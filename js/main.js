@@ -120,6 +120,8 @@ var ermrest = (function () {
     Entity.prototype.condition = function () {};
 
     /**
+     * Creates a new instance of a Condition
+     *
      * @constructor
      * @this {Condition}
      */
