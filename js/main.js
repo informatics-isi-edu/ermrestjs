@@ -35,7 +35,9 @@ var ermrest = (function () {
      * @param {String} name The name of the catalog.
      * @param {function} statusfn The status callback function.
      */
-    ServiceEndpoint.prototype.catalog = function (name) {};
+    ServiceEndpoint.prototype.catalog = function (name) {
+        return Catalog(this, name);
+    };
 
     /**
      * Creates an instance of Catalog.
@@ -43,9 +45,12 @@ var ermrest = (function () {
      * @memberof ermrest
      * @constructor
      * @this {Catalog}
-     * @param {string} URL The URL of the catalog
+     * @param {string} name The name of the catalog
      */
-    Catalog = function(URL) {};
+    Catalog = function(endpoint, name) {
+        this.endpoint = endpoint;
+        this.name = name;
+    };
 
     /**
      * Creates the Catalog.
@@ -64,7 +69,27 @@ var ermrest = (function () {
      * @this {Catalog}
      * @return {Object} schema interface
      */
-    Catalog.prototype.schemas = function() {};
+    Catalog.prototype.schema = function() {
+        return Schema(this);
+    };
+
+    /**
+     * Schema constructor
+     * @memberof ermrest
+     * @constructor
+     * @this {Schema}
+     */
+    Schema = function(catalog) {
+        this.catalog = catalog;
+        this.ready = false;
+        this.s = [];
+    };
+
+    /**
+     * Asynchronous method to get the schemas. Getting the schemas will update
+     * or override the schema.s array.
+     */
+    Schema.prototype.get = function (success, failure) {};
 
     /**
      * Returns the entity interface for this Catalog.
@@ -103,39 +128,40 @@ var ermrest = (function () {
      * @param {Table} table The table or table alias to extend the path
      * @return {Entity} This entity instance.
      */
-    Entity.prototype.extend = function (table) {};
+    Entity.prototype.join = function (table) {};
+    Entity.prototype.start = function (table) {};
 
     /**
      * Apply a filter to the current ERM path.
      * @function
      * @this {Entity}
+     * @param {object} term The column name used in the filter
+     * @param {string} op The operand of the filter condition
+     * @param {object} literal The literal value for the condition
      */
-    Entity.prototype.filter = function () {};
+    Entity.prototype.filter = function (term, op, literal) {};
 
     /**
-     * Creates and returns a Condition object for use in filters.
      * @function
      * @this {Entity}
      */
-    Entity.prototype.condition = function () {};
+    Entity.prototype.get = function () {};
 
     /**
-     * Creates a new instance of a Condition
-     *
-     * @constructor
-     * @this {Condition}
+     * @function
+     * @this {Entity}
      */
-    Entity.prototype.Condition = function () {};
-    Entity.prototype.Condition.prototype.predicate = function () {};
-    Entity.prototype.Condition.prototype.and = function () {};
-    Entity.prototype.Condition.prototype.or = function () {};
-
-    Entity.prototype.get = function () {};
     Entity.prototype.update = function () {};
+
+    /**
+     * @function
+     * @this {Entity}
+     */
     Entity.prototype.del = function () {};
 
     /**
      * Registered service providers.
+     * @memberof ermrest
      * @var providers The dictionary of known service providers.
      */
     providers_ = { };
