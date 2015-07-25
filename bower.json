@@ -1,0 +1,33 @@
+{
+  "name": "ermrestjs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ERMrest client library in JavaScript",
+  "main": "ermrest.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "database",
+    "rest",
+    "postgresql",
+    "library"
+  ],
+  "authors": [
+    "ermrestjs authors"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "www.isi.edu",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "dist",
+    "doc"
+  ],
+  "dependencies": {
+      "jquery": "x"
+  }
+}
