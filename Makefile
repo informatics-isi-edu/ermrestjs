@@ -28,7 +28,8 @@ MIN=$(DIST)/$(NAME).min.js
 LINT=.make-lint
 
 # List of JS source files
-SOURCE=$(JS)/main.js
+SOURCE=$(JS)/main.js \
+	   $(JS)/test.js
 
 # Dependencies
 DEPS=$(BOWER)/jquery/dist/jquery.js \
