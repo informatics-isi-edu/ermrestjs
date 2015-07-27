@@ -1,167 +1,128 @@
 /**
  * The root namespace for the ERMrest library.
- * @namespace ermrest
+ *
+ * @namespace ERMrest
  */
-var ermrest = (function () {
+var ERMrest = (function () {
 
     /**
-     * ERMrest Service Provider. This is a stub. An example implementation
-     * of the ServiceProvider is the RestServiceProvider which implements the
-     * ERMrest "REST" style protocol.
+     * ERMrest Service.
      *
+     * @memberof ERMrest
+     * @this {Service}
      * @constructor
-     * @this {ServiceProvider}
-     * @memberof ermrest
+     * @param {String} URL The URL of the ERMrest service.
      */
-    ServiceProvider = function() {};
+    Service = function(URL) {
 
-    /**
-     * An ERMrest service endpoint. This is a stub. An example implementation
-     * of the ServiceEndpoint is the RestServiceEndpoint which implements the
-     * state of a connection to an ERMrest service.
-     *
-     * @constructor
-     * @this {ServiceEndpoint}
-     * @memberof ermrest
-     */
-    ServiceEndpoint = function() {};
+        /**
+         * Returns an interface to a catalog resource located on this service.
+         * This function returns immediately, and it does not validate that the
+         * catalog exists.
+         *
+         * @constructor
+         * @this {Service}
+         * @param {String} name The name of the catalog.
+         */
+        this.Catalog = function (name) {
+            return Catalog_(this, name);
+        };
 
-    /**
-     * Returns a {Catalog} instance located at this {ServiceEndpoint}. This
-     * function returns immediately.
-     *
-     * @function
-     * @this {ServiceEndpoint}
-     * @param {String} name The name of the catalog.
-     * @param {function} statusfn The status callback function.
-     */
-    ServiceEndpoint.prototype.catalog = function (name) {
-        return Catalog(this, name);
-    };
 
-    /**
-     * Creates an instance of Catalog.
-     *
-     * @memberof ermrest
-     * @constructor
-     * @this {Catalog}
-     * @param {string} name The name of the catalog
-     */
-    Catalog = function(endpoint, name) {
-        this.endpoint = endpoint;
-        this.name = name;
-    };
+        /**
+         *
+         * This is the real implementation of the Catalog.
+         *
+         * @constructor
+         * @this {Catalog}
+         * @param {Object} service The service that this catalog belongs to.
+         * @param {String} name The name of the catalog.
+         */
+        Catalog = function(service, name) {
 
-    /**
-     * Creates the Catalog.
-     *
-     * @function
-     * @this {Catalog}
-     * @param {function} status A callback function
-     */
-    Catalog.prototype.create = function (status) {};
-    Catalog.prototype.get = function (status) {};
-    Catalog.prototype.destroy = function (status) {};
+            /**
+             * The name of the Catalog resource.
+             * @this {Catalog}
+             * @var
+             */
+            this.name = name;
 
-    /**
-     * Returns the schemas interface for this Catalog.
-     *
-     * @this {Catalog}
-     * @return {Object} schema interface
-     */
-    Catalog.prototype.schema = function() {
-        return Schema(this);
-    };
+            /**
+             * The properties of the Catalog resource.
+             * This variable will be populated by a successful Catalog.get().
+             *
+             * @this {Catalog}
+             * @var
+             */
+            this.properties = undefined;
 
-    /**
-     * Schema constructor
-     * @memberof ermrest
-     * @constructor
-     * @this {Schema}
-     */
-    Schema = function(catalog) {
-        this.catalog = catalog;
-        this.ready = false;
-        this.s = [];
-    };
+            /**
+             * The schemata of the Catalog resource.
+             * This variable will be populated by a successful Catalog.get().
+             *
+             * @this {Catalog}
+             * @var
+             */
+            this.schemata = undefined;
 
-    /**
-     * Asynchronous method to get the schemas. Getting the schemas will update
-     * or override the schema.s array.
-     */
-    Schema.prototype.get = function (success, failure) {};
+            /**
+             * Creates a Catalog resource. The caller must have permission to create 
+             * Catalog resources on the service. If successful, the object's properties
+             * will be defined by this function.
+             *
+             * @this {Catalog}
+             * @function
+             * @param {function} cb A callback function
+             */
+            this.create = function (cb) {};
 
-    /**
-     * Returns the entity interface for this Catalog.
-     *
-     * @this {Catalog}
-     * @return {Object} entity interface
-     */
-    Catalog.prototype.entity = function () {};
+            /**
+             * Gets a representation of a Catalog resource. If successful, the 
+             * object's properties will be defined by this function.
+             *
+             * @this {Catalog}
+             * @function
+             * @param {function} cb A callback function
+             */
+            this.get = function (cb) {};
 
-    /**
-     * Creates an Entity instance.
-     *
-     * @memberof ermrest
-     * @constructor
-     * @this {Entity}
-     */
-    Entity = function () {};
+            /**
+             * Removes a Catalog resource. The caller must have permission to remove 
+             * Catalog. Typically, the caller must be the 'owner' of the resource.
+             *
+             * @this {Catalog}
+             * @method
+             * @param {function} cb A callback function
+             */
+            this.remove = function (cb) {};
 
-    /**
-     * Creates an Alias out of a Table for use within the context of an
-     * instance of the Entity interface.
-     *
-     * @function
-     * @this {Entity}
-     * @param {Table} table The table to alias
-     * @return {Alias} An alias based on the table
-     */
-    Entity.prototype.alias = function (table) {};
+            /**
+             * Creates a representation of a Schema resource.
+             *
+             * @this {Schema}
+             * @constructor
+             * @param {String} name The name of the schema.
+             */
+            this.Schema = function (name) {
+                return Schema_(this,name);
+            };
 
-    /**
-     * Extends the current ERM path by a Table or Alias. This method must 
-     * be called at least once before any operations may be performed.
-     *
-     * @function
-     * @this {Entity}
-     * @param {Table} table The table or table alias to extend the path
-     * @return {Entity} This entity instance.
-     */
-    Entity.prototype.join = function (table) {};
-    Entity.prototype.start = function (table) {};
+            Schema_ = function (catalog, name) {
+                this.name = name;
+                return this;
+            }; // {Schema}
 
-    /**
-     * Apply a filter to the current ERM path.
-     * @function
-     * @this {Entity}
-     * @param {object} term The column name used in the filter
-     * @param {string} op The operand of the filter condition
-     * @param {object} literal The literal value for the condition
-     */
-    Entity.prototype.filter = function (term, op, literal) {};
+            return this;
+        }; // {Catalog}
 
-    /**
-     * @function
-     * @this {Entity}
-     */
-    Entity.prototype.get = function () {};
 
-    /**
-     * @function
-     * @this {Entity}
-     */
-    Entity.prototype.update = function () {};
+        return this;
+    }; // {Service}
 
-    /**
-     * @function
-     * @this {Entity}
-     */
-    Entity.prototype.del = function () {};
 
     /**
      * Registered service providers.
-     * @memberof ermrest
+     * @memberof ERMrest
      * @var providers The dictionary of known service providers.
      */
     providers_ = { };
