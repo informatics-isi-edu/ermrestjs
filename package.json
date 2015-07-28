@@ -21,6 +21,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
       "bower": "x",
+      "testem": "x",
       "closurecompiler": "x",
       "jshint": "x",
       "jsdoc": "x"
