@@ -96,6 +96,9 @@ test:
 	@echo "Test invocation goes here"
 	@exit 1
 
+testem:
+	$(BIN)/testem
+
 help: usage
 usage:
 	@echo "'make <target>' where <target> may be:"

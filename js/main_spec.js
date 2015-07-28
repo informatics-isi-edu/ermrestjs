@@ -1,7 +1,7 @@
-if (chai)
-    var expect = chai.expect;
-else
+if (typeof chai == 'undefined')
     var expect = require('chai').expect;
+else
+    var expect = chai.expect;
 
 describe('ERMrest', function(){
 
