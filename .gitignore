@@ -36,3 +36,6 @@ doc
 # Used by the Makefile
 .make-*
 
+# Misc
+*.swp
+*~
