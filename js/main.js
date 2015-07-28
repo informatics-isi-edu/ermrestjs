@@ -9,7 +9,7 @@ var ERMrest = (function () {
      * @constructor
      * @param {String} URL The URL of the ERMrest service.
      * @desc
-     * ERMrest Service.
+     * ERMrest Service. This class represents the service endpoint.
      */
     function Service(url) { this.url = url; }
 
