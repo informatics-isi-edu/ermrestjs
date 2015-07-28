@@ -25,11 +25,11 @@ JS=js
 PKG=$(DIST)/$(NAME).js
 MIN=$(DIST)/$(NAME).min.js
 
+# Lint target file
 LINT=.make-lint
 
 # List of JS source files
-SOURCE=$(JS)/main.js \
-	   $(JS)/test.js
+SOURCE=$(JS)/main.js
 
 # Dependencies
 DEPS=$(BOWER)/jquery/dist/jquery.js \
@@ -40,11 +40,11 @@ DEPS=$(BOWER)/jquery/dist/jquery.js \
 all: build docs
 
 # Makes the full source package
-$(PKG): $(SOURCE) $(LINT) $(DIST)
+$(PKG): $(SOURCE) $(LINT) $(DIST) Makefile
 	cat $(SOURCE) > $(PKG)
 
 # Makes the minified package (using 'closurecompiler')
-$(MIN): $(SOURCE) $(LINT) $(DIST) $(BIN)
+$(MIN): $(SOURCE) $(LINT) $(DIST) $(BIN) Makefile
 	$(BIN)/ccjs $(SOURCE) > $(MIN)
 
 # Lints the changed source (using 'jshint')
@@ -58,7 +58,7 @@ build: $(PKG) $(MIN)
 
 docs: $(DOC)
 
-$(DOC): $(SOURCE) $(BIN)
+$(DOC): $(SOURCE) $(BIN) Makefile
 	$(BIN)/jsdoc --pedantic -d $(DOC) $(SOURCE)
 	@touch $(DOC)
 
