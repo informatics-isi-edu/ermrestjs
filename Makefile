@@ -1,7 +1,7 @@
 # A simple example of using Makefile in a JavaScript project
 
 # Phony targets
-.PHONY : all build test testem clean distclean deps help usage update
+.PHONY : all deps update-deps lint build test testem clean distclean deps help
 
 # Disable built-in rules
 .SUFFIXES:
@@ -47,8 +47,8 @@ $(MIN): $(SOURCE) $(LINT) $(DIST) $(BIN) Makefile
 	$(BIN)/ccjs $(SOURCE) > $(MIN)
 
 # Lints the changed source (using 'jshint')
-$(LINT): $(SOURCE)
-	$(BIN)/jshint $?
+$(LINT): $(SOURCE) $(BIN)
+	$(BIN)/jshint $(filter $(SOURCE), $?)
 	@touch $(LINT)
 
 lint: $(LINT)
@@ -79,7 +79,7 @@ $(BOWER): $(BIN) bower.json
 
 deps: $(BIN) $(BOWER)
 
-update:
+update-deps:
 	npm update
 	$(BIN)/bower update
 
