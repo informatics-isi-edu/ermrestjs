@@ -1,7 +1,7 @@
 # A simple example of using Makefile in a JavaScript project
 
 # Phony targets
-.PHONY : all build test clean distclean deps help usage update
+.PHONY : all build test testem clean distclean deps help usage update
 
 # Disable built-in rules
 .SUFFIXES:
@@ -25,11 +25,15 @@ JS=js
 PKG=$(DIST)/$(NAME).js
 MIN=$(DIST)/$(NAME).min.js
 
-# Lint target file
+# Target files
 LINT=.make-lint
+TEST=.make-test.js
 
 # List of JS source files
 SOURCE=$(JS)/main.js
+
+# List of JS test specs
+SPECS=$(JS)/main_spec.js
 
 # Dependencies
 DEPS=$(BOWER)/jquery/dist/jquery.js \
@@ -92,9 +96,11 @@ distclean: clean
 	rm -rf $(MODULES)
 	rm -rf $(BOWER)
 
-test:
-	@echo "Test invocation goes here"
-	@exit 1
+test: $(TEST)
+
+$(TEST): $(SOURCE) $(SPECS) $(BIN)
+	cat $(SOURCE) $(SPECS) > $(TEST)
+	$(BIN)/mocha $(TEST) || (rm -r $(TEST) &&  exit 1)
 
 testem:
 	$(BIN)/testem
