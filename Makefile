@@ -35,13 +35,8 @@ SOURCE=$(JS)/main.js
 # List of JS test specs
 SPECS=$(JS)/main_spec.js
 
-# Dependencies
-DEPS=$(BOWER)/jquery/dist/jquery.js \
-	 $(BOWER)/jquery/dist/jquery.min.js \
-	 $(BOWER)/jquery/dist/jquery.min.map
-
 # "all" should build the package
-all: build docs
+all: build docs test
 
 # Makes the full source package
 $(PKG): $(SOURCE) $(LINT) $(DIST) Makefile
@@ -52,7 +47,7 @@ $(MIN): $(SOURCE) $(LINT) $(DIST) $(BIN) Makefile
 	$(BIN)/ccjs $(SOURCE) > $(MIN)
 
 # Lints the changed source (using 'jshint')
-$(LINT): $(SOURCE) $(BIN)
+$(LINT): $(SOURCE)
 	$(BIN)/jshint $?
 	@touch $(LINT)
 
@@ -71,6 +66,7 @@ $(DIST):
 
 # Installs Node modules locally
 $(BIN): $(MODULES)
+	@touch $(BIN)
 
 $(MODULES): package.json
 	npm install
@@ -100,7 +96,7 @@ test: $(TEST)
 
 $(TEST): $(SOURCE) $(SPECS) $(BIN)
 	cat $(SOURCE) $(SPECS) > $(TEST)
-	$(BIN)/mocha $(TEST) || (rm -r $(TEST) &&  exit 1)
+	$(BIN)/mocha $(TEST) || (rm -f $(TEST) &&  exit 1)
 
 testem:
 	$(BIN)/testem
