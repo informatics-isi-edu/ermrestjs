@@ -24,23 +24,39 @@ describe('ERMrest', function(){
         expect(ERMrest.service).to.exist;
     });
 
-    it('ERMrest.service(url) should return an ERMrest.Service instance', function(){
-        expect(typeof ERMrest.service('https://host/path', {}) == 'ERMrest.Service').to.exist;
+    it('ERMrest.service(url) should return a Service instance', function(){
+        var service = ERMrest.service('http://host/path');
+        expect(typeof service).to.equal("object");
     });
 
-    it('ERMrest.service(url).catalog(name) should return an ERMrest.Catalog.Schema instance', function(){
+    it('Service.catalog(id) should return a Catalog instance', function(){
+        var service = ERMrest.service('http://host/path');
+        var catalog = service.catalog('fubar');
+        expect(typeof catalog).to.equal("object");
+    });
+
+    it('Catalog.schema(name) should return a Schema instance', function(){
         var service = ERMrest.service('http://host/path');
         var catalog = service.catalog('fubar');
         var schema  = catalog.schema('foo');
-        expect(typeof schema == 'ERMrest.Catalog.Schema').to.exist;
+        expect(typeof schema).to.equal("object");
     });
 
-    it('Schema should be initialized', function(){
+    it('Schema should be initialized correctly', function(){
         var service = ERMrest.service('http://host/path');
         var catalog = service.catalog('fubar');
         var schema  = catalog.schema('foo');
         expect(schema.name).to.exist;
         expect(schema.catalog).to.not.exist;
     });
+
+    it('Schema.table(name) should return a Table instance', function(){
+        var service = ERMrest.service('http://host/path');
+        var catalog = service.catalog('fubar');
+        var schema  = catalog.schema('foo');
+        var table   = schema.table('bar');
+        expect(typeof table).to.equal("object");
+    });
+
 });
 

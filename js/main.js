@@ -4,7 +4,7 @@
  * The ERMrest module is a JavaScript client library for the ERMrest 
  * service.
  *
- * IMPORTANT NOTE: This contents of this source file are a work in progress.
+ * IMPORTANT NOTE: This module is a work in progress.
  * It is likely to change several times before we have an interface we wish
  * to use for ERMrest JavaScript agents.
  */
@@ -13,14 +13,28 @@ var ERMrest = (function () {
     /**
      * @var
      * @private
+     * @desc This is the state of the module.
      */
-    var module = {};
+    var module = { service: service};
+
+    /**
+     * @memberof ERMrest
+     * @function
+     * @param {Service} url URL of the service.
+     * @param {Object} credentials TBD credentials object
+     * @return {Service} Returns a new Catalog.Service instance.
+     * @desc
+     * See Catalog.Service.
+     */
+    function service(url, credentials) {
+        return new Service(url, credentials);
+    }
 
     /**
      * @memberof ERMrest
      * @constructor
      * @param {String} url URL of the service.
-     * @param {Object} header HTTP header attributes.
+     * @param {Object} credentials TBD credentials object
      * @desc
      * Represents the ERMrest service endpoint. This is completely TBD. There
      * will be bootstrapping the connection, figuring out what credentials are
@@ -28,24 +42,17 @@ var ERMrest = (function () {
      * even be the right place to do this. There may be some other class needed
      * represent all of that etc.
      */
-    module.service = function(url, header) {
-        return new Service(url, header);
-    };
-    function Service(url, header) { this.url = url; }
+    function Service(url, credentials) {
+        this.url = url;
+        this.credentials = credentials;
+    }
 
     /** 
      * @var
      * @desc
-     * The URL of the ERMrest service.
+     * The URL of the Service.
      */
     Service.prototype.url = undefined;
-
-    /** 
-     * @var
-     * @desc
-     * The attributes to use in the HTTP Head of HTTP requests to the service.
-     */
-    Service.prototype.header = undefined;
 
     /**
      * @function
@@ -85,9 +92,11 @@ var ERMrest = (function () {
 
     /**
      * @var
-     * @desc Properties of the catalog. In ERMrest, we currently provide access
-     * to these under the "meta" API. But we've talked of changing that to a 
-     * different term like "properties" or "props".
+     * @desc Properties of the catalog.
+     *
+     * In ERMrest, we currently provide access to these under the "meta" API.
+     * But we've talked of changing that to a different term like "properties"
+     * or "props".
      */
     Catalog.prototype.props = undefined;
 
@@ -104,7 +113,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return Promise Returns a Promise.
+     * @return {Promise} Returns a Promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, the
      * Catalog's details will be defined (i.e., it's model and props).
@@ -113,7 +122,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return Promise Returns a Promise.
+     * @return {Promise} Returns a Promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, the 
      * Catalog will be removed **from the Server** and **all data will be
@@ -123,7 +132,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return Promise Returns a Promise.
+     * @return {Promise} Returns a Promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, the 
      * Catalog will be created. TBD: should its state (model, props,...) also
@@ -148,6 +157,7 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
+     * @param {Catalog} catalog The catalog the schema belongs to.
      * @param {String} name The name of the schema.
      * @desc
      * Creates an instance of the Schema object.
@@ -175,7 +185,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return Promise Returns a Promise.
+     * @return {Promise} Returns a Promise.
      * @desc
      * Asynchronous function that attempts to create a new Schema.
      */
@@ -183,13 +193,93 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return Promise Returns a Promise.
+     * @return {Promise} Returns a Promise.
      * @desc
      * Asynchronous function that attempts to remove a Schema from the Catalog.
      * IMPORTANT: If successful, the Schema and **all** data in it will be 
      * removed from the Catalog.
      */
     Schema.prototype.remove = function () {};
+
+    /**
+     * @function
+     * @param {String} name The name of the table.
+     * @desc
+     * Returns a new instance of a Table object. The Table may not be
+     * bound to a real resource. The most likely (TBD only?) reason to
+     * use this method is to create an unbound Table object that can
+     * be used to create a new table. Clients should get Table objects
+     * from the Catalog.model.
+     */
+    Schema.prototype.table = function (name) {
+        return new Table(this, name);
+    };
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Schema} schema The schema that the table belongs to.
+     * @param {String} name The name of the table.
+     * @desc
+     * Creates an instance of the Table object.
+     */
+    function Table(schema, name) {
+        this.schema_ = schema;
+        this.name = name;
+        this.cols = undefined;
+        this.key = undefined;
+        this.annotations = undefined;
+    }
+
+    /**
+     * @var
+     * @desc The name of the table.
+     */
+    Table.prototype.name = undefined;
+
+    /**
+     * @var
+     * @desc TBD, likely something that looks like a dictionary.
+     *
+     * ```javascript
+     *   { column_name: column_object ...}
+     * ```
+     */
+    Table.prototype.cols = undefined;
+
+    /**
+     * @var
+     * @desc an ordered list of columns (or column names?) that make up the key.
+     *
+     * ```javascript
+     *   [ column+ ]
+     * ```
+     */
+    Table.prototype.key = undefined;
+
+    /**
+     * @var
+     * @desc a list or dictionary of annotation objects
+     */
+    Table.prototype.annotations = undefined;
+
+    /**
+     * @function
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * Asynchronous function that attempts to create a new Table.
+     */
+    Table.prototype.create = function () {};
+
+    /**
+     * @function
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * Asynchronous function that attempts to remove a Table from the Catalog.
+     * IMPORTANT: If successful, the Table and **all** data in it will be 
+     * removed from the Catalog.
+     */
+    Table.prototype.remove = function () {};
 
     return module;
 })();
