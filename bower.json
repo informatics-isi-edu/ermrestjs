@@ -27,7 +27,7 @@
     "dist",
     "doc"
   ],
-  "dependencies": {
-      "jquery": "x"
+  "'dependencies' go here": {
+      "'package' name goes here": "x"
   }
 }
