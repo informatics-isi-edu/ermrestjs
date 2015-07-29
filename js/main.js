@@ -30,7 +30,7 @@ var ERMrest = (function () {
      */
     module.service = function(url, header) {
         return new Service(url, header);
-    }
+    };
     function Service(url, header) { this.url = url; }
 
     /** 
