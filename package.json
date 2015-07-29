@@ -1,11 +1,16 @@
 {
   "name": "ermrestjs",
-  "version": "0.0.0",
-  "private": true,
   "description": "ERMrest client library in JavaScript",
-  "main": "main.js",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "main": "ermrest.js",
   "scripts": {
-    "test": "make test"
+    "build": "make build",
+    "pretest": "make build",
+    "test": "make test",
+    "test:testem": "make testem",
+    "docs": "make doc"
   },
   "repository": {
     "type": "git",
@@ -17,8 +22,6 @@
     "postgresql",
     "library"
   ],
-  "author": "ermrestjs authors",
-  "license": "Apache-2.0",
   "devDependencies": {
       "bower": "x",
       "mocha": "x",
