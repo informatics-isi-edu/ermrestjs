@@ -31,7 +31,7 @@ bower_components
 
 # Package output directories
 dist
-doc
+jsdoc
 
 # Used by the Makefile
 .make-*
