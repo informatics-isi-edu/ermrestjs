@@ -1,7 +1,7 @@
 # A simple example of using Makefile in a JavaScript project
 
 # Phony targets
-.PHONY : all deps update-deps lint build test testem clean distclean deps help
+.PHONY : all deps update-deps lint build jsdoc test testem clean distclean deps help
 
 # Disable built-in rules
 .SUFFIXES:
@@ -18,7 +18,7 @@ NAME=ermrest
 # Distribution directory
 DIST=dist
 # Documentation directory
-DOC=doc
+JSDOC=jsdoc
 # JavaScript source directory
 JS=js
 # Output package
@@ -36,7 +36,7 @@ SOURCE=$(JS)/main.js
 SPECS=$(JS)/main_spec.js
 
 # "all" should build the package
-all: build docs test
+all: build test
 
 # Makes the full source package
 $(PKG): $(SOURCE) $(LINT) $(DIST) Makefile
@@ -55,11 +55,11 @@ lint: $(LINT)
 
 build: $(PKG) $(MIN)
 
-docs: $(DOC)
+jsdoc: $(JSDOC)
 
-$(DOC): $(SOURCE) $(BIN) Makefile
-	$(BIN)/jsdoc --pedantic -d $(DOC) $(SOURCE)
-	@touch $(DOC)
+$(JSDOC): $(SOURCE) $(BIN) Makefile
+	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(SOURCE)
+	@touch $(JSDOC)
 
 $(DIST):
 	mkdir -p $(DIST)
@@ -85,7 +85,7 @@ update-deps:
 
 clean:
 	rm -rf $(DIST)
-	rm -rf $(DOC)
+	rm -rf $(JSDOC)
 	rm -f .make-*
 
 distclean: clean
