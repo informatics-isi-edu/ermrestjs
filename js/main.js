@@ -1,17 +1,37 @@
 /**
  * @namespace ERMrest
- * @desc The root namespace for the ERMrest library.
+ * @desc
+ * The ERMrest module is a JavaScript client library for the ERMrest 
+ * service.
+ *
+ * IMPORTANT NOTE: This contents of this source file are a work in progress.
+ * It is likely to change several times before we have an interface we wish
+ * to use for ERMrest JavaScript agents.
  */
 var ERMrest = (function () {
 
     /**
+     * @var
+     * @private
+     */
+    var module = {};
+
+    /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} URL The URL of the ERMrest service.
+     * @param {String} url URL of the service.
+     * @param {Object} header HTTP header attributes.
      * @desc
-     * ERMrest Service. This class represents the service endpoint.
+     * Represents the ERMrest service endpoint. This is completely TBD. There
+     * will be bootstrapping the connection, figuring out what credentials are
+     * even needed, then how to establish those credentials etc. This may not
+     * even be the right place to do this. There may be some other class needed
+     * represent all of that etc.
      */
-    function Service(url) { this.url = url; }
+    module.service = function(url, header) {
+        return new Service(url, header);
+    }
+    function Service(url, header) { this.url = url; }
 
     /** 
      * @var
@@ -20,92 +40,110 @@ var ERMrest = (function () {
      */
     Service.prototype.url = undefined;
 
+    /** 
+     * @var
+     * @desc
+     * The attributes to use in the HTTP Head of HTTP requests to the service.
+     */
+    Service.prototype.header = undefined;
+
     /**
      * @function
-     * @param {String} name The name of the catalog.
+     * @param {String} id Identifier of a catalog within the context of a
+     * service.
      * @desc
      * Returns an interface to a catalog resource located on this service.
      * This function returns immediately, and it does not validate that the
      * catalog exists.
      */
-    Service.prototype.catalog = function (name) { 
-        return new Catalog(this, name); 
+    Service.prototype.catalog = function (id) { 
+        return new Catalog(this, id); 
     };
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Service} service The service that this catalog belongs to.
-     * @param {String} name The name of the catalog.
+     * @param {Service} service The ERMrest.Service this Catalog belongs to.
+     * @param {String} id Identifier of a catalog within the context of a
+     * service.
      * @desc
-     * Creates a new instance of the Catalog object which is the interface
-     * to the catalog resource.
+     * The hidden constructor for the Catalog. In the object model, it 
+     * represents an ERMrest Catalog.
      */
-    function Catalog (service, name) {
+    function Catalog (service, id) {
         this.service_ = service;
-        this.name = name;
+        this.id = id;
+        this.props = undefined;
+        this.model = undefined;
     }
 
     /** 
      * @var 
-     * @desc The name of the catalog
+     * @desc Identifier of the Catalog.
      */
-    Catalog.prototype.name = undefined;
+    Catalog.prototype.id = undefined;
 
     /**
      * @var
-     * @desc Properties of the catalog
+     * @desc Properties of the catalog. In ERMrest, we currently provide access
+     * to these under the "meta" API. But we've talked of changing that to a 
+     * different term like "properties" or "props".
      */
-    Catalog.prototype.properties = undefined;
+    Catalog.prototype.props = undefined;
 
     /**
      * @var
-     * @desc Schemata of the catalog
+     * @desc The introspected data model of the Catalog or undefined. TBD This
+     * may be something that looks like a dictionary of Schema objects.
+     *
+     * ```javascript
+     *   { schema_name: schema_object ...}
+     * ```
      */
-    Catalog.prototype.schemata = undefined;
+    Catalog.prototype.model = undefined;
 
     /**
      * @function
-     * @param {function} cb A callback function
+     * @return Promise Returns a Promise.
      * @desc
-     * Gets a representation of a Catalog resource. If successful, the 
-     * object's properties will be defined by this function.
+     * An asynchronous method that returns a promise. If fulfilled, the
+     * Catalog's details will be defined (i.e., it's model and props).
      */
-    Catalog.prototype.get = function (cb) {};
+    Catalog.prototype.get = function () {};
 
     /**
      * @function
-     * @param {function} cb A callback function
+     * @return Promise Returns a Promise.
      * @desc
-     * Removes a Catalog resource. The caller must have permission to remove 
-     * Catalog. Typically, the caller must be the 'owner' of the resource.
+     * An asynchronous method that returns a promise. If fulfilled, the 
+     * Catalog will be removed **from the Server** and **all data will be
+     * permanently removed**.
      */
-    Catalog.prototype.remove = function (cb) {};
+    Catalog.prototype.remove = function () {};
+
+    /**
+     * @function
+     * @return Promise Returns a Promise.
+     * @desc
+     * An asynchronous method that returns a promise. If fulfilled, the 
+     * Catalog will be created. TBD: should its state (model, props,...) also
+     * be defined?
+     */
+    Catalog.prototype.create = function () {};
 
     /**
      * @function
      * @param {String} name The name of the schema.
      * @desc
      * Returns a new instance of a Schema object. The Schema may not be
-     * bound to a real resource. This object may be used to get a 
-     * representation of a Schema resource, if one exists that matches 
-     * the schema name passed to this function. It may also be used to
-     * create a new schema, if one does not exist that matches the name
-     * passed to this function.
+     * bound to a real resource. The most likely (TBD only?) reason to
+     * use this method is to create an unbound Schema object that can
+     * be used to create a new schema. Clients should get Schema objects
+     * from the Catalog.model.
      */
     Catalog.prototype.schema = function (name) {
         return new Schema(this, name);
     };
-
-    /**
-     * @function
-     * @param {function} cb A callback function
-     * @desc
-     * Creates a Catalog resource. The caller must have permission to create 
-     * Catalog resources on the service. If successful, the object's properties
-     * will be defined by this function.
-     */
-    Catalog.prototype.create = function (cb) {};
 
     /**
      * @memberof ERMrest
@@ -121,43 +159,37 @@ var ERMrest = (function () {
 
     /**
      * @var
-     * @desc The name of the schema
+     * @desc The name of the schema.
      */
     Schema.prototype.name = undefined;
 
     /**
      * @var
-     * @desc A dictionary of table definitions of the schema
+     * @desc TBD, likely something that looks like a dictionary.
+     *
+     * ```javascript
+     *   { table_name: table_object ...}
+     * ```
      */
     Schema.prototype.tables = undefined;
 
     /**
      * @function
+     * @return Promise Returns a Promise.
      * @desc
-     * Gets the schema definition from the catalog.
-     */
-    Schema.prototype.get = function () {};
-
-    /**
-     * @function
-     * @desc
-     * Creates a new schema definition within the catalog.
+     * Asynchronous function that attempts to create a new Schema.
      */
     Schema.prototype.create = function () {};
 
     /**
      * @function
+     * @return Promise Returns a Promise.
      * @desc
-     * Removes the schema definition from the catalog. *Warning*: 
-     * it also removes **all** data that are associated with the
-     * schema and of its tables.
+     * Asynchronous function that attempts to remove a Schema from the Catalog.
+     * IMPORTANT: If successful, the Schema and **all** data in it will be 
+     * removed from the Catalog.
      */
     Schema.prototype.remove = function () {};
 
-    /** 
-     * @member providers Available ERMrest service providers
-     */
-    providers_ = { rest: function (URL) { return new Service(URL); } };
-
-    return providers_;
+    return module;
 })();
