@@ -31,7 +31,7 @@ var ERMrest = (function () {
      * @private
      * @desc This is the state of the module.
      */
-    var module = { service: service};
+    var module = { service: service };
 
     /**
      * @memberof ERMrest
@@ -68,7 +68,7 @@ var ERMrest = (function () {
      * @desc
      * The URL of the Service.
      */
-    Service.prototype.url = undefined;
+    Service.prototype.url = null;
 
     /**
      * @function
@@ -96,15 +96,15 @@ var ERMrest = (function () {
     function Catalog (service, id) {
         this.service_ = service;
         this.id = id;
-        this.props = undefined;
-        this.model = undefined;
+        this.props = null;
+        this.model = null;
     }
 
     /** 
      * @var 
      * @desc Identifier of the Catalog.
      */
-    Catalog.prototype.id = undefined;
+    Catalog.prototype.id = null;
 
     /**
      * @var
@@ -114,18 +114,18 @@ var ERMrest = (function () {
      * But we've talked of changing that to a different term like "properties"
      * or "props".
      */
-    Catalog.prototype.props = undefined;
+    Catalog.prototype.props = null;
 
     /**
      * @var
-     * @desc The introspected data model of the Catalog or undefined. TBD This
+     * @desc The introspected data model of the Catalog or null. TBD This
      * may be something that looks like a dictionary of Schema objects.
      *
      * ```javascript
      *   { schema_name: schema_object ...}
      * ```
      */
-    Catalog.prototype.model = undefined;
+    Catalog.prototype.model = null;
 
     /**
      * @function
@@ -187,7 +187,7 @@ var ERMrest = (function () {
      * @var
      * @desc The name of the schema.
      */
-    Schema.prototype.name = undefined;
+    Schema.prototype.name = null;
 
     /**
      * @var
@@ -197,7 +197,7 @@ var ERMrest = (function () {
      *   { table_name: table_object ...}
      * ```
      */
-    Schema.prototype.tables = undefined;
+    Schema.prototype.tables = null;
 
     /**
      * @function
@@ -242,16 +242,16 @@ var ERMrest = (function () {
     function Table(schema, name) {
         this.schema_ = schema;
         this.name = name;
-        this.cols = undefined;
-        this.key = undefined;
-        this.annotations = undefined;
+        this.cols = null;
+        this.key = null;
+        this.annotations = null;
     }
 
     /**
      * @var
      * @desc The name of the table.
      */
-    Table.prototype.name = undefined;
+    Table.prototype.name = null;
 
     /**
      * @var
@@ -261,7 +261,7 @@ var ERMrest = (function () {
      *   { column_name: column_object ...}
      * ```
      */
-    Table.prototype.cols = undefined;
+    Table.prototype.cols = null;
 
     /**
      * @var
@@ -271,13 +271,13 @@ var ERMrest = (function () {
      *   [ column+ ]
      * ```
      */
-    Table.prototype.key = undefined;
+    Table.prototype.key = null;
 
     /**
      * @var
      * @desc a list or dictionary of annotation objects
      */
-    Table.prototype.annotations = undefined;
+    Table.prototype.annotations = null;
 
     /**
      * @function

@@ -121,7 +121,7 @@ or "props".
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+model"></a>
 #### catalog.model
-The introspected data model of the Catalog or undefined. TBD This
+The introspected data model of the Catalog or null. TBD This
 may be something that looks like a dictionary of Schema objects.
 
 ```javascript
