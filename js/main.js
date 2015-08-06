@@ -36,20 +36,20 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @function
-     * @param {Service} url URL of the service.
+     * @param {Service} uri URL of the service.
      * @param {Object} credentials TBD credentials object
      * @return {Service} Returns a new Catalog.Service instance.
      * @desc
      * See Catalog.Service.
      */
-    function service(url, credentials) {
-        return new Service(url, credentials);
+    function service(uri, credentials) {
+        return new Service(uri, credentials);
     }
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} url URL of the service.
+     * @param {String} uri URI of the service.
      * @param {Object} credentials TBD credentials object
      * @desc
      * Represents the ERMrest service endpoint. This is completely TBD. There
@@ -58,8 +58,10 @@ var ERMrest = (function () {
      * even be the right place to do this. There may be some other class needed
      * represent all of that etc.
      */
-    function Service(url, credentials) {
-        this.url = url;
+    function Service(uri, credentials) {
+        if (uri === undefined || uri === null)
+            throw "URL not defined or null";
+        this.uri = uri;
         this.credentials = credentials;
     }
 
@@ -68,7 +70,7 @@ var ERMrest = (function () {
      * @desc
      * The URL of the Service.
      */
-    Service.prototype.url = null;
+    Service.prototype.uri = null;
 
     /**
      * @function
@@ -79,7 +81,9 @@ var ERMrest = (function () {
      * This function returns immediately, and it does not validate that the
      * catalog exists.
      */
-    Service.prototype.catalog = function (id) { 
+    Service.prototype.catalog = function (id) {
+        if (id === undefined || id === null)
+            throw "ID is undefined or nul";
         return new Catalog(this, id); 
     };
 
@@ -96,6 +100,7 @@ var ERMrest = (function () {
     function Catalog (service, id) {
         this.service_ = service;
         this.id = id;
+        this.uri = service.uri + "/" + id;
         this.props = null;
         this.model = null;
     }

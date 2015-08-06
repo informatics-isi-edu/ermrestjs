@@ -40,7 +40,7 @@ describe('ERMrest', function(){
         expect(ERMrest.service).to.exist;
     });
 
-    it('ERMrest.service(url) should return a Service instance', function(){
+    it('ERMrest.service(uri) should return a Service instance', function(){
         var service = ERMrest.service('http://host/path');
         expect(typeof service).to.equal("object");
     });
