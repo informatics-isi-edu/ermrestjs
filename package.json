@@ -30,6 +30,7 @@
       "closurecompiler": "x",
       "jshint": "x",
       "jsdoc": "x",
-      "jsdoc-to-markdown": "x"
+      "jsdoc-to-markdown": "x",
+      "xmlhttprequest": "x"
   }
 }

@@ -23,6 +23,9 @@ else
     // Works in 'testem' for browser based testing
     var expect = chai.expect;
 
+// Import Node package for XMLHttpRequest if not defined
+var XMLHttpRequest = XMLHttpRequest || require("xmlhttprequest").XMLHttpRequest;
+
 describe('ERMrest', function(){
 
     var SERVICE_URI = 'https://localhost:8443/ermrest';
