@@ -141,7 +141,19 @@ var ERMrest = (function () {
      */
     Catalog.prototype.get = function () {
         // TODO this needs to process the results not just return raw json to client.
-        return get(this.uri_);
+        return http.get(this.uri_);
+    };
+
+    /**
+     * @function
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * An asynchronous method that returns a promise. If fulfilled, the
+     * Catalog's details will be defined (i.e., it's model and props).
+     */
+    Catalog.prototype.introspect = function () {
+        // TODO this needs to process the results not just return raw json to client.
+        return http.get(this.uri_ + "/schema");
     };
 
     /**
@@ -307,48 +319,54 @@ var ERMrest = (function () {
 
     /**
      * @private
-     * @function
-     * @return {Promise} Returns a Promise.
+     * @var http
      * @desc
-     * This function wraps the XMLHttpRequest and performs a HTTP GET.
-     *
-     * Adapted from:
-     * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
-     * License: site states that code samples licensed under Apache 2.0 License.
-     *
-     * Expect to rewrite and remove this code, but useful temporarily.
+     * This is a small utility of http routines that promisify XMLHttpRequest.
      */
-    function get(url) {
+    var http = {
 
-        // Return a new promise.
-        return new Promise(function(resolve, reject) {
-            // Do the usual XHR stuff
-            var req = new XMLHttpRequest();
-            req.open('GET', url);
+        /**
+         * @private
+         * @function
+         * @param {String} url Location of the resource.
+         * @return {Promise} Returns a promise object.
+         * @desc
+         * Gets a representation of the resource at 'url'. This function treats
+         * only HTTP 200 as a successful response.
+         */
+        get: function (url) {
 
-            req.onload = function() {
-                // This is called even on 404 etc
-                // so check the status
-                if (req.status == 200) {
-                    // Resolve the promise with the response text
-                    resolve(req.response);
-                }
-                else {
-                    // Otherwise reject with the status text
-                    // which will hopefully be a meaningful error
-                    reject(Error(req.statusText));
-                }
-            };
-
-            // Handle network errors
-            req.onerror = function() {
-                reject(Error("Network Error"));
-            };
-
-            // Make the request
-            req.send();
-        });
-    }
+            return new Promise( function( resolve, reject ) {
+                var err;
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    // debug statements (to be removed)
+                    //console.log("readyState == " + xhr.readyState);
+                    //console.log("status == " + xhr.status);
+                    //console.log("response == " + xhr.responseText);
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            resolve(xhr.responseText);
+                        }
+                        else if (xhr.status === 0) {
+                            err = Error("Network error");
+                            err.status = 0;
+                            reject(err);
+                        }
+                        else {
+                            err = Error(xhr.responseText);
+                            err.status = xhr.status;
+                            reject(err);
+                        }
+                    }
+                };
+                xhr.open('GET', url);
+                xhr.setRequestHeader("Accept", "application/json");
+                xhr.send();
+            });
+        }
+    };
 
     return module;
 })();
+

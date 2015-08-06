@@ -10,8 +10,10 @@
                 var p = catalog.get();
                 document.getElementById("ermrest").innerHTML = 'GET ' + catalog.uri_;
                 p.then(function(response) {
+                    document.getElementById("response").innerHTML = response;
                     console.log("Success!", response);
                     }, function(error) {
+                    document.getElementById("response").innerHTML = error;
                     console.log("Failed!", error);
                     });
             }
@@ -22,9 +24,10 @@
 
         <h1>ERMrest Dummy Test Page</h1>
 
-        <p id="ermrest">Waiting response</p>
+        <p id="ermrest">REQUEST</p>
+        <p id="response">RESPONSE</p>
 
-        <button type="button" onclick="callERMrest()">Try it</button>
+        <button type="button" onclick="callERMrest()">Send</button>
 
     </body>
 </html> 

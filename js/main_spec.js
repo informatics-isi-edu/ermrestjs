@@ -19,11 +19,18 @@
 var expect = (typeof chai == 'object') ? chai.expect : require('chai').expect;
 
 // Import Node package for XMLHttpRequest if not defined
-var XMLHttpRequest = XMLHttpRequest || require("xmlhttprequest").XMLHttpRequest;
+if (XMLHttpRequest) {
+    var SERVICE_URI = 'https://localhost:8443/ermrest';
+    var INVALID_URI = 'https://localhost:8443/wrong';
+}
+else {
+    var SERVICE_URI = 'http://localhost:8080/ermrest';
+    var INVALID_URI = 'http://localhost:8080/wrong';
+    var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+}
 
 describe('ERMrest', function(){
 
-    var SERVICE_URI = 'https://localhost:8443/ermrest';
     var CATALOG_ID  = '1';
 
     it('Promise is available', function() {
@@ -81,7 +88,7 @@ describe('ERMrest', function(){
         expect(catalog.uri_).to.equal(SERVICE_URI+'/catalog/'+CATALOG_ID);
     });
 
-    it('should get the catalog properties', function() {
+    it('should get the catalog properties', function(done) {
         // TODO this is a work in progress
         // This only works with a test server
         //      - running on localhost
@@ -92,9 +99,34 @@ describe('ERMrest', function(){
         var catalog = service.catalog(CATALOG_ID);
         var p = catalog.get();
         p.then(function(response) {
-            console.log("Success!", response);
+            done();
         }, function(error) {
-            console.error("Failed!", error);
+            done(error);
+        });
+    });
+
+    it('should not find this catalog resource (error 404)', function(done) {
+        // TODO this test is getting status=0 in 'testem'
+        var service = ERMrest.service(INVALID_URI);
+        var catalog = service.catalog(CATALOG_ID);
+        var p = catalog.get();
+        p.then(function(response) {
+            done(Error('catalog should have returned error 404'));
+        }, function(error) {
+            done(error.status == 404 ? null : Error("Unexpected response: " + error.status));
+        });
+    });
+
+    it('should introspect the catalog', function(done) {
+        // TODO same caveats as above
+        var service = ERMrest.service(SERVICE_URI);
+        var catalog = service.catalog(CATALOG_ID);
+        var p = catalog.introspect();
+        p.then(function(response) {
+            console.log(response);
+            done();
+        }, function(error) {
+            done(error);
         });
     });
 
