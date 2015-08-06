@@ -36,7 +36,7 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @function
-     * @param {Service} uri URL of the service.
+     * @param {Service} uri URI of the service.
      * @param {Object} credentials TBD credentials object
      * @return {Service} Returns a new Catalog.Service instance.
      * @desc
@@ -60,7 +60,7 @@ var ERMrest = (function () {
      */
     function Service(uri, credentials) {
         if (uri === undefined || uri === null)
-            throw "URL not defined or null";
+            throw "URI not defined or null";
         this.uri = uri;
         this.credentials = credentials;
     }
@@ -68,7 +68,7 @@ var ERMrest = (function () {
     /** 
      * @var
      * @desc
-     * The URL of the Service.
+     * The URI of the Service.
      */
     Service.prototype.uri = null;
 
@@ -100,9 +100,9 @@ var ERMrest = (function () {
     function Catalog (service, id) {
         this.service_ = service;
         this.id = id;
-        this.uri = service.uri + "/" + id;
         this.props = null;
         this.model = null;
+        this.uri_ = service.uri + "/catalog/" + id;
     }
 
     /** 
@@ -139,7 +139,10 @@ var ERMrest = (function () {
      * An asynchronous method that returns a promise. If fulfilled, the
      * Catalog's details will be defined (i.e., it's model and props).
      */
-    Catalog.prototype.get = function () {};
+    Catalog.prototype.get = function () {
+        // TODO this needs to process the results not just return raw json to client.
+        return get(this.uri_);
+    };
 
     /**
      * @function
@@ -301,6 +304,51 @@ var ERMrest = (function () {
      * removed from the Catalog.
      */
     Table.prototype.remove = function () {};
+
+    /**
+     * @private
+     * @function
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * This function wraps the XMLHttpRequest and performs a HTTP GET.
+     *
+     * Adapted from:
+     * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
+     * License: site states that code samples licensed under Apache 2.0 License.
+     *
+     * Expect to rewrite and remove this code, but useful temporarily.
+     */
+    function get(url) {
+
+        // Return a new promise.
+        return new Promise(function(resolve, reject) {
+            // Do the usual XHR stuff
+            var req = new XMLHttpRequest();
+            req.open('GET', url);
+
+            req.onload = function() {
+                // This is called even on 404 etc
+                // so check the status
+                if (req.status == 200) {
+                    // Resolve the promise with the response text
+                    resolve(req.response);
+                }
+                else {
+                    // Otherwise reject with the status text
+                    // which will hopefully be a meaningful error
+                    reject(Error(req.statusText));
+                }
+            };
+
+            // Handle network errors
+            req.onerror = function() {
+                reject(Error("Network Error"));
+            };
+
+            // Make the request
+            req.send();
+        });
+    }
 
     return module;
 })();

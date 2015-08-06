@@ -11,8 +11,8 @@ to use for ERMrest JavaScript agents.
 
 * [ERMrest](#ERMrest) : <code>object</code>
   * [.Service](#ERMrest.Service)
-    * [new Service(url, credentials)](#new_ERMrest.Service_new)
-    * [.url](#ERMrest.Service+url)
+    * [new Service(uri, credentials)](#new_ERMrest.Service_new)
+    * [.uri](#ERMrest.Service+uri)
     * [.catalog(id)](#ERMrest.Service+catalog)
   * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(service, id)](#new_ERMrest.Catalog_new)
@@ -38,19 +38,19 @@ to use for ERMrest JavaScript agents.
     * [.annotations](#ERMrest.Table+annotations)
     * [.create()](#ERMrest.Table+create) ⇒ <code>Promise</code>
     * [.remove()](#ERMrest.Table+remove) ⇒ <code>Promise</code>
-  * [.service(url, credentials)](#ERMrest.service) ⇒ <code>Service</code>
+  * [.service(uri, credentials)](#ERMrest.service) ⇒ <code>Service</code>
 
 <a name="ERMrest.Service"></a>
 ### ERMrest.Service
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Service](#ERMrest.Service)
-  * [new Service(url, credentials)](#new_ERMrest.Service_new)
-  * [.url](#ERMrest.Service+url)
+  * [new Service(uri, credentials)](#new_ERMrest.Service_new)
+  * [.uri](#ERMrest.Service+uri)
   * [.catalog(id)](#ERMrest.Service+catalog)
 
 <a name="new_ERMrest.Service_new"></a>
-#### new Service(url, credentials)
+#### new Service(uri, credentials)
 Represents the ERMrest service endpoint. This is completely TBD. There
 will be bootstrapping the connection, figuring out what credentials are
 even needed, then how to establish those credentials etc. This may not
@@ -60,12 +60,12 @@ represent all of that etc.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| url | <code>String</code> | URL of the service. |
+| uri | <code>String</code> | URI of the service. |
 | credentials | <code>Object</code> | TBD credentials object |
 
-<a name="ERMrest.Service+url"></a>
-#### service.url
-The URL of the Service.
+<a name="ERMrest.Service+uri"></a>
+#### service.uri
+The URI of the Service.
 
 **Kind**: instance property of <code>[Service](#ERMrest.Service)</code>  
 <a name="ERMrest.Service+catalog"></a>
@@ -296,7 +296,7 @@ removed from the Catalog.
 **Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
 **Returns**: <code>Promise</code> - Returns a Promise.  
 <a name="ERMrest.service"></a>
-### ERMrest.service(url, credentials) ⇒ <code>Service</code>
+### ERMrest.service(uri, credentials) ⇒ <code>Service</code>
 See Catalog.Service.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
@@ -304,6 +304,6 @@ See Catalog.Service.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| url | <code>Service</code> | URL of the service. |
+| uri | <code>Service</code> | URI of the service. |
 | credentials | <code>Object</code> | TBD credentials object |
 
