@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <script src="main.js"></script>
+        <script>
+            function callERMrest() {
+                var service = ERMrest.service('https://localhost:8443/ermrest');
+                var catalog = service.catalog('1');
+                var p = catalog.get();
+                document.getElementById("ermrest").innerHTML = 'GET ' + catalog.uri_;
+                p.then(function(response) {
+                    console.log("Success!", response);
+                    }, function(error) {
+                    console.log("Failed!", error);
+                    });
+            }
+        </script>
+    </head>
+
+    <body>
+
+        <h1>ERMrest Dummy Test Page</h1>
+
+        <p id="ermrest">Waiting response</p>
+
+        <button type="button" onclick="callERMrest()">Try it</button>
+
+    </body>
+</html> 
