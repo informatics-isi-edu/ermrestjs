@@ -15,13 +15,8 @@
  * limitations under the License.
  */
 
-// Import chai
-if (typeof chai == 'undefined')
-    // Works in 'mocha' for command line testing
-    var expect = require('chai').expect;
-else
-    // Works in 'testem' for browser based testing
-    var expect = chai.expect;
+// Import chai.expect if not defined
+var expect = (typeof chai == 'object') ? chai.expect : require('chai').expect;
 
 // Import Node package for XMLHttpRequest if not defined
 var XMLHttpRequest = XMLHttpRequest || require("xmlhttprequest").XMLHttpRequest;
