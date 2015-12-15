@@ -31,36 +31,41 @@ var ERMrest = (function () {
      * @private
      * @desc This is the state of the module.
      */
-    var module = { service: service };
+    var module = { client: client };
 
     /**
      * @memberof ERMrest
      * @function
-     * @param {Service} uri URI of the service.
-     * @param {Object} credentials TBD credentials object
-     * @return {Service} Returns a new Catalog.Service instance.
+     * @param {Object} http Angular $http service object
+     * @param {String} uri URI of the ERMrest service.
+     * @param {Object} credentials Credentials object (TBD)
+     * @return {Client} Returns a new ERMrest.Client instance.
      * @desc
-     * See Catalog.Service.
+     * ERMrest client factory creates ERMrest.Client instances.
      */
-    function service(uri, credentials) {
-        return new Service(uri, credentials);
+    function createClient(http, uri, credentials) {
+        return new Client(http, uri, credentials);
     }
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} uri URI of the service.
+     * @param {Object} http Angular $http service object
+     * @param {String} uri URI of the client.
      * @param {Object} credentials TBD credentials object
      * @desc
-     * Represents the ERMrest service endpoint. This is completely TBD. There
+     * Represents the ERMrest client endpoint. This is completely TBD. There
      * will be bootstrapping the connection, figuring out what credentials are
      * even needed, then how to establish those credentials etc. This may not
      * even be the right place to do this. There may be some other class needed
      * represent all of that etc.
      */
-    function Service(uri, credentials) {
+    function Client(http, uri, credentials) {
+        if (http === undefined || http === null)
+            throw "http undefined or null"
         if (uri === undefined || uri === null)
-            throw "URI not defined or null";
+            throw "URI undefined or null";
+        this.http = http;
         this.uri = uri;
         this.credentials = credentials;
     }
@@ -68,20 +73,29 @@ var ERMrest = (function () {
     /** 
      * @var
      * @desc
-     * The URI of the Service.
+     * Instance of Angular $http service.
      */
-    Service.prototype.uri = null;
+    Client.prototype.http = null;
+
+    /** 
+     * @var
+     * @desc
+     * The URI of the ERMrest service.
+     */
+    Client.prototype.uri = null;
 
     /**
      * @function
      * @param {String} id Identifier of a catalog within the context of a
-     * service.
+     * client connection to an ERMrest service.
      * @desc
-     * Returns an interface to a catalog resource located on this service.
-     * This function returns immediately, and it does not validate that the
-     * catalog exists.
+     * Returns an interface to a Catalog object representing the catalog
+     * resource on the service.
+     *
+     * TBD: should this return immediately, without validating that the
+     * catalog exists on the server?
      */
-    Service.prototype.catalog = function (id) {
+    Client.prototype.lookupCatalog = function (id) {
         if (id === undefined || id === null)
             throw "ID is undefined or nul";
         return new Catalog(this, id); 
@@ -90,19 +104,16 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Service} service The ERMrest.Service this Catalog belongs to.
+     * @param {Client} client The ERMrest.Client connection.
      * @param {String} id Identifier of a catalog within the context of a
      * service.
      * @desc
-     * The hidden constructor for the Catalog. In the object model, it 
-     * represents an ERMrest Catalog.
+     * Constructor for the Catalog.
      */
-    function Catalog (service, id) {
-        this.service_ = service;
+    function Catalog (client, id) {
+        this.client = client;
+        this.uri = client.uri + "/catalog/" + id;
         this.id = id;
-        this.props = null;
-        this.model = null;
-        this.uri_ = service.uri + "/catalog/" + id;
     }
 
     /** 
@@ -112,82 +123,15 @@ var ERMrest = (function () {
     Catalog.prototype.id = null;
 
     /**
-     * @var
-     * @desc Properties of the catalog.
-     *
-     * In ERMrest, we currently provide access to these under the "meta" API.
-     * But we've talked of changing that to a different term like "properties"
-     * or "props".
-     */
-    Catalog.prototype.props = null;
-
-    /**
-     * @var
-     * @desc The introspected data model of the Catalog or null. TBD This
-     * may be something that looks like a dictionary of Schema objects.
-     *
-     * ```javascript
-     *   { schema_name: schema_object ...}
-     * ```
-     */
-    Catalog.prototype.model = null;
-
-    /**
      * @function
      * @return {Promise} Returns a Promise.
      * @desc
-     * An asynchronous method that returns a promise. If fulfilled, the
-     * Catalog's details will be defined (i.e., it's model and props).
+     * An asynchronous method that returns a promise. If fulfilled, 
+     * it gets the schemas of the catalog.
      */
-    Catalog.prototype.get = function () {
+    Catalog.prototype.getSchemas = function () {
         // TODO this needs to process the results not just return raw json to client.
-        return http.get(this.uri_);
-    };
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled, the
-     * Catalog's details will be defined (i.e., it's model and props).
-     */
-    Catalog.prototype.introspect = function () {
-        // TODO this needs to process the results not just return raw json to client.
-        return http.get(this.uri_ + "/schema");
-    };
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled, the 
-     * Catalog will be removed **from the Server** and **all data will be
-     * permanently removed**.
-     */
-    Catalog.prototype.remove = function () {};
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled, the 
-     * Catalog will be created. TBD: should its state (model, props,...) also
-     * be defined?
-     */
-    Catalog.prototype.create = function () {};
-
-    /**
-     * @function
-     * @param {String} name The name of the schema.
-     * @desc
-     * Returns a new instance of a Schema object. The Schema may not be
-     * bound to a real resource. The most likely (TBD only?) reason to
-     * use this method is to create an unbound Schema object that can
-     * be used to create a new schema. Clients should get Schema objects
-     * from the Catalog.model.
-     */
-    Catalog.prototype.schema = function (name) {
-        return new Schema(this, name);
+        return this.client.http.get(this.uri_ + "/schema");
     };
 
     /**
@@ -196,10 +140,10 @@ var ERMrest = (function () {
      * @param {Catalog} catalog The catalog the schema belongs to.
      * @param {String} name The name of the schema.
      * @desc
-     * Creates an instance of the Schema object.
+     * Constructor for the Schema.
      */
     function Schema(catalog, name) {
-        this.catalog_ = catalog;
+        this.catalog = catalog;
         this.name = name;
     }
 
@@ -208,34 +152,6 @@ var ERMrest = (function () {
      * @desc The name of the schema.
      */
     Schema.prototype.name = null;
-
-    /**
-     * @var
-     * @desc TBD, likely something that looks like a dictionary.
-     *
-     * ```javascript
-     *   { table_name: table_object ...}
-     * ```
-     */
-    Schema.prototype.tables = null;
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * Asynchronous function that attempts to create a new Schema.
-     */
-    Schema.prototype.create = function () {};
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * Asynchronous function that attempts to remove a Schema from the Catalog.
-     * IMPORTANT: If successful, the Schema and **all** data in it will be 
-     * removed from the Catalog.
-     */
-    Schema.prototype.remove = function () {};
 
     /**
      * @function
@@ -247,7 +163,7 @@ var ERMrest = (function () {
      * be used to create a new table. Clients should get Table objects
      * from the Catalog.model.
      */
-    Schema.prototype.table = function (name) {
+    Schema.prototype.lookupTable = function (name) {
         return new Table(this, name);
     };
 
@@ -260,10 +176,10 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function Table(schema, name) {
-        this.schema_ = schema;
+        this.schema = schema;
         this.name = name;
         this.cols = null;
-        this.key = null;
+        this.keys = null;
         this.annotations = null;
     }
 
@@ -275,47 +191,21 @@ var ERMrest = (function () {
 
     /**
      * @var
-     * @desc TBD, likely something that looks like a dictionary.
-     *
-     * ```javascript
-     *   { column_name: column_object ...}
-     * ```
+     * @desc list of column definitions.
      */
     Table.prototype.cols = null;
 
     /**
      * @var
-     * @desc an ordered list of columns (or column names?) that make up the key.
-     *
-     * ```javascript
-     *   [ column+ ]
-     * ```
+     * @desc list of keys of the table.
      */
-    Table.prototype.key = null;
+    Table.prototype.keys = null;
 
     /**
      * @var
-     * @desc a list or dictionary of annotation objects
+     * @desc a list or dictionary of annotation objects.
      */
     Table.prototype.annotations = null;
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * Asynchronous function that attempts to create a new Table.
-     */
-    Table.prototype.create = function () {};
-
-    /**
-     * @function
-     * @return {Promise} Returns a Promise.
-     * @desc
-     * Asynchronous function that attempts to remove a Table from the Catalog.
-     * IMPORTANT: If successful, the Table and **all** data in it will be 
-     * removed from the Catalog.
-     */
-    Table.prototype.remove = function () {};
 
     /**
      * @private
