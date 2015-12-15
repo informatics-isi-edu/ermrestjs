@@ -10,48 +10,39 @@ to use for ERMrest JavaScript agents.
 **Kind**: global namespace  
 
 * [ERMrest](#ERMrest) : <code>object</code>
-  * [.Service](#ERMrest.Service)
-    * [new Service(uri, credentials)](#new_ERMrest.Service_new)
-    * [.uri](#ERMrest.Service+uri)
-    * [.catalog(id)](#ERMrest.Service+catalog)
+  * [.Client](#ERMrest.Client)
+    * [new Client(uri, credentials)](#new_ERMrest.Client_new)
+    * [.uri](#ERMrest.Client+uri)
+    * [.lookupCatalog(id)](#ERMrest.Client+lookupCatalog)
   * [.Catalog](#ERMrest.Catalog)
-    * [new Catalog(service, id)](#new_ERMrest.Catalog_new)
+    * [new Catalog(client, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id)
-    * [.props](#ERMrest.Catalog+props)
-    * [.model](#ERMrest.Catalog+model)
-    * [.get()](#ERMrest.Catalog+get) ⇒ <code>Promise</code>
-    * [.remove()](#ERMrest.Catalog+remove) ⇒ <code>Promise</code>
-    * [.create()](#ERMrest.Catalog+create) ⇒ <code>Promise</code>
-    * [.schema(name)](#ERMrest.Catalog+schema)
+    * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Promise</code>
   * [.Schema](#ERMrest.Schema)
     * [new Schema(catalog, name)](#new_ERMrest.Schema_new)
     * [.name](#ERMrest.Schema+name)
-    * [.tables](#ERMrest.Schema+tables)
-    * [.create()](#ERMrest.Schema+create) ⇒ <code>Promise</code>
-    * [.remove()](#ERMrest.Schema+remove) ⇒ <code>Promise</code>
-    * [.table(name)](#ERMrest.Schema+table)
+    * [.lookupTable(name)](#ERMrest.Schema+lookupTable)
   * [.Table](#ERMrest.Table)
     * [new Table(schema, name)](#new_ERMrest.Table_new)
     * [.name](#ERMrest.Table+name)
     * [.cols](#ERMrest.Table+cols)
-    * [.key](#ERMrest.Table+key)
+    * [.keys](#ERMrest.Table+keys)
     * [.annotations](#ERMrest.Table+annotations)
-    * [.create()](#ERMrest.Table+create) ⇒ <code>Promise</code>
-    * [.remove()](#ERMrest.Table+remove) ⇒ <code>Promise</code>
-  * [.service(uri, credentials)](#ERMrest.service) ⇒ <code>Service</code>
+  * [.configure(http)](#ERMrest.configure)
+  * [.createClient(uri, credentials)](#ERMrest.createClient) ⇒ <code>Client</code>
 
-<a name="ERMrest.Service"></a>
-### ERMrest.Service
+<a name="ERMrest.Client"></a>
+### ERMrest.Client
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
-* [.Service](#ERMrest.Service)
-  * [new Service(uri, credentials)](#new_ERMrest.Service_new)
-  * [.uri](#ERMrest.Service+uri)
-  * [.catalog(id)](#ERMrest.Service+catalog)
+* [.Client](#ERMrest.Client)
+  * [new Client(uri, credentials)](#new_ERMrest.Client_new)
+  * [.uri](#ERMrest.Client+uri)
+  * [.lookupCatalog(id)](#ERMrest.Client+lookupCatalog)
 
-<a name="new_ERMrest.Service_new"></a>
-#### new Service(uri, credentials)
-Represents the ERMrest service endpoint. This is completely TBD. There
+<a name="new_ERMrest.Client_new"></a>
+#### new Client(uri, credentials)
+Represents the ERMrest client endpoint. This is completely TBD. There
 will be bootstrapping the connection, figuring out what credentials are
 even needed, then how to establish those credentials etc. This may not
 even be the right place to do this. There may be some other class needed
@@ -60,49 +51,45 @@ represent all of that etc.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | URI of the service. |
+| uri | <code>String</code> | URI of the client. |
 | credentials | <code>Object</code> | TBD credentials object |
 
-<a name="ERMrest.Service+uri"></a>
-#### service.uri
-The URI of the Service.
+<a name="ERMrest.Client+uri"></a>
+#### client.uri
+The URI of the ERMrest service.
 
-**Kind**: instance property of <code>[Service](#ERMrest.Service)</code>  
-<a name="ERMrest.Service+catalog"></a>
-#### service.catalog(id)
-Returns an interface to a catalog resource located on this service.
-This function returns immediately, and it does not validate that the
-catalog exists.
+**Kind**: instance property of <code>[Client](#ERMrest.Client)</code>  
+<a name="ERMrest.Client+lookupCatalog"></a>
+#### client.lookupCatalog(id)
+Returns an interface to a Catalog object representing the catalog
+resource on the service.
 
-**Kind**: instance method of <code>[Service](#ERMrest.Service)</code>  
+TBD: should this return immediately, without validating that the
+catalog exists on the server?
+
+**Kind**: instance method of <code>[Client](#ERMrest.Client)</code>  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| id | <code>String</code> | Identifier of a catalog within the context of a service. |
+| id | <code>String</code> | Identifier of a catalog within the context of a client connection to an ERMrest service. |
 
 <a name="ERMrest.Catalog"></a>
 ### ERMrest.Catalog
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Catalog](#ERMrest.Catalog)
-  * [new Catalog(service, id)](#new_ERMrest.Catalog_new)
+  * [new Catalog(client, id)](#new_ERMrest.Catalog_new)
   * [.id](#ERMrest.Catalog+id)
-  * [.props](#ERMrest.Catalog+props)
-  * [.model](#ERMrest.Catalog+model)
-  * [.get()](#ERMrest.Catalog+get) ⇒ <code>Promise</code>
-  * [.remove()](#ERMrest.Catalog+remove) ⇒ <code>Promise</code>
-  * [.create()](#ERMrest.Catalog+create) ⇒ <code>Promise</code>
-  * [.schema(name)](#ERMrest.Catalog+schema)
+  * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
-#### new Catalog(service, id)
-The hidden constructor for the Catalog. In the object model, it 
-represents an ERMrest Catalog.
+#### new Catalog(client, id)
+Constructor for the Catalog.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| service | <code>Service</code> | The ERMrest.Service this Catalog belongs to. |
+| client | <code>Client</code> | The ERMrest.Client connection. |
 | id | <code>String</code> | Identifier of a catalog within the context of a service. |
 
 <a name="ERMrest.Catalog+id"></a>
@@ -110,62 +97,13 @@ represents an ERMrest Catalog.
 Identifier of the Catalog.
 
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
-<a name="ERMrest.Catalog+props"></a>
-#### catalog.props
-Properties of the catalog.
-
-In ERMrest, we currently provide access to these under the "meta" API.
-But we've talked of changing that to a different term like "properties"
-or "props".
-
-**Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
-<a name="ERMrest.Catalog+model"></a>
-#### catalog.model
-The introspected data model of the Catalog or null. TBD This
-may be something that looks like a dictionary of Schema objects.
-
-```javascript
-  { schema_name: schema_object ...}
-```
-
-**Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
-<a name="ERMrest.Catalog+get"></a>
-#### catalog.get() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled, the
-Catalog's details will be defined (i.e., it's model and props).
+<a name="ERMrest.Catalog+getSchemas"></a>
+#### catalog.getSchemas() ⇒ <code>Promise</code>
+An asynchronous method that returns a promise. If fulfilled, 
+it gets the schemas of the catalog.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
 **Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Catalog+remove"></a>
-#### catalog.remove() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled, the 
-Catalog will be removed **from the Server** and **all data will be
-permanently removed**.
-
-**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Catalog+create"></a>
-#### catalog.create() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled, the 
-Catalog will be created. TBD: should its state (model, props,...) also
-be defined?
-
-**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Catalog+schema"></a>
-#### catalog.schema(name)
-Returns a new instance of a Schema object. The Schema may not be
-bound to a real resource. The most likely (TBD only?) reason to
-use this method is to create an unbound Schema object that can
-be used to create a new schema. Clients should get Schema objects
-from the Catalog.model.
-
-**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| name | <code>String</code> | The name of the schema. |
-
 <a name="ERMrest.Schema"></a>
 ### ERMrest.Schema
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
@@ -173,14 +111,11 @@ from the Catalog.model.
 * [.Schema](#ERMrest.Schema)
   * [new Schema(catalog, name)](#new_ERMrest.Schema_new)
   * [.name](#ERMrest.Schema+name)
-  * [.tables](#ERMrest.Schema+tables)
-  * [.create()](#ERMrest.Schema+create) ⇒ <code>Promise</code>
-  * [.remove()](#ERMrest.Schema+remove) ⇒ <code>Promise</code>
-  * [.table(name)](#ERMrest.Schema+table)
+  * [.lookupTable(name)](#ERMrest.Schema+lookupTable)
 
 <a name="new_ERMrest.Schema_new"></a>
 #### new Schema(catalog, name)
-Creates an instance of the Schema object.
+Constructor for the Schema.
 
 
 | Param | Type | Description |
@@ -193,31 +128,8 @@ Creates an instance of the Schema object.
 The name of the schema.
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
-<a name="ERMrest.Schema+tables"></a>
-#### schema.tables
-TBD, likely something that looks like a dictionary.
-
-```javascript
-  { table_name: table_object ...}
-```
-
-**Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
-<a name="ERMrest.Schema+create"></a>
-#### schema.create() ⇒ <code>Promise</code>
-Asynchronous function that attempts to create a new Schema.
-
-**Kind**: instance method of <code>[Schema](#ERMrest.Schema)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Schema+remove"></a>
-#### schema.remove() ⇒ <code>Promise</code>
-Asynchronous function that attempts to remove a Schema from the Catalog.
-IMPORTANT: If successful, the Schema and **all** data in it will be 
-removed from the Catalog.
-
-**Kind**: instance method of <code>[Schema](#ERMrest.Schema)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Schema+table"></a>
-#### schema.table(name)
+<a name="ERMrest.Schema+lookupTable"></a>
+#### schema.lookupTable(name)
 Returns a new instance of a Table object. The Table may not be
 bound to a real resource. The most likely (TBD only?) reason to
 use this method is to create an unbound Table object that can
@@ -238,10 +150,8 @@ from the Catalog.model.
   * [new Table(schema, name)](#new_ERMrest.Table_new)
   * [.name](#ERMrest.Table+name)
   * [.cols](#ERMrest.Table+cols)
-  * [.key](#ERMrest.Table+key)
+  * [.keys](#ERMrest.Table+keys)
   * [.annotations](#ERMrest.Table+annotations)
-  * [.create()](#ERMrest.Table+create) ⇒ <code>Promise</code>
-  * [.remove()](#ERMrest.Table+remove) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table_new"></a>
 #### new Table(schema, name)
@@ -260,50 +170,40 @@ The name of the table.
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+cols"></a>
 #### table.cols
-TBD, likely something that looks like a dictionary.
-
-```javascript
-  { column_name: column_object ...}
-```
+list of column definitions.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-<a name="ERMrest.Table+key"></a>
-#### table.key
-an ordered list of columns (or column names?) that make up the key.
-
-```javascript
-  [ column+ ]
-```
+<a name="ERMrest.Table+keys"></a>
+#### table.keys
+list of keys of the table.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+annotations"></a>
 #### table.annotations
-a list or dictionary of annotation objects
+a list or dictionary of annotation objects.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-<a name="ERMrest.Table+create"></a>
-#### table.create() ⇒ <code>Promise</code>
-Asynchronous function that attempts to create a new Table.
-
-**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.Table+remove"></a>
-#### table.remove() ⇒ <code>Promise</code>
-Asynchronous function that attempts to remove a Table from the Catalog.
-IMPORTANT: If successful, the Table and **all** data in it will be 
-removed from the Catalog.
-
-**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
-**Returns**: <code>Promise</code> - Returns a Promise.  
-<a name="ERMrest.service"></a>
-### ERMrest.service(uri, credentials) ⇒ <code>Service</code>
-See Catalog.Service.
+<a name="ERMrest.configure"></a>
+### ERMrest.configure(http)
+This function is used to configure the module.
+The module expects the http service to implement the
+interface defined by the AngularJS 1.x $http service.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
-**Returns**: <code>Service</code> - Returns a new Catalog.Service instance.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>Service</code> | URI of the service. |
-| credentials | <code>Object</code> | TBD credentials object |
+| http | <code>Object</code> | Angular $http service object |
+
+<a name="ERMrest.createClient"></a>
+### ERMrest.createClient(uri, credentials) ⇒ <code>Client</code>
+ERMrest client factory creates ERMrest.Client instances.
+
+**Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
+**Returns**: <code>Client</code> - Returns a new ERMrest.Client instance.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>String</code> | URI of the ERMrest service. |
+| credentials | <code>Object</code> | Credentials object (TBD) |
 

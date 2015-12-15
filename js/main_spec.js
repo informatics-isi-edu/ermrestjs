@@ -132,3 +132,52 @@ describe('ERMrest', function(){
 
 });
 
+
+/**
+ * @var http
+ * @desc
+ * This is a small utility of http routines that promisify XMLHttpRequest.
+ */
+var http = {
+
+    /**
+     * @private
+     * @function
+     * @param {String} url Location of the resource.
+     * @return {Promise} Returns a promise object.
+     * @desc
+     * Gets a representation of the resource at 'url'. This function treats
+     * only HTTP 200 as a successful response.
+     */
+    get: function (url) {
+
+        return new Promise( function( resolve, reject ) {
+            var err;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                // debug statements (to be removed)
+                //console.log("readyState == " + xhr.readyState);
+                //console.log("status == " + xhr.status);
+                //console.log("response == " + xhr.responseText);
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(xhr.responseText);
+                    }
+                    else if (xhr.status === 0) {
+                        err = Error("Network error");
+                        err.status = 0;
+                        reject(err);
+                    }
+                    else {
+                        err = Error(xhr.responseText);
+                        err.status = xhr.status;
+                        reject(err);
+                    }
+                }
+            };
+            xhr.open('GET', url);
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.send();
+        });
+    }
+};

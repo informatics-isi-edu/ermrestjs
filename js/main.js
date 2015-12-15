@@ -31,26 +31,51 @@ var ERMrest = (function () {
      * @private
      * @desc This is the state of the module.
      */
-    var module = { client: client };
+    var module = {
+        configure: configure,
+        clientFactory: {
+            create: createClient
+        }
+    };
+
+    /**
+     * @private
+     * @var http_
+     * @desc
+     * The http serviced used by this module. This is private and not
+     * visible to users of the module.
+     */
+    var http_ = null;
 
     /**
      * @memberof ERMrest
      * @function
      * @param {Object} http Angular $http service object
+     * @desc
+     * This function is used to configure the module.
+     * The module expects the http service to implement the
+     * interface defined by the AngularJS 1.x $http service.
+     */
+    function configure(http) {
+        http_ = http;
+    }
+
+    /**
+     * @memberof ERMrest
+     * @function
      * @param {String} uri URI of the ERMrest service.
      * @param {Object} credentials Credentials object (TBD)
      * @return {Client} Returns a new ERMrest.Client instance.
      * @desc
      * ERMrest client factory creates ERMrest.Client instances.
      */
-    function createClient(http, uri, credentials) {
-        return new Client(http, uri, credentials);
+    function createClient(uri, credentials) {
+        return new Client(uri, credentials);
     }
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Object} http Angular $http service object
      * @param {String} uri URI of the client.
      * @param {Object} credentials TBD credentials object
      * @desc
@@ -60,22 +85,12 @@ var ERMrest = (function () {
      * even be the right place to do this. There may be some other class needed
      * represent all of that etc.
      */
-    function Client(http, uri, credentials) {
-        if (http === undefined || http === null)
-            throw "http undefined or null"
+    function Client(uri, credentials) {
         if (uri === undefined || uri === null)
             throw "URI undefined or null";
-        this.http = http;
         this.uri = uri;
         this.credentials = credentials;
     }
-
-    /** 
-     * @var
-     * @desc
-     * Instance of Angular $http service.
-     */
-    Client.prototype.http = null;
 
     /** 
      * @var
@@ -131,7 +146,7 @@ var ERMrest = (function () {
      */
     Catalog.prototype.getSchemas = function () {
         // TODO this needs to process the results not just return raw json to client.
-        return this.client.http.get(this.uri_ + "/schema");
+        return http_.get(this.uri_ + "/schema");
     };
 
     /**
@@ -206,56 +221,6 @@ var ERMrest = (function () {
      * @desc a list or dictionary of annotation objects.
      */
     Table.prototype.annotations = null;
-
-    /**
-     * @private
-     * @var http
-     * @desc
-     * This is a small utility of http routines that promisify XMLHttpRequest.
-     */
-    var http = {
-
-        /**
-         * @private
-         * @function
-         * @param {String} url Location of the resource.
-         * @return {Promise} Returns a promise object.
-         * @desc
-         * Gets a representation of the resource at 'url'. This function treats
-         * only HTTP 200 as a successful response.
-         */
-        get: function (url) {
-
-            return new Promise( function( resolve, reject ) {
-                var err;
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
-                    // debug statements (to be removed)
-                    //console.log("readyState == " + xhr.readyState);
-                    //console.log("status == " + xhr.status);
-                    //console.log("response == " + xhr.responseText);
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            resolve(xhr.responseText);
-                        }
-                        else if (xhr.status === 0) {
-                            err = Error("Network error");
-                            err.status = 0;
-                            reject(err);
-                        }
-                        else {
-                            err = Error(xhr.responseText);
-                            err.status = xhr.status;
-                            reject(err);
-                        }
-                    }
-                };
-                xhr.open('GET', url);
-                xhr.setRequestHeader("Accept", "application/json");
-                xhr.send();
-            });
-        }
-    };
 
     return module;
 })();
