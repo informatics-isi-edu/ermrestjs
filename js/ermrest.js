@@ -266,9 +266,8 @@ var ERMrest = (function () {
      * @desc
      * Returns a filtered table based on this table.
      */
-    Table.prototype.getFilteredTable = function (table, filters) {
-        // TODO create filtered table here
-        return null;
+    Table.prototype.getFilteredTable = function (filters) {
+        return new FilteredTable(this, filters);
     };
 
     /**
@@ -282,6 +281,25 @@ var ERMrest = (function () {
         // TODO this needs to process the results not just return raw json to client.
         return null; // TODO
     };
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Schema} schema The schema that the table belongs to.
+     * @param {Object} jsonTable The raw json of the table returned by ERMrest.
+     * @desc
+     * Creates an instance of the Table object.
+     */
+    function FilteredTable(table, filters) {
+        this._uri = table._uri + "ADD FILTERS";
+        this.name = table.name;
+        this.columns = table.columns;
+        this.keys = table.keys;
+        this.annotations = table.annotations;
+    }
+
+    FilteredTable.prototype = Object.create(Table.prototype);
+    FilteredTable.prototype.constructor = FilteredTable;
 
     return module;
 })();
