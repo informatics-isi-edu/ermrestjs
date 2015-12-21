@@ -17,7 +17,7 @@ BOWER=bower_components
 
 # JavaScript source and test specs
 JS=js
-SOURCE=$(JS)/main.js
+SOURCE=$(JS)/ermrest.js
 SPECS=$(JS)/main_spec.js
 
 # Distribution target

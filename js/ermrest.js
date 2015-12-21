@@ -17,7 +17,7 @@
 /**
  * @namespace ERMrest
  * @desc
- * The ERMrest module is a JavaScript client library for the ERMrest 
+ * The ERMrest module is a JavaScript client library for the ERMrest
  * service.
  *
  * IMPORTANT NOTE: This module is a work in progress.
@@ -92,7 +92,7 @@ var ERMrest = (function () {
         this.credentials = credentials;
     }
 
-    /** 
+    /**
      * @var
      * @desc
      * The URI of the ERMrest service.
@@ -110,10 +110,10 @@ var ERMrest = (function () {
      * TBD: should this return immediately, without validating that the
      * catalog exists on the server?
      */
-    Client.prototype.lookupCatalog = function (id) {
+    Client.prototype.bind = function (id) {
         if (id === undefined || id === null)
             throw "ID is undefined or nul";
-        return new Catalog(this, id); 
+        return new Catalog(this, id);
     };
 
     /**
@@ -131,8 +131,8 @@ var ERMrest = (function () {
         this.id = id;
     }
 
-    /** 
-     * @var 
+    /**
+     * @var
      * @desc Identifier of the Catalog.
      */
     Catalog.prototype.id = null;
@@ -141,7 +141,7 @@ var ERMrest = (function () {
      * @function
      * @return {Promise} Returns a Promise.
      * @desc
-     * An asynchronous method that returns a promise. If fulfilled, 
+     * An asynchronous method that returns a promise. If fulfilled,
      * it gets the schemas of the catalog.
      */
     Catalog.prototype.getSchemas = function () {
@@ -224,4 +224,3 @@ var ERMrest = (function () {
 
     return module;
 })();
-

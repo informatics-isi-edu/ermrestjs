@@ -1,6 +1,6 @@
 <a name="ERMrest"></a>
 ## ERMrest : <code>object</code>
-The ERMrest module is a JavaScript client library for the ERMrest 
+The ERMrest module is a JavaScript client library for the ERMrest
 service.
 
 IMPORTANT NOTE: This module is a work in progress.
@@ -13,7 +13,7 @@ to use for ERMrest JavaScript agents.
   * [.Client](#ERMrest.Client)
     * [new Client(uri, credentials)](#new_ERMrest.Client_new)
     * [.uri](#ERMrest.Client+uri)
-    * [.lookupCatalog(id)](#ERMrest.Client+lookupCatalog)
+    * [.bind(id)](#ERMrest.Client+bind)
   * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(client, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id)
@@ -38,7 +38,7 @@ to use for ERMrest JavaScript agents.
 * [.Client](#ERMrest.Client)
   * [new Client(uri, credentials)](#new_ERMrest.Client_new)
   * [.uri](#ERMrest.Client+uri)
-  * [.lookupCatalog(id)](#ERMrest.Client+lookupCatalog)
+  * [.bind(id)](#ERMrest.Client+bind)
 
 <a name="new_ERMrest.Client_new"></a>
 #### new Client(uri, credentials)
@@ -59,8 +59,8 @@ represent all of that etc.
 The URI of the ERMrest service.
 
 **Kind**: instance property of <code>[Client](#ERMrest.Client)</code>  
-<a name="ERMrest.Client+lookupCatalog"></a>
-#### client.lookupCatalog(id)
+<a name="ERMrest.Client+bind"></a>
+#### client.bind(id)
 Returns an interface to a Catalog object representing the catalog
 resource on the service.
 
@@ -99,7 +99,7 @@ Identifier of the Catalog.
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+getSchemas"></a>
 #### catalog.getSchemas() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled, 
+An asynchronous method that returns a promise. If fulfilled,
 it gets the schemas of the catalog.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
