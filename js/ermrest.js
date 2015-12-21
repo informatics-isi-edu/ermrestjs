@@ -105,6 +105,7 @@ var ERMrest = (function () {
             throw "URI undefined or null";
         this.uri = uri;
         this.credentials = credentials;
+        this._catalogs = {}; // consider "private"
     }
 
     /**
@@ -125,7 +126,12 @@ var ERMrest = (function () {
     Client.prototype.getCatalog = function (id) {
         if (id === undefined || id === null)
             throw "ID is undefined or nul";
-        return new Catalog(this, id);
+        catalog = this._catalogs[id];
+        if (! catalog) {
+            catalog = new Catalog(this, id);
+            this._catalogs[id] = catalog;
+        }
+        return catalog;
     };
 
     /**
@@ -139,7 +145,7 @@ var ERMrest = (function () {
      */
     function Catalog (client, id) {
         this.client = client;
-        this.catalogID = id;
+        this.id = id;
         this._uri = client.uri + "/catalog/" + id;
         this._schemas = null; // consider this "private"
     }
@@ -148,7 +154,7 @@ var ERMrest = (function () {
      * @var
      * @desc Identifier of the Catalog.
      */
-    Catalog.prototype.catalogID = null;
+    Catalog.prototype.id = null;
 
     /**
      * @function
