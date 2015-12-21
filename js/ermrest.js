@@ -34,18 +34,26 @@ var ERMrest = (function () {
     var module = {
         configure: configure,
         clientFactory: {
-            create: createClient
+            getClient: getClient
         }
     };
 
     /**
      * @private
-     * @var http_
+     * @var _clients
      * @desc
-     * The http serviced used by this module. This is private and not
+     * Internal collection of ERMrest clients.
+     */
+    var _clients = {};
+
+    /**
+     * @private
+     * @var _http
+     * @desc
+     * The http service used by this module. This is private and not
      * visible to users of the module.
      */
-    var http_ = null;
+    var _http = null;
 
     /**
      * @memberof ERMrest
@@ -57,7 +65,7 @@ var ERMrest = (function () {
      * interface defined by the AngularJS 1.x $http service.
      */
     function configure(http) {
-        http_ = http;
+        _http = http;
     }
 
     /**
@@ -67,10 +75,17 @@ var ERMrest = (function () {
      * @param {Object} credentials Credentials object (TBD)
      * @return {Client} Returns a new ERMrest.Client instance.
      * @desc
-     * ERMrest client factory creates ERMrest.Client instances.
+     * ERMrest client factory creates or reuses ERMrest.Client instances. The
+     * URI should be to the ERMrest _service_. For example,
+     * `https://www.example.org/ermrest`.
      */
-    function createClient(uri, credentials) {
-        return new Client(uri, credentials);
+    function getClient(uri, credentials) {
+        cli = _clients[uri];
+        if (! cli) {
+            cli = new Client(uri, credentials);
+            _clients[uri] = cli;
+        }
+        return cli;
     }
 
     /**
@@ -106,11 +121,8 @@ var ERMrest = (function () {
      * @desc
      * Returns an interface to a Catalog object representing the catalog
      * resource on the service.
-     *
-     * TBD: should this return immediately, without validating that the
-     * catalog exists on the server?
      */
-    Client.prototype.bind = function (id) {
+    Client.prototype.getCatalog = function (id) {
         if (id === undefined || id === null)
             throw "ID is undefined or nul";
         return new Catalog(this, id);
@@ -127,39 +139,60 @@ var ERMrest = (function () {
      */
     function Catalog (client, id) {
         this.client = client;
-        this.uri = client.uri + "/catalog/" + id;
-        this.id = id;
+        this.catalogID = id;
+        this._uri = client.uri + "/catalog/" + id;
+        this._schemas = null; // consider this "private"
     }
 
     /**
      * @var
      * @desc Identifier of the Catalog.
      */
-    Catalog.prototype.id = null;
+    Catalog.prototype.catalogID = null;
 
     /**
      * @function
      * @return {Promise} Returns a Promise.
      * @desc
-     * An asynchronous method that returns a promise. If fulfilled,
-     * it gets the schemas of the catalog.
+     * An asynchronous method that returns a promise. If fulfilled, it gets the
+     * schemas of the catalog. This method should be called at least on the
+     * catalog object before using the rest of its methods.
+     */
+    Catalog.prototype.introspect = function () {
+        // TODO this needs to process the results not just return raw json to client.
+        // This method should:
+        //   1. make the http call to get the schemas.
+        //   2. do any processing it needs to do on the raw json returned by server
+        //   3. save a copy of the schemas in this._schemas
+        //   4. then return the schemas via the promise
+        return _http.get(this._uri + "/schema").then(function(response) {
+            return response.data;
+        });
+    };
+
+    /**
+     * @function
+     * @return {Object} Returns a dictionary of schemas.
+     * @desc
+     * A synchronous method that returns immediately.
      */
     Catalog.prototype.getSchemas = function () {
-        // TODO this needs to process the results not just return raw json to client.
-        return http_.get(this.uri_ + "/schema");
+        return this._schemas;
     };
 
     /**
      * @memberof ERMrest
      * @constructor
      * @param {Catalog} catalog The catalog the schema belongs to.
-     * @param {String} name The name of the schema.
+     * @param {Object} jsonSchema The raw json Schema returned by ERMrest.
      * @desc
      * Constructor for the Schema.
      */
-    function Schema(catalog, name) {
+    function Schema(catalog, jsonSchema) {
         this.catalog = catalog;
-        this.name = name;
+        this._uri = catalog._uri + "TODO";
+        this.name = null; // get the name out of the json
+        this._tables = {}; // dictionary of tables, keyed on table name
     }
 
     /**
@@ -172,29 +205,26 @@ var ERMrest = (function () {
      * @function
      * @param {String} name The name of the table.
      * @desc
-     * Returns a new instance of a Table object. The Table may not be
-     * bound to a real resource. The most likely (TBD only?) reason to
-     * use this method is to create an unbound Table object that can
-     * be used to create a new table. Clients should get Table objects
-     * from the Catalog.model.
+     * Returns a table from the schema.
      */
-    Schema.prototype.lookupTable = function (name) {
-        return new Table(this, name);
+    Schema.prototype.getTable = function (name) {
+        return this._table[name];
     };
 
     /**
      * @memberof ERMrest
      * @constructor
      * @param {Schema} schema The schema that the table belongs to.
-     * @param {String} name The name of the table.
+     * @param {Object} jsonTable The raw json of the table returned by ERMrest.
      * @desc
      * Creates an instance of the Table object.
      */
-    function Table(schema, name) {
-        this.schema = schema;
-        this.name = name;
-        this.cols = null;
-        this.keys = null;
+    function Table(schema, jsonTable) {
+        this._schema = schema;
+        this._uri = schema._uri + "TODO";
+        this.name = ""; // get name out of json
+        this.columns = null; // get from json
+        this.keys = null; // get from json
         this.annotations = null;
     }
 
@@ -208,7 +238,7 @@ var ERMrest = (function () {
      * @var
      * @desc list of column definitions.
      */
-    Table.prototype.cols = null;
+    Table.prototype.columns = null;
 
     /**
      * @var
@@ -221,6 +251,31 @@ var ERMrest = (function () {
      * @desc a list or dictionary of annotation objects.
      */
     Table.prototype.annotations = null;
+
+    /**
+     * @function
+     * @param {Object} table The base table.
+     * @param {Object} fitlers The filters.
+     * @return {Object} a filtered table instance.
+     * @desc
+     * Returns a filtered table based on this table.
+     */
+    Table.prototype.getFilteredTable = function (table, filters) {
+        // TODO create filtered table here
+        return null;
+    };
+
+    /**
+     * @function
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * An asynchronous method that returns a promise. If fulfilled, it gets the
+     * rows for this table.
+     */
+    Table.prototype.getRows = function () {
+        // TODO this needs to process the results not just return raw json to client.
+        return null; // TODO
+    };
 
     return module;
 })();
