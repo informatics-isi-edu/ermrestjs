@@ -13,23 +13,28 @@ to use for ERMrest JavaScript agents.
   * [.Client](#ERMrest.Client)
     * [new Client(uri, credentials)](#new_ERMrest.Client_new)
     * [.uri](#ERMrest.Client+uri)
-    * [.bind(id)](#ERMrest.Client+bind)
+    * [.getCatalog(id)](#ERMrest.Client+getCatalog)
   * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(client, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id)
-    * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Promise</code>
+    * [.introspect()](#ERMrest.Catalog+introspect) ⇒ <code>Promise</code>
+    * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Object</code>
   * [.Schema](#ERMrest.Schema)
-    * [new Schema(catalog, name)](#new_ERMrest.Schema_new)
+    * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
     * [.name](#ERMrest.Schema+name)
-    * [.lookupTable(name)](#ERMrest.Schema+lookupTable)
+    * [.getTable(name)](#ERMrest.Schema+getTable)
   * [.Table](#ERMrest.Table)
-    * [new Table(schema, name)](#new_ERMrest.Table_new)
+    * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
     * [.name](#ERMrest.Table+name)
-    * [.cols](#ERMrest.Table+cols)
+    * [.columns](#ERMrest.Table+columns)
     * [.keys](#ERMrest.Table+keys)
     * [.annotations](#ERMrest.Table+annotations)
+    * [.getFilteredTable(table, fitlers)](#ERMrest.Table+getFilteredTable) ⇒ <code>Object</code>
+    * [.getRows()](#ERMrest.Table+getRows) ⇒ <code>Promise</code>
+  * [.FilteredTable](#ERMrest.FilteredTable)
+    * [new FilteredTable(schema, jsonTable)](#new_ERMrest.FilteredTable_new)
   * [.configure(http)](#ERMrest.configure)
-  * [.createClient(uri, credentials)](#ERMrest.createClient) ⇒ <code>Client</code>
+  * [.getClient(uri, credentials)](#ERMrest.getClient) ⇒ <code>Client</code>
 
 <a name="ERMrest.Client"></a>
 ### ERMrest.Client
@@ -38,7 +43,7 @@ to use for ERMrest JavaScript agents.
 * [.Client](#ERMrest.Client)
   * [new Client(uri, credentials)](#new_ERMrest.Client_new)
   * [.uri](#ERMrest.Client+uri)
-  * [.bind(id)](#ERMrest.Client+bind)
+  * [.getCatalog(id)](#ERMrest.Client+getCatalog)
 
 <a name="new_ERMrest.Client_new"></a>
 #### new Client(uri, credentials)
@@ -59,13 +64,10 @@ represent all of that etc.
 The URI of the ERMrest service.
 
 **Kind**: instance property of <code>[Client](#ERMrest.Client)</code>  
-<a name="ERMrest.Client+bind"></a>
-#### client.bind(id)
+<a name="ERMrest.Client+getCatalog"></a>
+#### client.getCatalog(id)
 Returns an interface to a Catalog object representing the catalog
 resource on the service.
-
-TBD: should this return immediately, without validating that the
-catalog exists on the server?
 
 **Kind**: instance method of <code>[Client](#ERMrest.Client)</code>  
 
@@ -80,7 +82,8 @@ catalog exists on the server?
 * [.Catalog](#ERMrest.Catalog)
   * [new Catalog(client, id)](#new_ERMrest.Catalog_new)
   * [.id](#ERMrest.Catalog+id)
-  * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Promise</code>
+  * [.introspect()](#ERMrest.Catalog+introspect) ⇒ <code>Promise</code>
+  * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
 #### new Catalog(client, id)
@@ -97,44 +100,47 @@ Constructor for the Catalog.
 Identifier of the Catalog.
 
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
-<a name="ERMrest.Catalog+getSchemas"></a>
-#### catalog.getSchemas() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled,
-it gets the schemas of the catalog.
+<a name="ERMrest.Catalog+introspect"></a>
+#### catalog.introspect() ⇒ <code>Promise</code>
+An asynchronous method that returns a promise. If fulfilled, it gets the
+schemas of the catalog. This method should be called at least on the
+catalog object before using the rest of its methods.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
 **Returns**: <code>Promise</code> - Returns a Promise.  
+<a name="ERMrest.Catalog+getSchemas"></a>
+#### catalog.getSchemas() ⇒ <code>Object</code>
+A synchronous method that returns immediately.
+
+**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
+**Returns**: <code>Object</code> - Returns a dictionary of schemas.  
 <a name="ERMrest.Schema"></a>
 ### ERMrest.Schema
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Schema](#ERMrest.Schema)
-  * [new Schema(catalog, name)](#new_ERMrest.Schema_new)
+  * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
   * [.name](#ERMrest.Schema+name)
-  * [.lookupTable(name)](#ERMrest.Schema+lookupTable)
+  * [.getTable(name)](#ERMrest.Schema+getTable)
 
 <a name="new_ERMrest.Schema_new"></a>
-#### new Schema(catalog, name)
+#### new Schema(catalog, jsonSchema)
 Constructor for the Schema.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | catalog | <code>Catalog</code> | The catalog the schema belongs to. |
-| name | <code>String</code> | The name of the schema. |
+| jsonSchema | <code>Object</code> | The raw json Schema returned by ERMrest. |
 
 <a name="ERMrest.Schema+name"></a>
 #### schema.name
 The name of the schema.
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
-<a name="ERMrest.Schema+lookupTable"></a>
-#### schema.lookupTable(name)
-Returns a new instance of a Table object. The Table may not be
-bound to a real resource. The most likely (TBD only?) reason to
-use this method is to create an unbound Table object that can
-be used to create a new table. Clients should get Table objects
-from the Catalog.model.
+<a name="ERMrest.Schema+getTable"></a>
+#### schema.getTable(name)
+Returns a table from the schema.
 
 **Kind**: instance method of <code>[Schema](#ERMrest.Schema)</code>  
 
@@ -147,29 +153,31 @@ from the Catalog.model.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Table](#ERMrest.Table)
-  * [new Table(schema, name)](#new_ERMrest.Table_new)
+  * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
   * [.name](#ERMrest.Table+name)
-  * [.cols](#ERMrest.Table+cols)
+  * [.columns](#ERMrest.Table+columns)
   * [.keys](#ERMrest.Table+keys)
   * [.annotations](#ERMrest.Table+annotations)
+  * [.getFilteredTable(table, fitlers)](#ERMrest.Table+getFilteredTable) ⇒ <code>Object</code>
+  * [.getRows()](#ERMrest.Table+getRows) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table_new"></a>
-#### new Table(schema, name)
+#### new Table(schema, jsonTable)
 Creates an instance of the Table object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | schema | <code>Schema</code> | The schema that the table belongs to. |
-| name | <code>String</code> | The name of the table. |
+| jsonTable | <code>Object</code> | The raw json of the table returned by ERMrest. |
 
 <a name="ERMrest.Table+name"></a>
 #### table.name
 The name of the table.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-<a name="ERMrest.Table+cols"></a>
-#### table.cols
+<a name="ERMrest.Table+columns"></a>
+#### table.columns
 list of column definitions.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
@@ -183,6 +191,38 @@ list of keys of the table.
 a list or dictionary of annotation objects.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+getFilteredTable"></a>
+#### table.getFilteredTable(table, fitlers) ⇒ <code>Object</code>
+Returns a filtered table based on this table.
+
+**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
+**Returns**: <code>Object</code> - a filtered table instance.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>Object</code> | The base table. |
+| fitlers | <code>Object</code> | The filters. |
+
+<a name="ERMrest.Table+getRows"></a>
+#### table.getRows() ⇒ <code>Promise</code>
+An asynchronous method that returns a promise. If fulfilled, it gets the
+rows for this table.
+
+**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
+**Returns**: <code>Promise</code> - Returns a Promise.  
+<a name="ERMrest.FilteredTable"></a>
+### ERMrest.FilteredTable
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.FilteredTable_new"></a>
+#### new FilteredTable(schema, jsonTable)
+Creates an instance of the Table object.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| schema | <code>Schema</code> | The schema that the table belongs to. |
+| jsonTable | <code>Object</code> | The raw json of the table returned by ERMrest. |
+
 <a name="ERMrest.configure"></a>
 ### ERMrest.configure(http)
 This function is used to configure the module.
@@ -195,9 +235,11 @@ interface defined by the AngularJS 1.x $http service.
 | --- | --- | --- |
 | http | <code>Object</code> | Angular $http service object |
 
-<a name="ERMrest.createClient"></a>
-### ERMrest.createClient(uri, credentials) ⇒ <code>Client</code>
-ERMrest client factory creates ERMrest.Client instances.
+<a name="ERMrest.getClient"></a>
+### ERMrest.getClient(uri, credentials) ⇒ <code>Client</code>
+ERMrest client factory creates or reuses ERMrest.Client instances. The
+URI should be to the ERMrest _service_. For example,
+`https://www.example.org/ermrest`.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>Client</code> - Returns a new ERMrest.Client instance.  
