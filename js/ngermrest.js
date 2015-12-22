@@ -16,8 +16,8 @@
 
 var ermrestApp = angular.module("ermrestApp", []);
 
-ermrestApp.factory('ERMrestClientFactory', ['$http', function($http) {
-    ERMrest.configure($http);
+ermrestApp.factory('ERMrestClientFactory', ['$http', '$q', function($http, $q) {
+    ERMrest.configure($http, $q);
     return ERMrest.clientFactory;
 }]);
 
@@ -28,5 +28,12 @@ ermrestApp.controller('ermrestController', ['ERMrestClientFactory', function(ERM
     catalog = client.getCatalog(1);
     catalog.introspect().then(function(schemas) {
         console.log(schemas);
+        var table = schemas['legacy'].getTable('dataset');
+        console.log(table);
+        table.getRows().then(function(rows) {
+            console.log(rows);
+            var relatedTable = rows[0].getRelatedTable('legacy', 'dataset_data_type');
+            console.log(relatedTable);
+        });
     });
 }]);
