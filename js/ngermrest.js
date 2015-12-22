@@ -34,6 +34,11 @@ ermrestApp.controller('ermrestController', ['ERMrestClientFactory', function(ERM
             console.log(rows);
             var relatedTable = rows[0].getRelatedTable('legacy', 'dataset_data_type');
             console.log(relatedTable);
+            var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
+            console.log(filteredTable);
+            filteredTable.getRows().then(function(rows) {
+                console.log(rows);
+            });
         });
     });
 }]);

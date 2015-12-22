@@ -474,15 +474,30 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function FilteredTable(table, filters) {
-        this._uri = table._uri + "ADD FILTERS";
+        this._uri = table._uri;
+        for (var i = 0; i < filters.length; i++) {
+            this._uri = this._uri + "/" + filters[i];
+        }
+
+        this.filters = filters;
+        this.displayName = table.displayName;
         this.name = table.name;
+        this.hidden = table.hidden;
         this.columns = table.columns;
         this.keys = table.keys;
         this.annotations = table.annotations;
     }
 
     FilteredTable.prototype = Object.create(Table.prototype);
+
     FilteredTable.prototype.constructor = FilteredTable;
+
+    /**
+     * @var
+     * @desc
+     * Filters of the filtered table
+     */
+    FilteredTable.prototype.filters = {};
 
     return module;
 })();
