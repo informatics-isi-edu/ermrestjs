@@ -415,8 +415,8 @@ var ERMrest = (function () {
         }
 
         this.uri = table._uri;
-        for (var i = 0; i < keys.length; i++) {
-            this.uri = this.uri + "/" + keys[i] + "=" + jsonRow[keys[i]];
+        for (var k = 0; k < keys.length; k++) {
+            this.uri = this.uri + "/" + keys[k] + "=" + jsonRow[keys[k]];
         }
     }
 
