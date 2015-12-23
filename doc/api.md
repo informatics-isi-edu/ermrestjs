@@ -20,20 +20,34 @@ to use for ERMrest JavaScript agents.
     * [.introspect()](#ERMrest.Catalog+introspect) ⇒ <code>Promise</code>
     * [.getSchemas()](#ERMrest.Catalog+getSchemas) ⇒ <code>Object</code>
   * [.Schema](#ERMrest.Schema)
-    * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
+    * [new Schema(catalog, jsonSchemas)](#new_ERMrest.Schema_new)
     * [.name](#ERMrest.Schema+name)
     * [.getTable(name)](#ERMrest.Schema+getTable)
   * [.Table](#ERMrest.Table)
     * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
     * [.name](#ERMrest.Table+name)
+    * [.displayName](#ERMrest.Table+displayName)
+    * [.hidden](#ERMrest.Table+hidden)
     * [.columns](#ERMrest.Table+columns)
     * [.keys](#ERMrest.Table+keys)
     * [.annotations](#ERMrest.Table+annotations)
     * [.getFilteredTable(table, fitlers)](#ERMrest.Table+getFilteredTable) ⇒ <code>Object</code>
     * [.getRows()](#ERMrest.Table+getRows) ⇒ <code>Promise</code>
+  * [.Column](#ERMrest.Column)
+    * [new Column(name, column&#x27;s, whether)](#new_ERMrest.Column_new)
+    * [.name](#ERMrest.Column+name)
+    * [.displayName](#ERMrest.Column+displayName)
+    * [.hidden](#ERMrest.Column+hidden)
+  * [.Row](#ERMrest.Row)
+    * [new Row(parent, json)](#new_ERMrest.Row_new)
+    * [.uri](#ERMrest.Row+uri)
+    * [.getRelatedTable(schemaName, tableName)](#ERMrest.Row+getRelatedTable) ⇒ <code>Object</code>
+  * [.RelatedTable](#ERMrest.RelatedTable)
+    * [new RelatedTable(row, schemaName, tableName)](#new_ERMrest.RelatedTable_new)
   * [.FilteredTable](#ERMrest.FilteredTable)
     * [new FilteredTable(schema, jsonTable)](#new_ERMrest.FilteredTable_new)
-  * [.configure(http)](#ERMrest.configure)
+    * [.filters](#ERMrest.FilteredTable+filters)
+  * [.configure(http, q)](#ERMrest.configure)
   * [.getClient(uri, credentials)](#ERMrest.getClient) ⇒ <code>Client</code>
 
 <a name="ERMrest.Client"></a>
@@ -119,19 +133,19 @@ A synchronous method that returns immediately.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Schema](#ERMrest.Schema)
-  * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
+  * [new Schema(catalog, jsonSchemas)](#new_ERMrest.Schema_new)
   * [.name](#ERMrest.Schema+name)
   * [.getTable(name)](#ERMrest.Schema+getTable)
 
 <a name="new_ERMrest.Schema_new"></a>
-#### new Schema(catalog, jsonSchema)
+#### new Schema(catalog, jsonSchemas)
 Constructor for the Schema.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | catalog | <code>Catalog</code> | The catalog the schema belongs to. |
-| jsonSchema | <code>Object</code> | The raw json Schema returned by ERMrest. |
+| jsonSchemas | <code>Object</code> | The raw json Schema returned by ERMrest. |
 
 <a name="ERMrest.Schema+name"></a>
 #### schema.name
@@ -155,6 +169,8 @@ Returns a table from the schema.
 * [.Table](#ERMrest.Table)
   * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
   * [.name](#ERMrest.Table+name)
+  * [.displayName](#ERMrest.Table+displayName)
+  * [.hidden](#ERMrest.Table+hidden)
   * [.columns](#ERMrest.Table+columns)
   * [.keys](#ERMrest.Table+keys)
   * [.annotations](#ERMrest.Table+annotations)
@@ -173,6 +189,16 @@ Creates an instance of the Table object.
 
 <a name="ERMrest.Table+name"></a>
 #### table.name
+The name of the table.
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+displayName"></a>
+#### table.displayName
+The display name of the table.
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+hidden"></a>
+#### table.hidden
 The name of the table.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
@@ -210,9 +236,100 @@ rows for this table.
 
 **Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
 **Returns**: <code>Promise</code> - Returns a Promise.  
+<a name="ERMrest.Column"></a>
+### ERMrest.Column
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Column](#ERMrest.Column)
+  * [new Column(name, column&#x27;s, whether)](#new_ERMrest.Column_new)
+  * [.name](#ERMrest.Column+name)
+  * [.displayName](#ERMrest.Column+displayName)
+  * [.hidden](#ERMrest.Column+hidden)
+
+<a name="new_ERMrest.Column_new"></a>
+#### new Column(name, column&#x27;s, whether)
+Creates an instance of the Table object.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>name</code> | of the column |
+| column's | <code>displayName</code> | display name |
+| whether | <code>hidden</code> | this column is hidden or not |
+
+<a name="ERMrest.Column+name"></a>
+#### column.name
+name of the column
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+displayName"></a>
+#### column.displayName
+display name of the column
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+hidden"></a>
+#### column.hidden
+whether column is hidden or not
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Row"></a>
+### ERMrest.Row
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Row](#ERMrest.Row)
+  * [new Row(parent, json)](#new_ERMrest.Row_new)
+  * [.uri](#ERMrest.Row+uri)
+  * [.getRelatedTable(schemaName, tableName)](#ERMrest.Row+getRelatedTable) ⇒ <code>Object</code>
+
+<a name="new_ERMrest.Row_new"></a>
+#### new Row(parent, json)
+Creates an instance of the Table object.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| parent | <code>table</code> | table |
+| json | <code>rowData</code> | row data |
+
+<a name="ERMrest.Row+uri"></a>
+#### row.uri
+row uri
+
+**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
+<a name="ERMrest.Row+getRelatedTable"></a>
+#### row.getRelatedTable(schemaName, tableName) ⇒ <code>Object</code>
+Returns a related table based on this row.
+
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Returns**: <code>Object</code> - related table instance.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| schemaName | <code>String</code> | Schema name. |
+| tableName | <code>String</code> | Table name. |
+
+<a name="ERMrest.RelatedTable"></a>
+### ERMrest.RelatedTable
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.RelatedTable_new"></a>
+#### new RelatedTable(row, schemaName, tableName)
+Creates an instance of the Table object.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| row | <code>Object</code> | row object. |
+| schemaName | <code>String</code> | related schema name. |
+| tableName | <code>String</code> | related table name. |
+
 <a name="ERMrest.FilteredTable"></a>
 ### ERMrest.FilteredTable
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.FilteredTable](#ERMrest.FilteredTable)
+  * [new FilteredTable(schema, jsonTable)](#new_ERMrest.FilteredTable_new)
+  * [.filters](#ERMrest.FilteredTable+filters)
+
 <a name="new_ERMrest.FilteredTable_new"></a>
 #### new FilteredTable(schema, jsonTable)
 Creates an instance of the Table object.
@@ -223,8 +340,13 @@ Creates an instance of the Table object.
 | schema | <code>Schema</code> | The schema that the table belongs to. |
 | jsonTable | <code>Object</code> | The raw json of the table returned by ERMrest. |
 
+<a name="ERMrest.FilteredTable+filters"></a>
+#### filteredTable.filters
+Filters of the filtered table
+
+**Kind**: instance property of <code>[FilteredTable](#ERMrest.FilteredTable)</code>  
 <a name="ERMrest.configure"></a>
-### ERMrest.configure(http)
+### ERMrest.configure(http, q)
 This function is used to configure the module.
 The module expects the http service to implement the
 interface defined by the AngularJS 1.x $http service.
@@ -234,6 +356,7 @@ interface defined by the AngularJS 1.x $http service.
 | Param | Type | Description |
 | --- | --- | --- |
 | http | <code>Object</code> | Angular $http service object |
+| q | <code>Object</code> | Angular $q service object |
 
 <a name="ERMrest.getClient"></a>
 ### ERMrest.getClient(uri, credentials) ⇒ <code>Client</code>
