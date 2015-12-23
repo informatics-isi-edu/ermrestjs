@@ -37,7 +37,7 @@ LINT=.make-lint
 TEST=.make-test.js
 
 .PHONY: all
-all: build test $(DOC)
+all: build $(DOC)
 
 .PHONY: build
 build: $(PKG) $(MIN)
@@ -127,7 +127,7 @@ testem:
 help: usage
 usage:
 	@echo "Available 'make' targets:"
-	@echo "    all       - an alias for build"
+	@echo "    all       - runs build and doc"
 	@echo "    deps      - local install of node and bower dependencies"
 	@echo "    updeps    - update local dependencies"
 	@echo "    lint      - lint the source"
