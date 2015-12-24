@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" id="testApp" ng-app="ermrestApp">
-<head>
-    <meta charset="UTF-8">
-    <title>Ermrest API Test</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-    <script src='js/ermrest.js'></script>
-    <script src='js/ngtest.js'></script>
-</head>
-<body>
-<div ng-controller="ermrestController"></div>
-</body>
+<html lang="en" id="testApp" ng-app="testApp">
+    <head>
+        <meta charset="UTF-8">
+        <title>ERMrest API Test</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src='js/ermrest.js'></script>
+        <script src='js/ngermrest.js'></script>
+        <script src='js/ngtest.js'></script>
+    </head>
+    <body>
+        <h1>This is only a test!</h1>
+        <p>No status is displayed here.</p>
+        <div ng-controller="testController"></div>
+    </body>
 </html>

@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-var ermrestApp = angular.module("ermrestApp", []);
+angular.module('testApp', ['ERMrest'])
 
-ermrestApp.factory('ERMrestClientFactory', ['$http', '$q', function($http, $q) {
-    ERMrest.configure($http, $q);
-    return ERMrest.clientFactory;
-}]);
-
-ermrestApp.controller('ermrestController', ['ERMrestClientFactory', function(ERMrestClientFactory) {
-    client = ERMrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+.controller('testController', ['ermrestClientFactory', function(ermrestClientFactory) {
+    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
     console.log('Client Acquired');
     console.log(client);
     catalog = client.getCatalog(1);
