@@ -16,11 +16,10 @@
 
 angular.module('testApp', ['ERMrest'])
 
-.controller('testController', ['ermrestClientFactory', function(ermrestClientFactory) {
+.controller('testControllerFB', ['ermrestClientFactory', function(ermrestClientFactory) {
     client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
-    console.log('Client Acquired');
     console.log(client);
-    catalog = client.getCatalog(1);
+    catalog = client.getCatalog(1); // dev server catalog 1 => fb
     catalog.introspect().then(function(schemas) {
         console.log(schemas);
         var table = schemas['legacy'].getTable('dataset');
@@ -33,6 +32,33 @@ angular.module('testApp', ['ERMrest'])
             console.log(filteredTable);
             filteredTable.getRows().then(function(rows) {
                 console.log(rows);
+            });
+        });
+    });
+}])
+
+.controller('testControllerRBK', ['ermrestClientFactory', function(ermrestClientFactory) {
+    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    console.log(client);
+    catalog = client.getCatalog(4); // dev server catalog 4 => rbk
+    catalog.introspect().then(function(schemas) {
+        console.log(schemas);
+        var table = schemas['rbk'].getTable('image');
+        console.log(table);
+        var filteredTable = table.getFilteredTable(["id=46"]);
+        filteredTable.getRows().then(function(rows) {
+            console.log(rows);
+            var roiTable = rows[0].getRelatedTable('rbk', 'roi');
+            console.log(roiTable);
+            var filteredRoiTable = roiTable.getFilteredTable(["id=25"]);
+            console.log(filteredRoiTable);
+            filteredRoiTable.getRows().then(function(roiRows) {
+                console.log(roiRows);
+                commentTable = roiRows[0].getRelatedTable('rbk', 'roi_comment');
+                console.log(commentTable);
+                commentTable.getRows().then(function(commentRows) {
+                    console.log(commentRows);
+                });
             });
         });
     });
