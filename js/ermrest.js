@@ -361,7 +361,58 @@ var ERMrest = (function () {
             }
             return rows;
         }, function(response) {
-            return $q.reject(response.data);
+            return _q.reject(response.data);
+        });
+    };
+
+    /**
+     * @function
+     * @param {Object} data The entity data.
+     * @param {Object} defaults An array of default columns.
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * Creating a new entity
+     */
+    Table.prototype.createEntity = function (data, defaults) {
+        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name;
+        if (typeof defaults !== 'undefined') {
+            for (var i = 0; i < defaults.length; i++) {
+                if (i == 0) {
+                    path = path + "?defaults=" + defaults[i];
+                } else {
+                    path = path + "," + defaults[i];
+                }
+            }
+        }
+        return _http.post(path, data).then(function(response) {
+            return response.data;
+        }, function(response) {
+            return _q.reject(response.data);
+        });
+    };
+
+    /**
+     * @function
+     * @param {Object} keys The keys and values identifying the entity
+     * @return {Promise} Returns a Promise.
+     * @desc
+     * Delete an entity
+     */
+    Table.prototype.deleteEntity = function (keys) {
+        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name + "/";
+        var first = true;
+        for (var key in keys) {
+            if (first) {
+                path = path + key + "=" + keys[key];
+                first = false;
+            } else {
+                path = path + "," + key + "=" + keys[key];
+            }
+        }
+        return _http.delete(path).then(function(response) {
+            return response.data;
+        }, function(response) {
+            return _q.reject(response.data);
         });
     };
 
@@ -428,9 +479,21 @@ var ERMrest = (function () {
 
     /**
      * @var
+     * @desc table
+     */
+    Row.prototype.table = null;
+
+    /**
+     * @var
      * @desc row uri
      */
     Row.prototype.uri = null;
+
+    /**
+     * @var
+     * @desc row data
+     */
+    Row.prototype.data = null;
 
     /**
      * @function
@@ -442,6 +505,29 @@ var ERMrest = (function () {
      */
     Row.prototype.getRelatedTable = function (schemaName, tableName) {
         return new RelatedTable(this, schemaName, tableName);
+    };
+
+    /**
+     * @function
+     * @return {Promise} Returns a promise.
+     * @desc
+     * Delete this row from its table
+     */
+    Row.prototype.delete = function () {
+        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name + "/";
+        var keys = this.table.keys[0].unique_columns;
+        for (var i = 0; i < keys.length; i++) {
+            if (i == 0) {
+                path = path + keys[i] + "=" + this.data[keys[i]];
+            } else {
+                path = path + "," + keys[i] + "=" + this.data[keys[i]];
+            }
+        }
+        return _http.delete(path).then(function(response) {
+            return response.data;
+        }, function(response) {
+            return _q.reject(response.data);
+        });
     };
 
     /**
