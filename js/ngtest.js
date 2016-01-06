@@ -16,6 +16,63 @@
 
 angular.module('testApp', ['ERMrest'])
 
+.controller('entityTestController', ['ermrestClientFactory', function(ermrestClientFactory) {
+    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    console.log(client);
+    catalog = client.getCatalog(4); // dev server catalog 1 => fb
+    catalog.introspect().then(function(schemas) {
+        console.log(schemas);
+        var table = schemas['rbk'].getTable('roi');
+        console.log(table);
+
+        // test create entity
+        var data = [{
+            "image_id":11,
+            "timestamp":"2015-12-21T17:43:30.609-08:00",
+            "anatomy":null,
+            "context_uri":"https://dev.rebuildingakidney.org/~jessie/openseadragon-viewer/mview.html?url=https://dev.rebuildingakidney.org/data/8fed0117fc94d16590a46d58bf66c9b43c04ea0135d9c0eea3c1a52f2c9e4c12/Brigh/ImageProperties.xml&x=0.5&y=0.25750542661546166&z=0.5473114658864339",
+            "coords":[-0.0566818558782389,0.0384655409052141,0.10898569923144,0.0769310818104284]}];
+
+        table.createEntity(data, ['id', 'author']).then(function(response) {
+            console.log("created");
+            console.log(response);
+
+            var id = response[0].id;
+
+            // see all rows
+            table.getRows().then(function(rows) {
+                console.log(rows);
+            });
+
+            var filter = "id=" + id;
+            var filteredTable = table.getFilteredTable([filter]);
+            filteredTable.getRows().then(function(rows) {
+                console.log(rows);
+
+                // test delete entity
+                rows[0].delete().then(function(response){
+                    console.log("deletion successful");
+
+                    // see all rows
+                    table.getRows().then(function(rows) {
+                        console.log(rows);
+                    });
+
+                }, function(response) {
+                    console.log("deletion failed");
+                })
+
+            });
+
+
+        }, function(response) {
+            console.log("creation failed");
+            console.log(response);
+        })
+
+    });
+}])
+
 .controller('testControllerFB', ['ermrestClientFactory', function(ermrestClientFactory) {
     client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
     console.log(client);
