@@ -25,7 +25,7 @@ angular.module('testApp', ['ERMrest'])
         var table = schemas['rbk'].getTable('roi');
         console.log(table);
 
-        // test create entity
+        // create, update then delete entity
         var data = [{
             "image_id":11,
             "timestamp":"2015-12-21T17:43:30.609-08:00",
@@ -49,18 +49,34 @@ angular.module('testApp', ['ERMrest'])
             filteredTable.getRows().then(function(rows) {
                 console.log(rows);
 
-                // test delete entity
-                rows[0].delete().then(function(response){
-                    console.log("deletion successful");
+                // update entity
+                rows[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
+                rows[0].update().then(function(response) {
+                    console.log("update successful");
+                    console.log(response);
 
-                    // see all rows
+                    // delete entity
+                    rows[0].delete().then(function(response){
+                        console.log("deletion successful");
+
+                        // see all rows
+                        table.getRows().then(function(rows) {
+                            console.log(rows);
+                        });
+
+                    }, function(response) {
+                        console.log("deletion failed");
+                    })
+
                     table.getRows().then(function(rows) {
                         console.log(rows);
                     });
-
                 }, function(response) {
-                    console.log("deletion failed");
-                })
+                    console.log("update failed");
+                    table.getRows().then(function(rows) {
+                        console.log(rows);
+                    });
+                });
 
             });
 
@@ -70,6 +86,39 @@ angular.module('testApp', ['ERMrest'])
             console.log(response);
         })
 
+    });
+}])
+
+.controller('updateTestController', ['ermrestClientFactory', function(ermrestClientFactory) {
+    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    console.log(client);
+    catalog = client.getCatalog(4); // dev server catalog 1 => fb
+    catalog.introspect().then(function (schemas) {
+        console.log(schemas);
+        var table = schemas['rbk'].getTable('roi');
+
+        var filter = "id=56";
+        var filteredTable = table.getFilteredTable([filter]);
+        filteredTable.getRows().then(function(rows) {
+            console.log(rows);
+
+            // update entity
+            rows[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
+            rows[0].update().then(function(response) {
+                console.log("update successful");
+                console.log(response);
+
+                table.getRows().then(function(rows) {
+                    console.log(rows);
+                });
+            }, function(response) {
+                console.log("update failed");
+                table.getRows().then(function(rows) {
+                    console.log(rows);
+                });
+            });
+
+        });
     });
 }])
 

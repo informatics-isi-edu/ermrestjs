@@ -531,6 +531,23 @@ var ERMrest = (function () {
     };
 
     /**
+     * @function
+     * @return {Promise} Returns a promise.
+     * @desc
+     * Update row with data that has been modified
+     */
+    Row.prototype.update = function () {
+        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name;
+        return _http.put(path, [this.data]).then(function(response) {
+            return response.data;
+        }, function(response) {
+            console.log(response);
+            return _q.reject(response.data);
+        });
+
+    };
+
+    /**
      * @memberof ERMrest
      * @constructor
      * @param {Object} row row object.
