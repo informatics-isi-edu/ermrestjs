@@ -417,6 +417,24 @@ var ERMrest = (function () {
     };
 
     /**
+     * @function
+     * @return {Promise} Returns a promise.
+     * @desc
+     * Update rows with data that has been modified
+     */
+    Table.prototype.updateRows = function (rows) {
+        var promiseArray = [];
+        for (var i = 0; i < rows.length; i++) {
+            promiseArray.push(rows[i].update());
+        }
+        return _q.all(promiseArray).then(function(results){
+            return results;
+        }, function(results) {
+            return results;
+        });
+    };
+
+    /**
      * @memberof ERMrest
      * @constructor
      * @param {name} name of the column
