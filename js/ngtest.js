@@ -16,6 +16,7 @@
 
 angular.module('testApp', ['ERMrest'])
 
+// Create, updated, delete single entity
 .controller('entityTestController', ['ermrestClientFactory', function(ermrestClientFactory) {
     client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
     console.log(client);
@@ -25,7 +26,7 @@ angular.module('testApp', ['ERMrest'])
         var table = schemas['rbk'].getTable('roi');
         console.log(table);
 
-        // test create entity
+        // create, update then delete entity
         var data = [{
             "image_id":11,
             "timestamp":"2015-12-21T17:43:30.609-08:00",
@@ -49,18 +50,35 @@ angular.module('testApp', ['ERMrest'])
             filteredTable.getRows().then(function(rows) {
                 console.log(rows);
 
-                // test delete entity
-                rows[0].delete().then(function(response){
-                    console.log("deletion successful");
+                // update entity
+                rows[0].data.image_id = 13;
+                rows[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
+                rows[0].update().then(function(response) {
+                    console.log("update successful");
+                    console.log(response);
 
-                    // see all rows
+                    // delete entity
+                    rows[0].delete().then(function(response){
+                        console.log("deletion successful");
+
+                        // see all rows
+                        table.getRows().then(function(rows) {
+                            console.log(rows);
+                        });
+
+                    }, function(response) {
+                        console.log("deletion failed");
+                    })
+
                     table.getRows().then(function(rows) {
                         console.log(rows);
                     });
-
                 }, function(response) {
-                    console.log("deletion failed");
-                })
+                    console.log("update failed");
+                    table.getRows().then(function(rows) {
+                        console.log(rows);
+                    });
+                });
 
             });
 
@@ -69,6 +87,69 @@ angular.module('testApp', ['ERMrest'])
             console.log("creation failed");
             console.log(response);
         })
+
+    });
+}])
+
+// create, update, delete multiple entities
+.controller('multipleUpdateTestController', ['ermrestClientFactory', '$q', function(ermrestClientFactory, $q) {
+    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    console.log(client);
+    catalog = client.getCatalog(4); // dev server catalog 1 => fb
+    catalog.introspect().then(function(schemas) {
+        console.log(schemas);
+        var table = schemas['rbk'].getTable('roi');
+
+        // create, update then delete entity
+        var data = [{
+            "image_id":11,
+            "author":"isi",
+            "timestamp":"2015-12-21T17:43:30.609-08:00",
+            "anatomy":null,
+            "context_uri":"https://dev.rebuildingakidney.org/~jessie/openseadragon-viewer/mview.html?url=https://dev.rebuildingakidney.org/data/8fed0117fc94d16590a46d58bf66c9b43c04ea0135d9c0eea3c1a52f2c9e4c12/Brigh/ImageProperties.xml&x=0.5&y=0.25750542661546166&z=0.5473114658864339",
+            "coords":[-0.0566818558782389,0.0384655409052141,0.10898569923144,0.0769310818104284]}];
+
+        // create 5 rows
+        var promises_c = [];
+        for (var i = 0; i < 5; i++) {
+            promises_c.push(table.createEntity(data, ['id']));
+        }
+        $q.all(promises_c).then(function(results) {
+            console.log(results);
+
+            var filter = "author=isi";
+            var filteredTable = table.getFilteredTable([filter]);
+            filteredTable.getRows().then(function(rows) {
+                console.log(rows);
+
+                // update multiple rows at the same time
+                for (var j = 0; j < 5; j++) {
+                    rows[j].data.author = "jennifer";
+                    rows[j].data.image_id = 13;
+                }
+                filteredTable.updateRows(rows).then(function(response) {
+                    console.log("rows updated");
+
+                    // get rows again to test updated rows
+                    var filteredTable2 = table.getFilteredTable(["author=jennifer"]);
+                    filteredTable2.getRows().then(function(rows) {
+                        console.log(rows);
+
+                        // delete rows
+                        var promises_d = [];
+                        for (var k = 0; k < rows.length; k++) {
+                            promises_d.push(rows[k].delete());
+                        }
+                        $q.all(promises_d).then(function(results) {
+                            table.getRows().then(function(rows) {
+                                console.log(rows);
+                            });
+                        });
+                    });
+                });
+            });
+
+        });
 
     });
 }])
