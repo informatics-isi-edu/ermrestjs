@@ -342,16 +342,16 @@ var ERMrest = (function () {
      * @return {Promise} Returns a Promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, it gets the
-     * rows for this table.
+     * entities for this table.
      */
-    Table.prototype.getRows = function () {
+    Table.prototype.getEntities = function () {
         var self = this;
         return _http.get(this._uri).then(function(response) {
-            var rows = [];
+            var entities = [];
             for (var i = 0; i < response.data.length; i++) {
-                rows[i] = new Row(self, response.data[i]);
+                entities[i] = new Entity(self, response.data[i]);
             }
-            return rows;
+            return entities;
         }, function(response) {
             return _q.reject(response.data);
         });
@@ -412,13 +412,13 @@ var ERMrest = (function () {
      * @function
      * @return {Promise} Returns a promise.
      * @desc
-     * Update rows with data that has been modified
+     * Update entities with data that has been modified
      */
-    Table.prototype.updateRows = function (rows) {
+    Table.prototype.updateEntities = function (entities) {
         // TODO we should replace this sometime with a bulk call to the server
         var promiseArray = [];
-        for (var i = 0; i < rows.length; i++) {
-            promiseArray.push(rows[i].update());
+        for (var i = 0; i < entities.length; i++) {
+            promiseArray.push(entities[i].update());
         }
         return _q.all(promiseArray).then(function(results){
             return results;
@@ -463,14 +463,14 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {table} parent table
-     * @param {rowData} json row data
+     * @param {Table} parent table
+     * @param {Object} json entity data
      * @desc
-     * Creates an instance of the Table object.
+     * Creates an entity, which is an instance of a table object.
      */
-    function Row (table, jsonRow) {
+    function Entity (table, jsonEntity) {
         this.table = table;
-        this.data = jsonRow;
+        this.data = jsonEntity;
 
         var keys = {};
         if (table.keys.length) {
@@ -484,7 +484,7 @@ var ERMrest = (function () {
 
         this.uri = table._uri;
         for (var k = 0; k < keys.length; k++) {
-            this.uri = this.uri + "/" + keys[k] + "=" + jsonRow[keys[k]];
+            this.uri = this.uri + "/" + keys[k] + "=" + jsonEntity[keys[k]];
         }
     }
 
@@ -492,19 +492,19 @@ var ERMrest = (function () {
      * @var
      * @desc table
      */
-    Row.prototype.table = null;
+    Entity.prototype.table = null;
 
     /**
      * @var
-     * @desc row uri
+     * @desc entity uri
      */
-    Row.prototype.uri = null;
+    Entity.prototype.uri = null;
 
     /**
      * @var
-     * @desc row data
+     * @desc entity data
      */
-    Row.prototype.data = null;
+    Entity.prototype.data = null;
 
     /**
      * @function
@@ -512,9 +512,9 @@ var ERMrest = (function () {
      * @param {String} tableName Table name.
      * @return {Object} related table instance.
      * @desc
-     * Returns a related table based on this row.
+     * Returns a related table based on this entity.
      */
-    Row.prototype.getRelatedTable = function (schemaName, tableName) {
+    Entity.prototype.getRelatedTable = function (schemaName, tableName) {
         return new RelatedTable(this, schemaName, tableName);
     };
 
@@ -522,9 +522,9 @@ var ERMrest = (function () {
      * @function
      * @return {Promise} Returns a promise.
      * @desc
-     * Delete this row from its table
+     * Delete this entity from its table
      */
-    Row.prototype.delete = function () {
+    Entity.prototype.delete = function () {
         var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name + "/";
         var keys = this.table.keys[0].unique_columns;
         for (var i = 0; i < keys.length; i++) {
@@ -545,9 +545,9 @@ var ERMrest = (function () {
      * @function
      * @return {Promise} Returns a promise.
      * @desc
-     * Update row with data that has been modified
+     * Update entity with data that has been modified
      */
-    Row.prototype.update = function () {
+    Entity.prototype.update = function () {
         var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name;
         return _http.put(path, [this.data]).then(function(response) {
             return response.data;
@@ -561,21 +561,21 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Object} row row object.
+     * @param {Object} entity row object.
      * @param {String} schemaName related schema name.
      * @param {String} tableName related table name.
      * @desc
      * Creates an instance of the Table object.
      */
-    function RelatedTable(row, schemaName, tableName) {
+    function RelatedTable(entity, schemaName, tableName) {
         // TODO we'll want to add more error handling here
-        var table = row.table.schema.catalog.getSchemas()[schemaName].getTable(tableName);
+        var table = entity.table.schema.catalog.getSchemas()[schemaName].getTable(tableName);
 
         // clone the parent 
         _clone(this, table);
 
-        // Extend the path from the row to this related table
-        this._uri = row.uri + "/" + schemaName + ":" + tableName;
+        // Extend the path from the entity to this related table
+        this._uri = entity.uri + "/" + schemaName + ":" + tableName;
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
@@ -586,10 +586,13 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Schema} schema The schema that the table belongs to.
-     * @param {Object} jsonTable The raw json of the table returned by ERMrest.
+     * @param {Table} table The base table to be filtered.
+     * @param {Object} filters The array of filters.
      * @desc
      * Creates an instance of the Table object.
+     *
+     * Currently, the filters are strings that follow the ERMrest specification
+     * for filters.
      */
     function FilteredTable(table, filters) {
         // clone the parent 
@@ -599,6 +602,9 @@ var ERMrest = (function () {
         for (var i = 0; i < filters.length; i++) {
             this._uri = this._uri + "/" + filters[i];
         }
+
+        // TODO we probably want these filters to be more object oriented
+        //   like a Filter object with left & right operands and an operator.
         this.filters = filters;
     }
 

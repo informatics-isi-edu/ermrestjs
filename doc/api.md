@@ -11,7 +11,7 @@ to use for ERMrest JavaScript agents.
 
 * [ERMrest](#ERMrest) : <code>object</code>
   * [.Client](#ERMrest.Client)
-    * [new Client(uri, credentials)](#new_ERMrest.Client_new)
+    * [new Client(uri)](#new_ERMrest.Client_new)
     * [.uri](#ERMrest.Client+uri)
     * [.getCatalog(id)](#ERMrest.Client+getCatalog)
   * [.Catalog](#ERMrest.Catalog)
@@ -33,53 +33,48 @@ to use for ERMrest JavaScript agents.
     * [.keys](#ERMrest.Table+keys)
     * [.annotations](#ERMrest.Table+annotations)
     * [.getFilteredTable(table, fitlers)](#ERMrest.Table+getFilteredTable) ⇒ <code>Object</code>
-    * [.getRows()](#ERMrest.Table+getRows) ⇒ <code>Promise</code>
+    * [.getEntities()](#ERMrest.Table+getEntities) ⇒ <code>Promise</code>
     * [.createEntity(data, defaults)](#ERMrest.Table+createEntity) ⇒ <code>Promise</code>
     * [.deleteEntity(keys)](#ERMrest.Table+deleteEntity) ⇒ <code>Promise</code>
-    * [.updateRows()](#ERMrest.Table+updateRows) ⇒ <code>Promise</code>
+    * [.updateEntities()](#ERMrest.Table+updateEntities) ⇒ <code>Promise</code>
   * [.Column](#ERMrest.Column)
     * [new Column(name, column&#x27;s, whether)](#new_ERMrest.Column_new)
     * [.name](#ERMrest.Column+name)
     * [.displayName](#ERMrest.Column+displayName)
     * [.hidden](#ERMrest.Column+hidden)
-  * [.Row](#ERMrest.Row)
-    * [new Row(parent, json)](#new_ERMrest.Row_new)
-    * [.table](#ERMrest.Row+table)
-    * [.uri](#ERMrest.Row+uri)
-    * [.data](#ERMrest.Row+data)
-    * [.getRelatedTable(schemaName, tableName)](#ERMrest.Row+getRelatedTable) ⇒ <code>Object</code>
-    * [.delete()](#ERMrest.Row+delete) ⇒ <code>Promise</code>
-    * [.update()](#ERMrest.Row+update) ⇒ <code>Promise</code>
+  * [.Entity](#ERMrest.Entity)
+    * [new Entity(parent, json)](#new_ERMrest.Entity_new)
+    * [.table](#ERMrest.Entity+table)
+    * [.uri](#ERMrest.Entity+uri)
+    * [.data](#ERMrest.Entity+data)
+    * [.getRelatedTable(schemaName, tableName)](#ERMrest.Entity+getRelatedTable) ⇒ <code>Object</code>
+    * [.delete()](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
+    * [.update()](#ERMrest.Entity+update) ⇒ <code>Promise</code>
   * [.RelatedTable](#ERMrest.RelatedTable)
-    * [new RelatedTable(row, schemaName, tableName)](#new_ERMrest.RelatedTable_new)
+    * [new RelatedTable(entity, schemaName, tableName)](#new_ERMrest.RelatedTable_new)
   * [.FilteredTable](#ERMrest.FilteredTable)
-    * [new FilteredTable(schema, jsonTable)](#new_ERMrest.FilteredTable_new)
+    * [new FilteredTable(table, filters)](#new_ERMrest.FilteredTable_new)
     * [.filters](#ERMrest.FilteredTable+filters)
   * [.configure(http, q)](#ERMrest.configure)
-  * [.getClient(uri, credentials)](#ERMrest.getClient) ⇒ <code>Client</code>
+  * [.getClient(uri)](#ERMrest.getClient) ⇒ <code>Client</code>
 
 <a name="ERMrest.Client"></a>
 ### ERMrest.Client
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Client](#ERMrest.Client)
-  * [new Client(uri, credentials)](#new_ERMrest.Client_new)
+  * [new Client(uri)](#new_ERMrest.Client_new)
   * [.uri](#ERMrest.Client+uri)
   * [.getCatalog(id)](#ERMrest.Client+getCatalog)
 
 <a name="new_ERMrest.Client_new"></a>
-#### new Client(uri, credentials)
-Represents the ERMrest client endpoint. This is completely TBD. There
-will be bootstrapping the connection, figuring out what credentials are
-even needed, then how to establish those credentials etc. This may not
-even be the right place to do this. There may be some other class needed
-represent all of that etc.
+#### new Client(uri)
+Represents the ERMrest client endpoint.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>String</code> | URI of the client. |
-| credentials | <code>Object</code> | TBD credentials object |
 
 <a name="ERMrest.Client+uri"></a>
 #### client.uri
@@ -184,10 +179,10 @@ Returns a table from the schema.
   * [.keys](#ERMrest.Table+keys)
   * [.annotations](#ERMrest.Table+annotations)
   * [.getFilteredTable(table, fitlers)](#ERMrest.Table+getFilteredTable) ⇒ <code>Object</code>
-  * [.getRows()](#ERMrest.Table+getRows) ⇒ <code>Promise</code>
+  * [.getEntities()](#ERMrest.Table+getEntities) ⇒ <code>Promise</code>
   * [.createEntity(data, defaults)](#ERMrest.Table+createEntity) ⇒ <code>Promise</code>
   * [.deleteEntity(keys)](#ERMrest.Table+deleteEntity) ⇒ <code>Promise</code>
-  * [.updateRows()](#ERMrest.Table+updateRows) ⇒ <code>Promise</code>
+  * [.updateEntities()](#ERMrest.Table+updateEntities) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table_new"></a>
 #### new Table(schema, jsonTable)
@@ -246,10 +241,10 @@ Returns a filtered table based on this table.
 | table | <code>Object</code> | The base table. |
 | fitlers | <code>Object</code> | The filters. |
 
-<a name="ERMrest.Table+getRows"></a>
-#### table.getRows() ⇒ <code>Promise</code>
+<a name="ERMrest.Table+getEntities"></a>
+#### table.getEntities() ⇒ <code>Promise</code>
 An asynchronous method that returns a promise. If fulfilled, it gets the
-rows for this table.
+entities for this table.
 
 **Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
 **Returns**: <code>Promise</code> - Returns a Promise.  
@@ -276,9 +271,9 @@ Delete an entity
 | --- | --- | --- |
 | keys | <code>Object</code> | The keys and values identifying the entity |
 
-<a name="ERMrest.Table+updateRows"></a>
-#### table.updateRows() ⇒ <code>Promise</code>
-Update rows with data that has been modified
+<a name="ERMrest.Table+updateEntities"></a>
+#### table.updateEntities() ⇒ <code>Promise</code>
+Update entities with data that has been modified
 
 **Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
 **Returns**: <code>Promise</code> - Returns a promise.  
@@ -318,49 +313,49 @@ display name of the column
 whether column is hidden or not
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
-<a name="ERMrest.Row"></a>
-### ERMrest.Row
+<a name="ERMrest.Entity"></a>
+### ERMrest.Entity
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
-* [.Row](#ERMrest.Row)
-  * [new Row(parent, json)](#new_ERMrest.Row_new)
-  * [.table](#ERMrest.Row+table)
-  * [.uri](#ERMrest.Row+uri)
-  * [.data](#ERMrest.Row+data)
-  * [.getRelatedTable(schemaName, tableName)](#ERMrest.Row+getRelatedTable) ⇒ <code>Object</code>
-  * [.delete()](#ERMrest.Row+delete) ⇒ <code>Promise</code>
-  * [.update()](#ERMrest.Row+update) ⇒ <code>Promise</code>
+* [.Entity](#ERMrest.Entity)
+  * [new Entity(parent, json)](#new_ERMrest.Entity_new)
+  * [.table](#ERMrest.Entity+table)
+  * [.uri](#ERMrest.Entity+uri)
+  * [.data](#ERMrest.Entity+data)
+  * [.getRelatedTable(schemaName, tableName)](#ERMrest.Entity+getRelatedTable) ⇒ <code>Object</code>
+  * [.delete()](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
+  * [.update()](#ERMrest.Entity+update) ⇒ <code>Promise</code>
 
-<a name="new_ERMrest.Row_new"></a>
-#### new Row(parent, json)
-Creates an instance of the Table object.
+<a name="new_ERMrest.Entity_new"></a>
+#### new Entity(parent, json)
+Creates an entity, which is an instance of a table object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| parent | <code>table</code> | table |
-| json | <code>rowData</code> | row data |
+| parent | <code>Table</code> | table |
+| json | <code>Object</code> | entity data |
 
-<a name="ERMrest.Row+table"></a>
-#### row.table
+<a name="ERMrest.Entity+table"></a>
+#### entity.table
 table
 
-**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
-<a name="ERMrest.Row+uri"></a>
-#### row.uri
-row uri
+**Kind**: instance property of <code>[Entity](#ERMrest.Entity)</code>  
+<a name="ERMrest.Entity+uri"></a>
+#### entity.uri
+entity uri
 
-**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
-<a name="ERMrest.Row+data"></a>
-#### row.data
-row data
+**Kind**: instance property of <code>[Entity](#ERMrest.Entity)</code>  
+<a name="ERMrest.Entity+data"></a>
+#### entity.data
+entity data
 
-**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
-<a name="ERMrest.Row+getRelatedTable"></a>
-#### row.getRelatedTable(schemaName, tableName) ⇒ <code>Object</code>
-Returns a related table based on this row.
+**Kind**: instance property of <code>[Entity](#ERMrest.Entity)</code>  
+<a name="ERMrest.Entity+getRelatedTable"></a>
+#### entity.getRelatedTable(schemaName, tableName) ⇒ <code>Object</code>
+Returns a related table based on this entity.
 
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
 **Returns**: <code>Object</code> - related table instance.  
 
 | Param | Type | Description |
@@ -368,29 +363,29 @@ Returns a related table based on this row.
 | schemaName | <code>String</code> | Schema name. |
 | tableName | <code>String</code> | Table name. |
 
-<a name="ERMrest.Row+delete"></a>
-#### row.delete() ⇒ <code>Promise</code>
-Delete this row from its table
+<a name="ERMrest.Entity+delete"></a>
+#### entity.delete() ⇒ <code>Promise</code>
+Delete this entity from its table
 
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
 **Returns**: <code>Promise</code> - Returns a promise.  
-<a name="ERMrest.Row+update"></a>
-#### row.update() ⇒ <code>Promise</code>
-Update row with data that has been modified
+<a name="ERMrest.Entity+update"></a>
+#### entity.update() ⇒ <code>Promise</code>
+Update entity with data that has been modified
 
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
 **Returns**: <code>Promise</code> - Returns a promise.  
 <a name="ERMrest.RelatedTable"></a>
 ### ERMrest.RelatedTable
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 <a name="new_ERMrest.RelatedTable_new"></a>
-#### new RelatedTable(row, schemaName, tableName)
+#### new RelatedTable(entity, schemaName, tableName)
 Creates an instance of the Table object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| row | <code>Object</code> | row object. |
+| entity | <code>Object</code> | row object. |
 | schemaName | <code>String</code> | related schema name. |
 | tableName | <code>String</code> | related table name. |
 
@@ -399,18 +394,21 @@ Creates an instance of the Table object.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.FilteredTable](#ERMrest.FilteredTable)
-  * [new FilteredTable(schema, jsonTable)](#new_ERMrest.FilteredTable_new)
+  * [new FilteredTable(table, filters)](#new_ERMrest.FilteredTable_new)
   * [.filters](#ERMrest.FilteredTable+filters)
 
 <a name="new_ERMrest.FilteredTable_new"></a>
-#### new FilteredTable(schema, jsonTable)
+#### new FilteredTable(table, filters)
 Creates an instance of the Table object.
+
+Currently, the filters are strings that follow the ERMrest specification
+for filters.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| schema | <code>Schema</code> | The schema that the table belongs to. |
-| jsonTable | <code>Object</code> | The raw json of the table returned by ERMrest. |
+| table | <code>Table</code> | The base table to be filtered. |
+| filters | <code>Object</code> | The array of filters. |
 
 <a name="ERMrest.FilteredTable+filters"></a>
 #### filteredTable.filters
@@ -431,7 +429,7 @@ interface defined by the AngularJS 1.x $http service.
 | q | <code>Object</code> | Angular $q service object |
 
 <a name="ERMrest.getClient"></a>
-### ERMrest.getClient(uri, credentials) ⇒ <code>Client</code>
+### ERMrest.getClient(uri) ⇒ <code>Client</code>
 ERMrest client factory creates or reuses ERMrest.Client instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
@@ -442,5 +440,4 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>String</code> | URI of the ERMrest service. |
-| credentials | <code>Object</code> | Credentials object (TBD) |
 

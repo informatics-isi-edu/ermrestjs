@@ -40,43 +40,43 @@ angular.module('testApp', ['ERMrest'])
 
             var id = response[0].id;
 
-            // see all rows
-            table.getRows().then(function(rows) {
-                console.log(rows);
+            // see all entities
+            table.getEntities().then(function(entities) {
+                console.log(entities);
             });
 
             var filter = "id=" + id;
             var filteredTable = table.getFilteredTable([filter]);
-            filteredTable.getRows().then(function(rows) {
-                console.log(rows);
+            filteredTable.getEntities().then(function(entities) {
+                console.log(entities);
 
                 // update entity
-                rows[0].data.image_id = 13;
-                rows[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
-                rows[0].update().then(function(response) {
+                entities[0].data.image_id = 13;
+                entities[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
+                entities[0].update().then(function(response) {
                     console.log("update successful");
                     console.log(response);
 
                     // delete entity
-                    rows[0].delete().then(function(response){
+                    entities[0].delete().then(function(response){
                         console.log("deletion successful");
 
-                        // see all rows
-                        table.getRows().then(function(rows) {
-                            console.log(rows);
+                        // see all entities
+                        table.getEntities().then(function(entities) {
+                            console.log(entities);
                         });
 
                     }, function(response) {
                         console.log("deletion failed");
                     })
 
-                    table.getRows().then(function(rows) {
-                        console.log(rows);
+                    table.getEntities().then(function(entities) {
+                        console.log(entities);
                     });
                 }, function(response) {
                     console.log("update failed");
-                    table.getRows().then(function(rows) {
-                        console.log(rows);
+                    table.getEntities().then(function(entities) {
+                        console.log(entities);
                     });
                 });
 
@@ -109,7 +109,7 @@ angular.module('testApp', ['ERMrest'])
             "context_uri":"https://dev.rebuildingakidney.org/~jessie/openseadragon-viewer/mview.html?url=https://dev.rebuildingakidney.org/data/8fed0117fc94d16590a46d58bf66c9b43c04ea0135d9c0eea3c1a52f2c9e4c12/Brigh/ImageProperties.xml&x=0.5&y=0.25750542661546166&z=0.5473114658864339",
             "coords":[-0.0566818558782389,0.0384655409052141,0.10898569923144,0.0769310818104284]}];
 
-        // create 5 rows
+        // create 5 entities
         var promises_c = [];
         for (var i = 0; i < 5; i++) {
             promises_c.push(table.createEntity(data, ['id']));
@@ -119,30 +119,30 @@ angular.module('testApp', ['ERMrest'])
 
             var filter = "author=isi";
             var filteredTable = table.getFilteredTable([filter]);
-            filteredTable.getRows().then(function(rows) {
-                console.log(rows);
+            filteredTable.getEntities().then(function(entities) {
+                console.log(entities);
 
-                // update multiple rows at the same time
+                // update multiple entities at the same time
                 for (var j = 0; j < 5; j++) {
-                    rows[j].data.author = "jennifer";
-                    rows[j].data.image_id = 13;
+                    entities[j].data.author = "jennifer";
+                    entities[j].data.image_id = 13;
                 }
-                filteredTable.updateRows(rows).then(function(response) {
-                    console.log("rows updated");
+                filteredTable.updateEntities(entities).then(function(response) {
+                    console.log("entities updated");
 
-                    // get rows again to test updated rows
+                    // get entities again to test updated entities
                     var filteredTable2 = table.getFilteredTable(["author=jennifer"]);
-                    filteredTable2.getRows().then(function(rows) {
-                        console.log(rows);
+                    filteredTable2.getEntities().then(function(entities) {
+                        console.log(entities);
 
-                        // delete rows
+                        // delete entities
                         var promises_d = [];
-                        for (var k = 0; k < rows.length; k++) {
-                            promises_d.push(rows[k].delete());
+                        for (var k = 0; k < entities.length; k++) {
+                            promises_d.push(entities[k].delete());
                         }
                         $q.all(promises_d).then(function(results) {
-                            table.getRows().then(function(rows) {
-                                console.log(rows);
+                            table.getEntities().then(function(entities) {
+                                console.log(entities);
                             });
                         });
                     });
@@ -162,14 +162,14 @@ angular.module('testApp', ['ERMrest'])
         console.log(schemas);
         var table = schemas['legacy'].getTable('dataset');
         console.log(table);
-        table.getRows().then(function(rows) {
-            console.log(rows);
-            var relatedTable = rows[0].getRelatedTable('legacy', 'dataset_data_type');
+        table.getEntities().then(function(entities) {
+            console.log(entities);
+            var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
             console.log(relatedTable);
             var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
             console.log(filteredTable);
-            filteredTable.getRows().then(function(rows) {
-                console.log(rows);
+            filteredTable.getEntities().then(function(entities) {
+                console.log(entities);
             });
         });
     });
@@ -184,18 +184,18 @@ angular.module('testApp', ['ERMrest'])
         var table = schemas['rbk'].getTable('image');
         console.log(table);
         var filteredTable = table.getFilteredTable(["id=46"]);
-        filteredTable.getRows().then(function(rows) {
-            console.log(rows);
-            var roiTable = rows[0].getRelatedTable('rbk', 'roi');
+        filteredTable.getEntities().then(function(entities) {
+            console.log(entities);
+            var roiTable = entities[0].getRelatedTable('rbk', 'roi');
             console.log(roiTable);
             var filteredRoiTable = roiTable.getFilteredTable(["id=25"]);
             console.log(filteredRoiTable);
-            filteredRoiTable.getRows().then(function(roiRows) {
-                console.log(roiRows);
-                commentTable = roiRows[0].getRelatedTable('rbk', 'roi_comment');
+            filteredRoiTable.getEntities().then(function(roiEntities) {
+                console.log(roiEntities);
+                commentTable = roiEntities[0].getRelatedTable('rbk', 'roi_comment');
                 console.log(commentTable);
-                commentTable.getRows().then(function(commentRows) {
-                    console.log(commentRows);
+                commentTable.getEntities().then(function(commentEntities) {
+                    console.log(commentEntities);
                 });
             });
         });
