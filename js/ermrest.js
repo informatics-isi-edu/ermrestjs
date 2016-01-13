@@ -82,17 +82,16 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @function
      * @param {String} uri URI of the ERMrest service.
-     * @param {Object} credentials Credentials object (TBD)
      * @return {Client} Returns a new ERMrest.Client instance.
      * @desc
      * ERMrest client factory creates or reuses ERMrest.Client instances. The
      * URI should be to the ERMrest _service_. For example,
      * `https://www.example.org/ermrest`.
      */
-    function getClient(uri, credentials) {
+    function getClient(uri) {
         cli = _clients[uri];
         if (! cli) {
-            cli = new Client(uri, credentials);
+            cli = new Client(uri);
             _clients[uri] = cli;
         }
         return cli;
@@ -102,20 +101,14 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @constructor
      * @param {String} uri URI of the client.
-     * @param {Object} credentials TBD credentials object
      * @desc
-     * Represents the ERMrest client endpoint. This is completely TBD. There
-     * will be bootstrapping the connection, figuring out what credentials are
-     * even needed, then how to establish those credentials etc. This may not
-     * even be the right place to do this. There may be some other class needed
-     * represent all of that etc.
+     * Represents the ERMrest client endpoint.
      */
-    function Client(uri, credentials) {
+    function Client(uri) {
         if (uri === undefined || uri === null)
             throw "URI undefined or null";
         this.uri = uri;
-        this.credentials = credentials;
-        this._catalogs = {}; // consider "private"
+        this._catalogs = {}; // consider this var "private"
     }
 
     /**
@@ -175,12 +168,6 @@ var ERMrest = (function () {
      * catalog object before using the rest of its methods.
      */
     Catalog.prototype.introspect = function () {
-        // TODO this needs to process the results not just return raw json to client.
-        // This method should:
-        //   1. make the http call to get the schemas.
-        //   2. do any processing it needs to do on the raw json returned by server
-        //   3. save a copy of the schemas in this._schemas
-        //   4. then return the schemas via the promise
         var self = this;
         return _http.get(this._uri + "/schema").then(function(response) {
             var jsonSchemas = response.data;
@@ -189,6 +176,7 @@ var ERMrest = (function () {
             }
             return self._schemas;
         });
+        // TODO need error handling function for promise
     };
 
     /**
@@ -260,6 +248,10 @@ var ERMrest = (function () {
         if (annotations['tag:misd.isi.edu,2015:display'] !== undefined &&
             annotations['tag:misd.isi.edu,2015:display'].name !== undefined) {
             this.displayName = annotations['tag:misd.isi.edu,2015:display'].name;
+        }
+        else {
+            // TODO set display name = table_name converted to title case and
+            //    replace '_' with ' ' (whitespace char)
         }
 
         // hidden
@@ -377,7 +369,7 @@ var ERMrest = (function () {
         var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name;
         if (typeof defaults !== 'undefined') {
             for (var i = 0; i < defaults.length; i++) {
-                if (i == 0) {
+                if (i === 0) {
                     path = path + "?defaults=" + defaults[i];
                 } else {
                     path = path + "," + defaults[i];
@@ -423,6 +415,7 @@ var ERMrest = (function () {
      * Update rows with data that has been modified
      */
     Table.prototype.updateRows = function (rows) {
+        // TODO we should replace this sometime with a bulk call to the server
         var promiseArray = [];
         for (var i = 0; i < rows.length; i++) {
             promiseArray.push(rows[i].update());
@@ -535,7 +528,7 @@ var ERMrest = (function () {
         var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name + "/";
         var keys = this.table.keys[0].unique_columns;
         for (var i = 0; i < keys.length; i++) {
-            if (i == 0) {
+            if (i === 0) {
                 path = path + keys[i] + "=" + this.data[keys[i]];
             } else {
                 path = path + "," + keys[i] + "=" + this.data[keys[i]];
@@ -575,17 +568,14 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function RelatedTable(row, schemaName, tableName) {
-        this._uri = row.uri + "/" + schemaName + ":" + tableName;
-        this.name = tableName;
-
         // TODO we'll want to add more error handling here
         var table = row.table.schema.catalog.getSchemas()[schemaName].getTable(tableName);
-        this.schema = table.schema;
-        this.displayName = table.displayName;
-        this.hidden = table.hidden;
-        this.columns = table.columns;
-        this.keys = table.keys;
-        this.annotations = table.annotations;
+
+        // clone the parent 
+        _clone(this, table);
+
+        // Extend the path from the row to this related table
+        this._uri = row.uri + "/" + schemaName + ":" + tableName;
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
@@ -602,19 +592,14 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function FilteredTable(table, filters) {
-        this._uri = table._uri;
+        // clone the parent 
+        _clone(this, table);
+
+        // Extend the URI with the filters
         for (var i = 0; i < filters.length; i++) {
             this._uri = this._uri + "/" + filters[i];
         }
-
         this.filters = filters;
-        this.displayName = table.displayName;
-        this.name = table.name;
-        this.schema = table.schema;
-        this.hidden = table.hidden;
-        this.columns = table.columns;
-        this.keys = table.keys;
-        this.annotations = table.annotations;
     }
 
     FilteredTable.prototype = Object.create(Table.prototype);
@@ -627,6 +612,24 @@ var ERMrest = (function () {
      * Filters of the filtered table
      */
     FilteredTable.prototype.filters = {};
+
+    /**
+     * @private
+     * @function
+     * @param {Object} copyTo the object to copy values to.
+     * @param {Object} copy the object to copy value from.
+     * @desc
+     * This private utility function does a shallow copy between objects.
+     */
+    function _clone(copyTo, copyFrom) {
+        for (var key in copyFrom) {
+            // only copy those properties that were set in the object, this
+            // will skip properties from the source object's prototype
+            if (copyFrom.hasOwnProperty(key)) {
+                copyTo[key] = copyFrom[key];
+            }
+        }
+    }
 
     return module;
 })();
