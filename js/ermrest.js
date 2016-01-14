@@ -174,8 +174,9 @@ var ERMrest = (function () {
                 self._schemas[s] = new Schema(self, jsonSchemas.schemas[s]);
             }
             return self._schemas;
+        }, function(response) {
+            return _q.reject(response);
         });
-        // TODO need error handling function for promise
     };
 
     /**
