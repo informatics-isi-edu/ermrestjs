@@ -241,7 +241,7 @@ var ERMrest = (function () {
      * Constructor of the Table.
      */
     function Table(schema, jsonTable) {
-        this._uri = schema.catalog._uri + "/entity/" + schema.name + ":" + jsonTable.table_name;
+        this.uri = schema.catalog._uri + "/entity/" + schema.name + ":" + jsonTable.table_name;
         this.name = jsonTable.table_name;
         this.schema = schema;
         this.columns = [];
@@ -288,6 +288,12 @@ var ERMrest = (function () {
         }
 
     }
+
+    /**
+     * @var
+     * @desc The uri of the table.
+     */
+    Table.prototype.uri = null;
 
     /**
      * @var
@@ -351,7 +357,7 @@ var ERMrest = (function () {
      */
     Table.prototype.getEntities = function () {
         var self = this;
-        return _http.get(this._uri).then(function(response) {
+        return _http.get(this.uri).then(function(response) {
             var entities = [];
             for (var i = 0; i < response.data.length; i++) {
                 entities[i] = new Entity(self, response.data[i]);
@@ -398,11 +404,11 @@ var ERMrest = (function () {
      * Deletes entities, if promise is fulfilled.
      */
     Table.prototype.deleteEntity = function (keys) {
-        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name + "/";
+        var path = this.uri;
         var first = true;
         for (var key in keys) {
             if (first) {
-                path = path + key + "=" + keys[key];
+                path = path + "/" + key + "=" + keys[key];
                 first = false;
             } else {
                 path = path + "," + key + "=" + keys[key];
@@ -489,7 +495,7 @@ var ERMrest = (function () {
             }
         }
 
-        this.uri = table._uri;
+        this.uri = table.uri;
         for (var k = 0; k < keys.length; k++) {
             this.uri = this.uri + "/" + keys[k] + "=" + jsonEntity[keys[k]];
         }
@@ -532,11 +538,11 @@ var ERMrest = (function () {
      * Delete this entity from its table
      */
     Entity.prototype.delete = function () {
-        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name + "/";
+        var path = this.table.uri;
         var keys = this.table.keys[0].unique_columns;
         for (var i = 0; i < keys.length; i++) {
             if (i === 0) {
-                path = path + keys[i] + "=" + this.data[keys[i]];
+                path = path + "/" + keys[i] + "=" + this.data[keys[i]];
             } else {
                 path = path + "," + keys[i] + "=" + this.data[keys[i]];
             }
@@ -582,7 +588,7 @@ var ERMrest = (function () {
         _clone(this, table);
 
         // Extend the path from the entity to this related table
-        this._uri = entity.uri + "/" + schemaName + ":" + tableName;
+        this.uri = entity.uri + "/" + schemaName + ":" + tableName;
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
@@ -607,7 +613,7 @@ var ERMrest = (function () {
 
         // Extend the URI with the filters
         for (var i = 0; i < filters.length; i++) {
-            this._uri = this._uri + "/" + filters[i];
+            this.uri = this.uri + "/" + filters[i];
         }
 
         // TODO we probably want these filters to be more object oriented
