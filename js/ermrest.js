@@ -70,8 +70,6 @@ var ERMrest = (function () {
      * @param {Object} q Angular $q service object
      * @desc
      * This function is used to configure the module.
-     * The module expects the http service to implement the
-     * interface defined by the AngularJS 1.x $http service.
      */
     function configure(http, q) {
         _http = http;
@@ -82,7 +80,7 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @function
      * @param {String} uri URI of the ERMrest service.
-     * @return {Client} Returns a new ERMrest.Client instance.
+     * @return {Client} Returns a client.
      * @desc
      * ERMrest client factory creates or reuses ERMrest.Client instances. The
      * URI should be to the ERMrest _service_. For example,
@@ -100,9 +98,9 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} uri URI of the client.
+     * @param {String} uri URI of the ERMrest service.
      * @desc
-     * Represents the ERMrest client endpoint.
+     * The client for the ERMrest service endpoint.
      */
     function Client(uri) {
         if (uri === undefined || uri === null)
@@ -120,8 +118,9 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @param {String} id Identifier of a catalog within the context of a
-     * client connection to an ERMrest service.
+     * @param {String} id Identifier of a catalog within the ERMrest
+     * service.
+     * @return {Catalog} an instance of a catalog object.
      * @desc
      * Returns an interface to a Catalog object representing the catalog
      * resource on the service.
@@ -140,8 +139,8 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Client} client The ERMrest.Client connection.
-     * @param {String} id Identifier of a catalog within the context of a
+     * @param {Client} client the client object.
+     * @param {String} id Identifier of a catalog within the ERMrest
      * service.
      * @desc
      * Constructor for the Catalog.
@@ -161,7 +160,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return {Promise} Returns a Promise.
+     * @return {Promise} Returns a promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, it gets the
      * schemas of the catalog. This method should be called at least on the
@@ -181,9 +180,12 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return {Object} Returns a dictionary of schemas.
+     * @return {Object} returns a dictionary of schemas. The keys of the
+     * dictionary are taken from the schema names and the values are the
+     * corresponding schema objects.
      * @desc
-     * A synchronous method that returns immediately.
+     * This is a synchronous method that returns a schema object from an
+     * already introspected catalog.
      */
     Catalog.prototype.getSchemas = function () {
         return this._schemas;
@@ -193,7 +195,8 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @constructor
      * @param {Catalog} catalog The catalog the schema belongs to.
-     * @param {Object} jsonSchemas The raw json Schema returned by ERMrest.
+     * @param {Object} jsonSchema The raw json Schema returned by the ERMrest
+     * service.
      * @desc
      * Constructor for the Schema.
      */
@@ -217,9 +220,11 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @param {String} name The name of the table.
+     * @param {String} name the name of the table.
+     * @return {Table} a table object.
      * @desc
-     * Returns a table from the schema.
+     * This is a synchronous method that returns a table object from an
+     * already introspected catalog.
      */
     Schema.prototype.getTable = function (name) {
         return this._tables[name];
@@ -229,10 +234,11 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Schema} schema The schema that the table belongs to.
-     * @param {Object} jsonTable The raw json of the table returned by ERMrest.
+     * @param {Schema} schema The schema for the table.
+     * @param {Object} jsonTable The raw json of the table returned by the
+     * ERMrest service.
      * @desc
-     * Creates an instance of the Table object.
+     * Constructor of the Table.
      */
     function Table(schema, jsonTable) {
         this._uri = schema.catalog._uri + "/entity/" + schema.name + ":" + jsonTable.table_name;
@@ -327,9 +333,8 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @param {Object} table The base table.
-     * @param {Object} fitlers The filters.
-     * @return {Object} a filtered table instance.
+     * @param {Array} fitlers array of filters, which are strings.
+     * @return {Table} a filtered table instance.
      * @desc
      * Returns a filtered table based on this table.
      */
@@ -339,7 +344,7 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @return {Promise} Returns a Promise.
+     * @return {Promise} Returns a promise.
      * @desc
      * An asynchronous method that returns a promise. If fulfilled, it gets the
      * entities for this table.
@@ -359,11 +364,13 @@ var ERMrest = (function () {
 
     /**
      * @function
-     * @param {Object} data The entity data.
+     * @param {Object} data The entity data. This is typically a dictionary of
+     * attribute name-value pairs essentially.
      * @param {Object} defaults An array of default columns.
-     * @return {Promise} Returns a Promise.
+     * @return {Promise} Returns a promise.
      * @desc
-     * Creating a new entity
+     * Creating a new entity. If the promise is fullfilled a new entity has
+     * been created in the catalog, otherwise the promise is rejected.
      */
     Table.prototype.createEntity = function (data, defaults) {
         var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name;
@@ -386,9 +393,9 @@ var ERMrest = (function () {
     /**
      * @function
      * @param {Object} keys The keys and values identifying the entity
-     * @return {Promise} Returns a Promise.
+     * @return {Promise} Returns a promise.
      * @desc
-     * Delete an entity
+     * Deletes entities, if promise is fulfilled.
      */
     Table.prototype.deleteEntity = function (keys) {
         var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name + "/";
@@ -412,7 +419,7 @@ var ERMrest = (function () {
      * @function
      * @return {Promise} Returns a promise.
      * @desc
-     * Update entities with data that has been modified
+     * Update entities with data that has been modified.
      */
     Table.prototype.updateEntities = function (entities) {
         // TODO we should replace this sometime with a bulk call to the server
@@ -434,7 +441,7 @@ var ERMrest = (function () {
      * @param {displayName} column's display name
      * @param {hidden} whether this column is hidden or not
      * @desc
-     * Creates an instance of the Table object.
+     * Constructor of the Column.
      */
     function Column (name, displayName, hidden) {
         this.name = name;
@@ -510,7 +517,7 @@ var ERMrest = (function () {
      * @function
      * @param {String} schemaName Schema name.
      * @param {String} tableName Table name.
-     * @return {Object} related table instance.
+     * @return {Table} related table instance.
      * @desc
      * Returns a related table based on this entity.
      */
@@ -561,7 +568,7 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Object} entity row object.
+     * @param {Entity} entity the entity object.
      * @param {String} schemaName related schema name.
      * @param {String} tableName related table name.
      * @desc
@@ -587,7 +594,7 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @constructor
      * @param {Table} table The base table to be filtered.
-     * @param {Object} filters The array of filters.
+     * @param {Array} filters The array of filters.
      * @desc
      * Creates an instance of the Table object.
      *
