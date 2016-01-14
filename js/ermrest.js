@@ -257,8 +257,8 @@ var ERMrest = (function () {
             this.displayName = annotations['tag:misd.isi.edu,2015:display'].name;
         }
         else {
-            // TODO set display name = table_name converted to title case and
-            //    replace '_' with ' ' (whitespace char)
+            this.displayName = this.displayName.replace(/_/g, ' ');
+            this.displayName = _toTitleCase(this.displayName);
         }
 
         // hidden
@@ -649,6 +649,19 @@ var ERMrest = (function () {
                 copyTo[key] = copyFrom[key];
             }
         }
+    }
+
+    /**
+     * @private
+     * @function
+     * @param {String} str string to be converted.
+     * @desc
+     * converts a string to title case
+     */
+    function _toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt){
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
     }
 
     return module;
