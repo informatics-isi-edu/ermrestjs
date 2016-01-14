@@ -93,6 +93,8 @@ angular.module('testApp', ['ERMrest'])
 
 // create, update, delete multiple entities
 .controller('multipleUpdateTestController', ['ermrestClientFactory', '$q', function(ermrestClientFactory, $q) {
+    this.status = "in progress";
+    var _self = this;
     client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
     console.log(client);
     catalog = client.getCatalog(4); // dev server catalog 1 => fb
@@ -115,6 +117,7 @@ angular.module('testApp', ['ERMrest'])
             promises_c.push(table.createEntity(data, ['id']));
         }
         $q.all(promises_c).then(function(results) {
+            _self.status = "created entities";
             console.log(results);
 
             var filter = "author=isi";
@@ -128,6 +131,7 @@ angular.module('testApp', ['ERMrest'])
                     entities[j].data.image_id = 13;
                 }
                 filteredTable.updateEntities(entities).then(function(response) {
+                    _self.status = "entities updated";
                     console.log("entities updated");
 
                     // get entities again to test updated entities
@@ -142,6 +146,7 @@ angular.module('testApp', ['ERMrest'])
                         }
                         $q.all(promises_d).then(function(results) {
                             table.getEntities().then(function(entities) {
+                                _self.status = "got entities. done.";
                                 console.log(entities);
                             });
                         });
