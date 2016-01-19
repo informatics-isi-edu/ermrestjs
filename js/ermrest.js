@@ -582,8 +582,14 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function RelatedTable(entity, schemaName, tableName) {
-        // TODO we'll want to add more error handling here
-        var table = entity.table.schema.catalog.getSchemas()[schemaName].getTable(tableName);
+        var schema = entity.table.schema.catalog.getSchemas()[schemaName];
+        if (schema == undefined) {
+            throw new UndefinedError(schemaName + " is not a valid schema.");
+        }
+        var table = schema.getTable(tableName);
+        if (table == undefined) {
+            throw new UndefinedError(tableName + " is not a valid table.");
+        }
 
         // clone the parent 
         _clone(this, table);
@@ -632,6 +638,20 @@ var ERMrest = (function () {
      * Filters of the filtered table
      */
     FilteredTable.prototype.filters = {};
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {String} message error message
+     * @desc
+     * Creates a undefined error object
+     */
+    function UndefinedError(message) {
+        this.name = "UndefinedError";
+        this.message = (message || "");
+    }
+
+    UndefinedError.prototype = Error.prototype;
 
     /**
      * @private
