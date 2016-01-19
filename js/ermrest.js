@@ -203,7 +203,7 @@ var ERMrest = (function () {
      */
     function Schema(catalog, jsonSchema) {
         this.catalog = catalog;
-        this._uri = catalog._uri + "/schema/" + jsonSchema.schema_name;
+        this._uri = catalog._uri + "/schema/" + _fixedEncodeURIComponent(jsonSchema.schema_name);
         this.name = jsonSchema.schema_name; // get the name out of the json
         this._tables = {}; // dictionary of tables, keyed on table name
 
@@ -242,7 +242,7 @@ var ERMrest = (function () {
      * Constructor of the Table.
      */
     function Table(schema, jsonTable) {
-        this.uri = schema.catalog._uri + "/entity/" + schema.name + ":" + jsonTable.table_name;
+        this.uri = schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
         this.name = jsonTable.table_name;
         this.schema = schema;
         this.columns = [];
@@ -380,13 +380,13 @@ var ERMrest = (function () {
      * been created in the catalog, otherwise the promise is rejected.
      */
     Table.prototype.createEntity = function (data, defaults) {
-        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name;
+        var path = this.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.schema.name) + ":" + _fixedEncodeURIComponent(this.name);
         if (typeof defaults !== 'undefined') {
             for (var i = 0; i < defaults.length; i++) {
                 if (i === 0) {
-                    path = path + "?defaults=" + defaults[i];
+                    path = path + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
                 } else {
-                    path = path + "," + defaults[i];
+                    path = path + "," + _fixedEncodeURIComponent(defaults[i]);
                 }
             }
         }
@@ -409,10 +409,10 @@ var ERMrest = (function () {
         var first = true;
         for (var key in keys) {
             if (first) {
-                path = path + "/" + key + "=" + keys[key];
+                path = path + "/" + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
                 first = false;
             } else {
-                path = path + "," + key + "=" + keys[key];
+                path = path + "," + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
             }
         }
         return _http.delete(path).then(function(response) {
@@ -498,7 +498,7 @@ var ERMrest = (function () {
 
         this.uri = table.uri;
         for (var k = 0; k < keys.length; k++) {
-            this.uri = this.uri + "/" + keys[k] + "=" + jsonEntity[keys[k]];
+            this.uri = this.uri + "/" + _fixedEncodeURIComponent(keys[k]) + "=" + _fixedEncodeURIComponent(jsonEntity[keys[k]]);
         }
     }
 
@@ -543,9 +543,9 @@ var ERMrest = (function () {
         var keys = this.table.keys[0].unique_columns;
         for (var i = 0; i < keys.length; i++) {
             if (i === 0) {
-                path = path + "/" + keys[i] + "=" + this.data[keys[i]];
+                path = path + "/" + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
             } else {
-                path = path + "," + keys[i] + "=" + this.data[keys[i]];
+                path = path + "," + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
             }
         }
         return _http.delete(path).then(function(response) {
@@ -562,7 +562,7 @@ var ERMrest = (function () {
      * Update entity with data that has been modified
      */
     Entity.prototype.update = function () {
-        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name;
+        var path = this.table.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.table.schema.name) + ":" + _fixedEncodeURIComponent(this.table.name);
         return _http.put(path, [this.data]).then(function(response) {
             return response.data;
         }, function(response) {
@@ -589,7 +589,7 @@ var ERMrest = (function () {
         _clone(this, table);
 
         // Extend the path from the entity to this related table
-        this.uri = entity.uri + "/" + schemaName + ":" + tableName;
+        this.uri = entity.uri + "/" + _fixedEncodeURIComponent(schemaName) + ":" + _fixedEncodeURIComponent(tableName);
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
@@ -601,7 +601,7 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @constructor
      * @param {Table} table The base table to be filtered.
-     * @param {Array} filters The array of filters.
+     * @param {Array} filters The array of filters. Need to be URI encoded!
      * @desc
      * Creates an instance of the Table object.
      *
@@ -661,6 +661,19 @@ var ERMrest = (function () {
     function _toTitleCase(str) {
         return str.replace(/\w\S*/g, function(txt){
             return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+    }
+
+    /**
+     * @private
+     * @function
+     * @param {String} str string to be encoded.
+     * @desc
+     * converts a string to an URI encoded string
+     */
+    function _fixedEncodeURIComponent(str) {
+        return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+            return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
     }
 
