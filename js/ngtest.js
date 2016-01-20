@@ -169,13 +169,17 @@ angular.module('testApp', ['ERMrest'])
         console.log(table);
         table.getEntities().then(function(entities) {
             console.log(entities);
-            var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
-            console.log(relatedTable);
-            var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
-            console.log(filteredTable);
-            filteredTable.getEntities().then(function(entities) {
-                console.log(entities);
-            });
+            try {
+                var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
+                console.log(relatedTable);
+                var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
+                console.log(filteredTable);
+                filteredTable.getEntities().then(function(entities) {
+                    console.log(entities);
+                });
+            } catch (e) {
+                console.log(e);
+            }
         });
     });
 }])
@@ -191,18 +195,22 @@ angular.module('testApp', ['ERMrest'])
         var filteredTable = table.getFilteredTable(["id=46"]);
         filteredTable.getEntities().then(function(entities) {
             console.log(entities);
-            var roiTable = entities[0].getRelatedTable('rbk', 'roi');
-            console.log(roiTable);
-            var filteredRoiTable = roiTable.getFilteredTable(["id=25"]);
-            console.log(filteredRoiTable);
-            filteredRoiTable.getEntities().then(function(roiEntities) {
-                console.log(roiEntities);
-                commentTable = roiEntities[0].getRelatedTable('rbk', 'roi_comment');
-                console.log(commentTable);
-                commentTable.getEntities().then(function(commentEntities) {
-                    console.log(commentEntities);
+            try {
+                var roiTable = entities[0].getRelatedTable('rbk', 'roi');
+                console.log(roiTable);
+                var filteredRoiTable = roiTable.getFilteredTable(["id=25"]);
+                console.log(filteredRoiTable);
+                filteredRoiTable.getEntities().then(function (roiEntities) {
+                    console.log(roiEntities);
+                    commentTable = roiEntities[0].getRelatedTable('rbk', 'roi_comment');
+                    console.log(commentTable);
+                    commentTable.getEntities().then(function (commentEntities) {
+                        console.log(commentEntities);
+                    });
                 });
-            });
+            } catch(e) {
+                console.log(e);
+            }
         });
     });
 }]);

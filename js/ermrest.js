@@ -174,8 +174,9 @@ var ERMrest = (function () {
                 self._schemas[s] = new Schema(self, jsonSchemas.schemas[s]);
             }
             return self._schemas;
+        }, function(response) {
+            return _q.reject(response);
         });
-        // TODO need error handling function for promise
     };
 
     /**
@@ -202,7 +203,7 @@ var ERMrest = (function () {
      */
     function Schema(catalog, jsonSchema) {
         this.catalog = catalog;
-        this._uri = catalog._uri + "/schema/" + jsonSchema.schema_name;
+        this._uri = catalog._uri + "/schema/" + _fixedEncodeURIComponent(jsonSchema.schema_name);
         this.name = jsonSchema.schema_name; // get the name out of the json
         this._tables = {}; // dictionary of tables, keyed on table name
 
@@ -241,7 +242,7 @@ var ERMrest = (function () {
      * Constructor of the Table.
      */
     function Table(schema, jsonTable) {
-        this._uri = schema.catalog._uri + "/entity/" + schema.name + ":" + jsonTable.table_name;
+        this.uri = schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
         this.name = jsonTable.table_name;
         this.schema = schema;
         this.columns = [];
@@ -256,8 +257,8 @@ var ERMrest = (function () {
             this.displayName = annotations['tag:misd.isi.edu,2015:display'].name;
         }
         else {
-            // TODO set display name = table_name converted to title case and
-            //    replace '_' with ' ' (whitespace char)
+            this.displayName = this.displayName.replace(/_/g, ' ');
+            this.displayName = _toTitleCase(this.displayName);
         }
 
         // hidden
@@ -288,6 +289,12 @@ var ERMrest = (function () {
         }
 
     }
+
+    /**
+     * @var
+     * @desc The uri of the table.
+     */
+    Table.prototype.uri = null;
 
     /**
      * @var
@@ -351,7 +358,7 @@ var ERMrest = (function () {
      */
     Table.prototype.getEntities = function () {
         var self = this;
-        return _http.get(this._uri).then(function(response) {
+        return _http.get(this.uri).then(function(response) {
             var entities = [];
             for (var i = 0; i < response.data.length; i++) {
                 entities[i] = new Entity(self, response.data[i]);
@@ -373,13 +380,13 @@ var ERMrest = (function () {
      * been created in the catalog, otherwise the promise is rejected.
      */
     Table.prototype.createEntity = function (data, defaults) {
-        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name;
+        var path = this.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.schema.name) + ":" + _fixedEncodeURIComponent(this.name);
         if (typeof defaults !== 'undefined') {
             for (var i = 0; i < defaults.length; i++) {
                 if (i === 0) {
-                    path = path + "?defaults=" + defaults[i];
+                    path = path + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
                 } else {
-                    path = path + "," + defaults[i];
+                    path = path + "," + _fixedEncodeURIComponent(defaults[i]);
                 }
             }
         }
@@ -398,14 +405,14 @@ var ERMrest = (function () {
      * Deletes entities, if promise is fulfilled.
      */
     Table.prototype.deleteEntity = function (keys) {
-        var path = this.schema.catalog._uri + "/entity/" + this.schema.name + ":" + this.name + "/";
+        var path = this.uri;
         var first = true;
         for (var key in keys) {
             if (first) {
-                path = path + key + "=" + keys[key];
+                path = path + "/" + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
                 first = false;
             } else {
-                path = path + "," + key + "=" + keys[key];
+                path = path + "," + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
             }
         }
         return _http.delete(path).then(function(response) {
@@ -489,9 +496,9 @@ var ERMrest = (function () {
             }
         }
 
-        this.uri = table._uri;
+        this.uri = table.uri;
         for (var k = 0; k < keys.length; k++) {
-            this.uri = this.uri + "/" + keys[k] + "=" + jsonEntity[keys[k]];
+            this.uri = this.uri + "/" + _fixedEncodeURIComponent(keys[k]) + "=" + _fixedEncodeURIComponent(jsonEntity[keys[k]]);
         }
     }
 
@@ -532,13 +539,13 @@ var ERMrest = (function () {
      * Delete this entity from its table
      */
     Entity.prototype.delete = function () {
-        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name + "/";
+        var path = this.table.uri;
         var keys = this.table.keys[0].unique_columns;
         for (var i = 0; i < keys.length; i++) {
             if (i === 0) {
-                path = path + keys[i] + "=" + this.data[keys[i]];
+                path = path + "/" + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
             } else {
-                path = path + "," + keys[i] + "=" + this.data[keys[i]];
+                path = path + "," + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
             }
         }
         return _http.delete(path).then(function(response) {
@@ -555,7 +562,7 @@ var ERMrest = (function () {
      * Update entity with data that has been modified
      */
     Entity.prototype.update = function () {
-        var path = this.table.schema.catalog._uri + "/entity/" + this.table.schema.name + ":" + this.table.name;
+        var path = this.table.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.table.schema.name) + ":" + _fixedEncodeURIComponent(this.table.name);
         return _http.put(path, [this.data]).then(function(response) {
             return response.data;
         }, function(response) {
@@ -575,14 +582,20 @@ var ERMrest = (function () {
      * Creates an instance of the Table object.
      */
     function RelatedTable(entity, schemaName, tableName) {
-        // TODO we'll want to add more error handling here
-        var table = entity.table.schema.catalog.getSchemas()[schemaName].getTable(tableName);
+        var schema = entity.table.schema.catalog.getSchemas()[schemaName];
+        if (schema == undefined) {
+            throw new UndefinedError(schemaName + " is not a valid schema.");
+        }
+        var table = schema.getTable(tableName);
+        if (table == undefined) {
+            throw new UndefinedError(tableName + " is not a valid table.");
+        }
 
         // clone the parent 
         _clone(this, table);
 
         // Extend the path from the entity to this related table
-        this._uri = entity.uri + "/" + schemaName + ":" + tableName;
+        this.uri = entity.uri + "/" + _fixedEncodeURIComponent(schemaName) + ":" + _fixedEncodeURIComponent(tableName);
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
@@ -594,7 +607,7 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @constructor
      * @param {Table} table The base table to be filtered.
-     * @param {Array} filters The array of filters.
+     * @param {Array} filters The array of filters. Need to be URI encoded!
      * @desc
      * Creates an instance of the Table object.
      *
@@ -607,7 +620,7 @@ var ERMrest = (function () {
 
         // Extend the URI with the filters
         for (var i = 0; i < filters.length; i++) {
-            this._uri = this._uri + "/" + filters[i];
+            this.uri = this.uri + "/" + filters[i];
         }
 
         // TODO we probably want these filters to be more object oriented
@@ -627,6 +640,20 @@ var ERMrest = (function () {
     FilteredTable.prototype.filters = {};
 
     /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {String} message error message
+     * @desc
+     * Creates a undefined error object
+     */
+    function UndefinedError(message) {
+        this.name = "UndefinedError";
+        this.message = (message || "");
+    }
+
+    UndefinedError.prototype = Error.prototype;
+
+    /**
      * @private
      * @function
      * @param {Object} copyTo the object to copy values to.
@@ -642,6 +669,32 @@ var ERMrest = (function () {
                 copyTo[key] = copyFrom[key];
             }
         }
+    }
+
+    /**
+     * @private
+     * @function
+     * @param {String} str string to be converted.
+     * @desc
+     * converts a string to title case
+     */
+    function _toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt){
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+    }
+
+    /**
+     * @private
+     * @function
+     * @param {String} str string to be encoded.
+     * @desc
+     * converts a string to an URI encoded string
+     */
+    function _fixedEncodeURIComponent(str) {
+        return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+            return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+        });
     }
 
     return module;
