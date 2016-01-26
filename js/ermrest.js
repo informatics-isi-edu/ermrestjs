@@ -380,6 +380,7 @@ var ERMrest = (function () {
      * been created in the catalog, otherwise the promise is rejected.
      */
     Table.prototype.createEntity = function (data, defaults) {
+        var self = this;
         var path = this.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.schema.name) + ":" + _fixedEncodeURIComponent(this.name);
         if (typeof defaults !== 'undefined') {
             for (var i = 0; i < defaults.length; i++) {
@@ -391,7 +392,7 @@ var ERMrest = (function () {
             }
         }
         return _http.post(path, data).then(function(response) {
-            return response.data;
+            return new Entity(self, response.data);
         }, function(response) {
             return _q.reject(response.data);
         });
