@@ -392,7 +392,7 @@ var ERMrest = (function () {
             }
         }
         return _http.post(path, data).then(function(response) {
-            return new Entity(self, response.data);
+            return new Entity(self, response.data[0]);
         }, function(response) {
             return _q.reject(response.data);
         });
