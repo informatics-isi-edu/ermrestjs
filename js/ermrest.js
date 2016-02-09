@@ -118,6 +118,22 @@ var ERMrest = (function () {
 
     /**
      * @function
+     * @return {Promise} Returns a promise.
+     * @desc
+     * An asynchronous method that returns a promise. If fulfilled (and a user
+     * is logged in), it gets the current session information.
+     */
+
+    Client.prototype.getSession = function() {
+        return _http.get(this.uri + "/authn/session").then(function(response) {
+            return response.data;
+        }, function(response) {
+            return _q.reject(response);
+        });
+    }
+    
+    /**
+     * @function
      * @param {String} id Identifier of a catalog within the ERMrest
      * service.
      * @return {Catalog} an instance of a catalog object.
@@ -127,7 +143,7 @@ var ERMrest = (function () {
      */
     Client.prototype.getCatalog = function (id) {
         if (id === undefined || id === null)
-            throw "ID is undefined or nul";
+            throw "ID is undefined or null";
         catalog = this._catalogs[id];
         if (! catalog) {
             catalog = new Catalog(this, id);
@@ -592,7 +608,7 @@ var ERMrest = (function () {
             throw new UndefinedError(tableName + " is not a valid table.");
         }
 
-        // clone the parent 
+        // clone the parent
         _clone(this, table);
 
         // Extend the path from the entity to this related table
@@ -616,7 +632,7 @@ var ERMrest = (function () {
      * for filters.
      */
     function FilteredTable(table, filters) {
-        // clone the parent 
+        // clone the parent
         _clone(this, table);
 
         // Extend the URI with the filters
