@@ -23,14 +23,17 @@
     "library"
   ],
   "devDependencies": {
-      "bower": "x",
-      "mocha": "x",
-      "chai": "x",
-      "testem": "x",
-      "closurecompiler": "x",
-      "jshint": "x",
-      "jsdoc": "x",
-      "jsdoc-to-markdown": "x",
-      "xmlhttprequest": "x"
+    "karma": "x",
+    "karma-chrome-launcher": "x",
+    "karma-firefox-launcher": "x",
+    "karma-jasmine": "x",
+    "jasmine-core": "x",
+    "bower": "x",
+    "testem": "x",
+    "closurecompiler": "x",
+    "jshint": "x",
+    "jsdoc": "x",
+    "jsdoc-to-markdown": "x",
+    "xmlhttprequest": "x"
   }
 }

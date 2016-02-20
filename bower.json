@@ -27,7 +27,8 @@
     "dist",
     "doc"
   ],
-  "'dependencies' go here": {
-      "'package' name goes here": "x"
+  "dependencies": {
+      "angular": "x",
+      "angular-mocks": "x"
   }
 }
