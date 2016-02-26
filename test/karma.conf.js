@@ -17,8 +17,15 @@ module.exports = function(config) {
     files: [
         'bower_components/angular/angular.js',
         'bower_components/angular-mocks/angular-mocks.js',
+        //jquery, jasmine-jquery are here only for purpose of including mock json data
+        //now it's using approach suggested here:
+        // http://stackoverflow.com/questions/17370427/loading-a-mock-json-file-within-karmaangularjs-test
+        'bower_components/jquery/dist/jquery.min.js',
+        'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
         'js/*.js',
-        'test/*.js'
+        'test/*.js',
+        // fixtures to include mock data
+        {pattern: 'test/mock_data/*.json', watched: true, served: true, included: false}
     ],
 
 

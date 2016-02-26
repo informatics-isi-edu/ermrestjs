@@ -29,6 +29,7 @@
   ],
   "dependencies": {
       "angular": "x",
-      "angular-mocks": "x"
+      "angular-mocks": "x",
+      "jquery": "x"
   }
 }

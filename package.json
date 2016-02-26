@@ -28,6 +28,7 @@
     "karma-firefox-launcher": "x",
     "karma-jasmine": "x",
     "jasmine-core": "x",
+    "jasmine-jquery": "x",
     "bower": "x",
     "testem": "x",
     "closurecompiler": "x",
