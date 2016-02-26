@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-angular.module('ERMrest', [])
+ermRestApp = angular.module('ERMrest', [])
 
-.factory('ermrestClientFactory', ['$http', '$q', function($http, $q) {
+ermRestApp.factory('ermrestClientFactory', ['$http', '$q', function($http, $q) {
     ERMrest.configure($http, $q);
     return ERMrest.clientFactory;
 }]);

@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-// Import chai.expect if not defined
-var expect = (typeof chai == 'object') ? chai.expect : require('chai').expect;
 
 // Import Node package for XMLHttpRequest if not defined
 if (XMLHttpRequest) {
@@ -29,7 +27,7 @@ else {
     var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 }
 
-describe('ERMrest', function(){
+xdescribe('ERMrest', function(){
 
     var CATALOG_ID  = '1';
 

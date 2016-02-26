@@ -584,11 +584,11 @@ var ERMrest = (function () {
      */
     function RelatedTable(entity, schemaName, tableName) {
         var schema = entity.table.schema.catalog.getSchemas()[schemaName];
-        if (schema == undefined) {
+        if (schema === undefined) {
             throw new UndefinedError(schemaName + " is not a valid schema.");
         }
         var table = schema.getTable(tableName);
-        if (table == undefined) {
+        if (table === undefined) {
             throw new UndefinedError(tableName + " is not a valid table.");
         }
 
