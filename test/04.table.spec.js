@@ -3,7 +3,6 @@
  * Created by shuai on 3/1/16.
  */
 
-
 describe('In ERMrest,', function () {
     var ermrestClientFactory, ermrestClient, ermrestBaseUrl;
     var $rootScope, $httpBackend, $http, $q;
@@ -22,15 +21,15 @@ describe('In ERMrest,', function () {
         ermrestBaseUrl = $injector.get('ermrestBaseUrl');
         //inject ermrest factory service
         ermrestClientFactory = $injector.get('ermrestClientFactory');
-    }));
 
-    beforeEach(function () {
         //define mock file path
         jasmine.getJSONFixtures().fixturesPath='base/test/mock_data';
-    });
+    }));
 
     describe('ermrest factory,', function () {
-        var catalog, schemas;
+        var catalog, schemas, legacySchema;
+        var legacy = 'legacy';
+        var dataset = 'dataset', datasetTable, datasetTableEntities;
 
         beforeEach(function () {
             //fetch client
@@ -44,48 +43,48 @@ describe('In ERMrest,', function () {
         });
 
         describe('ermrest catalog', function () {
-            it('should fetch schema data using its URI,', function (done) {
+            beforeEach(function () {
                 //schemas['legacy'] ['public']
                 schemas = catalog.getSchemas();
-                expect(schemas).toBeDefined();
-                done();
+                legacySchema = schemas[legacy];
             });
 
-            describe('ermrest schemas', function () {
-                var legacy = 'legacy';
-                var legacySchema, legacySchemaTables;
-                it('should get undefined when retrieving non-existing schema,', function (done) {
-                    expect(schemas['somethingDoesNotExist']).toBeUndefined();
+            it('should get \'dataset\' table,', function (done) {
+                datasetTable = legacySchema.getTable(dataset);
+                expect(datasetTable).toBeDefined();
+                done();
+            });
+            describe('dataset table', function () {
+                beforeEach(function () {
+                    //define mock data for URL
+                    $httpBackend.whenGET(datasetTable.uri)
+                        .respond(getJSONFixture('catalog.1.entity.legacy:dataset.json'));
+                });
+                it('should have \'dataset\' as its name property,', function (done) {
+                    expect(datasetTable.name).toBe(dataset);
                     done();
                 });
-                it('should get the \'legacy\' schema,', function (done) {
-                    legacySchema = schemas[legacy];
-                    expect(legacySchema).toBeDefined();
+                it('should have getEntites() method available,', function (done) {
+                    expect(typeof datasetTable.getEntities).toBe(functionType);
                     done();
                 });
-                describe('legacy schema', function () {
-                    it('should have the \'legacy\' name property,', function (done) {
-                        expect(legacySchema.name).toBe(legacy);
+                it('should get all of its entities,', function (done) {
+                    datasetTable.getEntities().then(function (data) {
+                        datasetTableEntities = data;
                         done();
                     });
-                    it('should have the correct catalog property,', function (done) {
-                        expect(legacySchema.catalog).toBe(catalog);
-                        done();
-                    });
-                    it('should have >0 tables,', function (done) {
-                        legacySchemaTables = legacySchema._tables;
-                        var tableSum = 0;
-                        for (var each in legacySchemaTables) {
-                            tableSum++;
-                        }
-                        //tableSum should be 54
-                        expect(tableSum).toBeGreaterThan(0);
-                        done();
-                    });
-                    it('should have getTable() method available', function (done) {
-                        expect(typeof legacySchema.getTable).toBe(functionType);
-                        done();
-                    });
+                    //$digest() enables Promise to be resolved
+                    $rootScope.$digest();
+                    //flush() enables the http request to be sent
+                    $httpBackend.flush();
+                });
+                it('should have >0 entities,', function (done) {
+                    var num = 0;
+                    for (var each in datasetTableEntities) {
+                        num++;
+                    }
+                    expect(num).toBeGreaterThan(0);
+                    done();
                 });
 
             });

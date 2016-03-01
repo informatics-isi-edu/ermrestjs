@@ -3,12 +3,11 @@
  * Created by shuai on 3/1/16.
  */
 
-
-
 describe('In ERMrest,', function () {
     var ermrestClientFactory, ermrestClient, ermrestBaseUrl;
     var $rootScope, $httpBackend, $http, $q;
     var catalog_id = 1;
+    var functionType = 'function';
 
     beforeEach(module('ERMrest'));
     beforeEach(module('ngMock'));
@@ -75,7 +74,7 @@ describe('In ERMrest,', function () {
                 done();
             });
             it('should have available getSchemas() method', function (done) {
-                expect(catalog.getSchemas).toBeDefined();
+                expect(typeof catalog.getSchemas).toBe(functionType);
                 done();
             });
             it('should get the same schema data using getSchemas() method', function (done) {
