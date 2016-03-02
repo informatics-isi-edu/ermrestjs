@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Fri Feb 19 2016 17:55:43 GMT-0800 (PST)
 
+// Try to solve Travis CI issue using methods below:
+// http://swizec.com/blog/how-to-run-javascript-tests-in-chrome-on-travis/swizec/6647
 
 module.exports = function (config) {
     var configuration = {
