@@ -18,7 +18,7 @@ angular.module('testApp', ['ERMrest'])
 
 // Create, updated, delete single entity
 .controller('entityTestController', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
     console.log(client);
     catalog = client.getCatalog(4); // dev server catalog 1 => fb
     catalog.introspect().then(function(schemas) {
@@ -95,7 +95,7 @@ angular.module('testApp', ['ERMrest'])
 .controller('multipleUpdateTestController', ['ermrestClientFactory', '$q', function(ermrestClientFactory, $q) {
     this.status = "in progress";
     var _self = this;
-    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
     console.log(client);
     catalog = client.getCatalog(4); // dev server catalog 1 => fb
     catalog.introspect().then(function(schemas) {
@@ -160,32 +160,34 @@ angular.module('testApp', ['ERMrest'])
 }])
 
 .controller('testControllerFB', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
     console.log(client);
     catalog = client.getCatalog(1); // dev server catalog 1 => fb
     catalog.introspect().then(function(schemas) {
         console.log(schemas);
         var table = schemas['legacy'].getTable('dataset');
         console.log(table);
-        table.getEntities().then(function(entities) {
+        var table2 = table.getRelatedTable('legacy', 'dataset_data_type');
+        console.log(table2);
+        table2.getEntities().then(function(entities) {
             console.log(entities);
-            try {
-                var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
-                console.log(relatedTable);
-                var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
-                console.log(filteredTable);
-                filteredTable.getEntities().then(function(entities) {
-                    console.log(entities);
-                });
-            } catch (e) {
-                console.log(e);
-            }
+            //try {
+            //    var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
+            //    console.log(relatedTable);
+            //    var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
+            //    console.log(filteredTable);
+            //    filteredTable.getEntities().then(function(entities) {
+            //        console.log(entities);
+            //    });
+            //} catch (e) {
+            //    console.log(e);
+            //}
         });
     });
 }])
 
 .controller('testControllerRBK', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.misd.isi.edu/ermrest', null);
+    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
     console.log(client);
     catalog = client.getCatalog(4); // dev server catalog 4 => rbk
     catalog.introspect().then(function(schemas) {

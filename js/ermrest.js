@@ -459,6 +459,18 @@ var ERMrest = (function () {
     };
 
     /**
+     * @function
+     * @param {String} schemaName Schema name.
+     * @param {String} tableName Table name.
+     * @return {Table} related table instance.
+     * @desc
+     * Returns a related table based on this entity.
+     */
+    Table.prototype.getRelatedTable = function(schemaName, tableName) {
+        return new RelatedTable(this, schemaName, tableName);
+    }
+
+    /**
      * @memberof ERMrest
      * @constructor
      * @param {name} name of the column
@@ -592,14 +604,19 @@ var ERMrest = (function () {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Entity} entity the entity object.
+     * @param {Object} object the Entity object or Table object.
      * @param {String} schemaName related schema name.
      * @param {String} tableName related table name.
      * @desc
      * Creates an instance of the Table object.
      */
-    function RelatedTable(entity, schemaName, tableName) {
-        var schema = entity.table.schema.catalog.getSchemas()[schemaName];
+    function RelatedTable(object, schemaName, tableName) {
+        var schema;
+        if (object instanceof Entity)
+            schema = object.table.schema.catalog.getSchemas()[schemaName];
+        else if(object instanceof Table)
+            schema = object.schema.catalog.getSchemas()[schemaName];
+
         if (schema == undefined) {
             throw new UndefinedError(schemaName + " is not a valid schema.");
         }
@@ -612,7 +629,7 @@ var ERMrest = (function () {
         _clone(this, table);
 
         // Extend the path from the entity to this related table
-        this.uri = entity.uri + "/" + _fixedEncodeURIComponent(schemaName) + ":" + _fixedEncodeURIComponent(tableName);
+        this.uri = object.uri + "/" + _fixedEncodeURIComponent(schemaName) + ":" + _fixedEncodeURIComponent(tableName);
     }
 
     RelatedTable.prototype = Object.create(Table.prototype);
