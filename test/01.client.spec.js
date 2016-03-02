@@ -60,7 +60,7 @@ describe('In ERMrest,', function () {
             });
 
             it('should throw error when passing undefined to \'getCatalog\' method', function (done) {
-                var errorMessage = 'ID is undefined or nul';
+                var errorMessage = 'ID is undefined or null';
                 expect(function () {ermrestClient.getCatalog(undefined)} ).toThrow(errorMessage);
                 expect(function () {ermrestClient.getCatalog(null)} ).toThrow(errorMessage);
                 done();
