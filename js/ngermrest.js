@@ -15,9 +15,8 @@
  */
 
 ermRestApp = angular.module('ERMrest', [])
-
-ermRestApp.factory('ermrestClientFactory', ['$http', '$q', function($http, $q) {
-    ERMrest.configure($http, $q);
-    return ERMrest.clientFactory;
-}]);
-ermRestApp.value('ermrestBaseUrl', 'https://example.com/ermrest');
+    .factory('ermrestClientFactory', ['$http', '$q', function ($http, $q) {
+        ERMrest.configure($http, $q);
+        return ERMrest.clientFactory;
+    }])
+    .value('ermrestBaseUrl', 'https://example.com/ermrest');
