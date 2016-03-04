@@ -17,8 +17,8 @@ BOWER=bower_components
 
 # JavaScript source and test specs
 JS=js
-SOURCE=$(JS)/ermrest.js
-SPECS=$(JS)/main_spec.js
+SOURCE=$(JS)/*.js
+SPECS=test/karma.conf.js
 
 # Distribution target
 DIST=dist
@@ -113,9 +113,9 @@ distclean: clean
 test: $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(SOURCE) $(SPECS) $(BIN)
-	cat $(SOURCE) $(SPECS) > $(TEST)
-	$(BIN)/mocha $(TEST) || (rm -f $(TEST) &&  exit 1)
+$(TEST): $(SOURCE) $(SPECS) $(BIN) $(BOWER) test/*.js
+	$(BIN)/karma start test/karma.conf.js
+	@touch $(TEST)
 
 # Rule to run testem
 .PHONY: testem

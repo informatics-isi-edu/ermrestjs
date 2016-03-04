@@ -621,7 +621,7 @@ var ERMrest = (function () {
             throw new UndefinedError(schemaName + " is not a valid schema.");
         }
         var table = schema.getTable(tableName);
-        if (table == undefined) {
+        if (table === undefined) {
             throw new UndefinedError(tableName + " is not a valid table.");
         }
 
