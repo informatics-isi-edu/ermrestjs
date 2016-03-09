@@ -3,19 +3,15 @@
     <head>
         <meta charset="UTF-8">
         <title>ERMrest API Test</title>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.js"></script>
+        <script src="js/filters.js"></script>
+        <script src="js/datapath.js"></script>
         <script src='js/ermrest.js'></script>
         <script src='js/ngermrest.js'></script>
         <script src='js/ngtest.js'></script>
     </head>
     <body>
         <h1>This is only a test!</h1>
-        <!--<div ng-controller="entityTestController"></div>-->
-        <div ng-controller="multipleUpdateTestController as muCtl">
-            <h2>Multi Update Test</h2>
-            <span>Status: {{muCtl.status}}</span>
-        </div>
-        <!--<div ng-controller="testControllerFB"></div>-->
-        <!--<div ng-controller="testControllerRBK"></div>-->
+        <div ng-controller="mainController"></div>
     </body>
 </html>

@@ -1,218 +1,113 @@
-/*
- * Copyright 2015 University of Southern California
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+angular.module("testApp", ['ERMrest'])
 
-angular.module('testApp', ['ERMrest'])
+    .controller('mainController', ['ermrestServerFactory', '$http', '$q', function(ermrestServerFactory, $http, $q) {
 
-// Create, updated, delete single entity
-.controller('entityTestController', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
-    console.log(client);
-    catalog = client.getCatalog(4); // dev server catalog 1 => fb
-    catalog.introspect().then(function(schemas) {
-        console.log(schemas);
-        var table = schemas['rbk'].getTable('roi');
-        console.log(table);
+        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
 
-        // create, update then delete entity
-        var data = [{
-            "image_id":11,
-            "timestamp":"2015-12-21T17:43:30.609-08:00",
-            "anatomy":null,
-            "context_uri":"https://dev.rebuildingakidney.org/~jessie/openseadragon-viewer/mview.html?url=https://dev.rebuildingakidney.org/data/8fed0117fc94d16590a46d58bf66c9b43c04ea0135d9c0eea3c1a52f2c9e4c12/Brigh/ImageProperties.xml&x=0.5&y=0.25750542661546166&z=0.5473114658864339",
-            "coords":[-0.0566818558782389,0.0384655409052141,0.10898569923144,0.0769310818104284]}];
+        // build catalog schemas
+        server.catalogs.get(1).then(function(catalog){
 
-        table.createEntity(data, ['id', 'author']).then(function(response) {
-            console.log("created");
-            console.log(response);
+            console.log(catalog);
+            console.log(catalog.schemas.get("legacy"));
 
-            var id = response[0].id;
+            // check tables
+            var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
+            var t2 = catalog.schemas.get("legacy").tables.get("dataset");
+            var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
+            console.log(t1);
+            console.log(t2);
 
-            // see all entities
-            table.getEntities().then(function(entities) {
-                console.log(entities);
+            // check column and annotations
+            var c1 = t1.columns.get("dataset_id");
+            console.log(c1);
+            console.log(c1.annotations.names());
+
+            // check keys
+            var colsets1 = t1.keys.colsets();
+            console.log(colsets1);
+            var colsets2 = t2.keys.colsets();
+            console.log(colsets2);
+
+
+            // get entities from table
+            t1.entity.get().then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
             });
 
-            var filter = "id=" + id;
-            var filteredTable = table.getFilteredTable([filter]);
-            filteredTable.getEntities().then(function(entities) {
-                console.log(entities);
+            // get entities with filters.js
+            var gtFilter = new BinaryPredicate("dataset_id", "::gt::", "12969");
+            var ltFilter = new BinaryPredicate("dataset_id", "::lt::", "12969");
+            var eqFilter = new BinaryPredicate("dataset_id", "=", "12969");
 
-                // update entity
-                entities[0].data.image_id = 13;
-                entities[0].data.timestamp = "2016-12-21T17:44:50.609-08:00";
-                entities[0].update().then(function(response) {
-                    console.log("update successful");
-                    console.log(response);
-
-                    // delete entity
-                    entities[0].delete().then(function(response){
-                        console.log("deletion successful");
-
-                        // see all entities
-                        table.getEntities().then(function(entities) {
-                            console.log(entities);
-                        });
-
-                    }, function(response) {
-                        console.log("deletion failed");
-                    })
-
-                    table.getEntities().then(function(entities) {
-                        console.log(entities);
-                    });
-                }, function(response) {
-                    console.log("update failed");
-                    table.getEntities().then(function(entities) {
-                        console.log(entities);
-                    });
-                });
-
+            t1.entity.get(eqFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
             });
+
+            t1.entity.get(gtFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            t1.entity.get(ltFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            // conjunction and negation filters.js
+            var notGtFilter = new Negation(gtFilter);
+            var notLtFilter = new Negation(ltFilter);
+            var conjFilter = new Conjunction([notGtFilter, notLtFilter]);
+            var disjFilter = new Disjunction([gtFilter, ltFilter]);
+
+            t1.entity.get(conjFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+
+            t1.entity.get(disjFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            // Unary Predicate filter
+            var unary = new UnaryPredicate("dataset_id", "::null::");
+
+            t1.entity.get(unary).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+
+            //get entity from datapath
+            var datapath1 = new DataPath($http, $q, t1);
+            console.log("Datapath 1 context table name: " + datapath1.context._table.name);
+            console.log("Datapath 1 URI: " + datapath1.getUri());
+            datapath1.entity.get().then(function(data){
+                console.log(data);
+            }, function(response) {
+                console.log("Datapath 1 get failed: " + response);
+            });
+
+            datapath1.extend(t2);
+            console.log(datapath1.context._table.name);
+            console.log(datapath1.getUri());
+
+            datapath1.extend(t3);
+            console.log(datapath1.context._table.name);
+            console.log(datapath1.getUri());
 
 
         }, function(response) {
-            console.log("creation failed");
             console.log(response);
-        })
-
-    });
-}])
-
-// create, update, delete multiple entities
-.controller('multipleUpdateTestController', ['ermrestClientFactory', '$q', function(ermrestClientFactory, $q) {
-    this.status = "in progress";
-    var _self = this;
-    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
-    console.log(client);
-    catalog = client.getCatalog(4); // dev server catalog 1 => fb
-    catalog.introspect().then(function(schemas) {
-        console.log(schemas);
-        var table = schemas['rbk'].getTable('roi');
-
-        // create, update then delete entity
-        var data = [{
-            "image_id":11,
-            "author":"isi",
-            "timestamp":"2015-12-21T17:43:30.609-08:00",
-            "anatomy":null,
-            "context_uri":"https://dev.rebuildingakidney.org/~jessie/openseadragon-viewer/mview.html?url=https://dev.rebuildingakidney.org/data/8fed0117fc94d16590a46d58bf66c9b43c04ea0135d9c0eea3c1a52f2c9e4c12/Brigh/ImageProperties.xml&x=0.5&y=0.25750542661546166&z=0.5473114658864339",
-            "coords":[-0.0566818558782389,0.0384655409052141,0.10898569923144,0.0769310818104284]}];
-
-        // create 5 entities
-        var promises_c = [];
-        for (var i = 0; i < 5; i++) {
-            promises_c.push(table.createEntity(data, ['id']));
-        }
-        $q.all(promises_c).then(function(results) {
-            _self.status = "created entities";
-            console.log(results);
-
-            var filter = "author=isi";
-            var filteredTable = table.getFilteredTable([filter]);
-            filteredTable.getEntities().then(function(entities) {
-                console.log(entities);
-
-                // update multiple entities at the same time
-                for (var j = 0; j < 5; j++) {
-                    entities[j].data.author = "jennifer";
-                    entities[j].data.image_id = 13;
-                }
-                filteredTable.updateEntities(entities).then(function(response) {
-                    _self.status = "entities updated";
-                    console.log("entities updated");
-
-                    // get entities again to test updated entities
-                    var filteredTable2 = table.getFilteredTable(["author=jennifer"]);
-                    filteredTable2.getEntities().then(function(entities) {
-                        console.log(entities);
-
-                        // delete entities
-                        var promises_d = [];
-                        for (var k = 0; k < entities.length; k++) {
-                            promises_d.push(entities[k].delete());
-                        }
-                        $q.all(promises_d).then(function(results) {
-                            table.getEntities().then(function(entities) {
-                                _self.status = "got entities. done.";
-                                console.log(entities);
-                            });
-                        });
-                    });
-                });
-            });
-
         });
-
-    });
-}])
-
-.controller('testControllerFB', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
-    console.log(client);
-    catalog = client.getCatalog(1); // dev server catalog 1 => fb
-    catalog.introspect().then(function(schemas) {
-        console.log(schemas);
-        var table = schemas['legacy'].getTable('dataset');
-        console.log(table);
-        var table2 = table.getRelatedTable('legacy', 'dataset_data_type');
-        console.log(table2);
-        table2.getEntities().then(function(entities) {
-            console.log(entities);
-            //try {
-            //    var relatedTable = entities[0].getRelatedTable('legacy', 'dataset_data_type');
-            //    console.log(relatedTable);
-            //    var filteredTable = table.getFilteredTable(["id::gt::200", "id::lt::300"]);
-            //    console.log(filteredTable);
-            //    filteredTable.getEntities().then(function(entities) {
-            //        console.log(entities);
-            //    });
-            //} catch (e) {
-            //    console.log(e);
-            //}
-        });
-    });
-}])
-
-.controller('testControllerRBK', ['ermrestClientFactory', function(ermrestClientFactory) {
-    client = ermrestClientFactory.getClient('https://dev.isrd.isi.edu/ermrest', null);
-    console.log(client);
-    catalog = client.getCatalog(4); // dev server catalog 4 => rbk
-    catalog.introspect().then(function(schemas) {
-        console.log(schemas);
-        var table = schemas['rbk'].getTable('image');
-        console.log(table);
-        var filteredTable = table.getFilteredTable(["id=46"]);
-        filteredTable.getEntities().then(function(entities) {
-            console.log(entities);
-            try {
-                var roiTable = entities[0].getRelatedTable('rbk', 'roi');
-                console.log(roiTable);
-                var filteredRoiTable = roiTable.getFilteredTable(["id=25"]);
-                console.log(filteredRoiTable);
-                filteredRoiTable.getEntities().then(function (roiEntities) {
-                    console.log(roiEntities);
-                    commentTable = roiEntities[0].getRelatedTable('rbk', 'roi_comment');
-                    console.log(commentTable);
-                    commentTable.getEntities().then(function (commentEntities) {
-                        console.log(commentEntities);
-                    });
-                });
-            } catch(e) {
-                console.log(e);
-            }
-        });
-    });
 }]);

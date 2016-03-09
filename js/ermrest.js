@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @namespace ERMrest
- * @desc
- * The ERMrest module is a JavaScript client library for the ERMrest
- * service.
- *
- * IMPORTANT NOTE: This module is a work in progress.
- * It is likely to change several times before we have an interface we wish
- * to use for ERMrest JavaScript agents.
- */
 var ERMrest = (function () {
 
     /**
@@ -33,18 +23,19 @@ var ERMrest = (function () {
      */
     var module = {
         configure: configure,
-        clientFactory: {
-            getClient: getClient
+
+        ermrestFactory: {
+            getServer: getServer
         }
     };
 
     /**
      * @private
-     * @var _clients
+     * @var _servers
      * @desc
-     * Internal collection of ERMrest clients.
+     * Internal collection of ERMrest servers.
      */
-    var _clients = {};
+    var _servers = {};
 
     /**
      * @private
@@ -80,41 +71,34 @@ var ERMrest = (function () {
      * @memberof ERMrest
      * @function
      * @param {String} uri URI of the ERMrest service.
-     * @return {Client} Returns a client.
+     * @return {Server} Returns a server instance.
      * @desc
-     * ERMrest client factory creates or reuses ERMrest.Client instances. The
+     * ERMrest server factory creates or reuses ERMrest.Server instances. The
      * URI should be to the ERMrest _service_. For example,
      * `https://www.example.org/ermrest`.
      */
-    function getClient(uri) {
-        cli = _clients[uri];
-        if (! cli) {
-            cli = new Client(uri);
-            _clients[uri] = cli;
+    function getServer(uri) {
+        var server = _servers[uri];
+        if (!server) {
+            server = new Server(uri);
+            _servers[uri] = server;
         }
-        return cli;
+        return server;
     }
 
-    /**
-     * @memberof ERMrest
-     * @constructor
-     * @param {String} uri URI of the ERMrest service.
-     * @desc
-     * The client for the ERMrest service endpoint.
-     */
-    function Client(uri) {
+
+    /******************************************************/
+    /* Server                                             */
+    /******************************************************/
+
+    function Server(uri) {
+
         if (uri === undefined || uri === null)
             throw "URI undefined or null";
         this.uri = uri;
-        this._catalogs = {}; // consider this var "private"
+        this.session = new Session();
+        this.catalogs = new Catalogs(this);
     }
-
-    /**
-     * @var
-     * @desc
-     * The URI of the ERMrest service.
-     */
-    Client.prototype.uri = null;
 
     /**
      * @function
@@ -123,555 +107,838 @@ var ERMrest = (function () {
      * An asynchronous method that returns a promise. If fulfilled (and a user
      * is logged in), it gets the current session information.
      */
-
-    Client.prototype.getSession = function() {
+    Server.prototype.getSession = function() {
         return _http.get(this.uri + "/authn/session").then(function(response) {
             return response.data;
         }, function(response) {
             return _q.reject(response);
         });
-    }
-    
-    /**
-     * @function
-     * @param {String} id Identifier of a catalog within the ERMrest
-     * service.
-     * @return {Catalog} an instance of a catalog object.
-     * @desc
-     * Returns an interface to a Catalog object representing the catalog
-     * resource on the service.
-     */
-    Client.prototype.getCatalog = function (id) {
-        if (id === undefined || id === null)
-            throw "ID is undefined or null";
-        catalog = this._catalogs[id];
-        if (! catalog) {
-            catalog = new Catalog(this, id);
-            this._catalogs[id] = catalog;
-        }
-        return catalog;
     };
+
+    /******************************************************/
+    /* Session                                            */
+    /******************************************************/
+
+    function Session() {
+        this._client = null;
+        this._attributes = null;
+        this._expires = null;
+    }
+
+    Session.prototype = {
+        constructor: Session,
+
+        login: function () {
+
+        },
+
+        logout: function () {
+
+        },
+
+        extend: function () {
+
+        }
+    };
+
+    /******************************************************/
+    /* Catalogs                                           */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Client} client the client object.
-     * @param {String} id Identifier of a catalog within the ERMrest
-     * service.
+     * @param {Server} server the server object.
+     * @desc
+     * Constructor for the Catalogs.
+     */
+    function Catalogs(server) {
+        this.server = server;
+        this._catalogs = {};
+    }
+
+
+    Catalogs.prototype = {
+        constructor: Catalogs,
+
+        create: function () {
+
+        },
+
+        length: function () {
+            return Object.keys(this._catalogs).length;
+        },
+
+        names: function () {
+            return Object.keys(this._catalogs);
+        },
+
+        get: function (id) {
+            // do introspection here and return a promise
+
+            var self = this;
+            var defer = _q.defer();
+
+            // load catalog only when requested
+            if (id in this._catalogs) {
+
+                defer.resolve(self._catalogs[id]);
+                return defer.promise;
+
+            } else {
+
+                var catalog = new Catalog(self.server, id);
+                catalog.introspect().then(function (schemas) {
+                    self._catalogs[id] = catalog;
+                    defer.resolve(catalog);
+                }, function (response) {
+                    defer.reject(response);
+                });
+
+                return defer.promise;
+            }
+        }
+    };
+
+    /******************************************************/
+    /* Catalog                                            */
+    /******************************************************/
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Server} server the server object.
+     * @param {String} id the catalog id.
      * @desc
      * Constructor for the Catalog.
      */
-    function Catalog (client, id) {
-        this.client = client;
+    function Catalog(server, id) {
+
+        this.server = server;
         this.id = id;
-        this._uri = client.uri + "/catalog/" + id;
-        this._schemas = {}; // consider this "private"
+        this.uri = server.uri + "/catalog/" + id;
+        this.schemas = new _Schemas();
     }
 
-    /**
-     * @var
-     * @desc Identifier of the Catalog.
-     */
-    Catalog.prototype.id = null;
+    Catalog.prototype = {
+        constructor: Catalog,
 
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled, it gets the
-     * schemas of the catalog. This method should be called at least on the
-     * catalog object before using the rest of its methods.
-     */
-    Catalog.prototype.introspect = function () {
-        var self = this;
-        return _http.get(this._uri + "/schema").then(function(response) {
-            var jsonSchemas = response.data;
-            for (var s in jsonSchemas.schemas) {
-                self._schemas[s] = new Schema(self, jsonSchemas.schemas[s]);
-            }
-            return self._schemas;
-        }, function(response) {
-            return _q.reject(response);
-        });
+        delete: function () {
+
+        },
+
+        introspect: function () {
+            // load all schemas
+            var self = this;
+            return _http.get(this.uri + "/schema").then(function (response) {
+                var jsonSchemas = response.data;
+                for (var s in jsonSchemas.schemas) {
+                    self.schemas.push(new Schema(self, jsonSchemas.schemas[s]));
+                }
+
+                // all schemas created, TODO load foreign key references
+                return self.schemas;
+            }, function (response) {
+                // this is not a valid catalog
+                return _q.reject(response);
+            });
+        }
+
     };
 
-    /**
-     * @function
-     * @return {Object} returns a dictionary of schemas. The keys of the
-     * dictionary are taken from the schema names and the values are the
-     * corresponding schema objects.
-     * @desc
-     * This is a synchronous method that returns a schema object from an
-     * already introspected catalog.
-     */
-    Catalog.prototype.getSchemas = function () {
-        return this._schemas;
-    };
+    /******************************************************/
+    /* Schemas                                            */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Catalog} catalog The catalog the schema belongs to.
-     * @param {Object} jsonSchema The raw json Schema returned by the ERMrest
-     * service.
      * @desc
-     * Constructor for the Schema.
+     * Constructor for the Schemas.
+     */
+    function _Schemas() {
+        this._schemas = {};
+    }
+
+    _Schemas.prototype = {
+        constructor: _Schemas,
+
+        push: function(schema) {
+            this._schemas[schema.name] = schema;
+        },
+
+        create: function () {
+
+        },
+
+        length: function () {
+            return Object.keys(this._schemas).length;
+        },
+
+        names: function () {
+            return Object.keys(this._schemas);
+        },
+
+        get: function (name) {
+            if (!name in this._schemas) {
+                // TODO schema not found, throw error
+            }
+
+            return this._schemas[name];
+        }
+    };
+
+
+    /******************************************************/
+    /* Schema                                             */
+    /******************************************************/
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Catalog} catalog the catalog object.
+     * @param {String} jsonSchema json of the schema.
+     * @desc
+     * Constructor for the Catalog.
      */
     function Schema(catalog, jsonSchema) {
-        this.catalog = catalog;
-        this._uri = catalog._uri + "/schema/" + _fixedEncodeURIComponent(jsonSchema.schema_name);
-        this.name = jsonSchema.schema_name; // get the name out of the json
-        this._tables = {}; // dictionary of tables, keyed on table name
 
-        // create all tables
-        for (var t in jsonSchema.tables) {
-            this._tables[t] = new Table(this, jsonSchema.tables[t]);
+        this.catalog = catalog;
+        this.name = jsonSchema.schema_name;
+        this.uri = catalog.uri + "/schema/" + _fixedEncodeURIComponent(this.name); // TODO needed?
+
+        // build tables
+        this.tables = new _Tables();
+        for (var key in jsonSchema.tables) {
+            var jsonTable = jsonSchema.tables[key];
+            this.tables.push(new Table(this, jsonTable));
         }
+
+        // build annotations
+        this.annotations = new _Annotations();
+        for (var uri in jsonSchema.annotations) {
+            var jsonAnnotation = jsonSchema.annotations[uri];
+            this.annotations.push(new Annotation("schema", uri, jsonAnnotation));
+        }
+
     }
 
-    /**
-     * @var
-     * @desc The name of the schema.
-     */
-    Schema.prototype.name = null;
+    Schema.prototype = {
+        constructor: Schema,
 
-    /**
-     * @function
-     * @param {String} name the name of the table.
-     * @return {Table} a table object.
-     * @desc
-     * This is a synchronous method that returns a table object from an
-     * already introspected catalog.
-     */
-    Schema.prototype.getTable = function (name) {
-        return this._tables[name];
+        delete: function () {
+
+        }
+
     };
 
+    /******************************************************/
+    /* Tables                                             */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Schema} schema The schema for the table.
-     * @param {Object} jsonTable The raw json of the table returned by the
-     * ERMrest service.
      * @desc
-     * Constructor of the Table.
+     * Constructor for the Tables.
+     */
+    function _Tables() {
+        this._tables = {};
+    }
+
+    _Tables.prototype = {
+        constructor: _Tables,
+
+        push: function(table) {
+            this._tables[table.name] = table;
+        },
+
+        create: function () {
+
+        },
+
+        length: function () {
+            return Object.keys(this._tables).length;
+        },
+
+        name: function () {
+            return Object.keys(this._tables);
+        },
+
+        get: function (name) {
+            if (!name in this._tables) {
+                // TODO table not found, throw error
+            }
+
+            return this._tables[name];
+        }
+
+    };
+
+    /******************************************************/
+    /* Table                                              */
+    /******************************************************/
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Schema} schema the schema object.
+     * @param {String} jsonTable the json of the table.
+     * @desc
+     * Constructor for Table.
      */
     function Table(schema, jsonTable) {
-        this.uri = schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
-        this.name = jsonTable.table_name;
+
         this.schema = schema;
-        this.columns = [];
-        this.keys = jsonTable.keys;
-        this.annotations = jsonTable.annotations;
+        this.name = jsonTable.table_name;
+        //this.uri = schema.catalog.uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
 
-        // table display name
-        this.displayName = jsonTable.table_name;
-        var annotations = jsonTable.annotations;
-        if (annotations['tag:misd.isi.edu,2015:display'] !== undefined &&
-            annotations['tag:misd.isi.edu,2015:display'].name !== undefined) {
-            this.displayName = annotations['tag:misd.isi.edu,2015:display'].name;
-        }
-        else {
-            this.displayName = this.displayName.replace(/_/g, ' ');
-            this.displayName = _toTitleCase(this.displayName);
+        this.entity = new _Entity(this);
+
+        this.columns = new _Columns();
+        for (var i = 0; i < jsonTable.column_definitions.length; i++) {
+            var jsonColumn = jsonTable.column_definitions[i];
+            this.columns.push(new Column(this, i, jsonColumn));
         }
 
-        // hidden
-        if (annotations['tag:misd.isi.edu,2015:hidden'] !== undefined) {
-            this.hidden = true;
+        this.keys = new _Keys();
+        for (var i = 0; i < jsonTable.keys.length; i++) {
+            var jsonKey = jsonTable.keys[i];
+            this.keys.push(new Key(this, jsonKey));
         }
 
-        // columns
-        var columnDefinitions = jsonTable.column_definitions;
-        for (var i = 0; i < columnDefinitions.length; i++){
+        this.foreignKeys = [];
 
-            var cd = columnDefinitions[i];
-
-            // hidden?
-            var cHidden = false;
-            if (cd.annotations['tag:misd.isi.edu,2015:hidden'] !== undefined) {
-                cHidden = true;
-            }
-
-            // display name
-            var cDisplayName = cd.name;
-            if (cd.annotations['tag:misd.isi.edu,2015:display'] !== undefined && cd.annotations['tag:misd.isi.edu,2015:display'].name !== undefined) {
-                cDisplayName = cd.annotations['tag:misd.isi.edu,2015:display'].name;
-            }
-
-            var column = new Column(cd.name, cDisplayName, cHidden);
-            this.columns.push(column);
+        this.annotations = new _Annotations();
+        for (var uri in jsonTable.annotations) {
+            var jsonAnnotation = jsonTable.annotations[uri];
+            this.annotations.push(new Annotation("table", uri, jsonAnnotation));
         }
-
     }
 
-    /**
-     * @var
-     * @desc The uri of the table.
-     */
-    Table.prototype.uri = null;
+    Table.prototype = {
+        constructor: Table,
 
-    /**
-     * @var
-     * @desc The name of the table.
-     */
-    Table.prototype.name = null;
+        delete: function () {
 
-    /**
-     * @var
-     * @desc The schema that the table belongs to.
-     */
-    Table.prototype.schema = null;
+        },
 
-    /**
-     * @var
-     * @desc The display name of the table.
-     */
-    Table.prototype.displayName = null;
-
-    /**
-     * @var
-     * @desc The name of the table.
-     */
-    Table.prototype.hidden = false;
-
-    /**
-     * @var
-     * @desc list of column definitions.
-     */
-    Table.prototype.columns = null;
-
-    /**
-     * @var
-     * @desc list of keys of the table.
-     */
-    Table.prototype.keys = null;
-
-    /**
-     * @var
-     * @desc a list or dictionary of annotation objects.
-     */
-    Table.prototype.annotations = null;
-
-    /**
-     * @function
-     * @param {Array} fitlers array of filters, which are strings.
-     * @return {Table} a filtered table instance.
-     * @desc
-     * Returns a filtered table based on this table.
-     */
-    Table.prototype.getFilteredTable = function (filters) {
-        return new FilteredTable(this, filters);
-    };
-
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled, it gets the
-     * entities for this table.
-     */
-    Table.prototype.getEntities = function () {
-        var self = this;
-        return _http.get(this.uri).then(function(response) {
-            var entities = [];
-            for (var i = 0; i < response.data.length; i++) {
-                entities[i] = new Entity(self, response.data[i]);
+        buildForeignKeys: function() {
+            // TODO this should be built on the second pass so we already have all the keys and columns for all tables
+            this.foreignKeys = new _ForeignKeys();
+            for (var i = 0; i < jsonTable.foreign_keys.length; i++) {
+                var jsonFKs = jsonTable.foreign_keys[i];
+                this.foreignKeys[i] = new ForeignKeyRef(this, jsonFKs);
             }
-            return entities;
-        }, function(response) {
-            return _q.reject(response.data);
-        });
+        }
+
     };
 
+
+    /******************************************************/
+    /* Entity                                             */
+    /******************************************************/
+
     /**
-     * @function
-     * @param {Object} data The entity data. This is typically a dictionary of
-     * attribute name-value pairs essentially.
-     * @param {Object} defaults An array of default columns.
-     * @return {Promise} Returns a promise.
+     * @memberof ERMrest
+     * @constructor
      * @desc
-     * Creating a new entity. If the promise is fullfilled a new entity has
-     * been created in the catalog, otherwise the promise is rejected.
+     * Constructor for Entity.
      */
-    Table.prototype.createEntity = function (data, defaults) {
-        var self = this;
-        var path = this.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.schema.name) + ":" + _fixedEncodeURIComponent(this.name);
-        if (typeof defaults !== 'undefined') {
-            for (var i = 0; i < defaults.length; i++) {
-                if (i === 0) {
-                    path = path + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
+    function _Entity(table) {
+        this._table = table;
+    }
+
+    _Entity.prototype = {
+        constructor: _Entity,
+
+        // filter: Negation|Conjunction|Disjunction|UnaryPredicate|BinaryPredicate
+        get: function(filter) {
+            var uri = this._table.schema.catalog.uri + "/entity/" +
+                _fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                _fixedEncodeURIComponent(this._table.name);
+
+            if (filter !== undefined) {
+
+
+                // Extend the URI with the filters.js
+                var filters = [];
+
+                // multiple filters.js
+                if (filter instanceof Conjunction || filter instanceof Disjunction) {
+                    filters = filters.concat(filter.filters); // only one filter
+                } else if (filter instanceof Negation) {
+                    filters.push(filter.filter);
                 } else {
-                    path = path + "," + _fixedEncodeURIComponent(defaults[i]);
+                    filters.push(filter);
+                }
+
+                // loop through individual filters.js to create filter strings
+                var filterStrings = [];
+                for (var i = 0; i < filters.length; i++) {
+                    var f = filters[i];
+
+                    var filterString = "";
+                    var negate = false;
+                    if (f instanceof Negation) {
+                        f = f.filter;
+                        negate = true;
+                    }
+                    if (f instanceof BinaryPredicate) {
+                        filterString = f.column + f.operator + f.rvalue;
+                    } else if (f instanceof UnaryPredicate) {
+                        filterString = f.column + f.operator;
+                    }
+
+
+                    if (filter instanceof Negation || negate) {
+
+                        filterString = "!(" + filterString + ")";
+                    }
+
+                    filterStrings[i] = filterString;
+                }
+
+                if (filter instanceof Conjunction) {
+                    for (var j = 0; j < filterStrings.length; j++) {
+                        if (j === 0)
+                            uri = uri + "/" + filterStrings[j];
+                        else
+                            uri = uri + "&" + filterStrings[j];
+                    }
+                } else if (filter instanceof Disjunction) {
+                    for (var j = 0; j < filterStrings.length; j++) {
+                        if (j === 0)
+                            uri = uri + "/" + filterStrings[j];
+                        else
+                            uri = uri + ";" + filterStrings[j];
+                    }
+                } else { // single filter
+                    uri = uri + "/" + filterStrings[0];
                 }
             }
+
+            return _http.get(uri).then(function(response) {
+                return response.data; // TODO convert to rowset
+            }, function(response) {
+                return _q.reject(response.data);
+            });
+        },
+
+        delete: function (filter) {
+
+        },
+
+        put: function (rowset) {
+
+        },
+
+        post: function (rowset, defaults) { // create new entities
+            //var uri = this._table.schema.catalog.uri + "/entity/" +
+            //    _fixedEncodeURIComponent(this._table.schema.name) + ":" +
+            //    _fixedEncodeURIComponent(this._table.name);
+            //
+            //if (typeof defaults !== 'undefined') {
+            //    for (var i = 0; i < defaults.length; i++) {
+            //        if (i === 0) {
+            //            path = path + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
+            //        } else {
+            //            path = path + "," + _fixedEncodeURIComponent(defaults[i]);
+            //        }
+            //    }
+            //}
+            //var promises_c = [];
+            //for (var i = 0; i < rowset.length; i++) {
+            //    promises_c.push(_http.post(uri, rowset[i]));
+            //}
+            //
+            //return _q.all(promises_c).then(function(results) {
+            //    return rowset;
+            //});
         }
-        return _http.post(path, data).then(function(response) {
-            return new Entity(self, response.data[0]);
-        }, function(response) {
-            return _q.reject(response.data);
-        });
     };
 
+
+    /******************************************************/
+    /* Columns                                            */
+    /******************************************************/
+
     /**
-     * @function
-     * @param {Object} keys The keys and values identifying the entity
-     * @return {Promise} Returns a promise.
+     * @memberof ERMrest
+     * @constructor
      * @desc
-     * Deletes entities, if promise is fulfilled.
+     * Constructor for Columns.
      */
-    Table.prototype.deleteEntity = function (keys) {
-        var path = this.uri;
-        var first = true;
-        for (var key in keys) {
-            if (first) {
-                path = path + "/" + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
-                first = false;
-            } else {
-                path = path + "," + _fixedEncodeURIComponent(key) + "=" + _fixedEncodeURIComponent(keys[key]);
+    function _Columns() {
+        this._columns = {};
+    }
+
+    _Columns.prototype = {
+        constructor: _Columns,
+
+        push: function(column) {
+            this._columns[column.name] = column;
+        },
+
+        create: function () {
+
+        },
+
+        length: function () {
+            return Object.keys(this._columns).length;
+        },
+
+        names: function () {
+            return Object.keys(this._columns);
+        },
+
+        get: function (name) {
+            if (!name in this._columns) {
+                // TODO not found, throw error
             }
+            return this._columns[name];
+        },
+
+        getByPosition: function (pos) {
+
         }
-        return _http.delete(path).then(function(response) {
-            return response.data;
-        }, function(response) {
-            return _q.reject(response.data);
-        });
     };
 
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * Update entities with data that has been modified.
-     */
-    Table.prototype.updateEntities = function (entities) {
-        // TODO we should replace this sometime with a bulk call to the server
-        var promiseArray = [];
-        for (var i = 0; i < entities.length; i++) {
-            promiseArray.push(entities[i].update());
-        }
-        return _q.all(promiseArray).then(function(results){
-            return results;
-        }, function(results) {
-            return results;
-        });
-    };
-
-    /**
-     * @function
-     * @param {String} schemaName Schema name.
-     * @param {String} tableName Table name.
-     * @return {Table} related table instance.
-     * @desc
-     * Returns a related table based on this entity.
-     */
-    Table.prototype.getRelatedTable = function(schemaName, tableName) {
-        return new RelatedTable(this, schemaName, tableName);
-    }
+    /******************************************************/
+    /* Column                                             */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {name} name of the column
-     * @param {displayName} column's display name
-     * @param {hidden} whether this column is hidden or not
+     * @param {Table} table the table object.
+     * @param {int} index column position in the table.
+     * @param {String} jsonColumn the json column.
      * @desc
-     * Constructor of the Column.
+     * Constructor for Column.
      */
-    function Column (name, displayName, hidden) {
-        this.name = name;
-        this.displayName = displayName;
-        this.hidden = hidden;
-    }
+    function Column(table, index, jsonColumn) {
 
-    /**
-     * @var
-     * @desc name of the column
-     */
-    Column.prototype.name = null;
-
-    /**
-     * @var
-     * @desc display name of the column
-     */
-    Column.prototype.displayName = null;
-
-    /**
-     * @var
-     * @desc whether column is hidden or not
-     */
-    Column.prototype.hidden = false;
-
-    /**
-     * @memberof ERMrest
-     * @constructor
-     * @param {Table} parent table
-     * @param {Object} json entity data
-     * @desc
-     * Creates an entity, which is an instance of a table object.
-     */
-    function Entity (table, jsonEntity) {
         this.table = table;
-        this.data = jsonEntity;
-
-        var keys = {};
-        if (table.keys.length) {
-            keys = table.keys[0].unique_columns;
-        }
-        else {
-            for (var i = 0; i < table.columns.length; i++) {
-                keys.push(table.columns[i].name);
-            }
-        }
-
-        this.uri = table.uri;
-        for (var k = 0; k < keys.length; k++) {
-            this.uri = this.uri + "/" + _fixedEncodeURIComponent(keys[k]) + "=" + _fixedEncodeURIComponent(jsonEntity[keys[k]]);
+        this.name = jsonColumn.name;
+        this.index = index;
+        this.type = new Type(jsonColumn.type.typename);
+        this.annotations = new _Annotations();
+        for (var uri in jsonColumn.annotations) {
+            var jsonAnnotation = jsonColumn.annotations[uri];
+            this.annotations.push(new Annotation("column", uri, jsonAnnotation));
         }
     }
 
-    /**
-     * @var
-     * @desc table
-     */
-    Entity.prototype.table = null;
+    Column.prototype = {
+        constructor: Column,
 
-    /**
-     * @var
-     * @desc entity uri
-     */
-    Entity.prototype.uri = null;
+        delete: function () {
 
-    /**
-     * @var
-     * @desc entity data
-     */
-    Entity.prototype.data = null;
-
-    /**
-     * @function
-     * @param {String} schemaName Schema name.
-     * @param {String} tableName Table name.
-     * @return {Table} related table instance.
-     * @desc
-     * Returns a related table based on this entity.
-     */
-    Entity.prototype.getRelatedTable = function (schemaName, tableName) {
-        return new RelatedTable(this, schemaName, tableName);
-    };
-
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * Delete this entity from its table
-     */
-    Entity.prototype.delete = function () {
-        var path = this.table.uri;
-        var keys = this.table.keys[0].unique_columns;
-        for (var i = 0; i < keys.length; i++) {
-            if (i === 0) {
-                path = path + "/" + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
-            } else {
-                path = path + "," + _fixedEncodeURIComponent(keys[i]) + "=" + _fixedEncodeURIComponent(this.data[keys[i]]);
-            }
         }
-        return _http.delete(path).then(function(response) {
-            return response.data;
-        }, function(response) {
-            return _q.reject(response.data);
-        });
-    };
-
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * Update entity with data that has been modified
-     */
-    Entity.prototype.update = function () {
-        var path = this.table.schema.catalog._uri + "/entity/" + _fixedEncodeURIComponent(this.table.schema.name) + ":" + _fixedEncodeURIComponent(this.table.name);
-        return _http.put(path, [this.data]).then(function(response) {
-            return response.data;
-        }, function(response) {
-            console.log(response);
-            return _q.reject(response.data);
-        });
 
     };
+
+    /******************************************************/
+    /* Annotations                                        */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Object} object the Entity object or Table object.
-     * @param {String} schemaName related schema name.
-     * @param {String} tableName related table name.
      * @desc
-     * Creates an instance of the Table object.
+     * Constructor for Annotations.
      */
-    function RelatedTable(object, schemaName, tableName) {
-        var schema;
-        if (object instanceof Entity)
-            schema = object.table.schema.catalog.getSchemas()[schemaName];
-        else if(object instanceof Table)
-            schema = object.schema.catalog.getSchemas()[schemaName];
-
-        if (schema == undefined) {
-            throw new UndefinedError(schemaName + " is not a valid schema.");
-        }
-        var table = schema.getTable(tableName);
-        if (table === undefined) {
-            throw new UndefinedError(tableName + " is not a valid table.");
-        }
-
-        // clone the parent
-        _clone(this, table);
-
-        // Extend the path from the entity to this related table
-        this.uri = object.uri + "/" + _fixedEncodeURIComponent(schemaName) + ":" + _fixedEncodeURIComponent(tableName);
+    function _Annotations() {
+        this._annotations = {};
     }
 
-    RelatedTable.prototype = Object.create(Table.prototype);
+    _Annotations.prototype = {
+        constructor: _Annotations,
 
-    RelatedTable.prototype.constructor = RelatedTable;
+        push: function(annotation) {
+            this._annotations[annotation.uri] = annotation;
+        },
 
+        create: function () {
+
+        },
+
+        length: function () {
+            return Object.keys(this._annotations).length;
+        },
+
+        names: function () {
+            return Object.keys(this._annotations);
+        },
+
+        get: function (uri) {
+            if (!uri in this._annotations) {
+                // TODO table not found, throw error
+            }
+
+            return this._annotations[uri];
+        }
+    };
+
+    /******************************************************/
+    /* Annotation                                         */
+    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Table} table The base table to be filtered.
-     * @param {Array} filters The array of filters. Need to be URI encoded!
+     * @param {String} subject subject of the annotation: schema|table|column|key|foreignkeyref.
+     * @param {String} uri uri id of the annotation.
+     * @param {String} jsonAnnotation json of annotation.
      * @desc
-     * Creates an instance of the Table object.
-     *
-     * Currently, the filters are strings that follow the ERMrest specification
-     * for filters.
+     * Constructor for Annotation.
      */
-    function FilteredTable(table, filters) {
-        // clone the parent
-        _clone(this, table);
+    function Annotation(subject, uri, jsonAnnotation) {
 
-        // Extend the URI with the filters
-        for (var i = 0; i < filters.length; i++) {
-            this.uri = this.uri + "/" + filters[i];
-        }
-
-        // TODO we probably want these filters to be more object oriented
-        //   like a Filter object with left & right operands and an operator.
-        this.filters = filters;
+        this.subject = subject;
+        this.uri = uri;
+        this.content = jsonAnnotation; // TODO keep json content?
     }
 
-    FilteredTable.prototype = Object.create(Table.prototype);
+    Annotation.prototype = {
+        constructor: Annotation,
 
-    FilteredTable.prototype.constructor = FilteredTable;
+        delete: function () {
+
+        }
+    };
+
+    /******************************************************/
+    /* Key                                                */
+    /******************************************************/
 
     /**
-     * @var
+     * @memberof ERMrest
+     * @constructor
      * @desc
-     * Filters of the filtered table
+     * Constructor for Keys.
      */
-    FilteredTable.prototype.filters = {};
+    function _Keys() {
+        this._keys = [];
+    }
+
+    _Keys.prototype = {
+        constructor: _Keys,
+
+        push: function(key) {
+            this._keys.push(key);
+        },
+
+        create: function () {
+
+        },
+
+        length: function () {
+        },
+
+        colsets: function () {
+            var sets = [];
+            for (var i = 0; i < this._keys.length; i++) {
+                sets.push(this._keys[i].colset);
+            }
+            return sets;
+        },
+
+        get: function (colset) {
+        }
+    };
+
+    /******************************************************/
+    /* Key                                                */
+    /******************************************************/
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Table} table the table object.
+     * @param {String} jsonKey json key.
+     * @desc
+     * Constructor for Key.
+     */
+    function Key(table, jsonKey) {
+
+        this.table = table;
+
+        var uniqueColumns = [];
+        for (var i = 0; i < jsonKey.unique_columns.length; i++) {
+            // find corresponding column objects
+            uniqueColumns.push(table.columns.get(jsonKey.unique_columns[i]));
+        }
+        this.colset = new ColSet(uniqueColumns);
+
+        this.annotations = new _Annotations();
+        for (var uri in jsonKey.annotations) {
+            var jsonAnnotation = jsonKey.annotations[uri];
+            this.annotations.push(new Annotation("key", uri, jsonAnnotation));
+        }
+    }
+
+
+    /******************************************************/
+    /* ColSet                                             */
+    /******************************************************/
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {Array} columns an array of Column objects.
+     * @desc
+     * Constructor for ColSet, a set of Column objects.
+     */
+    function ColSet(columns) {
+
+        this.columns = columns;
+    }
+
+    ColSet.prototype = {
+        constructor: ColSet,
+
+        length: function () {
+            return this.columns.length;
+        },
+
+        columns: function () {
+            return this.columns;
+        }
+
+    };
+
+    /******************************************************/
+    /* Mapping                                            */
+    /* mathematical functional map,                       */
+    /* i.e. a mathematical set of (from -> to)            */
+    /* column pairings                                    */
+    /******************************************************/
+
+    function Mapping() {
+        this.mapping = {};
+
+    }
+
+    Mapping.prototype = {
+        constructor: Mapping,
+
+        length: function () {
+
+        },
+
+        domain: function () {
+
+        },
+
+        get: function () {
+
+        }
+    };
+
+
+    function _ForeignKeys() {
+        this._foreignKeys = []; // array of ForeignKeyRef
+    }
+
+    _ForeignKeys.prototype = {
+        constructor: _ForeignKeys,
+
+        create: function () {
+
+        },
+
+        length: function () {
+            return this._foreignKeys.length;
+        },
+
+        mappings: function () {
+        },
+
+        get: function (mapping) {
+        }
+    };
+
+
+    /******************************************************/
+    /* ForeignKeyRef                                      */
+    /******************************************************/
+
+    function ForeignKeyRef(table, jsonFKR) {
+        //.columns : colset of referencing columns (foreign_key_columns, self table)
+        // TODO reference to a key in another table, but table needs to be created already
+        // TODO create all the tables and keys first, then process foreign keys.
+        //.key : key being referenced (referenced_columns, another table)
+        //.mapping
+        //.delete()
+        //.annotations.create( annotationParams ) -> annotation
+        //.annotations.length() -> count
+        //.annotations.names() -> sequence of uri
+        //.annotation.get( uri ) -> annotation
+
+        var catalog = table.schema.catalog;
+
+        // get Column reference
+        var fkeys = jsonFKR.foreign_key_columns;
+        var refcols = jsonFKR.referenced_columns;
+        this._columns  = []; // self columns
+        this._keys = []; // referenced columns
+        for (var i = 0; i < fkeys.length; i++) {
+            var fkey = fkeys[i];
+            var refcol = refcols[i];
+            this._columns[i] = catalog.schemas.get(fkey.schema_name).tables.get(fkey.table_name).columns.get(fkey.column_name); // TODO colset
+            this._keys[i] = catalogs.schemas.get(refcol.schema_name).tables.get(refcol.table_name).columns.get(refcol.column_name); // TODO colset
+        }
+
+        this._mapping = new Mapping(); // TODO
+
+        this.annotations = new _Annotations();
+        for (var uri in jsonFKR.annotations) {
+            var jsonAnnotation = jsonFKR.annotations[uri];
+            this.annotations.push(new Annotation("foreignkeyref", uri, jsonAnnotation));
+        }
+
+    }
+
+    ForeignKeyRef.prototype = {
+        constructor: ForeignKeyRef,
+
+        delete: function () {
+
+        }
+
+    };
+
+
+    /******************************************************/
+    /* Type                                               */
+    /******************************************************/
+
+    function Type(name) {
+        //.name
+        //.is_array : boolean
+        //.base_type
+        this.name = name;
+    }
+
+    Type.prototype = {
+        constructor: Type,
+
+        is_array: function () {
+
+        }
+    };
+
+
+
+
+
+
+    /******************************************************/
+    /* Utilities                                          */
+    /******************************************************/
+
 
     /**
      * @memberof ERMrest
@@ -733,3 +1000,6 @@ var ERMrest = (function () {
 
     return module;
 })();
+
+
+
