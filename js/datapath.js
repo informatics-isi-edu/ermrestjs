@@ -50,7 +50,7 @@ DataPath.prototype = {
 
     },
 
-    extend: function (table, context) {
+    extend: function (table, context, link) { // TODO context? link?
         if (context !== undefined) {
             // TODO context -> context/pathtable?
         }
@@ -59,7 +59,6 @@ DataPath.prototype = {
     },
 
     getUri: function() {
-        //var uri = this.catalog.server.uri + "/catalog/" + this.catalog.id + "/entity"; // TODO remove
         var uri = "";
         for (var i = 0; i < this.pathtables.length; i++) {
             if (i === 0)
@@ -67,9 +66,9 @@ DataPath.prototype = {
             else
                 uri = uri + "/" + this.pathtables[i].toString();
         }
+
         return uri;
 
-        // TODO add filters.js
     }
 
 };
@@ -84,16 +83,19 @@ _Entity.prototype = {
 
     constructor: _Entity,
 
-    get: function () {
+    get: function (filter) {
         var baseUri = this._datapath.catalog.server.uri;
         var catId = this._datapath.catalog.id;
-        var uri = baseUri            // base
+        var uri = baseUri                // base
             + "/catalog/" + catId        // catalog
             + "/entity/"                 // interface
             + this._datapath.getUri();   // datapath
 
+        if (filter !== undefined)
+            uri = uri + _filterToUri(filter);
+
         return this._http.get(uri).then(function(response){
-            return response.data; // TODO to rowset
+            return response.data;
         }, function(response){
             return this._q.reject(response);
         });
@@ -131,7 +133,8 @@ PathTable.prototype = {
     constructor: PathTable,
 
     toString: function () {
-        return this._table.schema.name + ":" + this._table.name;
+        return _fixedEncodeURIComponent(this._table.schema.name) + ":" +
+            _fixedEncodeURIComponent(this._table.name);
     }
 
 };
