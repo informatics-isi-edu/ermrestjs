@@ -533,20 +533,20 @@ var ERMrest = (function () {
 
         },
 
-        post: function (rowset, defaults) { // create new entities
-            //var uri = this._table.schema.catalog.uri + "/entity/" +
-            //    _fixedEncodeURIComponent(this._table.schema.name) + ":" +
-            //    _fixedEncodeURIComponent(this._table.name);
-            //
-            //if (typeof defaults !== 'undefined') {
-            //    for (var i = 0; i < defaults.length; i++) {
-            //        if (i === 0) {
-            //            path = path + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
-            //        } else {
-            //            path = path + "," + _fixedEncodeURIComponent(defaults[i]);
-            //        }
-            //    }
-            //}
+        post: function (rowsets, defaults) { // create new entities
+            var uri = this._table.schema.catalog.uri + "/entity/" +
+                _fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                _fixedEncodeURIComponent(this._table.name);
+
+            if (typeof defaults !== 'undefined') {
+                for (var i = 0; i < defaults.length; i++) {
+                    if (i === 0) {
+                        uri = uri + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
+                    } else {
+                        uri = uri + "," + _fixedEncodeURIComponent(defaults[i]);
+                    }
+                }
+            }
             //var promises_c = [];
             //for (var i = 0; i < rowset.length; i++) {
             //    promises_c.push(_http.post(uri, rowset[i]));
@@ -555,7 +555,14 @@ var ERMrest = (function () {
             //return _q.all(promises_c).then(function(results) {
             //    return rowset;
             //});
+
+            return _http.post(uri, rowsets).then(function(response) {
+               return response.data;
+            }, function(response) {
+                return _q.reject(response);
+            });
         }
+
     };
 
 
