@@ -43,7 +43,7 @@ angular.module('firstApp', ['ERMrest'])
 
     // Then, parse the URL fragment id (aka, hash)
     // Expected format: "#catalog_id/[schema_name:]table_name"
-    hash = window.location.hash;
+    var hash = window.location.hash;
     if (hash === undefined || hash == '' || hash.length == 1) {
         return;
     }
@@ -86,7 +86,7 @@ angular.module('firstApp', ['ERMrest'])
         selected[0] = entity;
     }
 }])
- 
+
 // Register the entity controller
 .controller('entityController', ['$scope', 'selected', function($scope, selected) {
     $scope.selected = selected;
@@ -127,4 +127,3 @@ angular.module('firstApp', ['ERMrest'])
         console.log(response);
     }); // introspect
 }]);
-
