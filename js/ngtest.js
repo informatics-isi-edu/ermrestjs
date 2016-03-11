@@ -37,55 +37,55 @@ angular.module("testApp", ['ERMrest'])
             });
 
             // get entities with filters.js
-            //var gtFilter = new BinaryPredicate("dataset_id", "::gt::", "12969");
-            //var ltFilter = new BinaryPredicate("dataset_id", "::lt::", "12969");
-            //var eqFilter = new BinaryPredicate("dataset_id", "=", "12969");
-            //
-            //t1.entity.get(eqFilter).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
-            //
-            //t1.entity.get(gtFilter).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
-            //
-            //t1.entity.get(ltFilter).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
+            var gtFilter = new BinaryPredicate("dataset_id", "::gt::", "12969");
+            var ltFilter = new BinaryPredicate("dataset_id", "::lt::", "12969");
+            var eqFilter = new BinaryPredicate("dataset_id", "=", "12969");
+
+            t1.entity.get(eqFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            t1.entity.get(gtFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            t1.entity.get(ltFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
 
             // conjunction and negation filters.js
-            //var notGtFilter = new Negation(gtFilter);
-            //var notLtFilter = new Negation(ltFilter);
-            //var conjFilter = new Conjunction([notGtFilter, notLtFilter]);
-            //var disjFilter = new Disjunction([gtFilter, ltFilter]);
-            //
-            //t1.entity.get(conjFilter).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
-            //
-            //
-            //t1.entity.get(disjFilter).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
-            //
-            //// Unary Predicate filter
-            //var unary = new UnaryPredicate("dataset_id", "::null::");
-            //
-            //t1.entity.get(unary).then(function(rows) {
-            //    console.log(rows);
-            //}, function(response) {
-            //    console.log(response);
-            //});
+            var notGtFilter = new Negation(gtFilter);
+            var notLtFilter = new Negation(ltFilter);
+            var conjFilter = new Conjunction([notGtFilter, notLtFilter]);
+            var disjFilter = new Disjunction([gtFilter, ltFilter]);
+
+            t1.entity.get(conjFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+
+            t1.entity.get(disjFilter).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            // Unary Predicate filter
+            var unary = new UnaryPredicate("dataset_id", "::null::");
+
+            t1.entity.get(unary).then(function(rows) {
+                console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
 
 
             //get entity from datapath
