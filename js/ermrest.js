@@ -190,6 +190,18 @@ var ERMrest = (function () {
                 var catalog = new Catalog(self.server, id);
                 catalog.introspect().then(function (schemas) {
                     self._catalogs[id] = catalog;
+
+                    // build foreign keys for each table in each schema
+                    var schemas = catalog.schemas.names();
+                    for (var s = 0; s < schemas.length; s++) {
+                        var schema = catalog.schemas.get(schemas[s]);
+                        var tables = schema.tables.names();
+                        for (var t = 0; t < tables.length; t++) {
+                            var table = schema.tables.get(tables[t]);
+                            table.buildForeignKeys();
+                        }
+                    }
+
                     defer.resolve(catalog);
                 }, function (response) {
                     defer.reject(response);
@@ -236,7 +248,8 @@ var ERMrest = (function () {
                     self.schemas.push(new Schema(self, jsonSchemas.schemas[s]));
                 }
 
-                // all schemas created, TODO load foreign key references
+                // all schemas created
+                // load foreign key references
                 return self.schemas;
             }, function (response) {
                 // this is not a valid catalog
@@ -361,7 +374,7 @@ var ERMrest = (function () {
             return Object.keys(this._tables).length;
         },
 
-        name: function () {
+        names: function () {
             return Object.keys(this._tables);
         },
 
@@ -391,6 +404,7 @@ var ERMrest = (function () {
 
         this.schema = schema;
         this.name = jsonTable.table_name;
+        this.jsonTable = jsonTable;
         //this.uri = schema.catalog.uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
 
         this.entity = new _Entity(this);
@@ -424,10 +438,11 @@ var ERMrest = (function () {
         },
 
         buildForeignKeys: function() {
-            // TODO this should be built on the second pass so we already have all the keys and columns for all tables
+            // this should be built on the second pass after introspection
+            // so we already have all the keys and columns for all tables
             this.foreignKeys = new _ForeignKeys();
-            for (var i = 0; i < jsonTable.foreign_keys.length; i++) {
-                var jsonFKs = jsonTable.foreign_keys[i];
+            for (var i = 0; i < this.jsonTable.foreign_keys.length; i++) {
+                var jsonFKs = this.jsonTable.foreign_keys[i];
                 this.foreignKeys[i] = new ForeignKeyRef(this, jsonFKs);
             }
         }
@@ -463,7 +478,7 @@ var ERMrest = (function () {
             }
 
             return _http.get(uri).then(function(response) {
-                return response.data; // TODO convert to rowset
+                return response.data;
             }, function(response) {
                 return _q.reject(response.data);
             });
@@ -491,14 +506,6 @@ var ERMrest = (function () {
                     }
                 }
             }
-            //var promises_c = [];
-            //for (var i = 0; i < rowset.length; i++) {
-            //    promises_c.push(_http.post(uri, rowset[i]));
-            //}
-            //
-            //return _q.all(promises_c).then(function(results) {
-            //    return rowset;
-            //});
 
             return _http.post(uri, rowsets).then(function(response) {
                return response.data;
@@ -586,6 +593,16 @@ var ERMrest = (function () {
 
         delete: function () {
 
+        },
+
+        equals: function(column) {
+            if (column.table.schema.name === this.table.schema.name &&
+                column.table.name === this.table.name &&
+                column.name === this.name) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
     };
@@ -649,7 +666,7 @@ var ERMrest = (function () {
 
         this.subject = subject;
         this.uri = uri;
-        this.content = jsonAnnotation; // TODO keep json content?
+        this.content = jsonAnnotation;
     }
 
     Annotation.prototype = {
@@ -691,12 +708,20 @@ var ERMrest = (function () {
         colsets: function () {
             var sets = [];
             for (var i = 0; i < this._keys.length; i++) {
-                sets.push(this._keys[i].colset);
+                sets.push(this._keys[i].columns);
             }
             return sets;
         },
 
         get: function (colset) {
+            // find Key with the same colset
+            for (var i = 0; i < this._keys.length; i++) {
+                var key = this._keys[i];
+                if (colset.equals(key.columns)) {
+                    return key;
+                }
+                return null;
+            }
         }
     };
 
@@ -721,7 +746,7 @@ var ERMrest = (function () {
             // find corresponding column objects
             uniqueColumns.push(table.columns.get(jsonKey.unique_columns[i]));
         }
-        this.colset = new ColSet(uniqueColumns);
+        this.columns = new ColSet(uniqueColumns);
 
         this.annotations = new _Annotations();
         for (var uri in jsonKey.annotations) {
@@ -756,6 +781,34 @@ var ERMrest = (function () {
 
         columns: function () {
             return this.columns;
+        },
+
+        equals: function (colset) {
+            var colsA = colset.columns;
+            var colsB = this.columns;
+
+            // for each col in colsetA, find equiv. col in colsetB
+            if (colsA.length === colsB.length) {
+                for (var a = 0; a < colsA.length; a++) {
+                    var colA = colsA[a];
+
+                    // find equiv col in colsetB
+                    // if not found, return false
+                    var foundMatchingCol = false;
+                    for (var b = 0; b < colsB.length; b++) {
+                        var colB = colsB[b];
+                        if (colA.equals(colB)){
+                            foundMatchingCol = true;
+                            break;
+                        }
+                    }
+                    if (!foundMatchingCol) {
+                        return false;
+                    }
+                }
+            } else return false;
+
+            return true;
         }
 
     };
@@ -818,8 +871,6 @@ var ERMrest = (function () {
 
     function ForeignKeyRef(table, jsonFKR) {
         //.columns : colset of referencing columns (foreign_key_columns, self table)
-        // TODO reference to a key in another table, but table needs to be created already
-        // TODO create all the tables and keys first, then process foreign keys.
         //.key : key being referenced (referenced_columns, another table)
         //.mapping
         //.delete()
@@ -830,18 +881,27 @@ var ERMrest = (function () {
 
         var catalog = table.schema.catalog;
 
-        // get Column reference
-        var fkeys = jsonFKR.foreign_key_columns;
-        var refcols = jsonFKR.referenced_columns;
-        this._columns  = []; // self columns
-        this._keys = []; // referenced columns
-        for (var i = 0; i < fkeys.length; i++) {
-            var fkey = fkeys[i];
-            var refcol = refcols[i];
-            this._columns[i] = catalog.schemas.get(fkey.schema_name).tables.get(fkey.table_name).columns.get(fkey.column_name); // TODO colset
-            this._keys[i] = catalogs.schemas.get(refcol.schema_name).tables.get(refcol.table_name).columns.get(refcol.column_name); // TODO colset
+        // create ColSet for foreign key columns
+        var fkCols = jsonFKR.foreign_key_columns;
+        var foreignKeyCols = [];
+        for (var i = 0; i < fkCols.length; i++) {
+            foreignKeyCols.push(table.columns.get(fkCols[i].column_name)); // "Column" object
         }
+        this.columns = new ColSet(foreignKeyCols);
 
+        // find corresponding Key from referenced columns
+        // ** all the tables in the catalog must have been created at this point
+        var refCols = jsonFKR.referenced_columns;
+        var referencedCols = [];
+        for (var j = 0; j < refCols.length; j++) {
+            var col = catalog.schemas.get(refCols[j].schema_name).tables.get(refCols[j].table_name).columns.get(refCols[j].column_name);
+            referencedCols.push(col);
+        }
+        // find key from referencedCols
+        // use index 0 since all refCols should be of the same schema:table
+        this.key = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name).keys.get(new ColSet(referencedCols));
+
+        // assign mapping
         this._mapping = new Mapping(); // TODO
 
         this.annotations = new _Annotations();
