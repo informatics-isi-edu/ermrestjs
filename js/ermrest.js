@@ -100,21 +100,6 @@ var ERMrest = (function () {
         this.catalogs = new Catalogs(this);
     }
 
-    /**
-     * @function
-     * @return {Promise} Returns a promise.
-     * @desc
-     * An asynchronous method that returns a promise. If fulfilled (and a user
-     * is logged in), it gets the current session information.
-     */
-    Server.prototype.getSession = function() {
-        return _http.get(this.uri + "/authn/session").then(function(response) {
-            return response.data;
-        }, function(response) {
-            return _q.reject(response);
-        });
-    };
-
     /******************************************************/
     /* Session                                            */
     /******************************************************/
@@ -128,6 +113,21 @@ var ERMrest = (function () {
     Session.prototype = {
         constructor: Session,
 
+        /**
+         * @function
+         * @return {Promise} Returns a promise.
+         * @desc
+         * An asynchronous method that returns a promise. If fulfilled (and a user
+         * is logged in), it gets the current session information.
+         */
+        get: function() {
+            return _http.get(this.uri + "/authn/session").then(function(response) {
+                return response.data;
+            }, function(response) {
+                return _q.reject(response);
+            });
+        },
+
         login: function () {
 
         },
@@ -139,6 +139,8 @@ var ERMrest = (function () {
         extend: function () {
 
         }
+
+
     };
 
     /******************************************************/
@@ -190,18 +192,6 @@ var ERMrest = (function () {
                 var catalog = new Catalog(self.server, id);
                 catalog.introspect().then(function (schemas) {
                     self._catalogs[id] = catalog;
-
-                    // build foreign keys for each table in each schema
-                    var schemas = catalog.schemas.names();
-                    for (var s = 0; s < schemas.length; s++) {
-                        var schema = catalog.schemas.get(schemas[s]);
-                        var tables = schema.tables.names();
-                        for (var t = 0; t < tables.length; t++) {
-                            var table = schema.tables.get(tables[t]);
-                            table.buildForeignKeys();
-                        }
-                    }
-
                     defer.resolve(catalog);
                 }, function (response) {
                     defer.reject(response);
@@ -249,7 +239,17 @@ var ERMrest = (function () {
                 }
 
                 // all schemas created
-                // load foreign key references
+                // build foreign keys for each table in each schema
+                var schemaNames = self.schemas.names();
+                for (var s = 0; s < schemaNames.length; s++) {
+                    var schema = self.schemas.get(schemaNames[s]);
+                    var tables = schema.tables.names();
+                    for (var t = 0; t < tables.length; t++) {
+                        var table = schema.tables.get(tables[t]);
+                        table.buildForeignKeys();
+                    }
+                }
+
                 return self.schemas;
             }, function (response) {
                 // this is not a valid catalog
@@ -286,6 +286,10 @@ var ERMrest = (function () {
 
         length: function () {
             return Object.keys(this._schemas).length;
+        },
+
+        all: function() {
+            return this._schemas;
         },
 
         names: function () {
