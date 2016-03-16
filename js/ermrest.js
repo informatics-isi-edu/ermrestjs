@@ -542,6 +542,14 @@ var ERMrest = (function () {
             this._columns[column.name] = column;
         },
 
+        all: function() {
+            var array = [];
+            for (var key in this._columns) {
+                array.push(this._columns[key]);
+            }
+            return array;
+        },
+
         create: function () {
 
         },
