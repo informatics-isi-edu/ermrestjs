@@ -425,7 +425,7 @@ var ERMrest = (function () {
             this.keys.push(new Key(this, jsonKey));
         }
 
-        this.foreignKeys = [];
+        this.foreignKeys = new _ForeignKeys();
 
         this.annotations = new _Annotations();
         for (var uri in jsonTable.annotations) {
@@ -863,6 +863,11 @@ var ERMrest = (function () {
         push: function(foreignKeyRef) {
             this._foreignKeys.push(foreignKeyRef);
             this._mappings.push(foreignKeyRef.mapping);
+        },
+
+        // return an array of all foreign key references
+        all: function() {
+            return this._foreignKeys;
         },
 
         create: function () {
