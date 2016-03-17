@@ -482,6 +482,10 @@ var ERMrest = (function () {
                     _fixedEncodeURIComponent(this._table.schema.name) + ":" +
                     _fixedEncodeURIComponent(this._table.name);
 
+            if (filter !== undefined && filter !== null) {
+                uri = uri + _filterToUri(filter);
+            }
+
             // selected columns only
             if (columns !== undefined) {
                 for (var c = 0; c < columns.length; c++) {
@@ -491,10 +495,6 @@ var ERMrest = (function () {
                     else
                         uri = uri + "," + col;
                 }
-            }
-
-            if (filter !== undefined && filter !== null) {
-                uri = uri + _filterToUri(filter);
             }
 
             if (limit !== undefined && limit !== null) {
@@ -725,6 +725,10 @@ var ERMrest = (function () {
 
         push: function(key) {
             this._keys.push(key);
+        },
+
+        all: function() {
+            return this._keys;
         },
 
         create: function () {
