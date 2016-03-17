@@ -289,7 +289,11 @@ var ERMrest = (function () {
         },
 
         all: function() {
-            return this._schemas;
+            var array = [];
+            for (var key in this._schemas) {
+                array.push(this._schemas[key]);
+            }
+            return array;
         },
 
         names: function () {
@@ -368,6 +372,14 @@ var ERMrest = (function () {
 
         push: function(table) {
             this._tables[table.name] = table;
+        },
+
+        all: function() {
+            var array = [];
+            for (var key in this._tables) {
+                array.push(this._tables[key]);
+            }
+            return array;
         },
 
         create: function () {
@@ -655,6 +667,14 @@ var ERMrest = (function () {
 
         push: function(annotation) {
             this._annotations[annotation.uri] = annotation;
+        },
+
+        all: function() {
+            var array = [];
+            for (var key in this._annotations) {
+                array.push(this._annotations[key]);
+            }
+            return array;
         },
 
         create: function () {
