@@ -471,15 +471,36 @@ var ERMrest = (function () {
     _Entity.prototype = {
         constructor: _Entity,
 
-        // filter: Negation|Conjunction|Disjunction|UnaryPredicate|BinaryPredicate
-        get: function(filter) {
-            var uri = this._table.schema.catalog.uri + "/entity/" +
-                _fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                _fixedEncodeURIComponent(this._table.name);
+        // filter: Negation|Conjunction|Disjunction|UnaryPredicate|BinaryPredicate or null
+        // limit: limit number of rows or null
+        // columns: array of Column, limit returned rows with selected columns only.
+        get: function(filter, limit, columns) {
 
-            if (filter !== undefined) {
+            var interf = (columns === undefined) ? "entity" : "attribute";
+
+            var uri = this._table.schema.catalog.uri + "/" + interf + "/" +
+                    _fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                    _fixedEncodeURIComponent(this._table.name);
+
+            // selected columns only
+            if (columns !== undefined) {
+                for (var c = 0; c < columns.length; c++) {
+                    var col = columns[c].name;
+                    if (c === 0)
+                        uri = uri + "/" + col;
+                    else
+                        uri = uri + "," + col;
+                }
+            }
+
+            if (filter !== undefined && filter !== null) {
                 uri = uri + _filterToUri(filter);
             }
+
+            if (limit !== undefined && limit !== null) {
+                uri = uri + "?limit=" + limit;
+            }
+
 
             return _http.get(uri).then(function(response) {
                 return response.data;
@@ -939,6 +960,13 @@ var ERMrest = (function () {
 
         delete: function () {
 
+        },
+
+        // returns rowset of the referenced key's table
+        getDomainValues: function (limit, columns) {
+            if (limit === undefined)
+                limit = null;
+            return this.key.table.entity.get(null, limit, this.key.colset.columns); // async call, returns promise
         }
 
     };
