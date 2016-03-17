@@ -915,6 +915,14 @@ var ERMrest = (function () {
             return this._foreignKeys;
         },
 
+        colsets: function () {
+            var sets = [];
+            for (var i = 0; i < this._foreignKeys.length; i++) {
+                sets.push(this._foreignKeys[i].colset);
+            }
+            return sets;
+        },
+
         create: function () {
 
         },
@@ -927,7 +935,18 @@ var ERMrest = (function () {
             return this._mappings;
         },
 
-        get: function (mapping) { // TODO?
+        //get: function (mapping) { // TODO?
+        //},
+
+        get: function (colset) {
+            // find ForeignKeyRef with the same colset
+            for (var i = 0; i < this._foreignKeys.length; i++) {
+                var fkr = this._foreignKeys[i];
+                if (colset.equals(fkr.colset)) {
+                    return fkr;
+                }
+            }
+            return null;
         }
     };
 
