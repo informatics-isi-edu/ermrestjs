@@ -1006,7 +1006,7 @@ var ERMrest = (function () {
         },
 
         // returns rowset of the referenced key's table
-        getDomainValues: function (limit, columns) {
+        getDomainValues: function (limit) {
             if (limit === undefined)
                 limit = null;
             return this.key.table.entity.get(null, limit, this.key.colset.columns); // async call, returns promise
