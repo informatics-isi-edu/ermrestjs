@@ -326,7 +326,7 @@ var ERMrest = (function () {
 
         this.catalog = catalog;
         this.name = jsonSchema.schema_name;
-        this.uri = catalog.uri + "/schema/" + _fixedEncodeURIComponent(this.name); // TODO needed?
+        this.uri = catalog.uri + "/schema/" + Utils.fixedEncodeURIComponent(this.name); // TODO needed?
 
         // build tables
         this.tables = new _Tables();
@@ -421,7 +421,7 @@ var ERMrest = (function () {
         this.schema = schema;
         this.name = jsonTable.table_name;
         this.jsonTable = jsonTable;
-        //this.uri = schema.catalog.uri + "/entity/" + _fixedEncodeURIComponent(schema.name) + ":" + _fixedEncodeURIComponent(jsonTable.table_name);
+        //this.uri = schema.catalog.uri + "/entity/" + Utils.fixedEncodeURIComponent(schema.name) + ":" + Utils.fixedEncodeURIComponent(jsonTable.table_name);
 
         this.entity = new _Entity(this);
 
@@ -491,11 +491,11 @@ var ERMrest = (function () {
             var interf = (columns === undefined) ? "entity" : "attribute";
 
             var uri = this._table.schema.catalog.uri + "/" + interf + "/" +
-                    _fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                    _fixedEncodeURIComponent(this._table.name);
+                    Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                    Utils.fixedEncodeURIComponent(this._table.name);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + _filterToUri(filter);
+                uri = uri + Filters.filterToUri(filter);
             }
 
             // selected columns only
@@ -531,15 +531,15 @@ var ERMrest = (function () {
 
         post: function (rowsets, defaults) { // create new entities
             var uri = this._table.schema.catalog.uri + "/entity/" +
-                _fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                _fixedEncodeURIComponent(this._table.name);
+                Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                Utils.fixedEncodeURIComponent(this._table.name);
 
             if (typeof defaults !== 'undefined') {
                 for (var i = 0; i < defaults.length; i++) {
                     if (i === 0) {
-                        uri = uri + "?defaults=" + _fixedEncodeURIComponent(defaults[i]);
+                        uri = uri + "?defaults=" + Utils.fixedEncodeURIComponent(defaults[i]);
                     } else {
-                        uri = uri + "," + _fixedEncodeURIComponent(defaults[i]);
+                        uri = uri + "," + Utils.fixedEncodeURIComponent(defaults[i]);
                     }
                 }
             }
@@ -1034,6 +1034,18 @@ var ERMrest = (function () {
         }
     };
 
+    /**
+     * @constructor
+     * @param {String} message error message
+     * @desc
+     * Creates a undefined error object
+     */
+    function UndefinedError(message) {
+        this.name = "UndefinedError";
+        this.message = (message || "");
+    }
+
+    UndefinedError.prototype = Error.prototype;
 
     return module;
 })();

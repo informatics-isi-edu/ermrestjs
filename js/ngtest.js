@@ -24,27 +24,27 @@ angular.module("testApp", ['ERMrest'])
 
             // check keys
             var colsets1 = t1.keys.colsets();
-            //console.log(colsets1);
+            console.log(colsets1);
             var colsets2 = t2.keys.colsets();
-            //console.log(colsets2);
+            console.log(colsets2);
 
 
             // get entities from table
             t1.entity.get().then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
             //// get entities with filters.js
-            var gtFilter = new BinaryPredicate("dataset_id", "::gt::", "12969");
-            var ltFilter = new BinaryPredicate("dataset_id", "::lt::", "12969");
-            var eqFilter = new BinaryPredicate("dataset_id", "=", "12969");
+            var gtFilter = new Filters.BinaryPredicate("dataset_id", "::gt::", "12969");
+            var ltFilter = new Filters.BinaryPredicate("dataset_id", "::lt::", "12969");
+            var eqFilter = new Filters.BinaryPredicate("dataset_id", "=", "12969");
 
             t1.entity.get(eqFilter).then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
             t1.entity.get(gtFilter, 5, t1.keys.all()[0].colset.columns).then(function(rows) {
@@ -54,37 +54,37 @@ angular.module("testApp", ['ERMrest'])
             });
 
             t1.entity.get(ltFilter).then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
             // conjunction and negation filters.js
-            var notGtFilter = new Negation(gtFilter);
-            var notLtFilter = new Negation(ltFilter);
-            var conjFilter = new Conjunction([notGtFilter, notLtFilter]);
-            var disjFilter = new Disjunction([gtFilter, ltFilter]);
+            var notGtFilter = new Filters.Negation(gtFilter);
+            var notLtFilter = new Filters.Negation(ltFilter);
+            var conjFilter = new Filters.Conjunction([notGtFilter, notLtFilter]);
+            var disjFilter = new Filters.Disjunction([gtFilter, ltFilter]);
 
             t1.entity.get(conjFilter).then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
 
             t1.entity.get(disjFilter).then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
             // Unary Predicate filter
-            var unary = new UnaryPredicate("dataset_id", "::null::");
+            var unary = new Filters.UnaryPredicate("dataset_id", "::null::");
 
             t1.entity.get(unary).then(function(rows) {
-            //    console.log(rows);
+                console.log(rows);
             }, function(response) {
-            //    console.log(response);
+                console.log(response);
             });
 
             // use foreign to get referenced table values (with limit)

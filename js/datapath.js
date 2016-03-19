@@ -92,7 +92,7 @@ _Entity.prototype = {
             + this._datapath.getUri();   // datapath
 
         if (filter !== undefined)
-            uri = uri + _filterToUri(filter);
+            uri = uri + Filters.filterToUri(filter);
 
         return this._http.get(uri).then(function(response){
             return response.data;
@@ -133,8 +133,8 @@ PathTable.prototype = {
     constructor: PathTable,
 
     toString: function () {
-        return _fixedEncodeURIComponent(this._table.schema.name) + ":" +
-            _fixedEncodeURIComponent(this._table.name);
+        return Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
+            Utils.fixedEncodeURIComponent(this._table.name);
     }
 
 };
