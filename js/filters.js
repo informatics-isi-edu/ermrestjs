@@ -26,6 +26,13 @@ var Filters = (function() {
         this.rvalue = rvalue;
     };
 
+    my.OPERATOR = {
+        EQUAL: "=",
+        GREATER_THAN: "::gt::",
+        LESS_THAN: "::lt::",
+        NULL: "::null::"
+    };
+
     /**
      * @function
      * @param {String} filter filter to be converted into URI.

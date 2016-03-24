@@ -31,30 +31,30 @@ angular.module("testApp", ['ERMrest'])
 
             // get entities from table
             t1.entity.get().then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
             //// get entities with filters.js
-            var gtFilter = new Filters.BinaryPredicate("dataset_id", "::gt::", "12969");
-            var ltFilter = new Filters.BinaryPredicate("dataset_id", "::lt::", "12969");
-            var eqFilter = new Filters.BinaryPredicate("dataset_id", "=", "12969");
+            var gtFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.GREATER_THAN, "12969");
+            var ltFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.LESS_THAN, "12969");
+            var eqFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.EQUAL, "12969");
 
             t1.entity.get(eqFilter).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
             t1.entity.get(gtFilter, 5, t1.keys.all()[0].colset.columns).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
             t1.entity.get(ltFilter).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
@@ -66,33 +66,37 @@ angular.module("testApp", ['ERMrest'])
             var disjFilter = new Filters.Disjunction([gtFilter, ltFilter]);
 
             t1.entity.get(conjFilter).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
 
             t1.entity.get(disjFilter).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
             // Unary Predicate filter
-            var unary = new Filters.UnaryPredicate("dataset_id", "::null::");
+            var unary = new Filters.UnaryPredicate("dataset_id", Filters.OPERATOR.NULL);
 
             t1.entity.get(unary).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
 
             // use foreign to get referenced table values (with limit)
             t1.foreignKeys.all()[0].getDomainValues(10).then(function(data) {
-                console.log(data);
+                //console.log(data);
             }, function(response) {
                 console.log(response);
             });
+
+
+
+
 
 
             //get entity from datapath
