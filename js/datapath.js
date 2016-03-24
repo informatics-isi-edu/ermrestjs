@@ -50,10 +50,10 @@ var ERMrest = (function(module) {
 
         extend: function (table, context, link) { // TODO context? link?
             if (context !== undefined) {
-                // TODO context -> context/pathtable?
             }
             this.context = new PathTable(table);
             this.pathtables.push(this.context);
+            return this.context;
         },
 
         getUri: function() {
@@ -64,6 +64,8 @@ var ERMrest = (function(module) {
                 else
                     uri = uri + "/" + this.pathtables[i].toString();
             }
+
+            // TODO pathcolumns
 
             return uri;
 
@@ -124,7 +126,8 @@ var ERMrest = (function(module) {
 
         this._datapath = datapath;
         this._table = table;
-        this._columns = new _Columns; // pathcolumns TODO what is it?
+        this.columns = new _Columns(); // pathcolumns
+        this.alias
     }
 
     PathTable.prototype = {
@@ -138,24 +141,28 @@ var ERMrest = (function(module) {
     };
 
     function _Columns() {
-        this._columns = {};
+        this._pathcolumns = {};
     }
 
     _Columns.prototype = {
         constructor: _Columns,
 
+        push: function(pathcolumn) {
+            this._pathcolumns[pathcolumn.column] = pathcolumn; // TODO use col name
+        },
+
         length: function () {
-            return Object.keys(this._columns).length;
+            return Object.keys(this._pathcolumns).length;
         },
 
         names: function () {
-            return Object.keys(this._columns);
+            return Object.keys(this._pathcolumns);
         },
 
         get: function (colName) {
             // TODO pathtable.columns.get (on demand)
-            if (colName in this._columns)
-                return this._columns(colName);
+            if (colName in this._pathcolumns)
+                return this._pathcolumns[colName];
             else {
 
             }
@@ -178,9 +185,11 @@ var ERMrest = (function(module) {
         //.operators.names() -> sequence of operatorName
         //.operators.get( operatorName )( rvalue=null ) -> predicate
 
-        this._pathtable = pathtable;
-        this._column = column;
-        this._operators = new _Operators();
+        this.pathtable = pathtable;
+        this.column = column; // TODO column instance of string name?
+        this.operators = new _Operators(); // TODO what is it for?
+
+        pathtable.columns.push(this);
     }
 
 
@@ -188,7 +197,6 @@ var ERMrest = (function(module) {
         constructor: PathColumn,
 
         push: function(operator) {
-            // TODO
         }
 
     };
