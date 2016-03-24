@@ -1,8 +1,6 @@
-var Datapath = (function() {
+var ERMrest = (function(module) {
 
-    var my = {};
-
-    my.DataPath = function (http, q, table) {
+    module.DataPath = function (http, q, table) {
         //.catalog
         //.context : pathtable
         //.copy() -> datapath shallow copy
@@ -39,8 +37,8 @@ var Datapath = (function() {
 
     };
 
-    my.DataPath.prototype = {
-        constructor: my.DataPath,
+    module.DataPath.prototype = {
+        constructor: module.DataPath,
 
         copy: function() {
 
@@ -133,8 +131,8 @@ var Datapath = (function() {
         constructor: PathTable,
 
         toString: function () {
-            return Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                Utils.fixedEncodeURIComponent(this._table.name);
+            return module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this._table.name);
         }
 
     };
@@ -215,7 +213,7 @@ var Datapath = (function() {
         }
     };
 
-    return my;
+    return module;
 
-}());
+}(ERMrest || {}));
 

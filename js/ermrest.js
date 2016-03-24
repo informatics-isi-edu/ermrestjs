@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-var ERMrest = (function () {
+var ERMrest = (function (module) {
 
     /**
      * @var
      * @private
      * @desc This is the state of the module.
      */
-    var module = {
-        configure: configure,
+    module.configure = configure;
 
-        ermrestFactory: {
-            getServer: getServer
-        }
+    module.ermrestFactory = {
+        getServer: getServer
     };
 
     /**
@@ -326,7 +324,7 @@ var ERMrest = (function () {
 
         this.catalog = catalog;
         this.name = jsonSchema.schema_name;
-        this.uri = catalog.uri + "/schema/" + Utils.fixedEncodeURIComponent(this.name); // TODO needed?
+        this.uri = catalog.uri + "/schema/" + module._fixedEncodeURIComponent(this.name); // TODO needed?
 
         // build tables
         this.tables = new _Tables();
@@ -421,7 +419,7 @@ var ERMrest = (function () {
         this.schema = schema;
         this.name = jsonTable.table_name;
         this.jsonTable = jsonTable;
-        //this.uri = schema.catalog.uri + "/entity/" + Utils.fixedEncodeURIComponent(schema.name) + ":" + Utils.fixedEncodeURIComponent(jsonTable.table_name);
+        //this.uri = schema.catalog.uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
         this.entity = new _Entity(this);
 
@@ -491,11 +489,11 @@ var ERMrest = (function () {
             var interf = (columns === undefined) ? "entity" : "attribute";
 
             var uri = this._table.schema.catalog.uri + "/" + interf + "/" +
-                    Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                    Utils.fixedEncodeURIComponent(this._table.name);
+                    module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                    module._fixedEncodeURIComponent(this._table.name);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + Filters.filterToUri(filter);
+                uri = uri + module.filterToUri(filter);
             }
 
             // selected columns only
@@ -531,15 +529,15 @@ var ERMrest = (function () {
 
         post: function (rowsets, defaults) { // create new entities
             var uri = this._table.schema.catalog.uri + "/entity/" +
-                Utils.fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                Utils.fixedEncodeURIComponent(this._table.name);
+                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this._table.name);
 
             if (typeof defaults !== 'undefined') {
                 for (var i = 0; i < defaults.length; i++) {
                     if (i === 0) {
-                        uri = uri + "?defaults=" + Utils.fixedEncodeURIComponent(defaults[i]);
+                        uri = uri + "?defaults=" + module._fixedEncodeURIComponent(defaults[i]);
                     } else {
-                        uri = uri + "," + Utils.fixedEncodeURIComponent(defaults[i]);
+                        uri = uri + "," + module._fixedEncodeURIComponent(defaults[i]);
                     }
                 }
             }
@@ -1048,7 +1046,7 @@ var ERMrest = (function () {
     UndefinedError.prototype = Error.prototype;
 
     return module;
-})();
+})(ERMrest || {});
 
 
 

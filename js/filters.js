@@ -1,32 +1,30 @@
-var Filters = (function() {
+var ERMrest = (function(module) {
 
-    var my = {};
-
-    my.Negation = function (filter) {
+    module.Negation = function (filter) {
         this.filter = filter;
     };
 
-    my.Conjunction = function (filters) {
+    module.Conjunction = function (filters) {
         this.filters = filters;
     };
 
-    my.Disjunction = function (filters) {
+    module.Disjunction = function (filters) {
         this.filters = filters;
     };
 
-    my.UnaryPredicate = function (column, operator) {
+    module.UnaryPredicate = function (column, operator) {
         this.column = column; // pathcolumn or column
         this.operator = operator;
     };
 
-    my.BinaryPredicate = function (column, operator, rvalue) {
+    module.BinaryPredicate = function (column, operator, rvalue) {
 
         this.column = column; // either pathcolumn or column
         this.operator = operator;
         this.rvalue = rvalue;
     };
 
-    my.OPERATOR = {
+    module.OPERATOR = {
         EQUAL: "=",
         GREATER_THAN: "::gt::",
         LESS_THAN: "::lt::",
@@ -39,7 +37,7 @@ var Filters = (function() {
      * @desc
      * returns an URI string for the given filter
      */
-    my.filterToUri = function (filter) {
+    module.filterToUri = function (filter) {
 
         var uri = "";
 
@@ -47,9 +45,9 @@ var Filters = (function() {
         var filters = [];
 
         // multiple filters.js
-        if (filter instanceof my.Conjunction || filter instanceof my.Disjunction) {
+        if (filter instanceof module.Conjunction || filter instanceof module.Disjunction) {
             filters = filters.concat(filter.filters); // only one filter
-        } else if (filter instanceof my.Negation) {
+        } else if (filter instanceof module.Negation) {
             filters.push(filter.filter);
         } else {
             filters.push(filter);
@@ -62,18 +60,18 @@ var Filters = (function() {
 
             var filterString = "";
             var negate = false;
-            if (f instanceof my.Negation) {
+            if (f instanceof module.Negation) {
                 f = f.filter;
                 negate = true;
             }
-            if (f instanceof my.BinaryPredicate) {
+            if (f instanceof module.BinaryPredicate) {
                 filterString = f.column + f.operator + f.rvalue;
-            } else if (f instanceof my.UnaryPredicate) {
+            } else if (f instanceof module.UnaryPredicate) {
                 filterString = f.column + f.operator;
             }
 
 
-            if (filter instanceof my.Negation || negate) {
+            if (filter instanceof module.Negation || negate) {
 
                 filterString = "!(" + filterString + ")";
             }
@@ -81,14 +79,14 @@ var Filters = (function() {
             filterStrings[i] = filterString;
         }
 
-        if (filter instanceof my.Conjunction) {
+        if (filter instanceof module.Conjunction) {
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + "/" + filterStrings[j];
                 else
                     uri = uri + "&" + filterStrings[j];
             }
-        } else if (filter instanceof my.Disjunction) {
+        } else if (filter instanceof module.Disjunction) {
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + "/" + filterStrings[j];
@@ -102,6 +100,6 @@ var Filters = (function() {
         return uri;
     };
 
-    return my;
+    return module;
 
-}());
+}(ERMrest || {}));

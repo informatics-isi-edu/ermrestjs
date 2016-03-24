@@ -1,7 +1,4 @@
-var Utils = (function() {
-
-    var my = {};
-
+var ERMrest = (function(module) {
 
     /**
      * @function
@@ -10,7 +7,7 @@ var Utils = (function() {
      * @desc
      * This private utility function does a shallow copy between objects.
      */
-    my.clone = function (copyTo, copyFrom) {
+    module._clone = function (copyTo, copyFrom) {
         for (var key in copyFrom) {
             // only copy those properties that were set in the object, this
             // will skip properties from the source object's prototype
@@ -26,7 +23,7 @@ var Utils = (function() {
      * @desc
      * converts a string to title case
      */
-    my.toTitleCase = function (str) {
+    module._toTitleCase = function (str) {
         return str.replace(/\w\S*/g, function(txt){
             return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
         });
@@ -38,15 +35,15 @@ var Utils = (function() {
      * @desc
      * converts a string to an URI encoded string
      */
-    my.fixedEncodeURIComponent = function (str) {
+    module._fixedEncodeURIComponent = function (str) {
         return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
     };
 
-    return my;
+    return module;
 
-}());
+}(ERMrest || {}));
 
 
 

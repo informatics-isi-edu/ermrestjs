@@ -37,9 +37,9 @@ angular.module("testApp", ['ERMrest'])
             });
 
             //// get entities with filters.js
-            var gtFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.GREATER_THAN, "12969");
-            var ltFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.LESS_THAN, "12969");
-            var eqFilter = new Filters.BinaryPredicate("dataset_id", Filters.OPERATOR.EQUAL, "12969");
+            var gtFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.GREATER_THAN, "12969");
+            var ltFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.LESS_THAN, "12969");
+            var eqFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.EQUAL, "12969");
 
             t1.entity.get(eqFilter).then(function(rows) {
                 //console.log(rows);
@@ -60,10 +60,10 @@ angular.module("testApp", ['ERMrest'])
             });
 
             // conjunction and negation filters.js
-            var notGtFilter = new Filters.Negation(gtFilter);
-            var notLtFilter = new Filters.Negation(ltFilter);
-            var conjFilter = new Filters.Conjunction([notGtFilter, notLtFilter]);
-            var disjFilter = new Filters.Disjunction([gtFilter, ltFilter]);
+            var notGtFilter = new ERMrest.Negation(gtFilter);
+            var notLtFilter = new ERMrest.Negation(ltFilter);
+            var conjFilter = new ERMrest.Conjunction([notGtFilter, notLtFilter]);
+            var disjFilter = new ERMrest.Disjunction([gtFilter, ltFilter]);
 
             t1.entity.get(conjFilter).then(function(rows) {
                 //console.log(rows);
@@ -79,7 +79,7 @@ angular.module("testApp", ['ERMrest'])
             });
 
             // Unary Predicate filter
-            var unary = new Filters.UnaryPredicate("dataset_id", Filters.OPERATOR.NULL);
+            var unary = new ERMrest.UnaryPredicate("dataset_id", ERMrest.OPERATOR.NULL);
 
             t1.entity.get(unary).then(function(rows) {
                 //console.log(rows);
@@ -100,7 +100,7 @@ angular.module("testApp", ['ERMrest'])
 
 
             //get entity from datapath
-            var datapath1 = new Datapath.DataPath($http, $q, t1);
+            var datapath1 = new ERMrest.DataPath($http, $q, t1); // TODO
             console.log("Datapath 1 context table name: " + datapath1.context._table.name);
             console.log("Datapath 1 URI: " + datapath1.getUri());
             datapath1.entity.get().then(function(data){
