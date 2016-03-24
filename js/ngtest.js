@@ -100,11 +100,11 @@ angular.module("testApp", ['ERMrest'])
 
 
             //get entity from datapath
-            var datapath1 = new DataPath($http, $q, t1);
-            //console.log("Datapath 1 context table name: " + datapath1.context._table.name);
-            //console.log("Datapath 1 URI: " + datapath1.getUri());
+            var datapath1 = new Datapath.DataPath($http, $q, t1);
+            console.log("Datapath 1 context table name: " + datapath1.context._table.name);
+            console.log("Datapath 1 URI: " + datapath1.getUri());
             datapath1.entity.get().then(function(data){
-            //    console.log(data);
+                console.log(data);
             }, function(response) {
             //    console.log("Datapath 1 get failed: " + response);
             });
