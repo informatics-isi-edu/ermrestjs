@@ -92,7 +92,12 @@ var ERMrest = (function(module) {
         constructor: UnaryPredicate,
 
         toUri: function() {
-            return this.column + this.operator;
+            var colName =  (this.column instanceof Column ?
+                // Column
+                this.column.name :
+                // Pathcolumn
+            "$" + this.column.pathtable.alias + ":" + this.column.column.name);
+            return colName + this.operator;
         }
     };
 
@@ -107,7 +112,12 @@ var ERMrest = (function(module) {
         constructor: BinaryPredicate,
 
         toUri: function() {
-            return this.column + this.operator + this.rvalue;
+            var colName =  (this.column instanceof Column ?
+                // Column
+                this.column.name :
+                // Pathcolumn
+                "$" + this.column.pathtable.alias + ":" + this.column.column.name);
+            return colName + this.operator + this.rvalue;
         }
     };
 

@@ -36,10 +36,10 @@ angular.module("testApp", ['ERMrest'])
                 console.log(response);
             });
 
-            //// get entities with filters.js
-            var gtFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.GREATER_THAN, "12969");
-            var ltFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.LESS_THAN, "12969");
-            var eqFilter = new ERMrest.BinaryPredicate("dataset_id", ERMrest.OPERATOR.EQUAL, "12969");
+            // get entities with filters.js
+            var gtFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.GREATER_THAN, "12969");
+            var ltFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.LESS_THAN, "12969");
+            var eqFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.EQUAL, "12969");
 
             t1.entity.get(eqFilter).then(function(rows) {
                 //console.log(rows);
@@ -79,7 +79,7 @@ angular.module("testApp", ['ERMrest'])
             });
 
             // Unary Predicate filter
-            var unary = new ERMrest.UnaryPredicate("dataset_id", ERMrest.OPERATOR.NULL);
+            var unary = new ERMrest.UnaryPredicate(c1, ERMrest.OPERATOR.NULL);
 
             t1.entity.get(unary).then(function(rows) {
                 //console.log(rows);

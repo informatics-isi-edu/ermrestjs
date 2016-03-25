@@ -127,7 +127,7 @@ var ERMrest = (function(module) {
         this._datapath = datapath;
         this._table = table;
         this.columns = new _Columns(); // pathcolumns
-        this.alias
+        this.alias = ""; // TODO
     }
 
     PathTable.prototype = {
