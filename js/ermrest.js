@@ -493,7 +493,7 @@ var ERMrest = (function (module) {
                     module._fixedEncodeURIComponent(this._table.name);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + module.filterToUri(filter);
+                uri = uri + "/" + filter.toUri();
             }
 
             // selected columns only

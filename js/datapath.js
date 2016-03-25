@@ -90,7 +90,7 @@ var ERMrest = (function(module) {
                 + this._datapath.getUri();   // datapath
 
             if (filter !== undefined)
-                uri = uri + Filters.filterToUri(filter);
+                uri = uri + "/" + filter.toUri();
 
             return this._http.get(uri).then(function(response){
                 return response.data;
