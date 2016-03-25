@@ -1,57 +1,48 @@
 var ERMrest = (function(module) {
 
-    module.DataPath = function (http, q, table) {
-        //.catalog
-        //.context : pathtable
-        //.copy() -> datapath shallow copy
-        //.filter( filter ) -> datapath shallow copy with filter
-        //.extend(table, context=null, link=null) -> pathtable
+    module.DataPath = DataPath;
 
-        //.entity.get( filter=null ) -> rowSet
-        //.entity.delete( filter=null ) : void
+    function DataPath(table) {
 
-        //.attribute.get( projection, filter=null ) -> rowSet
-        //.attribute.delete( projection, filter=null ) : void
-        //.attributegroup.get( grouping, projection, filter=null ) -> rowSet
-        //.aggregate.get( projection, filter=null ) -> rowSet
-
+        this.nextAlias = "a"; // TODO better way to doing alias?
         this.catalog = table.schema.catalog;
-        this.context = new PathTable(table, this);
-        this.entity = new _Entity(http, q, this);
+        this.context = new PathTable(table, this, this.nextAlias);
+        this.nextAlias = module._nextChar(this.nextAlias);
+        //this.entity = new _Entity(this);
 
         this.attribute = null;
         this.attributegroup = null;
         this.aggregate = null;
+        this.entity._bind(this);
 
         this.pathtables = [this.context]; // in order
+        this._filter = null;
 
-        // example
-        // ermrest/catalog/1/<interface>/<datapath>
-        // ermrest/catalog/1/entity/slide/scan/id=123
-        // interface: entity, attribute, attrgroup, schema, meta ...
-        // this.entity = {
-        //      get = function(...){}
-        //      post = function(..){}
-        // };
+    }
 
-
-    };
-
-    module.DataPath.prototype = {
+    DataPath.prototype = {
         constructor: module.DataPath,
 
-        copy: function() {
-
+        copy: function() { // shallow copy
+            var dp = Object.create(DataPath.prototype);
+            module._clone(dp, this);
+            dp.entity._bind(dp);
+            return dp;
         },
 
-        filter: function (filter) { //
-
+        // returns a shallow copy of this datapath with filter
+        // this datapath is not modified
+        getFilter: function (filter) {
+            var dp = this.copy();
+            dp._filter = filter;
+            return dp;
         },
 
         extend: function (table, context, link) { // TODO context? link?
             if (context !== undefined) {
             }
-            this.context = new PathTable(table);
+            this.context = new PathTable(table, this, this.nextAlias);
+            this.nextAlias = module._nextChar(this.nextAlias);
             this.pathtables.push(this.context);
             return this.context;
         },
@@ -65,7 +56,10 @@ var ERMrest = (function(module) {
                     uri = uri + "/" + this.pathtables[i].toString();
             }
 
-            // TODO pathcolumns
+            // filter strings
+            if (this._filter !== null) {
+                uri = uri + "/" + this._filter.toUri();
+            }
 
             return uri;
 
@@ -73,50 +67,35 @@ var ERMrest = (function(module) {
 
     };
 
-    function _Entity(http, q, datapath) {
-        this._http = http;
-        this._q = q;
-        this._datapath = datapath;
-    }
+    DataPath.prototype.entity = {
+        scope: null,
 
-    _Entity.prototype = {
+        _bind: function(scope) {
+            this.scope = scope;
+        },
 
-        constructor: _Entity,
-
-        get: function (filter) {
-            var baseUri = this._datapath.catalog.server.uri;
-            var catId = this._datapath.catalog.id;
+        get: function () {
+            var baseUri = this.scope.catalog.server.uri;
+            var catId = this.scope.catalog.id;
             var uri = baseUri                // base
                 + "/catalog/" + catId        // catalog
                 + "/entity/"                 // interface
-                + this._datapath.getUri();   // datapath
+                + this.scope.getUri();   // datapath
 
-            if (filter !== undefined)
-                uri = uri + "/" + filter.toUri();
-
-            return this._http.get(uri).then(function(response){
+            return module._http.get(uri).then(function(response){
                 return response.data;
             }, function(response){
-                return this._q.reject(response);
+                return module._q.reject(response);
             });
-
-        },
-
-        post: function (rowset) {
-
-        },
-
-        put: function (rowset) {
-
         }
-
     };
+
 
     /******************************************************/
     /* PathTable                                          */
     /******************************************************/
 
-    function PathTable(table, datapath) {
+    function PathTable(table, datapath, alias) {
         //.datapath
         //.table
         //.columns.length() -> count
@@ -126,21 +105,23 @@ var ERMrest = (function(module) {
 
         this._datapath = datapath;
         this._table = table;
-        this.columns = new _Columns(); // pathcolumns
-        this.alias = ""; // TODO
+        this.alias = alias;
+        this.columns = new _Columns(table, this); // pathcolumns
     }
 
     PathTable.prototype = {
         constructor: PathTable,
 
         toString: function () {
-            return module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+            return this.alias + ":=" + module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                 module._fixedEncodeURIComponent(this._table.name);
         }
 
     };
 
-    function _Columns() {
+    function _Columns(table, pathtable) {
+        this._table = table;
+        this._pathtable = pathtable;
         this._pathcolumns = {};
     }
 
@@ -148,23 +129,25 @@ var ERMrest = (function(module) {
         constructor: _Columns,
 
         push: function(pathcolumn) {
-            this._pathcolumns[pathcolumn.column] = pathcolumn; // TODO use col name
+            this._pathcolumns[pathcolumn.column.name] = pathcolumn;
         },
 
         length: function () {
             return Object.keys(this._pathcolumns).length;
         },
 
-        names: function () {
+        names: function () { // TODO order by position
             return Object.keys(this._pathcolumns);
         },
 
         get: function (colName) {
-            // TODO pathtable.columns.get (on demand)
             if (colName in this._pathcolumns)
                 return this._pathcolumns[colName];
             else {
-
+                // create new PathColumn
+                var pc = new PathColumn(this._table.columns.get(colName), this._pathtable);
+                this._pathcolumns[colName] = pc;
+                return pc;
             }
         },
 
@@ -186,10 +169,10 @@ var ERMrest = (function(module) {
         //.operators.get( operatorName )( rvalue=null ) -> predicate
 
         this.pathtable = pathtable;
-        this.column = column; // TODO column instance of string name?
+        this.column = column;
         this.operators = new _Operators(); // TODO what is it for?
 
-        pathtable.columns.push(this);
+        this.pathtable.columns.push(this);
     }
 
 

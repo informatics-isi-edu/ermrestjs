@@ -92,11 +92,11 @@ var ERMrest = (function(module) {
         constructor: UnaryPredicate,
 
         toUri: function() {
-            var colName =  (this.column instanceof Column ?
+            var colName =  (this.column.name ?
                 // Column
                 this.column.name :
                 // Pathcolumn
-            "$" + this.column.pathtable.alias + ":" + this.column.column.name);
+                this.column.pathtable.alias + ":" + this.column.column.name);
             return colName + this.operator;
         }
     };
@@ -112,11 +112,11 @@ var ERMrest = (function(module) {
         constructor: BinaryPredicate,
 
         toUri: function() {
-            var colName =  (this.column instanceof Column ?
+            var colName =  (this.column.name ?
                 // Column
                 this.column.name :
                 // Pathcolumn
-                "$" + this.column.pathtable.alias + ":" + this.column.column.name);
+                this.column.pathtable.alias + ":" + this.column.column.name);
             return colName + this.operator + this.rvalue;
         }
     };

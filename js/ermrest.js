@@ -42,7 +42,7 @@ var ERMrest = (function (module) {
      * The http service used by this module. This is private and not
      * visible to users of the module.
      */
-    var _http = null;
+    module._http = null;
 
     /**
      * @private
@@ -50,7 +50,7 @@ var ERMrest = (function (module) {
      * @desc
      * Angular $q service
      */
-    var _q = null;
+    module._q = null;
 
     /**
      * @memberof ERMrest
@@ -61,8 +61,8 @@ var ERMrest = (function (module) {
      * This function is used to configure the module.
      */
     function configure(http, q) {
-        _http = http;
-        _q = q;
+        module._http = http;
+        module._q = q;
     }
 
     /**
@@ -119,10 +119,10 @@ var ERMrest = (function (module) {
          * is logged in), it gets the current session information.
          */
         get: function() {
-            return _http.get(this.uri + "/authn/session").then(function(response) {
+            return module._http.get(this.uri + "/authn/session").then(function(response) {
                 return response.data;
             }, function(response) {
-                return _q.reject(response);
+                return module._q.reject(response);
             });
         },
 
@@ -177,7 +177,7 @@ var ERMrest = (function (module) {
             // do introspection here and return a promise
 
             var self = this;
-            var defer = _q.defer();
+            var defer = module._q.defer();
 
             // load catalog only when requested
             if (id in this._catalogs) {
@@ -230,7 +230,7 @@ var ERMrest = (function (module) {
         introspect: function () {
             // load all schemas
             var self = this;
-            return _http.get(this.uri + "/schema").then(function (response) {
+            return module._http.get(this.uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
                 for (var s in jsonSchemas.schemas) {
                     self.schemas.push(new Schema(self, jsonSchemas.schemas[s]));
@@ -244,14 +244,14 @@ var ERMrest = (function (module) {
                     var tables = schema.tables.names();
                     for (var t = 0; t < tables.length; t++) {
                         var table = schema.tables.get(tables[t]);
-                        table.buildForeignKeys();
+                        table._buildForeignKeys();
                     }
                 }
 
                 return self.schemas;
             }, function (response) {
                 // this is not a valid catalog
-                return _q.reject(response);
+                return module._q.reject(response);
             });
         }
 
@@ -451,7 +451,7 @@ var ERMrest = (function (module) {
 
         },
 
-        buildForeignKeys: function() {
+        _buildForeignKeys: function() {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
             this.foreignKeys = new _ForeignKeys();
@@ -512,10 +512,10 @@ var ERMrest = (function (module) {
             }
 
 
-            return _http.get(uri).then(function(response) {
+            return module._http.get(uri).then(function(response) {
                 return response.data;
             }, function(response) {
-                return _q.reject(response.data);
+                return module._q.reject(response.data);
             });
         },
 
@@ -542,10 +542,10 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return _http.post(uri, rowsets).then(function(response) {
+            return module._http.post(uri, rowsets).then(function(response) {
                return response.data;
             }, function(response) {
-                return _q.reject(response);
+                return module._q.reject(response);
             });
         }
 

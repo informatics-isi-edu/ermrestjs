@@ -41,6 +41,10 @@ var ERMrest = (function(module) {
         });
     };
 
+    module._nextChar = function (c) {
+        return String.fromCharCode(c.charCodeAt(0) + 1);
+    };
+
     return module;
 
 }(ERMrest || {}));
