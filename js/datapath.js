@@ -96,13 +96,6 @@ var ERMrest = (function(module) {
     /******************************************************/
 
     function PathTable(table, datapath, alias) {
-        //.datapath
-        //.table
-        //.columns.length() -> count
-        //.columns.names() -> sequence of names ordered by position
-        //.columns.get( columnName ) -> pathcolumn
-        //.columns.getByPosition( index ) -> pathcolumn
-
         this.datapath = datapath;
         this.table = table;
         this.alias = alias;
@@ -162,15 +155,10 @@ var ERMrest = (function(module) {
     /******************************************************/
 
     function PathColumn(column, pathtable) {
-        //.pathtable
-        //.column
-        //.operators.length() -> count
-        //.operators.names() -> sequence of operatorName
-        //.operators.get( operatorName )( rvalue=null ) -> predicate
 
         this.pathtable = pathtable;
         this.column = column;
-        this.operators = new _Operators(); // TODO what is it for?
+        this.operators = new _Operators(); // TODO
 
         this.pathtable.columns._push(this);
     }

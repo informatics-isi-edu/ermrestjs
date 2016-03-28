@@ -958,14 +958,6 @@ var ERMrest = (function (module) {
     /******************************************************/
 
     function ForeignKeyRef(table, jsonFKR) {
-        //.columns : colset of referencing columns (foreign_key_columns, self table)
-        //.key : key being referenced (referenced_columns, another table)
-        //.mapping
-        //.delete()
-        //.annotations.create( annotationParams ) -> annotation
-        //.annotations.length() -> count
-        //.annotations.names() -> sequence of uri
-        //.annotation.get( uri ) -> annotation
 
         var catalog = table.schema.catalog;
 
