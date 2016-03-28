@@ -101,8 +101,8 @@ angular.module("testApp", ['ERMrest'])
 
             //get entity from datapath
             var datapath1 = new ERMrest.DataPath(t1);
-            console.log("Datapath 1 context table name: " + datapath1.context._table.name);
-            console.log("Datapath 1 URI: " + datapath1.getUri());
+            console.log("Datapath 1 context table name: " + datapath1.context.table.name);
+            console.log("Datapath 1 URI: " + datapath1._getUri());
             datapath1.entity.get().then(function(data){
                 //console.log(data);
             }, function(response) {
@@ -110,23 +110,23 @@ angular.module("testApp", ['ERMrest'])
             });
 
             var pathtable2 = datapath1.extend(t2);
-            //console.log(datapath1.context._table.name);
-            //console.log(datapath1.getUri());
+            //console.log(datapath1.context.table.name);
+            //console.log(datapath1._getUri());
 
             var pathtable3 = datapath1.extend(t3);
-            //console.log(datapath1.context._table.name);
-            //console.log(datapath1.getUri());
+            //console.log(datapath1.context.table.name);
+            //console.log(datapath1._getUri());
 
             // create new datapath from datapath1 with filter
             //var c3 = t3.columns.get("dataset_id");
             var pathcolumn2 = pathtable2.columns.get("id");
             var pathcolumn3 = pathtable3.columns.get("dataset_id");
             var gtFilter3 = new ERMrest.BinaryPredicate(pathcolumn2, ERMrest.OPERATOR.GREATER_THAN, "4542");
-            var datapath3 = datapath1.getFilter(gtFilter3);
+            var datapath3 = datapath1.filter(gtFilter3);
             //console.log(datapath1);
             //console.log(datapath3);
-            console.log(datapath1.getUri());
-            console.log(datapath3.getUri());
+            console.log(datapath1._getUri());
+            console.log(datapath3._getUri());
 
             datapath3.entity.get().then(function(data){
                 console.log(data);

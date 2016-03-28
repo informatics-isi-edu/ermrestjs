@@ -95,6 +95,11 @@ var ERMrest = (function (module) {
             throw "URI undefined or null";
         this.uri = uri;
         this.session = new Session();
+        this.session.get().then(function(data) { // TODO
+
+        }, function(response) {
+
+        });
         this.catalogs = new Catalogs(this);
     }
 
@@ -153,7 +158,7 @@ var ERMrest = (function (module) {
      * Constructor for the Catalogs.
      */
     function Catalogs(server) {
-        this.server = server;
+        this._server = server;
         this._catalogs = {};
     }
 
@@ -187,8 +192,8 @@ var ERMrest = (function (module) {
 
             } else {
 
-                var catalog = new Catalog(self.server, id);
-                catalog.introspect().then(function (schemas) {
+                var catalog = new Catalog(self._server, id);
+                catalog._introspect().then(function (schemas) {
                     self._catalogs[id] = catalog;
                     defer.resolve(catalog);
                 }, function (response) {
@@ -216,7 +221,7 @@ var ERMrest = (function (module) {
 
         this.server = server;
         this.id = id;
-        this.uri = server.uri + "/catalog/" + id;
+        this._uri = server.uri + "/catalog/" + id;
         this.schemas = new _Schemas();
     }
 
@@ -227,13 +232,13 @@ var ERMrest = (function (module) {
 
         },
 
-        introspect: function () {
+        _introspect: function () {
             // load all schemas
             var self = this;
-            return module._http.get(this.uri + "/schema").then(function (response) {
+            return module._http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
                 for (var s in jsonSchemas.schemas) {
-                    self.schemas.push(new Schema(self, jsonSchemas.schemas[s]));
+                    self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
                 }
 
                 // all schemas created
@@ -274,7 +279,7 @@ var ERMrest = (function (module) {
     _Schemas.prototype = {
         constructor: _Schemas,
 
-        push: function(schema) {
+        _push: function(schema) {
             this._schemas[schema.name] = schema;
         },
 
@@ -324,20 +329,20 @@ var ERMrest = (function (module) {
 
         this.catalog = catalog;
         this.name = jsonSchema.schema_name;
-        this.uri = catalog.uri + "/schema/" + module._fixedEncodeURIComponent(this.name); // TODO needed?
+        //this._uri = catalog._uri + "/schema/" + module._fixedEncodeURIComponent(this.name);
 
         // build tables
         this.tables = new _Tables();
         for (var key in jsonSchema.tables) {
             var jsonTable = jsonSchema.tables[key];
-            this.tables.push(new Table(this, jsonTable));
+            this.tables._push(new Table(this, jsonTable));
         }
 
         // build annotations
         this.annotations = new _Annotations();
         for (var uri in jsonSchema.annotations) {
             var jsonAnnotation = jsonSchema.annotations[uri];
-            this.annotations.push(new Annotation("schema", uri, jsonAnnotation));
+            this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
         }
 
     }
@@ -368,7 +373,7 @@ var ERMrest = (function (module) {
     _Tables.prototype = {
         constructor: _Tables,
 
-        push: function(table) {
+        _push: function(table) {
             this._tables[table.name] = table;
         },
 
@@ -418,21 +423,21 @@ var ERMrest = (function (module) {
 
         this.schema = schema;
         this.name = jsonTable.table_name;
-        this.jsonTable = jsonTable;
-        //this.uri = schema.catalog.uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
+        this._jsonTable = jsonTable;
+        //this.uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
         this.entity = new _Entity(this);
 
         this.columns = new _Columns();
         for (var i = 0; i < jsonTable.column_definitions.length; i++) {
             var jsonColumn = jsonTable.column_definitions[i];
-            this.columns.push(new Column(this, i, jsonColumn));
+            this.columns._push(new Column(this, jsonColumn));
         }
 
         this.keys = new _Keys();
         for (var i = 0; i < jsonTable.keys.length; i++) {
             var jsonKey = jsonTable.keys[i];
-            this.keys.push(new Key(this, jsonKey));
+            this.keys._push(new Key(this, jsonKey));
         }
 
         this.foreignKeys = new _ForeignKeys();
@@ -440,7 +445,7 @@ var ERMrest = (function (module) {
         this.annotations = new _Annotations();
         for (var uri in jsonTable.annotations) {
             var jsonAnnotation = jsonTable.annotations[uri];
-            this.annotations.push(new Annotation("table", uri, jsonAnnotation));
+            this.annotations._push(new Annotation("table", uri, jsonAnnotation));
         }
     }
 
@@ -455,9 +460,9 @@ var ERMrest = (function (module) {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
             this.foreignKeys = new _ForeignKeys();
-            for (var i = 0; i < this.jsonTable.foreign_keys.length; i++) {
-                var jsonFKs = this.jsonTable.foreign_keys[i];
-                this.foreignKeys.push(new ForeignKeyRef(this, jsonFKs));
+            for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
+                var jsonFKs = this._jsonTable.foreign_keys[i];
+                this.foreignKeys._push(new ForeignKeyRef(this, jsonFKs));
             }
         }
 
@@ -488,7 +493,7 @@ var ERMrest = (function (module) {
 
             var interf = (columns === undefined) ? "entity" : "attribute";
 
-            var uri = this._table.schema.catalog.uri + "/" + interf + "/" +
+            var uri = this._table.schema.catalog._uri + "/" + interf + "/" +
                     module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                     module._fixedEncodeURIComponent(this._table.name);
 
@@ -528,7 +533,7 @@ var ERMrest = (function (module) {
         },
 
         post: function (rowsets, defaults) { // create new entities
-            var uri = this._table.schema.catalog.uri + "/entity/" +
+            var uri = this._table.schema.catalog._uri + "/entity/" +
                 module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                 module._fixedEncodeURIComponent(this._table.name);
 
@@ -569,7 +574,7 @@ var ERMrest = (function (module) {
     _Columns.prototype = {
         constructor: _Columns,
 
-        push: function(column) {
+        _push: function(column) {
             this._columns[column.name] = column;
         },
 
@@ -618,16 +623,15 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for Column.
      */
-    function Column(table, index, jsonColumn) {
+    function Column(table, jsonColumn) {
 
         this.table = table;
         this.name = jsonColumn.name;
-        this.index = index;
         this.type = new Type(jsonColumn.type.typename);
         this.annotations = new _Annotations();
         for (var uri in jsonColumn.annotations) {
             var jsonAnnotation = jsonColumn.annotations[uri];
-            this.annotations.push(new Annotation("column", uri, jsonAnnotation));
+            this.annotations._push(new Annotation("column", uri, jsonAnnotation));
         }
     }
 
@@ -638,7 +642,7 @@ var ERMrest = (function (module) {
 
         },
 
-        equals: function(column) {
+        _equals: function(column) {
             return (column.table.schema.name === this.table.schema.name &&
                 column.table.name === this.table.name &&
                 column.name === this.name);
@@ -663,8 +667,8 @@ var ERMrest = (function (module) {
     _Annotations.prototype = {
         constructor: _Annotations,
 
-        push: function(annotation) {
-            this._annotations[annotation.uri] = annotation;
+        _push: function(annotation) {
+            this._annotations[annotation._uri] = annotation;
         },
 
         all: function() {
@@ -712,14 +716,14 @@ var ERMrest = (function (module) {
     function Annotation(subject, uri, jsonAnnotation) {
 
         this.subject = subject;
-        this.uri = uri;
+        this._uri = uri;
         this.content = jsonAnnotation;
     }
 
     Annotation.prototype = {
         constructor: Annotation,
 
-        delete: function () {
+        _delete: function () {
 
         }
     };
@@ -741,7 +745,7 @@ var ERMrest = (function (module) {
     _Keys.prototype = {
         constructor: _Keys,
 
-        push: function(key) {
+        _push: function(key) {
             this._keys.push(key);
         },
 
@@ -769,7 +773,7 @@ var ERMrest = (function (module) {
             // find Key with the same colset
             for (var i = 0; i < this._keys.length; i++) {
                 var key = this._keys[i];
-                if (colset.equals(key.colset)) {
+                if (colset._equals(key.colset)) {
                     return key;
                 }
             }
@@ -791,7 +795,7 @@ var ERMrest = (function (module) {
      */
     function Key(table, jsonKey) {
 
-        this.table = table;
+        this._table = table;
 
         var uniqueColumns = [];
         for (var i = 0; i < jsonKey.unique_columns.length; i++) {
@@ -803,7 +807,7 @@ var ERMrest = (function (module) {
         this.annotations = new _Annotations();
         for (var uri in jsonKey.annotations) {
             var jsonAnnotation = jsonKey.annotations[uri];
-            this.annotations.push(new Annotation("key", uri, jsonAnnotation));
+            this.annotations._push(new Annotation("key", uri, jsonAnnotation));
         }
     }
 
@@ -831,7 +835,7 @@ var ERMrest = (function (module) {
             return this.columns.length;
         },
 
-        equals: function (colset) {
+        _equals: function (colset) {
             var colsA = colset.columns;
             var colsB = this.columns;
 
@@ -845,7 +849,7 @@ var ERMrest = (function (module) {
                     var foundMatchingCol = false;
                     for (var b = 0; b < colsB.length; b++) {
                         var colB = colsB[b];
-                        if (colA.equals(colB)){
+                        if (colA._equals(colB)){
                             foundMatchingCol = true;
                             break;
                         }
@@ -886,7 +890,7 @@ var ERMrest = (function (module) {
 
         get: function (fromCol) {
             for (var i = 0; i < this._from.length; i++) {
-                if (fromCol.equals(this._from[i])) {
+                if (fromCol._equals(this._from[i])) {
                     return this._to[i];
                 }
             }
@@ -903,7 +907,7 @@ var ERMrest = (function (module) {
     _ForeignKeys.prototype = {
         constructor: _ForeignKeys,
 
-        push: function(foreignKeyRef) {
+        _push: function(foreignKeyRef) {
             this._foreignKeys.push(foreignKeyRef);
             this._mappings.push(foreignKeyRef.mapping);
         },
@@ -940,7 +944,7 @@ var ERMrest = (function (module) {
             // find ForeignKeyRef with the same colset
             for (var i = 0; i < this._foreignKeys.length; i++) {
                 var fkr = this._foreignKeys[i];
-                if (colset.equals(fkr.colset)) {
+                if (colset._equals(fkr.colset)) {
                     return fkr;
                 }
             }
@@ -991,7 +995,7 @@ var ERMrest = (function (module) {
         this.annotations = new _Annotations();
         for (var uri in jsonFKR.annotations) {
             var jsonAnnotation = jsonFKR.annotations[uri];
-            this.annotations.push(new Annotation("foreignkeyref", uri, jsonAnnotation));
+            this.annotations._push(new Annotation("foreignkeyref", uri, jsonAnnotation));
         }
 
     }
@@ -1007,7 +1011,7 @@ var ERMrest = (function (module) {
         getDomainValues: function (limit) {
             if (limit === undefined)
                 limit = null;
-            return this.key.table.entity.get(null, limit, this.key.colset.columns); // async call, returns promise
+            return this.key._table.entity.get(null, limit, this.key.colset.columns); // async call, returns promise
         }
 
     };

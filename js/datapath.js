@@ -4,10 +4,10 @@ var ERMrest = (function(module) {
 
     function DataPath(table) {
 
-        this.nextAlias = "a"; // TODO better way to doing alias?
+        this._nextAlias = "a"; // TODO better way to doing alias?
         this.catalog = table.schema.catalog;
-        this.context = new PathTable(table, this, this.nextAlias);
-        this.nextAlias = module._nextChar(this.nextAlias);
+        this.context = new PathTable(table, this, this._nextAlias);
+        this._nextAlias = module._nextChar(this._nextAlias);
         //this.entity = new _Entity(this);
 
         this.attribute = null;
@@ -15,7 +15,7 @@ var ERMrest = (function(module) {
         this.aggregate = null;
         this.entity._bind(this);
 
-        this.pathtables = [this.context]; // in order
+        this._pathtables = [this.context]; // in order
         this._filter = null;
 
     }
@@ -32,7 +32,7 @@ var ERMrest = (function(module) {
 
         // returns a shallow copy of this datapath with filter
         // this datapath is not modified
-        getFilter: function (filter) {
+        filter: function (filter) {
             var dp = this.copy();
             dp._filter = filter;
             return dp;
@@ -41,19 +41,19 @@ var ERMrest = (function(module) {
         extend: function (table, context, link) { // TODO context? link?
             if (context !== undefined) {
             }
-            this.context = new PathTable(table, this, this.nextAlias);
-            this.nextAlias = module._nextChar(this.nextAlias);
-            this.pathtables.push(this.context);
+            this.context = new PathTable(table, this, this._nextAlias);
+            this._nextAlias = module._nextChar(this._nextAlias);
+            this._pathtables.push(this.context);
             return this.context;
         },
 
-        getUri: function() {
+        _getUri: function() {
             var uri = "";
-            for (var i = 0; i < this.pathtables.length; i++) {
+            for (var i = 0; i < this._pathtables.length; i++) {
                 if (i === 0)
-                    uri = this.pathtables[i].toString();
+                    uri = this._pathtables[i].toString();
                 else
-                    uri = uri + "/" + this.pathtables[i].toString();
+                    uri = uri + "/" + this._pathtables[i].toString();
             }
 
             // filter strings
@@ -80,7 +80,7 @@ var ERMrest = (function(module) {
             var uri = baseUri                // base
                 + "/catalog/" + catId        // catalog
                 + "/entity/"                 // interface
-                + this.scope.getUri();   // datapath
+                + this.scope._getUri();   // datapath
 
             return module._http.get(uri).then(function(response){
                 return response.data;
@@ -103,8 +103,8 @@ var ERMrest = (function(module) {
         //.columns.get( columnName ) -> pathcolumn
         //.columns.getByPosition( index ) -> pathcolumn
 
-        this._datapath = datapath;
-        this._table = table;
+        this.datapath = datapath;
+        this.table = table;
         this.alias = alias;
         this.columns = new _Columns(table, this); // pathcolumns
     }
@@ -113,8 +113,8 @@ var ERMrest = (function(module) {
         constructor: PathTable,
 
         toString: function () {
-            return this.alias + ":=" + module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                module._fixedEncodeURIComponent(this._table.name);
+            return this.alias + ":=" + module._fixedEncodeURIComponent(this.table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this.table.name);
         }
 
     };
@@ -128,7 +128,7 @@ var ERMrest = (function(module) {
     _Columns.prototype = {
         constructor: _Columns,
 
-        push: function(pathcolumn) {
+        _push: function(pathcolumn) {
             this._pathcolumns[pathcolumn.column.name] = pathcolumn;
         },
 
@@ -172,17 +172,9 @@ var ERMrest = (function(module) {
         this.column = column;
         this.operators = new _Operators(); // TODO what is it for?
 
-        this.pathtable.columns.push(this);
+        this.pathtable.columns._push(this);
     }
 
-
-    PathColumn.prototype = {
-        constructor: PathColumn,
-
-        push: function(operator) {
-        }
-
-    };
 
     function _Operators() {
         this._operators = {};
