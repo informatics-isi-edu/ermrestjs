@@ -14,42 +14,29 @@
  * limitations under the License.
  */
 
+/**
+ * @namespace ERMrest
+ * @desc
+ * The ERMrest module is a JavaScript client library for the ERMrest
+ * service.
+ *
+ * IMPORTANT NOTE: This module is a work in progress.
+ * It is likely to change several times before we have an interface we wish
+ * to use for ERMrest JavaScript agents.
+ */
 var ERMrest = (function (module) {
 
-    /**
-     * @var
-     * @private
-     * @desc This is the state of the module.
-     */
     module.configure = configure;
 
     module.ermrestFactory = {
         getServer: getServer
     };
 
-    /**
-     * @private
-     * @var _servers
-     * @desc
-     * Internal collection of ERMrest servers.
-     */
+
     var _servers = {};
 
-    /**
-     * @private
-     * @var _http
-     * @desc
-     * The http service used by this module. This is private and not
-     * visible to users of the module.
-     */
     module._http = null;
 
-    /**
-     * @private
-     * @var _q
-     * @desc
-     * Angular $q service
-     */
     module._q = null;
 
     /**
@@ -57,8 +44,7 @@ var ERMrest = (function (module) {
      * @function
      * @param {Object} http Angular $http service object
      * @param {Object} q Angular $q service object
-     * @desc
-     * This function is used to configure the module.
+     * @desc This function is used to configure the module
      */
     function configure(http, q) {
         module._http = http;
@@ -85,40 +71,58 @@ var ERMrest = (function (module) {
     }
 
 
-    /******************************************************/
-    /* Server                                             */
-    /******************************************************/
-
+    /**
+     * @memberof ERMrest
+     * @param {String} uri URI of the ERMrest service.
+     * @constructor
+     */
     function Server(uri) {
 
         if (uri === undefined || uri === null)
             throw "URI undefined or null";
+
+        /**
+         *
+         * @type {String}
+         */
         this.uri = uri;
+
+        /**
+         *
+         * @type {ERMrest.Session}
+         */
         this.session = new Session();
         this.session.get().then(function(data) { // TODO
 
         }, function(response) {
 
         });
+
+        /**
+         *
+         * @type {ERMrest.Catalogs}
+         */
         this.catalogs = new Catalogs(this);
     }
 
-    /******************************************************/
-    /* Session                                            */
-    /******************************************************/
 
+    /**
+     * @memberof ERMrest
+     * @constructor
+     */
     function Session() {
         this._client = null;
         this._attributes = null;
         this._expires = null;
     }
 
+
     Session.prototype = {
         constructor: Session,
 
         /**
-         * @function
-         * @return {Promise} Returns a promise.
+         *
+         * @returns {Promise} Returns a promise.
          * @desc
          * An asynchronous method that returns a promise. If fulfilled (and a user
          * is logged in), it gets the current session information.
@@ -146,9 +150,6 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Catalogs                                           */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -170,14 +171,26 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} Returns the length of the catalogs.
+         */
         length: function () {
             return Object.keys(this._catalogs).length;
         },
 
+        /**
+         *
+         * @returns {Array} Returns an array of names of catalogs.
+         */
         names: function () {
             return Object.keys(this._catalogs);
         },
 
+        /**
+         * @param {String} id Catalog ID.
+         * @returns {Promise} Promise with the catalog object
+         */
         get: function (id) {
             // do introspection here and return a promise
 
@@ -205,9 +218,6 @@ var ERMrest = (function (module) {
         }
     };
 
-    /******************************************************/
-    /* Catalog                                            */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -219,10 +229,25 @@ var ERMrest = (function (module) {
      */
     function Catalog(server, id) {
 
+        /**
+         *
+         * @type {Server}
+         */
         this.server = server;
+
+        /**
+         *
+         * @type {String}
+         */
         this.id = id;
+
         this._uri = server.uri + "/catalog/" + id;
-        this.schemas = new _Schemas();
+
+        /**
+         *
+         * @type {ERMrest.Schemas}
+         */
+        this.schemas = new Schemas();
     }
 
     Catalog.prototype = {
@@ -262,9 +287,6 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Schemas                                            */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -272,12 +294,12 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for the Schemas.
      */
-    function _Schemas() {
+    function Schemas() {
         this._schemas = {};
     }
 
-    _Schemas.prototype = {
-        constructor: _Schemas,
+    Schemas.prototype = {
+        constructor: Schemas,
 
         _push: function(schema) {
             this._schemas[schema.name] = schema;
@@ -287,10 +309,18 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of schemas
+         */
         length: function () {
             return Object.keys(this._schemas).length;
         },
 
+        /**
+         *
+         * @returns {Array} Array of all schemas
+         */
         all: function() {
             var array = [];
             for (var key in this._schemas) {
@@ -299,10 +329,18 @@ var ERMrest = (function (module) {
             return array;
         },
 
+        /**
+         *
+         * @returns {Array} Array of schema names
+         */
         names: function () {
             return Object.keys(this._schemas);
         },
 
+        /**
+         * @param {String} name schema name
+         * @returns {Schema} schema object
+         */
         get: function (name) {
             if (!name in this._schemas) {
                 // TODO schema not found, throw error
@@ -312,10 +350,6 @@ var ERMrest = (function (module) {
         }
     };
 
-
-    /******************************************************/
-    /* Schema                                             */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -327,19 +361,34 @@ var ERMrest = (function (module) {
      */
     function Schema(catalog, jsonSchema) {
 
+        /**
+         *
+         * @type {Catalog}
+         */
         this.catalog = catalog;
+
+        /**
+         *
+         */
         this.name = jsonSchema.schema_name;
+
         //this._uri = catalog._uri + "/schema/" + module._fixedEncodeURIComponent(this.name);
 
-        // build tables
-        this.tables = new _Tables();
+        /**
+         *
+         * @type {ERMrest.Tables}
+         */
+        this.tables = new Tables();
         for (var key in jsonSchema.tables) {
             var jsonTable = jsonSchema.tables[key];
             this.tables._push(new Table(this, jsonTable));
         }
 
-        // build annotations
-        this.annotations = new _Annotations();
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
         for (var uri in jsonSchema.annotations) {
             var jsonAnnotation = jsonSchema.annotations[uri];
             this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
@@ -356,9 +405,6 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Tables                                             */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -366,17 +412,21 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for the Tables.
      */
-    function _Tables() {
+    function Tables() {
         this._tables = {};
     }
 
-    _Tables.prototype = {
-        constructor: _Tables,
+    Tables.prototype = {
+        constructor: Tables,
 
         _push: function(table) {
             this._tables[table.name] = table;
         },
 
+        /**
+         *
+         * @returns {Array} array of tables
+         */
         all: function() {
             var array = [];
             for (var key in this._tables) {
@@ -389,14 +439,27 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of tables
+         */
         length: function () {
             return Object.keys(this._tables).length;
         },
 
+        /**
+         *
+         * @returns {Array} Array of table names
+         */
         names: function () {
             return Object.keys(this._tables);
         },
 
+        /**
+         *
+         * @param {String} name name of table
+         * @returns {Table} table
+         */
         get: function (name) {
             if (!name in this._tables) {
                 // TODO table not found, throw error
@@ -407,9 +470,6 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Table                                              */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -421,28 +481,57 @@ var ERMrest = (function (module) {
      */
     function Table(schema, jsonTable) {
 
+        /**
+         *
+         * @type {Schema}
+         */
         this.schema = schema;
+
+        /**
+         *
+         */
         this.name = jsonTable.table_name;
         this._jsonTable = jsonTable;
+
         //this.uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
-        this.entity = new _Entity(this);
+        /**
+         *
+         * @type {ERMrest.Entity}
+         */
+        this.entity = new Entity(this);
 
-        this.columns = new _Columns();
+        /**
+         *
+         * @type {ERMrest.Columns}
+         */
+        this.columns = new Columns();
         for (var i = 0; i < jsonTable.column_definitions.length; i++) {
             var jsonColumn = jsonTable.column_definitions[i];
             this.columns._push(new Column(this, jsonColumn));
         }
 
-        this.keys = new _Keys();
+        /**
+         *
+         * @type {ERMrest.Keys}
+         */
+        this.keys = new Keys();
         for (var i = 0; i < jsonTable.keys.length; i++) {
             var jsonKey = jsonTable.keys[i];
             this.keys._push(new Key(this, jsonKey));
         }
 
-        this.foreignKeys = new _ForeignKeys();
+        /**
+         *
+         * @type {ERMrest.ForeignKeys}
+         */
+        this.foreignKeys = new ForeignKeys();
 
-        this.annotations = new _Annotations();
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
         for (var uri in jsonTable.annotations) {
             var jsonAnnotation = jsonTable.annotations[uri];
             this.annotations._push(new Annotation("table", uri, jsonAnnotation));
@@ -459,7 +548,7 @@ var ERMrest = (function (module) {
         _buildForeignKeys: function() {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
-            this.foreignKeys = new _ForeignKeys();
+            this.foreignKeys = new ForeignKeys();
             for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
                 var jsonFKs = this._jsonTable.foreign_keys[i];
                 this.foreignKeys._push(new ForeignKeyRef(this, jsonFKs));
@@ -469,26 +558,27 @@ var ERMrest = (function (module) {
     };
 
 
-    /******************************************************/
-    /* Entity                                             */
-    /******************************************************/
-
     /**
      * @memberof ERMrest
      * @constructor
      * @desc
      * Constructor for Entity.
      */
-    function _Entity(table) {
+    function Entity(table) {
         this._table = table;
     }
 
-    _Entity.prototype = {
-        constructor: _Entity,
+    Entity.prototype = {
+        constructor: Entity,
 
-        // filter: Negation|Conjunction|Disjunction|UnaryPredicate|BinaryPredicate or null
-        // limit: limit number of rows or null
-        // columns: array of Column, limit returned rows with selected columns only.
+        /**
+         *
+         * @param {Object} filter Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @param {Number} limit number of rows or null
+         * @param {Array} columns array of Column to limit returned rows with selected columns only.
+         * @returns promise
+         * @desc add
+         */
         get: function(filter, limit, columns) {
 
             var interf = (columns === undefined) ? "entity" : "attribute";
@@ -532,6 +622,14 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @param {Object} rowsets Array of jSON representation of rows
+         * @param {Array} defaults Array of string column names to be defaults
+         * @returns {Promise} promise
+         * @desc
+         * Create new entities
+         */
         post: function (rowsets, defaults) { // create new entities
             var uri = this._table.schema.catalog._uri + "/entity/" +
                 module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
@@ -557,9 +655,6 @@ var ERMrest = (function (module) {
     };
 
 
-    /******************************************************/
-    /* Columns                                            */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -567,17 +662,21 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for Columns.
      */
-    function _Columns() {
+    function Columns() {
         this._columns = {};
     }
 
-    _Columns.prototype = {
-        constructor: _Columns,
+    Columns.prototype = {
+        constructor: Columns,
 
         _push: function(column) {
             this._columns[column.name] = column;
         },
 
+        /**
+         *
+         * @returns {Array} array of all columns
+         */
         all: function() {
             var array = [];
             for (var key in this._columns) {
@@ -590,14 +689,27 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of columns
+         */
         length: function () {
             return Object.keys(this._columns).length;
         },
 
+        /**
+         *
+         * @returns {Array} names of columns
+         */
         names: function () {
             return Object.keys(this._columns);
         },
 
+        /**
+         *
+         * @param {String} name name of column
+         * @returns {Column} column
+         */
         get: function (name) {
             if (!name in this._columns) {
                 // TODO not found, throw error
@@ -610,25 +722,39 @@ var ERMrest = (function (module) {
         }
     };
 
-    /******************************************************/
-    /* Column                                             */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
      * @param {Table} table the table object.
-     * @param {int} index column position in the table.
      * @param {String} jsonColumn the json column.
      * @desc
      * Constructor for Column.
      */
     function Column(table, jsonColumn) {
 
+        /**
+         *
+         * @type {Table}
+         */
         this.table = table;
+
+        /**
+         *
+         */
         this.name = jsonColumn.name;
+
+        /**
+         *
+         * @type {Type}
+         */
         this.type = new Type(jsonColumn.type.typename);
-        this.annotations = new _Annotations();
+
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
         for (var uri in jsonColumn.annotations) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
@@ -650,9 +776,6 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Annotations                                        */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -660,17 +783,21 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for Annotations.
      */
-    function _Annotations() {
+    function Annotations() {
         this._annotations = {};
     }
 
-    _Annotations.prototype = {
-        constructor: _Annotations,
+    Annotations.prototype = {
+        constructor: Annotations,
 
         _push: function(annotation) {
             this._annotations[annotation._uri] = annotation;
         },
 
+        /**
+         *
+         * @returns {Array} list of all annotations
+         */
         all: function() {
             var array = [];
             for (var key in this._annotations) {
@@ -683,14 +810,27 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of annotations
+         */
         length: function () {
             return Object.keys(this._annotations).length;
         },
 
+        /**
+         *
+         * @returns {Array} array of annotation names
+         */
         names: function () {
             return Object.keys(this._annotations);
         },
 
+        /**
+         *
+         * @param {String} uri uri of annotation
+         * @returns {Annotation} annotation
+         */
         get: function (uri) {
             if (!uri in this._annotations) {
                 // TODO table not found, throw error
@@ -700,14 +840,11 @@ var ERMrest = (function (module) {
         }
     };
 
-    /******************************************************/
-    /* Annotation                                         */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} subject subject of the annotation: schema|table|column|key|foreignkeyref.
+     * @param {String} subject subject of the annotation: schema,table,column,key,foreignkeyref.
      * @param {String} uri uri id of the annotation.
      * @param {String} jsonAnnotation json of annotation.
      * @desc
@@ -715,8 +852,17 @@ var ERMrest = (function (module) {
      */
     function Annotation(subject, uri, jsonAnnotation) {
 
+        /**
+         *
+         * @type {String}  schema,table,column,key,foreignkeyref
+         */
         this.subject = subject;
         this._uri = uri;
+
+        /**
+         *
+         * @type {String} json content
+         */
         this.content = jsonAnnotation;
     }
 
@@ -728,9 +874,6 @@ var ERMrest = (function (module) {
         }
     };
 
-    /******************************************************/
-    /* Key                                                */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -738,17 +881,21 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for Keys.
      */
-    function _Keys() {
+    function Keys() {
         this._keys = [];
     }
 
-    _Keys.prototype = {
-        constructor: _Keys,
+    Keys.prototype = {
+        constructor: Keys,
 
         _push: function(key) {
             this._keys.push(key);
         },
 
+        /**
+         *
+         * @returns {Array} a list of all Keys
+         */
         all: function() {
             return this._keys;
         },
@@ -757,10 +904,18 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of keys
+         */
         length: function () {
             return this._keys.length;
         },
 
+        /**
+         *
+         * @returns {Array} array of colsets
+         */
         colsets: function () {
             var sets = [];
             for (var i = 0; i < this._keys.length; i++) {
@@ -769,6 +924,11 @@ var ERMrest = (function (module) {
             return sets;
         },
 
+        /**
+         *
+         * @param {ColSet} colset
+         * @returns {Key} key of the colset
+         */
         get: function (colset) {
             // find Key with the same colset
             for (var i = 0; i < this._keys.length; i++) {
@@ -781,9 +941,6 @@ var ERMrest = (function (module) {
         }
     };
 
-    /******************************************************/
-    /* Key                                                */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -802,9 +959,18 @@ var ERMrest = (function (module) {
             // find corresponding column objects
             uniqueColumns.push(table.columns.get(jsonKey.unique_columns[i]));
         }
+
+        /**
+         *
+         * @type {ERMrest.ColSet}
+         */
         this.colset = new ColSet(uniqueColumns);
 
-        this.annotations = new _Annotations();
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
         for (var uri in jsonKey.annotations) {
             var jsonAnnotation = jsonKey.annotations[uri];
             this.annotations._push(new Annotation("key", uri, jsonAnnotation));
@@ -812,9 +978,6 @@ var ERMrest = (function (module) {
     }
 
 
-    /******************************************************/
-    /* ColSet                                             */
-    /******************************************************/
 
     /**
      * @memberof ERMrest
@@ -831,6 +994,10 @@ var ERMrest = (function (module) {
     ColSet.prototype = {
         constructor: ColSet,
 
+        /**
+         *
+         * @returns {Number} number of columns
+         */
         length: function () {
             return this.columns.length;
         },
@@ -865,13 +1032,14 @@ var ERMrest = (function (module) {
 
     };
 
-    /******************************************************/
-    /* Mapping                                            */
-    /* mathematical functional map,                       */
-    /* i.e. a mathematical set of (from -> to)            */
-    /* column pairings                                    */
-    /******************************************************/
 
+    /**
+     *
+     * @memberof ERMrest
+     * @param {Array} from array of from Columns
+     * @param {Array} to array of to Columns
+     * @constructor
+     */
     function Mapping(from, to) { // both array of 'Column' objects
         this._from = from;
         this._to = to;
@@ -880,14 +1048,27 @@ var ERMrest = (function (module) {
     Mapping.prototype = {
         constructor: Mapping,
 
+        /**
+         *
+         * @returns {Number} number of mapping columns
+         */
         length: function () {
             return this._from.length;
         },
 
+        /**
+         *
+         * @returns {Array} the from columns
+         */
         domain: function () {
-            return from;
+            return this._from;
         },
 
+        /**
+         *
+         * @param {Column} fromCol
+         * @returns {Column} mapping column
+         */
         get: function (fromCol) {
             for (var i = 0; i < this._from.length; i++) {
                 if (fromCol._equals(this._from[i])) {
@@ -899,24 +1080,36 @@ var ERMrest = (function (module) {
     };
 
 
-    function _ForeignKeys() {
+    /**
+     *
+     * @memberof ERMrest
+     * @constructor
+     */
+    function ForeignKeys() {
         this._foreignKeys = []; // array of ForeignKeyRef
         this._mappings = []; // array of Mapping
     }
 
-    _ForeignKeys.prototype = {
-        constructor: _ForeignKeys,
+    ForeignKeys.prototype = {
+        constructor: ForeignKeys,
 
         _push: function(foreignKeyRef) {
             this._foreignKeys.push(foreignKeyRef);
             this._mappings.push(foreignKeyRef.mapping);
         },
 
-        // return an array of all foreign key references
+        /**
+         *
+         * @returns {Array} an array of all foreign key references
+         */
         all: function() {
             return this._foreignKeys;
         },
 
+        /**
+         *
+         * @returns {Array} an array of the foreign keys' colsets
+         */
         colsets: function () {
             var sets = [];
             for (var i = 0; i < this._foreignKeys.length; i++) {
@@ -929,10 +1122,18 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @returns {Number} number of foreign keys
+         */
         length: function () {
             return this._foreignKeys.length;
         },
 
+        /**
+         *
+         * @returns {Array} mappings
+         */
         mappings: function () {
             return this._mappings;
         },
@@ -940,6 +1141,11 @@ var ERMrest = (function (module) {
         //get: function (mapping) { // TODO?
         //},
 
+        /**
+         *
+         * @param {ColSet} colset
+         * @returns {ForeignKeyRef} foreign key reference of the colset
+         */
         get: function (colset) {
             // find ForeignKeyRef with the same colset
             for (var i = 0; i < this._foreignKeys.length; i++) {
@@ -953,10 +1159,12 @@ var ERMrest = (function (module) {
     };
 
 
-    /******************************************************/
-    /* ForeignKeyRef                                      */
-    /******************************************************/
-
+    /**
+     *
+     * @param table
+     * @param jsonFKR
+     * @constructor
+     */
     function ForeignKeyRef(table, jsonFKR) {
 
         var catalog = table.schema.catalog;
@@ -967,6 +1175,11 @@ var ERMrest = (function (module) {
         for (var i = 0; i < fkCols.length; i++) {
             foreignKeyCols.push(table.columns.get(fkCols[i].column_name)); // "Column" object
         }
+
+        /**
+         *
+         * @type {ERMrest.ColSet}
+         */
         this.colset = new ColSet(foreignKeyCols);
 
         // find corresponding Key from referenced columns
@@ -977,14 +1190,26 @@ var ERMrest = (function (module) {
             var col = catalog.schemas.get(refCols[j].schema_name).tables.get(refCols[j].table_name).columns.get(refCols[j].column_name);
             referencedCols.push(col);
         }
-        // find key from referencedCols
-        // use index 0 since all refCols should be of the same schema:table
+
+        /**
+         *
+         * find key from referencedCols
+         * use index 0 since all refCols should be of the same schema:table
+         * @type {ERMrest.Key}
+         */
         this.key = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name).keys.get(new ColSet(referencedCols));
 
-        // assign mapping
+        /**
+         *
+         * @type {ERMrest.Mapping}
+         */
         this.mapping = new Mapping(foreignKeyCols, referencedCols);
 
-        this.annotations = new _Annotations();
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
         for (var uri in jsonFKR.annotations) {
             var jsonAnnotation = jsonFKR.annotations[uri];
             this.annotations._push(new Annotation("foreignkeyref", uri, jsonAnnotation));
@@ -1000,23 +1225,33 @@ var ERMrest = (function (module) {
         },
 
         // returns rowset of the referenced key's table
+        /**
+         *
+         * @param {Number} limit
+         * @returns {Promise} promise with rowset of the referenced key's table
+         */
         getDomainValues: function (limit) {
             if (limit === undefined)
                 limit = null;
-            return this.key._table.entity.get(null, limit, this.key.colset.columns); // async call, returns promise
+            return this.key._table.entity.get(null, limit, this.key.colset.columns);
         }
 
     };
 
 
-    /******************************************************/
-    /* Type                                               */
-    /******************************************************/
-
+    /**
+     *
+     * @param name
+     * @constructor
+     */
     function Type(name) {
         //.name
         //.is_array : boolean
         //.base_type
+
+        /**
+         *
+         */
         this.name = name;
     }
 
@@ -1035,7 +1270,16 @@ var ERMrest = (function (module) {
      * Creates a undefined error object
      */
     function UndefinedError(message) {
+        /**
+         *
+         * @type {string} error name
+         */
         this.name = "UndefinedError";
+
+        /**
+         *
+         * @type {String} error message
+         */
         this.message = (message || "");
     }
 

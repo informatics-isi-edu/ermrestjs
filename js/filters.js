@@ -1,3 +1,6 @@
+/**
+ * @namespace ERMrest.Filters
+ */
 var ERMrest = (function(module) {
 
     module.Negation = Negation;
@@ -17,6 +20,11 @@ var ERMrest = (function(module) {
         NULL: "::null::"
     };
 
+    /**
+     * @memberof ERMrest.Filters
+     * @param filter
+     * @constructor
+     */
     function Negation (filter) {
         this.filter = filter;
     }
@@ -24,11 +32,20 @@ var ERMrest = (function(module) {
     Negation.prototype = {
         constructor: Negation,
 
+        /**
+         *
+         * @returns {string} URI of the filter
+         */
         toUri: function () {
             return "!(" + this.filter.toUri() + ")";
         }
     };
 
+    /**
+     * @memberof ERMrest.Filters
+     * @param filters
+     * @constructor
+     */
     function Conjunction (filters) {
         this.filters = filters;
     }
@@ -36,6 +53,10 @@ var ERMrest = (function(module) {
     Conjunction.prototype = {
         constructor: Conjunction,
 
+        /**
+         *
+         * @returns {string} URI of the filter
+         */
         toUri: function () {
             // loop through individual filters to create filter strings
             var filterStrings = [];
@@ -56,6 +77,11 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     * @memberof ERMrest.Filters
+     * @param filters
+     * @constructor
+     */
     function Disjunction (filters) {
         this.filters = filters;
     }
@@ -63,6 +89,10 @@ var ERMrest = (function(module) {
     Disjunction.prototype = {
         constructor: Disjunction,
 
+        /**
+         *
+         * @returns {string} URI of the filter
+         */
         toUri: function () {
             // loop through individual filters to create filter strings
             var filterStrings = [];
@@ -83,6 +113,12 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     *
+     * @param column
+     * @param operator
+     * @constructor
+     */
     function UnaryPredicate (column, operator) {
         this.column = column; // pathcolumn or column
         this.operator = operator;
@@ -91,6 +127,10 @@ var ERMrest = (function(module) {
     UnaryPredicate.prototype = {
         constructor: UnaryPredicate,
 
+        /**
+         *
+         * @returns {string} URI of the filter
+         */
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
@@ -101,6 +141,13 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     * @memberof ERMrest.Filters
+     * @param column
+     * @param operator
+     * @param rvalue
+     * @constructor
+     */
     function BinaryPredicate (column, operator, rvalue) {
 
         this.column = column; // either pathcolumn or column
@@ -111,6 +158,10 @@ var ERMrest = (function(module) {
     BinaryPredicate.prototype = {
         constructor: BinaryPredicate,
 
+        /**
+         *
+         * @returns {string} URI of the filter
+         */
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
