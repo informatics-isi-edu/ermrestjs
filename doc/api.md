@@ -24,7 +24,7 @@ to use for ERMrest JavaScript agents.
         * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
     * [.Catalog](#ERMrest.Catalog)
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-        * [.server](#ERMrest.Catalog+server) : <code>Server</code>
+        * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
         * [.id](#ERMrest.Catalog+id) : <code>String</code>
         * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
     * [.Schemas](#ERMrest.Schemas)
@@ -32,10 +32,10 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
         * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
         * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>Schema</code>
+        * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
-        * [.catalog](#ERMrest.Schema+catalog) : <code>Catalog</code>
+        * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
         * [.name](#ERMrest.Schema+name)
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
         * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -44,10 +44,10 @@ to use for ERMrest JavaScript agents.
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
         * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Tables+get) ⇒ <code>Table</code>
+        * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
     * [.Table](#ERMrest.Table)
         * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
-        * [.schema](#ERMrest.Table+schema) : <code>Schema</code>
+        * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
         * [.name](#ERMrest.Table+name)
         * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Entity)</code>
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -66,16 +66,16 @@ to use for ERMrest JavaScript agents.
         * [.get(name)](#ERMrest.Columns+get) ⇒ <code>Column</code>
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-        * [.table](#ERMrest.Column+table) : <code>Table</code>
+        * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.Column+name)
-        * [.type](#ERMrest.Column+type) : <code>Type</code>
+        * [.type](#ERMrest.Column+type) : <code>ERMrest.Type</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
         * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
-        * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>Annotation</code>
+        * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
     * [.Annotation](#ERMrest.Annotation)
         * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
         * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
@@ -85,25 +85,26 @@ to use for ERMrest JavaScript agents.
         * [.all()](#ERMrest.Keys+all) ⇒ <code>Array</code>
         * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
         * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>Array</code>
-        * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>Key</code>
+        * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
     * [.Key](#ERMrest.Key)
         * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
         * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
+        * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>Array</code>
-        * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>Column</code>
+        * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.ForeignKeys](#ERMrest.ForeignKeys)
         * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>Array</code>
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
         * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
         * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
-        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ForeignKeyRef</code>
+        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ERMrest.ForeignKeyRef</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -132,7 +133,7 @@ to use for ERMrest JavaScript agents.
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>Server</code>
+    * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
 
 <a name="ERMrest.Server"></a>
 ### ERMrest.Server
@@ -187,7 +188,7 @@ Constructor for the Catalogs.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| server | <code>Server</code> | the server object. |
+| server | <code>[Server](#ERMrest.Server)</code> | the server object. |
 
 <a name="ERMrest.Catalogs+length"></a>
 #### catalogs.length() ⇒ <code>Number</code>
@@ -212,7 +213,7 @@ Constructor for the Catalogs.
 
 * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-    * [.server](#ERMrest.Catalog+server) : <code>Server</code>
+    * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
     * [.id](#ERMrest.Catalog+id) : <code>String</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
 
@@ -223,11 +224,11 @@ Constructor for the Catalog.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| server | <code>Server</code> | the server object. |
+| server | <code>[Server](#ERMrest.Server)</code> | the server object. |
 | id | <code>String</code> | the catalog id. |
 
 <a name="ERMrest.Catalog+server"></a>
-#### catalog.server : <code>Server</code>
+#### catalog.server : <code>[Server](#ERMrest.Server)</code>
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+id"></a>
 #### catalog.id : <code>String</code>
@@ -244,7 +245,7 @@ Constructor for the Catalog.
     * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
     * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
     * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>Schema</code>
+    * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
 
 <a name="new_ERMrest.Schemas_new"></a>
 #### new Schemas()
@@ -263,9 +264,9 @@ Constructor for the Schemas.
 **Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
 **Returns**: <code>Array</code> - Array of schema names  
 <a name="ERMrest.Schemas+get"></a>
-#### schemas.get(name) ⇒ <code>Schema</code>
+#### schemas.get(name) ⇒ <code>[Schema](#ERMrest.Schema)</code>
 **Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
-**Returns**: <code>Schema</code> - schema object  
+**Returns**: <code>[Schema](#ERMrest.Schema)</code> - schema object  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -277,7 +278,7 @@ Constructor for the Schemas.
 
 * [.Schema](#ERMrest.Schema)
     * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
-    * [.catalog](#ERMrest.Schema+catalog) : <code>Catalog</code>
+    * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
     * [.name](#ERMrest.Schema+name)
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
     * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -289,11 +290,11 @@ Constructor for the Catalog.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| catalog | <code>Catalog</code> | the catalog object. |
+| catalog | <code>[Catalog](#ERMrest.Catalog)</code> | the catalog object. |
 | jsonSchema | <code>String</code> | json of the schema. |
 
 <a name="ERMrest.Schema+catalog"></a>
-#### schema.catalog : <code>Catalog</code>
+#### schema.catalog : <code>[Catalog](#ERMrest.Catalog)</code>
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+name"></a>
 #### schema.name
@@ -313,7 +314,7 @@ Constructor for the Catalog.
     * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
     * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Tables+get) ⇒ <code>Table</code>
+    * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
 
 <a name="new_ERMrest.Tables_new"></a>
 #### new Tables()
@@ -332,9 +333,9 @@ Constructor for the Tables.
 **Kind**: instance method of <code>[Tables](#ERMrest.Tables)</code>  
 **Returns**: <code>Array</code> - Array of table names  
 <a name="ERMrest.Tables+get"></a>
-#### tables.get(name) ⇒ <code>Table</code>
+#### tables.get(name) ⇒ <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance method of <code>[Tables](#ERMrest.Tables)</code>  
-**Returns**: <code>Table</code> - table  
+**Returns**: <code>[Table](#ERMrest.Table)</code> - table  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -346,7 +347,7 @@ Constructor for the Tables.
 
 * [.Table](#ERMrest.Table)
     * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
-    * [.schema](#ERMrest.Table+schema) : <code>Schema</code>
+    * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
     * [.name](#ERMrest.Table+name)
     * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Entity)</code>
     * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -361,11 +362,11 @@ Constructor for Table.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| schema | <code>Schema</code> | the schema object. |
+| schema | <code>[Schema](#ERMrest.Schema)</code> | the schema object. |
 | jsonTable | <code>String</code> | the json of the table. |
 
 <a name="ERMrest.Table+schema"></a>
-#### table.schema : <code>Schema</code>
+#### table.schema : <code>[Schema](#ERMrest.Schema)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+name"></a>
 #### table.name
@@ -465,9 +466,9 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-    * [.table](#ERMrest.Column+table) : <code>Table</code>
+    * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name)
-    * [.type](#ERMrest.Column+type) : <code>Type</code>
+    * [.type](#ERMrest.Column+type) : <code>ERMrest.Type</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
 
 <a name="new_ERMrest.Column_new"></a>
@@ -477,17 +478,17 @@ Constructor for Column.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| table | <code>Table</code> | the table object. |
+| table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonColumn | <code>String</code> | the json column. |
 
 <a name="ERMrest.Column+table"></a>
-#### column.table : <code>Table</code>
+#### column.table : <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+name"></a>
 #### column.name
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+type"></a>
-#### column.type : <code>Type</code>
+#### column.type : <code>ERMrest.Type</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -501,7 +502,7 @@ Constructor for Column.
     * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
     * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
-    * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>Annotation</code>
+    * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
 
 <a name="new_ERMrest.Annotations_new"></a>
 #### new Annotations()
@@ -520,9 +521,9 @@ Constructor for Annotations.
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
 **Returns**: <code>Array</code> - array of annotation names  
 <a name="ERMrest.Annotations+get"></a>
-#### annotations.get(uri) ⇒ <code>Annotation</code>
+#### annotations.get(uri) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
-**Returns**: <code>Annotation</code> - annotation  
+**Returns**: <code>[Annotation](#ERMrest.Annotation)</code> - annotation  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -567,7 +568,7 @@ json content
     * [.all()](#ERMrest.Keys+all) ⇒ <code>Array</code>
     * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
     * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>Array</code>
-    * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>Key</code>
+    * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
 
 <a name="new_ERMrest.Keys_new"></a>
 #### new Keys()
@@ -586,13 +587,13 @@ Constructor for Keys.
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
 **Returns**: <code>Array</code> - array of colsets  
 <a name="ERMrest.Keys+get"></a>
-#### keys.get(colset) ⇒ <code>Key</code>
+#### keys.get(colset) ⇒ <code>[Key](#ERMrest.Key)</code>
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
-**Returns**: <code>Key</code> - key of the colset  
+**Returns**: <code>[Key](#ERMrest.Key)</code> - key of the colset  
 
 | Param | Type |
 | --- | --- |
-| colset | <code>ColSet</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
 
 <a name="ERMrest.Key"></a>
 ### ERMrest.Key
@@ -610,7 +611,7 @@ Constructor for Key.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| table | <code>Table</code> | the table object. |
+| table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonKey | <code>String</code> | json key. |
 
 <a name="ERMrest.Key+colset"></a>
@@ -625,6 +626,7 @@ Constructor for Key.
 
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
+    * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
 <a name="new_ERMrest.ColSet_new"></a>
@@ -636,6 +638,9 @@ Constructor for ColSet, a set of Column objects.
 | --- | --- | --- |
 | columns | <code>Array</code> | an array of Column objects. |
 
+<a name="ERMrest.ColSet+columns"></a>
+#### colSet.columns : <code>Array</code>
+**Kind**: instance property of <code>[ColSet](#ERMrest.ColSet)</code>  
 <a name="ERMrest.ColSet+length"></a>
 #### colSet.length() ⇒ <code>Number</code>
 **Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
@@ -648,7 +653,7 @@ Constructor for ColSet, a set of Column objects.
     * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
     * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>Array</code>
-    * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>Column</code>
+    * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Mapping_new"></a>
 #### new Mapping(from, to)
@@ -667,13 +672,13 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
 **Returns**: <code>Array</code> - the from columns  
 <a name="ERMrest.Mapping+get"></a>
-#### mapping.get(fromCol) ⇒ <code>Column</code>
+#### mapping.get(fromCol) ⇒ <code>[Column](#ERMrest.Column)</code>
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
-**Returns**: <code>Column</code> - mapping column  
+**Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
 
 | Param | Type |
 | --- | --- |
-| fromCol | <code>Column</code> | 
+| fromCol | <code>[Column](#ERMrest.Column)</code> | 
 
 <a name="ERMrest.ForeignKeys"></a>
 ### ERMrest.ForeignKeys
@@ -684,7 +689,7 @@ Constructor for ColSet, a set of Column objects.
     * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
     * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
     * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
-    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ForeignKeyRef</code>
+    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ERMrest.ForeignKeyRef</code>
 
 <a name="ERMrest.ForeignKeys+all"></a>
 #### foreignKeys.all() ⇒ <code>Array</code>
@@ -703,13 +708,13 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
 **Returns**: <code>Array</code> - mappings  
 <a name="ERMrest.ForeignKeys+get"></a>
-#### foreignKeys.get(colset) ⇒ <code>ForeignKeyRef</code>
+#### foreignKeys.get(colset) ⇒ <code>ERMrest.ForeignKeyRef</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>ForeignKeyRef</code> - foreign key reference of the colset  
+**Returns**: <code>ERMrest.ForeignKeyRef</code> - foreign key reference of the colset  
 
 | Param | Type |
 | --- | --- |
-| colset | <code>ColSet</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
 
 <a name="ERMrest.Datapath"></a>
 ### ERMrest.Datapath : <code>object</code>
@@ -918,13 +923,13 @@ This function is used to configure the module
 | q | <code>Object</code> | Angular $q service object |
 
 <a name="ERMrest.getServer"></a>
-### ERMrest.getServer(uri) ⇒ <code>Server</code>
+### ERMrest.getServer(uri) ⇒ <code>[Server](#ERMrest.Server)</code>
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
-**Returns**: <code>Server</code> - Returns a server instance.  
+**Returns**: <code>[Server](#ERMrest.Server)</code> - Returns a server instance.  
 
 | Param | Type | Description |
 | --- | --- | --- |

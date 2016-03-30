@@ -55,7 +55,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @function
      * @param {String} uri URI of the ERMrest service.
-     * @return {Server} Returns a server instance.
+     * @return {ERMrest.Server} Returns a server instance.
      * @desc
      * ERMrest server factory creates or reuses ERMrest.Server instances. The
      * URI should be to the ERMrest _service_. For example,
@@ -154,7 +154,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Server} server the server object.
+     * @param {ERMrest.Server} server the server object.
      * @desc
      * Constructor for the Catalogs.
      */
@@ -222,7 +222,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Server} server the server object.
+     * @param {ERMrest.Server} server the server object.
      * @param {String} id the catalog id.
      * @desc
      * Constructor for the Catalog.
@@ -231,7 +231,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {Server}
+         * @type {ERMrest.Server}
          */
         this.server = server;
 
@@ -339,7 +339,7 @@ var ERMrest = (function (module) {
 
         /**
          * @param {String} name schema name
-         * @returns {Schema} schema object
+         * @returns {ERMrest.Schema} schema object
          */
         get: function (name) {
             if (!name in this._schemas) {
@@ -354,7 +354,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Catalog} catalog the catalog object.
+     * @param {ERMrest.Catalog} catalog the catalog object.
      * @param {String} jsonSchema json of the schema.
      * @desc
      * Constructor for the Catalog.
@@ -363,7 +363,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {Catalog}
+         * @type {ERMrest.Catalog}
          */
         this.catalog = catalog;
 
@@ -458,7 +458,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {String} name name of table
-         * @returns {Table} table
+         * @returns {ERMrest.Table} table
          */
         get: function (name) {
             if (!name in this._tables) {
@@ -474,7 +474,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Schema} schema the schema object.
+     * @param {ERMrest.Schema} schema the schema object.
      * @param {String} jsonTable the json of the table.
      * @desc
      * Constructor for Table.
@@ -483,7 +483,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {Schema}
+         * @type {ERMrest.Schema}
          */
         this.schema = schema;
 
@@ -726,7 +726,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Table} table the table object.
+     * @param {ERMrest.Table} table the table object.
      * @param {String} jsonColumn the json column.
      * @desc
      * Constructor for Column.
@@ -735,7 +735,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {Table}
+         * @type {ERMrest.Table}
          */
         this.table = table;
 
@@ -746,7 +746,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {Type}
+         * @type {ERMrest.Type}
          */
         this.type = new Type(jsonColumn.type.typename);
 
@@ -829,7 +829,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {String} uri uri of annotation
-         * @returns {Annotation} annotation
+         * @returns {ERMrest.Annotation} annotation
          */
         get: function (uri) {
             if (!uri in this._annotations) {
@@ -926,8 +926,8 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {ColSet} colset
-         * @returns {Key} key of the colset
+         * @param {ERMrest.ColSet} colset
+         * @returns {ERMrest.Key} key of the colset
          */
         get: function (colset) {
             // find Key with the same colset
@@ -945,7 +945,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {Table} table the table object.
+     * @param {ERMrest.Table} table the table object.
      * @param {String} jsonKey json key.
      * @desc
      * Constructor for Key.
@@ -988,6 +988,10 @@ var ERMrest = (function (module) {
      */
     function ColSet(columns) {
 
+        /**
+         *
+         * @type {Array}
+         */
         this.columns = columns;
     }
 
@@ -1066,8 +1070,8 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Column} fromCol
-         * @returns {Column} mapping column
+         * @param {ERMrest.Column} fromCol
+         * @returns {ERMrest.Column} mapping column
          */
         get: function (fromCol) {
             for (var i = 0; i < this._from.length; i++) {
@@ -1143,8 +1147,8 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {ColSet} colset
-         * @returns {ForeignKeyRef} foreign key reference of the colset
+         * @param {ERMrest.ColSet} colset
+         * @returns {ERMrest.ForeignKeyRef} foreign key reference of the colset
          */
         get: function (colset) {
             // find ForeignKeyRef with the same colset
@@ -1161,8 +1165,8 @@ var ERMrest = (function (module) {
 
     /**
      *
-     * @param table
-     * @param jsonFKR
+     * @param {ERMrest.Table} table
+     * @param {Object} jsonFKR
      * @constructor
      */
     function ForeignKeyRef(table, jsonFKR) {
