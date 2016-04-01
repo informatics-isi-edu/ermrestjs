@@ -561,6 +561,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
+     * @param {EMRrest.Table}
      * @desc
      * Constructor for Entity.
      */
@@ -576,7 +577,7 @@ var ERMrest = (function (module) {
          * @param {Object} filter Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
          * @param {Number} limit number of rows or null
          * @param {Array} columns array of Column to limit returned rows with selected columns only.
-         * @returns promise
+         * @returns {Promise}
          * @desc add
          */
         get: function(filter, limit, columns) {
@@ -708,7 +709,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {String} name name of column
-         * @returns {Column} column
+         * @returns {ERMrest.Column} column
          */
         get: function (name) {
             if (!name in this._columns) {
@@ -1165,6 +1166,7 @@ var ERMrest = (function (module) {
 
     /**
      *
+     * @memberof ERMrest
      * @param {ERMrest.Table} table
      * @param {Object} jsonFKR
      * @constructor
@@ -1245,6 +1247,7 @@ var ERMrest = (function (module) {
 
     /**
      *
+     * @memberof ERMrest
      * @param name
      * @constructor
      */

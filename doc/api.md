@@ -56,19 +56,19 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Entity](#ERMrest.Entity)
         * [new Entity()](#new_ERMrest.Entity_new)
-        * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒
+        * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
         * [.post(rowsets, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
         * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Columns+get) ⇒ <code>Column</code>
+        * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
         * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.Column+name)
-        * [.type](#ERMrest.Column+type) : <code>ERMrest.Type</code>
+        * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -104,21 +104,41 @@ to use for ERMrest JavaScript agents.
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
         * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
         * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
-        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ERMrest.ForeignKeyRef</code>
+        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+    * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
+        * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+        * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+        * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
+        * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+        * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
+    * [.Type](#ERMrest.Type)
+        * [new Type(name)](#new_ERMrest.Type_new)
+        * [.name](#ERMrest.Type+name)
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-            * _instance_
-                * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>DataPath</code>
-                * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>PathTable</code>
-            * _static_
-                * [.DataPath#entity](#ERMrest.Datapath.DataPath.DataPath+entity)
-                    * [.get()](#ERMrest.Datapath.DataPath.DataPath+entity.get) ⇒ <code>Promise</code>
+            * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+            * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+            * [.entity](#ERMrest.Datapath.DataPath+entity)
+                * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+            * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+            * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
         * [.PathTable](#ERMrest.Datapath.PathTable)
             * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+            * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+            * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+            * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+            * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
             * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
         * [.PathColumn](#ERMrest.Datapath.PathColumn)
             * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+            * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+            * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+        * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
+            * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+            * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+            * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
     * [.Filters](#ERMrest.Filters) : <code>object</code>
         * [.Negation](#ERMrest.Filters.Negation)
             * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
@@ -392,7 +412,7 @@ Constructor for Table.
 
 * [.Entity](#ERMrest.Entity)
     * [new Entity()](#new_ERMrest.Entity_new)
-    * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒
+    * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
     * [.post(rowsets, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Entity_new"></a>
@@ -400,11 +420,10 @@ Constructor for Table.
 Constructor for Entity.
 
 <a name="ERMrest.Entity+get"></a>
-#### entity.get(filter, limit, columns) ⇒
+#### entity.get(filter, limit, columns) ⇒ <code>Promise</code>
 add
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
-**Returns**: promise  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -433,7 +452,7 @@ Create new entities
     * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
     * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Columns+get) ⇒ <code>Column</code>
+    * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Columns_new"></a>
 #### new Columns()
@@ -452,9 +471,9 @@ Constructor for Columns.
 **Kind**: instance method of <code>[Columns](#ERMrest.Columns)</code>  
 **Returns**: <code>Array</code> - names of columns  
 <a name="ERMrest.Columns+get"></a>
-#### columns.get(name) ⇒ <code>Column</code>
+#### columns.get(name) ⇒ <code>[Column](#ERMrest.Column)</code>
 **Kind**: instance method of <code>[Columns](#ERMrest.Columns)</code>  
-**Returns**: <code>Column</code> - column  
+**Returns**: <code>[Column](#ERMrest.Column)</code> - column  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -468,7 +487,7 @@ Constructor for Columns.
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name)
-    * [.type](#ERMrest.Column+type) : <code>ERMrest.Type</code>
+    * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
 
 <a name="new_ERMrest.Column_new"></a>
@@ -488,7 +507,7 @@ Constructor for Column.
 #### column.name
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+type"></a>
-#### column.type : <code>ERMrest.Type</code>
+#### column.type : <code>[Type](#ERMrest.Type)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -689,7 +708,7 @@ Constructor for ColSet, a set of Column objects.
     * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
     * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
     * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
-    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>ERMrest.ForeignKeyRef</code>
+    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 
 <a name="ERMrest.ForeignKeys+all"></a>
 #### foreignKeys.all() ⇒ <code>Array</code>
@@ -708,14 +727,76 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
 **Returns**: <code>Array</code> - mappings  
 <a name="ERMrest.ForeignKeys+get"></a>
-#### foreignKeys.get(colset) ⇒ <code>ERMrest.ForeignKeyRef</code>
+#### foreignKeys.get(colset) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>ERMrest.ForeignKeyRef</code> - foreign key reference of the colset  
+**Returns**: <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code> - foreign key reference of the colset  
 
 | Param | Type |
 | --- | --- |
 | colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
 
+<a name="ERMrest.ForeignKeyRef"></a>
+### ERMrest.ForeignKeyRef
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
+    * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+    * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+    * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
+    * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+    * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
+
+<a name="new_ERMrest.ForeignKeyRef_new"></a>
+#### new ForeignKeyRef(table, jsonFKR)
+
+| Param | Type |
+| --- | --- |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| jsonFKR | <code>Object</code> | 
+
+<a name="ERMrest.ForeignKeyRef+colset"></a>
+#### foreignKeyRef.colset : <code>[ColSet](#ERMrest.ColSet)</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+key"></a>
+#### foreignKeyRef.key : <code>[Key](#ERMrest.Key)</code>
+find key from referencedCols
+use index 0 since all refCols should be of the same schema:table
+
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+mapping"></a>
+#### foreignKeyRef.mapping : <code>[Mapping](#ERMrest.Mapping)</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+annotations"></a>
+#### foreignKeyRef.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
+#### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>
+**Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+**Returns**: <code>Promise</code> - promise with rowset of the referenced key's table  
+
+| Param | Type |
+| --- | --- |
+| limit | <code>Number</code> | 
+
+<a name="ERMrest.Type"></a>
+### ERMrest.Type
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Type](#ERMrest.Type)
+    * [new Type(name)](#new_ERMrest.Type_new)
+    * [.name](#ERMrest.Type+name)
+
+<a name="new_ERMrest.Type_new"></a>
+#### new Type(name)
+
+| Param |
+| --- |
+| name | 
+
+<a name="ERMrest.Type+name"></a>
+#### type.name
+**Kind**: instance property of <code>[Type](#ERMrest.Type)</code>  
 <a name="ERMrest.Datapath"></a>
 ### ERMrest.Datapath : <code>object</code>
 **Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
@@ -723,17 +804,27 @@ Constructor for ColSet, a set of Column objects.
 * [.Datapath](#ERMrest.Datapath) : <code>object</code>
     * [.DataPath](#ERMrest.Datapath.DataPath)
         * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-        * _instance_
-            * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>DataPath</code>
-            * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>PathTable</code>
-        * _static_
-            * [.DataPath#entity](#ERMrest.Datapath.DataPath.DataPath+entity)
-                * [.get()](#ERMrest.Datapath.DataPath.DataPath+entity.get) ⇒ <code>Promise</code>
+        * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+        * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+        * [.entity](#ERMrest.Datapath.DataPath+entity)
+            * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+        * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+        * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
     * [.PathTable](#ERMrest.Datapath.PathTable)
         * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+        * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+        * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+        * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+        * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
         * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
     * [.PathColumn](#ERMrest.Datapath.PathColumn)
         * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+        * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+        * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+    * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
+        * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+        * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+        * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
 
 <a name="ERMrest.Datapath.DataPath"></a>
 #### Datapath.DataPath
@@ -741,54 +832,66 @@ Constructor for ColSet, a set of Column objects.
 
 * [.DataPath](#ERMrest.Datapath.DataPath)
     * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-    * _instance_
-        * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>DataPath</code>
-        * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>PathTable</code>
-    * _static_
-        * [.DataPath#entity](#ERMrest.Datapath.DataPath.DataPath+entity)
-            * [.get()](#ERMrest.Datapath.DataPath.DataPath+entity.get) ⇒ <code>Promise</code>
+    * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+    * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+    * [.entity](#ERMrest.Datapath.DataPath+entity)
+        * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+    * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+    * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
 
 <a name="new_ERMrest.Datapath.DataPath_new"></a>
 ##### new DataPath(table)
 
 | Param | Type |
 | --- | --- |
-| table | <code>Table</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> | 
 
+<a name="ERMrest.Datapath.DataPath+catalog"></a>
+##### dataPath.catalog : <code>[Catalog](#ERMrest.Catalog)</code>
+**Kind**: instance property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
+<a name="ERMrest.Datapath.DataPath+context"></a>
+##### dataPath.context : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+**Kind**: instance property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
+<a name="ERMrest.Datapath.DataPath+entity"></a>
+##### dataPath.entity
+entity container
+
+**Kind**: instance property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
+<a name="ERMrest.Datapath.DataPath+entity.get"></a>
+###### entity.get() ⇒ <code>Promise</code>
+**Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
+**Returns**: <code>Promise</code> - promise with rowset data  
 <a name="ERMrest.Datapath.DataPath+filter"></a>
-##### dataPath.filter(filter) ⇒ <code>DataPath</code>
+##### dataPath.filter(filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
 this datapath is not modified
 
 **Kind**: instance method of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
-**Returns**: <code>DataPath</code> - a shallow copy of this datapath with filter  
+**Returns**: <code>[DataPath](#ERMrest.Datapath.DataPath)</code> - a shallow copy of this datapath with filter  
 
 | Param | Type |
 | --- | --- |
 | filter | <code>Object</code> | 
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
-##### dataPath.extend(table, context, link) ⇒ <code>PathTable</code>
+##### dataPath.extend(table, context, link) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
 **Kind**: instance method of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
 
 | Param | Type |
 | --- | --- |
-| table | <code>Table</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> | 
 | context |  | 
 | link |  | 
 
-<a name="ERMrest.Datapath.DataPath.DataPath+entity"></a>
-##### DataPath.DataPath#entity
-**Kind**: static property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
-<a name="ERMrest.Datapath.DataPath.DataPath+entity.get"></a>
-###### DataPath#entity.get() ⇒ <code>Promise</code>
-**Kind**: static method of <code>[DataPath#entity](#ERMrest.Datapath.DataPath.DataPath+entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset data  
 <a name="ERMrest.Datapath.PathTable"></a>
 #### Datapath.PathTable
 **Kind**: static class of <code>[Datapath](#ERMrest.Datapath)</code>  
 
 * [.PathTable](#ERMrest.Datapath.PathTable)
     * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+    * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+    * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+    * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+    * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
     * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Datapath.PathTable_new"></a>
@@ -796,10 +899,22 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| table | <code>Table</code> | 
-| datapath | <code>DataPath</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> | 
 | alias | <code>string</code> | 
 
+<a name="ERMrest.Datapath.PathTable+datapath"></a>
+##### pathTable.datapath : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+**Kind**: instance property of <code>[PathTable](#ERMrest.Datapath.PathTable)</code>  
+<a name="ERMrest.Datapath.PathTable+table"></a>
+##### pathTable.table : <code>[Table](#ERMrest.Table)</code>
+**Kind**: instance property of <code>[PathTable](#ERMrest.Datapath.PathTable)</code>  
+<a name="ERMrest.Datapath.PathTable+alias"></a>
+##### pathTable.alias : <code>string</code>
+**Kind**: instance property of <code>[PathTable](#ERMrest.Datapath.PathTable)</code>  
+<a name="ERMrest.Datapath.PathTable+columns"></a>
+##### pathTable.columns : <code>[Columns](#ERMrest.Datapath.Columns)</code>
+**Kind**: instance property of <code>[PathTable](#ERMrest.Datapath.PathTable)</code>  
 <a name="ERMrest.Datapath.PathTable+toString"></a>
 ##### pathTable.toString() ⇒ <code>string</code>
 **Kind**: instance method of <code>[PathTable](#ERMrest.Datapath.PathTable)</code>  
@@ -807,13 +922,57 @@ this datapath is not modified
 <a name="ERMrest.Datapath.PathColumn"></a>
 #### Datapath.PathColumn
 **Kind**: static class of <code>[Datapath](#ERMrest.Datapath)</code>  
+
+* [.PathColumn](#ERMrest.Datapath.PathColumn)
+    * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+    * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+    * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+
 <a name="new_ERMrest.Datapath.PathColumn_new"></a>
 ##### new PathColumn(column, pathtable)
 
 | Param | Type |
 | --- | --- |
-| column | <code>Column</code> | 
-| pathtable | <code>PathTable</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+
+<a name="ERMrest.Datapath.PathColumn+pathtable"></a>
+##### pathColumn.pathtable : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+**Kind**: instance property of <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>  
+<a name="ERMrest.Datapath.PathColumn+column"></a>
+##### pathColumn.column : <code>[Column](#ERMrest.Column)</code>
+**Kind**: instance property of <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>  
+<a name="ERMrest.Datapath.Columns"></a>
+#### Datapath.Columns(table, pathtable)
+**Kind**: static method of <code>[Datapath](#ERMrest.Datapath)</code>  
+
+| Param | Type |
+| --- | --- |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+
+
+* [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
+    * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+    * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+
+<a name="ERMrest.Datapath.Columns+length"></a>
+##### columns.length() ⇒ <code>Number</code>
+**Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
+**Returns**: <code>Number</code> - number of path columns  
+<a name="ERMrest.Datapath.Columns+names"></a>
+##### columns.names() ⇒ <code>Array</code>
+**Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
+**Returns**: <code>Array</code> - a list of pathcolumn names  
+<a name="ERMrest.Datapath.Columns+get"></a>
+##### columns.get(colName) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+**Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
+**Returns**: <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code> - returns the PathColumn  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| colName | <code>string</code> | column name |
 
 <a name="ERMrest.Filters"></a>
 ### ERMrest.Filters : <code>object</code>

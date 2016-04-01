@@ -7,23 +7,37 @@ var ERMrest = (function(module) {
 
     /**
      * @memberof ERMrest.Datapath
-     * @param {Table} table
+     * @param {ERMrest.Table} table
      * @constructor
      */
     function DataPath(table) {
 
         this._nextAlias = "a"; // TODO better way to doing alias?
+
+        /**
+         *
+         * @type {ERMrest.Catalog}
+         */
         this.catalog = table.schema.catalog;
+
+        /**
+         *
+         * @type {ERMrest.Datapath.PathTable}
+         */
         this.context = new PathTable(table, this, this._nextAlias);
+
         this._nextAlias = module._nextChar(this._nextAlias);
-        //this.entity = new _Entity(this);
 
         this.attribute = null;
+
         this.attributegroup = null;
+
         this.aggregate = null;
+
         this.entity._bind(this);
 
         this._pathtables = [this.context]; // in order
+
         this._filter = null;
 
     }
@@ -41,7 +55,7 @@ var ERMrest = (function(module) {
         /**
          *
          * @param {Object} filter
-         * @returns {DataPath} a shallow copy of this datapath with filter
+         * @returns {ERMrest.Datapath.DataPath} a shallow copy of this datapath with filter
          * @desc
          * this datapath is not modified
          */
@@ -53,10 +67,10 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @param {Table} table
+         * @param {ERMrest.Table} table
          * @param context
          * @param link
-         * @returns {PathTable}
+         * @returns {ERMrest.Datapath.PathTable}
          */
         extend: function (table, context, link) { // TODO context? link?
             this.context = new PathTable(table, this, this._nextAlias);
@@ -81,53 +95,74 @@ var ERMrest = (function(module) {
 
             return uri;
 
-        }
-
-    };
-
-    /**
-     * @memberof ERMrest.Datapath.DataPath
-     */
-    DataPath.prototype.entity = {
-        scope: null,
-
-        _bind: function(scope) {
-            this.scope = scope;
         },
 
         /**
-         * @returns {Promise} promise with rowset data
+         * @desc
+         * entity container
          */
-        get: function () {
-            var baseUri = this.scope.catalog.server.uri;
-            var catId = this.scope.catalog.id;
-            var uri = baseUri                // base
-                + "/catalog/" + catId        // catalog
-                + "/entity/"                 // interface
-                + this.scope._getUri();   // datapath
+        entity: {
+            scope: null,
 
-            return module._http.get(uri).then(function(response){
-                return response.data;
-            }, function(response){
-                return module._q.reject(response);
-            });
+            _bind: function(scope) {
+                this.scope = scope;
+            },
+
+            /**
+             * @returns {Promise} promise with rowset data
+             */
+            get: function () {
+                var baseUri = this.scope.catalog.server.uri;
+                var catId = this.scope.catalog.id;
+                var uri = baseUri                // base
+                    + "/catalog/" + catId        // catalog
+                    + "/entity/"                 // interface
+                    + this.scope._getUri();   // datapath
+
+                return module._http.get(uri).then(function(response){
+                    return response.data;
+                }, function(response){
+                    return module._q.reject(response);
+                });
+            }
         }
+
     };
 
 
     /**
      *
      * @memberof ERMrest.Datapath
-     * @param {Table} table
-     * @param {DataPath} datapath
+     * @param {ERMrest.Table} table
+     * @param {ERMrest.Datapath.DataPath} datapath
      * @param {string} alias
      * @constructor
      */
     function PathTable(table, datapath, alias) {
+
+        /**
+         *
+         * @type {ERMrest.Datapath.DataPath}
+         */
         this.datapath = datapath;
+
+        /**
+         *
+         * @type {ERMrest.Table}
+         */
         this.table = table;
+
+        /**
+         *
+         * @type {string}
+         */
         this.alias = alias;
-        this.columns = new _Columns(table, this); // pathcolumns
+
+        /**
+         *
+         * @type {ERMrest.Datapath.Columns}
+         */
+        this.columns = new Columns(table, this); // pathcolumns
     }
 
     PathTable.prototype = {
@@ -147,18 +182,17 @@ var ERMrest = (function(module) {
     /**
      *
      * @memberof ERMrest.Datapath
-     * @param {Table} table
-     * @param {PathTable} pathtable
-     * @private
+     * @param {ERMrest.Table} table
+     * @param {ERMrest.Datapath.PathTable} pathtable
      */
-    function _Columns(table, pathtable) {
+    function Columns(table, pathtable) {
         this._table = table;
         this._pathtable = pathtable;
         this._pathcolumns = {};
     }
 
-    _Columns.prototype = {
-        constructor: _Columns,
+    Columns.prototype = {
+        constructor: Columns,
 
         _push: function(pathcolumn) {
             this._pathcolumns[pathcolumn.column.name] = pathcolumn;
@@ -183,7 +217,7 @@ var ERMrest = (function(module) {
         /**
          *
          * @param {string} colName column name
-         * @returns {PathColumn} returns the PathColumn
+         * @returns {ERMrest.Datapath.PathColumn} returns the PathColumn
          */
         get: function (colName) {
             if (colName in this._pathcolumns)
@@ -204,26 +238,36 @@ var ERMrest = (function(module) {
 
     /**
      * @memberof ERMrest.Datapath
-     * @param {Column} column
-     * @param {PathTable} pathtable
+     * @param {ERMrest.Column} column
+     * @param {ERMrest.Datapath.PathTable} pathtable
      * @constructor
      */
     function PathColumn(column, pathtable) {
 
+        /**
+         *
+         * @type {ERMrest.Datapath.PathTable}
+         */
         this.pathtable = pathtable;
+
+        /**
+         *
+         * @type {ERMrest.Column}
+         */
         this.column = column;
-        this.operators = new _Operators(); // TODO
+
+        this.operators = new Operators(); // TODO
 
         this.pathtable.columns._push(this);
     }
 
 
-    function _Operators() {
+    function Operators() {
         this._operators = {};
     }
 
-    _Operators.prototype = {
-        constructor: _Operators,
+    Operators.prototype = {
+        constructor: Operators,
 
         length: function () {
             return Object.keys(this._operators).length;
