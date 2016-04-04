@@ -574,11 +574,12 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Object} filter Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
-         * @param {Number} limit number of rows or null
-         * @param {Array} columns array of Column to limit returned rows with selected columns only.
+         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @param {Number} limit Optional. Number of rows or null
+         * @param {Array} columns Optional. Array of column names or Column objects, limit returned rows with selected columns only.
          * @returns {Promise}
-         * @desc add
+         * @desc
+         * get table rows with option filter, row limit and selected columns (in this order).
          */
         get: function(filter, limit, columns) {
 
@@ -595,7 +596,10 @@ var ERMrest = (function (module) {
             // selected columns only
             if (columns !== undefined) {
                 for (var c = 0; c < columns.length; c++) {
-                    var col = columns[c].name;
+                    var col = columns[c]; // if string
+                    if (columns[c] instanceof Column) {
+                        col = columns[c].name;
+                    }
                     if (c === 0)
                         uri = uri + "/" + col;
                     else

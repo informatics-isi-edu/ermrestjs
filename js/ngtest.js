@@ -47,8 +47,8 @@ angular.module("testApp", ['ERMrest'])
                 console.log(response);
             });
 
-            t1.entity.get(gtFilter, 5, t1.keys.all()[0].colset.columns).then(function(rows) {
-                //console.log(rows);
+            t1.entity.get(gtFilter, 5, ["dataset_id"]).then(function(rows) {
+                console.log(rows);
             }, function(response) {
                 console.log(response);
             });
