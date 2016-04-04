@@ -629,13 +629,13 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Object} rowsets Array of jSON representation of rows
+         * @param {Object} rowset Array of jSON representation of rows
          * @param {Array} defaults Array of string column names to be defaults
-         * @returns {Promise} promise
+         * @returns {Promise} Promise
          * @desc
          * Create new entities
          */
-        post: function (rowsets, defaults) { // create new entities
+        post: function (rowset, defaults) { // create new entities
             var uri = this._table.schema.catalog._uri + "/entity/" +
                 module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                 module._fixedEncodeURIComponent(this._table.name);
@@ -650,7 +650,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return module._http.post(uri, rowsets).then(function(response) {
+            return module._http.post(uri, rowset).then(function(response) {
                return response.data;
             }, function(response) {
                 return module._q.reject(response);

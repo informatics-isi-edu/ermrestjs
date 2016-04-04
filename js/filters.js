@@ -115,8 +115,9 @@ var ERMrest = (function(module) {
 
     /**
      *
-     * @param column
-     * @param operator
+     * @memberof ERMrest.Filters
+     * @param {ERMrest.Column} column
+     * @param {ERMrest.Filters.OPERATOR} operator
      * @constructor
      */
     function UnaryPredicate (column, operator) {
@@ -143,9 +144,9 @@ var ERMrest = (function(module) {
 
     /**
      * @memberof ERMrest.Filters
-     * @param column
-     * @param operator
-     * @param rvalue
+     * @param {ERMrest.Column} column
+     * @param {ERMrest.Filters.OPERATOR} operator
+     * @param {String | Number} rvalue
      * @constructor
      */
     function BinaryPredicate (column, operator, rvalue) {

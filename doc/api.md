@@ -55,9 +55,11 @@ to use for ERMrest JavaScript agents.
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Entity](#ERMrest.Entity)
-        * [new Entity()](#new_ERMrest.Entity_new)
+        * [new Entity(table)](#new_ERMrest.Entity_new)
         * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
-        * [.post(rowsets, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
+        * [.delete(filter)](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
+        * [.put(rowset)](#ERMrest.Entity+put) ⇒ <code>Promise</code>
+        * [.post(rowset, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
@@ -149,6 +151,9 @@ to use for ERMrest JavaScript agents.
         * [.Disjunction](#ERMrest.Filters.Disjunction)
             * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
             * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+        * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+            * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+            * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
         * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
@@ -411,36 +416,64 @@ Constructor for Table.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Entity](#ERMrest.Entity)
-    * [new Entity()](#new_ERMrest.Entity_new)
+    * [new Entity(table)](#new_ERMrest.Entity_new)
     * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
-    * [.post(rowsets, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
+    * [.delete(filter)](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
+    * [.put(rowset)](#ERMrest.Entity+put) ⇒ <code>Promise</code>
+    * [.post(rowset, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Entity_new"></a>
-#### new Entity()
+#### new Entity(table)
 Constructor for Entity.
+
+
+| Param | Type |
+| --- | --- |
+| table | <code>EMRrest.Table</code> | 
 
 <a name="ERMrest.Entity+get"></a>
 #### entity.get(filter, limit, columns) ⇒ <code>Promise</code>
-add
+get table rows with option filter, row limit and selected columns (in this order).
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| filter | <code>Object</code> | Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
-| limit | <code>Number</code> | number of rows or null |
-| columns | <code>Array</code> | array of Column to limit returned rows with selected columns only. |
+| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| limit | <code>Number</code> | Optional. Number of rows or null |
+| columns | <code>Array</code> | Optional. Array of column names or Column objects, limit returned rows with selected columns only. |
+
+<a name="ERMrest.Entity+delete"></a>
+#### entity.delete(filter) ⇒ <code>Promise</code>
+Delete rows from table based on the filter
+
+**Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
+**Returns**: <code>Promise</code> - Promise  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filter | <code>Object</code> | Negation, Conjunction, Disjunction, UnaryPredicate, or BinaryPredicate |
+
+<a name="ERMrest.Entity+put"></a>
+#### entity.put(rowset) ⇒ <code>Promise</code>
+**Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
+**Returns**: <code>Promise</code> - Promise
+Update rows in the table  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rowset | <code>Object</code> | jSON representation of the updated rows |
 
 <a name="ERMrest.Entity+post"></a>
-#### entity.post(rowsets, defaults) ⇒ <code>Promise</code>
+#### entity.post(rowset, defaults) ⇒ <code>Promise</code>
 Create new entities
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
-**Returns**: <code>Promise</code> - promise  
+**Returns**: <code>Promise</code> - Promise  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| rowsets | <code>Object</code> | Array of jSON representation of rows |
+| rowset | <code>Object</code> | Array of jSON representation of rows |
 | defaults | <code>Array</code> | Array of string column names to be defaults |
 
 <a name="ERMrest.Columns"></a>
@@ -988,6 +1021,9 @@ this datapath is not modified
     * [.Disjunction](#ERMrest.Filters.Disjunction)
         * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
         * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+    * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+        * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+        * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
     * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
         * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
         * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
@@ -1049,6 +1085,26 @@ this datapath is not modified
 ##### disjunction.toUri() ⇒ <code>string</code>
 **Kind**: instance method of <code>[Disjunction](#ERMrest.Filters.Disjunction)</code>  
 **Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Filters.UnaryPredicate"></a>
+#### Filters.UnaryPredicate
+**Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
+
+* [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+    * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+    * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.UnaryPredicate_new"></a>
+##### new UnaryPredicate(column, operator)
+
+| Param | Type |
+| --- | --- |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+
+<a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
+##### unaryPredicate.toUri() ⇒ <code>string</code>
+**Kind**: instance method of <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code>  
+**Returns**: <code>string</code> - URI of the filter  
 <a name="ERMrest.Filters.BinaryPredicate"></a>
 #### Filters.BinaryPredicate
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
@@ -1060,11 +1116,11 @@ this datapath is not modified
 <a name="new_ERMrest.Filters.BinaryPredicate_new"></a>
 ##### new BinaryPredicate(column, operator, rvalue)
 
-| Param |
-| --- |
-| column | 
-| operator | 
-| rvalue | 
+| Param | Type |
+| --- | --- |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| rvalue | <code>String</code> &#124; <code>Number</code> | 
 
 <a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
