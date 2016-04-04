@@ -619,12 +619,45 @@ var ERMrest = (function (module) {
             });
         },
 
+        /**
+         *
+         * @param {Object} filter Negation, Conjunction, Disjunction, UnaryPredicate, or BinaryPredicate
+         * @returns {Promise} Promise
+         * @desc
+         * Delete rows from table based on the filter
+         */
         delete: function (filter) {
+            var uri = this._table.schema.catalog._uri + "/entity/" +
+                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this._table.name);
 
+                uri = uri + "/" + filter.toUri();
+
+            return module._http.delete(uri).then(function(response) {
+                return response.data;
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
         },
 
+        /**
+         *
+         * @param {Object} rowset jSON representation of the updated rows
+         * @returns {Promise} Promise
+         * Update rows in the table
+         */
         put: function (rowset) {
 
+            var path = this._table.schema.catalog._uri + "/entity/" +
+                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this._table.name);
+
+            return module._http.put(path, rowset).then(function(response) {
+                return response.data;
+            }, function(response) {
+                console.log(response);
+                return module._q.reject(response.data);
+            });
         },
 
         /**

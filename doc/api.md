@@ -124,6 +124,7 @@ to use for ERMrest JavaScript agents.
             * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
             * [.entity](#ERMrest.Datapath.DataPath+entity)
                 * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+                * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
             * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
             * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
         * [.PathTable](#ERMrest.Datapath.PathTable)
@@ -841,6 +842,7 @@ use index 0 since all refCols should be of the same schema:table
         * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
         * [.entity](#ERMrest.Datapath.DataPath+entity)
             * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+            * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
         * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
         * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
     * [.PathTable](#ERMrest.Datapath.PathTable)
@@ -869,6 +871,7 @@ use index 0 since all refCols should be of the same schema:table
     * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
     * [.entity](#ERMrest.Datapath.DataPath+entity)
         * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+        * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
     * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
     * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
 
@@ -890,10 +893,25 @@ use index 0 since all refCols should be of the same schema:table
 entity container
 
 **Kind**: instance property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
+
+* [.entity](#ERMrest.Datapath.DataPath+entity)
+    * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+    * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+
 <a name="ERMrest.Datapath.DataPath+entity.get"></a>
 ###### entity.get() ⇒ <code>Promise</code>
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
 **Returns**: <code>Promise</code> - promise with rowset data  
+<a name="ERMrest.Datapath.DataPath+entity.delete"></a>
+###### entity.delete(filter) ⇒ <code>Promise</code>
+delete entities
+
+**Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
+
+| Param | Type |
+| --- | --- |
+| filter | <code>Object</code> | 
+
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 ##### dataPath.filter(filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
 this datapath is not modified

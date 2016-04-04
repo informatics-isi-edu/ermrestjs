@@ -1,6 +1,6 @@
 angular.module("testApp", ['ERMrest'])
 
-    .controller('mainController', ['ermrestServerFactory', '$http', '$q', function(ermrestServerFactory, $http, $q) {
+    .controller('mainController', ['ermrestServerFactory', function(ermrestServerFactory) {
 
         var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
 
@@ -29,9 +29,9 @@ angular.module("testApp", ['ERMrest'])
             console.log(colsets2);
 
 
-            // get entities from table
+            // get all entities from table
             t1.entity.get().then(function(rows) {
-                //console.log(rows);
+                console.log(rows);
             }, function(response) {
                 console.log(response);
             });
@@ -48,7 +48,7 @@ angular.module("testApp", ['ERMrest'])
             });
 
             t1.entity.get(gtFilter, 5, ["dataset_id"]).then(function(rows) {
-                console.log(rows);
+                //console.log(rows);
             }, function(response) {
                 console.log(response);
             });
@@ -129,13 +129,27 @@ angular.module("testApp", ['ERMrest'])
             console.log(datapath3._getUri());
 
             datapath3.entity.get().then(function(data){
-                console.log(data);
+                //console.log(data);
             }, function(response) {
                 // console.log("Datapath 1 get failed: " + response);
             });
 
-            /**
-            // create entities
+
+        }, function(response) {
+            console.log(response);
+        });
+    }])
+
+    .controller('editController', ['ermrestServerFactory', function(ermrestServerFactory){
+
+        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
+
+        // build catalog schemas
+        server.catalogs.get(1).then(function(catalog){
+            var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
+
+
+            // post: create entities
             var rows = [
                 {"dataset_id":4277,"chromosome":"chr14","start_position":11111111,"end_position":22222222},
                 {"dataset_id":4421,"chromosome":"chr14","start_position":33333333,"end_position":44444444}];
@@ -148,13 +162,51 @@ angular.module("testApp", ['ERMrest'])
                 }, function(response) {
                     console.log(response);
                 });
-            }, function(response) {
+
+
+                // put: modify entities
+                var rows = [
+                    {"dataset_id":4277,"chromosome":"chr14","start_position":11111111,"end_position":33333333},
+                    {"dataset_id":4421,"chromosome":"chr14","start_position":33333333,"end_position":55555555}];
+
+                t1.entity.put(rows).then(function(data){
+                    console.log(data);
+
+
+                    // delete: delete entities using table.entity
+                    var colStartPos = t1.columns.get("start_position");
+                    var delFilter1 = new ERMrest.BinaryPredicate(colStartPos, ERMrest.OPERATOR.EQUAL, "11111111");
+
+                    t1.entity.delete(delFilter1).then(function(data){
+                        console.log("Delete successful");
+                    }, function(response){
+                        console.log(response);
+                    });
+
+                    // delete entity using datapath
+                    var datapath = new ERMrest.DataPath(t1);
+                    var pathtable = datapath.context;
+                    var pathcolumn = pathtable.columns.get("start_position");
+                    var delFilter2 = new ERMrest.BinaryPredicate(pathcolumn, ERMrest.OPERATOR.EQUAL, "33333333");
+
+                    datapath.entity.delete(delFilter2).then(function(data) {
+                        console.log("delete successful");
+                    }, function(response) {
+                        console.log(response);
+                    });
+
+                }, function(response){
                 console.log(response);
+                });
+
+
+
+            }, function(response) {
+            console.log(response);
             });
-            **/
 
 
         }, function(response) {
             console.log(response);
         });
-}]);
+    }]);

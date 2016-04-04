@@ -124,6 +124,29 @@ var ERMrest = (function(module) {
                 }, function(response){
                     return module._q.reject(response);
                 });
+            },
+
+            /**
+             *
+             * @param {Object} filter
+             * @desc delete entities
+             * @returns {Promise}
+             */
+            delete: function (filter) {
+                var baseUri = this.scope.catalog.server.uri;
+                var catId = this.scope.catalog.id;
+                var uri = baseUri
+                    + "/catalog/" + catId
+                    + "/entity/"
+                    + this.scope._getUri();
+
+                uri = uri + "/" + filter.toUri();
+
+                return module._http.delete(uri).then(function(response) {
+                    return response.data;
+                }, function(response) {
+                    return module._q.reject(response.data);
+                });
             }
         }
 
