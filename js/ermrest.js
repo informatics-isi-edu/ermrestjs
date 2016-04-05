@@ -577,13 +577,14 @@ var ERMrest = (function (module) {
          * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
          * @param {Number} limit Optional. Number of rows or null
          * @param {Array} columns Optional. Array of column names or Column objects, limit returned rows with selected columns only.
+         * @param {Array} sortby Option. An ordered array of column names or Column objects for sorting
          * @returns {Promise}
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
          */
-        get: function(filter, limit, columns) {
+        get: function(filter, limit, columns, sortby) {
 
-            var interf = (columns === undefined) ? "entity" : "attribute";
+            var interf = (columns === null || columns === undefined) ? "entity" : "attribute";
 
             var uri = this._table.schema.catalog._uri + "/" + interf + "/" +
                     module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
@@ -594,7 +595,7 @@ var ERMrest = (function (module) {
             }
 
             // selected columns only
-            if (columns !== undefined) {
+            if (columns !== undefined && columns !== null) {
                 for (var c = 0; c < columns.length; c++) {
                     var col = columns[c]; // if string
                     if (columns[c] instanceof Column) {
@@ -607,10 +608,23 @@ var ERMrest = (function (module) {
                 }
             }
 
+            if (sortby !== undefined && sortby !== null) {
+                for (c = 0; c < sortby.length; c++) {
+                    col = sortby[c]; // if string
+                    if (sortby[c] instanceof Column) {
+                        col = sortby[c].name;
+                    }
+                    if (c === 0)
+                        uri = uri + "@sort(" + col;
+                    else
+                        uri = uri + "," + col;
+                }
+                uri = uri + ")";
+            }
+
             if (limit !== undefined && limit !== null) {
                 uri = uri + "?limit=" + limit;
             }
-
 
             return module._http.get(uri).then(function(response) {
                 return response.data;
