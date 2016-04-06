@@ -20,12 +20,12 @@ JS=js
 SOURCE=$(JS)/*.js
 SPECS=test/karma.conf.js
 
-# Distribution target
-DIST=dist
+# Build target
+BUILD=build
 
 # Project package full/minified
-PKG=$(DIST)/$(PROJ).js
-MIN=$(DIST)/$(PROJ).min.js
+PKG=$(BUILD)/$(PROJ).js
+MIN=$(BUILD)/$(PROJ).min.js
 
 # Documentation target
 DOC=doc
@@ -37,19 +37,19 @@ LINT=.make-lint
 TEST=.make-test.js
 
 .PHONY: all
-all: build $(DOC)
+all: $(BUILD) $(DOC)
 
 .PHONY: build
-build: $(PKG) $(MIN)
+$(BUILD): $(PKG) $(MIN)
 
 # Rule to build the full library
 $(PKG): $(SOURCE) $(LINT) $(BIN)
-	mkdir -p $(DIST)
+	mkdir -p $(BUILD)
 	cat $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
 $(MIN): $(SOURCE) $(LINT) $(BIN)
-	mkdir -p $(DIST)
+	mkdir -p $(BUILD)
 	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
 # Rule to lint the source (only changed source is linted)
@@ -99,7 +99,7 @@ updeps:
 # Rule to clean project directory
 .PHONY: clean
 clean:
-	rm -rf $(DIST)
+	rm -rf $(BUILD)
 	rm -rf $(JSDOC)
 	rm -f .make-*
 
