@@ -50,7 +50,7 @@ $(PKG): $(SOURCE) $(LINT) $(BIN)
 # Rule to build the minified package
 $(MIN): $(SOURCE) $(LINT) $(BIN)
 	mkdir -p $(DIST)
-	$(BIN)/ccjs $(SOURCE) > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
 # Rule to lint the source (only changed source is linted)
 $(LINT): $(SOURCE) $(BIN)
