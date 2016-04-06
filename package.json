@@ -9,7 +9,6 @@
     "build": "make build",
     "pretest": "make build",
     "test": "make test",
-    "test:testem": "make testem",
     "docs": "make doc"
   },
   "repository": {
@@ -30,7 +29,6 @@
     "jasmine-core": "x",
     "jasmine-jquery": "x",
     "bower": "x",
-    "testem": "x",
     "closurecompiler": "x",
     "jshint": "x",
     "jsdoc": "x",

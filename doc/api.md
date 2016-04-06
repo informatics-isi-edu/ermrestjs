@@ -56,7 +56,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Entity](#ERMrest.Entity)
         * [new Entity(table)](#new_ERMrest.Entity_new)
-        * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
+        * [.get(filter, limit, columns, sortby)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
         * [.delete(filter)](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
         * [.put(rowset)](#ERMrest.Entity+put) ⇒ <code>Promise</code>
         * [.post(rowset, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
@@ -418,7 +418,7 @@ Constructor for Table.
 
 * [.Entity](#ERMrest.Entity)
     * [new Entity(table)](#new_ERMrest.Entity_new)
-    * [.get(filter, limit, columns)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
+    * [.get(filter, limit, columns, sortby)](#ERMrest.Entity+get) ⇒ <code>Promise</code>
     * [.delete(filter)](#ERMrest.Entity+delete) ⇒ <code>Promise</code>
     * [.put(rowset)](#ERMrest.Entity+put) ⇒ <code>Promise</code>
     * [.post(rowset, defaults)](#ERMrest.Entity+post) ⇒ <code>Promise</code>
@@ -433,7 +433,7 @@ Constructor for Entity.
 | table | <code>EMRrest.Table</code> | 
 
 <a name="ERMrest.Entity+get"></a>
-#### entity.get(filter, limit, columns) ⇒ <code>Promise</code>
+#### entity.get(filter, limit, columns, sortby) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Entity)</code>  
@@ -443,6 +443,7 @@ get table rows with option filter, row limit and selected columns (in this order
 | filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
 | limit | <code>Number</code> | Optional. Number of rows or null |
 | columns | <code>Array</code> | Optional. Array of column names or Column objects, limit returned rows with selected columns only. |
+| sortby | <code>Array</code> | Option. An ordered array of column names or Column objects for sorting |
 
 <a name="ERMrest.Entity+delete"></a>
 #### entity.delete(filter) ⇒ <code>Promise</code>
