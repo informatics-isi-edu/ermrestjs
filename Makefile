@@ -39,7 +39,7 @@ TEST=.make-test.js
 .PHONY: all
 all: $(BUILD) $(DOC)
 
-.PHONY: build
+# Build rule
 $(BUILD): $(PKG) $(MIN)
 
 # Rule to build the full library
