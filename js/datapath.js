@@ -114,10 +114,10 @@ var ERMrest = (function(module) {
             get: function () {
                 var baseUri = this.scope.catalog.server.uri;
                 var catId = this.scope.catalog.id;
-                var uri = baseUri                // base
-                    + "/catalog/" + catId        // catalog
-                    + "/entity/"                 // interface
-                    + this.scope._getUri();   // datapath
+                var uri = baseUri +            // base
+                    "/catalog/" + catId +      // catalog
+                    "/entity/" +               // interface
+                    this.scope._getUri();      // datapath
 
                 return module._http.get(uri).then(function(response){
                     return response.data;
@@ -135,10 +135,10 @@ var ERMrest = (function(module) {
             delete: function (filter) {
                 var baseUri = this.scope.catalog.server.uri;
                 var catId = this.scope.catalog.id;
-                var uri = baseUri
-                    + "/catalog/" + catId
-                    + "/entity/"
-                    + this.scope._getUri();
+                var uri = baseUri +
+                    "/catalog/" + catId +
+                    "/entity/" +
+                    this.scope._getUri();
 
                 uri = uri + "/" + filter.toUri();
 

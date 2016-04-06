@@ -269,7 +269,7 @@ var ERMrest = (function (module) {
                 // all schemas created
                 // build foreign keys for each table in each schema
                 var schemaNames = self.schemas.names();
-                for (var s = 0; s < schemaNames.length; s++) {
+                for (s = 0; s < schemaNames.length; s++) {
                     var schema = self.schemas.get(schemaNames[s]);
                     var tables = schema.tables.names();
                     for (var t = 0; t < tables.length; t++) {
@@ -342,7 +342,7 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Schema} schema object
          */
         get: function (name) {
-            if (!name in this._schemas) {
+            if (!(name in this._schemas)) {
                 // TODO schema not found, throw error
             }
 
@@ -461,7 +461,7 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Table} table
          */
         get: function (name) {
-            if (!name in this._tables) {
+            if (!(name in this._tables)) {
                 // TODO table not found, throw error
             }
 
@@ -516,7 +516,7 @@ var ERMrest = (function (module) {
          * @type {ERMrest.Keys}
          */
         this.keys = new Keys();
-        for (var i = 0; i < jsonTable.keys.length; i++) {
+        for (i = 0; i < jsonTable.keys.length; i++) {
             var jsonKey = jsonTable.keys[i];
             this.keys._push(new Key(this, jsonKey));
         }
@@ -609,15 +609,15 @@ var ERMrest = (function (module) {
             }
 
             if (sortby !== undefined && sortby !== null) {
-                for (c = 0; c < sortby.length; c++) {
-                    col = sortby[c]; // if string
-                    if (sortby[c] instanceof Column) {
-                        col = sortby[c].name;
+                for (var d = 0; d < sortby.length; d++) {
+                    var col1 = sortby[d]; // if string
+                    if (sortby[d] instanceof Column) {
+                        col1 = sortby[d].name;
                     }
-                    if (c === 0)
-                        uri = uri + "@sort(" + col;
+                    if (d === 0)
+                        uri = uri + "@sort(" + col1;
                     else
-                        uri = uri + "," + col;
+                        uri = uri + "," + col1;
                 }
                 uri = uri + ")";
             }
@@ -763,7 +763,7 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Column} column
          */
         get: function (name) {
-            if (!name in this._columns) {
+            if (!(name in this._columns)) {
                 // TODO not found, throw error
             }
             return this._columns[name];
@@ -884,7 +884,7 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Annotation} annotation
          */
         get: function (uri) {
-            if (!uri in this._annotations) {
+            if (!(uri in this._annotations)) {
                 // TODO table not found, throw error
             }
 
