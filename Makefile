@@ -17,7 +17,20 @@ BOWER=bower_components
 
 # JavaScript source and test specs
 JS=js
-SOURCE=$(JS)/*.js
+
+# Pure ERMrest API
+JS_SRC=$(JS)/datapath.js \
+	   $(JS)/ermrest.js \
+	   $(JS)/filters.js \
+	   $(JS)/utilities.js
+
+# Angular-related API files
+NG_SRC=$(JS)/ngermrest.js
+
+# All source
+SOURCE=$(JS_SRC) $(NG_SRC)
+
+# Specs
 SPECS=test/karma.conf.js
 
 # Build target
@@ -26,6 +39,7 @@ BUILD=build
 # Project package full/minified
 PKG=$(BUILD)/$(PROJ).js
 MIN=$(BUILD)/$(PROJ).min.js
+NGAPI=$(BUILD)/ng$(PROJ).js
 
 # Documentation target
 DOC=doc
@@ -40,21 +54,26 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(PKG) $(MIN)
+$(BUILD): $(PKG) $(MIN) $(NGAPI)
 
 # Rule to build the full library
-$(PKG): $(SOURCE) $(LINT) $(BIN)
+$(PKG): $(JS_SRC) $(LINT) $(BIN)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	cat $(JS_SRC) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(LINT) $(BIN)
+$(MIN): $(JS_SRC) $(LINT) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(JS_SRC) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
-# Rule to lint the source (only changed source is linted)
+# Rule to build the ng only api
+$(NGAPI): $(NG_SRC) $(LINT) $(BIN)
+	mkdir -p $(BUILD)
+	cat $(NG_SRC) > $(NGAPI)
+
+# Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $(SOURCE), $?)
+	$(BIN)/jshint $(filter $(SOURCE), $?)  || true
 	@touch $(LINT)
 
 .PHONY: lint
