@@ -497,7 +497,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {ERMrest.Entity}
+         * @type {ERMrest.Table.Entity}
          */
         this.entity = new Entity(this);
 
@@ -559,11 +559,11 @@ var ERMrest = (function (module) {
 
 
     /**
-     * @memberof ERMrest
+     * @memberof ERMrest.Table
      * @constructor
-     * @param {EMRrest.Table}
+     * @param {ERMrest.Table} table
      * @desc
-     * Constructor for Entity.
+     * Constructor for Entity. This is a container in Table
      */
     function Entity(table) {
         this._table = table;
