@@ -435,7 +435,7 @@ Constructor for Table.
 
 <a name="new_ERMrest.Table.Entity_new"></a>
 ##### new Entity(table)
-Constructor for Entity.
+Constructor for Entity. This is a container in Table
 
 
 | Param | Type |
@@ -453,7 +453,7 @@ get table rows with option filter, row limit and selected columns (in this order
 | filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
 | limit | <code>Number</code> | Optional. Number of rows or null |
 | columns | <code>Array</code> | Optional. Array of column names or Column objects, limit returned rows with selected columns only. |
-| sortby | <code>Array</code> | Option. An ordered array of column names or Column objects for sorting |
+| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Table.Entity+delete"></a>
 ##### entity.delete(filter) ⇒ <code>Promise</code>

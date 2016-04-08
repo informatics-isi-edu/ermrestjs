@@ -47,8 +47,8 @@ angular.module("testApp", ['ERMrest'])
                 console.log(response);
             });
 
-            t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], ["start_position"]).then(function(rows) {
-                //console.log(rows);
+            t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], [{"column": "start_position", "order": "desc"}]).then(function(rows) {
+                console.log(rows);
             }, function(response) {
                 console.log(response);
             });

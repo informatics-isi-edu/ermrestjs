@@ -577,7 +577,7 @@ var ERMrest = (function (module) {
          * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
          * @param {Number} limit Optional. Number of rows or null
          * @param {Array} columns Optional. Array of column names or Column objects, limit returned rows with selected columns only.
-         * @param {Array} sortby Option. An ordered array of column names or Column objects for sorting
+         * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
          * @returns {Promise}
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
@@ -610,14 +610,15 @@ var ERMrest = (function (module) {
 
             if (sortby !== undefined && sortby !== null) {
                 for (var d = 0; d < sortby.length; d++) {
-                    var col1 = sortby[d]; // if string
-                    if (sortby[d] instanceof Column) {
+                    var col1 = sortby[d].column; // if string
+                    if (sortby[d] instanceof Column) { // if Column object
                         col1 = sortby[d].name;
                     }
+                    var order = (sortby[d].order === 'desc' ? "::desc::" : "");
                     if (d === 0)
-                        uri = uri + "@sort(" + col1;
+                        uri = uri + "@sort(" + col1 + order;
                     else
-                        uri = uri + "," + col1;
+                        uri = uri + "," + col1 + order;
                 }
                 uri = uri + ")";
             }
