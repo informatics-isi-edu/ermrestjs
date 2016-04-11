@@ -574,32 +574,33 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
-         * @param {Number} limit Optional. Number of rows or null
-         * @param {Array} columns Optional. Array of column names or Column objects, limit returned rows with selected columns only.
-         * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
-         * @returns {Promise}
-         * @desc
-         * get table rows with option filter, row limit and selected columns (in this order).
+         * @param {string} api entity, attribute or attributegroup
+         * @returns {string} the base URI for doing http calls
+         * @private
+         * @desc <service>/catalog/<cid>/<api>/<schema>:<table>
          */
-        get: function(filter, limit, columns, sortby) {
+        _getBaseURI: function(api) {
+            return this._table.schema.catalog._uri + "/" + api + "/" +
+                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
+                module._fixedEncodeURIComponent(this._table.name);
+        },
 
-            var interf = (columns === null || columns === undefined) ? "entity" : "attribute";
+        _toURI: function(filter, output, sortby, paging, row, limit) {
 
-            var uri = this._table.schema.catalog._uri + "/" + interf + "/" +
-                    module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                    module._fixedEncodeURIComponent(this._table.name);
+            var api = (output === null || output === undefined) ? "entity" : "attribute";
+
+            var uri = this._getBaseURI(api);
 
             if (filter !== undefined && filter !== null) {
                 uri = uri + "/" + filter.toUri();
             }
 
             // selected columns only
-            if (columns !== undefined && columns !== null) {
-                for (var c = 0; c < columns.length; c++) {
-                    var col = columns[c]; // if string
-                    if (columns[c] instanceof Column) {
-                        col = columns[c].name;
+            if (output !== undefined && output !== null) {
+                for (var c = 0; c < output.length; c++) {
+                    var col = output[c]; // if string
+                    if (output[c] instanceof Column) {
+                        col = output[c].name;
                     }
                     if (c === 0)
                         uri = uri + "/" + col;
@@ -621,14 +622,62 @@ var ERMrest = (function (module) {
                         uri = uri + "," + col1 + order;
                 }
                 uri = uri + ")";
+
+                // paging requires sortby
+                if (paging  !== undefined && paging !== null && row !== undefined && row !== null) {
+                    if (paging === "before") {
+                        uri = uri + "@before(";
+                    } else {
+                        uri = uri + "@after(";
+                    }
+
+                    for (d = 0; d < sortby.length; d++) {
+                        col1 = sortby[d].column; // if string
+                        if (sortby[d] instanceof Column) { // if Column object
+                            col1 = sortby[d].name;
+                        }
+                        var value = row[col1];
+                        if (value === null)
+                            value = "::null::";
+                        if (d === 0)
+                            uri = uri + value;
+                        else
+                            uri = uri + "," + value;
+
+                        uri = uri + ")";
+                    }
+                }
+
             }
+
 
             if (limit !== undefined && limit !== null) {
                 uri = uri + "?limit=" + limit;
             }
 
+            return uri;
+        },
+
+        /**
+         *
+         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @param {Number} limit Optional. Number of rows or null
+         * @param {Array} columns Optional. Array of column names or Column objects output
+         * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
+         * @returns {Promise}
+         * @desc
+         * get table rows with option filter, row limit and selected columns (in this order).
+         *
+         * In order to use before & after on a rowset, limit must be speficied,
+         * output columns and sortby needs to have columns of a key
+         */
+        get: function(filter, limit, columns, sortby) {
+
+            var uri = this._toURI(filter, columns, sortby, null, null, limit);
+
+            var self = this;
             return module._http.get(uri).then(function(response) {
-                return response.data;
+                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 return module._q.reject(response.data);
             });
@@ -642,11 +691,7 @@ var ERMrest = (function (module) {
          * Delete rows from table based on the filter
          */
         delete: function (filter) {
-            var uri = this._table.schema.catalog._uri + "/entity/" +
-                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                module._fixedEncodeURIComponent(this._table.name);
-
-                uri = uri + "/" + filter.toUri();
+            var uri = this._toURI(filter);
 
             return module._http.delete(uri).then(function(response) {
                 return response.data;
@@ -657,17 +702,15 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Object} rowset jSON representation of the updated rows
+         * @param {Object} rows jSON representation of the updated rows
          * @returns {Promise} Promise
          * Update rows in the table
          */
-        put: function (rowset) {
+        put: function (rows) {
 
-            var path = this._table.schema.catalog._uri + "/entity/" +
-                module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
-                module._fixedEncodeURIComponent(this._table.name);
+            var uri = this._toURI();
 
-            return module._http.put(path, rowset).then(function(response) {
+            return module._http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function(response) {
                 console.log(response);
@@ -677,13 +720,13 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {Object} rowset Array of jSON representation of rows
+         * @param {Object} rows Array of jSON representation of rows
          * @param {Array} defaults Array of string column names to be defaults
          * @returns {Promise} Promise
          * @desc
          * Create new entities
          */
-        post: function (rowset, defaults) { // create new entities
+        post: function (rows, defaults) { // create new entities
             var uri = this._table.schema.catalog._uri + "/entity/" +
                 module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                 module._fixedEncodeURIComponent(this._table.name);
@@ -698,7 +741,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return module._http.post(uri, rowset).then(function(response) {
+            return module._http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
                 return module._q.reject(response);
@@ -708,6 +751,42 @@ var ERMrest = (function (module) {
     };
 
 
+    function RowSet(table, jsonRows, filter, limit, output, sortby) {
+        this._table = table;
+        this.data = jsonRows;
+        this._filter = filter;
+        this._limit = limit;
+        this._output = output;
+        this._sortby = sortby;
+    }
+
+    RowSet.prototype = {
+        constructor: RowSet,
+
+        after: function() {
+            var uri =
+                this._table.entity._toURI(this._filter, this._output, this._sortby, "after", this.data[this.data.length - 1], this._limit);
+
+            var self = this;
+            return module._http.get(uri).then(function(response) {
+                return new RowSet(self._table, response.data, self._filter, self._limit, self._output, self._sortby);
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
+        },
+
+        before: function() {
+            var uri =
+                this._table.entity._toURI(this._filter, this._output, this._sortby, "before", this.data[0], this._limit);
+
+            var self = this;
+            return module._http.get(uri).then(function(response) {
+                return new RowSet(self._table, response.data, self._filter, self._limit, self._output, self._sortby);
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
+        }
+    };
 
     /**
      * @memberof ERMrest
@@ -1282,11 +1361,11 @@ var ERMrest = (function (module) {
 
         },
 
-        // returns rowset of the referenced key's table
+        // returns rows of the referenced key's table
         /**
          *
          * @param {Number} limit
-         * @returns {Promise} promise with rowset of the referenced key's table
+         * @returns {Promise} promise with rows of the referenced key's table
          */
         getDomainValues: function (limit) {
             if (limit === undefined)

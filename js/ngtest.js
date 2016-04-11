@@ -31,6 +31,7 @@ angular.module("testApp", ['ERMrest'])
 
             // get all entities from table
             t1.entity.get().then(function(rows) {
+                console.log("Get all rows from dataset_chromosome using Table.entity.get()");
                 console.log(rows);
             }, function(response) {
                 console.log(response);
@@ -48,6 +49,10 @@ angular.module("testApp", ['ERMrest'])
             });
 
             t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], [{"column": "start_position", "order": "desc"}]).then(function(rows) {
+                console.log("Test Table.entity.get() with filter, limit, columns and sort. \n" +
+                    "Get from table dataset_chromosome with dataset_id > 12969, \n" +
+                    "limited columns to dataset_id and start_position, \n" +
+                    "sort by start_position in decending order, limit to 5 rows");
                 console.log(rows);
             }, function(response) {
                 console.log(response);
