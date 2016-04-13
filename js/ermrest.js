@@ -91,7 +91,7 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.Session}
          */
-        this.session = new Session();
+        this.session = new Session(this);
         this.session.get().then(function(data) { // TODO
 
         }, function(response) {
@@ -110,8 +110,8 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      */
-    function Session() {
-        this._client = null;
+    function Session(server) {
+        this._server = server;
         this._attributes = null;
         this._expires = null;
     }
@@ -128,10 +128,10 @@ var ERMrest = (function (module) {
          * is logged in), it gets the current session information.
          */
         get: function() {
-            return module._http.get(this.uri + "/authn/session").then(function(response) {
+            return module._http.get(this._server.uri + "/authn/session").then(function(response) {
                 return response.data;
             }, function(response) {
-                return module._q.reject(response);
+                return module._q.reject(response.data);
             });
         },
 
