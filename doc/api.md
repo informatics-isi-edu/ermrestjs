@@ -58,10 +58,11 @@ to use for ERMrest JavaScript agents.
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+                * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
                 * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
                 * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
-                * [.put(rowset)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
-                * [.post(rowset, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+                * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
+                * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
@@ -386,10 +387,11 @@ Constructor for the Tables.
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+            * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
             * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
             * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
-            * [.put(rowset)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
-            * [.post(rowset, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+            * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
+            * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table_new"></a>
 #### new Table(schema, jsonTable)
@@ -428,10 +430,11 @@ Constructor for Table.
 
 * [.Entity](#ERMrest.Table.Entity)
     * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+    * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
     * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
     * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
-    * [.put(rowset)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
-    * [.post(rowset, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+    * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
+    * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table.Entity_new"></a>
 ##### new Entity(table)
@@ -442,9 +445,22 @@ Constructor for Entity. This is a container in Table
 | --- | --- |
 | table | <code>[Table](#ERMrest.Table)</code> | 
 
+<a name="ERMrest.Table.Entity+count"></a>
+##### entity.count(filter) ⇒ <code>Promise</code>
+get the number of rows
+
+**Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+
 <a name="ERMrest.Table.Entity+get"></a>
 ##### entity.get(filter, limit, columns, sortby) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
+
+In order to use before & after on a rowset, limit must be speficied,
+output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
 
@@ -452,7 +468,7 @@ get table rows with option filter, row limit and selected columns (in this order
 | --- | --- | --- |
 | filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
 | limit | <code>Number</code> | Optional. Number of rows or null |
-| columns | <code>Array</code> | Optional. Array of column names or Column objects, limit returned rows with selected columns only. |
+| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
 | sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Table.Entity+delete"></a>
@@ -467,17 +483,17 @@ Delete rows from table based on the filter
 | filter | <code>Object</code> | Negation, Conjunction, Disjunction, UnaryPredicate, or BinaryPredicate |
 
 <a name="ERMrest.Table.Entity+put"></a>
-##### entity.put(rowset) ⇒ <code>Promise</code>
+##### entity.put(rows) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
 **Returns**: <code>Promise</code> - Promise
 Update rows in the table  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| rowset | <code>Object</code> | jSON representation of the updated rows |
+| rows | <code>Object</code> | jSON representation of the updated rows |
 
 <a name="ERMrest.Table.Entity+post"></a>
-##### entity.post(rowset, defaults) ⇒ <code>Promise</code>
+##### entity.post(rows, defaults) ⇒ <code>Promise</code>
 Create new entities
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
@@ -485,7 +501,7 @@ Create new entities
 
 | Param | Type | Description |
 | --- | --- | --- |
-| rowset | <code>Object</code> | Array of jSON representation of rows |
+| rows | <code>Object</code> | Array of jSON representation of rows |
 | defaults | <code>Array</code> | Array of string column names to be defaults |
 
 <a name="ERMrest.Columns"></a>
@@ -818,7 +834,7 @@ use index 0 since all refCols should be of the same schema:table
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
-**Returns**: <code>Promise</code> - promise with rowset of the referenced key's table  
+**Returns**: <code>Promise</code> - promise with rows of the referenced key's table  
 
 | Param | Type |
 | --- | --- |

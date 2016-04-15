@@ -661,6 +661,30 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @returns {Promise}
+         * @desc get the number of rows
+         *
+         */
+        count: function(filter) {
+
+            var uri = this._getBaseURI("aggregate");
+
+            if (filter !== undefined && filter !== null) {
+                uri = uri + "/" + filter.toUri();
+            }
+
+            uri = uri + "/row_count:=cnt(*)";
+
+            return module._http.get(uri).then(function(response) {
+                return response.data[0].row_count;
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
+        },
+
+        /**
+         *
+         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
          * @param {Number} limit Optional. Number of rows or null
          * @param {Array} columns Optional. Array of column names or Column objects output
          * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
