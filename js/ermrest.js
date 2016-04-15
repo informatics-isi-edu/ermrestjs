@@ -643,9 +643,9 @@ var ERMrest = (function (module) {
                             uri = uri + value;
                         else
                             uri = uri + "," + value;
-
-                        uri = uri + ")";
                     }
+
+                    uri = uri + ")";
                 }
 
             }
