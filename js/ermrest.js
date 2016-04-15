@@ -603,9 +603,9 @@ var ERMrest = (function (module) {
                         col = output[c].name;
                     }
                     if (c === 0)
-                        uri = uri + "/" + col;
+                        uri = uri + "/" + module._fixedEncodeURIComponent(col);
                     else
-                        uri = uri + "," + col;
+                        uri = uri + "," + module._fixedEncodeURIComponent(col);
                 }
             }
 
@@ -617,9 +617,9 @@ var ERMrest = (function (module) {
                     }
                     var order = (sortby[d].order === 'desc' ? "::desc::" : "");
                     if (d === 0)
-                        uri = uri + "@sort(" + col1 + order;
+                        uri = uri + "@sort(" + module._fixedEncodeURIComponent(col1) + order;
                     else
-                        uri = uri + "," + col1 + order;
+                        uri = uri + "," + module._fixedEncodeURIComponent(col1) + order;
                 }
                 uri = uri + ")";
 
@@ -639,6 +639,8 @@ var ERMrest = (function (module) {
                         var value = row[col1];
                         if (value === null)
                             value = "::null::";
+                        else
+                            value = module._fixedEncodeURIComponent(value);
                         if (d === 0)
                             uri = uri + value;
                         else
