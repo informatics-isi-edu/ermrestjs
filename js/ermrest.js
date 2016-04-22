@@ -711,6 +711,56 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @param {Number} limit Required. Number of rows
+         * @param {Array} columns Optional. Array of column names or Column objects output
+         * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
+         * @param {Object} row json row data used to getBefore
+         *
+         * @returns {Promise}
+         * @desc
+         * get a page of rows before a specific row
+         *
+         */
+        getBefore: function(filter, limit, columns, sortby, row) {
+            var uri =
+                this._toURI(filter, columns, sortby, "before", row, limit);
+
+            var self = this;
+            return module._http.get(uri).then(function(response) {
+                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
+        },
+
+        /**
+         *
+         * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+         * @param {Number} limit Required. Number of rows
+         * @param {Array} columns Optional. Array of column names or Column objects output
+         * @param {Array} sortby Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
+         * @param {Object} row json row data used to getAfter
+         *
+         * @returns {Promise}
+         * @desc
+         * get a page of rows after a specific row
+         *
+         */
+        getAfter: function(filter, limit, columns, sortby, row) {
+            var uri =
+                this._toURI(filter, columns, sortby, "after", row, limit);
+
+            var self = this;
+            return module._http.get(uri).then(function(response) {
+                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+            }, function(response) {
+                return module._q.reject(response.data);
+            });
+        },
+
+        /**
+         *
          * @param {Object} filter Negation, Conjunction, Disjunction, UnaryPredicate, or BinaryPredicate
          * @returns {Promise} Promise
          * @desc
@@ -777,40 +827,49 @@ var ERMrest = (function (module) {
     };
 
 
-    function RowSet(table, jsonRows, filter, limit, output, sortby) {
+    /**
+     *
+     * @memberof ERMrest
+     * @param {ERMrest.Table} table Required.
+     * @param {Object} jsonRows Required.
+     * @param {Object} filter Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null
+     * @param {Number} limit Required. Number of rows
+     * @param {Array} columns Optional. Array of column names or Column objects output
+     * @param {Array} sortby Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
+     * @constructor
+     */
+    function RowSet(table, jsonRows, filter, limit, columns, sortby) {
         this._table = table;
         this.data = jsonRows;
         this._filter = filter;
         this._limit = limit;
-        this._output = output;
+        this._columns = columns;
         this._sortby = sortby;
     }
 
     RowSet.prototype = {
         constructor: RowSet,
 
+        /**
+         *
+         * @returns {Promise}
+         * @desc get the rowset of the next page
+         *
+         */
         after: function() {
-            var uri =
-                this._table.entity._toURI(this._filter, this._output, this._sortby, "after", this.data[this.data.length - 1], this._limit);
 
-            var self = this;
-            return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, self._filter, self._limit, self._output, self._sortby);
-            }, function(response) {
-                return module._q.reject(response.data);
-            });
+            return this._table.entity.getAfter(this._filter, this._limit, this._output, this._sortby, this.data[this.data.length - 1]);
         },
 
+        /**
+         *
+         * @returns {Promise}
+         * @desc get the rowset of the previous page
+         *
+         */
         before: function() {
-            var uri =
-                this._table.entity._toURI(this._filter, this._output, this._sortby, "before", this.data[0], this._limit);
 
-            var self = this;
-            return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, self._filter, self._limit, self._output, self._sortby);
-            }, function(response) {
-                return module._q.reject(response.data);
-            });
+            return this._table.entity.getBefore(this._filter, this._limit, this._output, this._sortby, this.data[0]);
         }
     };
 
