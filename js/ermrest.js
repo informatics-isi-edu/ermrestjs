@@ -852,6 +852,14 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @returns {number}
+         */
+        length: function() {
+            return this.data.length;
+        },
+
+        /**
+         *
          * @returns {Promise}
          * @desc get the rowset of the next page
          *

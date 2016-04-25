@@ -60,9 +60,16 @@ to use for ERMrest JavaScript agents.
                 * [new Entity(table)](#new_ERMrest.Table.Entity_new)
                 * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
                 * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+                * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+                * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
                 * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
                 * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
                 * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+    * [.RowSet](#ERMrest.RowSet)
+        * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
+        * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
+        * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
+        * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
@@ -389,6 +396,8 @@ Constructor for the Tables.
             * [new Entity(table)](#new_ERMrest.Table.Entity_new)
             * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
             * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+            * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+            * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
             * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
             * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
             * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
@@ -432,6 +441,8 @@ Constructor for Table.
     * [new Entity(table)](#new_ERMrest.Table.Entity_new)
     * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
     * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+    * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+    * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
     * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
     * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
     * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
@@ -471,6 +482,34 @@ output columns and sortby needs to have columns of a key
 | columns | <code>Array</code> | Optional. Array of column names or Column objects output |
 | sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
+<a name="ERMrest.Table.Entity+getBefore"></a>
+##### entity.getBefore(filter, limit, columns, sortby, row) ⇒ <code>Promise</code>
+get a page of rows before a specific row
+
+**Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| limit | <code>Number</code> | Required. Number of rows |
+| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
+| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| row | <code>Object</code> | json row data used to getBefore |
+
+<a name="ERMrest.Table.Entity+getAfter"></a>
+##### entity.getAfter(filter, limit, columns, sortby, row) ⇒ <code>Promise</code>
+get a page of rows after a specific row
+
+**Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| limit | <code>Number</code> | Required. Number of rows |
+| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
+| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| row | <code>Object</code> | json row data used to getAfter |
+
 <a name="ERMrest.Table.Entity+delete"></a>
 ##### entity.delete(filter) ⇒ <code>Promise</code>
 Delete rows from table based on the filter
@@ -504,6 +543,41 @@ Create new entities
 | rows | <code>Object</code> | Array of jSON representation of rows |
 | defaults | <code>Array</code> | Array of string column names to be defaults |
 
+<a name="ERMrest.RowSet"></a>
+### ERMrest.RowSet
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.RowSet](#ERMrest.RowSet)
+    * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
+    * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
+    * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
+    * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
+
+<a name="new_ERMrest.RowSet_new"></a>
+#### new RowSet(table, jsonRows, filter, limit, columns, sortby)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>[Table](#ERMrest.Table)</code> | Required. |
+| jsonRows | <code>Object</code> | Required. |
+| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| limit | <code>Number</code> | Required. Number of rows |
+| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
+| sortby | <code>Array</code> | Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+
+<a name="ERMrest.RowSet+length"></a>
+#### rowSet.length() ⇒ <code>number</code>
+**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
+<a name="ERMrest.RowSet+after"></a>
+#### rowSet.after() ⇒ <code>Promise</code>
+get the rowset of the next page
+
+**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
+<a name="ERMrest.RowSet+before"></a>
+#### rowSet.before() ⇒ <code>Promise</code>
+get the rowset of the previous page
+
+**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
