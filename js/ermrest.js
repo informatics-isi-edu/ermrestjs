@@ -965,7 +965,7 @@ var ERMrest = (function (module) {
         this.table = table;
 
         /**
-         *
+         * @type {String}
          */
         this.name = jsonColumn.name;
 
@@ -974,6 +974,16 @@ var ERMrest = (function (module) {
          * @type {ERMrest.Type}
          */
         this.type = new Type(jsonColumn.type.typename);
+
+        /**
+         * @type {Boolean}
+         */
+        this.nullok = jsonColumn.nullok;
+
+        /**
+         * @type {String}
+         */
+        this.default = jsonColumn.default;
 
         /**
          *

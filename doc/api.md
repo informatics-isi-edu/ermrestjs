@@ -79,8 +79,10 @@ to use for ERMrest JavaScript agents.
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
         * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-        * [.name](#ERMrest.Column+name)
+        * [.name](#ERMrest.Column+name) : <code>String</code>
         * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
+        * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+        * [.default](#ERMrest.Column+default) : <code>String</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -621,8 +623,10 @@ Constructor for Columns.
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-    * [.name](#ERMrest.Column+name)
+    * [.name](#ERMrest.Column+name) : <code>String</code>
     * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
+    * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+    * [.default](#ERMrest.Column+default) : <code>String</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
 
 <a name="new_ERMrest.Column_new"></a>
@@ -639,10 +643,16 @@ Constructor for Column.
 #### column.table : <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+name"></a>
-#### column.name
+#### column.name : <code>String</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+type"></a>
 #### column.type : <code>[Type](#ERMrest.Type)</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+nullok"></a>
+#### column.nullok : <code>Boolean</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+default"></a>
+#### column.default : <code>String</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
