@@ -611,15 +611,15 @@ var ERMrest = (function (module) {
 
             if (sortby !== undefined && sortby !== null) {
                 for (var d = 0; d < sortby.length; d++) {
-                    var col1 = sortby[d].column; // if string
+                    var sortCol = sortby[d].column; // if string
                     if (sortby[d] instanceof Column) { // if Column object
-                        col1 = sortby[d].name;
+                        sortCol = sortby[d].name;
                     }
                     var order = (sortby[d].order === 'desc' ? "::desc::" : "");
                     if (d === 0)
-                        uri = uri + "@sort(" + module._fixedEncodeURIComponent(col1) + order;
+                        uri = uri + "@sort(" + module._fixedEncodeURIComponent(sortCol) + order;
                     else
-                        uri = uri + "," + module._fixedEncodeURIComponent(col1) + order;
+                        uri = uri + "," + module._fixedEncodeURIComponent(sortCol) + order;
                 }
                 uri = uri + ")";
 
@@ -632,11 +632,11 @@ var ERMrest = (function (module) {
                     }
 
                     for (d = 0; d < sortby.length; d++) {
-                        var col1 = sortby[d].column; // if string
+                        var pageCol = sortby[d].column; // if string
                         if (sortby[d] instanceof Column) { // if Column object
-                            col1 = sortby[d].name;
+                            pageCol = sortby[d].name;
                         }
-                        var value = row[col1];
+                        var value = row[pageCol];
                         if (value === null)
                             value = "::null::";
                         else
