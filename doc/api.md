@@ -106,6 +106,7 @@ to use for ERMrest JavaScript agents.
         * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
         * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -127,6 +128,7 @@ to use for ERMrest JavaScript agents.
         * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -781,6 +783,7 @@ Constructor for Keys.
     * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
     * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
 #### new Key(table, jsonKey)
@@ -797,6 +800,11 @@ Constructor for Key.
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+annotations"></a>
 #### key.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
+**Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
+<a name="ERMrest.Key+simple"></a>
+#### key.simple : <code>Boolean</code>
+Indicates if the key is simple (not composite)
+
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.ColSet"></a>
 ### ERMrest.ColSet
@@ -904,6 +912,7 @@ Constructor for ColSet, a set of Column objects.
     * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -928,6 +937,11 @@ use index 0 since all refCols should be of the same schema:table
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+annotations"></a>
 #### foreignKeyRef.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+simple"></a>
+#### foreignKeyRef.simple : <code>Boolean</code>
+Indicates if the foreign key is simple (not composite)
+
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>

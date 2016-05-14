@@ -1226,6 +1226,17 @@ var ERMrest = (function (module) {
         }
     }
 
+    Key.prototype = {
+        constructor: Key,
+
+        /**
+         * Indicates if the key is simple (not composite)
+         * @type {Boolean}
+         */
+        get simple() {
+            return this.colset.length() == 1;
+        }
+    };
 
 
     /**
@@ -1490,8 +1501,15 @@ var ERMrest = (function (module) {
             if (limit === undefined)
                 limit = null;
             return this.key._table.entity.get(null, limit, this.key.colset.columns);
-        }
+        },
 
+        /**
+         * Indicates if the foreign key is simple (not composite)
+         * @type {Boolean}
+         */
+        get simple() {
+            return this.key.simple;
+        }
     };
 
 
