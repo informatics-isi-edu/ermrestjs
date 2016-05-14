@@ -1452,9 +1452,10 @@ var ERMrest = (function (module) {
         // find corresponding Key from referenced columns
         // ** all the tables in the catalog must have been created at this point
         var refCols = jsonFKR.referenced_columns;
+        var refTable = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name);
         var referencedCols = [];
         for (var j = 0; j < refCols.length; j++) {
-            var col = catalog.schemas.get(refCols[j].schema_name).tables.get(refCols[j].table_name).columns.get(refCols[j].column_name);
+            var col = refTable.columns.get(refCols[j].column_name);
             referencedCols.push(col);
         }
 
@@ -1464,7 +1465,7 @@ var ERMrest = (function (module) {
          * use index 0 since all refCols should be of the same schema:table
          * @type {ERMrest.Key}
          */
-        this.key = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name).keys.get(new ColSet(referencedCols));
+        this.key = refTable.keys.get(new ColSet(referencedCols));
 
         /**
          *
