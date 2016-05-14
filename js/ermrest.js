@@ -1427,9 +1427,9 @@ var ERMrest = (function (module) {
         var fkCols = jsonFKR.foreign_key_columns;
         var foreignKeyCols = [];
         for (var i = 0; i < fkCols.length; i++) {
-            var col = table.columns.get(fkCols[i].column_name); // "Column" object
-            foreignKeyCols.push(col);
-            col.memberOfForeignKeys.push(this);
+            var fkcol = table.columns.get(fkCols[i].column_name); // "Column" object
+            foreignKeyCols.push(fkcol);
+            fkcol.memberOfForeignKeys.push(this);
         }
 
         /**
