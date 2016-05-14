@@ -84,6 +84,8 @@ to use for ERMrest JavaScript agents.
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.Column+default) : <code>String</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
+        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>Array</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
@@ -628,6 +630,8 @@ Constructor for Columns.
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.Column+default) : <code>String</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
+    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>Array</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
@@ -656,6 +660,16 @@ Constructor for Column.
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+memberOfKeys"></a>
+#### column.memberOfKeys : <code>Array</code>
+Member of Keys
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+memberOfForeignKeys"></a>
+#### column.memberOfForeignKeys : <code>Array</code>
+Member of ForeignKeys
+
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Annotations"></a>
 ### ERMrest.Annotations

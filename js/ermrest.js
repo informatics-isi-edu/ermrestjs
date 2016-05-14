@@ -994,6 +994,18 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
         }
+
+        /**
+         * Member of Keys
+         * @type {Array}
+         */
+        this.memberOfKeys = [];
+
+        /**
+         * Member of ForeignKeys
+         * @type {Array}
+         */
+        this.memberOfForeignKeys = [];
     }
 
     Column.prototype = {
@@ -1192,7 +1204,9 @@ var ERMrest = (function (module) {
         var uniqueColumns = [];
         for (var i = 0; i < jsonKey.unique_columns.length; i++) {
             // find corresponding column objects
-            uniqueColumns.push(table.columns.get(jsonKey.unique_columns[i]));
+            var col = table.columns.get(jsonKey.unique_columns[i]);
+            uniqueColumns.push(col);
+            col.memberOfKeys.push(this);
         }
 
         /**
@@ -1413,7 +1427,9 @@ var ERMrest = (function (module) {
         var fkCols = jsonFKR.foreign_key_columns;
         var foreignKeyCols = [];
         for (var i = 0; i < fkCols.length; i++) {
-            foreignKeyCols.push(table.columns.get(fkCols[i].column_name)); // "Column" object
+            var col = table.columns.get(fkCols[i].column_name); // "Column" object
+            foreignKeyCols.push(col);
+            col.memberOfForeignKeys.push(this);
         }
 
         /**
