@@ -632,7 +632,7 @@ var ERMrest = (function (module) {
                     }
 
                     for (d = 0; d < sortby.length; d++) {
-                        col1 = sortby[d].column; // if string
+                        var col1 = sortby[d].column; // if string
                         if (sortby[d] instanceof Column) { // if Column object
                             col1 = sortby[d].name;
                         }
