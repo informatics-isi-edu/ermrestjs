@@ -130,18 +130,19 @@ var ERMrest = (function (module) {
          * is logged in), it gets the current session information.
          */
         get: function() {
-            // TODO authentication
-            //return module._http.get(this._server.uri + "/authn/session").then(function(response) {
-            //    return response;
-            //}, function(response) {
-            //    var error = responseToError(response);
-            //    return module._q.reject(error);
-            //});
+            return module._http.get(this._server.uri + "/authn/session").then(function(response) {
+                return response;
+            }, function(response) {
+                if (response.status === 404)
+                    return module._q.reject(new Errors.SessionNotFoundError(response.data));
+                else
+                    return module._q.reject(responseToError(response));
+            });
 
             // Faking successful authen
-            var defer = module._q.defer();
-            defer.resolve();
-            return defer.promise;
+            //var defer = module._q.defer();
+            //defer.resolve();
+            //return defer.promise;
         },
 
         login: function () {
