@@ -83,8 +83,8 @@ to use for ERMrest JavaScript agents.
         * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.Column+default) : <code>String</code>
-        * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.Column+comment) : <code>String</code>
+        * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
@@ -628,8 +628,8 @@ Constructor for Columns.
     * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.Column+default) : <code>String</code>
-    * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.Column+comment) : <code>String</code>
+    * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
@@ -656,16 +656,15 @@ Constructor for Column.
 <a name="ERMrest.Column+default"></a>
 #### column.default : <code>String</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+comment"></a>
+#### column.comment : <code>String</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Annotations"></a>
 ### ERMrest.Annotations
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
-#### column.comment : <code>String</code>
-**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>
-<a name="ERMrest.Column+comment"></a>
-
 
 * [.Annotations](#ERMrest.Annotations)
     * [new Annotations()](#new_ERMrest.Annotations_new)
