@@ -994,6 +994,11 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
         }
+
+        /**
+         * @type {String}
+         */
+        this.commment = jsonColumn.comment;
     }
 
     Column.prototype = {
@@ -1528,6 +1533,3 @@ var ERMrest = (function (module) {
 
     return module;
 })(ERMrest || {});
-
-
-

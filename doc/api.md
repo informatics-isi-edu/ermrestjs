@@ -84,6 +84,7 @@ to use for ERMrest JavaScript agents.
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.Column+default) : <code>String</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.comment](#ERMrest.Column+comment) : <code>String</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
@@ -456,7 +457,7 @@ Constructor for Entity. This is a container in Table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Table.Entity+count"></a>
 ##### entity.count(filter) ⇒ <code>Promise</code>
@@ -628,6 +629,7 @@ Constructor for Columns.
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.Column+default) : <code>String</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.comment](#ERMrest.Column+comment) : <code>String</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
@@ -660,6 +662,10 @@ Constructor for Column.
 <a name="ERMrest.Annotations"></a>
 ### ERMrest.Annotations
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+#### column.comment : <code>String</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>
+<a name="ERMrest.Column+comment"></a>
+
 
 * [.Annotations](#ERMrest.Annotations)
     * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -757,7 +763,7 @@ Constructor for Keys.
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.Key"></a>
 ### ERMrest.Key
@@ -842,7 +848,7 @@ Constructor for ColSet, a set of Column objects.
 
 | Param | Type |
 | --- | --- |
-| fromCol | <code>[Column](#ERMrest.Column)</code> | 
+| fromCol | <code>[Column](#ERMrest.Column)</code> |
 
 <a name="ERMrest.ForeignKeys"></a>
 ### ERMrest.ForeignKeys
@@ -878,7 +884,7 @@ Constructor for ColSet, a set of Column objects.
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.ForeignKeyRef"></a>
 ### ERMrest.ForeignKeyRef
@@ -897,8 +903,8 @@ Constructor for ColSet, a set of Column objects.
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| jsonFKR | <code>Object</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| jsonFKR | <code>Object</code> |
 
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 #### foreignKeyRef.colset : <code>[ColSet](#ERMrest.ColSet)</code>
@@ -922,7 +928,7 @@ use index 0 since all refCols should be of the same schema:table
 
 | Param | Type |
 | --- | --- |
-| limit | <code>Number</code> | 
+| limit | <code>Number</code> |
 
 <a name="ERMrest.Type"></a>
 ### ERMrest.Type
@@ -937,7 +943,7 @@ use index 0 since all refCols should be of the same schema:table
 
 | Param |
 | --- |
-| name | 
+| name |
 
 <a name="ERMrest.Type+name"></a>
 #### type.name
@@ -991,7 +997,7 @@ use index 0 since all refCols should be of the same schema:table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Datapath.DataPath+catalog"></a>
 ##### dataPath.catalog : <code>[Catalog](#ERMrest.Catalog)</code>
@@ -1021,7 +1027,7 @@ delete entities
 
 | Param | Type |
 | --- | --- |
-| filter | <code>Object</code> | 
+| filter | <code>Object</code> |
 
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 ##### dataPath.filter(filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
@@ -1032,7 +1038,7 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| filter | <code>Object</code> | 
+| filter | <code>Object</code> |
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
 ##### dataPath.extend(table, context, link) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
@@ -1040,9 +1046,9 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| context |  | 
-| link |  | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| context |  |
+| link |  |
 
 <a name="ERMrest.Datapath.PathTable"></a>
 #### Datapath.PathTable
@@ -1061,9 +1067,9 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> | 
-| alias | <code>string</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> |
+| alias | <code>string</code> |
 
 <a name="ERMrest.Datapath.PathTable+datapath"></a>
 ##### pathTable.datapath : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
@@ -1095,8 +1101,8 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 <a name="ERMrest.Datapath.PathColumn+pathtable"></a>
 ##### pathColumn.pathtable : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
@@ -1110,8 +1116,8 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
@@ -1170,7 +1176,7 @@ this datapath is not modified
 
 | Param |
 | --- |
-| filter | 
+| filter |
 
 <a name="ERMrest.Filters.Negation+toUri"></a>
 ##### negation.toUri() ⇒ <code>string</code>
@@ -1189,7 +1195,7 @@ this datapath is not modified
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Conjunction+toUri"></a>
 ##### conjunction.toUri() ⇒ <code>string</code>
@@ -1208,7 +1214,7 @@ this datapath is not modified
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Disjunction+toUri"></a>
 ##### disjunction.toUri() ⇒ <code>string</code>
@@ -1227,8 +1233,8 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
 
 <a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
 ##### unaryPredicate.toUri() ⇒ <code>string</code>
@@ -1247,9 +1253,9 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
-| rvalue | <code>String</code> &#124; <code>Number</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
+| rvalue | <code>String</code> &#124; <code>Number</code> |
 
 <a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
@@ -1278,4 +1284,3 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>String</code> | URI of the ERMrest service. |
-
