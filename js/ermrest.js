@@ -988,7 +988,7 @@ var ERMrest = (function (module) {
         /**
          * @type {String}
          */
-        this.commment = jsonColumn.comment;
+        this.comment = jsonColumn.comment;
 
         /**
          *
