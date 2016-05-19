@@ -611,15 +611,15 @@ var ERMrest = (function (module) {
 
             if (sortby !== undefined && sortby !== null) {
                 for (var d = 0; d < sortby.length; d++) {
-                    var col1 = sortby[d].column; // if string
+                    var sortCol = sortby[d].column; // if string
                     if (sortby[d] instanceof Column) { // if Column object
-                        col1 = sortby[d].name;
+                        sortCol = sortby[d].name;
                     }
                     var order = (sortby[d].order === 'desc' ? "::desc::" : "");
                     if (d === 0)
-                        uri = uri + "@sort(" + module._fixedEncodeURIComponent(col1) + order;
+                        uri = uri + "@sort(" + module._fixedEncodeURIComponent(sortCol) + order;
                     else
-                        uri = uri + "," + module._fixedEncodeURIComponent(col1) + order;
+                        uri = uri + "," + module._fixedEncodeURIComponent(sortCol) + order;
                 }
                 uri = uri + ")";
 
@@ -632,11 +632,11 @@ var ERMrest = (function (module) {
                     }
 
                     for (d = 0; d < sortby.length; d++) {
-                        var col1 = sortby[d].column; // if string
+                        var pageCol = sortby[d].column; // if string
                         if (sortby[d] instanceof Column) { // if Column object
-                            col1 = sortby[d].name;
+                            pageCol = sortby[d].name;
                         }
-                        var value = row[col1];
+                        var value = row[pageCol];
                         if (value === null)
                             value = "::null::";
                         else
@@ -999,6 +999,18 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
         }
+
+        /**
+         * Member of Keys
+         * @type {Array}
+         */
+        this.memberOfKeys = [];
+
+        /**
+         * Member of ForeignKeys
+         * @type {Array}
+         */
+        this.memberOfForeignKeys = [];
     }
 
     Column.prototype = {
@@ -1197,7 +1209,9 @@ var ERMrest = (function (module) {
         var uniqueColumns = [];
         for (var i = 0; i < jsonKey.unique_columns.length; i++) {
             // find corresponding column objects
-            uniqueColumns.push(table.columns.get(jsonKey.unique_columns[i]));
+            var col = table.columns.get(jsonKey.unique_columns[i]);
+            uniqueColumns.push(col);
+            col.memberOfKeys.push(this);
         }
 
         /**
@@ -1217,6 +1231,17 @@ var ERMrest = (function (module) {
         }
     }
 
+    Key.prototype = {
+        constructor: Key,
+
+        /**
+         * Indicates if the key is simple (not composite)
+         * @type {Boolean}
+         */
+        get simple() {
+            return this.colset.length() == 1;
+        }
+    };
 
 
     /**
@@ -1418,7 +1443,9 @@ var ERMrest = (function (module) {
         var fkCols = jsonFKR.foreign_key_columns;
         var foreignKeyCols = [];
         for (var i = 0; i < fkCols.length; i++) {
-            foreignKeyCols.push(table.columns.get(fkCols[i].column_name)); // "Column" object
+            var fkcol = table.columns.get(fkCols[i].column_name); // "Column" object
+            foreignKeyCols.push(fkcol);
+            fkcol.memberOfForeignKeys.push(this);
         }
 
         /**
@@ -1430,9 +1457,10 @@ var ERMrest = (function (module) {
         // find corresponding Key from referenced columns
         // ** all the tables in the catalog must have been created at this point
         var refCols = jsonFKR.referenced_columns;
+        var refTable = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name);
         var referencedCols = [];
         for (var j = 0; j < refCols.length; j++) {
-            var col = catalog.schemas.get(refCols[j].schema_name).tables.get(refCols[j].table_name).columns.get(refCols[j].column_name);
+            var col = refTable.columns.get(refCols[j].column_name);
             referencedCols.push(col);
         }
 
@@ -1442,7 +1470,7 @@ var ERMrest = (function (module) {
          * use index 0 since all refCols should be of the same schema:table
          * @type {ERMrest.Key}
          */
-        this.key = catalog.schemas.get(refCols[0].schema_name).tables.get(refCols[0].table_name).keys.get(new ColSet(referencedCols));
+        this.key = refTable.keys.get(new ColSet(referencedCols));
 
         /**
          *
@@ -1479,8 +1507,15 @@ var ERMrest = (function (module) {
             if (limit === undefined)
                 limit = null;
             return this.key._table.entity.get(null, limit, this.key.colset.columns);
-        }
+        },
 
+        /**
+         * Indicates if the foreign key is simple (not composite)
+         * @type {Boolean}
+         */
+        get simple() {
+            return this.key.simple;
+        }
     };
 
 
