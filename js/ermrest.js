@@ -107,6 +107,14 @@ var ERMrest = (function (module) {
         this.catalogs = null;
     }
 
+    Server.prototype = {
+        constructor: Server,
+
+        getUser: function() {
+            return this.session._user;
+        }
+    };
+
 
     /**
      * @memberof ERMrest
@@ -114,6 +122,7 @@ var ERMrest = (function (module) {
      */
     function Session(server) {
         this._server = server;
+        this._user = null;
         this._attributes = null;
         this._expires = null;
     }
@@ -130,7 +139,9 @@ var ERMrest = (function (module) {
          * is logged in), it gets the current session information.
          */
         get: function() {
+            var self = this;
             return module._http.get(this._server.uri + "/authn/session").then(function(response) {
+                self._user = response.data.client;
                 return response;
             }, function(response) {
                 if (response.status === 404)
