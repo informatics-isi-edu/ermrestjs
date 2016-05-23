@@ -17,6 +17,8 @@ to use for ERMrest JavaScript agents.
         * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
     * [.Session](#ERMrest.Session)
         * [.get()](#ERMrest.Session+get) ⇒ <code>Promise</code>
+        * [.login(referrer)](#ERMrest.Session+login)
+        * [.logout(location)](#ERMrest.Session+logout)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
         * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
@@ -210,6 +212,12 @@ to use for ERMrest JavaScript agents.
 <a name="ERMrest.Session"></a>
 ### ERMrest.Session
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Session](#ERMrest.Session)
+    * [.get()](#ERMrest.Session+get) ⇒ <code>Promise</code>
+    * [.login(referrer)](#ERMrest.Session+login)
+    * [.logout(location)](#ERMrest.Session+logout)
+
 <a name="ERMrest.Session+get"></a>
 #### session.get() ⇒ <code>Promise</code>
 An asynchronous method that returns a promise. If fulfilled (and a user
@@ -217,6 +225,26 @@ is logged in), it gets the current session information.
 
 **Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
 **Returns**: <code>Promise</code> - Returns a promise.  
+<a name="ERMrest.Session+login"></a>
+#### session.login(referrer)
+login with the url to redriect back to after logged in
+
+**Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| referrer | <code>String</code> | referred URL |
+
+<a name="ERMrest.Session+logout"></a>
+#### session.logout(location)
+logout with the url to redriect to if failed
+
+**Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| location | <code>String</code> | URL to redirect to if failed |
+
 <a name="ERMrest.Catalogs"></a>
 ### ERMrest.Catalogs
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  

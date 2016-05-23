@@ -156,13 +156,28 @@ var ERMrest = (function (module) {
             //return defer.promise;
         },
 
+        /**
+         *
+         * @param {String} referrer referred URL
+         * @desc login with the url to redriect back to after logged in
+         *
+         */
         login: function (referrer) {
-            getGoauth(encodeSafeURIComponent(referrer));
+            var url = this._server.uri + '/authn/preauth?referrer=' + module._fixedEncodeURIComponent(referrer);
+            ERMREST.GET(url, 'application/x-www-form-urlencoded; charset=UTF-8', successLogin, errorLogin, null);
+            // TODO handle login error
         },
 
+        /**
+         *
+         * @param {String} location URL to redirect to if failed
+         * @desc logout with the url to redriect to if failed
+         *
+         */
         logout: function (location) {
             var url = this._server.uri + "/authn/session"
             ERMREST.DELETE(url, successDeleteSession, errorDeleteSession, location);
+            // TODO handle error
         },
 
         extend: function () {
