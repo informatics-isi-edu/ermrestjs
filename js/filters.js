@@ -146,7 +146,7 @@ var ERMrest = (function(module) {
                 this.column.name :
                 // Pathcolumn
                 this.column.pathtable.alias + ":" + this.column.column.name);
-            return colName + this.operator;
+            return encodeURIComponent(colName) + this.operator;
         }
     };
 
@@ -179,7 +179,7 @@ var ERMrest = (function(module) {
                 this.column.name :
                 // Pathcolumn
                 this.column.pathtable.alias + ":" + this.column.column.name);
-            return colName + this.operator + this.rvalue;
+            return encodeURIComponent(colName) + this.operator + encodeURIComponent(this.rvalue);
         }
     };
 
