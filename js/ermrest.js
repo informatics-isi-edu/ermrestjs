@@ -145,12 +145,13 @@ var ERMrest = (function (module) {
             //return defer.promise;
         },
 
-        login: function () {
-
+        login: function (referrer) {
+            getGoauth(encodeSafeURIComponent(referrer));
         },
 
-        logout: function () {
-
+        logout: function (location) {
+            var url = this._server.uri + "/authn/session"
+            ERMREST.DELETE(url, successDeleteSession, errorDeleteSession, location);
         },
 
         extend: function () {
