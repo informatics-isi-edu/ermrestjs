@@ -394,6 +394,11 @@ var ERMrest = (function (module) {
             this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
         }
 
+        /**
+         * @type {String}
+         * @desc Preferred display name for user presentation only.
+         */
+        this.displayname = module._determineDisplayName(this);
     }
 
     Schema.prototype = {
@@ -536,6 +541,12 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonTable.annotations[uri];
             this.annotations._push(new Annotation("table", uri, jsonAnnotation));
         }
+
+        /**
+         * @type {String}
+         * @desc Preferred display name for user presentation only.
+         */
+        this.displayname = module._determineDisplayName(this);
     }
 
     Table.prototype = {
@@ -999,6 +1010,12 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
         }
+
+        /**
+         * @type {String}
+         * @desc Preferred display name for user presentation only.
+         */
+        this.displayname = module._determineDisplayName(this);
 
         /**
          * Member of Keys
