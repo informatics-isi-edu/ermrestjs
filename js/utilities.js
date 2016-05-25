@@ -45,9 +45,23 @@ var ERMrest = (function(module) {
         return String.fromCharCode(c.charCodeAt(0) + 1);
     };
 
+    /**
+     * @function
+     * @param {Object} element a model element (schema, table, or column)
+     * @return {String}
+     * @desc This function determines the display name for the schema, table, or
+     * column elements of a model.
+     */
+    module._determineDisplayName = function (element) {
+        var displayname = element.name;
+        var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
+        if (display_annotation && display_annotation.content &&
+            display_annotation.content.name) {
+            displayname = display_annotation.content.name;
+        }
+        return displayname;
+    }
+
     return module;
 
 }(ERMrest || {}));
-
-
-
