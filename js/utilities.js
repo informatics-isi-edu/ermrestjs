@@ -54,13 +54,17 @@ var ERMrest = (function(module) {
      */
     module._determineDisplayName = function (element) {
         var displayname = element.name;
-        var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
-        if (display_annotation && display_annotation.content &&
-            display_annotation.content.name) {
-            displayname = display_annotation.content.name;
+        try {
+            var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
+            if (display_annotation && display_annotation.content &&
+                display_annotation.content.name) {
+                displayname = display_annotation.content.name;
+            }
+        } catch (exception) {
+            // no display annotation, don't do anything
         }
         return displayname;
-    }
+    };
 
     return module;
 
