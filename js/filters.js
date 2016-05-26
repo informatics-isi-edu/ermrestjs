@@ -143,10 +143,10 @@ var ERMrest = (function(module) {
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
-                this.column.name :
+                encodeURIComponent(this.column.name) :
                 // Pathcolumn
-                this.column.pathtable.alias + ":" + this.column.column.name);
-            return encodeURIComponent(colName) + this.operator;
+                encodeURIComponent(this.column.pathtable.alias) + ":" + encodeURIComponent(this.column.column.name));
+            return colName + this.operator;
         }
     };
 
@@ -176,10 +176,10 @@ var ERMrest = (function(module) {
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
-                this.column.name :
+                encodeURIComponent(this.column.name) :
                 // Pathcolumn
-                this.column.pathtable.alias + ":" + this.column.column.name);
-            return encodeURIComponent(colName) + this.operator + encodeURIComponent(this.rvalue);
+                encodeURIComponent(this.column.pathtable.alias) + ":" + encodeURIComponent(this.column.column.name));
+            return colName + this.operator + encodeURIComponent(this.rvalue);
         }
     };
 
