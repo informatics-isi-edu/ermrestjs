@@ -65,16 +65,12 @@ var ERMrest = (function (module) {
         var server = _servers[uri];
         if (!server) {
             server = new Server(uri);
-            return server.session.get().then(function() {
 
-                server.catalogs = new Catalogs(server);
-                _servers[uri] = server;
-                return server;
-
-            }, function(error) {
-                return module._q.reject(error);
-            });
+            server.catalogs = new Catalogs(server);
+            _servers[uri] = server;
         }
+
+        return server;
     }
 
 

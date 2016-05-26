@@ -2,171 +2,170 @@ angular.module("testApp", ['ERMrest'])
 
     .controller('mainController', ['ermrestServerFactory', function(ermrestServerFactory) {
 
-        ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest').then(function(server){
+        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
 
-            // build catalog schemas
-            server.catalogs.get(1).then(function(catalog){
+        // if authentication required, do it here
+        // using server.session.get()
 
-                console.log(catalog);
-                console.log(catalog.schemas.get("legacy"));
+        // build catalog schemas
+        server.catalogs.get(1).then(function(catalog){
 
-                // check tables
-                try {
-                    var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
-                    var t2 = catalog.schemas.get("legacy").tables.get("dataset");
-                    var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
-                    console.log(t1);
-                    console.log(t2);
-                } catch (e) {
-                    console.log("Error getting table: ");
-                    console.log(e);
-                }
+            console.log(catalog);
+            console.log(catalog.schemas.get("legacy"));
 
-                // check column and annotations
-                try {
+            // check tables
+            try {
+                var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
+                var t2 = catalog.schemas.get("legacy").tables.get("dataset");
+                var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
+                console.log(t1);
+                console.log(t2);
+            } catch (e) {
+                console.log("Error getting table: ");
+                console.log(e);
+            }
 
-                    var c1 = t1.columns.get("dataset_id");
-                    console.log(c1);
-                    console.log(c1.annotations.names());
-                } catch (e) {
-                    console.log("Error getting column: ");
-                    console.log(e);
-                }
+            // check column and annotations
+            try {
 
-                // check keys
-                try {
-                    var colsets1 = t1.keys.colsets();
-                    console.log(colsets1);
-                    var colsets2 = t2.keys.colsets();
-                    console.log(colsets2);
-                } catch (e) {
-                    console.log("Error getting colset: ");
-                    console.log(e);
-                }
+                var c1 = t1.columns.get("dataset_id");
+                console.log(c1);
+                console.log(c1.annotations.names());
+            } catch (e) {
+                console.log("Error getting column: ");
+                console.log(e);
+            }
 
-
-                // get all entities from table
-                t1.entity.get().then(function(rows) {
-                    console.log("Get all rows from dataset_chromosome using Table.entity.get()");
-                    console.log(rows);
-                }, function(error) {
-                    console.log("Error getting entities from table " + t1.name + ":");
-                    console.log(error);
-                });
-
-                // get entities with filters.js
-                var gtFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.GREATER_THAN, "12969");
-                var ltFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.LESS_THAN, "12969");
-                var eqFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.EQUAL, "12969");
-
-                t1.entity.get(eqFilter).then(function(rows) {
-                    //console.log(rows);
-                }, function(error) {
-                    console.log("Error getting entities from table with filter");
-                    console.log(error);
-                });
-
-                t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], [{"column": "start_position", "order": "desc"}]).then(function(rows) {
-                    console.log("Test Table.entity.get() with filter, limit, columns and sort. \n" +
-                        "Get from table dataset_chromosome with dataset_id > 12969, \n" +
-                        "limited columns to dataset_id and start_position, \n" +
-                        "sort by start_position in decending order, limit to 5 rows");
-                    console.log(rows);
-                }, function(error) {
-                    console.log(error);
-                });
-
-                t1.entity.get(ltFilter).then(function(rows) {
-                    //console.log(rows);
-                }, function(error) {
-                    console.log(error);
-                });
-
-                // conjunction and negation filters.js
-                var notGtFilter = new ERMrest.Negation(gtFilter);
-                var notLtFilter = new ERMrest.Negation(ltFilter);
-                var conjFilter = new ERMrest.Conjunction([notGtFilter, notLtFilter]);
-                var disjFilter = new ERMrest.Disjunction([gtFilter, ltFilter]);
-
-                t1.entity.get(conjFilter).then(function(rows) {
-                    //console.log(rows);
-                }, function(response) {
-                    console.log(response);
-                });
+            // check keys
+            try {
+                var colsets1 = t1.keys.colsets();
+                console.log(colsets1);
+                var colsets2 = t2.keys.colsets();
+                console.log(colsets2);
+            } catch (e) {
+                console.log("Error getting colset: ");
+                console.log(e);
+            }
 
 
-                t1.entity.get(disjFilter).then(function(rows) {
-                    //console.log(rows);
-                }, function(response) {
-                    console.log(response);
-                });
-
-                // Unary Predicate filter
-                var unary = new ERMrest.UnaryPredicate(c1, ERMrest.OPERATOR.NULL);
-
-                t1.entity.get(unary).then(function(rows) {
-                    //console.log(rows);
-                }, function(response) {
-                    console.log(response);
-                });
-
-                // use foreign to get referenced table values (with limit)
-                t1.foreignKeys.all()[0].getDomainValues(10).then(function(data) {
-                    //console.log(data);
-                }, function(response) {
-                    console.log(response);
-                });
-
-
-
-
-
-
-                //get entity from datapath
-                var datapath1 = new ERMrest.DataPath(t1);
-                console.log("Datapath 1 context table name: " + datapath1.context.table.name);
-                console.log("Datapath 1 URI: " + datapath1._getUri());
-                datapath1.entity.get().then(function(data){
-                    //console.log(data);
-                }, function(response) {
-                    //    console.log("Datapath 1 get failed: " + response);
-                });
-
-                var pathtable2 = datapath1.extend(t2);
-                //console.log(datapath1.context.table.name);
-                //console.log(datapath1._getUri());
-
-                var pathtable3 = datapath1.extend(t3);
-                //console.log(datapath1.context.table.name);
-                //console.log(datapath1._getUri());
-
-                // create new datapath from datapath1 with filter
-                //var c3 = t3.columns.get("dataset_id");
-                var pathcolumn2 = pathtable2.columns.get("id");
-                var pathcolumn3 = pathtable3.columns.get("dataset_id");
-                var gtFilter3 = new ERMrest.BinaryPredicate(pathcolumn2, ERMrest.OPERATOR.GREATER_THAN, "4542");
-                var datapath3 = datapath1.filter(gtFilter3);
-                //console.log(datapath1);
-                //console.log(datapath3);
-                console.log(datapath1._getUri());
-                console.log(datapath3._getUri());
-
-                datapath3.entity.get().then(function(data){
-                    //console.log(data);
-                }, function(response) {
-                    // console.log("Datapath 1 get failed: " + response);
-                });
-
-
+            // get all entities from table
+            t1.entity.get().then(function(rows) {
+                console.log("Get all rows from dataset_chromosome using Table.entity.get()");
+                console.log(rows);
             }, function(error) {
-                console.log("Error getting catalog:");
+                console.log("Error getting entities from table " + t1.name + ":");
                 console.log(error);
             });
 
-        }, function(error){
-            console.log("Error getting server instance: ");
+            // get entities with filters.js
+            var gtFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.GREATER_THAN, "12969");
+            var ltFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.LESS_THAN, "12969");
+            var eqFilter = new ERMrest.BinaryPredicate(c1, ERMrest.OPERATOR.EQUAL, "12969");
+
+            t1.entity.get(eqFilter).then(function(rows) {
+                //console.log(rows);
+            }, function(error) {
+                console.log("Error getting entities from table with filter");
+                console.log(error);
+            });
+
+            t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], [{"column": "start_position", "order": "desc"}]).then(function(rows) {
+                console.log("Test Table.entity.get() with filter, limit, columns and sort. \n" +
+                    "Get from table dataset_chromosome with dataset_id > 12969, \n" +
+                    "limited columns to dataset_id and start_position, \n" +
+                    "sort by start_position in decending order, limit to 5 rows");
+                console.log(rows);
+            }, function(error) {
+                console.log(error);
+            });
+
+            t1.entity.get(ltFilter).then(function(rows) {
+                //console.log(rows);
+            }, function(error) {
+                console.log(error);
+            });
+
+            // conjunction and negation filters.js
+            var notGtFilter = new ERMrest.Negation(gtFilter);
+            var notLtFilter = new ERMrest.Negation(ltFilter);
+            var conjFilter = new ERMrest.Conjunction([notGtFilter, notLtFilter]);
+            var disjFilter = new ERMrest.Disjunction([gtFilter, ltFilter]);
+
+            t1.entity.get(conjFilter).then(function(rows) {
+                //console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+
+            t1.entity.get(disjFilter).then(function(rows) {
+                //console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            // Unary Predicate filter
+            var unary = new ERMrest.UnaryPredicate(c1, ERMrest.OPERATOR.NULL);
+
+            t1.entity.get(unary).then(function(rows) {
+                //console.log(rows);
+            }, function(response) {
+                console.log(response);
+            });
+
+            // use foreign to get referenced table values (with limit)
+            t1.foreignKeys.all()[0].getDomainValues(10).then(function(data) {
+                //console.log(data);
+            }, function(response) {
+                console.log(response);
+            });
+
+
+
+
+
+
+            //get entity from datapath
+            var datapath1 = new ERMrest.DataPath(t1);
+            console.log("Datapath 1 context table name: " + datapath1.context.table.name);
+            console.log("Datapath 1 URI: " + datapath1._getUri());
+            datapath1.entity.get().then(function(data){
+                //console.log(data);
+            }, function(response) {
+                //    console.log("Datapath 1 get failed: " + response);
+            });
+
+            var pathtable2 = datapath1.extend(t2);
+            //console.log(datapath1.context.table.name);
+            //console.log(datapath1._getUri());
+
+            var pathtable3 = datapath1.extend(t3);
+            //console.log(datapath1.context.table.name);
+            //console.log(datapath1._getUri());
+
+            // create new datapath from datapath1 with filter
+            //var c3 = t3.columns.get("dataset_id");
+            var pathcolumn2 = pathtable2.columns.get("id");
+            var pathcolumn3 = pathtable3.columns.get("dataset_id");
+            var gtFilter3 = new ERMrest.BinaryPredicate(pathcolumn2, ERMrest.OPERATOR.GREATER_THAN, "4542");
+            var datapath3 = datapath1.filter(gtFilter3);
+            //console.log(datapath1);
+            //console.log(datapath3);
+            console.log(datapath1._getUri());
+            console.log(datapath3._getUri());
+
+            datapath3.entity.get().then(function(data){
+                //console.log(data);
+            }, function(response) {
+                // console.log("Datapath 1 get failed: " + response);
+            });
+
+
+        }, function(error) {
+            console.log("Error getting catalog:");
             console.log(error);
         });
+
 
     }])
 
