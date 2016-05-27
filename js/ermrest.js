@@ -140,16 +140,9 @@ var ERMrest = (function (module) {
                 self._user = response.data.client;
                 return response;
             }, function(response) {
-                if (response.status === 404)
-                    return module._q.reject(new Errors.SessionNotFoundError(response.data));
-                else
-                    return module._q.reject(responseToError(response));
+                return module._q.reject(responseToError(response));
             });
 
-            // Faking successful authen
-            //var defer = module._q.defer();
-            //defer.resolve();
-            //return defer.promise;
         },
 
         /**
@@ -376,7 +369,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._schemas)) {
-                throw new Errors.SchemaNotFoundError("Schema " + name + " not found in catalog.");
+                throw new Errors.NotFoundError("", "Schema " + name + " not found in catalog.");
             }
 
             return this._schemas[name];
@@ -500,7 +493,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._tables)) {
-                throw new Errors.TableNotFoundError("Table " + name + " not found in schema.");
+                throw new Errors.NotFoundError("", "Table " + name + " not found in schema.");
             }
 
             return this._tables[name];
@@ -987,7 +980,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._columns)) {
-                throw new Errors.ColumnNotFoundError("Column " + name + " not found in table.");
+                throw new Errors.NotFoundError("", "Column " + name + " not found in table.");
             }
             return this._columns[name];
         },
@@ -1141,7 +1134,7 @@ var ERMrest = (function (module) {
          */
         get: function (uri) {
             if (!(uri in this._annotations)) {
-                throw new Errors.AnnotationNotFoundError("Annotation " + uri + " not found.");
+                throw new Errors.NotFoundError("", "Annotation " + uri + " not found.");
             }
 
             return this._annotations[uri];
@@ -1246,7 +1239,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.KeyNotFoundError("Key not found for colset");
+            throw new Errors.NotFoundError("", "Key not found for colset");
         }
     };
 
@@ -1402,7 +1395,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.MappingNotFoundError("Mapping not found for column " + fromCol.name);
+            throw new Errors.NotFoundError("", "Mapping not found for column " + fromCol.name);
         }
     };
 
@@ -1482,7 +1475,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.ForeignKeyNotFoundError("Foreign Key not found for the colset.");
+            throw new Errors.NotFoundError("", "Foreign Key not found for the colset.");
         }
     };
 
