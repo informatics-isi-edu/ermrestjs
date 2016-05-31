@@ -4,6 +4,9 @@ angular.module("testApp", ['ERMrest'])
 
         var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
 
+        // if authentication required, do it here
+        // using server.session.get()
+
         // build catalog schemas
         server.catalogs.get(1).then(function(catalog){
 
@@ -11,30 +14,47 @@ angular.module("testApp", ['ERMrest'])
             console.log(catalog.schemas.get("legacy"));
 
             // check tables
-            var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
-            var t2 = catalog.schemas.get("legacy").tables.get("dataset");
-            var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
-            console.log(t1);
-            console.log(t2);
+            try {
+                var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
+                var t2 = catalog.schemas.get("legacy").tables.get("dataset");
+                var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
+                console.log(t1);
+                console.log(t2);
+            } catch (e) {
+                console.log("Error getting table: ");
+                console.log(e);
+            }
 
             // check column and annotations
-            var c1 = t1.columns.get("dataset_id");
-            console.log(c1);
-            console.log(c1.annotations.names());
+            try {
+
+                var c1 = t1.columns.get("dataset_id");
+                console.log(c1);
+                console.log(c1.annotations.names());
+            } catch (e) {
+                console.log("Error getting column: ");
+                console.log(e);
+            }
 
             // check keys
-            var colsets1 = t1.keys.colsets();
-            console.log(colsets1);
-            var colsets2 = t2.keys.colsets();
-            console.log(colsets2);
+            try {
+                var colsets1 = t1.keys.colsets();
+                console.log(colsets1);
+                var colsets2 = t2.keys.colsets();
+                console.log(colsets2);
+            } catch (e) {
+                console.log("Error getting colset: ");
+                console.log(e);
+            }
 
 
             // get all entities from table
             t1.entity.get().then(function(rows) {
                 console.log("Get all rows from dataset_chromosome using Table.entity.get()");
                 console.log(rows);
-            }, function(response) {
-                console.log(response);
+            }, function(error) {
+                console.log("Error getting entities from table " + t1.name + ":");
+                console.log(error);
             });
 
             // get entities with filters.js
@@ -44,8 +64,9 @@ angular.module("testApp", ['ERMrest'])
 
             t1.entity.get(eqFilter).then(function(rows) {
                 //console.log(rows);
-            }, function(response) {
-                console.log(response);
+            }, function(error) {
+                console.log("Error getting entities from table with filter");
+                console.log(error);
             });
 
             t1.entity.get(gtFilter, 5, ["dataset_id", "start_position"], [{"column": "start_position", "order": "desc"}]).then(function(rows) {
@@ -54,14 +75,14 @@ angular.module("testApp", ['ERMrest'])
                     "limited columns to dataset_id and start_position, \n" +
                     "sort by start_position in decending order, limit to 5 rows");
                 console.log(rows);
-            }, function(response) {
-                console.log(response);
+            }, function(error) {
+                console.log(error);
             });
 
             t1.entity.get(ltFilter).then(function(rows) {
                 //console.log(rows);
-            }, function(response) {
-                console.log(response);
+            }, function(error) {
+                console.log(error);
             });
 
             // conjunction and negation filters.js
@@ -111,7 +132,7 @@ angular.module("testApp", ['ERMrest'])
             datapath1.entity.get().then(function(data){
                 //console.log(data);
             }, function(response) {
-            //    console.log("Datapath 1 get failed: " + response);
+                //    console.log("Datapath 1 get failed: " + response);
             });
 
             var pathtable2 = datapath1.extend(t2);
@@ -140,9 +161,12 @@ angular.module("testApp", ['ERMrest'])
             });
 
 
-        }, function(response) {
-            console.log(response);
+        }, function(error) {
+            console.log("Error getting catalog:");
+            console.log(error);
         });
+
+
     }])
 
     .controller('editController', ['ermrestServerFactory', function(ermrestServerFactory){

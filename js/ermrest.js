@@ -65,8 +65,11 @@ var ERMrest = (function (module) {
         var server = _servers[uri];
         if (!server) {
             server = new Server(uri);
+
+            server.catalogs = new Catalogs(server);
             _servers[uri] = server;
         }
+
         return server;
     }
 
@@ -79,7 +82,7 @@ var ERMrest = (function (module) {
     function Server(uri) {
 
         if (uri === undefined || uri === null)
-            throw "URI undefined or null";
+            throw new Error("URI undefined or null");
 
         /**
          *
@@ -92,18 +95,21 @@ var ERMrest = (function (module) {
          * @type {ERMrest.Session}
          */
         this.session = new Session(this);
-        this.session.get().then(function(data) { // TODO
-
-        }, function(response) {
-
-        });
 
         /**
          *
          * @type {ERMrest.Catalogs}
          */
-        this.catalogs = new Catalogs(this);
+        this.catalogs = null;
     }
+
+    Server.prototype = {
+        constructor: Server,
+
+        getUser: function() {
+            return this.session._user;
+        }
+    };
 
 
     /**
@@ -112,6 +118,7 @@ var ERMrest = (function (module) {
      */
     function Session(server) {
         this._server = server;
+        this._user = null;
         this._attributes = null;
         this._expires = null;
     }
@@ -128,19 +135,38 @@ var ERMrest = (function (module) {
          * is logged in), it gets the current session information.
          */
         get: function() {
+            var self = this;
             return module._http.get(this._server.uri + "/authn/session").then(function(response) {
-                return response.data;
+                self._user = response.data.client;
+                return response;
             }, function(response) {
-                return module._q.reject(response.data);
+                return module._q.reject(responseToError(response));
             });
-        },
-
-        login: function () {
 
         },
 
-        logout: function () {
+        /**
+         *
+         * @param {String} referrer referred URL
+         * @desc login with the url to redriect back to after logged in
+         *
+         */
+        login: function (referrer) {
+            var url = this._server.uri + '/authn/preauth?referrer=' + module._fixedEncodeURIComponent(referrer);
+            ERMREST.GET(url, 'application/x-www-form-urlencoded; charset=UTF-8', successLogin, errorLogin, null);
+            // TODO handle login error
+        },
 
+        /**
+         *
+         * @param {String} location URL to redirect to if failed
+         * @desc logout with the url to redriect to if failed
+         *
+         */
+        logout: function (location) {
+            var url = this._server.uri + "/authn/session"
+            ERMREST.DELETE(url, successDeleteSession, errorDeleteSession, location);
+            // TODO handle error
         },
 
         extend: function () {
@@ -206,11 +232,11 @@ var ERMrest = (function (module) {
             } else {
 
                 var catalog = new Catalog(self._server, id);
-                catalog._introspect().then(function (schemas) {
+                catalog._introspect().then(function () {
                     self._catalogs[id] = catalog;
                     defer.resolve(catalog);
-                }, function (response) {
-                    defer.reject(response);
+                }, function (error) {
+                    defer.reject(error);
                 });
 
                 return defer.promise;
@@ -280,8 +306,8 @@ var ERMrest = (function (module) {
 
                 return self.schemas;
             }, function (response) {
-                // this is not a valid catalog
-                return module._q.reject(response);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         }
 
@@ -343,7 +369,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._schemas)) {
-                // TODO schema not found, throw error
+                throw new Errors.NotFoundError("", "Schema " + name + " not found in catalog.");
             }
 
             return this._schemas[name];
@@ -467,7 +493,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._tables)) {
-                // TODO table not found, throw error
+                throw new Errors.NotFoundError("", "Table " + name + " not found in schema.");
             }
 
             return this._tables[name];
@@ -691,7 +717,8 @@ var ERMrest = (function (module) {
             return module._http.get(uri).then(function(response) {
                 return response.data[0].row_count;
             }, function(response) {
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -716,7 +743,8 @@ var ERMrest = (function (module) {
             return module._http.get(uri).then(function(response) {
                 return new RowSet(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -741,7 +769,8 @@ var ERMrest = (function (module) {
             return module._http.get(uri).then(function(response) {
                 return new RowSet(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -766,7 +795,8 @@ var ERMrest = (function (module) {
             return module._http.get(uri).then(function(response) {
                 return new RowSet(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -783,7 +813,8 @@ var ERMrest = (function (module) {
             return module._http.delete(uri).then(function(response) {
                 return response.data;
             }, function(response) {
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -800,8 +831,8 @@ var ERMrest = (function (module) {
             return module._http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function(response) {
-                console.log(response);
-                return module._q.reject(response.data);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         },
 
@@ -831,7 +862,8 @@ var ERMrest = (function (module) {
             return module._http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
-                return module._q.reject(response);
+                var error = responseToError(response);
+                return module._q.reject(error);
             });
         }
 
@@ -948,7 +980,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._columns)) {
-                // TODO not found, throw error
+                throw new Errors.NotFoundError("", "Column " + name + " not found in table.");
             }
             return this._columns[name];
         },
@@ -1102,7 +1134,7 @@ var ERMrest = (function (module) {
          */
         get: function (uri) {
             if (!(uri in this._annotations)) {
-                // TODO table not found, throw error
+                throw new Errors.NotFoundError("", "Annotation " + uri + " not found.");
             }
 
             return this._annotations[uri];
@@ -1206,7 +1238,8 @@ var ERMrest = (function (module) {
                     return key;
                 }
             }
-            return null;
+
+            throw new Errors.NotFoundError("", "Key not found for colset");
         }
     };
 
@@ -1361,7 +1394,8 @@ var ERMrest = (function (module) {
                     return this._to[i];
                 }
             }
-            return null; // no mapping found
+
+            throw new Errors.NotFoundError("", "Mapping not found for column " + fromCol.name);
         }
     };
 
@@ -1440,7 +1474,8 @@ var ERMrest = (function (module) {
                     return fkr;
                 }
             }
-            return null;
+
+            throw new Errors.NotFoundError("", "Foreign Key not found for the colset.");
         }
     };
 
@@ -1582,6 +1617,29 @@ var ERMrest = (function (module) {
     }
 
     UndefinedError.prototype = Error.prototype;
+
+
+    function responseToError(response) {
+        var status = response.status;
+        switch(status) {
+            case 0:
+                return new Errors.TimedOutError(response.statusText, response.data);
+            case 400:
+                return new Errors.BadRequestError(response.statusText, response.data);
+            case 401:
+                return new Errors.UnauthorizedError(response.statusText, response.data);
+            case 403:
+                return new Errors.ForbiddenError(response.statusText, response.data);
+            case 404:
+                return new Errors.NotFoundError(response.statusText, response.data);
+            case 409:
+                return new Errors.ConflictError(response.statusText, response.data);
+            case 500:
+                return new Errors.InternalServerError(response.statusText, response.data);
+            default:
+                return new Error(response.statusText, response.data);
+        }
+    }
 
     return module;
 })(ERMrest || {});
