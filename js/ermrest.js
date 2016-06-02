@@ -1254,7 +1254,18 @@ var ERMrest = (function (module) {
      */
     function Key(table, jsonKey) {
 
+        /*
+         * TODO
+         * I added `this.table` below and we should remove `this._table`. But
+         * I'm leaving it in for now because I am not sure what I might break.
+         */
         this._table = table;
+
+        /**
+         * @type {Table}
+         * @desc Reference to the table that this Key belongs to.
+         */
+        this.table = table;
 
         var uniqueColumns = [];
         for (var i = 0; i < jsonKey.unique_columns.length; i++) {

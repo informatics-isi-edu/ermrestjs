@@ -110,6 +110,7 @@ to use for ERMrest JavaScript agents.
         * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
     * [.Key](#ERMrest.Key)
         * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
+        * [.table](#ERMrest.Key+table) : <code>Table</code>
         * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
@@ -835,6 +836,7 @@ Constructor for Keys.
 
 * [.Key](#ERMrest.Key)
     * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
+    * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
@@ -849,6 +851,11 @@ Constructor for Key.
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonKey | <code>String</code> | json key. |
 
+<a name="ERMrest.Key+table"></a>
+#### key.table : <code>Table</code>
+Reference to the table that this Key belongs to.
+
+**Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+colset"></a>
 #### key.colset : <code>[ColSet](#ERMrest.ColSet)</code>
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
