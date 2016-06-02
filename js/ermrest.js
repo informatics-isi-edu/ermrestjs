@@ -883,11 +883,18 @@ var ERMrest = (function (module) {
      */
     function RowSet(table, jsonRows, filter, limit, columns, sortby) {
         this._table = table;
-        this.data = jsonRows;
         this._filter = filter;
         this._limit = limit;
         this._columns = columns;
         this._sortby = sortby;
+
+        /**
+         * @type {Array}
+         * @desc The set of rows returns from the server. It is an Array of
+         * Objects that has keys and values based on the query that produced
+         * the RowSet.
+         */
+        this.data = jsonRows;
     }
 
     RowSet.prototype = {

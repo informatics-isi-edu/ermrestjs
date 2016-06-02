@@ -71,6 +71,7 @@ to use for ERMrest JavaScript agents.
                 * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
     * [.RowSet](#ERMrest.RowSet)
         * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
+        * [.data](#ERMrest.RowSet+data) : <code>Array</code>
         * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
         * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
         * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
@@ -600,6 +601,7 @@ Create new entities
 
 * [.RowSet](#ERMrest.RowSet)
     * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
+    * [.data](#ERMrest.RowSet+data) : <code>Array</code>
     * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
     * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
     * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
@@ -616,6 +618,13 @@ Create new entities
 | columns | <code>Array</code> | Optional. Array of column names or Column objects output |
 | sortby | <code>Array</code> | Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
+<a name="ERMrest.RowSet+data"></a>
+#### rowSet.data : <code>Array</code>
+The set of rows returns from the server. It is an Array of
+Objects that has keys and values based on the query that produced
+the RowSet.
+
+**Kind**: instance property of <code>[RowSet](#ERMrest.RowSet)</code>  
 <a name="ERMrest.RowSet+length"></a>
 #### rowSet.length() ⇒ <code>number</code>
 **Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
