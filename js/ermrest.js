@@ -412,12 +412,25 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @type {boolean}
+         */
+        this.ignore = false;
+
+        /**
+         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonSchema.annotations) {
             var jsonAnnotation = jsonSchema.annotations[uri];
             this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
+
+            if (uri === "tag:misd.isi.edu,2015:hidden") {
+                this.ignore = true;
+            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+                (jsonAnnotation === null || jsonAnnotation === [])) {
+                this.ignore = true;
+            }
         }
 
         /**
@@ -425,6 +438,7 @@ var ERMrest = (function (module) {
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = module._determineDisplayName(this);
+
     }
 
     Schema.prototype = {
@@ -560,12 +574,25 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @type {boolean}
+         */
+        this.ignore = false;
+
+        /**
+         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonTable.annotations) {
             var jsonAnnotation = jsonTable.annotations[uri];
             this.annotations._push(new Annotation("table", uri, jsonAnnotation));
+
+            if (uri === "tag:misd.isi.edu,2015:hidden") {
+                this.ignore = true;
+            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+                (jsonAnnotation === null || jsonAnnotation === [])) {
+                this.ignore = true;
+            }
         }
 
         /**
@@ -1042,12 +1069,25 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @type {boolean}
+         */
+        this.ignore = false;
+
+        /**
+         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonColumn.annotations) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
+
+            if (uri === "tag:misd.isi.edu,2015:hidden") {
+                this.ignore = true;
+            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+                (jsonAnnotation === null || jsonAnnotation === [])) {
+                this.ignore = true;
+            }
         }
 
         /**
@@ -1550,12 +1590,25 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @type {boolean}
+         */
+        this.ignore = false;
+
+        /**
+         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonFKR.annotations) {
             var jsonAnnotation = jsonFKR.annotations[uri];
             this.annotations._push(new Annotation("foreignkeyref", uri, jsonAnnotation));
+
+            if (uri === "tag:misd.isi.edu,2015:hidden") {
+                this.ignore = true;
+            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+                (jsonAnnotation === null || jsonAnnotation === [])) {
+                this.ignore = true;
+            }
         }
 
     }
