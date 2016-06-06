@@ -40,6 +40,7 @@ to use for ERMrest JavaScript agents.
         * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
         * [.name](#ERMrest.Schema+name)
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+        * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
     * [.Tables](#ERMrest.Tables)
@@ -57,6 +58,7 @@ to use for ERMrest JavaScript agents.
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
             * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+            * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
             * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
             * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
         * _static_
@@ -89,6 +91,7 @@ to use for ERMrest JavaScript agents.
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.Column+default) : <code>String</code>
         * [.comment](#ERMrest.Column+comment) : <code>String</code>
+        * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
@@ -135,6 +138,7 @@ to use for ERMrest JavaScript agents.
         * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+        * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
@@ -357,6 +361,7 @@ Constructor for the Schemas.
     * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
     * [.name](#ERMrest.Schema+name)
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+    * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
 
@@ -378,6 +383,9 @@ Constructor for the Catalog.
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+tables"></a>
 #### schema.tables : <code>[Tables](#ERMrest.Tables)</code>
+**Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
+<a name="ERMrest.Schema+ignore"></a>
+#### schema.ignore : <code>boolean</code>
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+annotations"></a>
 #### schema.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -436,6 +444,7 @@ Constructor for the Tables.
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
         * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+        * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
     * _static_
@@ -476,6 +485,9 @@ Constructor for Table.
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+foreignKeys"></a>
 #### table.foreignKeys : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+ignore"></a>
+#### table.ignore : <code>boolean</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+annotations"></a>
 #### table.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -686,6 +698,7 @@ Constructor for Columns.
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.Column+default) : <code>String</code>
     * [.comment](#ERMrest.Column+comment) : <code>String</code>
+    * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
@@ -718,6 +731,9 @@ Constructor for Column.
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+comment"></a>
 #### column.comment : <code>String</code>
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+ignore"></a>
+#### column.ignore : <code>boolean</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+annotations"></a>
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -981,6 +997,7 @@ Constructor for ColSet, a set of Column objects.
     * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+    * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
@@ -1004,6 +1021,9 @@ use index 0 since all refCols should be of the same schema:table
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+mapping"></a>
 #### foreignKeyRef.mapping : <code>[Mapping](#ERMrest.Mapping)</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+ignore"></a>
+#### foreignKeyRef.ignore : <code>boolean</code>
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+annotations"></a>
 #### foreignKeyRef.annotations : <code>[Annotations](#ERMrest.Annotations)</code>

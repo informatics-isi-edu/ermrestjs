@@ -82,7 +82,7 @@ var ERMrest = (function (module) {
     function Server(uri) {
 
         if (uri === undefined || uri === null)
-            throw new Error("URI undefined or null");
+            throw new module.InvalidInputError("URI undefined or null");
 
         /**
          *
@@ -164,7 +164,7 @@ var ERMrest = (function (module) {
          *
          */
         logout: function (location) {
-            var url = this._server.uri + "/authn/session"
+            var url = this._server.uri + "/authn/session";
             ERMREST.DELETE(url, successDeleteSession, errorDeleteSession, location);
             // TODO handle error
         },
@@ -369,7 +369,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._schemas)) {
-                throw new Errors.NotFoundError("", "Schema " + name + " not found in catalog.");
+                throw new module.NotFoundError("", "Schema " + name + " not found in catalog.");
             }
 
             return this._schemas[name];
@@ -507,7 +507,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._tables)) {
-                throw new Errors.NotFoundError("", "Table " + name + " not found in schema.");
+                throw new module.NotFoundError("", "Table " + name + " not found in schema.");
             }
 
             return this._tables[name];
@@ -1014,7 +1014,7 @@ var ERMrest = (function (module) {
          */
         get: function (name) {
             if (!(name in this._columns)) {
-                throw new Errors.NotFoundError("", "Column " + name + " not found in table.");
+                throw new module.NotFoundError("", "Column " + name + " not found in table.");
             }
             return this._columns[name];
         },
@@ -1181,7 +1181,7 @@ var ERMrest = (function (module) {
          */
         get: function (uri) {
             if (!(uri in this._annotations)) {
-                throw new Errors.NotFoundError("", "Annotation " + uri + " not found.");
+                throw new module.NotFoundError("", "Annotation " + uri + " not found.");
             }
 
             return this._annotations[uri];
@@ -1286,7 +1286,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.NotFoundError("", "Key not found for colset");
+            throw new module.NotFoundError("", "Key not found for colset");
         }
     };
 
@@ -1453,7 +1453,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.NotFoundError("", "Mapping not found for column " + fromCol.name);
+            throw new module.NotFoundError("", "Mapping not found for column " + fromCol.name);
         }
     };
 
@@ -1533,7 +1533,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            throw new Errors.NotFoundError("", "Foreign Key not found for the colset.");
+            throw new module.NotFoundError("", "Foreign Key not found for the colset.");
         }
     };
 
@@ -1667,46 +1667,24 @@ var ERMrest = (function (module) {
         }
     };
 
-    /**
-     * @constructor
-     * @param {String} message error message
-     * @desc
-     * Creates a undefined error object
-     */
-    function UndefinedError(message) {
-        /**
-         *
-         * @type {string} error name
-         */
-        this.name = "UndefinedError";
-
-        /**
-         *
-         * @type {String} error message
-         */
-        this.message = (message || "");
-    }
-
-    UndefinedError.prototype = Error.prototype;
-
 
     function responseToError(response) {
         var status = response.status;
         switch(status) {
             case 0:
-                return new Errors.TimedOutError(response.statusText, response.data);
+                return new module.TimedOutError(response.statusText, response.data);
             case 400:
-                return new Errors.BadRequestError(response.statusText, response.data);
+                return new module.BadRequestError(response.statusText, response.data);
             case 401:
-                return new Errors.UnauthorizedError(response.statusText, response.data);
+                return new module.UnauthorizedError(response.statusText, response.data);
             case 403:
-                return new Errors.ForbiddenError(response.statusText, response.data);
+                return new module.ForbiddenError(response.statusText, response.data);
             case 404:
-                return new Errors.NotFoundError(response.statusText, response.data);
+                return new module.NotFoundError(response.statusText, response.data);
             case 409:
-                return new Errors.ConflictError(response.statusText, response.data);
+                return new module.ConflictError(response.statusText, response.data);
             case 500:
-                return new Errors.InternalServerError(response.statusText, response.data);
+                return new module.InternalServerError(response.statusText, response.data);
             default:
                 return new Error(response.statusText, response.data);
         }
