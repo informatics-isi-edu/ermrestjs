@@ -17,12 +17,15 @@ BOWER=bower_components
 
 # JavaScript source and test specs
 JS=js
+ERR=errors
 
 # Pure ERMrest API
 JS_SRC=$(JS)/datapath.js \
 	   $(JS)/ermrest.js \
 	   $(JS)/filters.js \
-	   $(JS)/utilities.js
+	   $(JS)/utilities.js \
+	   $(ERR)/networkerrors.js \
+	   $(ERR)/validationerrors.js
 
 # Angular-related API files
 NG_SRC=$(JS)/ngermrest.js
