@@ -90,11 +90,6 @@ var ERMrest = (function (module) {
          */
         this.uri = uri;
 
-        /**
-         *
-         * @type {ERMrest.Session}
-         */
-        this.session = new Session(this);
 
         /**
          *
@@ -102,79 +97,6 @@ var ERMrest = (function (module) {
          */
         this.catalogs = null;
     }
-
-    Server.prototype = {
-        constructor: Server,
-
-        getUser: function() {
-            return this.session._user;
-        }
-    };
-
-
-    /**
-     * @memberof ERMrest
-     * @constructor
-     */
-    function Session(server) {
-        this._server = server;
-        this._user = null;
-        this._attributes = null;
-        this._expires = null;
-    }
-
-
-    Session.prototype = {
-        constructor: Session,
-
-        /**
-         *
-         * @returns {Promise} Returns a promise.
-         * @desc
-         * An asynchronous method that returns a promise. If fulfilled (and a user
-         * is logged in), it gets the current session information.
-         */
-        get: function() {
-            var self = this;
-            return module._http.get(this._server.uri + "/authn/session").then(function(response) {
-                self._user = response.data.client;
-                return response;
-            }, function(response) {
-                return module._q.reject(responseToError(response));
-            });
-
-        },
-
-        /**
-         *
-         * @param {String} referrer referred URL
-         * @desc login with the url to redriect back to after logged in
-         *
-         */
-        login: function (referrer) {
-            var url = this._server.uri + '/authn/preauth?referrer=' + module._fixedEncodeURIComponent(referrer);
-            ERMREST.GET(url, 'application/x-www-form-urlencoded; charset=UTF-8', successLogin, errorLogin, null);
-            // TODO handle login error
-        },
-
-        /**
-         *
-         * @param {String} location URL to redirect to if failed
-         * @desc logout with the url to redriect to if failed
-         *
-         */
-        logout: function (location) {
-            var url = this._server.uri + "/authn/session";
-            ERMREST.DELETE(url, successDeleteSession, errorDeleteSession, location);
-            // TODO handle error
-        },
-
-        extend: function () {
-
-        }
-
-
-    };
 
 
     /**

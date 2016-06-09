@@ -13,12 +13,7 @@ to use for ERMrest JavaScript agents.
     * [.Server](#ERMrest.Server)
         * [new Server(uri)](#new_ERMrest.Server_new)
         * [.uri](#ERMrest.Server+uri) : <code>String</code>
-        * [.session](#ERMrest.Server+session) : <code>[Session](#ERMrest.Session)</code>
         * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
-    * [.Session](#ERMrest.Session)
-        * [.get()](#ERMrest.Session+get) ⇒ <code>Promise</code>
-        * [.login(referrer)](#ERMrest.Session+login)
-        * [.logout(location)](#ERMrest.Session+logout)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
         * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
@@ -186,6 +181,44 @@ to use for ERMrest JavaScript agents.
         * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+    * [.Errors](#ERMrest.Errors) : <code>object</code>
+        * [.TimedOutError](#ERMrest.Errors.TimedOutError)
+            * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
+        * [.BadRequestError](#ERMrest.Errors.BadRequestError)
+            * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
+        * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
+            * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
+        * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
+            * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
+        * [.NotFoundError](#ERMrest.Errors.NotFoundError)
+            * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
+        * [.ConflictError](#ERMrest.Errors.ConflictError)
+            * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
+        * [.InternalServerError](#ERMrest.Errors.InternalServerError)
+            * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
+            * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
+        * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
+            * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
+    * [.Errors](#ERMrest.Errors) : <code>object</code>
+        * [.TimedOutError](#ERMrest.Errors.TimedOutError)
+            * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
+        * [.BadRequestError](#ERMrest.Errors.BadRequestError)
+            * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
+        * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
+            * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
+        * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
+            * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
+        * [.NotFoundError](#ERMrest.Errors.NotFoundError)
+            * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
+        * [.ConflictError](#ERMrest.Errors.ConflictError)
+            * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
+        * [.InternalServerError](#ERMrest.Errors.InternalServerError)
+            * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
+            * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
+        * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
+            * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
 
@@ -196,7 +229,6 @@ to use for ERMrest JavaScript agents.
 * [.Server](#ERMrest.Server)
     * [new Server(uri)](#new_ERMrest.Server_new)
     * [.uri](#ERMrest.Server+uri) : <code>String</code>
-    * [.session](#ERMrest.Server+session) : <code>[Session](#ERMrest.Session)</code>
     * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
 
 <a name="new_ERMrest.Server_new"></a>
@@ -209,48 +241,9 @@ to use for ERMrest JavaScript agents.
 <a name="ERMrest.Server+uri"></a>
 #### server.uri : <code>String</code>
 **Kind**: instance property of <code>[Server](#ERMrest.Server)</code>  
-<a name="ERMrest.Server+session"></a>
-#### server.session : <code>[Session](#ERMrest.Session)</code>
-**Kind**: instance property of <code>[Server](#ERMrest.Server)</code>  
 <a name="ERMrest.Server+catalogs"></a>
 #### server.catalogs : <code>[Catalogs](#ERMrest.Catalogs)</code>
 **Kind**: instance property of <code>[Server](#ERMrest.Server)</code>  
-<a name="ERMrest.Session"></a>
-### ERMrest.Session
-**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
-
-* [.Session](#ERMrest.Session)
-    * [.get()](#ERMrest.Session+get) ⇒ <code>Promise</code>
-    * [.login(referrer)](#ERMrest.Session+login)
-    * [.logout(location)](#ERMrest.Session+logout)
-
-<a name="ERMrest.Session+get"></a>
-#### session.get() ⇒ <code>Promise</code>
-An asynchronous method that returns a promise. If fulfilled (and a user
-is logged in), it gets the current session information.
-
-**Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
-**Returns**: <code>Promise</code> - Returns a promise.  
-<a name="ERMrest.Session+login"></a>
-#### session.login(referrer)
-login with the url to redriect back to after logged in
-
-**Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| referrer | <code>String</code> | referred URL |
-
-<a name="ERMrest.Session+logout"></a>
-#### session.logout(location)
-logout with the url to redriect to if failed
-
-**Kind**: instance method of <code>[Session](#ERMrest.Session)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| location | <code>String</code> | URL to redirect to if failed |
-
 <a name="ERMrest.Catalogs"></a>
 ### ERMrest.Catalogs
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
@@ -1373,6 +1366,256 @@ this datapath is not modified
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
 **Kind**: instance method of <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code>  
 **Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Errors"></a>
+### ERMrest.Errors : <code>object</code>
+**Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Errors](#ERMrest.Errors) : <code>object</code>
+    * [.TimedOutError](#ERMrest.Errors.TimedOutError)
+        * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
+    * [.BadRequestError](#ERMrest.Errors.BadRequestError)
+        * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
+    * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
+        * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
+    * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
+        * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
+    * [.NotFoundError](#ERMrest.Errors.NotFoundError)
+        * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
+    * [.ConflictError](#ERMrest.Errors.ConflictError)
+        * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
+    * [.InternalServerError](#ERMrest.Errors.InternalServerError)
+        * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
+        * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
+    * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
+        * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
+
+<a name="ERMrest.Errors.TimedOutError"></a>
+#### Errors.TimedOutError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.TimedOutError_new"></a>
+##### new TimedOutError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.BadRequestError"></a>
+#### Errors.BadRequestError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.BadRequestError_new"></a>
+##### new BadRequestError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.UnauthorizedError"></a>
+#### Errors.UnauthorizedError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.UnauthorizedError_new"></a>
+##### new UnauthorizedError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ForbiddenError"></a>
+#### Errors.ForbiddenError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ForbiddenError_new"></a>
+##### new ForbiddenError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.NotFoundError"></a>
+#### Errors.NotFoundError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.NotFoundError_new"></a>
+##### new NotFoundError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ConflictError"></a>
+#### Errors.ConflictError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ConflictError_new"></a>
+##### new ConflictError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InternalServerError"></a>
+#### Errors.InternalServerError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InternalServerError_new"></a>
+##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InvalidFilterOperatorError"></a>
+#### Errors.InvalidFilterOperatorError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InvalidFilterOperatorError_new"></a>
+##### new InvalidFilterOperatorError(message)
+An invalid filter operator
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InvalidInputError"></a>
+#### Errors.InvalidInputError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InvalidInputError_new"></a>
+##### new InvalidInputError(message)
+An invalid input
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors"></a>
+### ERMrest.Errors : <code>object</code>
+**Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Errors](#ERMrest.Errors) : <code>object</code>
+    * [.TimedOutError](#ERMrest.Errors.TimedOutError)
+        * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
+    * [.BadRequestError](#ERMrest.Errors.BadRequestError)
+        * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
+    * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
+        * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
+    * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
+        * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
+    * [.NotFoundError](#ERMrest.Errors.NotFoundError)
+        * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
+    * [.ConflictError](#ERMrest.Errors.ConflictError)
+        * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
+    * [.InternalServerError](#ERMrest.Errors.InternalServerError)
+        * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
+        * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
+    * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
+        * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
+
+<a name="ERMrest.Errors.TimedOutError"></a>
+#### Errors.TimedOutError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.TimedOutError_new"></a>
+##### new TimedOutError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.BadRequestError"></a>
+#### Errors.BadRequestError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.BadRequestError_new"></a>
+##### new BadRequestError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.UnauthorizedError"></a>
+#### Errors.UnauthorizedError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.UnauthorizedError_new"></a>
+##### new UnauthorizedError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ForbiddenError"></a>
+#### Errors.ForbiddenError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ForbiddenError_new"></a>
+##### new ForbiddenError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.NotFoundError"></a>
+#### Errors.NotFoundError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.NotFoundError_new"></a>
+##### new NotFoundError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ConflictError"></a>
+#### Errors.ConflictError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ConflictError_new"></a>
+##### new ConflictError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InternalServerError"></a>
+#### Errors.InternalServerError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InternalServerError_new"></a>
+##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InvalidFilterOperatorError"></a>
+#### Errors.InvalidFilterOperatorError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InvalidFilterOperatorError_new"></a>
+##### new InvalidFilterOperatorError(message)
+An invalid filter operator
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.InvalidInputError"></a>
+#### Errors.InvalidInputError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.InvalidInputError_new"></a>
+##### new InvalidInputError(message)
+An invalid input
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
 <a name="ERMrest.configure"></a>
 ### ERMrest.configure(http, q)
 This function is used to configure the module
