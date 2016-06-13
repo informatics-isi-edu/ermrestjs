@@ -1107,7 +1107,16 @@ var ERMrest = (function (module) {
             }
 
             return this._annotations[uri];
-        }
+        },
+
+        /**
+         *
+         * @param {String} uri uri of annotation
+         * @returns {boolean} boolean
+         */
+         includes: function (uri) {
+             return (uri in this._annotations);
+         }
     };
 
 
