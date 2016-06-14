@@ -127,7 +127,7 @@ var ERMrest = (function(module) {
      */
     function UnaryPredicate (column, operator) {
         if (!module.isValidOperator(operator)) {
-            throw new Errors.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
         }
         this.column = column; // pathcolumn or column
         this.operator = operator;
@@ -159,7 +159,7 @@ var ERMrest = (function(module) {
      */
     function BinaryPredicate (column, operator, rvalue) {
         if (!module.isValidOperator(operator)) {
-            throw new Errors.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
         }
         this.column = column; // either pathcolumn or column
         this.operator = operator;
