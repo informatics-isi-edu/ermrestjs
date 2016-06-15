@@ -127,7 +127,7 @@ var ERMrest = (function(module) {
      */
     function UnaryPredicate (column, operator) {
         if (!module.isValidOperator(operator)) {
-            throw new Errors.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
         }
         this.column = column; // pathcolumn or column
         this.operator = operator;
@@ -143,9 +143,9 @@ var ERMrest = (function(module) {
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
-                encodeURIComponent(this.column.name) :
+                module._fixedEncodeURIComponent(this.column.name) :
                 // Pathcolumn
-                encodeURIComponent(this.column.pathtable.alias) + ":" + encodeURIComponent(this.column.column.name));
+                module._fixedEncodeURIComponent(this.column.pathtable.alias) + ":" + module._fixedEncodeURIComponent(this.column.column.name));
             return colName + this.operator;
         }
     };
@@ -159,7 +159,7 @@ var ERMrest = (function(module) {
      */
     function BinaryPredicate (column, operator, rvalue) {
         if (!module.isValidOperator(operator)) {
-            throw new Errors.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
         }
         this.column = column; // either pathcolumn or column
         this.operator = operator;
@@ -176,10 +176,10 @@ var ERMrest = (function(module) {
         toUri: function() {
             var colName =  (this.column.name ?
                 // Column
-                encodeURIComponent(this.column.name) :
+                module._fixedEncodeURIComponent(this.column.name) :
                 // Pathcolumn
-                encodeURIComponent(this.column.pathtable.alias) + ":" + encodeURIComponent(this.column.column.name));
-            return colName + this.operator + encodeURIComponent(this.rvalue);
+                module._fixedEncodeURIComponent(this.column.pathtable.alias) + ":" + module._fixedEncodeURIComponent(this.column.column.name));
+            return colName + this.operator + module._fixedEncodeURIComponent(this.rvalue);
         }
     };
 
