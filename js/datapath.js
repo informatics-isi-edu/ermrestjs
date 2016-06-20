@@ -54,7 +54,7 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @param {Object} filter
+         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
          * @returns {ERMrest.Datapath.DataPath} a shallow copy of this datapath with filter
          * @desc
          * this datapath is not modified
@@ -71,6 +71,7 @@ var ERMrest = (function(module) {
          * @param context
          * @param link
          * @returns {ERMrest.Datapath.PathTable}
+         * @desc extend the Datapath with table
          */
         extend: function (table, context, link) { // TODO context? link?
             this.context = new PathTable(table, this, this._nextAlias);
@@ -109,7 +110,7 @@ var ERMrest = (function(module) {
             },
 
             /**
-             * @returns {Promise} promise with rowset data
+             * @returns {Promise} promise with rowset data or error
              */
             get: function () {
                 var baseUri = this.scope.catalog.server.uri;
@@ -120,17 +121,18 @@ var ERMrest = (function(module) {
                     this.scope._getUri();      // datapath
 
                 return module._http.get(uri).then(function(response){
-                    return response.data;
+                    return response.data; // TODO rowset?
                 }, function(response){
-                    return module._q.reject(response);
+                    var error = module._responseToError(response);
+                    return module._q.reject(error);
                 });
             },
 
             /**
              *
-             * @param {Object} filter
+             * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
              * @desc delete entities
-             * @returns {Promise}
+             * @returns {Promise} promise with deleted entities or error
              */
             delete: function (filter) {
                 var baseUri = this.scope.catalog.server.uri;
@@ -145,7 +147,8 @@ var ERMrest = (function(module) {
                 return module._http.delete(uri).then(function(response) {
                     return response.data;
                 }, function(response) {
-                    return module._q.reject(response.data);
+                    var error = module._responseToError(response);
+                    return module._q.reject(error);
                 });
             }
         }
@@ -231,7 +234,7 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @returns {Array} a list of pathcolumn names
+         * @returns {String[]} a list of pathcolumn names
          */
         names: function () { // TODO order by position
             return Object.keys(this._pathcolumns);
@@ -241,15 +244,21 @@ var ERMrest = (function(module) {
          *
          * @param {string} colName column name
          * @returns {ERMrest.Datapath.PathColumn} returns the PathColumn
+         * @throws {ERMrest.Errors.NotFoundError} column not found
+         * @desc get PathColumn object by column name
          */
         get: function (colName) {
             if (colName in this._pathcolumns)
                 return this._pathcolumns[colName];
             else {
-                // create new PathColumn
-                var pc = new PathColumn(this._table.columns.get(colName), this._pathtable);
-                this._pathcolumns[colName] = pc;
-                return pc;
+                if (this._table.columns.get(colName)) {
+                    // create new PathColumn
+                    var pc = new PathColumn(this._table.columns.get(colName), this._pathtable);
+                    this._pathcolumns[colName] = pc;
+                    return pc;
+                } else {
+                    throw new module.NotFoundError("", "Column not found in table");
+                }
             }
         },
 
@@ -284,7 +293,10 @@ var ERMrest = (function(module) {
         this.pathtable.columns._push(this);
     }
 
-
+    /**
+     *
+     * @memberof ERMrest.Datapath
+     */
     function Operators() {
         this._operators = {};
     }

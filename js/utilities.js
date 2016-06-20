@@ -66,6 +66,34 @@ var ERMrest = (function(module) {
         return displayname;
     };
 
+    /**
+     * @function
+     * @param {Object} response http response object
+     * @return {Object} error object
+     * @desc create an error object from http response
+     */
+    module._responseToError = function (response) {
+        var status = response.status;
+        switch(status) {
+            case 0:
+                return new module.TimedOutError(response.statusText, response.data);
+            case 400:
+                return new module.BadRequestError(response.statusText, response.data);
+            case 401:
+                return new module.UnauthorizedError(response.statusText, response.data);
+            case 403:
+                return new module.ForbiddenError(response.statusText, response.data);
+            case 404:
+                return new module.NotFoundError(response.statusText, response.data);
+            case 409:
+                return new module.ConflictError(response.statusText, response.data);
+            case 500:
+                return new module.InternalServerError(response.statusText, response.data);
+            default:
+                return new Error(response.statusText, response.data);
+        }
+    };
+
     return module;
 
 }(ERMrest || {}));
