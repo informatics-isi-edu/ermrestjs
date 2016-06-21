@@ -1114,7 +1114,7 @@ var ERMrest = (function (module) {
          * @param {String} uri uri of annotation
          * @returns {boolean} boolean
          */
-         includes: function (uri) {
+         contains: function (uri) {
              return (uri in this._annotations);
          }
     };
