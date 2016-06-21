@@ -97,7 +97,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
         * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-        * [.includes(uri)](#ERMrest.Annotations+includes) ⇒ <code>Boolean</code>
+        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
     * [.Annotation](#ERMrest.Annotation)
         * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
         * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
@@ -757,7 +757,7 @@ Member of ForeignKeys
     * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
     * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-    * [.includes(uri)](#ERMrest.Annotations+includes) ⇒ <code>Boolean</code>
+    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
 
 <a name="new_ERMrest.Annotations_new"></a>
 #### new Annotations()
@@ -779,8 +779,8 @@ Constructor for Annotations.
 #### annotations.get(uri) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
 **Returns**: <code>[Annotation](#ERMrest.Annotation)</code> - annotation  
-<a name="ERMrest.Annotations+includes"></a>
-#### annotations.includes(uri) ⇒ <code>Boolean</code>
+<a name="ERMrest.Annotations+contains"></a>
+#### annotations.contains(uri) ⇒ <code>Boolean</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
 **Returns**: <code>Boolean</code> - boolean  
 
