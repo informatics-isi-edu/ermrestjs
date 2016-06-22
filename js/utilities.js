@@ -89,6 +89,8 @@ var ERMrest = (function(module) {
                 return new module.ConflictError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
+            case 503:
+                return new module.ServiceUnavailableError(response.statusText, response.data);
             default:
                 return new Error(response.statusText, response.data);
         }

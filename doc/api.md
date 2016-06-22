@@ -97,7 +97,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
         * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
+        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
     * [.Annotation](#ERMrest.Annotation)
         * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
         * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
@@ -198,6 +198,8 @@ to use for ERMrest JavaScript agents.
             * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
         * [.InternalServerError](#ERMrest.Errors.InternalServerError)
             * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
         * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
             * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
         * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -217,6 +219,8 @@ to use for ERMrest JavaScript agents.
             * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
         * [.InternalServerError](#ERMrest.Errors.InternalServerError)
             * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
         * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
             * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
         * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -278,7 +282,9 @@ Constructor for the Catalogs.
 Get a catalog by id. This call does catalog introspection.
 
 **Kind**: instance method of <code>[Catalogs](#ERMrest.Catalogs)</code>  
-**Returns**: <code>Promise</code> - Promise with the catalog object or error  
+**Returns**: <code>Promise</code> - a promise that returns the catalog  if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [NotFoundError](#ERMrest.Errors.NotFoundError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -534,7 +540,9 @@ Constructor for Entity. This is a container in Table
 get the number of rows
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - promise with number of count or error  
+**Returns**: <code>Promise</code> - promise returning number of count if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
@@ -548,7 +556,9 @@ In order to use before & after on a rowset, limit must be speficied,
 output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset or error  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -562,7 +572,9 @@ output columns and sortby needs to have columns of a key
 get a page of rows before a specific row
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset or error  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -577,7 +589,9 @@ get a page of rows before a specific row
 get a page of rows after a specific row
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset or error  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -592,7 +606,9 @@ get a page of rows after a specific row
 Delete rows from table based on the filter
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise with the json row data deleted or error  
+**Returns**: <code>Promise</code> - Promise that returns the json row data deleted if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
@@ -601,7 +617,9 @@ Delete rows from table based on the filter
 <a name="ERMrest.Table.Entity+put"></a>
 ##### entity.put(rows) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise with the row updated or error
+**Returns**: <code>Promise</code> - Promise that returns the rows updated if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected
 Update rows in the table  
 
 | Param | Type | Description |
@@ -613,7 +631,9 @@ Update rows in the table
 Create new entities
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise with the rows created or error  
+**Returns**: <code>Promise</code> - Promise that returns the rows created if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [BadRequestError](#ERMrest.Errors.BadRequestError), [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -658,13 +678,17 @@ the RowSet.
 get the rowset of the next page
 
 **Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
-**Returns**: <code>Promise</code> - promise with rowset or error  
+**Returns**: <code>Promise</code> - promise that returns a rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 <a name="ERMrest.RowSet+before"></a>
 #### rowSet.before() ⇒ <code>Promise</code>
 get the rowset of the previous page
 
 **Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
-**Returns**: <code>Promise</code> - promise with rowset or error  
+**Returns**: <code>Promise</code> - promise that returns a rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
@@ -778,7 +802,7 @@ foreign key that this column is a member of
     * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
     * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
+    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Annotations_new"></a>
 #### new Annotations()
@@ -1085,7 +1109,9 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
-**Returns**: <code>Promise</code> - promise with rowset of the referenced key's table or error  
+**Returns**: <code>Promise</code> - promise that returns a rowset of the referenced key's table if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
@@ -1180,13 +1206,17 @@ entity container
 <a name="ERMrest.Datapath.DataPath+entity.get"></a>
 ###### entity.get() ⇒ <code>Promise</code>
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset data or error  
+**Returns**: <code>Promise</code> - promise that returns a row data if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 <a name="ERMrest.Datapath.DataPath+entity.delete"></a>
 ###### entity.delete(filter) ⇒ <code>Promise</code>
 delete entities
 
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
-**Returns**: <code>Promise</code> - promise with deleted entities or error  
+**Returns**: <code>Promise</code> - promise that returns deleted entities if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
@@ -1462,6 +1492,8 @@ get PathColumn object by column name
         * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
     * [.InternalServerError](#ERMrest.Errors.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
     * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -1538,6 +1570,17 @@ get PathColumn object by column name
 **Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
 <a name="new_ERMrest.Errors.InternalServerError_new"></a>
 ##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ServiceUnavailableError"></a>
+#### Errors.ServiceUnavailableError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
+##### new ServiceUnavailableError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1587,6 +1630,8 @@ An invalid input
         * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
     * [.InternalServerError](#ERMrest.Errors.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
     * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -1663,6 +1708,17 @@ An invalid input
 **Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
 <a name="new_ERMrest.Errors.InternalServerError_new"></a>
 ##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ServiceUnavailableError"></a>
+#### Errors.ServiceUnavailableError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
+##### new ServiceUnavailableError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1714,7 +1770,7 @@ URI should be to the ERMrest _service_. For example,
 **Returns**: <code>[Server](#ERMrest.Server)</code> - Returns a server instance.  
 **Throws**:
 
-- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> 
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> URI is missing
 
 
 | Param | Type | Description |

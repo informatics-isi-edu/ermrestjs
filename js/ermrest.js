@@ -56,7 +56,7 @@ var ERMrest = (function (module) {
      * @function
      * @param {String} uri URI of the ERMrest service.
      * @return {ERMrest.Server} Returns a server instance.
-     * @throws {ERMrest.Errors.InvalidInputError}
+     * @throws {ERMrest.Errors.InvalidInputError} URI is missing
      * @desc
      * ERMrest server factory creates or reuses ERMrest.Server instances. The
      * URI should be to the ERMrest _service_. For example,
@@ -139,7 +139,9 @@ var ERMrest = (function (module) {
 
         /**
          * @param {String} id Catalog ID.
-         * @returns {Promise} Promise with the catalog object or error
+         * @return {Promise} a promise that returns the catalog  if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
          */
         get: function (id) {
@@ -208,6 +210,13 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         *
+         * @private
+         * @return {Promise} a promise that returns json object or catalog schema if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         */
         _introspect: function () {
             // load all schemas
             var self = this;
@@ -668,7 +677,9 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
-         * @returns {Promise} promise with number of count or error
+         * @returns {Promise} promise returning number of count if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc get the number of rows
          *
          */
@@ -696,7 +707,9 @@ var ERMrest = (function (module) {
          * @param {Number} [limit] Number of rows
          * @param {ERMrest.Column[] | string[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
-         * @returns {Promise} promise with rowset or error
+         * @returns {Promise} promise returning rowset if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
          *
@@ -723,8 +736,9 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getBefore
-         *
-         * @returns {Promise} promise with rowset or error
+         * @returns {Promise} promise returning rowset if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
          *
@@ -749,8 +763,9 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getAfter
-         *
-         * @returns {Promise} promise with rowset or error
+         * @returns {Promise} promise returning rowset if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get a page of rows after a specific row
          *
@@ -771,7 +786,9 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
-         * @returns {Promise} Promise with the json row data deleted or error
+         * @returns {Promise} Promise that returns the json row data deleted if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc
          * Delete rows from table based on the filter
          */
@@ -789,7 +806,9 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {Object} rows jSON representation of the updated rows
-         * @returns {Promise} Promise with the row updated or error
+         * @returns {Promise} Promise that returns the rows updated if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * Update rows in the table
          */
         put: function (rows) {
@@ -808,7 +827,9 @@ var ERMrest = (function (module) {
          *
          * @param {Object} rows Array of jSON representation of rows
          * @param {String[]} defaults Array of string column names to be defaults
-         * @returns {Promise} Promise with the rows created or error
+         * @returns {Promise} Promise that returns the rows created if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.BadRequestError}, {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc
          * Create new entities
          */
@@ -878,7 +899,9 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {Promise} promise with rowset or error
+         * @returns {Promise} promise that returns a rowset if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc get the rowset of the next page
          *
          */
@@ -889,7 +912,9 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {Promise} promise with rowset or error
+         * @returns {Promise} promise that returns a rowset if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc get the rowset of the previous page
          *
          */
@@ -1580,7 +1605,9 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {Number} limit
-         * @returns {Promise} promise with rowset of the referenced key's table or error
+         * @returns {Promise} promise that returns a rowset of the referenced key's table if resolved or
+         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          */
         getDomainValues: function (limit) {
             if (limit === undefined)

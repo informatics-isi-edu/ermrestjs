@@ -110,7 +110,9 @@ var ERMrest = (function(module) {
             },
 
             /**
-             * @returns {Promise} promise with rowset data or error
+             * @returns {Promise} promise that returns a row data if resolved or
+             *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+             *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
              */
             get: function () {
                 var baseUri = this.scope.catalog.server.uri;
@@ -132,7 +134,9 @@ var ERMrest = (function(module) {
              *
              * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
              * @desc delete entities
-             * @returns {Promise} promise with deleted entities or error
+             * @returns {Promise} promise that returns deleted entities if resolved or
+             *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
+             *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
              */
             delete: function (filter) {
                 var baseUri = this.scope.catalog.server.uri;
