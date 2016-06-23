@@ -690,7 +690,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = responseToError(response);
                 return module._q.reject(error);
@@ -716,7 +716,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = responseToError(response);
                 return module._q.reject(error);
@@ -742,7 +742,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = responseToError(response);
                 return module._q.reject(error);
@@ -830,7 +830,7 @@ var ERMrest = (function (module) {
      * @param {Array} sortby Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
      * @constructor
      */
-    function RowSet(table, jsonRows, filter, limit, columns, sortby) {
+    function Rows(table, jsonRows, filter, limit, columns, sortby) {
         this._table = table;
         this._filter = filter;
         this._limit = limit;
@@ -841,13 +841,13 @@ var ERMrest = (function (module) {
          * @type {Array}
          * @desc The set of rows returns from the server. It is an Array of
          * Objects that has keys and values based on the query that produced
-         * the RowSet.
+         * the Rows.
          */
         this.data = jsonRows;
     }
 
-    RowSet.prototype = {
-        constructor: RowSet,
+    Rows.prototype = {
+        constructor: Rows,
 
         /**
          *
@@ -855,6 +855,14 @@ var ERMrest = (function (module) {
          */
         length: function() {
             return this.data.length;
+        },
+
+        /**
+         *
+         * @returns {Row}
+         */
+        get: function(index) {
+            return new Row(this._table, this.data[index]);
         },
 
         /**
@@ -877,6 +885,48 @@ var ERMrest = (function (module) {
         before: function() {
 
             return this._table.entity.getBefore(this._filter, this._limit, this._output, this._sortby, this.data[0]);
+        }
+    };
+
+    /**
+     *
+     * @memberof ERMrest
+     * @param {ERMrest.Table} table Required.
+     * @param {Object} jsonRow Required.
+     * @constructor
+     */
+    function Row(table, jsonRow) {
+        this._table = table;
+
+        /**
+         * @type {Object}
+         * @desc The row returned from the ith result in the Rows.data. It is an
+         * Object that has keys and values ....
+         */
+        this.data = jsonRow;
+    }
+
+    Row.prototype = {
+        constructor: Row,
+
+        /**
+         *
+         * @returns {Array} Array of column names
+         */
+        names: function() {
+            return Object.keys(this.data);
+        },
+
+        /**
+         *
+         * @returns {String} name name of column
+         * @returns {ERMrest.Column} column
+         */
+        get: function(name) {
+            if (!(name in this.data)) {
+                throw new module.NotFoundError("", "Column " + name + " not found in row.");
+            }
+            return this.data[name];
         }
     };
 

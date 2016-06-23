@@ -66,12 +66,12 @@ to use for ERMrest JavaScript agents.
                 * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
                 * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
                 * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
-    * [.RowSet](#ERMrest.RowSet)
-        * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
-        * [.data](#ERMrest.RowSet+data) : <code>Array</code>
-        * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
-        * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
-        * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
+    * [.Rows](#ERMrest.Rows)
+        * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
+        * [.data](#ERMrest.Rows+data) : <code>Array</code>
+        * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
+        * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
+        * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
@@ -601,19 +601,19 @@ Create new entities
 | rows | <code>Object</code> | Array of jSON representation of rows |
 | defaults | <code>Array</code> | Array of string column names to be defaults |
 
-<a name="ERMrest.RowSet"></a>
-### ERMrest.RowSet
+<a name="ERMrest.Rows"></a>
+### ERMrest.Rows
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
-* [.RowSet](#ERMrest.RowSet)
-    * [new RowSet(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.RowSet_new)
-    * [.data](#ERMrest.RowSet+data) : <code>Array</code>
-    * [.length()](#ERMrest.RowSet+length) ⇒ <code>number</code>
-    * [.after()](#ERMrest.RowSet+after) ⇒ <code>Promise</code>
-    * [.before()](#ERMrest.RowSet+before) ⇒ <code>Promise</code>
+* [.Rows](#ERMrest.Rows)
+    * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
+    * [.data](#ERMrest.Rows+data) : <code>Array</code>
+    * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
+    * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
+    * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
 
-<a name="new_ERMrest.RowSet_new"></a>
-#### new RowSet(table, jsonRows, filter, limit, columns, sortby)
+<a name="new_ERMrest.Rows_new"></a>
+#### new Rows(table, jsonRows, filter, limit, columns, sortby)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -624,26 +624,26 @@ Create new entities
 | columns | <code>Array</code> | Optional. Array of column names or Column objects output |
 | sortby | <code>Array</code> | Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
-<a name="ERMrest.RowSet+data"></a>
+<a name="ERMrest.Rows+data"></a>
 #### rowSet.data : <code>Array</code>
 The set of rows returns from the server. It is an Array of
 Objects that has keys and values based on the query that produced
-the RowSet.
+the Rows.
 
-**Kind**: instance property of <code>[RowSet](#ERMrest.RowSet)</code>  
-<a name="ERMrest.RowSet+length"></a>
+**Kind**: instance property of <code>[Rows](#ERMrest.Rows)</code>  
+<a name="ERMrest.Rows+length"></a>
 #### rowSet.length() ⇒ <code>number</code>
-**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
-<a name="ERMrest.RowSet+after"></a>
+**Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
+<a name="ERMrest.Rows+after"></a>
 #### rowSet.after() ⇒ <code>Promise</code>
 get the rowset of the next page
 
-**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
-<a name="ERMrest.RowSet+before"></a>
+**Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
+<a name="ERMrest.Rows+before"></a>
 #### rowSet.before() ⇒ <code>Promise</code>
 get the rowset of the previous page
 
-**Kind**: instance method of <code>[RowSet](#ERMrest.RowSet)</code>  
+**Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
