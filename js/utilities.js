@@ -96,6 +96,90 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     *
+     * @param http
+     * @param q
+     * @param method
+     * @param url
+     * @param data
+     * @returns {Promise}
+     * @private
+     */
+    module._makeRequest = function(http, q, method, url, data) {
+
+        // keep the same promise for each request
+        var deferred = q.defer();
+        var retryCount = 0;
+        var delay = 0; // ms
+        return _retryRequest(http, q, method, url, data, deferred, retryCount, delay);
+
+    };
+
+    /**
+     *
+     * @param http angular $http service
+     * @param q angular $q
+     * @param method 'get', 'put', 'post', 'delete'
+     * @param url request url
+     * @param data request data
+     * @param deferred
+     * @param retryCount keep count of number of retries
+     * @param delay milliseconds to delay before retry
+     * @private
+     * @return {Promise}
+     */
+    function _retryRequest (http, q, method, url, data, deferred, retryCount, delay) {
+
+        var requestObj = {
+            method: method,
+            url: url
+        };
+        if (method === 'put' || method === 'post') {
+            requestObj.data = data;
+        }
+
+        var self = this;
+
+        // make http request
+        return http(requestObj).then(function(response) {
+            // successful
+            deferred.resolve(response);
+            return deferred.promise;
+        }, function(response) {
+            if ((response.status === 0 || response.status === 500 || response.status === 503) && retryCount <= 10 ) {
+                // if error is 0, 500 or 503, and retry count is less than 10, retry
+                retryCount += 1;
+                // retry after delay
+                delay = 2^retryCount * 100; // exponential backoff
+                _sleep(delay); // not using setTimeout because setTimeout is asychronous
+                return _retryRequest(http, q, method, url, data, deferred, retryCount, delay);
+            } else if (self.method === 'delete' && response.status === 409){
+                // SPECIAL CASE:
+                // if method is delete and error is 409 not found
+                // return a success promise
+                deferred.resolve(response);
+                return deferred.promise;
+            } else {
+                // max retries reached or
+                // reached returnable error, reject
+                deferred.reject(response);
+                return deferred.promise;
+            }
+
+        });
+
+    }
+
+    function _sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+            if ((new Date().getTime() - start) > milliseconds){
+                break;
+            }
+        }
+    }
+
     return module;
 
 }(ERMrest || {}));

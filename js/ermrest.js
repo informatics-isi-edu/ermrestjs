@@ -139,7 +139,9 @@ var ERMrest = (function (module) {
 
         /**
          * @param {String} id Catalog ID.
-         * @return {Promise} a promise that returns the catalog  if resolved or
+         *
+         *
+         * @return {Promise} a promise that returns the {@link ERMrest.Catalog} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
@@ -213,14 +215,14 @@ var ERMrest = (function (module) {
         /**
          *
          * @private
-         * @return {Promise} a promise that returns json object or catalog schema if resolved or
+         * @return {Promise} a promise that returns json object of catalog schema if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          */
         _introspect: function () {
             // load all schemas
             var self = this;
-            return module._http.get(this._uri + "/schema").then(function (response) {
+            return module._makeRequest(module._http, module._q, "get", this._uri + "/schema", {}).then(function (response) {
                 var jsonSchemas = response.data;
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
@@ -693,7 +695,7 @@ var ERMrest = (function (module) {
 
             uri = uri + "/row_count:=cnt(*)";
 
-            return module._http.get(uri).then(function(response) {
+            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function (response) {
                 return response.data[0].row_count;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -707,12 +709,11 @@ var ERMrest = (function (module) {
          * @param {Number} [limit] Number of rows
          * @param {ERMrest.Column[] | string[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
-         * @returns {Promise} promise returning rowset if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
-         *
          * In order to use before & after on a rowset, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          */
@@ -721,7 +722,7 @@ var ERMrest = (function (module) {
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -736,11 +737,13 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getBefore
-         * @returns {Promise} promise returning rowset if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
+         * In order to use before & after on a rowset, limit must be speficied,
+         * output columns and sortby needs to have columns of a key
          *
          */
         getBefore: function(filter, limit, columns, sortby, row) {
@@ -748,7 +751,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -763,7 +766,7 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getAfter
-         * @returns {Promise} promise returning rowset if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
@@ -775,7 +778,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -795,7 +798,7 @@ var ERMrest = (function (module) {
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return module._http.delete(uri).then(function(response) {
+            return module._makeRequest(module._http, module._q, "delete", uri, {}).then(function (response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -815,7 +818,7 @@ var ERMrest = (function (module) {
 
             var uri = this._toURI();
 
-            return module._http.put(uri, rows).then(function(response) {
+            return module._makeRequest(module._http, module._q, "put", uri, rows).then(function (response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -848,7 +851,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return module._http.post(uri, rows).then(function(response) {
+            return module._makeRequest(module._http, module._q, "post", uri, rows).then(function (response) {
                return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -919,10 +922,10 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {Promise} promise that returns a rowset if resolved or
+         * @returns {Promise} promise that returns a {@link ERMrest.RowSet} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
-         * @desc get the rowset of the previous page
+         * @desc get the {@link ERMrest.RowSet} of the previous page
          *
          */
         before: function() {
@@ -1650,7 +1653,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {Number} limit
-         * @returns {Promise} promise that returns a rowset of the referenced key's table if resolved or
+         * @returns {Promise} promise that returns a {@link RowSet} of the referenced key's table if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          */
