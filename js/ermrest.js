@@ -862,7 +862,7 @@ var ERMrest = (function (module) {
          * @returns {Row}
          */
         get: function(index) {
-            return new Row(this._table, this.data[index]);
+            return new Row(this.data[index]);
         },
 
         /**
@@ -895,9 +895,7 @@ var ERMrest = (function (module) {
      * @param {Object} jsonRow Required.
      * @constructor
      */
-    function Row(table, jsonRow) {
-        this._table = table;
-
+    function Row(jsonRow) {
         /**
          * @type {Object}
          * @desc The row returned from the ith result in the Rows.data. It is an
