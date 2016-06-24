@@ -891,15 +891,13 @@ var ERMrest = (function (module) {
     /**
      *
      * @memberof ERMrest
-     * @param {ERMrest.Table} table Required.
      * @param {Object} jsonRow Required.
      * @constructor
      */
     function Row(jsonRow) {
         /**
          * @type {Object}
-         * @desc The row returned from the ith result in the Rows.data. It is an
-         * Object that has keys and values ....
+         * @desc The row returned from the ith result in the Rows.data.
          */
         this.data = jsonRow;
     }
@@ -917,8 +915,8 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {String} name name of column
-         * @returns {ERMrest.Column} column
+         * @param {String} name name of column
+         * @returns {Object} column value
          */
         get: function(name) {
             if (!(name in this.data)) {

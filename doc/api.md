@@ -69,9 +69,15 @@ to use for ERMrest JavaScript agents.
     * [.Rows](#ERMrest.Rows)
         * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
         * [.data](#ERMrest.Rows+data) : <code>Array</code>
+        * [.get(index)](#ERMrest.Rows+get) : <code>[Row](#ERMrest.Row)</code>
         * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
         * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
         * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
+    * [.Row](#ERMrest.Row)
+        * [new Row(jsonRow)](#new_ERMrest.Row_new)
+        * [.data](#ERMrest.Row+data) : <code>Object</code>
+        * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
+        * [.get(name)](#ERMrest.Row+get) ⇒ <code>String</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns()](#new_ERMrest.Columns_new)
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
@@ -528,7 +534,7 @@ get the number of rows
 ##### entity.get(filter, limit, columns, sortby) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
 
-In order to use before & after on a rowset, limit must be speficied,
+In order to use before & after on a rows, limit must be speficied,
 output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
@@ -608,6 +614,7 @@ Create new entities
 * [.Rows](#ERMrest.Rows)
     * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
     * [.data](#ERMrest.Rows+data) : <code>Array</code>
+    * [.get(index)](#ERMrest.Rows+get) : <code>[Row](#ERMrest.Row)</code>
     * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
     * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
     * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
@@ -625,28 +632,67 @@ Create new entities
 | sortby | <code>Array</code> | Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Rows+data"></a>
-#### rowSet.data : <code>Array</code>
+#### rows.data : <code>Array</code>
 The set of rows returns from the server. It is an Array of
 Objects that has keys and values based on the query that produced
 the Rows.
-
 **Kind**: instance property of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+length"></a>
-#### rowSet.length() ⇒ <code>number</code>
+#### rows.length() ⇒ <code>number</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
+<a name="ERMrest.Rows+get"></a>
+#### rows.get(index) ⇒ <code>[Row](#ERMrest.Row)</code>
+**Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
+**Returns**: <code>[Row](#ERMrest.Row)</code>
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>Number</code> | Index of a Row from Rows.data |
 <a name="ERMrest.Rows+after"></a>
-#### rowSet.after() ⇒ <code>Promise</code>
-get the rowset of the next page
-
+#### rows.after() ⇒ <code>Promise</code>
+get the rows of the next page
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+before"></a>
-#### rowSet.before() ⇒ <code>Promise</code>
-get the rowset of the previous page
-
+#### rows.before() ⇒ <code>Promise</code>
+get the rows of the previous page
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
+
+<a name="ERMrest.Row"></a>
+### ERMrest.Row
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>
+
+* [.Row](#ERMrest.Row)
+    * [new Row(jsonRow)](#new_ERMrest.Row_new)
+    * [.data](#ERMrest.Row+data) : <code>Object</code>
+    * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
+    * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
+
+<a name="new_ERMrest.Row_new"></a>
+### new Row(jsonRow)
+Constructor for Row.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| jsonRow | <code>Object</code> | Required. |
+
+<a name="ERMrest.Row+data"></a>
+#### row.data : <code>Object</code>
+The row returned from the ith result in the Rows.data.
+**Kind**: instance property of <code>[Rows](#ERMrest.Row)</code>  
+<a name="ERMrest.Row+get"></a>
+#### row.get(name) ⇒ <code>[Row](#ERMrest.Row)</code>
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Returns**: <code>Object</code>
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>String</code> | name of a column |
+<a name="ERMrest.Row+names"></a>
+#### row.names() : <code>Array</code>
+**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>
+**Returns**: <code>Array</code>
+
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
-**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>
 
 * [.Columns](#ERMrest.Columns)
     * [new Columns()](#new_ERMrest.Columns_new)
@@ -1129,7 +1175,7 @@ entity container
 <a name="ERMrest.Datapath.DataPath+entity.get"></a>
 ###### entity.get() ⇒ <code>Promise</code>
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
-**Returns**: <code>Promise</code> - promise with rowset data  
+**Returns**: <code>Promise</code> - promise with rows data  
 <a name="ERMrest.Datapath.DataPath+entity.delete"></a>
 ###### entity.delete(filter) ⇒ <code>Promise</code>
 delete entities
