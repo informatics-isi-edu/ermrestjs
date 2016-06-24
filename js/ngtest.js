@@ -5,7 +5,6 @@ angular.module("testApp", ['ERMrest'])
         var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
 
         // if authentication required, do it here
-        // using server.session.get()
 
         // build catalog schemas
         server.catalogs.get(1).then(function(catalog){
@@ -18,8 +17,7 @@ angular.module("testApp", ['ERMrest'])
                 var t1 = catalog.schemas.get("legacy").tables.get("dataset_chromosome");
                 var t2 = catalog.schemas.get("legacy").tables.get("dataset");
                 var t3 = catalog.schemas.get("legacy").tables.get("dataset_mouse_gene");
-                console.log(t1);
-                console.log(t2);
+                var t4 = catalog.schemas.get("legacy").tables.get("fake_table");
             } catch (e) {
                 console.log("Error getting table: ");
                 console.log(e);

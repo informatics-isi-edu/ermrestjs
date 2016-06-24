@@ -17,6 +17,8 @@ var ERMrest = (function(module) {
 
     module.InternalServerError = InternalServerError;
 
+    module.ServiceUnavailableError = ServiceUnavailableError;
+
     /**
      * @memberof ERMrest.Errors
      * @param {string} status the network error code
@@ -140,6 +142,24 @@ var ERMrest = (function(module) {
     InternalServerError.prototype = Object.create(Error.prototype);
 
     InternalServerError.prototype.constructor = InternalServerError;
+
+
+
+    /**
+     * @memberof ERMrest.Errors
+     * @param {string} status the network error code
+     * @param {string} message error message
+     * @constructor
+     */
+    function ServiceUnavailableError(status, message) {
+        this.code = 500;
+        this.status = status;
+        this.message = message;
+    }
+
+    ServiceUnavailableError.prototype = Object.create(Error.prototype);
+
+    ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
     return module;
 
