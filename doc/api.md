@@ -724,21 +724,20 @@ The row returned from the ith result in the Rows.data.
 
 **Kind**: instance property of <code>[Rows](#ERMrest.Row)</code>  
 <a name="ERMrest.Row+get"></a>
-#### row.get(name) ⇒ <code>[Row](#ERMrest.Row)</code>
-
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>
-
+#### rows.get(name) ⇒ <code>[Row](#ERMrest.Row)</code>
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
 **Returns**: <code>Object</code>
+
 
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>String</code> | name of a column |
 
-<a name="ERMrest.Row+names"></a>
-#### row.names() : <code>Array</code>
-**Kind**: instance property of <code>[Row](#ERMrest.Row)</code>
-
+<a name="ERMrest.Rows+names"></a>
+#### rows.names() ⇒ <code>Array</code>
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
 **Returns**: <code>Array</code>
+
 
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
