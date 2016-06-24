@@ -68,14 +68,14 @@ to use for ERMrest JavaScript agents.
                 * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
     * [.Rows](#ERMrest.Rows)
         * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
-        * [.data](#ERMrest.Rows+data) : <code>Array</code>
-        * [.get(index)](#ERMrest.Rows+get) : <code>[Row](#ERMrest.Row)</code>
+        * [.data](#ERMrest.Rows+data) ⇒ <code>Array</code>
+        * [.get(index)](#ERMrest.Rows+get) ⇒ <code>[Row](#ERMrest.Row)</code>
         * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
         * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
         * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
     * [.Row](#ERMrest.Row)
         * [new Row(jsonRow)](#new_ERMrest.Row_new)
-        * [.data](#ERMrest.Row+data) : <code>Object</code>
+        * [.data](#ERMrest.Row+data) ⇒ <code>Object</code>
         * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
         * [.get(name)](#ERMrest.Row+get) ⇒ <code>String</code>
     * [.Columns](#ERMrest.Columns)
@@ -652,8 +652,8 @@ Create new entities
 
 * [.Rows](#ERMrest.Rows)
     * [new Rows(table, jsonRows, filter, limit, columns, sortby)](#new_ERMrest.Rows_new)
-    * [.data](#ERMrest.Rows+data) : <code>Array</code>
-    * [.get(index)](#ERMrest.Rows+get) : <code>[Row](#ERMrest.Row)</code>
+    * [.data](#ERMrest.Rows+data) ⇒ <code>Array</code>
+    * [.get(index)](#ERMrest.Rows+get) ⇒ <code>[Row](#ERMrest.Row)</code>
     * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
     * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
     * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
@@ -664,17 +664,18 @@ Create new entities
 | Param | Type | Description |
 | --- | --- | --- |
 | table | <code>[Table](#ERMrest.Table)</code> |  |
-| jsonRows | <code>Object</code> |  |
+| jsonRows | <code>Array</code> |  |
 | filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> &#124; <code>null</code> | null if not being used |
 | limit | <code>Number</code> | Number of rows |
 | columns | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> &#124; <code>Array.&lt;String&gt;</code> | Array of column names or Column objects output |
 | [sortby] | <code>Array.&lt;Object&gt;</code> | An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Rows+data"></a>
-#### rows.data : <code>Array</code>
+#### rows.data ⇒ <code>Array</code>
 The set of rows returns from the server. It is an Array of
 Objects that has keys and values based on the query that produced
 the Rows.
+
 **Kind**: instance property of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+length"></a>
 #### rows.length() ⇒ <code>number</code>
@@ -683,16 +684,20 @@ the Rows.
 #### rows.get(index) ⇒ <code>[Row](#ERMrest.Row)</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 **Returns**: <code>[Row](#ERMrest.Row)</code>
+
 | Param | Type | Description |
 | --- | --- | --- |
-| index | <code>Number</code> | Index of a Row from Rows.data |
+| index | <code>Number</code> | Index of a row from Rows.data |
+
 <a name="ERMrest.Rows+after"></a>
 #### rows.after() ⇒ <code>Promise</code>
 get the rows of the next page
+
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+before"></a>
 #### rows.before() ⇒ <code>Promise</code>
 get the rows of the previous page
+
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 
 <a name="ERMrest.Row"></a>
@@ -716,14 +721,18 @@ Constructor for Row.
 <a name="ERMrest.Row+data"></a>
 #### row.data : <code>Object</code>
 The row returned from the ith result in the Rows.data.
+
 **Kind**: instance property of <code>[Rows](#ERMrest.Row)</code>  
 <a name="ERMrest.Row+get"></a>
 #### row.get(name) ⇒ <code>[Row](#ERMrest.Row)</code>
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>
 **Returns**: <code>Object</code>
+
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>String</code> | name of a column |
+
 <a name="ERMrest.Row+names"></a>
 #### row.names() : <code>Array</code>
 **Kind**: instance property of <code>[Row](#ERMrest.Row)</code>
