@@ -50,6 +50,8 @@ angular.module("testApp", ['ERMrest'])
             t1.entity.get().then(function(rows) {
                 console.log("Get all rows from dataset_chromosome using Table.entity.get()");
                 console.log(rows);
+                // get a Row from Rows
+                console.log(rows.get(0));
             }, function(error) {
                 console.log("Error getting entities from table " + t1.name + ":");
                 console.log(error);
@@ -117,8 +119,6 @@ angular.module("testApp", ['ERMrest'])
             }, function(response) {
                 console.log(response);
             });
-
-
 
 
 

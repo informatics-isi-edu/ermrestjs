@@ -722,7 +722,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
@@ -749,7 +749,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
@@ -776,7 +776,7 @@ var ERMrest = (function (module) {
 
             var self = this;
             return module._http.get(uri).then(function(response) {
-                return new RowSet(self._table, response.data, filter, limit, columns, sortby);
+                return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
@@ -870,7 +870,7 @@ var ERMrest = (function (module) {
      * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
      * @constructor
      */
-    function RowSet(table, jsonRows, filter, limit, columns, sortby) {
+    function Rows(table, jsonRows, filter, limit, columns, sortby) {
         this._table = table;
         this._filter = filter;
         this._limit = limit;
@@ -881,13 +881,13 @@ var ERMrest = (function (module) {
          * @type {Array}
          * @desc The set of rows returns from the server. It is an Array of
          * Objects that has keys and values based on the query that produced
-         * the RowSet.
+         * the Rows.
          */
         this.data = jsonRows;
     }
 
-    RowSet.prototype = {
-        constructor: RowSet,
+    Rows.prototype = {
+        constructor: Rows,
 
         /**
          *
@@ -899,10 +899,17 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {Promise} promise that returns a rowset if resolved or
+         * @returns {Row}
+         */
+        get: function(index) {
+            return new Row(this.data[index]);
+        },
+
+        /**
+         * @returns {Promise} promise that returns the rows if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
-         * @desc get the rowset of the next page
+         * @desc get the rows of the next page
          *
          */
         after: function() {
@@ -921,6 +928,44 @@ var ERMrest = (function (module) {
         before: function() {
 
             return this._table.entity.getBefore(this._filter, this._limit, this._output, this._sortby, this.data[0]);
+        }
+    };
+
+    /**
+     *
+     * @memberof ERMrest
+     * @param {Object} jsonRow Required.
+     * @constructor
+     */
+    function Row(jsonRow) {
+        /**
+         * @type {Object}
+         * @desc The row returned from the ith result in the Rows.data.
+         */
+        this.data = jsonRow;
+    }
+
+    Row.prototype = {
+        constructor: Row,
+
+        /**
+         *
+         * @returns {Array} Array of column names
+         */
+        names: function() {
+            return Object.keys(this.data);
+        },
+
+        /**
+         *
+         * @param {String} name name of column
+         * @returns {Object} column value
+         */
+        get: function(name) {
+            if (!(name in this.data)) {
+                throw new module.NotFoundError("", "Column " + name + " not found in row.");
+            }
+            return this.data[name];
         }
     };
 
