@@ -727,6 +727,7 @@ The row returned from the ith result in the Rows.data.
 #### row.get(name) ⇒ <code>[Row](#ERMrest.Row)</code>
 
 **Kind**: instance method of <code>[Row](#ERMrest.Row)</code>
+
 **Returns**: <code>Object</code>
 
 | Param | Type | Description |
@@ -736,6 +737,7 @@ The row returned from the ith result in the Rows.data.
 <a name="ERMrest.Row+names"></a>
 #### row.names() : <code>Array</code>
 **Kind**: instance property of <code>[Row](#ERMrest.Row)</code>
+
 **Returns**: <code>Array</code>
 
 <a name="ERMrest.Columns"></a>
