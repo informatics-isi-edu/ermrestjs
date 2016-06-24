@@ -59,10 +59,10 @@ to use for ERMrest JavaScript agents.
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(table)](#new_ERMrest.Table.Entity_new)
-                * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
-                * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
-                * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
-                * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
+                * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
+                * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+                * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+                * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
                 * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
                 * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
                 * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
@@ -95,24 +95,24 @@ to use for ERMrest JavaScript agents.
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
-        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
-        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>Array</code>
+        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
+        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
-        * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
+        * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
         * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
         * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
+        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
     * [.Annotation](#ERMrest.Annotation)
         * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
         * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
         * [.content](#ERMrest.Annotation+content) : <code>String</code>
     * [.Keys](#ERMrest.Keys)
         * [new Keys()](#new_ERMrest.Keys_new)
-        * [.all()](#ERMrest.Keys+all) ⇒ <code>Array</code>
+        * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
         * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
-        * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>Array</code>
+        * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
         * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
     * [.Key](#ERMrest.Key)
         * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
@@ -127,13 +127,13 @@ to use for ERMrest JavaScript agents.
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
-        * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>Array</code>
+        * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.ForeignKeys](#ERMrest.ForeignKeys)
-        * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>Array</code>
-        * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
+        * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+        * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
         * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
-        * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
+        * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
         * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
     * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
         * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
@@ -170,8 +170,9 @@ to use for ERMrest JavaScript agents.
             * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
         * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
             * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-            * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+            * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
             * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+        * [.Operators()](#ERMrest.Datapath.Operators)
     * [.Filters](#ERMrest.Filters) : <code>object</code>
         * [.Negation](#ERMrest.Filters.Negation)
             * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
@@ -203,6 +204,8 @@ to use for ERMrest JavaScript agents.
             * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
         * [.InternalServerError](#ERMrest.Errors.InternalServerError)
             * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
         * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
             * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
         * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -222,6 +225,8 @@ to use for ERMrest JavaScript agents.
             * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
         * [.InternalServerError](#ERMrest.Errors.InternalServerError)
             * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
         * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
             * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
         * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -280,8 +285,12 @@ Constructor for the Catalogs.
 **Returns**: <code>Array</code> - Returns an array of names of catalogs.  
 <a name="ERMrest.Catalogs+get"></a>
 #### catalogs.get(id) ⇒ <code>Promise</code>
+Get a catalog by id. This call does catalog introspection.
+
 **Kind**: instance method of <code>[Catalogs](#ERMrest.Catalogs)</code>  
-**Returns**: <code>Promise</code> - Promise with the catalog object  
+**Returns**: <code>Promise</code> - a promise that returns the catalog  if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [NotFoundError](#ERMrest.Errors.NotFoundError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -338,15 +347,21 @@ Constructor for the Schemas.
 <a name="ERMrest.Schemas+all"></a>
 #### schemas.all() ⇒ <code>Array</code>
 **Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
-**Returns**: <code>Array</code> - Array of all schemas  
+**Returns**: <code>Array</code> - Array of all schemas in the catalog  
 <a name="ERMrest.Schemas+names"></a>
 #### schemas.names() ⇒ <code>Array</code>
 **Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
 **Returns**: <code>Array</code> - Array of schema names  
 <a name="ERMrest.Schemas+get"></a>
 #### schemas.get(name) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+get schema by schema name
+
 **Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
 **Returns**: <code>[Schema](#ERMrest.Schema)</code> - schema object  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> schema not found
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -424,8 +439,14 @@ Constructor for the Tables.
 **Returns**: <code>Array</code> - Array of table names  
 <a name="ERMrest.Tables+get"></a>
 #### tables.get(name) ⇒ <code>[Table](#ERMrest.Table)</code>
+get table by table name
+
 **Kind**: instance method of <code>[Tables](#ERMrest.Tables)</code>  
 **Returns**: <code>[Table](#ERMrest.Table)</code> - table  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> table not found
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -450,10 +471,10 @@ Constructor for the Tables.
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(table)](#new_ERMrest.Table.Entity_new)
-            * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
-            * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
-            * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
-            * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
+            * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
+            * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+            * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+            * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
             * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
             * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
             * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
@@ -503,10 +524,10 @@ Preferred display name for user presentation only.
 
 * [.Entity](#ERMrest.Table.Entity)
     * [new Entity(table)](#new_ERMrest.Table.Entity_new)
-    * [.count(filter)](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
-    * [.get(filter, limit, columns, sortby)](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
-    * [.getBefore(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
-    * [.getAfter(filter, limit, columns, sortby, row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
+    * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
+    * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+    * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+    * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
     * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
     * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
     * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
@@ -521,57 +542,69 @@ Constructor for Entity. This is a container in Table
 | table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Table.Entity+count"></a>
-##### entity.count(filter) ⇒ <code>Promise</code>
+##### entity.count([filter]) ⇒ <code>Promise</code>
 get the number of rows
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+**Returns**: <code>Promise</code> - promise returning number of count if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| Param | Type |
+| --- | --- |
+| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+get"></a>
-##### entity.get(filter, limit, columns, sortby) ⇒ <code>Promise</code>
+##### entity.get([filter], [limit], [columns], [sortby]) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
 
 In order to use before & after on a rows, limit must be speficied,
 output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
-| limit | <code>Number</code> | Optional. Number of rows or null |
-| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
-| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |  |
+| [limit] | <code>Number</code> | Number of rows |
+| [columns] | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> &#124; <code>Array.&lt;string&gt;</code> | Array of column names or Column objects output |
+| [sortby] | <code>Array.&lt;Object&gt;</code> | An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Table.Entity+getBefore"></a>
-##### entity.getBefore(filter, limit, columns, sortby, row) ⇒ <code>Promise</code>
+##### entity.getBefore(filter, limit, [columns], [sortby], row) ⇒ <code>Promise</code>
 get a page of rows before a specific row
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> &#124; <code>null</code> | null if not being used |
 | limit | <code>Number</code> | Required. Number of rows |
-| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
-| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| [columns] | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> &#124; <code>Array.&lt;String&gt;</code> | Array of column names or Column objects output |
+| [sortby] | <code>Array.&lt;Object&gt;</code> | ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc' |
 | row | <code>Object</code> | json row data used to getBefore |
 
 <a name="ERMrest.Table.Entity+getAfter"></a>
-##### entity.getAfter(filter, limit, columns, sortby, row) ⇒ <code>Promise</code>
+##### entity.getAfter(filter, limit, [columns], [sortby], row) ⇒ <code>Promise</code>
 get a page of rows after a specific row
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
+**Returns**: <code>Promise</code> - promise returning rowset if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> &#124; <code>null</code> | null is not being used |
 | limit | <code>Number</code> | Required. Number of rows |
-| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
-| sortby | <code>Array</code> | Option. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| [columns] | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> &#124; <code>Array.&lt;String&gt;</code> | Array of column names or Column objects output |
+| [sortby] | <code>Array.&lt;Object&gt;</code> | ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc' |
 | row | <code>Object</code> | json row data used to getAfter |
 
 <a name="ERMrest.Table.Entity+delete"></a>
@@ -579,16 +612,20 @@ get a page of rows after a specific row
 Delete rows from table based on the filter
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise  
+**Returns**: <code>Promise</code> - Promise that returns the json row data deleted if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| filter | <code>Object</code> | Negation, Conjunction, Disjunction, UnaryPredicate, or BinaryPredicate |
+| Param | Type |
+| --- | --- |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+put"></a>
 ##### entity.put(rows) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise
+**Returns**: <code>Promise</code> - Promise that returns the rows updated if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected
 Update rows in the table  
 
 | Param | Type | Description |
@@ -600,12 +637,14 @@ Update rows in the table
 Create new entities
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
-**Returns**: <code>Promise</code> - Promise  
+**Returns**: <code>Promise</code> - Promise that returns the rows created if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [BadRequestError](#ERMrest.Errors.BadRequestError), [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | rows | <code>Object</code> | Array of jSON representation of rows |
-| defaults | <code>Array</code> | Array of string column names to be defaults |
+| defaults | <code>Array.&lt;String&gt;</code> | Array of string column names to be defaults |
 
 <a name="ERMrest.Rows"></a>
 ### ERMrest.Rows
@@ -624,12 +663,12 @@ Create new entities
 
 | Param | Type | Description |
 | --- | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | Required. |
-| jsonRows | <code>Object</code> | Required. |
-| filter | <code>Object</code> | Optional. Negation, Conjunction, Disjunction, UnaryPredicate, BinaryPredicate or null |
-| limit | <code>Number</code> | Required. Number of rows |
-| columns | <code>Array</code> | Optional. Array of column names or Column objects output |
-| sortby | <code>Array</code> | Optional. An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
+| table | <code>[Table](#ERMrest.Table)</code> |  |
+| jsonRows | <code>Object</code> |  |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> &#124; <code>null</code> | null if not being used |
+| limit | <code>Number</code> | Number of rows |
+| columns | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> &#124; <code>Array.&lt;String&gt;</code> | Array of column names or Column objects output |
+| [sortby] | <code>Array.&lt;Object&gt;</code> | An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Rows+data"></a>
 #### rows.data : <code>Array</code>
@@ -741,8 +780,8 @@ Constructor for Columns.
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
-    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>Array</code>
-    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>Array</code>
+    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
+    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
@@ -784,13 +823,13 @@ Preferred display name for user presentation only.
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+memberOfKeys"></a>
-#### column.memberOfKeys : <code>Array</code>
-Member of Keys
+#### column.memberOfKeys : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
+keys that this column is a member of
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+memberOfForeignKeys"></a>
-#### column.memberOfForeignKeys : <code>Array</code>
-Member of ForeignKeys
+#### column.memberOfForeignKeys : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+foreign key that this column is a member of
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Annotations"></a>
@@ -799,20 +838,20 @@ Member of ForeignKeys
 
 * [.Annotations](#ERMrest.Annotations)
     * [new Annotations()](#new_ERMrest.Annotations_new)
-    * [.all()](#ERMrest.Annotations+all) ⇒ <code>Array</code>
+    * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
     * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
     * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>Boolean</code>
+    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Annotations_new"></a>
 #### new Annotations()
 Constructor for Annotations.
 
 <a name="ERMrest.Annotations+all"></a>
-#### annotations.all() ⇒ <code>Array</code>
+#### annotations.all() ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
-**Returns**: <code>Array</code> - list of all annotations  
+**Returns**: <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code> - list of all annotations  
 <a name="ERMrest.Annotations+length"></a>
 #### annotations.length() ⇒ <code>Number</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
@@ -823,12 +862,23 @@ Constructor for Annotations.
 **Returns**: <code>Array</code> - array of annotation names  
 <a name="ERMrest.Annotations+get"></a>
 #### annotations.get(uri) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
+get annotation by URI
+
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
 **Returns**: <code>[Annotation](#ERMrest.Annotation)</code> - annotation  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> annotation not found
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>String</code> | uri of annotation |
+
 <a name="ERMrest.Annotations+contains"></a>
-#### annotations.contains(uri) ⇒ <code>Boolean</code>
+#### annotations.contains(uri) ⇒ <code>boolean</code>
 **Kind**: instance method of <code>[Annotations](#ERMrest.Annotations)</code>  
-**Returns**: <code>Boolean</code> - boolean  
+**Returns**: <code>boolean</code> - whether or not annotation exists  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -870,9 +920,9 @@ json content
 
 * [.Keys](#ERMrest.Keys)
     * [new Keys()](#new_ERMrest.Keys_new)
-    * [.all()](#ERMrest.Keys+all) ⇒ <code>Array</code>
+    * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
     * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
-    * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>Array</code>
+    * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
     * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
 
 <a name="new_ERMrest.Keys_new"></a>
@@ -880,21 +930,27 @@ json content
 Constructor for Keys.
 
 <a name="ERMrest.Keys+all"></a>
-#### keys.all() ⇒ <code>Array</code>
+#### keys.all() ⇒ <code>Array.&lt;Key&gt;</code>
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
-**Returns**: <code>Array</code> - a list of all Keys  
+**Returns**: <code>Array.&lt;Key&gt;</code> - a list of all Keys  
 <a name="ERMrest.Keys+length"></a>
 #### keys.length() ⇒ <code>Number</code>
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
 **Returns**: <code>Number</code> - number of keys  
 <a name="ERMrest.Keys+colsets"></a>
-#### keys.colsets() ⇒ <code>Array</code>
+#### keys.colsets() ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
-**Returns**: <code>Array</code> - array of colsets  
+**Returns**: <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code> - array of colsets  
 <a name="ERMrest.Keys+get"></a>
 #### keys.get(colset) ⇒ <code>[Key](#ERMrest.Key)</code>
+get the key by the column set
+
 **Kind**: instance method of <code>[Keys](#ERMrest.Keys)</code>  
 **Returns**: <code>[Key](#ERMrest.Key)</code> - key of the colset  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> Key not found
+
 
 | Param | Type |
 | --- | --- |
@@ -969,7 +1025,7 @@ Constructor for ColSet, a set of Column objects.
 * [.Mapping](#ERMrest.Mapping)
     * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
-    * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>Array</code>
+    * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Mapping_new"></a>
@@ -977,21 +1033,27 @@ Constructor for ColSet, a set of Column objects.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| from | <code>Array</code> | array of from Columns |
-| to | <code>Array</code> | array of to Columns |
+| from | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of from Columns |
+| to | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of to Columns |
 
 <a name="ERMrest.Mapping+length"></a>
 #### mapping.length() ⇒ <code>Number</code>
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
 **Returns**: <code>Number</code> - number of mapping columns  
 <a name="ERMrest.Mapping+domain"></a>
-#### mapping.domain() ⇒ <code>Array</code>
+#### mapping.domain() ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
-**Returns**: <code>Array</code> - the from columns  
+**Returns**: <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> - the from columns  
 <a name="ERMrest.Mapping+get"></a>
 #### mapping.get(fromCol) ⇒ <code>[Column](#ERMrest.Column)</code>
+get the mapping column given the from column
+
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
 **Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> no mapping column found
+
 
 | Param | Type |
 | --- | --- |
@@ -1002,32 +1064,38 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.ForeignKeys](#ERMrest.ForeignKeys)
-    * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>Array</code>
-    * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>Array</code>
+    * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+    * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
     * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
-    * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>Array</code>
+    * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
     * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 
 <a name="ERMrest.ForeignKeys+all"></a>
-#### foreignKeys.all() ⇒ <code>Array</code>
+#### foreignKeys.all() ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>Array</code> - an array of all foreign key references  
+**Returns**: <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code> - an array of all foreign key references  
 <a name="ERMrest.ForeignKeys+colsets"></a>
-#### foreignKeys.colsets() ⇒ <code>Array</code>
+#### foreignKeys.colsets() ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>Array</code> - an array of the foreign keys' colsets  
+**Returns**: <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code> - an array of the foreign keys' colsets  
 <a name="ERMrest.ForeignKeys+length"></a>
 #### foreignKeys.length() ⇒ <code>Number</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
 **Returns**: <code>Number</code> - number of foreign keys  
 <a name="ERMrest.ForeignKeys+mappings"></a>
-#### foreignKeys.mappings() ⇒ <code>Array</code>
+#### foreignKeys.mappings() ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>Array</code> - mappings  
+**Returns**: <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code> - mappings  
 <a name="ERMrest.ForeignKeys+get"></a>
 #### foreignKeys.get(colset) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+get the foreign key of the given column set
+
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
 **Returns**: <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code> - foreign key reference of the colset  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> foreign key not found
+
 
 | Param | Type |
 | --- | --- |
@@ -1081,7 +1149,9 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
-**Returns**: <code>Promise</code> - promise with rows of the referenced key's table  
+**Returns**: <code>Promise</code> - promise that returns a rowset of the referenced key's table if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
@@ -1132,8 +1202,9 @@ Indicates if the foreign key is simple (not composite)
         * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
     * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
         * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+        * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
         * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+    * [.Operators()](#ERMrest.Datapath.Operators)
 
 <a name="ERMrest.Datapath.DataPath"></a>
 #### Datapath.DataPath
@@ -1175,16 +1246,21 @@ entity container
 <a name="ERMrest.Datapath.DataPath+entity.get"></a>
 ###### entity.get() ⇒ <code>Promise</code>
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
-**Returns**: <code>Promise</code> - promise with rows data  
+**Returns**: <code>Promise</code> - promise that returns a row data if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 <a name="ERMrest.Datapath.DataPath+entity.delete"></a>
 ###### entity.delete(filter) ⇒ <code>Promise</code>
 delete entities
 
 **Kind**: static method of <code>[entity](#ERMrest.Datapath.DataPath+entity)</code>  
+**Returns**: <code>Promise</code> - promise that returns deleted entities if resolved or
+    [TimedOutError](#ERMrest.Errors.TimedOutError), [InternalServerError](#ERMrest.Errors.InternalServerError), [ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+    [ConflictError](#ERMrest.Errors.ConflictError), [ForbiddenError](#ERMrest.Errors.ForbiddenError) or [UnauthorizedError](#ERMrest.Errors.UnauthorizedError) if rejected  
 
 | Param | Type |
 | --- | --- |
-| filter | <code>Object</code> |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 ##### dataPath.filter(filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
@@ -1195,10 +1271,12 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| filter | <code>Object</code> |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
 ##### dataPath.extend(table, context, link) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+extend the Datapath with table
+
 **Kind**: instance method of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
 
 | Param | Type |
@@ -1279,7 +1357,7 @@ this datapath is not modified
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
     * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array</code>
+    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
     * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
 
 <a name="ERMrest.Datapath.Columns+length"></a>
@@ -1287,18 +1365,27 @@ this datapath is not modified
 **Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
 **Returns**: <code>Number</code> - number of path columns  
 <a name="ERMrest.Datapath.Columns+names"></a>
-##### columns.names() ⇒ <code>Array</code>
+##### columns.names() ⇒ <code>Array.&lt;String&gt;</code>
 **Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
-**Returns**: <code>Array</code> - a list of pathcolumn names  
+**Returns**: <code>Array.&lt;String&gt;</code> - a list of pathcolumn names  
 <a name="ERMrest.Datapath.Columns+get"></a>
 ##### columns.get(colName) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+get PathColumn object by column name
+
 **Kind**: instance method of <code>[Columns](#ERMrest.Datapath.Columns)</code>  
 **Returns**: <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code> - returns the PathColumn  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.Errors.NotFoundError)</code> column not found
+
 
 | Param | Type | Description |
 | --- | --- | --- |
 | colName | <code>string</code> | column name |
 
+<a name="ERMrest.Datapath.Operators"></a>
+#### Datapath.Operators()
+**Kind**: static method of <code>[Datapath](#ERMrest.Datapath)</code>  
 <a name="ERMrest.Filters"></a>
 ### ERMrest.Filters : <code>object</code>
 **Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
@@ -1387,6 +1474,10 @@ this datapath is not modified
 
 <a name="new_ERMrest.Filters.UnaryPredicate_new"></a>
 ##### new UnaryPredicate(column, operator)
+**Throws**:
+
+- <code>[InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)</code> invalid filter operator
+
 
 | Param | Type |
 | --- | --- |
@@ -1407,6 +1498,10 @@ this datapath is not modified
 
 <a name="new_ERMrest.Filters.BinaryPredicate_new"></a>
 ##### new BinaryPredicate(column, operator, rvalue)
+**Throws**:
+
+- <code>[InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)</code> invalid filter operator
+
 
 | Param | Type |
 | --- | --- |
@@ -1437,6 +1532,8 @@ this datapath is not modified
         * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
     * [.InternalServerError](#ERMrest.Errors.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
     * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -1513,6 +1610,17 @@ this datapath is not modified
 **Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
 <a name="new_ERMrest.Errors.InternalServerError_new"></a>
 ##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ServiceUnavailableError"></a>
+#### Errors.ServiceUnavailableError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
+##### new ServiceUnavailableError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1562,6 +1670,8 @@ An invalid input
         * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
     * [.InternalServerError](#ERMrest.Errors.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
+    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
+        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
     * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
@@ -1638,6 +1748,17 @@ An invalid input
 **Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
 <a name="new_ERMrest.Errors.InternalServerError_new"></a>
 ##### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.Errors.ServiceUnavailableError"></a>
+#### Errors.ServiceUnavailableError
+**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
+<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
+##### new ServiceUnavailableError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1687,6 +1808,10 @@ URI should be to the ERMrest _service_. For example,
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>[Server](#ERMrest.Server)</code> - Returns a server instance.  
+**Throws**:
+
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> URI is missing
+
 
 | Param | Type | Description |
 | --- | --- | --- |

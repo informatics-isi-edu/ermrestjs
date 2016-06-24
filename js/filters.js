@@ -123,6 +123,7 @@ var ERMrest = (function(module) {
      * @memberof ERMrest.Filters
      * @param {ERMrest.Column} column
      * @param {ERMrest.Filters.OPERATOR} operator
+     * @throws {ERMrest.Errors.InvalidFilterOperatorError} invalid filter operator
      * @constructor
      */
     function UnaryPredicate (column, operator) {
@@ -155,6 +156,7 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Column} column
      * @param {ERMrest.Filters.OPERATOR} operator
      * @param {String | Number} rvalue
+     * @throws {ERMrest.Errors.InvalidFilterOperatorError} invalid filter operator
      * @constructor
      */
     function BinaryPredicate (column, operator, rvalue) {
