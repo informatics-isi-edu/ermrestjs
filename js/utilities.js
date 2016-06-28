@@ -21,12 +21,23 @@ var ERMrest = (function(module) {
      * @function
      * @param {String} str string to be converted.
      * @desc
-     * converts a string to title case
+     * Converts a string to title case (separators are space, hyphen, and underscore)
      */
     module._toTitleCase = function (str) {
-        return str.replace(/\w\S*/g, function(txt){
-            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        return str.replace(/([^\x00-\x7F]|([^\W_]))[^\-\s_]*/g, function(txt){
+            return txt.charAt(0).toLocaleUpperCase() + txt.substr(1).toLocaleLowerCase();
         });
+    };
+
+    /**
+    * @function
+    * @param {String} str string to be manipulated.
+    * @private
+    * @desc
+    * Replaces all underlines with a single space.
+    */
+    module._underlineToSpace = function (str) {
+      return str.replace(/_/g, ' ');
     };
 
     /**
@@ -48,21 +59,50 @@ var ERMrest = (function(module) {
     /**
      * @function
      * @param {Object} element a model element (schema, table, or column)
-     * @return {String}
+     * @param {Object} parentElement the upper element (schema->null, table->schema, column->table)
      * @desc This function determines the display name for the schema, table, or
      * column elements of a model.
      */
-    module._determineDisplayName = function (element) {
+    module._determineDisplayName = function (element, parentElement) {
         var displayname = element.name;
+        var hasDisplayName = false;
         try {
             var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
-            if (display_annotation && display_annotation.content &&
-                display_annotation.content.name) {
-                displayname = display_annotation.content.name;
+            if (display_annotation && display_annotation.content) {
+                if("name" in display_annotation.content){
+                    //it has a specified display name
+                    displayname = display_annotation.content.name;
+                    hasDisplayName = true;
+                }
+                if(display_annotation.content.name_style){
+                    //get the name styles
+                    element._nameStyle = display_annotation.content.name_style;
+                }
             }
         } catch (exception) {
             // no display annotation, don't do anything
         }
+
+        // if undefined, get name styles from the parent element
+        if(parentElement){
+            if(!("underline_space" in element._nameStyle)){
+               element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
+            }
+            if(!("title_case" in element._nameStyle)){
+                element._nameStyle.title_case = parentElement._nameStyle.title_case;
+            }
+        }
+
+        //apply the heuristic functions (name styles)
+        if(!hasDisplayName && element._nameStyle){
+            if(element._nameStyle.underline_space){
+                displayname = module._underlineToSpace(displayname);
+            }
+            if(element._nameStyle.title_case){
+                displayname = module._toTitleCase(displayname);
+            }
+        }
+
         return displayname;
     };
 

@@ -338,16 +338,6 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {ERMrest.Tables}
-         */
-        this.tables = new Tables();
-        for (var key in jsonSchema.tables) {
-            var jsonTable = jsonSchema.tables[key];
-            this.tables._push(new Table(this, jsonTable));
-        }
-
-        /**
-         *
          * @type {boolean}
          */
         this.ignore = false;
@@ -369,11 +359,23 @@ var ERMrest = (function (module) {
             }
         }
 
+        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+
         /**
          * @type {String}
          * @desc Preferred display name for user presentation only.
          */
-        this.displayname = module._determineDisplayName(this);
+        this.displayname = module._determineDisplayName(this, null);
+
+        /**
+         *
+         * @type {ERMrest.Tables}
+         */
+        this.tables = new Tables();
+        for (var key in jsonSchema.tables) {
+            var jsonTable = jsonSchema.tables[key];
+            this.tables._push(new Table(this, jsonTable));
+        }
 
     }
 
@@ -486,6 +488,37 @@ var ERMrest = (function (module) {
 
         /**
          *
+         * @type {boolean}
+         */
+        this.ignore = false;
+
+        /**
+         *
+         * @type {ERMrest.Annotations}
+         */
+        this.annotations = new Annotations();
+        for (var uri in jsonTable.annotations) {
+            var jsonAnnotation = jsonTable.annotations[uri];
+            this.annotations._push(new Annotation("table", uri, jsonAnnotation));
+
+            if (uri === "tag:misd.isi.edu,2015:hidden") {
+                this.ignore = true;
+            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+                (jsonAnnotation === null || jsonAnnotation === [])) {
+                this.ignore = true;
+            }
+        }
+
+        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+
+        /**
+         * @type {String}
+         * @desc Preferred display name for user presentation only.
+         */
+        this.displayname = module._determineDisplayName(this, this.schema);
+
+        /**
+         *
          * @type {ERMrest.Columns}
          */
         this.columns = new Columns();
@@ -510,34 +543,6 @@ var ERMrest = (function (module) {
          */
         this.foreignKeys = new ForeignKeys();
 
-        /**
-         *
-         * @type {boolean}
-         */
-        this.ignore = false;
-
-        /**
-         *
-         * @type {ERMrest.Annotations}
-         */
-        this.annotations = new Annotations();
-        for (var uri in jsonTable.annotations) {
-            var jsonAnnotation = jsonTable.annotations[uri];
-            this.annotations._push(new Annotation("table", uri, jsonAnnotation));
-
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
-                this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
-                this.ignore = true;
-            }
-        }
-
-        /**
-         * @type {String}
-         * @desc Preferred display name for user presentation only.
-         */
-        this.displayname = module._determineDisplayName(this);
     }
 
     Table.prototype = {
@@ -1101,11 +1106,13 @@ var ERMrest = (function (module) {
             }
         }
 
+        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+
         /**
          * @type {String}
          * @desc Preferred display name for user presentation only.
          */
-        this.displayname = module._determineDisplayName(this);
+        this.displayname = module._determineDisplayName(this, this.table);
 
         /**
          * Member of Keys
