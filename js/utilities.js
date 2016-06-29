@@ -154,7 +154,7 @@ var ERMrest = (function(module) {
                 delay = 2^retryCount * 100; // exponential backoff
                 _sleep(delay); // not using setTimeout because setTimeout is asychronous
                 return _retryRequest(http, q, method, url, data, deferred, retryCount, delay);
-            } else if (self.method === 'delete' && response.status === 409){
+            } else if (self.method === 'delete' && response.status === 404){
                 // SPECIAL CASE:
                 // if method is delete and error is 409 not found
                 // return a success promise
