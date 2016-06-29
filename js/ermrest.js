@@ -709,12 +709,12 @@ var ERMrest = (function (module) {
          * @param {Number} [limit] Number of rows
          * @param {ERMrest.Column[] | string[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
-         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.Rows} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
-         * In order to use before & after on a rowset, limit must be speficied,
+         * In order to use before & after on a Rows, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          */
         get: function(filter, limit, columns, sortby) {
@@ -737,12 +737,12 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getBefore
-         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.Rows} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
-         * In order to use before & after on a rowset, limit must be speficied,
+         * In order to use before & after on a Rows, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          *
          */
@@ -766,7 +766,7 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getAfter
-         * @returns {Promise} promise returning {@link ERMrest.RowSet} if resolved or
+         * @returns {Promise} promise returning {@link ERMrest.Rows} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
          * @desc
@@ -909,10 +909,10 @@ var ERMrest = (function (module) {
         },
 
         /**
-         * @returns {Promise} promise that returns the rows if resolved or
+         * @returns {Promise} promise that returns next {@link ERMrest.Rows} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
-         * @desc get the rows of the next page
+         * @desc get the {@link ERMrest.Rows} of the next page
          *
          */
         after: function() {
@@ -922,10 +922,10 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @returns {Promise} promise that returns a {@link ERMrest.RowSet} if resolved or
+         * @returns {Promise} promise that returns a {@link ERMrest.Rows} if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
-         * @desc get the {@link ERMrest.RowSet} of the previous page
+         * @desc get the {@link ERMrest.Rows} of the previous page
          *
          */
         before: function() {
@@ -1653,7 +1653,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {Number} limit
-         * @returns {Promise} promise that returns a {@link RowSet} of the referenced key's table if resolved or
+         * @returns {Promise} promise that returns a {@link ERMrest.Rows} of the referenced key's table if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
          */
