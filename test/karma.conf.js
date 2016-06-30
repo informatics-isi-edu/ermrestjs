@@ -17,6 +17,8 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
+            'node_modules/requirejs/require.js',
+            'node_modules/karma-requirejs/lib/adapter.js',  
             'bower_components/angular/angular.js',
             'bower_components/angular-mocks/angular-mocks.js',
             //jquery, jasmine-jquery are here only for purpose of including mock json data
@@ -25,7 +27,7 @@ module.exports = function (config) {
             'bower_components/jquery/dist/jquery.min.js',
             'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
             'js/*.js',
-            'test/*.js',
+            'test/*.spec.js',
             // fixtures to include mock data
             {pattern: 'test/mock_data/*.json', watched: true, served: true, included: false}
         ],

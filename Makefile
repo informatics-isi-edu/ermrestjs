@@ -25,7 +25,8 @@ JS_SRC=$(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
 	   $(ERR)/networkerrors.js \
-	   $(ERR)/validationerrors.js
+	   $(ERR)/validationerrors.js \
+	   $(JS)/node.js
 
 # Angular-related API files
 NG_SRC=$(JS)/ngermrest.js
