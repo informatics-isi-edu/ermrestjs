@@ -1,10 +1,6 @@
-/**
- * To test the functionality of Client object in js/ermrest.js
- * Created by shuai on 3/1/16.
- */
 
 var url = "https://dev.isrd.isi.edu/ermrest",
-    authCookie = 'ermrest=C6KFIQn2JS37CGovofWnjKfu;';
+    authCookie = 'ermrest_cookie';
 
 var ermrestUtils = require("ermrest-data-utils");
 
