@@ -359,7 +359,7 @@ var ERMrest = (function (module) {
             }
         }
 
-        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+        this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
          * @type {String}
@@ -509,7 +509,7 @@ var ERMrest = (function (module) {
             }
         }
 
-        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+        this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
          * @type {String}
@@ -1106,7 +1106,7 @@ var ERMrest = (function (module) {
             }
         }
 
-        this._nameStyle = {}; // Used in the displayname to find out the name styles.
+        this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
          * @type {String}

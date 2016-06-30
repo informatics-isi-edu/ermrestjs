@@ -34,7 +34,7 @@ var ERMrest = (function(module) {
     * @param {String} str string to be manipulated.
     * @private
     * @desc
-    * Replaces all underlines with a single space.
+    * Replaces underline with space.
     */
     module._underlineToSpace = function (str) {
       return str.replace(/_/g, ' ');
@@ -69,13 +69,15 @@ var ERMrest = (function(module) {
         try {
             var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
             if (display_annotation && display_annotation.content) {
-                if("name" in display_annotation.content){
-                    //it has a specified display name
+
+                //get the specified display name
+                if(display_annotation.content.name){
                     displayname = display_annotation.content.name;
                     hasDisplayName = true;
                 }
+
+                //get the name styles
                 if(display_annotation.content.name_style){
-                    //get the name styles
                     element._nameStyle = display_annotation.content.name_style;
                 }
             }
@@ -83,7 +85,8 @@ var ERMrest = (function(module) {
             // no display annotation, don't do anything
         }
 
-        // if undefined, get name styles from the parent element
+        // if name styles are undefined, get them from the parent element
+        // Note: underline_space and title_case might be null.
         if(parentElement){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
@@ -93,7 +96,7 @@ var ERMrest = (function(module) {
             }
         }
 
-        //apply the heuristic functions (name styles)
+        // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(!hasDisplayName && element._nameStyle){
             if(element._nameStyle.underline_space){
                 displayname = module._underlineToSpace(displayname);
