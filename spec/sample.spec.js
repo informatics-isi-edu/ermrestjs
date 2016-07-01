@@ -1,5 +1,5 @@
 
-var url = "https://dev.isrd.isi.edu/ermrest", cookie = "ermrest_cookie";
+var url = "https://dev.isrd.isi.edu/ermrest", cookie = "ermrest=C6KFIQn2JS37CGovofWnjKfu;";
 
 var includes = require(__dirname + '/utils/ermrest-init.js').init({
     url: url,
@@ -15,8 +15,8 @@ describe('In ERMrest,', function () {
     
     beforeAll(function (done) {
         ermrestUtils.importData({
-            configuration: require('./configuration/sample.spec.conf.json'), 
-            url: url + "/",
+            setup: require('./configuration/sample.spec.conf.json'), 
+            url: url ,
             authCookie : cookie
         }).then(function(data) {
             catalog_id = data.catalogId;
@@ -45,24 +45,23 @@ describe('In ERMrest,', function () {
         });
     })
 
-    it('Should have schema name as ' + schemaName, function (done) {
+    it('Should have schema name', function (done) {
         console.log("in test");
         expect(schema).toBeDefined();
         expect(schema.name).toBe(schemaName);
         done();
     });
 
-
-    it('should have catalog id as ' + catalog_id, function (done) {
+    it('should have catalog id', function (done) {
         expect(catalog.id).toBe(catalog_id);
         done();
     });
 
     afterAll(function(done) {
         ermrestUtils.tear({
-            dataSetup: require('./configuration/sample.spec.conf.json'),
+            setup: require('./configuration/sample.spec.conf.json'),
             catalogId: catalog_id,
-            url:  url + "/",
+            url:  url ,
             authCookie : cookie
         }).then(function(data) {
             done();
