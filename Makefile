@@ -136,9 +136,10 @@ distclean: clean
 test: $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(SOURCE) $(SPECS) $(BIN) $(BOWER) test/*.js
-	$(BIN)/karma start test/karma.conf.js
+$(TEST): $(pkg)
+	node spec/jasmine-runner.js
 	@touch $(TEST)
+
 
 # Rules for help/usage
 .PHONY: help usage
