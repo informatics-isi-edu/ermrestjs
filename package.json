@@ -22,7 +22,8 @@
     "library"
   ],
   "dependencies" : {
-    "request-q": "x"
+    "request-q": "x",
+    "q": "x"
   },
   "devDependencies": {
     "bower": "x",
