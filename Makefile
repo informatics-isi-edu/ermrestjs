@@ -133,10 +133,10 @@ distclean: clean
 	rm -rf $(BOWER)
 
 .PHONY: test
-test: $(TEST)
+test: $(PKG) $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(pkg)
+$(TEST):
 	node spec/jasmine-runner.js
 	@touch $(TEST)
 
