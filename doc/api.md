@@ -421,6 +421,7 @@ Constructor for the Catalog.
 
 #### schema.name
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
+
 <a name="ERMrest.Schema+ignore"></a>
 
 #### schema.ignore : <code>boolean</code>
@@ -538,6 +539,7 @@ Constructor for Table.
 
 #### table.entity : <code>[Entity](#ERMrest.Table.Entity)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+
 <a name="ERMrest.Table+ignore"></a>
 
 #### table.ignore : <code>boolean</code>
@@ -715,7 +717,14 @@ Create new entities
     * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Rows_new"></a>
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> Changed test config in makefile
+>>>>>>> Changed test config in makefile
 #### new Rows(table, jsonRows, filter, limit, columns, [sortby])
 
 | Param | Type | Description |
@@ -728,7 +737,14 @@ Create new entities
 | [sortby] | <code>Array.&lt;Object&gt;</code> | An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Rows+data"></a>
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> Changed test config in makefile
+>>>>>>> Changed test config in makefile
 #### rows.data : <code>Array</code>
 The set of rows returns from the server. It is an Array of
 Objects that has keys and values based on the query that produced
@@ -740,7 +756,14 @@ the Rows.
 #### rows.length() ⇒ <code>number</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+get"></a>
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> Changed test config in makefile
+>>>>>>> Changed test config in makefile
 #### rows.get() ⇒ <code>Row</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+after"></a>
@@ -773,7 +796,14 @@ get the rowset of the previous page
     * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Row_new"></a>
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> Changed test config in makefile
+>>>>>>> Changed test config in makefile
 #### new Row(jsonRow)
 
 | Param | Type | Description |
@@ -787,6 +817,17 @@ The row returned from the ith result in the Rows.data.
 
 **Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
 <a name="ERMrest.Row+names"></a>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+#### row.names() ⇒ <code>Array</code>
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+**Returns**: <code>Array</code> - Array of column names  
+<a name="ERMrest.Row+get"></a>
+#### row.get(name) ⇒ <code>Object</code>
+**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+=======
+>>>>>>> Changed test config in makefile
 
 #### row.names() ⇒ <code>Array</code>
 **Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
@@ -795,6 +836,7 @@ The row returned from the ith result in the Rows.data.
 
 #### row.get(name) ⇒ <code>Object</code>
 **Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
+>>>>>>> Changed test config in makefile
 **Returns**: <code>Object</code> - column value  
 
 | Param | Type | Description |
