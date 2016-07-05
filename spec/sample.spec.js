@@ -1,10 +1,5 @@
 
-var url = "https://dev.isrd.isi.edu/ermrest", cookie = "ermrest=C6KFIQn2JS37CGovofWnjKfu;";
-
-var includes = require(__dirname + '/utils/ermrest-init.js').init({
-    url: url,
-    authCookie : cookie
-});
+var includes = require(__dirname + '/utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermRest = includes.ermRest;
@@ -16,8 +11,8 @@ describe('In ERMrest,', function () {
     beforeAll(function (done) {
         ermrestUtils.importData({
             setup: require('./configuration/sample.spec.conf.json'), 
-            url: url ,
-            authCookie : cookie
+            url: includes.url ,
+            authCookie : includes.authCookie
         }).then(function(data) {
             catalog_id = data.catalogId;
             schemaName = data.schema.name;
@@ -26,6 +21,7 @@ describe('In ERMrest,', function () {
         }, function(err) {
             console.log("Unable to import data");
             console.dir(err);
+            done.fail();
         });
     });
 
@@ -61,13 +57,14 @@ describe('In ERMrest,', function () {
         ermrestUtils.tear({
             setup: require('./configuration/sample.spec.conf.json'),
             catalogId: catalog_id,
-            url:  url ,
-            authCookie : cookie
+            url:  includes.url ,
+            authCookie : includes.authCookie
         }).then(function(data) {
             done();
         }, function(err) {
             console.log("Unable to import data");
             console.dir(err);
+            done.fail();
         });
     })
 });

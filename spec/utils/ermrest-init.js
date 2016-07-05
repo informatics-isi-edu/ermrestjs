@@ -2,8 +2,8 @@
 exports.init = function (options) {
 	options = options || {};
 
-	var url = options.url || "https://dev.isrd.isi.edu/ermrest",
-	    authCookie = options.ermrest_cookie;
+	var url = options.url || process.env.ERMREST_URL,
+	    authCookie = options.ermrest_cookie || process.env.ERMREST_COOKIE;
 
 	var ermRest = require(process.env.PWD + "/build/ermrest.js");
 
@@ -14,6 +14,8 @@ exports.init = function (options) {
 	return {
 		ermrestUtils: require("ermrest-data-utils"),
 		ermRest: ermRest,
-		server: server
+		server: server,
+		url: url,
+		authCookie: authCookie
 	};
 };
