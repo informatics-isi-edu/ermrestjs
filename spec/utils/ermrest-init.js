@@ -3,7 +3,7 @@ exports.init = function (options) {
 	options = options || {};
 
 	var url = options.url || process.env.ERMREST_URL,
-	    authCookie = options.ermrest_cookie || process.env.ERMREST_COOKIE;
+	    authCookie = options.ermrest_cookie || process.env.AUTH_COOKIE;
 
 	var ermRest = require(process.env.PWD + "/build/ermrest.js");
 
