@@ -23,7 +23,8 @@
   ],
   "dependencies" : {
     "request-q": "x",
-    "q": "x"
+    "q": "x",
+    "ermrest-data-utils": "x"
   },
   "devDependencies": {
     "bower": "x",

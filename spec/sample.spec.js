@@ -42,7 +42,6 @@ describe('In ERMrest,', function () {
     })
 
     it('Should have schema name', function (done) {
-        console.log("in test");
         expect(schema).toBeDefined();
         expect(schema.name).toBe(schemaName);
         done();
