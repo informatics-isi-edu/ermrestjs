@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "license": "Apache-2.0",
   "private": true,
-  "main": "ermrest.js",
+  "main": "build/ermrest.js",
   "scripts": {
     "build": "make build",
     "pretest": "make build",
@@ -21,18 +21,18 @@
     "postgresql",
     "library"
   ],
+  "dependencies" : {
+    "request-q": "x",
+    "q": "x"
+  },
   "devDependencies": {
-    "karma": "x",
-    "karma-chrome-launcher": "x",
-    "karma-firefox-launcher": "x",
-    "karma-jasmine": "x",
-    "jasmine-core": "x",
-    "jasmine-jquery": "x",
     "bower": "x",
+    "ermrest-data-utils": "x",
     "closurecompiler": "x",
-    "jshint": "x",
+    "jasmine": "x",
+    "jasmine-spec-reporter": "^2.5.0",
     "jsdoc": "x",
     "jsdoc-to-markdown": "x",
-    "xmlhttprequest": "x"
+    "jshint": "x"
   }
 }

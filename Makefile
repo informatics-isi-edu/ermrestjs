@@ -26,7 +26,8 @@ JS_SRC=$(JS)/ermrest.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
-	   $(JS)/errors.js
+	   $(JS)/errors.js \
+	   $(JS)/node.js
 
 # Angular-related API files
 NG_SRC=$(JS)/ngermrest.js
@@ -136,11 +137,11 @@ distclean: clean
 	rm -rf $(BOWER)
 
 .PHONY: test
-test: $(TEST)
+test:  $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(SOURCE) $(SPECS) $(BIN) $(BOWER) test/*.js
-	$(BIN)/karma start test/karma.conf.js
+$(TEST): $(PKG)
+	node spec/jasmine-runner.js
 	@touch $(TEST)
 
 # Rule to install the package
