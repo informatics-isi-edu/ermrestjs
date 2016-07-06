@@ -96,30 +96,38 @@ var ERMrest = (function(module) {
         }
     };
 
-    /**
-     *
-     * @param http
-     * @param q
-     * @param method
-     * @param url
-     * @param data
-     * @returns {Promise}
-     * @private
-     */
-    module._makeRequest = function(http, q, method, url, data) {
+    module._makeRequest = {
+        get: function(url) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            return _retryRequest(url, null, deferred, retryCount, delay);
+        },
 
-        // keep the same promise for each request
-        var deferred = q.defer();
-        var retryCount = 0;
-        var delay = 0; // ms
-        return _retryRequest(http, q, method, url, data, deferred, retryCount, delay);
+        put: function(url, data) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            return _retryRequest(url, data, deferred, retryCount, delay);
+        },
 
+        post: function(url, data) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            return _retryRequest(url, data, deferred, retryCount, delay);
+        },
+
+        delete: function(url) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            return _retryRequest(url, null, deferred, retryCount, delay);
+        }
     };
 
     /**
      *
-     * @param http angular $http service
-     * @param q angular $q
      * @param method 'get', 'put', 'post', 'delete'
      * @param url request url
      * @param data request data
@@ -129,7 +137,7 @@ var ERMrest = (function(module) {
      * @private
      * @return {Promise}
      */
-    function _retryRequest (http, q, method, url, data, deferred, retryCount, delay) {
+    function _retryRequest (method, url, data, deferred, retryCount, delay) {
 
         var requestObj = {
             method: method,
@@ -142,7 +150,7 @@ var ERMrest = (function(module) {
         var self = this;
 
         // make http request
-        return http(requestObj).then(function(response) {
+        return module._http(requestObj).then(function(response) {
             // successful
             deferred.resolve(response);
             return deferred.promise;
@@ -153,7 +161,7 @@ var ERMrest = (function(module) {
                 // retry after delay
                 delay = 2^retryCount * 100; // exponential backoff
                 _sleep(delay); // not using setTimeout because setTimeout is asychronous
-                return _retryRequest(http, q, method, url, data, deferred, retryCount, delay);
+                return _retryRequest(method, url, data, deferred, retryCount, delay);
             } else if (self.method === 'delete' && response.status === 404){
                 // SPECIAL CASE:
                 // if method is delete and error is 409 not found

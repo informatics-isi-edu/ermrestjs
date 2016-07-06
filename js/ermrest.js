@@ -222,7 +222,7 @@ var ERMrest = (function (module) {
         _introspect: function () {
             // load all schemas
             var self = this;
-            return module._makeRequest(module._http, module._q, "get", this._uri + "/schema", {}).then(function (response) {
+            return module._makeRequest.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
@@ -695,7 +695,7 @@ var ERMrest = (function (module) {
 
             uri = uri + "/row_count:=cnt(*)";
 
-            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function (response) {
+            return module._makeRequest.get(uri).then(function (response) {
                 return response.data[0].row_count;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -722,7 +722,7 @@ var ERMrest = (function (module) {
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
-            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
+            return module._makeRequest.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -751,7 +751,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
+            return module._makeRequest.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -778,7 +778,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return module._makeRequest(module._http, module._q, "get", uri, {}).then(function(response) {
+            return module._makeRequest.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -798,7 +798,7 @@ var ERMrest = (function (module) {
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return module._makeRequest(module._http, module._q, "delete", uri, {}).then(function (response) {
+            return module._makeRequest.delete(uri).then(function (response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -818,7 +818,7 @@ var ERMrest = (function (module) {
 
             var uri = this._toURI();
 
-            return module._makeRequest(module._http, module._q, "put", uri, rows).then(function (response) {
+            return module._makeRequest.put(uri, rows).then(function (response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -851,7 +851,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return module._makeRequest(module._http, module._q, "post", uri, rows).then(function (response) {
+            return module._makeRequest.post(uri, rows).then(function (response) {
                return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
