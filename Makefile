@@ -54,23 +54,26 @@ LINT=.make-lint
 TEST=.make-test.js
 
 .PHONY: all
-all: $(BUILD) $(DOC)
+all: $(LINT) $(BUILD) $(DOC)
 
 # Build rule
 $(BUILD): $(PKG) $(MIN) $(NGAPI)
 
-# Rule to build the full library
-$(PKG): $(JS_SRC) $(LINT) $(BIN)
+# Rule to build the library (non-minified)
+.PHONY: package
+package: $(PKG) $(NGAPI)
+
+$(PKG): $(JS_SRC)
 	mkdir -p $(BUILD)
 	cat $(JS_SRC) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(JS_SRC) $(LINT) $(BIN)
+$(MIN): $(JS_SRC) $(BIN)
 	mkdir -p $(BUILD)
 	$(BIN)/ccjs $(JS_SRC) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
 # Rule to build the ng only api
-$(NGAPI): $(NG_SRC) $(LINT) $(BIN)
+$(NGAPI): $(NG_SRC)
 	mkdir -p $(BUILD)
 	cat $(NG_SRC) > $(NGAPI)
 
