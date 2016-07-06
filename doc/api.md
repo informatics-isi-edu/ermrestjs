@@ -211,27 +211,6 @@ to use for ERMrest JavaScript agents.
             * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
         * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
             * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
-    * [.Errors](#ERMrest.Errors) : <code>object</code>
-        * [.TimedOutError](#ERMrest.Errors.TimedOutError)
-            * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
-        * [.BadRequestError](#ERMrest.Errors.BadRequestError)
-            * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
-        * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
-            * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
-        * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
-            * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
-        * [.NotFoundError](#ERMrest.Errors.NotFoundError)
-            * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
-        * [.ConflictError](#ERMrest.Errors.ConflictError)
-            * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
-        * [.InternalServerError](#ERMrest.Errors.InternalServerError)
-            * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
-        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
-            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
-        * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
-            * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
-        * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
-            * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
 
@@ -421,7 +400,6 @@ Constructor for the Catalog.
 
 #### schema.name
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
-
 <a name="ERMrest.Schema+ignore"></a>
 
 #### schema.ignore : <code>boolean</code>
@@ -539,7 +517,6 @@ Constructor for Table.
 
 #### table.entity : <code>[Entity](#ERMrest.Table.Entity)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-
 <a name="ERMrest.Table+ignore"></a>
 
 #### table.ignore : <code>boolean</code>
@@ -717,14 +694,7 @@ Create new entities
     * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Rows_new"></a>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-=======
-
->>>>>>> Changed test config in makefile
->>>>>>> Changed test config in makefile
 #### new Rows(table, jsonRows, filter, limit, columns, [sortby])
 
 | Param | Type | Description |
@@ -737,14 +707,7 @@ Create new entities
 | [sortby] | <code>Array.&lt;Object&gt;</code> | An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc' |
 
 <a name="ERMrest.Rows+data"></a>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-=======
-
->>>>>>> Changed test config in makefile
->>>>>>> Changed test config in makefile
 #### rows.data : <code>Array</code>
 The set of rows returns from the server. It is an Array of
 Objects that has keys and values based on the query that produced
@@ -756,14 +719,7 @@ the Rows.
 #### rows.length() ⇒ <code>number</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+get"></a>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-=======
-
->>>>>>> Changed test config in makefile
->>>>>>> Changed test config in makefile
 #### rows.get() ⇒ <code>Row</code>
 **Kind**: instance method of <code>[Rows](#ERMrest.Rows)</code>  
 <a name="ERMrest.Rows+after"></a>
@@ -796,14 +752,7 @@ get the rowset of the previous page
     * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Row_new"></a>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-=======
-
->>>>>>> Changed test config in makefile
->>>>>>> Changed test config in makefile
 #### new Row(jsonRow)
 
 | Param | Type | Description |
@@ -817,17 +766,6 @@ The row returned from the ith result in the Rows.data.
 
 **Kind**: instance property of <code>[Row](#ERMrest.Row)</code>  
 <a name="ERMrest.Row+names"></a>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-#### row.names() ⇒ <code>Array</code>
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
-**Returns**: <code>Array</code> - Array of column names  
-<a name="ERMrest.Row+get"></a>
-#### row.get(name) ⇒ <code>Object</code>
-**Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
-=======
->>>>>>> Changed test config in makefile
 
 #### row.names() ⇒ <code>Array</code>
 **Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
@@ -836,7 +774,6 @@ The row returned from the ith result in the Rows.data.
 
 #### row.get(name) ⇒ <code>Object</code>
 **Kind**: instance method of <code>[Row](#ERMrest.Row)</code>  
->>>>>>> Changed test config in makefile
 **Returns**: <code>Object</code> - column value  
 
 | Param | Type | Description |
@@ -1738,165 +1675,6 @@ get PathColumn object by column name
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
 **Kind**: instance method of <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code>  
 **Returns**: <code>string</code> - URI of the filter  
-<a name="ERMrest.Errors"></a>
-
-### ERMrest.Errors : <code>object</code>
-**Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
-
-* [.Errors](#ERMrest.Errors) : <code>object</code>
-    * [.TimedOutError](#ERMrest.Errors.TimedOutError)
-        * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
-    * [.BadRequestError](#ERMrest.Errors.BadRequestError)
-        * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
-    * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
-        * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
-    * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
-        * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
-    * [.NotFoundError](#ERMrest.Errors.NotFoundError)
-        * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
-    * [.ConflictError](#ERMrest.Errors.ConflictError)
-        * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
-    * [.InternalServerError](#ERMrest.Errors.InternalServerError)
-        * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
-    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
-        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
-    * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
-        * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
-    * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
-        * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
-
-<a name="ERMrest.Errors.TimedOutError"></a>
-
-#### Errors.TimedOutError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.TimedOutError_new"></a>
-
-##### new TimedOutError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.BadRequestError"></a>
-
-#### Errors.BadRequestError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.BadRequestError_new"></a>
-
-##### new BadRequestError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.UnauthorizedError"></a>
-
-#### Errors.UnauthorizedError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.UnauthorizedError_new"></a>
-
-##### new UnauthorizedError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ForbiddenError"></a>
-
-#### Errors.ForbiddenError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ForbiddenError_new"></a>
-
-##### new ForbiddenError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.NotFoundError"></a>
-
-#### Errors.NotFoundError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.NotFoundError_new"></a>
-
-##### new NotFoundError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ConflictError"></a>
-
-#### Errors.ConflictError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ConflictError_new"></a>
-
-##### new ConflictError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InternalServerError"></a>
-
-#### Errors.InternalServerError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InternalServerError_new"></a>
-
-##### new InternalServerError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ServiceUnavailableError"></a>
-
-#### Errors.ServiceUnavailableError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
-
-##### new ServiceUnavailableError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InvalidFilterOperatorError"></a>
-
-#### Errors.InvalidFilterOperatorError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InvalidFilterOperatorError_new"></a>
-
-##### new InvalidFilterOperatorError(message)
-An invalid filter operator
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InvalidInputError"></a>
-
-#### Errors.InvalidInputError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InvalidInputError_new"></a>
-
-##### new InvalidInputError(message)
-An invalid input
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| message | <code>string</code> | error message |
-
 <a name="ERMrest.Errors"></a>
 
 ### ERMrest.Errors : <code>object</code>
