@@ -23,11 +23,11 @@
   ],
   "dependencies" : {
     "request-q": "x",
-    "q": "x",
-    "ermrest-data-utils": "x"
+    "q": "x"
   },
   "devDependencies": {
     "bower": "x",
+    "ermrest-data-utils": "x",
     "closurecompiler": "x",
     "jasmine": "x",
     "jasmine-spec-reporter": "^2.5.0",
