@@ -18,7 +18,7 @@ var ERMrest = (function(module) {
 
     /**
      * @memberof ERMrest
-     * @function
+     * @function resolve
      * @param {String} uri A `URI` to a resource in an ERMrest service.
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
@@ -28,7 +28,6 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Errors.Conflict, {@link ERMrest.Errors.ForbiddenError},
      * or {@link ERMrest.Errors.Unauthorized}
      * @throws {ERMrest.Errors.MalformedURI} if the input URI is malformed.
-     * ...other exceptions to be documented...
      * @desc This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the references
      * to model elements in it. This function makes a call to the ERMrest server
@@ -37,6 +36,7 @@ var ERMrest = (function(module) {
      */
     module.resolve = function(uri) {
         // parse the uri; validating its syntax here
+        //  if invalid syntax; throw malformed uri error
         // make a uri to the catalog schema resource
         // get the catalog/N/schema
         // validate the model references in the `uri` parameter
@@ -75,7 +75,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @param {ERMrest.Reference.mode} Indicates the contextual mode that
+         * @param {ERMrest.Reference.mode} mode Indicates the contextual mode that
          * the client wants to switch into.
          * @returns {ERMrest.Reference} A contextualized reference object, which
          * is a copy of _this_ reference object. The _contextualized_ reference

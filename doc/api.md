@@ -151,7 +151,7 @@ to use for ERMrest JavaScript agents.
         * [new Reference()](#new_ERMrest.Reference_new)
         * [.mode](#ERMrest.Reference+mode)
         * [.isUnique](#ERMrest.Reference+isUnique)
-        * [.contextualize(Indicates)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+        * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -217,7 +217,7 @@ to use for ERMrest JavaScript agents.
             * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
-    * [.module.resolve(uri)](#ERMrest.module.resolve) ⇒ <code>Promise</code>
+    * [.resolve(uri)](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 ### ERMrest.Server
@@ -1173,7 +1173,7 @@ Indicates if the foreign key is simple (not composite)
     * [new Reference()](#new_ERMrest.Reference_new)
     * [.mode](#ERMrest.Reference+mode)
     * [.isUnique](#ERMrest.Reference+isUnique)
-    * [.contextualize(Indicates)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+    * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
 
 <a name="new_ERMrest.Reference_new"></a>
 #### new Reference()
@@ -1193,7 +1193,7 @@ the reference filters on a unique key.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+contextualize"></a>
-#### reference.contextualize(Indicates) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+#### reference.contextualize(mode) ⇒ <code>[Reference](#ERMrest.Reference)</code>
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> - A contextualized reference object, which
 is a copy of _this_ reference object. The _contextualized_ reference
@@ -1202,7 +1202,7 @@ in a "view" mode on a table, some columns may be hidden.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| Indicates | <code>ERMrest.Reference.mode</code> | the contextual mode that the client wants to switch into. |
+| mode | <code>ERMrest.Reference.mode</code> | Indicates the contextual mode that the client wants to switch into. |
 
 <a name="ERMrest.Datapath"></a>
 ### ERMrest.Datapath : <code>object</code>
@@ -1708,8 +1708,8 @@ URI should be to the ERMrest _service_. For example,
 | --- | --- | --- |
 | uri | <code>String</code> | URI of the ERMrest service. |
 
-<a name="ERMrest.module.resolve"></a>
-### ERMrest.module.resolve(uri) ⇒ <code>Promise</code>
+<a name="ERMrest.resolve"></a>
+### ERMrest.resolve(uri) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the references
 to model elements in it. This function makes a call to the ERMrest server
@@ -1727,7 +1727,6 @@ or [ERMrest.Errors.Unauthorized](ERMrest.Errors.Unauthorized)
 **Throws**:
 
 - <code>ERMrest.Errors.MalformedURI</code> if the input URI is malformed.
-...other exceptions to be documented...
 
 
 | Param | Type | Description |
