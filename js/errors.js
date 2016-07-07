@@ -19,6 +19,10 @@ var ERMrest = (function(module) {
 
     module.ServiceUnavailableError = ServiceUnavailableError;
 
+    module.InvalidFilterOperatorError = InvalidFilterOperatorError;
+
+    module.InvalidInputError = InvalidInputError;
+
     /**
      * @memberof ERMrest.Errors
      * @param {string} status the network error code
@@ -161,7 +165,37 @@ var ERMrest = (function(module) {
 
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
+    /**
+     * @memberof ERMrest.Errors
+     * @param {string} message error message
+     * @constructor
+     * @desc An invalid filter operator
+     */
+    function InvalidFilterOperatorError(message) {
+        this.message = message;
+    }
+
+    InvalidFilterOperatorError.prototype = Object.create(Error.prototype);
+
+    InvalidFilterOperatorError.prototype.constructor = InvalidFilterOperatorError;
+
+
+
+    /**
+     * @memberof ERMrest.Errors
+     * @param {string} message error message
+     * @constructor
+     * @desc An invalid input
+     */
+    function InvalidInputError(message) {
+        this.message = message;
+    }
+
+    InvalidInputError.prototype = Object.create(Error.prototype);
+
+    InvalidInputError.prototype.constructor = InvalidInputError;
+
+
     return module;
 
 }(ERMrest || {}));
-
