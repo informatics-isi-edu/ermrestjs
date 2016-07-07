@@ -147,6 +147,11 @@ to use for ERMrest JavaScript agents.
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
         * [.name](#ERMrest.Type+name)
+    * [.Reference](#ERMrest.Reference)
+        * [new Reference()](#new_ERMrest.Reference_new)
+        * [.mode](#ERMrest.Reference+mode)
+        * [.isUnique](#ERMrest.Reference+isUnique)
+        * [.contextualize(Indicates)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -212,6 +217,7 @@ to use for ERMrest JavaScript agents.
             * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
+    * [.module.resolve(uri)](#ERMrest.module.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 ### ERMrest.Server
@@ -1159,6 +1165,45 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.Type+name"></a>
 #### type.name
 **Kind**: instance property of <code>[Type](#ERMrest.Type)</code>  
+<a name="ERMrest.Reference"></a>
+### ERMrest.Reference
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Reference](#ERMrest.Reference)
+    * [new Reference()](#new_ERMrest.Reference_new)
+    * [.mode](#ERMrest.Reference+mode)
+    * [.isUnique](#ERMrest.Reference+isUnique)
+    * [.contextualize(Indicates)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+
+<a name="new_ERMrest.Reference_new"></a>
+#### new Reference()
+The constructor of the `Reference` object.
+
+<a name="ERMrest.Reference+mode"></a>
+#### reference.mode
+Statically defined "modes" to contextualize the reference.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+isUnique"></a>
+#### reference.isUnique
+A Boolean value that indicates whether this Reference is
+_inherently_ unique. Meaning, that it can only refere to a single
+data element, like a single row. This is determined based on whether
+the reference filters on a unique key.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+contextualize"></a>
+#### reference.contextualize(Indicates) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>[Reference](#ERMrest.Reference)</code> - A contextualized reference object, which
+is a copy of _this_ reference object. The _contextualized_ reference
+will behave and reflect state according to the mode. For instance,
+in a "view" mode on a table, some columns may be hidden.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Indicates | <code>ERMrest.Reference.mode</code> | the contextual mode that the client wants to switch into. |
+
 <a name="ERMrest.Datapath"></a>
 ### ERMrest.Datapath : <code>object</code>
 **Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
@@ -1662,4 +1707,30 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>String</code> | URI of the ERMrest service. |
+
+<a name="ERMrest.module.resolve"></a>
+### ERMrest.module.resolve(uri) ⇒ <code>Promise</code>
+This function resolves a URI reference to a [Reference](#ERMrest.Reference)
+object. It validates the syntax of the URI and validates that the references
+to model elements in it. This function makes a call to the ERMrest server
+in order to get the `schema` resource which it uses in the validation of
+the URI reference.
+
+**Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
+**Returns**: <code>Promise</code> - Promise when resolved passes the
+[Reference](#ERMrest.Reference) object. If rejected, passes one of:
+[TimedOutError](#ERMrest.Errors.TimedOutError),
+[InternalServerError](#ERMrest.Errors.InternalServerError),
+[ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
+[{@link ERMrest.Errors.ForbiddenError](ERMrest.Errors.Conflict,),
+or [ERMrest.Errors.Unauthorized](ERMrest.Errors.Unauthorized)  
+**Throws**:
+
+- <code>ERMrest.Errors.MalformedURI</code> if the input URI is malformed.
+...other exceptions to be documented...
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>String</code> | A `URI` to a resource in an ERMrest service. |
 

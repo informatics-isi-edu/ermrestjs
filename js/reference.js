@@ -57,7 +57,6 @@ var ERMrest = (function(module) {
         constructor: Reference,
 
         /**
-         * @type {Object}
          * @desc Statically defined "modes" to contextualize the reference.
          */
         mode: {
@@ -66,13 +65,12 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @type {Boolean}
          * @desc A Boolean value that indicates whether this Reference is
          * _inherently_ unique. Meaning, that it can only refere to a single
          * data element, like a single row. This is determined based on whether
          * the reference filters on a unique key.
          */
-        get isUnique: function() {
+        get isUnique() {
             return undefined;
         },
 
