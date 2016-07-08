@@ -139,7 +139,7 @@ var ERMrest = (function(module) {
         /**
          * Indicates whether the client has the permission to _create_
          * the referenced resource(s). In some cases, this permission cannot
-         * be termined and the value will be `undefined`.
+         * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
         get canCreate() {
@@ -149,7 +149,7 @@ var ERMrest = (function(module) {
         /**
          * Indicates whether the client has the permission to _read_
          * the referenced resource(s). In some cases, this permission cannot
-         * be termined and the value will be `undefined`.
+         * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
         get canRead() {
@@ -159,7 +159,7 @@ var ERMrest = (function(module) {
         /**
          * Indicates whether the client has the permission to _update_
          * the referenced resource(s). In some cases, this permission cannot
-         * be termined and the value will be `undefined`.
+         * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
         get canUpdate() {
@@ -169,7 +169,7 @@ var ERMrest = (function(module) {
         /**
          * Indicates whether the client has the permission to _delete_
          * the referenced resource(s). In some cases, this permission cannot
-         * be termined and the value will be `undefined`.
+         * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
         get canDelete() {
@@ -191,7 +191,7 @@ var ERMrest = (function(module) {
         /**
          * Reads the references resources.
          * @param {!number} limit The limit of results to be returned by the
-         * get method.
+         * read request.
          * @returns {Promise} A promise for a {@Link ERMRest.Page} of results.
          * @throws {ERMrest.Errors.InvalidInputError} if `limit` is not 
          * defined or not in the valid range.
@@ -236,7 +236,7 @@ var ERMrest = (function(module) {
          * considered "outbound" where the table has FKRs to other entities or
          * "inbound" where other entities have FKRs to this entity. Finally,
          * entities can be "associated" by means of associative entities. Those
-         * are entities in another table that estably _many-to-many_ 
+         * are entities in another table that establish _many-to-many_ 
          * relationships between entities. If this help `A <- B -> C` where
          * entities in `B` establish relationships between entities in `A` and
          * `C`. Thus entities in `A` and `C` may be associated and we may
@@ -306,8 +306,9 @@ var ERMrest = (function(module) {
         constructor: Page,
 
         /**
-         * An array of unprocessed tuples returned by ERMrest. See
-         * {@link ERMrest.Page.tuple}.
+         * An array of unprocessed tuples returned by ERMrest.
+         *
+         * See also {@link ERMrest.Page#tuple}.
          * @type {Object[]}
          */
         get data() {
@@ -317,10 +318,9 @@ var ERMrest = (function(module) {
         /**
          * An array of processed tuples. The results will be processed
          * according to the contextualized model element associated with this
-         * page of results. For instance, if the reference was made to a set of
-         * entities, then the model element is a {@link ERMrest.Table}. Other
-         * interfaces may not have such clear `schema:table` model element to
-         * define the tuple.
+         * page of tuples.
+         *
+         * See also {@link ERMrest.Page#data}.
          * @type {ERMrest.Tuple[]}
          */
         get tuple() {

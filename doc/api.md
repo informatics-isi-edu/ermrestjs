@@ -1257,28 +1257,28 @@ filters on a unique key.
 #### reference.canCreate : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client has the permission to _create_
 the referenced resource(s). In some cases, this permission cannot
-be termined and the value will be `undefined`.
+be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+canRead"></a>
 #### reference.canRead : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client has the permission to _read_
 the referenced resource(s). In some cases, this permission cannot
-be termined and the value will be `undefined`.
+be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+canUpdate"></a>
 #### reference.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client has the permission to _update_
 the referenced resource(s). In some cases, this permission cannot
-be termined and the value will be `undefined`.
+be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+canDelete"></a>
 #### reference.canDelete : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client has the permission to _delete_
 the referenced resource(s). In some cases, this permission cannot
-be termined and the value will be `undefined`.
+be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+relatedReferences"></a>
@@ -1288,7 +1288,7 @@ references between [Table](#ERMrest.Table)s. Those references can be
 considered "outbound" where the table has FKRs to other entities or
 "inbound" where other entities have FKRs to this entity. Finally,
 entities can be "associated" by means of associative entities. Those
-are entities in another table that estably _many-to-many_ 
+are entities in another table that establish _many-to-many_ 
 relationships between entities. If this help `A <- B -> C` where
 entities in `B` establish relationships between entities in `A` and
 `C`. Thus entities in `A` and `C` may be associated and we may
@@ -1350,7 +1350,7 @@ defined or not in the valid range.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| limit | <code>number</code> | The limit of results to be returned by the get method. |
+| limit | <code>number</code> | The limit of results to be returned by the read request. |
 
 <a name="ERMrest.Reference+update"></a>
 #### reference.update(tbd) ⇒ <code>Promise</code>
@@ -1406,18 +1406,18 @@ Constructs a new Page.
 
 <a name="ERMrest.Page+data"></a>
 #### page.data : <code>Array.&lt;Object&gt;</code>
-An array of unprocessed tuples returned by ERMrest. See
-[ERMrest.Page.tuple](ERMrest.Page.tuple).
+An array of unprocessed tuples returned by ERMrest.
+
+See also [tuple](#ERMrest.Page+tuple).
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+tuple"></a>
 #### page.tuple : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
 An array of processed tuples. The results will be processed
 according to the contextualized model element associated with this
-page of results. For instance, if the reference was made to a set of
-entities, then the model element is a [Table](#ERMrest.Table). Other
-interfaces may not have such clear `schema:table` model element to
-define the tuple.
+page of tuples.
+
+See also [data](#ERMrest.Page+data).
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+previous"></a>
