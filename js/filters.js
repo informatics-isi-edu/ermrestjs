@@ -70,13 +70,14 @@ var ERMrest = (function(module) {
             }
 
             // combine filter strings
-            var uri = "";
+            var uri = "(";
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + filterStrings[j];
                 else
                     uri = uri + "&" + filterStrings[j];
             }
+            uri = uri + ")";
 
             return uri;
         }
@@ -106,13 +107,14 @@ var ERMrest = (function(module) {
             }
 
             // combine filter strings
-            var uri = "";
+            var uri = "(";
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + filterStrings[j];
                 else
                     uri = uri + ";" + filterStrings[j];
             }
+            uri = uri + ")";
 
             return uri;
         }

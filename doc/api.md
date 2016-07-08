@@ -12,7 +12,7 @@ to use for ERMrest JavaScript agents.
 * [ERMrest](#ERMrest) : <code>object</code>
   * [.Server](#ERMrest.Server)
     * [new Server(uri)](#new_ERMrest.Server_new)
-    * [.uri](#ERMrest.Server+uri) : <code>String</code>
+    * [.uri](#ERMrest.Server+uri) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
   * [.Catalogs](#ERMrest.Catalogs)
     * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -22,7 +22,7 @@ to use for ERMrest JavaScript agents.
   * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
-    * [.id](#ERMrest.Catalog+id) : <code>String</code>
+    * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
   * [.Schemas](#ERMrest.Schemas)
     * [new Schemas()](#new_ERMrest.Schemas_new)
@@ -36,7 +36,7 @@ to use for ERMrest JavaScript agents.
     * [.name](#ERMrest.Schema+name)
     * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
+    * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
   * [.Tables](#ERMrest.Tables)
     * [new Tables()](#new_ERMrest.Tables_new)
@@ -52,7 +52,7 @@ to use for ERMrest JavaScript agents.
       * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
       * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
       * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-      * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
+      * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
       * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
       * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
       * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
@@ -87,14 +87,14 @@ to use for ERMrest JavaScript agents.
   * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-    * [.name](#ERMrest.Column+name) : <code>String</code>
+    * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-    * [.default](#ERMrest.Column+default) : <code>String</code>
-    * [.comment](#ERMrest.Column+comment) : <code>String</code>
+    * [.default](#ERMrest.Column+default) : <code>string</code>
+    * [.comment](#ERMrest.Column+comment) : <code>string</code>
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
+    * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
   * [.Annotations](#ERMrest.Annotations)
@@ -106,8 +106,8 @@ to use for ERMrest JavaScript agents.
     * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
   * [.Annotation](#ERMrest.Annotation)
     * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
-    * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
-    * [.content](#ERMrest.Annotation+content) : <code>String</code>
+    * [.subject](#ERMrest.Annotation+subject) : <code>string</code>
+    * [.content](#ERMrest.Annotation+content) : <code>string</code>
   * [.Keys](#ERMrest.Keys)
     * [new Keys()](#new_ERMrest.Keys_new)
     * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
@@ -119,7 +119,7 @@ to use for ERMrest JavaScript agents.
     * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
+    * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
   * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -232,7 +232,7 @@ to use for ERMrest JavaScript agents.
 
 * [.Server](#ERMrest.Server)
   * [new Server(uri)](#new_ERMrest.Server_new)
-  * [.uri](#ERMrest.Server+uri) : <code>String</code>
+  * [.uri](#ERMrest.Server+uri) : <code>string</code>
   * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
 
 <a name="new_ERMrest.Server_new"></a>
@@ -240,10 +240,10 @@ to use for ERMrest JavaScript agents.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | URI of the ERMrest service. |
+| uri | <code>string</code> | URI of the ERMrest service. |
 
 <a name="ERMrest.Server+uri"></a>
-#### server.uri : <code>String</code>
+#### server.uri : <code>string</code>
 **Kind**: instance property of <code>[Server](#ERMrest.Server)</code>  
 <a name="ERMrest.Server+catalogs"></a>
 #### server.catalogs : <code>[Catalogs](#ERMrest.Catalogs)</code>
@@ -286,7 +286,7 @@ Get a catalog by id. This call does catalog introspection.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| id | <code>String</code> | Catalog ID. |
+| id | <code>string</code> | Catalog ID. |
 
 <a name="ERMrest.Catalog"></a>
 ### ERMrest.Catalog
@@ -295,7 +295,7 @@ Get a catalog by id. This call does catalog introspection.
 * [.Catalog](#ERMrest.Catalog)
   * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
   * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
-  * [.id](#ERMrest.Catalog+id) : <code>String</code>
+  * [.id](#ERMrest.Catalog+id) : <code>string</code>
   * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
@@ -306,13 +306,13 @@ Constructor for the Catalog.
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>[Server](#ERMrest.Server)</code> | the server object. |
-| id | <code>String</code> | the catalog id. |
+| id | <code>string</code> | the catalog id. |
 
 <a name="ERMrest.Catalog+server"></a>
 #### catalog.server : <code>[Server](#ERMrest.Server)</code>
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+id"></a>
-#### catalog.id : <code>String</code>
+#### catalog.id : <code>string</code>
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+schemas"></a>
 #### catalog.schemas : <code>[Schemas](#ERMrest.Schemas)</code>
@@ -357,7 +357,7 @@ get schema by schema name
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> | schema name |
+| name | <code>string</code> | schema name |
 
 <a name="ERMrest.Schema"></a>
 ### ERMrest.Schema
@@ -369,7 +369,7 @@ get schema by schema name
   * [.name](#ERMrest.Schema+name)
   * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
   * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-  * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
+  * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
   * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
 
 <a name="new_ERMrest.Schema_new"></a>
@@ -380,7 +380,7 @@ Constructor for the Catalog.
 | Param | Type | Description |
 | --- | --- | --- |
 | catalog | <code>[Catalog](#ERMrest.Catalog)</code> | the catalog object. |
-| jsonSchema | <code>String</code> | json of the schema. |
+| jsonSchema | <code>string</code> | json of the schema. |
 
 <a name="ERMrest.Schema+catalog"></a>
 #### schema.catalog : <code>[Catalog](#ERMrest.Catalog)</code>
@@ -395,7 +395,7 @@ Constructor for the Catalog.
 #### schema.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+displayname"></a>
-#### schema.displayname : <code>String</code>
+#### schema.displayname : <code>string</code>
 Preferred display name for user presentation only.
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
@@ -442,7 +442,7 @@ get table by table name
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> | name of table |
+| name | <code>string</code> | name of table |
 
 <a name="ERMrest.Table"></a>
 ### ERMrest.Table
@@ -456,7 +456,7 @@ get table by table name
     * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
     * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
+    * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
     * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
     * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
     * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
@@ -479,7 +479,7 @@ Constructor for Table.
 | Param | Type | Description |
 | --- | --- | --- |
 | schema | <code>[Schema](#ERMrest.Schema)</code> | the schema object. |
-| jsonTable | <code>String</code> | the json of the table. |
+| jsonTable | <code>string</code> | the json of the table. |
 
 <a name="ERMrest.Table+schema"></a>
 #### table.schema : <code>[Schema](#ERMrest.Schema)</code>
@@ -497,7 +497,7 @@ Constructor for Table.
 #### table.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+displayname"></a>
-#### table.displayname : <code>String</code>
+#### table.displayname : <code>string</code>
 Preferred display name for user presentation only.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
@@ -724,7 +724,7 @@ The row returned from the ith result in the Rows.data.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> | name of column |
+| name | <code>string</code> | name of column |
 
 <a name="ERMrest.Columns"></a>
 ### ERMrest.Columns
@@ -760,7 +760,7 @@ Constructor for Columns.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> | name of column |
+| name | <code>string</code> | name of column |
 
 <a name="ERMrest.Column"></a>
 ### ERMrest.Column
@@ -769,14 +769,14 @@ Constructor for Columns.
 * [.Column](#ERMrest.Column)
   * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
   * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-  * [.name](#ERMrest.Column+name) : <code>String</code>
+  * [.name](#ERMrest.Column+name) : <code>string</code>
   * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
   * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-  * [.default](#ERMrest.Column+default) : <code>String</code>
-  * [.comment](#ERMrest.Column+comment) : <code>String</code>
+  * [.default](#ERMrest.Column+default) : <code>string</code>
+  * [.comment](#ERMrest.Column+comment) : <code>string</code>
   * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
   * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-  * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
+  * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
   * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
   * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 
@@ -788,13 +788,13 @@ Constructor for Column.
 | Param | Type | Description |
 | --- | --- | --- |
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
-| jsonColumn | <code>String</code> | the json column. |
+| jsonColumn | <code>string</code> | the json column. |
 
 <a name="ERMrest.Column+table"></a>
 #### column.table : <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+name"></a>
-#### column.name : <code>String</code>
+#### column.name : <code>string</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+type"></a>
 #### column.type : <code>[Type](#ERMrest.Type)</code>
@@ -803,10 +803,10 @@ Constructor for Column.
 #### column.nullok : <code>Boolean</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+default"></a>
-#### column.default : <code>String</code>
+#### column.default : <code>string</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+comment"></a>
-#### column.comment : <code>String</code>
+#### column.comment : <code>string</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+ignore"></a>
 #### column.ignore : <code>boolean</code>
@@ -815,7 +815,7 @@ Constructor for Column.
 #### column.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+displayname"></a>
-#### column.displayname : <code>String</code>
+#### column.displayname : <code>string</code>
 Preferred display name for user presentation only.
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
@@ -870,7 +870,7 @@ get annotation by URI
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | uri of annotation |
+| uri | <code>string</code> | uri of annotation |
 
 <a name="ERMrest.Annotations+contains"></a>
 #### annotations.contains(uri) ⇒ <code>boolean</code>
@@ -879,7 +879,7 @@ get annotation by URI
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | uri of annotation |
+| uri | <code>string</code> | uri of annotation |
 
 <a name="ERMrest.Annotation"></a>
 ### ERMrest.Annotation
@@ -887,8 +887,8 @@ get annotation by URI
 
 * [.Annotation](#ERMrest.Annotation)
   * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
-  * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
-  * [.content](#ERMrest.Annotation+content) : <code>String</code>
+  * [.subject](#ERMrest.Annotation+subject) : <code>string</code>
+  * [.content](#ERMrest.Annotation+content) : <code>string</code>
 
 <a name="new_ERMrest.Annotation_new"></a>
 #### new Annotation(subject, uri, jsonAnnotation)
@@ -897,17 +897,17 @@ Constructor for Annotation.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| subject | <code>String</code> | subject of the annotation: schema,table,column,key,foreignkeyref. |
-| uri | <code>String</code> | uri id of the annotation. |
-| jsonAnnotation | <code>String</code> | json of annotation. |
+| subject | <code>string</code> | subject of the annotation: schema,table,column,key,foreignkeyref. |
+| uri | <code>string</code> | uri id of the annotation. |
+| jsonAnnotation | <code>string</code> | json of annotation. |
 
 <a name="ERMrest.Annotation+subject"></a>
-#### annotation.subject : <code>String</code>
-schema,table,column,key,foreignkeyref
+#### annotation.subject : <code>string</code>
+One of schema,table,column,key,foreignkeyref
 
 **Kind**: instance property of <code>[Annotation](#ERMrest.Annotation)</code>  
 <a name="ERMrest.Annotation+content"></a>
-#### annotation.content : <code>String</code>
+#### annotation.content : <code>string</code>
 json content
 
 **Kind**: instance property of <code>[Annotation](#ERMrest.Annotation)</code>  
@@ -962,7 +962,7 @@ get the key by the column set
   * [.table](#ERMrest.Key+table) : <code>Table</code>
   * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
   * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-  * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
+  * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
 #### new Key(table, jsonKey)
@@ -972,7 +972,7 @@ Constructor for Key.
 | Param | Type | Description |
 | --- | --- | --- |
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
-| jsonKey | <code>String</code> | json key. |
+| jsonKey | <code>string</code> | json key. |
 
 <a name="ERMrest.Key+table"></a>
 #### key.table : <code>Table</code>
@@ -986,7 +986,7 @@ Reference to the table that this Key belongs to.
 #### key.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+simple"></a>
-#### key.simple : <code>Boolean</code>
+#### key.simple : <code>boolean</code>
 Indicates if the key is simple (not composite)
 
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
@@ -1879,7 +1879,7 @@ URI should be to the ERMrest _service_. For example,
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | URI of the ERMrest service. |
+| uri | <code>string</code> | URI of the ERMrest service. |
 
 <a name="ERMrest.resolve"></a>
 ### ERMrest.resolve(uri) ⇒ <code>Promise</code>

@@ -54,7 +54,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @function
-     * @param {String} uri URI of the ERMrest service.
+     * @param {string} uri URI of the ERMrest service.
      * @return {ERMrest.Server} Returns a server instance.
      * @throws {ERMrest.Errors.InvalidInputError} URI is missing
      * @desc
@@ -81,14 +81,14 @@ var ERMrest = (function (module) {
 
     /**
      * @memberof ERMrest
-     * @param {String} uri URI of the ERMrest service.
+     * @param {string} uri URI of the ERMrest service.
      * @constructor
      */
     function Server(uri) {
 
         /**
          *
-         * @type {String}
+         * @type {string}
          */
         this.uri = uri;
 
@@ -138,7 +138,7 @@ var ERMrest = (function (module) {
         },
 
         /**
-         * @param {String} id Catalog ID.
+         * @param {string} id Catalog ID.
          * @return {Promise} a promise that returns the catalog  if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
          *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
@@ -176,7 +176,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Server} server the server object.
-     * @param {String} id the catalog id.
+     * @param {string} id the catalog id.
      * @desc
      * Constructor for the Catalog.
      */
@@ -190,7 +190,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @type {String}
+         * @type {string}
          */
         this.id = id;
 
@@ -298,7 +298,7 @@ var ERMrest = (function (module) {
         },
 
         /**
-         * @param {String} name schema name
+         * @param {string} name schema name
          * @returns {ERMrest.Schema} schema object
          * @throws {ERMrest.Errors.NotFoundError} schema not found
          * @desc get schema by schema name
@@ -317,7 +317,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Catalog} catalog the catalog object.
-     * @param {String} jsonSchema json of the schema.
+     * @param {string} jsonSchema json of the schema.
      * @desc
      * Constructor for the Catalog.
      */
@@ -362,7 +362,7 @@ var ERMrest = (function (module) {
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
-         * @type {String}
+         * @type {string}
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = module._determineDisplayName(this, null);
@@ -440,7 +440,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {String} name name of table
+         * @param {string} name name of table
          * @returns {ERMrest.Table} table
          * @throws {ERMrest.Errors.NotFoundError} table not found
          * @desc get table by table name
@@ -460,7 +460,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Schema} schema the schema object.
-     * @param {String} jsonTable the json of the table.
+     * @param {string} jsonTable the json of the table.
      * @desc
      * Constructor for Table.
      */
@@ -512,7 +512,7 @@ var ERMrest = (function (module) {
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
-         * @type {String}
+         * @type {string}
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = module._determineDisplayName(this, this.schema);
@@ -963,7 +963,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {String} name name of column
+         * @param {string} name name of column
          * @returns {Object} column value
          */
         get: function(name) {
@@ -1025,7 +1025,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {String} name name of column
+         * @param {string} name name of column
          * @returns {ERMrest.Column} column
          */
         get: function (name) {
@@ -1045,7 +1045,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
-     * @param {String} jsonColumn the json column.
+     * @param {string} jsonColumn the json column.
      * @desc
      * Constructor for Column.
      */
@@ -1058,7 +1058,7 @@ var ERMrest = (function (module) {
         this.table = table;
 
         /**
-         * @type {String}
+         * @type {string}
          */
         this.name = jsonColumn.name;
 
@@ -1074,12 +1074,12 @@ var ERMrest = (function (module) {
         this.nullok = jsonColumn.nullok;
 
         /**
-         * @type {String}
+         * @type {string}
          */
         this.default = jsonColumn.default;
 
         /**
-         * @type {String}
+         * @type {string}
          */
         this.comment = jsonColumn.comment;
 
@@ -1109,7 +1109,7 @@ var ERMrest = (function (module) {
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
-         * @type {String}
+         * @type {string}
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = module._determineDisplayName(this, this.table);
@@ -1196,7 +1196,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {String} uri uri of annotation
+         * @param {string} uri uri of annotation
          * @returns {ERMrest.Annotation} annotation
          * @throws {ERMrest.Errors.NotFoundError} annotation not found
          * @desc get annotation by URI
@@ -1211,7 +1211,7 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param {String} uri uri of annotation
+         * @param {string} uri uri of annotation
          * @returns {boolean} whether or not annotation exists
          */
          contains: function (uri) {
@@ -1223,24 +1223,24 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {String} subject subject of the annotation: schema,table,column,key,foreignkeyref.
-     * @param {String} uri uri id of the annotation.
-     * @param {String} jsonAnnotation json of annotation.
+     * @param {string} subject subject of the annotation: schema,table,column,key,foreignkeyref.
+     * @param {string} uri uri id of the annotation.
+     * @param {string} jsonAnnotation json of annotation.
      * @desc
      * Constructor for Annotation.
      */
     function Annotation(subject, uri, jsonAnnotation) {
 
         /**
-         *
-         * @type {String}  schema,table,column,key,foreignkeyref
+         * One of schema,table,column,key,foreignkeyref
+         * @type {string}
          */
         this.subject = subject;
         this._uri = uri;
 
         /**
-         *
-         * @type {String} json content
+         * json content
+         * @type {string}
          */
         this.content = jsonAnnotation;
     }
@@ -1328,7 +1328,7 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
-     * @param {String} jsonKey json key.
+     * @param {string} jsonKey json key.
      * @desc
      * Constructor for Key.
      */
@@ -1342,8 +1342,8 @@ var ERMrest = (function (module) {
         this._table = table;
 
         /**
+         * Reference to the table that this Key belongs to.
          * @type {Table}
-         * @desc Reference to the table that this Key belongs to.
          */
         this.table = table;
 
@@ -1356,13 +1356,11 @@ var ERMrest = (function (module) {
         }
 
         /**
-         *
          * @type {ERMrest.ColSet}
          */
         this.colset = new ColSet(uniqueColumns);
 
         /**
-         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
@@ -1376,8 +1374,8 @@ var ERMrest = (function (module) {
         constructor: Key,
 
         /**
-         * @desc Indicates if the key is simple (not composite)
-         * @type {Boolean}
+         * Indicates if the key is simple (not composite)
+         * @type {boolean}
          */
         get simple() {
             return this.colset.length() == 1;
@@ -1593,7 +1591,6 @@ var ERMrest = (function (module) {
         }
 
         /**
-         *
          * @type {ERMrest.ColSet}
          */
         this.colset = new ColSet(foreignKeyCols);
@@ -1609,7 +1606,6 @@ var ERMrest = (function (module) {
         }
 
         /**
-         *
          * find key from referencedCols
          * use index 0 since all refCols should be of the same schema:table
          * @type {ERMrest.Key}
@@ -1617,19 +1613,16 @@ var ERMrest = (function (module) {
         this.key = refTable.keys.get(new ColSet(referencedCols));
 
         /**
-         *
          * @type {ERMrest.Mapping}
          */
         this.mapping = new Mapping(foreignKeyCols, referencedCols);
 
         /**
-         *
          * @type {boolean}
          */
         this.ignore = false;
 
         /**
-         *
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
@@ -1655,7 +1648,6 @@ var ERMrest = (function (module) {
         },
 
         /**
-         *
          * @param {Number} limit
          * @returns {Promise} promise that returns a rowset of the referenced key's table if resolved or
          *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
@@ -1668,7 +1660,7 @@ var ERMrest = (function (module) {
         },
 
         /**
-         * @desc Indicates if the foreign key is simple (not composite)
+         * Indicates if the foreign key is simple (not composite)
          * @type {Boolean}
          */
         get simple() {
