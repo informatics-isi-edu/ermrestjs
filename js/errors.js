@@ -1,4 +1,4 @@
-/**
+/*
  * @namespace ERMrest.Errors
  */
 var ERMrest = (function(module) {
@@ -22,6 +22,8 @@ var ERMrest = (function(module) {
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
 
     module.InvalidInputError = InvalidInputError;
+    
+    module.MalformedURIError = MalformedURIError;
 
     /**
      * @memberof ERMrest.Errors
@@ -194,6 +196,22 @@ var ERMrest = (function(module) {
     InvalidInputError.prototype = Object.create(Error.prototype);
 
     InvalidInputError.prototype.constructor = InvalidInputError;
+
+
+    /**
+     * @memberof ERMrest.Errors
+     * @param {string} message error message
+     * @constructor
+     * @desc A malformed URI was passed to the API.
+     */
+    function MalformedURIError(message) {
+        this.message = message;
+    }
+
+    MalformedURIError.prototype = Object.create(Error.prototype);
+
+    MalformedURIError.prototype.constructor = MalformedURIError;
+
 
 
     return module;

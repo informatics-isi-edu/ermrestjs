@@ -10,223 +10,230 @@ to use for ERMrest JavaScript agents.
 **Kind**: global namespace  
 
 * [ERMrest](#ERMrest) : <code>object</code>
-    * [.Server](#ERMrest.Server)
-        * [new Server(uri)](#new_ERMrest.Server_new)
-        * [.uri](#ERMrest.Server+uri) : <code>String</code>
-        * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
-    * [.Catalogs](#ERMrest.Catalogs)
-        * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
-        * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
-        * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
-    * [.Catalog](#ERMrest.Catalog)
-        * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-        * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
-        * [.id](#ERMrest.Catalog+id) : <code>String</code>
-        * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
-    * [.Schemas](#ERMrest.Schemas)
-        * [new Schemas()](#new_ERMrest.Schemas_new)
-        * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
-        * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
-        * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
-    * [.Schema](#ERMrest.Schema)
-        * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
-        * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
-        * [.name](#ERMrest.Schema+name)
-        * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
-        * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
-        * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
-    * [.Tables](#ERMrest.Tables)
-        * [new Tables()](#new_ERMrest.Tables_new)
-        * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
-        * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
-    * [.Table](#ERMrest.Table)
-        * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
-        * _instance_
-            * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
-            * [.name](#ERMrest.Table+name)
-            * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
-            * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
-            * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-            * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
-            * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
-            * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
-            * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
-        * _static_
-            * [.Entity](#ERMrest.Table.Entity)
-                * [new Entity(table)](#new_ERMrest.Table.Entity_new)
-                * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
-                * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
-                * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
-                * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
-                * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
-                * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
-                * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
-    * [.Rows](#ERMrest.Rows)
-        * [new Rows(table, jsonRows, filter, limit, columns, [sortby])](#new_ERMrest.Rows_new)
-        * [.data](#ERMrest.Rows+data) : <code>Array</code>
-        * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
-        * [.get()](#ERMrest.Rows+get) ⇒ <code>Row</code>
-        * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
-        * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
-    * [.Row](#ERMrest.Row)
-        * [new Row(jsonRow)](#new_ERMrest.Row_new)
-        * [.data](#ERMrest.Row+data) : <code>Object</code>
-        * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
-    * [.Columns](#ERMrest.Columns)
-        * [new Columns()](#new_ERMrest.Columns_new)
-        * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
-        * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
-        * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
-    * [.Column](#ERMrest.Column)
-        * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-        * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-        * [.name](#ERMrest.Column+name) : <code>String</code>
-        * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
-        * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-        * [.default](#ERMrest.Column+default) : <code>String</code>
-        * [.comment](#ERMrest.Column+comment) : <code>String</code>
-        * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
-        * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
-        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
-        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
-    * [.Annotations](#ERMrest.Annotations)
-        * [new Annotations()](#new_ERMrest.Annotations_new)
-        * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
-        * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
-        * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-        * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
-    * [.Annotation](#ERMrest.Annotation)
-        * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
-        * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
-        * [.content](#ERMrest.Annotation+content) : <code>String</code>
-    * [.Keys](#ERMrest.Keys)
-        * [new Keys()](#new_ERMrest.Keys_new)
-        * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
-        * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
-        * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
-        * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
-    * [.Key](#ERMrest.Key)
-        * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
-        * [.table](#ERMrest.Key+table) : <code>Table</code>
-        * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
-        * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
-    * [.ColSet](#ERMrest.ColSet)
-        * [new ColSet(columns)](#new_ERMrest.ColSet_new)
-        * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
-        * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
-    * [.Mapping](#ERMrest.Mapping)
-        * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
-        * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
-        * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-        * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
-    * [.ForeignKeys](#ERMrest.ForeignKeys)
-        * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
-        * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
-        * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
-        * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
-        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-    * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
-        * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
-        * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
-        * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
-        * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
-        * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
-        * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-        * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
-    * [.Type](#ERMrest.Type)
-        * [new Type(name)](#new_ERMrest.Type_new)
-        * [.name](#ERMrest.Type+name)
-    * [.Reference](#ERMrest.Reference)
-        * [new Reference()](#new_ERMrest.Reference_new)
-        * [.mode](#ERMrest.Reference+mode)
-        * [.isUnique](#ERMrest.Reference+isUnique)
-        * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
-    * [.Datapath](#ERMrest.Datapath) : <code>object</code>
-        * [.DataPath](#ERMrest.Datapath.DataPath)
-            * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-            * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
-            * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-            * [.entity](#ERMrest.Datapath.DataPath+entity)
-                * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
-                * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
-            * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-            * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-        * [.PathTable](#ERMrest.Datapath.PathTable)
-            * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
-            * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-            * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
-            * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-            * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
-            * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
-        * [.PathColumn](#ERMrest.Datapath.PathColumn)
-            * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
-            * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-            * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
-        * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-            * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-            * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-            * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
-        * [.Operators()](#ERMrest.Datapath.Operators)
-    * [.Filters](#ERMrest.Filters) : <code>object</code>
-        * [.Negation](#ERMrest.Filters.Negation)
-            * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
-            * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
-        * [.Conjunction](#ERMrest.Filters.Conjunction)
-            * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
-            * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
-        * [.Disjunction](#ERMrest.Filters.Disjunction)
-            * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
-            * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
-        * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
-            * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
-            * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
-        * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
-            * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
-            * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
-    * [.Errors](#ERMrest.Errors) : <code>object</code>
-        * [.TimedOutError](#ERMrest.Errors.TimedOutError)
-            * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
-        * [.BadRequestError](#ERMrest.Errors.BadRequestError)
-            * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
-        * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
-            * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
-        * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
-            * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
-        * [.NotFoundError](#ERMrest.Errors.NotFoundError)
-            * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
-        * [.ConflictError](#ERMrest.Errors.ConflictError)
-            * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
-        * [.InternalServerError](#ERMrest.Errors.InternalServerError)
-            * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
-        * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
-            * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
-        * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
-            * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
-        * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
-            * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
-    * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
-    * [.resolve(uri)](#ERMrest.resolve) ⇒ <code>Promise</code>
+  * [.Server](#ERMrest.Server)
+    * [new Server(uri)](#new_ERMrest.Server_new)
+    * [.uri](#ERMrest.Server+uri) : <code>String</code>
+    * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
+  * [.Catalogs](#ERMrest.Catalogs)
+    * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
+    * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
+    * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
+  * [.Catalog](#ERMrest.Catalog)
+    * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
+    * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
+    * [.id](#ERMrest.Catalog+id) : <code>String</code>
+    * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+  * [.Schemas](#ERMrest.Schemas)
+    * [new Schemas()](#new_ERMrest.Schemas_new)
+    * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
+    * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
+    * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
+    * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+  * [.Schema](#ERMrest.Schema)
+    * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
+    * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+    * [.name](#ERMrest.Schema+name)
+    * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
+    * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
+    * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+  * [.Tables](#ERMrest.Tables)
+    * [new Tables()](#new_ERMrest.Tables_new)
+    * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
+    * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
+    * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
+  * [.Table](#ERMrest.Table)
+    * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
+    * _instance_
+      * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
+      * [.name](#ERMrest.Table+name)
+      * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
+      * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+      * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+      * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
+      * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
+      * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
+      * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+    * _static_
+      * [.Entity](#ERMrest.Table.Entity)
+        * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+        * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
+        * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+        * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+        * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
+        * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
+        * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
+        * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+  * [.Rows](#ERMrest.Rows)
+    * [new Rows(table, jsonRows, filter, limit, columns, [sortby])](#new_ERMrest.Rows_new)
+    * [.data](#ERMrest.Rows+data) : <code>Array</code>
+    * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
+    * [.get()](#ERMrest.Rows+get) ⇒ <code>Row</code>
+    * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
+    * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
+  * [.Row](#ERMrest.Row)
+    * [new Row(jsonRow)](#new_ERMrest.Row_new)
+    * [.data](#ERMrest.Row+data) : <code>Object</code>
+    * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
+    * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
+  * [.Columns](#ERMrest.Columns)
+    * [new Columns()](#new_ERMrest.Columns_new)
+    * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
+    * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
+    * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+  * [.Column](#ERMrest.Column)
+    * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
+    * [.name](#ERMrest.Column+name) : <code>String</code>
+    * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
+    * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+    * [.default](#ERMrest.Column+default) : <code>String</code>
+    * [.comment](#ERMrest.Column+comment) : <code>String</code>
+    * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+    * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
+    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
+    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+  * [.Annotations](#ERMrest.Annotations)
+    * [new Annotations()](#new_ERMrest.Annotations_new)
+    * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
+    * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
+    * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
+    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
+  * [.Annotation](#ERMrest.Annotation)
+    * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
+    * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
+    * [.content](#ERMrest.Annotation+content) : <code>String</code>
+  * [.Keys](#ERMrest.Keys)
+    * [new Keys()](#new_ERMrest.Keys_new)
+    * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
+    * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
+    * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
+    * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
+  * [.Key](#ERMrest.Key)
+    * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
+    * [.table](#ERMrest.Key+table) : <code>Table</code>
+    * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+    * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
+  * [.ColSet](#ERMrest.ColSet)
+    * [new ColSet(columns)](#new_ERMrest.ColSet_new)
+    * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+    * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
+  * [.Mapping](#ERMrest.Mapping)
+    * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+    * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
+    * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+    * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+  * [.ForeignKeys](#ERMrest.ForeignKeys)
+    * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+    * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
+    * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
+    * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
+    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+  * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
+    * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+    * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+    * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
+    * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+    * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
+    * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+    * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
+  * [.Type](#ERMrest.Type)
+    * [new Type(name)](#new_ERMrest.Type_new)
+    * [.name](#ERMrest.Type+name)
+  * [.Reference](#ERMrest.Reference)
+    * [new Reference(uri)](#new_ERMrest.Reference_new)
+    * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+    * [.model](#ERMrest.Reference+model) : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
+    * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
+      * [.view](#ERMrest.Reference+mode.view)
+      * [.edit](#ERMrest.Reference+mode.edit)
+    * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
+    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+    * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+    * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+    * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+  * [.Page](#ERMrest.Page)
+    * [new Page(reference, data)](#new_ERMrest.Page_new)
+    * [.data](#ERMrest.Page+data) : <code>Array.&lt;Object&gt;</code>
+    * [.tuple](#ERMrest.Page+tuple) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+    * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
+  * [.Tuple](#ERMrest.Tuple)
+    * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+    * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.data](#ERMrest.Tuple+data) : <code>Object</code>
+    * [.value](#ERMrest.Tuple+value) : <code>Object</code>
+    * [.name](#ERMrest.Tuple+name) : <code>string</code>
+    * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
+    * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
+  * [.Datapath](#ERMrest.Datapath) : <code>object</code>
+    * [.DataPath](#ERMrest.Datapath.DataPath)
+      * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+      * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+      * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+      * [.entity](#ERMrest.Datapath.DataPath+entity)
+        * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+        * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+      * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+      * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+    * [.PathTable](#ERMrest.Datapath.PathTable)
+      * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+      * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+      * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+      * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+      * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
+      * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+    * [.PathColumn](#ERMrest.Datapath.PathColumn)
+      * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+      * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+      * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+    * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
+      * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+      * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
+      * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+    * [.Operators()](#ERMrest.Datapath.Operators)
+  * [.Filters](#ERMrest.Filters) : <code>object</code>
+    * [.Negation](#ERMrest.Filters.Negation)
+      * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+      * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+    * [.Conjunction](#ERMrest.Filters.Conjunction)
+      * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+      * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+    * [.Disjunction](#ERMrest.Filters.Disjunction)
+      * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+      * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+    * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+      * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+      * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+    * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
+      * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+      * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+  * [.configure(http, q)](#ERMrest.configure)
+  * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
+  * [.resolve(uri)](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 ### ERMrest.Server
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Server](#ERMrest.Server)
-    * [new Server(uri)](#new_ERMrest.Server_new)
-    * [.uri](#ERMrest.Server+uri) : <code>String</code>
-    * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
+  * [new Server(uri)](#new_ERMrest.Server_new)
+  * [.uri](#ERMrest.Server+uri) : <code>String</code>
+  * [.catalogs](#ERMrest.Server+catalogs) : <code>[Catalogs](#ERMrest.Catalogs)</code>
 
 <a name="new_ERMrest.Server_new"></a>
 #### new Server(uri)
@@ -246,10 +253,10 @@ to use for ERMrest JavaScript agents.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Catalogs](#ERMrest.Catalogs)
-    * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
-    * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
-    * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
+  * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
+  * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
+  * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
+  * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Catalogs_new"></a>
 #### new Catalogs(server)
@@ -286,10 +293,10 @@ Get a catalog by id. This call does catalog introspection.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Catalog](#ERMrest.Catalog)
-    * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-    * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
-    * [.id](#ERMrest.Catalog+id) : <code>String</code>
-    * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+  * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
+  * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
+  * [.id](#ERMrest.Catalog+id) : <code>String</code>
+  * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
 #### new Catalog(server, id)
@@ -315,11 +322,11 @@ Constructor for the Catalog.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Schemas](#ERMrest.Schemas)
-    * [new Schemas()](#new_ERMrest.Schemas_new)
-    * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
-    * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
-    * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+  * [new Schemas()](#new_ERMrest.Schemas_new)
+  * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
+  * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
+  * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
+  * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
 
 <a name="new_ERMrest.Schemas_new"></a>
 #### new Schemas()
@@ -357,13 +364,13 @@ get schema by schema name
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Schema](#ERMrest.Schema)
-    * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
-    * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
-    * [.name](#ERMrest.Schema+name)
-    * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
-    * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
-    * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+  * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
+  * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+  * [.name](#ERMrest.Schema+name)
+  * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
+  * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+  * [.displayname](#ERMrest.Schema+displayname) : <code>String</code>
+  * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 #### new Schema(catalog, jsonSchema)
@@ -400,11 +407,11 @@ Preferred display name for user presentation only.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Tables](#ERMrest.Tables)
-    * [new Tables()](#new_ERMrest.Tables_new)
-    * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
-    * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
+  * [new Tables()](#new_ERMrest.Tables_new)
+  * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
+  * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
+  * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
+  * [.get(name)](#ERMrest.Tables+get) ⇒ <code>[Table](#ERMrest.Table)</code>
 
 <a name="new_ERMrest.Tables_new"></a>
 #### new Tables()
@@ -442,27 +449,27 @@ get table by table name
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Table](#ERMrest.Table)
-    * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
-    * _instance_
-        * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
-        * [.name](#ERMrest.Table+name)
-        * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
-        * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
-        * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
-        * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
-        * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
-        * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
-    * _static_
-        * [.Entity](#ERMrest.Table.Entity)
-            * [new Entity(table)](#new_ERMrest.Table.Entity_new)
-            * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
-            * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
-            * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
-            * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
-            * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
-            * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
-            * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
+  * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
+  * _instance_
+    * [.schema](#ERMrest.Table+schema) : <code>[Schema](#ERMrest.Schema)</code>
+    * [.name](#ERMrest.Table+name)
+    * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
+    * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+    * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.displayname](#ERMrest.Table+displayname) : <code>String</code>
+    * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
+    * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
+    * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+  * _static_
+    * [.Entity](#ERMrest.Table.Entity)
+      * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+      * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
+      * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
+      * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
+      * [.getAfter(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getAfter) ⇒ <code>Promise</code>
+      * [.delete(filter)](#ERMrest.Table.Entity+delete) ⇒ <code>Promise</code>
+      * [.put(rows)](#ERMrest.Table.Entity+put) ⇒ <code>Promise</code>
+      * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table_new"></a>
 #### new Table(schema, jsonTable)
@@ -507,7 +514,7 @@ Preferred display name for user presentation only.
 #### Table.Entity
 **Kind**: static class of <code>[Table](#ERMrest.Table)</code>  
 
-* [.Entity](#ERMrest.Table.Entity)
+  * [.Entity](#ERMrest.Table.Entity)
     * [new Entity(table)](#new_ERMrest.Table.Entity_new)
     * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
     * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
@@ -636,12 +643,12 @@ Create new entities
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Rows](#ERMrest.Rows)
-    * [new Rows(table, jsonRows, filter, limit, columns, [sortby])](#new_ERMrest.Rows_new)
-    * [.data](#ERMrest.Rows+data) : <code>Array</code>
-    * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
-    * [.get()](#ERMrest.Rows+get) ⇒ <code>Row</code>
-    * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
-    * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
+  * [new Rows(table, jsonRows, filter, limit, columns, [sortby])](#new_ERMrest.Rows_new)
+  * [.data](#ERMrest.Rows+data) : <code>Array</code>
+  * [.length()](#ERMrest.Rows+length) ⇒ <code>number</code>
+  * [.get()](#ERMrest.Rows+get) ⇒ <code>Row</code>
+  * [.after()](#ERMrest.Rows+after) ⇒ <code>Promise</code>
+  * [.before()](#ERMrest.Rows+before) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Rows_new"></a>
 #### new Rows(table, jsonRows, filter, limit, columns, [sortby])
@@ -689,10 +696,10 @@ get the rowset of the previous page
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Row](#ERMrest.Row)
-    * [new Row(jsonRow)](#new_ERMrest.Row_new)
-    * [.data](#ERMrest.Row+data) : <code>Object</code>
-    * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
+  * [new Row(jsonRow)](#new_ERMrest.Row_new)
+  * [.data](#ERMrest.Row+data) : <code>Object</code>
+  * [.names()](#ERMrest.Row+names) ⇒ <code>Array</code>
+  * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Row_new"></a>
 #### new Row(jsonRow)
@@ -724,11 +731,11 @@ The row returned from the ith result in the Rows.data.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Columns](#ERMrest.Columns)
-    * [new Columns()](#new_ERMrest.Columns_new)
-    * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
-    * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
-    * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+  * [new Columns()](#new_ERMrest.Columns_new)
+  * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
+  * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
+  * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
+  * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Columns_new"></a>
 #### new Columns()
@@ -760,18 +767,18 @@ Constructor for Columns.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Column](#ERMrest.Column)
-    * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-    * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
-    * [.name](#ERMrest.Column+name) : <code>String</code>
-    * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
-    * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-    * [.default](#ERMrest.Column+default) : <code>String</code>
-    * [.comment](#ERMrest.Column+comment) : <code>String</code>
-    * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
-    * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
-    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
-    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+  * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+  * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
+  * [.name](#ERMrest.Column+name) : <code>String</code>
+  * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
+  * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+  * [.default](#ERMrest.Column+default) : <code>String</code>
+  * [.comment](#ERMrest.Column+comment) : <code>String</code>
+  * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+  * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+  * [.displayname](#ERMrest.Column+displayname) : <code>String</code>
+  * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
+  * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
@@ -827,12 +834,12 @@ foreign key that this column is a member of
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Annotations](#ERMrest.Annotations)
-    * [new Annotations()](#new_ERMrest.Annotations_new)
-    * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
-    * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
-    * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
-    * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
+  * [new Annotations()](#new_ERMrest.Annotations_new)
+  * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
+  * [.length()](#ERMrest.Annotations+length) ⇒ <code>Number</code>
+  * [.names()](#ERMrest.Annotations+names) ⇒ <code>Array</code>
+  * [.get(uri)](#ERMrest.Annotations+get) ⇒ <code>[Annotation](#ERMrest.Annotation)</code>
+  * [.contains(uri)](#ERMrest.Annotations+contains) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Annotations_new"></a>
 #### new Annotations()
@@ -879,9 +886,9 @@ get annotation by URI
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Annotation](#ERMrest.Annotation)
-    * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
-    * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
-    * [.content](#ERMrest.Annotation+content) : <code>String</code>
+  * [new Annotation(subject, uri, jsonAnnotation)](#new_ERMrest.Annotation_new)
+  * [.subject](#ERMrest.Annotation+subject) : <code>String</code>
+  * [.content](#ERMrest.Annotation+content) : <code>String</code>
 
 <a name="new_ERMrest.Annotation_new"></a>
 #### new Annotation(subject, uri, jsonAnnotation)
@@ -909,11 +916,11 @@ json content
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Keys](#ERMrest.Keys)
-    * [new Keys()](#new_ERMrest.Keys_new)
-    * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
-    * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
-    * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
-    * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
+  * [new Keys()](#new_ERMrest.Keys_new)
+  * [.all()](#ERMrest.Keys+all) ⇒ <code>Array.&lt;Key&gt;</code>
+  * [.length()](#ERMrest.Keys+length) ⇒ <code>Number</code>
+  * [.colsets()](#ERMrest.Keys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
+  * [.get(colset)](#ERMrest.Keys+get) ⇒ <code>[Key](#ERMrest.Key)</code>
 
 <a name="new_ERMrest.Keys_new"></a>
 #### new Keys()
@@ -951,11 +958,11 @@ get the key by the column set
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Key](#ERMrest.Key)
-    * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
-    * [.table](#ERMrest.Key+table) : <code>Table</code>
-    * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
-    * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
+  * [new Key(table, jsonKey)](#new_ERMrest.Key_new)
+  * [.table](#ERMrest.Key+table) : <code>Table</code>
+  * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+  * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+  * [.simple](#ERMrest.Key+simple) : <code>Boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
 #### new Key(table, jsonKey)
@@ -988,9 +995,9 @@ Indicates if the key is simple (not composite)
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.ColSet](#ERMrest.ColSet)
-    * [new ColSet(columns)](#new_ERMrest.ColSet_new)
-    * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
-    * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
+  * [new ColSet(columns)](#new_ERMrest.ColSet_new)
+  * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+  * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
 <a name="new_ERMrest.ColSet_new"></a>
 #### new ColSet(columns)
@@ -1013,10 +1020,10 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Mapping](#ERMrest.Mapping)
-    * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
-    * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
-    * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-    * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+  * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+  * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
+  * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+  * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Mapping_new"></a>
 #### new Mapping(from, to)
@@ -1054,11 +1061,11 @@ get the mapping column given the from column
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.ForeignKeys](#ERMrest.ForeignKeys)
-    * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
-    * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
-    * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
-    * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
-    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+  * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+  * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
+  * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
+  * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
+  * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 
 <a name="ERMrest.ForeignKeys+all"></a>
 #### foreignKeys.all() ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
@@ -1096,14 +1103,14 @@ get the foreign key of the given column set
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
-    * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
-    * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
-    * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
-    * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
-    * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
-    * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-    * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
+  * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+  * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
+  * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
+  * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+  * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
+  * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+  * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+  * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
 #### new ForeignKeyRef(table, jsonFKR)
@@ -1152,8 +1159,8 @@ Indicates if the foreign key is simple (not composite)
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Type](#ERMrest.Type)
-    * [new Type(name)](#new_ERMrest.Type_new)
-    * [.name](#ERMrest.Type+name)
+  * [new Type(name)](#new_ERMrest.Type_new)
+  * [.name](#ERMrest.Type+name)
 
 <a name="new_ERMrest.Type_new"></a>
 #### new Type(name)
@@ -1170,84 +1177,388 @@ Indicates if the foreign key is simple (not composite)
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference()](#new_ERMrest.Reference_new)
-    * [.mode](#ERMrest.Reference+mode)
-    * [.isUnique](#ERMrest.Reference+isUnique)
-    * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+  * [new Reference(uri)](#new_ERMrest.Reference_new)
+  * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+  * [.model](#ERMrest.Reference+model) : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
+  * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
+    * [.view](#ERMrest.Reference+mode.view)
+    * [.edit](#ERMrest.Reference+mode.edit)
+  * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
+  * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+  * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+  * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+  * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+  * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+  * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Reference_new"></a>
-#### new Reference()
-The constructor of the `Reference` object.
+#### new Reference(uri)
+Constructs a Reference object.
 
-<a name="ERMrest.Reference+mode"></a>
-#### reference.mode
-Statically defined "modes" to contextualize the reference.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>string</code> | The `URI` for this reference. |
+
+<a name="ERMrest.Reference+uri"></a>
+#### reference.uri : <code>string</code>
+The string form of the `URI` for this reference.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+model"></a>
+#### reference.model : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
+The model element for this reference. 
+
+_Note_: everything returned from ERMrest is a 'tuple' or a 'relation'
+and the `model` property here is therefore the model of that tuple.
+In the simplest cases, the refernece is to an entity or set of 
+entities, therefore they can be described by a [Table](#ERMrest.Table).
+Other types of tuples, like a projection of columns using the
+`attribute/` interface, are not described by a particular table 
+definition. We may need to introduce a `Relation` element to the
+model objects to cover the non-table cases.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+mode"></a>
+#### reference.mode : <code>Object</code>
+Statically defined "modes" to contextualize the reference.
+This object should be used like an enumeration type as a parameter
+to the contextualize function.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+
+* [.mode](#ERMrest.Reference+mode) : <code>Object</code>
+  * [.view](#ERMrest.Reference+mode.view)
+  * [.edit](#ERMrest.Reference+mode.edit)
+
+<a name="ERMrest.Reference+mode.view"></a>
+##### mode.view
+Use to specify "view" mode context.
+
+**Kind**: static property of <code>[mode](#ERMrest.Reference+mode)</code>  
+<a name="ERMrest.Reference+mode.edit"></a>
+##### mode.edit
+Use to specify "edit" mode context.
+
+**Kind**: static property of <code>[mode](#ERMrest.Reference+mode)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
-#### reference.isUnique
-A Boolean value that indicates whether this Reference is
-_inherently_ unique. Meaning, that it can only refere to a single
-data element, like a single row. This is determined based on whether
-the reference filters on a unique key.
+#### reference.isUnique : <code>boolean</code>
+A Boolean value that indicates whether this Reference is _inherently_
+unique. Meaning, that it can only refere to a single data element, 
+like a single row. This is determined based on whether the reference 
+filters on a unique key.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+canCreate"></a>
+#### reference.canCreate : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client has the permission to _create_
+the referenced resource(s). In some cases, this permission cannot
+be termined and the value will be `undefined`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+canRead"></a>
+#### reference.canRead : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client has the permission to _read_
+the referenced resource(s). In some cases, this permission cannot
+be termined and the value will be `undefined`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+canUpdate"></a>
+#### reference.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client has the permission to _update_
+the referenced resource(s). In some cases, this permission cannot
+be termined and the value will be `undefined`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+canDelete"></a>
+#### reference.canDelete : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client has the permission to _delete_
+the referenced resource(s). In some cases, this permission cannot
+be termined and the value will be `undefined`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+relatedReferences"></a>
+#### reference.relatedReferences : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+The "related" references. Relationships are defined by foreign key
+references between [Table](#ERMrest.Table)s. Those references can be
+considered "outbound" where the table has FKRs to other entities or
+"inbound" where other entities have FKRs to this entity. Finally,
+entities can be "associated" by means of associative entities. Those
+are entities in another table that estably _many-to-many_ 
+relationships between entities. If this help `A <- B -> C` where
+entities in `B` establish relationships between entities in `A` and
+`C`. Thus entities in `A` and `C` may be associated and we may
+ignore `B` and think of this relationship as `A <-> C`, unless `B`
+has other moderating attributes, for instance that indicate the 
+`type` of relationship, but this is a model-depenent detail.
+
+_Note_: Initially, this will only reflect relationships based on
+"inbound" references.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+contextualize"></a>
 #### reference.contextualize(mode) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+_Contextualizes_ a [Reference](#ERMrest.Reference).  The contextualized 
+reference will behave and reflect state according to the mode. For 
+instance, in a "view" mode on a table, some columns may be hidden.
+
+Usage example:
+```
+var myRef2 = myRef1.contextualize(Reference.mode.view);
+// myRef1 is unchanged
+```
+
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> - A contextualized reference object, which
-is a copy of _this_ reference object. The _contextualized_ reference
-will behave and reflect state according to the mode. For instance,
-in a "view" mode on a table, some columns may be hidden.  
+is a copy of _this_ reference object.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| mode | <code>ERMrest.Reference.mode</code> | Indicates the contextual mode that the client wants to switch into. |
+| mode | <code>ERMrest.Reference.mode</code> | Indicates the desired contextual mode. |
 
+<a name="ERMrest.Reference+create"></a>
+#### reference.create(tbd) ⇒ <code>Promise</code>
+Creates a set of resources.
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Promise</code> - A promise for a TBD result.  
+**Throws**:
+
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
+defined or not in the valid range.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tbd | <code>Array</code> | TBD parameters. Probably an array of tuples [ {tuple},... ] for all entities to be created. |
+
+<a name="ERMrest.Reference+read"></a>
+#### reference.read(limit) ⇒ <code>Promise</code>
+Reads the references resources.
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Promise</code> - A promise for a {@Link ERMRest.Page} of results.  
+**Throws**:
+
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
+defined or not in the valid range.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| limit | <code>number</code> | The limit of results to be returned by the get method. |
+
+<a name="ERMrest.Reference+update"></a>
+#### reference.update(tbd) ⇒ <code>Promise</code>
+Updates a set of resources.
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Promise</code> - A promise for a TBD result.  
+**Throws**:
+
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
+defined or not in the valid range.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tbd | <code>Array</code> | TBD parameters. Probably an array of pairs of [ (keys+values, allvalues)]+ ] for all entities to be updated. |
+
+<a name="ERMrest.Reference+delete"></a>
+#### reference.delete() ⇒ <code>Promise</code>
+Deletes the referenced resources.
+
+Note that `delete` is a JavaScript keyword. We could consider 
+changing it to `del` but there is probably no harm is leaving it as
+`delete`.
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Promise</code> - A promise for a TBD result.  
+**Throws**:
+
+- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
+defined or not in the valid range.
+
+<a name="ERMrest.Page"></a>
+### ERMrest.Page
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Page](#ERMrest.Page)
+  * [new Page(reference, data)](#new_ERMrest.Page_new)
+  * [.data](#ERMrest.Page+data) : <code>Array.&lt;Object&gt;</code>
+  * [.tuple](#ERMrest.Page+tuple) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+  * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
+  * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
+
+<a name="new_ERMrest.Page_new"></a>
+#### new Page(reference, data)
+Constructs a new Page.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
+| data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
+
+<a name="ERMrest.Page+data"></a>
+#### page.data : <code>Array.&lt;Object&gt;</code>
+An array of unprocessed tuples returned by ERMrest. See
+[ERMrest.Page.tuple](ERMrest.Page.tuple).
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+tuple"></a>
+#### page.tuple : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+An array of processed tuples. The results will be processed
+according to the contextualized model element associated with this
+page of results. For instance, if the reference was made to a set of
+entities, then the model element is a [Table](#ERMrest.Table). Other
+interfaces may not have such clear `schema:table` model element to
+define the tuple.
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+previous"></a>
+#### page.previous : <code>[Reference](#ERMrest.Reference)</code>
+A reference to the previous set of results.
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+next"></a>
+#### page.next : <code>[Reference](#ERMrest.Reference)</code>
+A reference to the next set of results.
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Tuple"></a>
+### ERMrest.Tuple
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.Tuple](#ERMrest.Tuple)
+  * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+  * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+  * [.data](#ERMrest.Tuple+data) : <code>Object</code>
+  * [.value](#ERMrest.Tuple+value) : <code>Object</code>
+  * [.name](#ERMrest.Tuple+name) : <code>string</code>
+  * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
+  * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
+
+<a name="new_ERMrest.Tuple_new"></a>
+#### new Tuple(reference, data)
+Constructs a new Tuple.
+
+_Note_: An open question in this part of the API is whether the client
+should change `.value[i]`s or `.data[i]` when in an edit mode. In an
+edit mode, we might expect that the `.value[i]` is not processed for
+display and therefore is just a shallow copy of the `.data` which should
+not be modified by the client.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
+| data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
+
+<a name="ERMrest.Tuple+canUpdate"></a>
+#### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client can update this tuple. Because
+some policies may be undecidable until query execution, this
+property may also be `undefined`.
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+canDelete"></a>
+#### tuple.canDelete : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client can delete this tuple. Because
+some policies may be undecidable until query execution, this
+property may also be `undefined`.
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+data"></a>
+#### tuple.data : <code>Object</code>
+The unprocessed tuple of data returned from ERMrest. It can be
+treated like a map that is keyed on the column name.
+
+```
+var raw = page.tuple[i].data['column_name'];
+```
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+value"></a>
+#### tuple.value : <code>Object</code>
+The processed values of this tuple. It can be treated like a map that
+is keyed on the column name.
+
+```
+var raw = page.tuple[i].value['column_name'];
+```
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+name"></a>
+#### tuple.name : <code>string</code>
+The logical "name" of this tuple. For example, if this tuple is a
+row from a table, then the "name" is defined by the heuristic or
+the annotation for the _row name_.
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+update"></a>
+#### tuple.update() ⇒ <code>Promise</code>
+Attempts to update this tuple. This is a server side transaction,
+and therefore an asynchronous operation that returns a promise.
+
+**Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>Promise</code> - a promise (TBD the result object)  
+<a name="ERMrest.Tuple+delete"></a>
+#### tuple.delete() ⇒ <code>Promise</code>
+Attempts to delete this tuple. This is a server side transaction,
+and therefore an asynchronous operation that returns a promise.
+
+**Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>Promise</code> - a promise (TBD the result object)  
 <a name="ERMrest.Datapath"></a>
 ### ERMrest.Datapath : <code>object</code>
 **Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Datapath](#ERMrest.Datapath) : <code>object</code>
-    * [.DataPath](#ERMrest.Datapath.DataPath)
-        * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-        * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
-        * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-        * [.entity](#ERMrest.Datapath.DataPath+entity)
-            * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
-            * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
-        * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-        * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-    * [.PathTable](#ERMrest.Datapath.PathTable)
-        * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
-        * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-        * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
-        * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-        * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
-        * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
-    * [.PathColumn](#ERMrest.Datapath.PathColumn)
-        * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
-        * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-        * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
-    * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-        * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-        * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
-    * [.Operators()](#ERMrest.Datapath.Operators)
+  * [.DataPath](#ERMrest.Datapath.DataPath)
+    * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+    * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+    * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+    * [.entity](#ERMrest.Datapath.DataPath+entity)
+      * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+      * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+    * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+    * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+  * [.PathTable](#ERMrest.Datapath.PathTable)
+    * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+    * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+    * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+    * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+    * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
+    * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+  * [.PathColumn](#ERMrest.Datapath.PathColumn)
+    * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+    * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+    * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+  * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
+    * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
+    * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+  * [.Operators()](#ERMrest.Datapath.Operators)
 
 <a name="ERMrest.Datapath.DataPath"></a>
 #### Datapath.DataPath
 **Kind**: static class of <code>[Datapath](#ERMrest.Datapath)</code>  
 
 * [.DataPath](#ERMrest.Datapath.DataPath)
-    * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
-    * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
-    * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-    * [.entity](#ERMrest.Datapath.DataPath+entity)
-        * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
-        * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
-    * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-    * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+  * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+  * [.catalog](#ERMrest.Datapath.DataPath+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
+  * [.context](#ERMrest.Datapath.DataPath+context) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+  * [.entity](#ERMrest.Datapath.DataPath+entity)
+    * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+    * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+  * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+  * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
 
 <a name="new_ERMrest.Datapath.DataPath_new"></a>
 ##### new DataPath(table)
@@ -1269,8 +1580,8 @@ entity container
 **Kind**: instance property of <code>[DataPath](#ERMrest.Datapath.DataPath)</code>  
 
 * [.entity](#ERMrest.Datapath.DataPath+entity)
-    * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
-    * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+  * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+  * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Datapath.DataPath+entity.get"></a>
 ###### entity.get() ⇒ <code>Promise</code>
@@ -1319,12 +1630,12 @@ extend the Datapath with table
 **Kind**: static class of <code>[Datapath](#ERMrest.Datapath)</code>  
 
 * [.PathTable](#ERMrest.Datapath.PathTable)
-    * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
-    * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
-    * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
-    * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-    * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
-    * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+  * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+  * [.datapath](#ERMrest.Datapath.PathTable+datapath) : <code>[DataPath](#ERMrest.Datapath.DataPath)</code>
+  * [.table](#ERMrest.Datapath.PathTable+table) : <code>[Table](#ERMrest.Table)</code>
+  * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+  * [.columns](#ERMrest.Datapath.PathTable+columns) : <code>[Columns](#ERMrest.Datapath.Columns)</code>
+  * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Datapath.PathTable_new"></a>
 ##### new PathTable(table, datapath, alias)
@@ -1356,9 +1667,9 @@ extend the Datapath with table
 **Kind**: static class of <code>[Datapath](#ERMrest.Datapath)</code>  
 
 * [.PathColumn](#ERMrest.Datapath.PathColumn)
-    * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
-    * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
-    * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
+  * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+  * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : <code>[PathTable](#ERMrest.Datapath.PathTable)</code>
+  * [.column](#ERMrest.Datapath.PathColumn+column) : <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Datapath.PathColumn_new"></a>
 ##### new PathColumn(column, pathtable)
@@ -1385,9 +1696,9 @@ extend the Datapath with table
 
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-    * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-    * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
+  * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
+  * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
+  * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ <code>[PathColumn](#ERMrest.Datapath.PathColumn)</code>
 
 <a name="ERMrest.Datapath.Columns+length"></a>
 ##### columns.length() ⇒ <code>Number</code>
@@ -1420,29 +1731,29 @@ get PathColumn object by column name
 **Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Filters](#ERMrest.Filters) : <code>object</code>
-    * [.Negation](#ERMrest.Filters.Negation)
-        * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
-        * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
-    * [.Conjunction](#ERMrest.Filters.Conjunction)
-        * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
-        * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
-    * [.Disjunction](#ERMrest.Filters.Disjunction)
-        * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
-        * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
-    * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
-        * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
-        * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
-    * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
-        * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
-        * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+  * [.Negation](#ERMrest.Filters.Negation)
+    * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+    * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+  * [.Conjunction](#ERMrest.Filters.Conjunction)
+    * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+    * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+  * [.Disjunction](#ERMrest.Filters.Disjunction)
+    * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+    * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+  * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+    * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+    * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+  * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
+    * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+    * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
 
 <a name="ERMrest.Filters.Negation"></a>
 #### Filters.Negation
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
 
 * [.Negation](#ERMrest.Filters.Negation)
-    * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
-    * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+  * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+  * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Filters.Negation_new"></a>
 ##### new Negation(filter)
@@ -1460,8 +1771,8 @@ get PathColumn object by column name
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
 
 * [.Conjunction](#ERMrest.Filters.Conjunction)
-    * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
-    * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+  * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+  * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Filters.Conjunction_new"></a>
 ##### new Conjunction(filters)
@@ -1479,8 +1790,8 @@ get PathColumn object by column name
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
 
 * [.Disjunction](#ERMrest.Filters.Disjunction)
-    * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
-    * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+  * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+  * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Filters.Disjunction_new"></a>
 ##### new Disjunction(filters)
@@ -1498,8 +1809,8 @@ get PathColumn object by column name
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
 
 * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
-    * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
-    * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+  * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+  * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Filters.UnaryPredicate_new"></a>
 ##### new UnaryPredicate(column, operator)
@@ -1522,8 +1833,8 @@ get PathColumn object by column name
 **Kind**: static class of <code>[Filters](#ERMrest.Filters)</code>  
 
 * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
-    * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
-    * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+  * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+  * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Filters.BinaryPredicate_new"></a>
 ##### new BinaryPredicate(column, operator, rvalue)
@@ -1542,144 +1853,6 @@ get PathColumn object by column name
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
 **Kind**: instance method of <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code>  
 **Returns**: <code>string</code> - URI of the filter  
-<a name="ERMrest.Errors"></a>
-### ERMrest.Errors : <code>object</code>
-**Kind**: static namespace of <code>[ERMrest](#ERMrest)</code>  
-
-* [.Errors](#ERMrest.Errors) : <code>object</code>
-    * [.TimedOutError](#ERMrest.Errors.TimedOutError)
-        * [new TimedOutError(status, message)](#new_ERMrest.Errors.TimedOutError_new)
-    * [.BadRequestError](#ERMrest.Errors.BadRequestError)
-        * [new BadRequestError(status, message)](#new_ERMrest.Errors.BadRequestError_new)
-    * [.UnauthorizedError](#ERMrest.Errors.UnauthorizedError)
-        * [new UnauthorizedError(status, message)](#new_ERMrest.Errors.UnauthorizedError_new)
-    * [.ForbiddenError](#ERMrest.Errors.ForbiddenError)
-        * [new ForbiddenError(status, message)](#new_ERMrest.Errors.ForbiddenError_new)
-    * [.NotFoundError](#ERMrest.Errors.NotFoundError)
-        * [new NotFoundError(status, message)](#new_ERMrest.Errors.NotFoundError_new)
-    * [.ConflictError](#ERMrest.Errors.ConflictError)
-        * [new ConflictError(status, message)](#new_ERMrest.Errors.ConflictError_new)
-    * [.InternalServerError](#ERMrest.Errors.InternalServerError)
-        * [new InternalServerError(status, message)](#new_ERMrest.Errors.InternalServerError_new)
-    * [.ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError)
-        * [new ServiceUnavailableError(status, message)](#new_ERMrest.Errors.ServiceUnavailableError_new)
-    * [.InvalidFilterOperatorError](#ERMrest.Errors.InvalidFilterOperatorError)
-        * [new InvalidFilterOperatorError(message)](#new_ERMrest.Errors.InvalidFilterOperatorError_new)
-    * [.InvalidInputError](#ERMrest.Errors.InvalidInputError)
-        * [new InvalidInputError(message)](#new_ERMrest.Errors.InvalidInputError_new)
-
-<a name="ERMrest.Errors.TimedOutError"></a>
-#### Errors.TimedOutError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.TimedOutError_new"></a>
-##### new TimedOutError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.BadRequestError"></a>
-#### Errors.BadRequestError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.BadRequestError_new"></a>
-##### new BadRequestError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.UnauthorizedError"></a>
-#### Errors.UnauthorizedError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.UnauthorizedError_new"></a>
-##### new UnauthorizedError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ForbiddenError"></a>
-#### Errors.ForbiddenError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ForbiddenError_new"></a>
-##### new ForbiddenError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.NotFoundError"></a>
-#### Errors.NotFoundError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.NotFoundError_new"></a>
-##### new NotFoundError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ConflictError"></a>
-#### Errors.ConflictError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ConflictError_new"></a>
-##### new ConflictError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InternalServerError"></a>
-#### Errors.InternalServerError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InternalServerError_new"></a>
-##### new InternalServerError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.ServiceUnavailableError"></a>
-#### Errors.ServiceUnavailableError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.ServiceUnavailableError_new"></a>
-##### new ServiceUnavailableError(status, message)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status | <code>string</code> | the network error code |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InvalidFilterOperatorError"></a>
-#### Errors.InvalidFilterOperatorError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InvalidFilterOperatorError_new"></a>
-##### new InvalidFilterOperatorError(message)
-An invalid filter operator
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| message | <code>string</code> | error message |
-
-<a name="ERMrest.Errors.InvalidInputError"></a>
-#### Errors.InvalidInputError
-**Kind**: static class of <code>[Errors](#ERMrest.Errors)</code>  
-<a name="new_ERMrest.Errors.InvalidInputError_new"></a>
-##### new InvalidInputError(message)
-An invalid input
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| message | <code>string</code> | error message |
-
 <a name="ERMrest.configure"></a>
 ### ERMrest.configure(http, q)
 This function is used to configure the module
@@ -1710,11 +1883,11 @@ URI should be to the ERMrest _service_. For example,
 
 <a name="ERMrest.resolve"></a>
 ### ERMrest.resolve(uri) ⇒ <code>Promise</code>
-This function resolves a URI reference to a [Reference](#ERMrest.Reference)
-object. It validates the syntax of the URI and validates that the references
-to model elements in it. This function makes a call to the ERMrest server
-in order to get the `schema` resource which it uses in the validation of
-the URI reference.
+This function resolves a URI reference to a [Reference](#ERMrest.Reference) 
+object. It validates the syntax of the URI and validates that the 
+references to model elements in it. This function makes a call to the 
+ERMrest server in order to get the `schema` resource which it uses in the
+validation of the URI reference.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>Promise</code> - Promise when resolved passes the
@@ -1726,10 +1899,10 @@ the URI reference.
 or [ERMrest.Errors.Unauthorized](ERMrest.Errors.Unauthorized)  
 **Throws**:
 
-- <code>ERMrest.Errors.MalformedURI</code> if the input URI is malformed.
+- <code>[MalformedURIError](#ERMrest.Errors.MalformedURIError)</code> if the input URI is malformed.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>String</code> | A `URI` to a resource in an ERMrest service. |
+| uri | <code>string</code> | A `URI` to a resource in an ERMrest service. |
 
