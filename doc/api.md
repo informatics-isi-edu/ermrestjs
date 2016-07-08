@@ -1318,7 +1318,7 @@ is a copy of _this_ reference object.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| mode | <code>ERMrest.Reference.mode</code> | Indicates the desired contextual mode. |
+| mode | <code>[mode](#ERMrest.Reference+mode)</code> | Indicates the desired contextual mode. |
 
 <a name="ERMrest.Reference+create"></a>
 #### reference.create(tbd) ⇒ <code>Promise</code>

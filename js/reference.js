@@ -123,7 +123,7 @@ var ERMrest = (function(module) {
          * var myRef2 = myRef1.contextualize(Reference.mode.view);
          * // myRef1 is unchanged
          * ```
-         * @param {!ERMrest.Reference.mode} mode Indicates the desired contextual
+         * @param {!ERMrest.Reference#mode} mode Indicates the desired contextual
          * mode.
          * @returns {ERMrest.Reference} A contextualized reference object, which
          * is a copy of _this_ reference object.
