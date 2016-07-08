@@ -35,9 +35,6 @@ NG_SRC=$(JS)/ngermrest.js
 # All source
 SOURCE=$(JS_SRC) $(NG_SRC)
 
-# Specs
-SPECS=test/karma.conf.js
-
 # Build target
 BUILD=build
 
@@ -141,7 +138,7 @@ test:  $(TEST)
 
 # Rule to run the unit tests
 $(TEST): $(PKG)
-	node spec/jasmine-runner.js
+	node test/jasmine-runner.js
 	@touch $(TEST)
 
 # Rule to install the package

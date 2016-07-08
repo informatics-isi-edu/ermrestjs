@@ -3,13 +3,13 @@
     "schema": {
         "name": "product",   
         "createNew": true,  
-        "path": "spec/configuration/sample.spec.conf/product.json"  
+        "path": "test/configuration/sample.spec.conf/product.json"
     },
     "tables": {
         "createNew": true
     },
     "entities": {
         "createNew": true,
-        "path": "spec/configuration/sample.spec.conf/data/product"  
+        "path": "test/configuration/sample.spec.conf/data/product"
     }
 }
