@@ -1,5 +1,5 @@
 
-var includes = require(__dirname + '/utils/ermrest-init.js').init();
+var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermRest = includes.ermRest;
@@ -10,7 +10,7 @@ describe('In ERMrest,', function () {
     
     beforeAll(function (done) {
         ermrestUtils.importData({
-            setup: require('./configuration/sample.spec.conf.json'), 
+            setup: require('../configuration/sample.spec.conf.json'),
             url: includes.url ,
             authCookie : includes.authCookie
         }).then(function(data) {
@@ -39,7 +39,7 @@ describe('In ERMrest,', function () {
             console.dir(err);
             done.fail();
         });
-    })
+    });
 
     it('Should have schema name', function (done) {
         expect(schema).toBeDefined();
@@ -54,7 +54,7 @@ describe('In ERMrest,', function () {
 
     afterAll(function(done) {
         ermrestUtils.tear({
-            setup: require('./configuration/sample.spec.conf.json'),
+            setup: require('../configuration/sample.spec.conf.json'),
             catalogId: catalog_id,
             url:  includes.url ,
             authCookie : includes.authCookie
