@@ -98,6 +98,7 @@ When developing new code for ermrestjs, please remember to run the build tools
 _before_ submitting Pull Requests (PR).
 
 Steps to make a contribution:
+
 1. make your updates to the code;
 2. do your own quality assurance;
 3. update the documentation (if applicable);
