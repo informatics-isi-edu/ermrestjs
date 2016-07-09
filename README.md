@@ -12,12 +12,16 @@ We intend for ermrestjs to be usable in browsers and nodejs.
 - Nodejs: experimental, more information coming.
 - AngularJS: should work with AngularJS 1.x.
 
-## Deployment packages
+## Library
 
-The library consists of the following packages:
-- `ermrest.js`: a complete, non-minified package.
-- `ermrest.min.js`: a complete, minified package.
-- `ngermrest.js`: add-on for using either of the above packages in AngularJS.
+The library consists of the following scripts:
+- `ermrest.js`: a complete, non-minified script.
+- `ermrest.min.js`: a complete, minified script.
+- `ngermrest.js`: add-on for using either of the above scripts in AngularJS.
+
+## Documention
+
+See the [API reference](doc/api.md).
 
 ## Development dependencies
 
