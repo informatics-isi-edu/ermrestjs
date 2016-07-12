@@ -86,6 +86,7 @@ to use for ERMrest JavaScript agents.
     * [.get(name)](#ERMrest.Columns+get) ⇒ <code>[Column](#ERMrest.Column)</code>
   * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
@@ -97,6 +98,7 @@ to use for ERMrest JavaScript agents.
     * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+    * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
   * [.Annotations](#ERMrest.Annotations)
     * [new Annotations()](#new_ERMrest.Annotations_new)
     * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -151,33 +153,30 @@ to use for ERMrest JavaScript agents.
     * [new Reference(uri)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-    * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
-      * [.view](#ERMrest.Reference+mode.view)
-      * [.edit](#ERMrest.Reference+mode.edit)
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
+    * [.contextualize](#ERMrest.Reference+contextualize)
+      * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
+      * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-    * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
   * [.Page](#ERMrest.Page)
     * [new Page(reference, data)](#new_ERMrest.Page_new)
-    * [.data](#ERMrest.Page+data) : <code>Array.&lt;Object&gt;</code>
-    * [.tuple](#ERMrest.Page+tuple) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+    * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
     * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
     * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
   * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-    * [.data](#ERMrest.Tuple+data) : <code>Object</code>
-    * [.value](#ERMrest.Tuple+value) : <code>Object</code>
-    * [.name](#ERMrest.Tuple+name) : <code>string</code>
+    * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+    * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
   * [.Datapath](#ERMrest.Datapath) : <code>object</code>
@@ -768,6 +767,7 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
   * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+  * [.position](#ERMrest.Column+position) : <code>number</code>
   * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
   * [.name](#ERMrest.Column+name) : <code>string</code>
   * [.type](#ERMrest.Column+type) : <code>[Type](#ERMrest.Type)</code>
@@ -779,10 +779,15 @@ Constructor for Columns.
   * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
   * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
   * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
+  * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Column_new"></a>
 #### new Column(table, jsonColumn)
-Constructor for Column.
+Constructs a Column.
+
+TODO: The Column will need to change. We need to be able to use the
+column in the context the new [ERMrest.Reference+columns](ERMrest.Reference+columns) where
+a Column _may not_ be a part of a Table.
 
 
 | Param | Type | Description |
@@ -790,6 +795,13 @@ Constructor for Column.
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
 
+<a name="ERMrest.Column+position"></a>
+#### column.position : <code>number</code>
+The ordinal number or position of this column relative to other 
+columns within the same scope.
+TODO: to be implemented
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+table"></a>
 #### column.table : <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
@@ -829,6 +841,17 @@ keys that this column is a member of
 foreign key that this column is a member of
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
+<a name="ERMrest.Column+formatvalue"></a>
+#### column.formatvalue(data) ⇒ <code>string</code>
+Formats a value corresponding to this column definition.
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+**Returns**: <code>string</code> - The formatted value.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | The 'raw' data value. |
+
 <a name="ERMrest.Annotations"></a>
 ### ERMrest.Annotations
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
@@ -1180,16 +1203,15 @@ Indicates if the foreign key is simple (not composite)
   * [new Reference(uri)](#new_ERMrest.Reference_new)
   * [.uri](#ERMrest.Reference+uri) : <code>string</code>
   * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-  * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
-    * [.view](#ERMrest.Reference+mode.view)
-    * [.edit](#ERMrest.Reference+mode.edit)
   * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
+  * [.contextualize](#ERMrest.Reference+contextualize)
+    * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
   * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
   * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
   * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
   * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
   * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-  * [.contextualize(mode)](#ERMrest.Reference+contextualize) ⇒ <code>[Reference](#ERMrest.Reference)</code>
   * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
   * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
   * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1198,6 +1220,12 @@ Indicates if the foreign key is simple (not composite)
 <a name="new_ERMrest.Reference_new"></a>
 #### new Reference(uri)
 Constructs a Reference object.
+
+For most uses, maybe all, of the `ermrestjs` library, the Reference
+will be the main object that the client will interact with. References
+are immutable objects and therefore can be safely passed around and
+used between multiple client components without risk that the underlying
+reference to server-side resources could change.
 
 
 | Param | Type | Description |
@@ -1211,7 +1239,8 @@ The string form of the `URI` for this reference.
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+columns"></a>
 #### reference.columns : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-The column definitions for this references.
+The array of column definitions which represent the model of
+the resources accessible via this reference.
 
 _Note_: in database jargon, technically everything returned from 
 ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
@@ -1220,28 +1249,6 @@ array of [Column](#ERMrest.Column)s. The column definitions may be
 contextualized (see [ERMrest.Reference+contextualize](ERMrest.Reference+contextualize)).
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+mode"></a>
-#### reference.mode : <code>Object</code>
-Statically defined "modes" to contextualize the reference.
-This object should be used like an enumeration type as a parameter
-to the contextualize function.
-
-**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-
-* [.mode](#ERMrest.Reference+mode) : <code>Object</code>
-  * [.view](#ERMrest.Reference+mode.view)
-  * [.edit](#ERMrest.Reference+mode.edit)
-
-<a name="ERMrest.Reference+mode.view"></a>
-##### mode.view
-Use to specify "view" mode context.
-
-**Kind**: static property of <code>[mode](#ERMrest.Reference+mode)</code>  
-<a name="ERMrest.Reference+mode.edit"></a>
-##### mode.edit
-Use to specify "edit" mode context.
-
-**Kind**: static property of <code>[mode](#ERMrest.Reference+mode)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
 #### reference.isUnique : <code>boolean</code>
 A Boolean value that indicates whether this Reference is _inherently_
@@ -1262,6 +1269,38 @@ _Note_: we intend to support other semantic checks on references like
 `isUnconstrained`, `isFiltered`, etc.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+contextualize"></a>
+#### reference.contextualize
+The members of this object are _contextualized references_.
+
+These references will behave and reflect state according to the mode.
+For instance, in a `view` mode on a table some columns may be hidden.
+
+Usage example:
+```
+// ...we already have an uncontextualized reference "ref"
+var viewRef = ref.contextualize.view;
+// ref is unchanged
+// viewRef now has a reconfigured reference
+// for e.g., viewRef.columns may look different from ref.columns
+```
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+
+* [.contextualize](#ERMrest.Reference+contextualize)
+  * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
+  * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
+
+<a name="ERMrest.Reference+contextualize.view"></a>
+##### contextualize.view : <code>[Reference](#ERMrest.Reference)</code>
+The _view_ context of this reference.
+
+**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
+<a name="ERMrest.Reference+contextualize.edit"></a>
+##### contextualize.edit : <code>[Reference](#ERMrest.Reference)</code>
+The _edit_ context of this reference.
+
+**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
 <a name="ERMrest.Reference+canCreate"></a>
 #### reference.canCreate : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client has the permission to _create_
@@ -1309,26 +1348,6 @@ _Note_: Initially, this will only reflect relationships based on
 "inbound" references.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+contextualize"></a>
-#### reference.contextualize(mode) ⇒ <code>[Reference](#ERMrest.Reference)</code>
-_Contextualizes_ a [Reference](#ERMrest.Reference).  The contextualized 
-reference will behave and reflect state according to the mode. For 
-instance, in a "view" mode on a table, some columns may be hidden.
-
-Usage example:
-```
-var myRef2 = myRef1.contextualize(Reference.mode.view);
-// myRef1 is unchanged
-```
-
-**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>[Reference](#ERMrest.Reference)</code> - A contextualized reference object, which
-is a copy of _this_ reference object.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| mode | <code>[mode](#ERMrest.Reference+mode)</code> | Indicates the desired contextual mode. |
-
 <a name="ERMrest.Reference+create"></a>
 #### reference.create(tbd) ⇒ <code>Promise</code>
 Creates a set of resources.
@@ -1347,31 +1366,24 @@ defined or not in the valid range.
 
 <a name="ERMrest.Reference+read"></a>
 #### reference.read(limit) ⇒ <code>Promise</code>
-Reads the references resources.
+Reads the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a {@Link ERMRest.Page} of results.  
-**Throws**:
-
-- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
-defined or not in the valid range.
-
+**Returns**: <code>Promise</code> - A promise for a [ERMRest.Page](ERMRest.Page) of results,
+or
+[InvalidInputError](#ERMrest.Errors.InvalidInputError) if `limit` is invalid,
+TODO document other errors here.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| limit | <code>number</code> | The limit of results to be returned by the read request. |
+| limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
 
 <a name="ERMrest.Reference+update"></a>
 #### reference.update(tbd) ⇒ <code>Promise</code>
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result.  
-**Throws**:
-
-- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
-defined or not in the valid range.
-
+**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1386,26 +1398,25 @@ changing it to `del` but there is probably no harm is leaving it as
 `delete`.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result.  
-**Throws**:
-
-- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
-defined or not in the valid range.
-
+**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
 <a name="ERMrest.Page"></a>
 ### ERMrest.Page
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Page](#ERMrest.Page)
   * [new Page(reference, data)](#new_ERMrest.Page_new)
-  * [.data](#ERMrest.Page+data) : <code>Array.&lt;Object&gt;</code>
-  * [.tuple](#ERMrest.Page+tuple) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+  * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
   * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
   * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
 
 <a name="new_ERMrest.Page_new"></a>
 #### new Page(reference, data)
-Constructs a new Page.
+Constructs a new Page. A _page_ represents a set of results returned from
+ERMrest. It may not represent the complete set of results. There is an
+iterator pattern used here, where its [ERMrest.Page+previous](ERMrest.Page+previous) and
+[ERMrest.Page+next](ERMrest.Page+next) properties will give the client a 
+[Reference](#ERMrest.Reference) to the previous and next set of results, 
+respectively.
 
 
 | Param | Type | Description |
@@ -1413,20 +1424,10 @@ Constructs a new Page.
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
 
-<a name="ERMrest.Page+data"></a>
-#### page.data : <code>Array.&lt;Object&gt;</code>
-An array of unprocessed tuples returned by ERMrest.
-
-See also [tuple](#ERMrest.Page+tuple).
-
-**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
-<a name="ERMrest.Page+tuple"></a>
-#### page.tuple : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+<a name="ERMrest.Page+tuples"></a>
+#### page.tuples : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
 An array of processed tuples. The results will be processed
-according to the contextualized model element associated with this
-page of tuples.
-
-See also [data](#ERMrest.Page+data).
+according to the contextualized scheme (model) of this reference.
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+previous"></a>
@@ -1447,21 +1448,15 @@ A reference to the next set of results.
   * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
   * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
   * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-  * [.data](#ERMrest.Tuple+data) : <code>Object</code>
-  * [.value](#ERMrest.Tuple+value) : <code>Object</code>
-  * [.name](#ERMrest.Tuple+name) : <code>string</code>
+  * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+  * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
   * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
   * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Tuple_new"></a>
 #### new Tuple(reference, data)
-Constructs a new Tuple.
-
-_Note_: An open question in this part of the API is whether the client
-should change `.value[i]`s or `.data[i]` when in an edit mode. In an
-edit mode, we might expect that the `.value[i]` is not processed for
-display and therefore is just a shallow copy of the `.data` which should
-not be modified by the client.
+Constructs a new Tuple. In database jargon, a tuple is a row in a 
+relation. This object represents a row returned by a query to ERMrest.
 
 
 | Param | Type | Description |
@@ -1483,31 +1478,35 @@ some policies may be undecidable until query execution, this
 property may also be `undefined`.
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
-<a name="ERMrest.Tuple+data"></a>
-#### tuple.data : <code>Object</code>
-The unprocessed tuple of data returned from ERMrest. It can be
-treated like a map that is keyed on the column name.
+<a name="ERMrest.Tuple+values"></a>
+#### tuple.values : <code>Array.&lt;string&gt;</code>
+The array of formatted values of this tuple. The ordering of the 
+values in the array matches the ordering of the columns in the 
+reference (see [ERMrest.Reference+columns](ERMrest.Reference+columns)).
 
+Example of looping through all the values in all the tuples in a 
+page of results:
 ```
-var raw = page.tuple[i].data['column_name'];
+for (var i=0; i<ref.columns.length; i++) {
+  console.log(ref.columns[i].name, "has value", tuple.values[i]);
+  ...
+}
+```
+
+Example of getting a specific value for a prefetched column by its
+position:
+```
+console.log(col.name, "has value", tuple.values[col.position]);
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
-<a name="ERMrest.Tuple+value"></a>
-#### tuple.value : <code>Object</code>
-The processed values of this tuple. It can be treated like a map that
-is keyed on the column name.
+<a name="ERMrest.Tuple+displayname"></a>
+#### tuple.displayname : <code>string</code>
+The _disaply name_ of this tuple. For example, if this tuple is a
+row from a table, then the display name is defined by the heuristic
+or the annotation for the _row name_.
 
-```
-var raw = page.tuple[i].value['column_name'];
-```
-
-**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
-<a name="ERMrest.Tuple+name"></a>
-#### tuple.name : <code>string</code>
-The logical "name" of this tuple. For example, if this tuple is a
-row from a table, then the "name" is defined by the heuristic or
-the annotation for the _row name_.
+TODO: add a @link to the ermrest row name annotation
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+update"></a>

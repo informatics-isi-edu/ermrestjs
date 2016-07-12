@@ -1042,14 +1042,41 @@ var ERMrest = (function (module) {
 
 
     /**
+     * Constructs a Column.
+     *
+     * TODO: The Column will need to change. We need to be able to use the
+     * column in the context the new {@link ERMrest.Reference+columns} where
+     * a Column _may not_ be a part of a Table.
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
      * @param {string} jsonColumn the json column.
-     * @desc
-     * Constructor for Column.
      */
     function Column(table, jsonColumn) {
+
+        /**
+         * The ordinal number or position of this column relative to other 
+         * columns within the same scope.
+         * TODO: to be implemented
+         * @type {number}
+         */
+        this.position = undefined;
+
+        /**
+         * Formats a value corresponding to this column definition.
+         * @param {Object} data The 'raw' data value.
+         * @returns {string} The formatted value.
+         */
+        this.formatvalue = function(data) {
+            if (data) {
+                /* TODO format the raw value based on the column definition
+                 * type, heuristics, annotations, etc.
+                 */
+                return data.toString();
+            } else {
+                return 'undefined';
+            }
+        };
 
         /**
          *

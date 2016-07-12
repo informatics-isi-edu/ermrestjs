@@ -39,6 +39,7 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Errors.ColumnNotFoundError}
      */
     module.resolve = function(uri) {
+        // TODO
         // parse the uri; validating its syntax here
         //  if invalid syntax; reject with malformed uri error
         // make a uri to the catalog schema resource
@@ -46,18 +47,38 @@ var ERMrest = (function(module) {
         // validate the model references in the `uri` parameter
         // this method needs to internally construct a reference object that
         // represents the `uri` parameter
-        return undefined; // this will probably return a promise that was
-                          // returned from the module._http calls
+        return notimplemented();
     };
 
     /**
+     * Returns a rejected promise with a reason set to an `Error` object
+     * with the message 'not implemented'.
+     * @memberof ERMrest
+     * @private
+     * @function notimplemented
+     * @returns {Promise} the rejected promise
+     */
+    function notimplemented() {
+        return module._q.reject(new Error('not implemented'));
+    }
+
+    /**
      * Constructs a Reference object.
+     *
+     * For most uses, maybe all, of the `ermrestjs` library, the Reference
+     * will be the main object that the client will interact with. References
+     * are immutable objects and therefore can be safely passed around and
+     * used between multiple client components without risk that the underlying
+     * reference to server-side resources could change.
      * @memberof ERMrest
      * @class
      * @param {!string} uri The `URI` for this reference.
      */
     function Reference(uri) {
         this._uri = uri;
+        // TODO
+        // The reference will also need a reference to the catalog or a 
+        // way to get a refernece to the catalog
     }
 
     Reference.prototype = {
@@ -72,7 +93,8 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The column definitions for this references.
+         * The array of column definitions which represent the model of
+         * the resources accessible via this reference.
          *
          * _Note_: in database jargon, technically everything returned from 
          * ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
@@ -82,23 +104,6 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Column[]}
          */
         columns: null,
-
-        /**
-         * Statically defined "modes" to contextualize the reference.
-         * This object should be used like an enumeration type as a parameter
-         * to the contextualize function.
-         * @type {Object}
-         */
-        mode: {
-            /**
-             * Use to specify "view" mode context.
-             */
-            view: "view",
-            /**
-             * Use to specify "edit" mode context.
-             */
-            edit: "edit"
-        },
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_
@@ -123,30 +128,51 @@ var ERMrest = (function(module) {
             /* This getter should determine whether the reference is unique
              * on-demand.
              */
-            return; // TODO
+            return undefined; // TODO
         },
 
         /**
-         * _Contextualizes_ a {@link ERMrest.Reference}.  The contextualized 
-         * reference will behave and reflect state according to the mode. For 
-         * instance, in a "view" mode on a table, some columns may be hidden.
+         * The members of this object are _contextualized references_.
+         *
+         * These references will behave and reflect state according to the mode.
+         * For instance, in a `view` mode on a table some columns may be hidden.
          *
          * Usage example:
          * ```
-         * var myRef2 = myRef1.contextualize(Reference.mode.view);
-         * // myRef1 is unchanged
+         * // ...we already have an uncontextualized reference "ref"
+         * var viewRef = ref.contextualize.view;
+         * // ref is unchanged
+         * // viewRef now has a reconfigured reference
+         * // for e.g., viewRef.columns may look different from ref.columns
          * ```
-         * @param {!ERMrest.Reference#mode} mode Indicates the desired contextual
-         * mode.
-         * @returns {ERMrest.Reference} A contextualized reference object, which
-         * is a copy of _this_ reference object.
          */
-        contextualize: function(mode) {
-            // ideally we use copy-on-write style of copy here
-            var ref = _referenceCopy(this);
-            // may need to reprocess the annotations according to the
-            // contextual mode
-            return ref;
+        contextualize: {
+            /* TODO: you'll need to figure out how to allow the following 
+             * getters to have access to `this` with respect to the Refernece
+             * object not the nested contextualize object. A simple test can be
+             * done. The brute force way would be to introduce a `Contextualize`
+             * class that gets instantiated. Or a better less brute force way
+             * would be to have another lazy getter for the contextualize
+             * property.
+             */
+
+            /**
+             * The _view_ context of this reference.
+             * @type {ERMrest.Reference}
+             */
+            get view() {
+                // TODO: remember these are copies of this reference.
+                return undefined;
+            },
+
+            /**
+             * The _edit_ context of this reference.
+             * @type {ERMrest.Reference}
+             */
+            get edit() {
+                // TODO: remember these are copies of this reference.
+                return undefined;
+            }
         },
 
         /**
@@ -198,35 +224,45 @@ var ERMrest = (function(module) {
          * defined or not in the valid range.
          */
         create: function(tbd) {
-            return;
+            return notimplemented();
         },
 
         /**
-         * Reads the references resources.
+         * Reads the referenced resources.
          * @param {!number} limit The limit of results to be returned by the
-         * read request.
-         * @returns {Promise} A promise for a {@Link ERMRest.Page} of results.
-         * @throws {ERMrest.Errors.InvalidInputError} if `limit` is not 
-         * defined or not in the valid range.
+         * read request. __required__
+         * @returns {Promise} A promise for a {@link ERMRest.Page} of results,
+         * or
+         * {@link ERMrest.Errors.InvalidInputError} if `limit` is invalid,
+         * TODO document other errors here.
          */
         read: function(limit) {
-            if (limit === undefined || limit <= 0) {
-                throw new ERMrest.InvalidInputError();
+            var defer = module._q.defer();
+            if (limit === undefined) {
+                defer.reject(
+                    new ERMrest.InvalidInputError("'limit' must be specified"));
+            } else if (typeof(limit) != 'number') {
+                defer.reject(
+                    new ERMrest.InvalidInputError("'limit' must be a number"));
+            } else if (limit < 1) {
+                defer.reject(
+                    new ERMrest.InvalidInputError("'limit' must be greater than 0"));
             }
-            return; // will probably return a promise from the underlying http
-                    // calls
+            // TODO the real stuff goes here
+            // this can probably be direct calls to the module._http
+            // I do not think we need to re-use the current ...entity.get(...)
+            // methods implemented in the other scripts
+            return defer.promise;
         },
 
         /**
          * Updates a set of resources.
          * @param {!Array} tbd TBD parameters. Probably an array of pairs of
          * [ (keys+values, allvalues)]+ ] for all entities to be updated.
-         * @returns {Promise} A promise for a TBD result.
-         * @throws {ERMrest.Errors.InvalidInputError} if `limit` is not 
-         * defined or not in the valid range.
+         * @returns {Promise} A promise for a TBD result or errors.
          */
         update: function(tbd) {
-            return;
+            return notimplemented();
         },
 
         /**
@@ -235,12 +271,10 @@ var ERMrest = (function(module) {
          * Note that `delete` is a JavaScript keyword. We could consider 
          * changing it to `del` but there is probably no harm is leaving it as
          * `delete`.
-         * @returns {Promise} A promise for a TBD result.
-         * @throws {ERMrest.Errors.InvalidInputError} if `limit` is not 
-         * defined or not in the valid range.
+         * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function() {
-            return;
+            return notimplemented();
         },
 
         /**
@@ -289,21 +323,24 @@ var ERMrest = (function(module) {
 
     /**
      * This is a private function that makes a copy of a reference object.
-     * Because this method is defined withing this module's closure, it will
-     * only be accessible to functions within this module.
      * @memberof ERMrest
      * @private
      * @param {!ERMrest.Reference} source The source reference to be copied.
      * @returns {ERMrest.Reference} The copy of the reference object.
      */
     function _referenceCopy(source) {
-        // make a (copy-on-write) copy of the source reference
+        // TODO: make a (copy-on-write) copy of the source reference
         return source; // TODO
     }
 
 
     /**
-     * Constructs a new Page.
+     * Constructs a new Page. A _page_ represents a set of results returned from
+     * ERMrest. It may not represent the complete set of results. There is an
+     * iterator pattern used here, where its {@link ERMrest.Page+previous} and
+     * {@link ERMrest.Page+next} properties will give the client a 
+     * {@link ERMrest.Reference} to the previous and next set of results, 
+     * respectively.
      * @memberof ERMrest
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
@@ -319,24 +356,11 @@ var ERMrest = (function(module) {
         constructor: Page,
 
         /**
-         * An array of unprocessed tuples returned by ERMrest.
-         *
-         * See also {@link ERMrest.Page#tuple}.
-         * @type {Object[]}
-         */
-        get data() {
-            return this._data;
-        },
-
-        /**
          * An array of processed tuples. The results will be processed
-         * according to the contextualized model element associated with this
-         * page of tuples.
-         *
-         * See also {@link ERMrest.Page#data}.
+         * according to the contextualized scheme (model) of this reference.
          * @type {ERMrest.Tuple[]}
          */
-        get tuple() {
+        get tuples() {
             if (this._tuple === undefined) {
                 for (var i=0, len=page._data.length; i<len; i++) {
                     page._tuple[i] = new Tuple(page._ref, page._data[i]);
@@ -350,9 +374,8 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         get previous() {
-            var ref = _referenceCopy(this);
-            // TODO: modify reference to point to previous entity set
-            return ref;
+            // TODO: a reference to previous entity set
+            return undefined;
         },
 
         /**
@@ -360,21 +383,15 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         get next() {
-            var ref = _referenceCopy(this);
-            // TODO: modify reference to point to next entity set
-            return ref;
+            // TODO: a reference to next entity set
+            return undefined;
         }
     };
 
 
     /**
-     * Constructs a new Tuple.
-     *
-     * _Note_: An open question in this part of the API is whether the client
-     * should change `.value[i]`s or `.data[i]` when in an edit mode. In an
-     * edit mode, we might expect that the `.value[i]` is not processed for
-     * display and therefore is just a shallow copy of the `.data` which should
-     * not be modified by the client.
+     * Constructs a new Tuple. In database jargon, a tuple is a row in a 
+     * relation. This object represents a row returned by a query to ERMrest.
      * @memberof ERMrest
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
@@ -383,8 +400,7 @@ var ERMrest = (function(module) {
      */
     function Tuple(reference, data) {
         this._ref = reference;
-        this._orig = data;
-        // TBD do we need a reference to the `page` also?
+        this._data = data;
     }
 
     Tuple.prototype = {
@@ -423,7 +439,7 @@ var ERMrest = (function(module) {
             //   we may need to create a reference to that table
             // - then, we can go back and call that reference
             //   `return entity_reference.update(...);`
-            return module._q.defer().promise;
+            return notimplemented();
         },
 
         /**
@@ -437,60 +453,50 @@ var ERMrest = (function(module) {
             //   based on keys for this tuple
             // - then call the delete on that reference
             //   `return tuple_ref.delete();`
-            return module._q.defer().promise;
+            return notimplemented();
         },
 
         /**
-         * The unprocessed tuple of data returned from ERMrest. It can be
-         * treated like a map that is keyed on the column name.
+         * The array of formatted values of this tuple. The ordering of the 
+         * values in the array matches the ordering of the columns in the 
+         * reference (see {@link ERMrest.Reference+columns}).
          *
+         * Example of looping through all the values in all the tuples in a 
+         * page of results:
          * ```
-         * var raw = page.tuple[i].data['column_name'];
+         * for (var i=0; i<ref.columns.length; i++) {
+         *   console.log(ref.columns[i].name, "has value", tuple.values[i]);
+         *   ...
+         * }
          * ```
-         * @type {Object}
+         *
+         * Example of getting a specific value for a prefetched column by its
+         * position:
+         * ```
+         * console.log(col.name, "has value", tuple.values[col.position]);
+         * ```
+         * @type {string[]}
          */
-        get data() {
-            // Do a shallow copy here because we do not want clients ever to 
-            // change the original copy of data. We need to protect that copy
-            // of data so that we can use it for comparison when doing an
-            // update.
-            if (this._data === undefined) {
-                this._data = {};
-                for (var key in this._orig) {
-                    this._data[key] = this._orig[key];
+        get values() {
+            if (this._values === undefined) {
+                this._values = [];
+                for (var i=0; i<this._ref.columns.length; i++) {
+                    var col = reference.columns[i];
+                    this._values[i] = col.formatvalue(this._data[col.name]);
                 }
             }
-            return this._data;
+            return this._values;
         },
 
         /**
-         * The processed values of this tuple. It can be treated like a map that
-         * is keyed on the column name.
+         * The _disaply name_ of this tuple. For example, if this tuple is a
+         * row from a table, then the display name is defined by the heuristic
+         * or the annotation for the _row name_.
          *
-         * ```
-         * var raw = page.tuple[i].value['column_name'];
-         * ```
-         * @type {Object}
-         */
-        get value() {
-            if (this._value === undefined) {
-                this._value = {};
-                for (var key in this._orig) {
-                    // TODO something like this...
-                    //this._value[key] = this._ref.model.columns.byName(key)
-                    //                    .prettyprint(this._orig[key]);
-                }
-            }
-            return this._value;
-        },
-
-        /**
-         * The logical "name" of this tuple. For example, if this tuple is a
-         * row from a table, then the "name" is defined by the heuristic or
-         * the annotation for the _row name_.
+         * TODO: add a @link to the ermrest row name annotation
          * @type {string}
          */
-        get name() {
+        get displayname() {
             // TODO do this on demand
             return undefined;
         }
