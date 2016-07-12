@@ -19,9 +19,9 @@ var ERMrest = (function(module) {
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference} 
      * object. It validates the syntax of the URI and validates that the 
-     * references to model elements in it. This function makes a call to the 
-     * ERMrest server in order to get the `schema` resource which it uses in the
-     * validation of the URI reference.
+     * references to model elements in it are correct. This function makes a 
+     * call to the ERMrest server in order to get the `schema` which it uses to
+     * validate the URI path.
      * @memberof ERMrest
      * @function resolve
      * @param {!string} uri A `URI` to a resource in an ERMrest service.
@@ -100,7 +100,7 @@ var ERMrest = (function(module) {
          * ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
          * and the definitions of those attributes are represented here as the
          * array of {@link ERMrest.Column}s. The column definitions may be
-         * contextualized (see {@link ERMrest.Reference+contextualize}).
+         * contextualized (see {@link ERMrest.Reference#contextualize}).
          * @type {ERMrest.Column[]}
          */
         columns: null,
@@ -220,8 +220,6 @@ var ERMrest = (function(module) {
          * @param {!Array} tbd TBD parameters. Probably an array of tuples
          * [ {tuple},... ] for all entities to be created.
          * @returns {Promise} A promise for a TBD result.
-         * @throws {ERMrest.Errors.InvalidInputError} if `limit` is not 
-         * defined or not in the valid range.
          */
         create: function(tbd) {
             return notimplemented();
@@ -231,7 +229,7 @@ var ERMrest = (function(module) {
          * Reads the referenced resources.
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
-         * @returns {Promise} A promise for a {@link ERMRest.Page} of results,
+         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
          * or
          * {@link ERMrest.Errors.InvalidInputError} if `limit` is invalid,
          * TODO document other errors here.
@@ -337,8 +335,8 @@ var ERMrest = (function(module) {
     /**
      * Constructs a new Page. A _page_ represents a set of results returned from
      * ERMrest. It may not represent the complete set of results. There is an
-     * iterator pattern used here, where its {@link ERMrest.Page+previous} and
-     * {@link ERMrest.Page+next} properties will give the client a 
+     * iterator pattern used here, where its {@link ERMrest.Page#previous} and
+     * {@link ERMrest.Page#next} properties will give the client a 
      * {@link ERMrest.Reference} to the previous and next set of results, 
      * respectively.
      * @memberof ERMrest
@@ -459,7 +457,7 @@ var ERMrest = (function(module) {
         /**
          * The array of formatted values of this tuple. The ordering of the 
          * values in the array matches the ordering of the columns in the 
-         * reference (see {@link ERMrest.Reference+columns}).
+         * reference (see {@link ERMrest.Reference#columns}).
          *
          * Example of looping through all the values in all the tuples in a 
          * page of results:

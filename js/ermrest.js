@@ -15,14 +15,13 @@
  */
 
 /**
- * @namespace ERMrest
- * @desc
  * The ERMrest module is a JavaScript client library for the ERMrest
- * service.
+ * service. Most clients should begin with {@link ERMrest.resolve}.
  *
  * IMPORTANT NOTE: This module is a work in progress.
  * It is likely to change several times before we have an interface we wish
  * to use for ERMrest JavaScript agents.
+ * @namespace ERMrest
  */
 var ERMrest = (function (module) {
 

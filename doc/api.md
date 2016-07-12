@@ -1,7 +1,7 @@
 <a name="ERMrest"></a>
 ## ERMrest : <code>object</code>
 The ERMrest module is a JavaScript client library for the ERMrest
-service.
+service. Most clients should begin with [resolve](#ERMrest.resolve).
 
 IMPORTANT NOTE: This module is a work in progress.
 It is likely to change several times before we have an interface we wish
@@ -1246,7 +1246,7 @@ _Note_: in database jargon, technically everything returned from
 ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
 and the definitions of those attributes are represented here as the
 array of [Column](#ERMrest.Column)s. The column definitions may be
-contextualized (see [ERMrest.Reference+contextualize](ERMrest.Reference+contextualize)).
+contextualized (see [contextualize](#ERMrest.Reference+contextualize)).
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
@@ -1354,11 +1354,6 @@ Creates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise for a TBD result.  
-**Throws**:
-
-- <code>[InvalidInputError](#ERMrest.Errors.InvalidInputError)</code> if `limit` is not 
-defined or not in the valid range.
-
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1369,7 +1364,7 @@ defined or not in the valid range.
 Reads the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [ERMRest.Page](ERMRest.Page) of results,
+**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
 or
 [InvalidInputError](#ERMrest.Errors.InvalidInputError) if `limit` is invalid,
 TODO document other errors here.  
@@ -1413,8 +1408,8 @@ changing it to `del` but there is probably no harm is leaving it as
 #### new Page(reference, data)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
-iterator pattern used here, where its [ERMrest.Page+previous](ERMrest.Page+previous) and
-[ERMrest.Page+next](ERMrest.Page+next) properties will give the client a 
+iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
+[next](#ERMrest.Page+next) properties will give the client a 
 [Reference](#ERMrest.Reference) to the previous and next set of results, 
 respectively.
 
@@ -1482,7 +1477,7 @@ property may also be `undefined`.
 #### tuple.values : <code>Array.&lt;string&gt;</code>
 The array of formatted values of this tuple. The ordering of the 
 values in the array matches the ordering of the columns in the 
-reference (see [ERMrest.Reference+columns](ERMrest.Reference+columns)).
+reference (see [columns](#ERMrest.Reference+columns)).
 
 Example of looping through all the values in all the tuples in a 
 page of results:
@@ -1893,9 +1888,9 @@ URI should be to the ERMrest _service_. For example,
 ### ERMrest.resolve(uri) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference) 
 object. It validates the syntax of the URI and validates that the 
-references to model elements in it. This function makes a call to the 
-ERMrest server in order to get the `schema` resource which it uses in the
-validation of the URI reference.
+references to model elements in it are correct. This function makes a 
+call to the ERMrest server in order to get the `schema` which it uses to
+validate the URI path.
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>Promise</code> - Promise when resolved passes the
