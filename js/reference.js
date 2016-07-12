@@ -36,27 +36,49 @@ var ERMrest = (function(module) {
      * {@link ERMrest.NotFoundError},
      */
     module.resolve = function(uri) {
-        // TODO
-        // parse the uri; validating its syntax here
-        //  if invalid syntax; reject with malformed uri error
-        // make a uri to the catalog schema resource
-        // get the catalog/N/schema
-        // validate the model references in the `uri` parameter
-        // this method needs to internally construct a reference object that
-        // represents the `uri` parameter
-        return notimplemented();
+        try {
+            // TODO
+            // parse the uri; validating its syntax here
+            //  if invalid syntax; reject with malformed uri error
+            // make a uri to the catalog schema resource
+            // get the catalog/N/schema
+            // validate the model references in the `uri` parameter
+            // this method needs to internally construct a reference object that
+            // represents the `uri` parameter
+            notimplemented();
+        }
+        catch (e) {
+            return module._q.reject(e);
+        }
     };
 
     /**
-     * Returns a rejected promise with a reason set to an `Error` object
-     * with the message 'not implemented'.
+     * Throws a 'not implemented' error.
+     *
+     * A simple helper method.
      * @memberof ERMrest
      * @private
      * @function notimplemented
-     * @returns {Promise} the rejected promise
+     * @throws {Error} 'not implemented' error
      */
     function notimplemented() {
-        return module._q.reject(new Error('not implemented'));
+        throw new Error('not implemented');
+    }
+
+    /**
+     * Throws an {@link ERMrest.InvalidInputError} if test is
+     * not `True`.
+     * @memberof ERMrest
+     * @private
+     * @function verify
+     * @param {boolean} test The test
+     * @param {string} message The message
+     * @throws {ERMrest.InvalidInputError} If test is not true.
+     */
+    function verify(test, message) {
+        if (! test) {
+            throw new ERMrest.InvalidInputError(message);
+        }
     }
 
     /**
@@ -219,7 +241,13 @@ var ERMrest = (function(module) {
          * @returns {Promise} A promise for a TBD result.
          */
         create: function(tbd) {
-            return notimplemented();
+            try {
+                // TODO
+                notimplemented();
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
@@ -232,22 +260,20 @@ var ERMrest = (function(module) {
          * TODO document other errors here.
          */
         read: function(limit) {
-            var defer = module._q.defer();
-            if (limit === undefined) {
-                defer.reject(
-                    new ERMrest.InvalidInputError("'limit' must be specified"));
-            } else if (typeof(limit) != 'number') {
-                defer.reject(
-                    new ERMrest.InvalidInputError("'limit' must be a number"));
-            } else if (limit < 1) {
-                defer.reject(
-                    new ERMrest.InvalidInputError("'limit' must be greater than 0"));
+            try {
+                verify(limit, "'limit' must be specified");
+                verify(typeof(limit) == 'number', "'limit' must be a number");
+                verify(limit > 0, "'limit' must be greater than 0");
+
+                // TODO the real stuff goes here
+                // this can probably be direct calls to the module._http
+                // I do not think we need to re-use the current ...entity.get(...)
+                // methods implemented in the other scripts
+                notimplemented();
             }
-            // TODO the real stuff goes here
-            // this can probably be direct calls to the module._http
-            // I do not think we need to re-use the current ...entity.get(...)
-            // methods implemented in the other scripts
-            return defer.promise;
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
@@ -257,7 +283,13 @@ var ERMrest = (function(module) {
          * @returns {Promise} A promise for a TBD result or errors.
          */
         update: function(tbd) {
-            return notimplemented();
+            try {
+                // TODO
+                notimplemented();
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
@@ -269,7 +301,13 @@ var ERMrest = (function(module) {
          * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function() {
-            return notimplemented();
+            try {
+                // TODO
+                notimplemented();
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
@@ -427,14 +465,19 @@ var ERMrest = (function(module) {
          * @returns {Promise} a promise (TBD the result object)
          */
         update: function() {
-            // TODO
-            // - since we only support updates on "simple paths" that are just
-            //   entity references with no joins, we can first validate that
-            //   this tuple represents a row from a single table, and then
-            //   we may need to create a reference to that table
-            // - then, we can go back and call that reference
-            //   `return entity_reference.update(...);`
-            return notimplemented();
+            try {
+                // TODO
+                // - since we only support updates on "simple paths" that are just
+                //   entity references with no joins, we can first validate that
+                //   this tuple represents a row from a single table, and then
+                //   we may need to create a reference to that table
+                // - then, we can go back and call that reference
+                //   `return entity_reference.update(...);`
+                notimplemented();
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
@@ -443,12 +486,17 @@ var ERMrest = (function(module) {
          * @returns {Promise} a promise (TBD the result object)
          */
         delete: function() {
-            // TODO
-            // - create a new reference by taking this._ref and adding filters
-            //   based on keys for this tuple
-            // - then call the delete on that reference
-            //   `return tuple_ref.delete();`
-            return notimplemented();
+            try {
+                // TODO
+                // - create a new reference by taking this._ref and adding filters
+                //   based on keys for this tuple
+                // - then call the delete on that reference
+                //   `return tuple_ref.delete();`
+                notimplemented();
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
         },
 
         /**
