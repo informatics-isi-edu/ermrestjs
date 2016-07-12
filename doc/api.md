@@ -150,7 +150,7 @@ to use for ERMrest JavaScript agents.
   * [.Reference](#ERMrest.Reference)
     * [new Reference(uri)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-    * [.model](#ERMrest.Reference+model) : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
+    * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
       * [.view](#ERMrest.Reference+mode.view)
       * [.edit](#ERMrest.Reference+mode.edit)
@@ -1179,7 +1179,7 @@ Indicates if the foreign key is simple (not composite)
 * [.Reference](#ERMrest.Reference)
   * [new Reference(uri)](#new_ERMrest.Reference_new)
   * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-  * [.model](#ERMrest.Reference+model) : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
+  * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
   * [.mode](#ERMrest.Reference+mode) : <code>Object</code>
     * [.view](#ERMrest.Reference+mode.view)
     * [.edit](#ERMrest.Reference+mode.edit)
@@ -1209,18 +1209,15 @@ Constructs a Reference object.
 The string form of the `URI` for this reference.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+model"></a>
-#### reference.model : <code>[Table](#ERMrest.Table)</code> &#124; <code>Object</code>
-The model element for this reference. 
+<a name="ERMrest.Reference+columns"></a>
+#### reference.columns : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+The column definitions for this references.
 
-_Note_: everything returned from ERMrest is a 'tuple' or a 'relation'
-and the `model` property here is therefore the model of that tuple.
-In the simplest cases, the refernece is to an entity or set of 
-entities, therefore they can be described by a [Table](#ERMrest.Table).
-Other types of tuples, like a projection of columns using the
-`attribute/` interface, are not described by a particular table 
-definition. We may need to introduce a `Relation` element to the
-model objects to cover the non-table cases.
+_Note_: in database jargon, technically everything returned from 
+ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
+and the definitions of those attributes are represented here as the
+array of [Column](#ERMrest.Column)s. The column definitions may be
+contextualized (see [ERMrest.Reference+contextualize](ERMrest.Reference+contextualize)).
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+mode"></a>
@@ -1251,6 +1248,18 @@ A Boolean value that indicates whether this Reference is _inherently_
 unique. Meaning, that it can only refere to a single data element, 
 like a single row. This is determined based on whether the reference 
 filters on a unique key.
+
+As a simple example, the following would make a unique reference:
+
+```
+https://example.org/ermrest/catalog/42/entity/s1:t1/key=123
+```
+
+Assuming that table `s1:t1` has a `UNIQUE NOT NULL` constraint on
+column `key`. Such a unique reference can return `0` or `1` results.
+
+_Note_: we intend to support other semantic checks on references like
+`isUnconstrained`, `isFiltered`, etc.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+canCreate"></a>
@@ -1892,15 +1901,16 @@ validation of the URI reference.
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>Promise</code> - Promise when resolved passes the
 [Reference](#ERMrest.Reference) object. If rejected, passes one of:
+[MalformedURIError](#ERMrest.Errors.MalformedURIError)
 [TimedOutError](#ERMrest.Errors.TimedOutError),
 [InternalServerError](#ERMrest.Errors.InternalServerError),
-[ServiceUnavailableError](#ERMrest.Errors.ServiceUnavailableError),
-[{@link ERMrest.Errors.ForbiddenError](ERMrest.Errors.Conflict,),
-or [ERMrest.Errors.Unauthorized](ERMrest.Errors.Unauthorized)  
-**Throws**:
-
-- <code>[MalformedURIError](#ERMrest.Errors.MalformedURIError)</code> if the input URI is malformed.
-
+[ERMrest.Errors.Conflict](ERMrest.Errors.Conflict),
+[ForbiddenError](#ERMrest.Errors.ForbiddenError),
+[ERMrest.Errors.Unauthorized](ERMrest.Errors.Unauthorized),
+[ERMrest.Errors.CatalogNotFoundError](ERMrest.Errors.CatalogNotFoundError),
+[ERMrest.Errors.SchemaNotFoundError](ERMrest.Errors.SchemaNotFoundError),
+[ERMrest.Errors.TableNotFoundError](ERMrest.Errors.TableNotFoundError),
+[ERMrest.Errors.ColumnNotFoundError](ERMrest.Errors.ColumnNotFoundError)  
 
 | Param | Type | Description |
 | --- | --- | --- |

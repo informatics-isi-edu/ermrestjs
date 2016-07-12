@@ -27,16 +27,20 @@ var ERMrest = (function(module) {
      * @param {!string} uri A `URI` to a resource in an ERMrest service.
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
+     * {@link ERMrest.Errors.MalformedURIError}
      * {@link ERMrest.Errors.TimedOutError},
      * {@link ERMrest.Errors.InternalServerError},
-     * {@link ERMrest.Errors.ServiceUnavailableError},
-     * {@link ERMrest.Errors.Conflict, {@link ERMrest.Errors.ForbiddenError},
-     * or {@link ERMrest.Errors.Unauthorized}
-     * @throws {ERMrest.Errors.MalformedURIError} if the input URI is malformed.
+     * {@link ERMrest.Errors.Conflict},
+     * {@link ERMrest.Errors.ForbiddenError},
+     * {@link ERMrest.Errors.Unauthorized},
+     * {@link ERMrest.Errors.CatalogNotFoundError},
+     * {@link ERMrest.Errors.SchemaNotFoundError},
+     * {@link ERMrest.Errors.TableNotFoundError},
+     * {@link ERMrest.Errors.ColumnNotFoundError}
      */
     module.resolve = function(uri) {
         // parse the uri; validating its syntax here
-        //  if invalid syntax; throw malformed uri error
+        //  if invalid syntax; reject with malformed uri error
         // make a uri to the catalog schema resource
         // get the catalog/N/schema
         // validate the model references in the `uri` parameter
@@ -68,19 +72,16 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The model element for this reference. 
+         * The column definitions for this references.
          *
-         * _Note_: everything returned from ERMrest is a 'tuple' or a 'relation'
-         * and the `model` property here is therefore the model of that tuple.
-         * In the simplest cases, the refernece is to an entity or set of 
-         * entities, therefore they can be described by a {@link ERMrest.Table}.
-         * Other types of tuples, like a projection of columns using the
-         * `attribute/` interface, are not described by a particular table 
-         * definition. We may need to introduce a `Relation` element to the
-         * model objects to cover the non-table cases.
-         * @type {(ERMrest.Table|Object)}
+         * _Note_: in database jargon, technically everything returned from 
+         * ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
+         * and the definitions of those attributes are represented here as the
+         * array of {@link ERMrest.Column}s. The column definitions may be
+         * contextualized (see {@link ERMrest.Reference+contextualize}).
+         * @type {ERMrest.Column[]}
          */
-        model: null,
+        columns: null,
 
         /**
          * Statically defined "modes" to contextualize the reference.
@@ -104,6 +105,18 @@ var ERMrest = (function(module) {
          * unique. Meaning, that it can only refere to a single data element, 
          * like a single row. This is determined based on whether the reference 
          * filters on a unique key.
+         *
+         * As a simple example, the following would make a unique reference:
+         * 
+         * ```
+         * https://example.org/ermrest/catalog/42/entity/s1:t1/key=123
+         * ```
+         *
+         * Assuming that table `s1:t1` has a `UNIQUE NOT NULL` constraint on
+         * column `key`. Such a unique reference can return `0` or `1` results.
+         *
+         * _Note_: we intend to support other semantic checks on references like
+         * `isUnconstrained`, `isFiltered`, etc.
          * @type {boolean}
          */
         get isUnique() {
