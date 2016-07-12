@@ -62,14 +62,18 @@ var ERMrest = (function (module) {
      * URI should be to the ERMrest _service_. For example,
      * `https://www.example.org/ermrest`.
      */
-    function getServer(uri) {
+    function getServer(uri, params) {
 
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
+        if (typeof params === 'undefined' || params === null) {
+            params = {'cid': null};
+        }
+
         var server = _servers[uri];
         if (!server) {
-            server = new Server(uri);
+            server = new Server(uri, params);
 
             server.catalogs = new Catalogs(server);
             _servers[uri] = server;
@@ -84,7 +88,7 @@ var ERMrest = (function (module) {
      * @param {string} uri URI of the ERMrest service.
      * @constructor
      */
-    function Server(uri) {
+    function Server(uri, params) {
 
         /**
          *
@@ -92,6 +96,15 @@ var ERMrest = (function (module) {
          */
         this.uri = uri;
 
+        /**
+         *
+         * @type {string}
+         */
+
+        if (typeof params.cid === 'undefined') {
+            params.cid = null;
+        }
+        this._cid = params.cid;
 
         /**
          *

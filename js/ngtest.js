@@ -2,7 +2,9 @@ angular.module("testApp", ['ERMrest'])
 
     .controller('mainController', ['ermrestServerFactory', function(ermrestServerFactory) {
 
-        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
+        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest', {cid: 'ermrestjs-test'});
+
+        console.log(server);
 
         // if authentication required, do it here
 
