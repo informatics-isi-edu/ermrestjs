@@ -1,32 +1,19 @@
-/*
- * @namespace ERMrest.Errors
- */
 var ERMrest = (function(module) {
 
     module.TimedOutError = TimedOutError;
-
     module.BadRequestError = BadRequestError;
-
     module.UnauthorizedError = UnauthorizedError;
-
     module.ForbiddenError = ForbiddenError;
-
     module.NotFoundError = NotFoundError;
-
     module.ConflictError = ConflictError;
-
     module.InternalServerError = InternalServerError;
-
     module.ServiceUnavailableError = ServiceUnavailableError;
-
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
-
     module.InvalidInputError = InvalidInputError;
-    
     module.MalformedURIError = MalformedURIError;
 
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -38,13 +25,11 @@ var ERMrest = (function(module) {
     }
 
     TimedOutError.prototype = Object.create(Error.prototype);
-
     TimedOutError.prototype.constructor = TimedOutError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -56,13 +41,11 @@ var ERMrest = (function(module) {
     }
 
     BadRequestError.prototype = Object.create(Error.prototype);
-
     BadRequestError.prototype.constructor = BadRequestError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -74,13 +57,11 @@ var ERMrest = (function(module) {
     }
 
     UnauthorizedError.prototype = Object.create(Error.prototype);
-
     UnauthorizedError.prototype.constructor = UnauthorizedError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -92,13 +73,11 @@ var ERMrest = (function(module) {
     }
 
     ForbiddenError.prototype = Object.create(Error.prototype);
-
     ForbiddenError.prototype.constructor = ForbiddenError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -110,13 +89,11 @@ var ERMrest = (function(module) {
     }
 
     NotFoundError.prototype = Object.create(Error.prototype);
-
     NotFoundError.prototype.constructor = NotFoundError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -128,13 +105,11 @@ var ERMrest = (function(module) {
     }
 
     ConflictError.prototype = Object.create(Error.prototype);
-
     ConflictError.prototype.constructor = ConflictError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -146,13 +121,11 @@ var ERMrest = (function(module) {
     }
 
     InternalServerError.prototype = Object.create(Error.prototype);
-
     InternalServerError.prototype.constructor = InternalServerError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
      * @constructor
@@ -164,11 +137,10 @@ var ERMrest = (function(module) {
     }
 
     ServiceUnavailableError.prototype = Object.create(Error.prototype);
-
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} message error message
      * @constructor
      * @desc An invalid filter operator
@@ -178,13 +150,11 @@ var ERMrest = (function(module) {
     }
 
     InvalidFilterOperatorError.prototype = Object.create(Error.prototype);
-
     InvalidFilterOperatorError.prototype.constructor = InvalidFilterOperatorError;
 
 
-
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} message error message
      * @constructor
      * @desc An invalid input
@@ -194,12 +164,11 @@ var ERMrest = (function(module) {
     }
 
     InvalidInputError.prototype = Object.create(Error.prototype);
-
     InvalidInputError.prototype.constructor = InvalidInputError;
 
 
     /**
-     * @memberof ERMrest.Errors
+     * @memberof ERMrest
      * @param {string} message error message
      * @constructor
      * @desc A malformed URI was passed to the API.
@@ -209,10 +178,7 @@ var ERMrest = (function(module) {
     }
 
     MalformedURIError.prototype = Object.create(Error.prototype);
-
     MalformedURIError.prototype.constructor = MalformedURIError;
-
-
 
     return module;
 

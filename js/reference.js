@@ -27,16 +27,13 @@ var ERMrest = (function(module) {
      * @param {!string} uri A `URI` to a resource in an ERMrest service.
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
-     * {@link ERMrest.Errors.MalformedURIError}
-     * {@link ERMrest.Errors.TimedOutError},
-     * {@link ERMrest.Errors.InternalServerError},
-     * {@link ERMrest.Errors.Conflict},
-     * {@link ERMrest.Errors.ForbiddenError},
-     * {@link ERMrest.Errors.Unauthorized},
-     * {@link ERMrest.Errors.CatalogNotFoundError},
-     * {@link ERMrest.Errors.SchemaNotFoundError},
-     * {@link ERMrest.Errors.TableNotFoundError},
-     * {@link ERMrest.Errors.ColumnNotFoundError}
+     * {@link ERMrest.MalformedURIError}
+     * {@link ERMrest.TimedOutError},
+     * {@link ERMrest.InternalServerError},
+     * {@link ERMrest.ConflictError},
+     * {@link ERMrest.ForbiddenError},
+     * {@link ERMrest.Unauthorized},
+     * {@link ERMrest.NotFoundError},
      */
     module.resolve = function(uri) {
         // TODO
@@ -231,7 +228,7 @@ var ERMrest = (function(module) {
          * read request. __required__
          * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
          * or
-         * {@link ERMrest.Errors.InvalidInputError} if `limit` is invalid,
+         * {@link ERMrest.InvalidInputError} if `limit` is invalid,
          * TODO document other errors here.
          */
         read: function(limit) {
