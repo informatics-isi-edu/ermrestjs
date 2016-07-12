@@ -1483,7 +1483,7 @@ Example of looping through all the values in all the tuples in a
 page of results:
 ```
 for (var i=0; i<ref.columns.length; i++) {
-  console.log(ref.columns[i].name, "has value", tuple.values[i]);
+  console.log("this tuple's", ref.columns[i].name, "column has value", tuple.values[i]);
   ...
 }
 ```
@@ -1491,7 +1491,7 @@ for (var i=0; i<ref.columns.length; i++) {
 Example of getting a specific value for a prefetched column by its
 position:
 ```
-console.log(col.name, "has value", tuple.values[col.position]);
+console.log("this tuple's", col.name, "column has value", tuple.values[col.position]);
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  

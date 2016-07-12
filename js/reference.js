@@ -463,7 +463,7 @@ var ERMrest = (function(module) {
          * page of results:
          * ```
          * for (var i=0; i<ref.columns.length; i++) {
-         *   console.log(ref.columns[i].name, "has value", tuple.values[i]);
+         *   console.log("this tuple's", ref.columns[i].name, "column has value", tuple.values[i]);
          *   ...
          * }
          * ```
@@ -471,7 +471,7 @@ var ERMrest = (function(module) {
          * Example of getting a specific value for a prefetched column by its
          * position:
          * ```
-         * console.log(col.name, "has value", tuple.values[col.position]);
+         * console.log("this tuple's", col.name, "column has value", tuple.values[col.position]);
          * ```
          * @type {string[]}
          */
