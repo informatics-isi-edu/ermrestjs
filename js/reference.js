@@ -37,6 +37,7 @@ var ERMrest = (function(module) {
      */
     module.resolve = function(uri) {
         try {
+            verify(uri, "'uri' must be specified");
             // TODO
             // parse the uri; validating its syntax here
             //  if invalid syntax; reject with malformed uri error
