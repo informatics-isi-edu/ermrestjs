@@ -339,9 +339,7 @@
           "type": {
             "typename": "serial4"
           },
-          "annotations": {
-            "comment": ["hidden"]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -351,9 +349,7 @@
           "type": {
             "typename": "int4"
           },
-          "annotations": {
-            "comment": ["hidden"]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -363,12 +359,7 @@
           "type": {
             "typename": "float4"
           },
-          "annotations": {
-            "description": {
-              "display": "Price"
-            },
-            "facetOrder": ["4"]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -378,12 +369,7 @@
           "type": {
             "typename": "timestamptz"
           },
-          "annotations": {
-            "description": {
-              "display": "Date of Booking"
-            },
-            "facetOrder": ["5"]
-          }
+          "annotations": {}
         }
       ],
       "annotations": {
@@ -425,11 +411,7 @@
           "type": {
             "typename": "int4"
           },
-          "annotations": {
-            "comment": [
-              "hidden"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -439,11 +421,7 @@
           "type": {
             "typename": "text"
           },
-          "annotations": {
-            "comment": [
-              "name"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": "asset/reference",
@@ -453,12 +431,7 @@
           "type": {
             "typename": "text"
           },
-          "annotations": {
-            "comment": [
-              "thumbnail",
-              "download"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -468,11 +441,7 @@
           "type": {
             "typename": "text"
           },
-          "annotations": {
-            "comment": [
-              "type"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -482,11 +451,7 @@
           "type": {
             "typename": "int8"
           },
-          "annotations": {
-            "comment": [
-              "orderby"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -512,10 +477,7 @@
                 "underline_space": true,
                 "title_case": true
               }
-            },
-            "comment": [
-              "image"
-            ]
+            }
           }
         },
         {
@@ -536,11 +498,7 @@
           "type": {
             "typename": "text"
           },
-          "annotations": {
-            "comment": [
-              "preview"
-            ]
-          }
+          "annotations": {}
         }
       ],
       "annotations": {
@@ -549,10 +507,7 @@
             "underline_space": false,
             "title_case": false
           }
-        },
-        "comment": [
-          "exclude"
-        ]
+        }
       }
     },
     "accommodation_image": {
@@ -618,11 +573,7 @@
           "type": {
             "typename": "int4"
           },
-          "annotations": {
-            "comment": [
-              "dataset"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": "this is an asset/thumbnail",
@@ -632,24 +583,10 @@
           "type": {
             "typename": "int4"
           },
-          "annotations": {
-            "comment": [
-              "image"
-            ],
-            "description": {
-              "display": "Image"
-            }
-          }
+          "annotations": {}
         }
       ],
-      "annotations": {
-        "comment": [
-          "image"
-        ],
-        "description": {
-          "display": "Accommodation Images"
-        }
-      }
+      "annotations": {}
     },
     "category": {
       "comment": "domain",
@@ -683,11 +620,7 @@
           "type": {
             "typename": "int4"
           },
-          "annotations": {
-            "comment": [
-              "hidden"
-            ]
-          }
+          "annotations": {}
         },
         {
           "comment": null,
@@ -700,8 +633,7 @@
           "annotations": {
             "tag:misd.isi.edu,2015:display": {
               "name": "Category Title"
-            },
-            "comment": ["top"]
+            }
           }
         }
       ],
@@ -739,9 +671,7 @@
           "type": {
             "typename": "serial4"
           },
-          "annotations": {
-            "comment": ["hidden"]
-          }
+          "annotations": {}
         }
       ],
       "annotations": {
@@ -750,12 +680,6 @@
             "title_case": true,
             "underline_space": false
           }
-        },
-        "comment": [
-          "association"
-        ],
-        "description": {
-          "display": "Bookings"
         }
       }
     }
