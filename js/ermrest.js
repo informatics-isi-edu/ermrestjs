@@ -15,14 +15,13 @@
  */
 
 /**
- * @namespace ERMrest
- * @desc
  * The ERMrest module is a JavaScript client library for the ERMrest
- * service.
+ * service. Most clients should begin with {@link ERMrest.resolve}.
  *
  * IMPORTANT NOTE: This module is a work in progress.
  * It is likely to change several times before we have an interface we wish
  * to use for ERMrest JavaScript agents.
+ * @namespace ERMrest
  */
 var ERMrest = (function (module) {
 
@@ -56,7 +55,7 @@ var ERMrest = (function (module) {
      * @function
      * @param {string} uri URI of the ERMrest service.
      * @return {ERMrest.Server} Returns a server instance.
-     * @throws {ERMrest.Errors.InvalidInputError} URI is missing
+     * @throws {ERMrest.InvalidInputError} URI is missing
      * @desc
      * ERMrest server factory creates or reuses ERMrest.Server instances. The
      * URI should be to the ERMrest _service_. For example,
@@ -140,8 +139,8 @@ var ERMrest = (function (module) {
         /**
          * @param {string} id Catalog ID.
          * @return {Promise} a promise that returns the catalog  if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
          */
         get: function (id) {
@@ -214,8 +213,8 @@ var ERMrest = (function (module) {
          *
          * @private
          * @return {Promise} a promise that returns json object or catalog schema if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.NotFoundError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          */
         _introspect: function () {
             // load all schemas
@@ -300,7 +299,7 @@ var ERMrest = (function (module) {
         /**
          * @param {string} name schema name
          * @returns {ERMrest.Schema} schema object
-         * @throws {ERMrest.Errors.NotFoundError} schema not found
+         * @throws {ERMrest.NotFoundError} schema not found
          * @desc get schema by schema name
          */
         get: function (name) {
@@ -442,7 +441,7 @@ var ERMrest = (function (module) {
          *
          * @param {string} name name of table
          * @returns {ERMrest.Table} table
-         * @throws {ERMrest.Errors.NotFoundError} table not found
+         * @throws {ERMrest.NotFoundError} table not found
          * @desc get table by table name
          */
         get: function (name) {
@@ -683,8 +682,8 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
          * @returns {Promise} promise returning number of count if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc get the number of rows
          *
          */
@@ -713,8 +712,8 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column[] | string[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @returns {Promise} promise returning rowset if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
          *
@@ -742,8 +741,8 @@ var ERMrest = (function (module) {
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getBefore
          * @returns {Promise} promise returning rowset if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
          *
@@ -769,8 +768,8 @@ var ERMrest = (function (module) {
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getAfter
          * @returns {Promise} promise returning rowset if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     ERMrest.Errors.Conflict, ERMrest.Errors.ForbiddenError or ERMrest.Errors.Unauthorized if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get a page of rows after a specific row
          *
@@ -792,8 +791,8 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
          * @returns {Promise} Promise that returns the json row data deleted if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc
          * Delete rows from table based on the filter
          */
@@ -812,8 +811,8 @@ var ERMrest = (function (module) {
          *
          * @param {Object} rows jSON representation of the updated rows
          * @returns {Promise} Promise that returns the rows updated if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * Update rows in the table
          */
         put: function (rows) {
@@ -833,8 +832,8 @@ var ERMrest = (function (module) {
          * @param {Object} rows Array of jSON representation of rows
          * @param {String[]} defaults Array of string column names to be defaults
          * @returns {Promise} Promise that returns the rows created if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.BadRequestError}, {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.BadRequestError}, {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc
          * Create new entities
          */
@@ -912,8 +911,8 @@ var ERMrest = (function (module) {
 
         /**
          * @returns {Promise} promise that returns the rows if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc get the rows of the next page
          *
          */
@@ -925,8 +924,8 @@ var ERMrest = (function (module) {
         /**
          *
          * @returns {Promise} promise that returns a rowset if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc get the rowset of the previous page
          *
          */
@@ -1042,14 +1041,41 @@ var ERMrest = (function (module) {
 
 
     /**
+     * Constructs a Column.
+     *
+     * TODO: The Column will need to change. We need to be able to use the
+     * column in the context the new {@link ERMrest.Reference+columns} where
+     * a Column _may not_ be a part of a Table.
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
      * @param {string} jsonColumn the json column.
-     * @desc
-     * Constructor for Column.
      */
     function Column(table, jsonColumn) {
+
+        /**
+         * The ordinal number or position of this column relative to other 
+         * columns within the same scope.
+         * TODO: to be implemented
+         * @type {number}
+         */
+        this.position = undefined;
+
+        /**
+         * Formats a value corresponding to this column definition.
+         * @param {Object} data The 'raw' data value.
+         * @returns {string} The formatted value.
+         */
+        this.formatvalue = function(data) {
+            if (data) {
+                /* TODO format the raw value based on the column definition
+                 * type, heuristics, annotations, etc.
+                 */
+                return data.toString();
+            } else {
+                return 'undefined';
+            }
+        };
 
         /**
          *
@@ -1198,7 +1224,7 @@ var ERMrest = (function (module) {
          *
          * @param {string} uri uri of annotation
          * @returns {ERMrest.Annotation} annotation
-         * @throws {ERMrest.Errors.NotFoundError} annotation not found
+         * @throws {ERMrest.NotFoundError} annotation not found
          * @desc get annotation by URI
          */
         get: function (uri) {
@@ -1307,7 +1333,7 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.ColSet} colset
          * @returns {ERMrest.Key} key of the colset
-         * @throws {ERMrest.Errors.NotFoundError} Key not found
+         * @throws {ERMrest.NotFoundError} Key not found
          * @desc get the key by the column set
          */
         get: function (colset) {
@@ -1476,7 +1502,7 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.Column} fromCol
          * @returns {ERMrest.Column} mapping column
-         * @throws {ERMrest.Errors.NotFoundError} no mapping column found
+         * @throws {ERMrest.NotFoundError} no mapping column found
          * @desc get the mapping column given the from column
          */
         get: function (fromCol) {
@@ -1552,7 +1578,7 @@ var ERMrest = (function (module) {
         /**
          *
          * @param {ERMrest.ColSet} colset
-         * @throws {ERMrest.Errors.NotFoundError} foreign key not found
+         * @throws {ERMrest.NotFoundError} foreign key not found
          * @returns {ERMrest.ForeignKeyRef} foreign key reference of the colset
          * @desc get the foreign key of the given column set
          */
@@ -1650,8 +1676,8 @@ var ERMrest = (function (module) {
         /**
          * @param {Number} limit
          * @returns {Promise} promise that returns a rowset of the referenced key's table if resolved or
-         *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
-         *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          */
         getDomainValues: function (limit) {
             if (limit === undefined)
