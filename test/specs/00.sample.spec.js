@@ -8,6 +8,7 @@ var ermrestUtils = includes.ermrestUtils;
 describe('In ERMrest,', function () {
     var catalog_id, schemaName, schema, catalog;
     
+    // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
         ermrestUtils.importData({
             setup: require('../configuration/sample.spec.conf.json'),
@@ -25,6 +26,7 @@ describe('In ERMrest,', function () {
         });
     });
 
+    // Test Cases:
     it('should introspect catalog', function(done) {
         expect(server.catalogs).toBeDefined();
         expect(server.catalogs.get).toBeDefined();
@@ -52,6 +54,7 @@ describe('In ERMrest,', function () {
         done();
     });
 
+    // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function(done) {
         ermrestUtils.tear({
             setup: require('../configuration/sample.spec.conf.json'),
