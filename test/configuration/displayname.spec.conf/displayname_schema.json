@@ -1,594 +1,6 @@
 {
   "tables": {
-    "accommodation": {
-      "comment": "List of different types of accommodations",
-      "kind": "table",
-      "entityCount": 0,
-      "keys": [
-        {
-          "comment": null,
-          "annotations": {},
-          "unique_columns": [
-            "title"
-          ]
-        },
-        {
-          "comment": null,
-          "annotations": {},
-          "unique_columns": [
-            "id"
-          ]
-        }
-      ],
-      "foreign_keys": [
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "accommodation",
-              "schema_name": "displayname_schema",
-              "column_name": "category"
-            }
-          ],
-          "annotations": {},
-          "referenced_columns": [
-            {
-              "table_name": "category",
-              "schema_name": "displayname_schema",
-              "column_name": "term"
-            }
-          ]
-        },
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "accommodation",
-              "schema_name": "displayname_schema",
-              "column_name": "thumbnail"
-            }
-          ],
-          "annotations": {
-            "comment": ["thumbnail"]
-          },
-          "referenced_columns": [
-            {
-              "table_name": "file",
-              "schema_name": "displayname_schema",
-              "column_name": "id"
-            }
-          ]
-        },
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "accommodation",
-              "schema_name": "displayname_schema",
-              "column_name": "cover"
-            }
-          ],
-          "annotations": {
-            "comment": ["thumbnail"]
-          },
-          "referenced_columns": [
-            {
-              "table_name": "file",
-              "schema_name": "displayname_schema",
-              "column_name": "id"
-            }
-          ]
-        }
-      ],
-      "table_name": "accommodation",
-      "schema_name": "displayname_schema",
-      "column_definitions": [
-        {
-          "comment": null,
-          "name": "id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {
-            "comment": [
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "title",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {
-            "comment": [
-              "title",
-              "top",
-              "orderby"
-            ],
-            "description": {
-              "display": "Name of Accommodation"
-            },
-            "facetOrder": [
-              "1"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "website",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {
-            "comment": [
-              "url"
-            ],
-            "description": {
-              "display": "Website"
-            }
-          }
-        },
-        {
-          "comment": null,
-          "name": "category",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {
-            "comment": ["top"],
-            "description": {
-              "display": "Category"
-            },
-            "facetOrder": [
-              "2"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "rating",
-          "default": 3,
-          "nullok": false,
-          "type": {
-            "typename": "float4"
-          },
-          "annotations": {
-            "comment": ["top"],
-            "description": {
-              "display": "User Rating"
-            },
-            "facetOrder": [
-              "3"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "summary",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {
-            "comment": [
-              "text",
-              "unsortable",
-              "summary",
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "description",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {
-            "comment": [
-              "text",
-              "unsortable",
-              "html",
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "thumbnail",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {
-            "comment": [
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "customer_count",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {
-            "comment": [
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "cover",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {
-            "description": {
-              "display": "Cover Image"
-            },
-            "comment": [
-              "hidden"
-            ]
-          }
-        },
-        {
-          "comment": null,
-          "name": "opened_on",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "timestamptz"
-          },
-          "annotations": {
-            "comment": [
-              "bottom"
-            ],
-            "description": {
-              "display": "Date since operational"
-            }
-          }
-        },
-        {
-          "comment": null,
-          "name": "luxurious",
-          "default": false,
-          "nullok": true,
-          "type": {
-            "typename": "boolean"
-          },
-          "annotations": {
-            "comment": ["top"],
-            "description": {
-              "display": "Luxurious"
-            }
-          }
-        }
-      ],
-      "annotations": {
-        "comment": [
-          "default"
-        ],
-        "description": {
-          "display": "Accommodations",
-          "top_columns": ["title", "rating", "category", "opened_on"]
-        }
-      }
-    },
-    "booking": {
-      "comment": null,
-      "kind": "table",
-      "entityCount": 0,
-      "keys": [
-        {
-          "comment": null,
-          "annotations": {},
-          "unique_columns": [
-            "id",
-            "accommodation_id"
-          ]
-        }
-      ],
-      "foreign_keys": [
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "booking",
-              "schema_name": "displayname_schema",
-              "column_name": "accommodation_id"
-            }
-          ],
-          "annotations": {},
-          "referenced_columns": [
-            {
-              "table_name": "accommodation",
-              "schema_name": "displayname_schema",
-              "column_name": "id"
-            }
-          ]
-        }
-      ],
-      "table_name": "booking",
-      "schema_name": "displayname_schema",
-      "column_definitions": [
-        {
-          "comment": null,
-          "name": "id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "serial4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "accommodation_id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "price",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "float4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "booking_date",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "timestamptz"
-          },
-          "annotations": {}
-        }
-      ],
-      "annotations": {
-        "tag:misd.isi.edu,2015:display": {
-          "name_style": {
-            "title_case": true
-          }
-        },
-        "comment": [
-          "association"
-        ],
-        "description": {
-          "display": "Bookings"
-        }
-      }
-    },
-    "file": {
-      "comment": "asset/object",
-      "kind": "table",
-      "keys": [
-        {
-          "comment": null,
-          "annotations": {},
-          "unique_columns": [
-            "id"
-          ]
-        }
-      ],
-      "entityCount": 0,
-      "foreign_keys": [],
-      "table_name": "file",
-      "schema_name": "displayname_schema",
-      "column_definitions": [
-        {
-          "comment": null,
-          "name": "id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "filename",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": "asset/reference",
-          "name": "uri",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "content_type",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "bytes",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int8"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "timestamp",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "timestamptz"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "image_width",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int8"
-          },
-          "annotations": {
-            "tag:misd.isi.edu,2015:display": {
-              "name_style": {
-                "underline_space": true,
-                "title_case": true
-              }
-            }
-          }
-        },
-        {
-          "comment": null,
-          "name": "image_height",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "int8"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": "asset/thumbnail",
-          "name": "preview",
-          "default": null,
-          "nullok": true,
-          "type": {
-            "typename": "text"
-          },
-          "annotations": {}
-        }
-      ],
-      "annotations": {
-        "tag:misd.isi.edu,2015:display": {
-          "name_style": {
-            "underline_space": false,
-            "title_case": false
-          }
-        }
-      }
-    },
-    "accommodation_image": {
-      "comment": "this contains asset/thumbnails",
-      "kind": "table",
-      "keys": [
-        {
-          "comment": "vocabulary",
-          "annotations": {},
-          "unique_columns": [
-            "image_id",
-            "accommodation_id"
-          ]
-        }
-      ],
-      "entityCount": 0,
-      "foreign_keys": [
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "accommodation_image",
-              "schema_name": "displayname_schema",
-              "column_name": "accommodation_id"
-            }
-          ],
-          "annotations": {},
-          "referenced_columns": [
-            {
-              "table_name": "accommodation",
-              "schema_name": "displayname_schema",
-              "column_name": "id"
-            }
-          ]
-        },
-        {
-          "comment": null,
-          "foreign_key_columns": [
-            {
-              "table_name": "accommodation_image",
-              "schema_name": "displayname_schema",
-              "column_name": "image_id"
-            }
-          ],
-          "annotations": {},
-          "referenced_columns": [
-            {
-              "table_name": "file",
-              "schema_name": "displayname_schema",
-              "column_name": "id"
-            }
-          ]
-        }
-      ],
-      "table_name": "accommodation_image",
-      "schema_name": "displayname_schema",
-      "column_definitions": [
-        {
-          "comment": null,
-          "name": "accommodation_id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": "this is an asset/thumbnail",
-          "name": "image_id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {}
-        }
-      ],
-      "annotations": {}
-    },
-    "category": {
+    "table_with_name": {
       "comment": "domain",
       "kind": "table",
       "keys": [
@@ -596,35 +8,18 @@
           "comment": "vocabulary",
           "annotations": {},
           "unique_columns": [
-            "id"
-          ]
-        },
-        {
-          "comment": "vocabulary",
-          "annotations": {},
-          "unique_columns": [
-            "term"
+            "column_with_name"
           ]
         }
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "category",
-      "schema_name": "displayname_schema",
+      "table_name": "table_with_name",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
       "column_definitions": [
         {
           "comment": null,
-          "name": "id",
-          "default": null,
-          "nullok": false,
-          "type": {
-            "typename": "int4"
-          },
-          "annotations": {}
-        },
-        {
-          "comment": null,
-          "name": "term",
+          "name": "column_with_name",
           "default": null,
           "nullok": false,
           "type": {
@@ -632,21 +27,34 @@
           },
           "annotations": {
             "tag:misd.isi.edu,2015:display": {
-              "name": "Category Title"
+              "name": "Column Name"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_with_titlecase",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "title_case": true
+              }
             }
           }
         }
       ],
       "annotations": {
         "tag:misd.isi.edu,2015:display": {
-          "name": "Categories"
-        },
-        "description": {
-          "display": "Categories"
+          "name": "Table Name"
         }
       }
     },
-    "empty_table": {
+    "table_with_titlecase": {
       "comment": null,
       "kind": "table",
       "entityCount": 0,
@@ -655,23 +63,89 @@
           "comment": null,
           "annotations": {},
           "unique_columns": [
-            "id"
+            "column_with_name_2"
           ]
         }
       ],
       "foreign_keys": [],
-      "table_name": "empty_table",
-      "schema_name": "displayname_schema",
+      "table_name": "table_with_titlecase",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
       "column_definitions": [
         {
           "comment": null,
-          "name": "id",
+          "name": "column_with_name_2",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name 2"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_without_display_annotation_3",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name_style": {
+            "title_case": true
+          }
+        }
+      }
+    },
+    "table_with_titlecase_without_underlinespace": {
+      "comment": null,
+      "kind": "table",
+      "entityCount": 0,
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_without_display_annotation"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_with_titlecase_without_underlinespace",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_without_display_annotation",
           "default": null,
           "nullok": false,
           "type": {
             "typename": "serial4"
           },
           "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "column_with_underlinespace_without_titlecase",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "title_case": false,
+                "underline_space": true
+              }
+            }
+          }
         }
       ],
       "annotations": {
@@ -682,14 +156,58 @@
           }
         }
       }
+    },
+    "table_without_display_annotation": {
+      "comment": "",
+      "kind": "table",
+      "entityCount": 0,
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_with_name_3"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_without_display_annotation",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_with_name_3",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "int4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name 3"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_without_display_annotation_2",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "timestamptz"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {}
     }
   },
   "table_names": [
     "category",
-    "file",
     "accommodation",
     "accommodation_image",
-    "booking"
+    "booking",
+    "foreign_tourist"
   ],
   "comment": null,
   "annotations": {
@@ -700,5 +218,5 @@
       }
     }
   },
-  "schema_name": "displayname_schema"
+  "schema_name": "schema_with_underlinespace_without_titlecase"
 }
