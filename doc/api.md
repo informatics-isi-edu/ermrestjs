@@ -191,8 +191,8 @@ to use for ERMrest JavaScript agents.
   * [.Page](#ERMrest.Page)
     * [new Page(reference, data)](#new_ERMrest.Page_new)
     * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
-    * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+    * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
   * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1373,6 +1373,10 @@ are immutable objects and therefore can be safely passed around and
 used between multiple client components without risk that the underlying
 reference to server-side resources could change.
 
+Usage:
+ Clients _do not_ directly access this constructor. 
+ See [resolve](#ERMrest.resolve).
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1394,6 +1398,14 @@ and the definitions of those attributes are represented here as the
 array of [Column](#ERMrest.Column)s. The column definitions may be
 contextualized (see [contextualize](#ERMrest.Reference+contextualize)).
 
+Usage:
+```
+for (var i=0, len=reference.columns.length; i<len; i++) {
+  var col = reference.columns[i];
+  console.log("Column name:", col.name, "has display name:", col.displayname);
+}
+```
+
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
 #### reference.isUnique : <code>boolean</code>
@@ -1405,14 +1417,20 @@ filters on a unique key.
 As a simple example, the following would make a unique reference:
 
 ```
-https://example.org/ermrest/catalog/42/entity/s1:t1/key=123
+https://example.org/ermrest/catalog/42/entity/s:t/key=123
 ```
 
-Assuming that table `s1:t1` has a `UNIQUE NOT NULL` constraint on
-column `key`. Such a unique reference can return `0` or `1` results.
+Assuming that table `s:t` has a `UNIQUE NOT NULL` constraint on
+column `key`. A unique reference may be used to access at most one
+tuple.
 
 _Note_: we intend to support other semantic checks on references like
 `isUnconstrained`, `isFiltered`, etc.
+
+Usage:
+```
+console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
+```
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+contextualize"></a>
@@ -1422,14 +1440,14 @@ The members of this object are _contextualized references_.
 These references will behave and reflect state according to the mode.
 For instance, in a `view` mode on a table some columns may be hidden.
 
-Usage example:
+Usage:
 ```
-// ...we already have an uncontextualized reference "ref"
-var viewRef = ref.contextualize.view;
-// ref is unchanged
-// viewRef now has a reconfigured reference
-// for e.g., viewRef.columns may look different from ref.columns
+// assumes we have an uncontextualized `Reference` object
+var viewable = reference.contextualize.view;
 ```
+The `reference` is unchanged, while `viewable` now represents a
+reconfigured reference. For instance, `viewable.columns` may be
+different compared to `reference.columns`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 
@@ -1507,13 +1525,29 @@ Creates a set of resources.
 
 <a name="ERMrest.Reference+read"></a>
 #### reference.read(limit) ⇒ <code>Promise</code>
-Reads the referenced resources.
+Reads the referenced resources and returns a promise for a page of 
+tuples. The `limit` parameter is required and must be a positive 
+integer. The page of tuples returned will be described by the 
+[columns](#ERMrest.Reference+columns) array of column definitions.
+
+Usage:
+```
+// assumes the client holds a reference
+reference.read(10).then(
+  function(page) {
+    // we now have a page of tuples
+    ...
+  },
+  function(error) {
+    // an error occurred
+    ...
+  });
+```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or
-[InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid,
-TODO document other errors here.  
+or [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid, or
+other errors TBD (TODO document other errors here).  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1534,10 +1568,6 @@ Updates a set of resources.
 #### reference.delete() ⇒ <code>Promise</code>
 Deletes the referenced resources.
 
-Note that `delete` is a JavaScript keyword. We could consider 
-changing it to `del` but there is probably no harm is leaving it as
-`delete`.
-
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
 <a name="ERMrest.Page"></a>
@@ -1547,8 +1577,8 @@ changing it to `del` but there is probably no harm is leaving it as
 * [.Page](#ERMrest.Page)
   * [new Page(reference, data)](#new_ERMrest.Page_new)
   * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
-  * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code>
-  * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code>
+  * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+  * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
 
 <a name="new_ERMrest.Page_new"></a>
 #### new Page(reference, data)
@@ -1558,6 +1588,10 @@ iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
 [next](#ERMrest.Page+next) properties will give the client a 
 [Reference](#ERMrest.Reference) to the previous and next set of results, 
 respectively.
+
+Usage:
+ Clients _do not_ directly access this constructor. 
+ See [read](#ERMrest.Reference+read).
 
 
 | Param | Type | Description |
@@ -1570,15 +1604,43 @@ respectively.
 An array of processed tuples. The results will be processed
 according to the contextualized scheme (model) of this reference.
 
+Usage:
+```
+for (var i=0, len=page.tuples.length; i<len; i++) {
+  var tuple = page.tuples[i];
+  console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+}
+```
+
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+previous"></a>
-#### page.previous : <code>[Reference](#ERMrest.Reference)</code>
+#### page.previous : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
 A reference to the previous set of results.
+
+Usage:
+```
+if (reference.previous) {
+  // more tuples in the 'previous' direction are available
+  reference.previous.read(10).then(
+    ...
+  );
+}
+```
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+next"></a>
-#### page.next : <code>[Reference](#ERMrest.Reference)</code>
+#### page.next : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
 A reference to the next set of results.
+
+Usage:
+```
+if (reference.next) {
+  // more tuples in the 'next' direction are available
+  reference.next.read(10).then(
+    ...
+  );
+}
+```
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Tuple"></a>
@@ -1599,6 +1661,10 @@ A reference to the next set of results.
 Constructs a new Tuple. In database jargon, a tuple is a row in a 
 relation. This object represents a row returned by a query to ERMrest.
 
+Usage:
+ Clients _do not_ directly access this constructor. 
+ See [tuples](#ERMrest.Page+tuples).
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1611,12 +1677,27 @@ Indicates whether the client can update this tuple. Because
 some policies may be undecidable until query execution, this
 property may also be `undefined`.
 
+Usage:
+```
+if (tuple.canUpdate == true) {
+  console.log(tuple.displayname, "can be updated by this client");
+}
+else if (tuple.canUpdate == false) {
+  console.log(tuple.displayname, "cannot be updated by this client");
+}
+else {
+  console.log(tuple.displayname, "update permission cannot be determied");
+}
+```
+
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+canDelete"></a>
 #### tuple.canDelete : <code>boolean</code> &#124; <code>undefined</code>
 Indicates whether the client can delete this tuple. Because
 some policies may be undecidable until query execution, this
 property may also be `undefined`.
+
+See [canUpdate](#ERMrest.Tuple+canUpdate) for a usage example.
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+values"></a>
@@ -1625,19 +1706,19 @@ The array of formatted values of this tuple. The ordering of the
 values in the array matches the ordering of the columns in the 
 reference (see [columns](#ERMrest.Reference+columns)).
 
-Example of looping through all the values in all the tuples in a 
-page of results:
+Usage (iterating over all values in the tuple):
 ```
-for (var i=0; i<ref.columns.length; i++) {
-  console.log("this tuple's", ref.columns[i].name, "column has value", tuple.values[i]);
-  ...
+for (var i=0; len=reference.columns.length; i<len; i++) {
+  console.log(tuple.displayname, "has a", ref.columns[i].displayname,
+      "with value", tuple.values[i]);
 }
 ```
 
-Example of getting a specific value for a prefetched column by its
-position:
+Usage (getting a specific value by column position):
 ```
-console.log("this tuple's", col.name, "column has value", tuple.values[col.position]);
+var column = reference.columns[8]; // the 8th column in this refernece
+console.log(tuple.displayname, "has a", column.displayname,
+    "with value", tuple.values[column.position]);
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
@@ -1648,6 +1729,11 @@ row from a table, then the display name is defined by the heuristic
 or the annotation for the _row name_.
 
 TODO: add a @link to the ermrest row name annotation
+
+Usage:
+```
+console.log("This tuple has a displayable name of", tuple.displayname);
+```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+update"></a>
@@ -2037,6 +2123,23 @@ object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a 
 call to the ERMrest server in order to get the `schema` which it uses to
 validate the URI path.
+
+Usage:
+```
+// This example assume that the client has access to the `ERMrest` module
+ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
+  function(reference) {
+    // the uri was successfully resolve to a `Reference` object
+    console.log("The reference has URI", reference.uri);
+    console.log("It has", reference.columns.length, "columns");
+    console.log("Is it unique?", (reference.isUnique ? 'yes' : 'no'));
+    ...
+  },
+  function(error) {
+    // there was an error returned here
+    ...
+  });
+```
 
 **Kind**: static method of <code>[ERMrest](#ERMrest)</code>  
 **Returns**: <code>Promise</code> - Promise when resolved passes the

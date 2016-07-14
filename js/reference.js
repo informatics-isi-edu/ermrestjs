@@ -22,6 +22,23 @@ var ERMrest = (function(module) {
      * references to model elements in it are correct. This function makes a 
      * call to the ERMrest server in order to get the `schema` which it uses to
      * validate the URI path.
+     *
+     * Usage:
+     * ```
+     * // This example assume that the client has access to the `ERMrest` module
+     * ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
+     *   function(reference) {
+     *     // the uri was successfully resolve to a `Reference` object
+     *     console.log("The reference has URI", reference.uri);
+     *     console.log("It has", reference.columns.length, "columns");
+     *     console.log("Is it unique?", (reference.isUnique ? 'yes' : 'no'));
+     *     ...
+     *   },
+     *   function(error) {
+     *     // there was an error returned here
+     *     ...
+     *   });
+     * ```
      * @memberof ERMrest
      * @function resolve
      * @param {!string} uri A `URI` to a resource in an ERMrest service.
@@ -90,6 +107,10 @@ var ERMrest = (function(module) {
      * are immutable objects and therefore can be safely passed around and
      * used between multiple client components without risk that the underlying
      * reference to server-side resources could change.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. 
+     *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
      * @param {!string} uri The `URI` for this reference.
@@ -121,6 +142,14 @@ var ERMrest = (function(module) {
          * and the definitions of those attributes are represented here as the
          * array of {@link ERMrest.Column}s. The column definitions may be
          * contextualized (see {@link ERMrest.Reference#contextualize}).
+         *
+         * Usage:
+         * ```
+         * for (var i=0, len=reference.columns.length; i<len; i++) {
+         *   var col = reference.columns[i];
+         *   console.log("Column name:", col.name, "has display name:", col.displayname);
+         * }
+         * ```
          * @type {ERMrest.Column[]}
          */
         columns: null,
@@ -134,14 +163,20 @@ var ERMrest = (function(module) {
          * As a simple example, the following would make a unique reference:
          * 
          * ```
-         * https://example.org/ermrest/catalog/42/entity/s1:t1/key=123
+         * https://example.org/ermrest/catalog/42/entity/s:t/key=123
          * ```
          *
-         * Assuming that table `s1:t1` has a `UNIQUE NOT NULL` constraint on
-         * column `key`. Such a unique reference can return `0` or `1` results.
+         * Assuming that table `s:t` has a `UNIQUE NOT NULL` constraint on
+         * column `key`. A unique reference may be used to access at most one
+         * tuple.
          *
          * _Note_: we intend to support other semantic checks on references like
          * `isUnconstrained`, `isFiltered`, etc.
+         *
+         * Usage:
+         * ```
+         * console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
+         * ```
          * @type {boolean}
          */
         get isUnique() {
@@ -157,14 +192,14 @@ var ERMrest = (function(module) {
          * These references will behave and reflect state according to the mode.
          * For instance, in a `view` mode on a table some columns may be hidden.
          *
-         * Usage example:
+         * Usage:
          * ```
-         * // ...we already have an uncontextualized reference "ref"
-         * var viewRef = ref.contextualize.view;
-         * // ref is unchanged
-         * // viewRef now has a reconfigured reference
-         * // for e.g., viewRef.columns may look different from ref.columns
+         * // assumes we have an uncontextualized `Reference` object
+         * var viewable = reference.contextualize.view;
          * ```
+         * The `reference` is unchanged, while `viewable` now represents a
+         * reconfigured reference. For instance, `viewable.columns` may be
+         * different compared to `reference.columns`.
          */
         contextualize: {
             /* TODO: you'll need to figure out how to allow the following 
@@ -252,13 +287,29 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * Reads the referenced resources.
+         * Reads the referenced resources and returns a promise for a page of 
+         * tuples. The `limit` parameter is required and must be a positive 
+         * integer. The page of tuples returned will be described by the 
+         * {@link ERMrest.Reference#columns} array of column definitions.
+         *
+         * Usage:
+         * ```
+         * // assumes the client holds a reference
+         * reference.read(10).then(
+         *   function(page) {
+         *     // we now have a page of tuples
+         *     ...
+         *   },
+         *   function(error) {
+         *     // an error occurred
+         *     ...
+         *   });
+         * ```
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or
-         * {@link ERMrest.InvalidInputError} if `limit` is invalid,
-         * TODO document other errors here.
+         * or {@link ERMrest.InvalidInputError} if `limit` is invalid, or
+         * other errors TBD (TODO document other errors here).
          */
         read: function(limit) {
             try {
@@ -295,10 +346,6 @@ var ERMrest = (function(module) {
 
         /**
          * Deletes the referenced resources.
-         *
-         * Note that `delete` is a JavaScript keyword. We could consider 
-         * changing it to `del` but there is probably no harm is leaving it as
-         * `delete`.
          * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function() {
@@ -375,6 +422,10 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Page#next} properties will give the client a 
      * {@link ERMrest.Reference} to the previous and next set of results, 
      * respectively.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. 
+     *  See {@link ERMrest.Reference#read}.
      * @memberof ERMrest
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
@@ -392,6 +443,14 @@ var ERMrest = (function(module) {
         /**
          * An array of processed tuples. The results will be processed
          * according to the contextualized scheme (model) of this reference.
+         *
+         * Usage:
+         * ```
+         * for (var i=0, len=page.tuples.length; i<len; i++) {
+         *   var tuple = page.tuples[i];
+         *   console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+         * }
+         * ```
          * @type {ERMrest.Tuple[]}
          */
         get tuples() {
@@ -405,7 +464,17 @@ var ERMrest = (function(module) {
 
         /**
          * A reference to the previous set of results.
-         * @type {ERMrest.Reference}
+         *
+         * Usage:
+         * ```
+         * if (reference.previous) {
+         *   // more tuples in the 'previous' direction are available
+         *   reference.previous.read(10).then(
+         *     ...
+         *   );
+         * }
+         * ```
+         * @type {ERMrest.Reference|undefined}
          */
         get previous() {
             // TODO: a reference to previous entity set
@@ -414,7 +483,17 @@ var ERMrest = (function(module) {
 
         /**
          * A reference to the next set of results.
-         * @type {ERMrest.Reference}
+         *
+         * Usage:
+         * ```
+         * if (reference.next) {
+         *   // more tuples in the 'next' direction are available
+         *   reference.next.read(10).then(
+         *     ...
+         *   );
+         * }
+         * ```
+         * @type {ERMrest.Reference|undefined}
          */
         get next() {
             // TODO: a reference to next entity set
@@ -426,6 +505,10 @@ var ERMrest = (function(module) {
     /**
      * Constructs a new Tuple. In database jargon, a tuple is a row in a 
      * relation. This object represents a row returned by a query to ERMrest.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. 
+     *  See {@link ERMrest.Page#tuples}.
      * @memberof ERMrest
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
@@ -444,6 +527,19 @@ var ERMrest = (function(module) {
          * Indicates whether the client can update this tuple. Because
          * some policies may be undecidable until query execution, this
          * property may also be `undefined`.
+         *
+         * Usage:
+         * ```
+         * if (tuple.canUpdate == true) {
+         *   console.log(tuple.displayname, "can be updated by this client");
+         * }
+         * else if (tuple.canUpdate == false) {
+         *   console.log(tuple.displayname, "cannot be updated by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "update permission cannot be determied");
+         * }
+         * ```
          * @type {(boolean|undefined)}
          */
         get canUpdate() {
@@ -454,6 +550,8 @@ var ERMrest = (function(module) {
          * Indicates whether the client can delete this tuple. Because
          * some policies may be undecidable until query execution, this
          * property may also be `undefined`.
+         *
+         * See {@link ERMrest.Tuple#canUpdate} for a usage example.
          * @type {(boolean|undefined)}
          */
         get canDelete() {
@@ -505,19 +603,19 @@ var ERMrest = (function(module) {
          * values in the array matches the ordering of the columns in the 
          * reference (see {@link ERMrest.Reference#columns}).
          *
-         * Example of looping through all the values in all the tuples in a 
-         * page of results:
+         * Usage (iterating over all values in the tuple):
          * ```
-         * for (var i=0; i<ref.columns.length; i++) {
-         *   console.log("this tuple's", ref.columns[i].name, "column has value", tuple.values[i]);
-         *   ...
+         * for (var i=0; len=reference.columns.length; i<len; i++) {
+         *   console.log(tuple.displayname, "has a", ref.columns[i].displayname,
+         *       "with value", tuple.values[i]);
          * }
          * ```
          *
-         * Example of getting a specific value for a prefetched column by its
-         * position:
+         * Usage (getting a specific value by column position):
          * ```
-         * console.log("this tuple's", col.name, "column has value", tuple.values[col.position]);
+         * var column = reference.columns[8]; // the 8th column in this refernece
+         * console.log(tuple.displayname, "has a", column.displayname,
+         *     "with value", tuple.values[column.position]);
          * ```
          * @type {string[]}
          */
@@ -538,6 +636,11 @@ var ERMrest = (function(module) {
          * or the annotation for the _row name_.
          *
          * TODO: add a @link to the ermrest row name annotation
+         *
+         * Usage:
+         * ```
+         * console.log("This tuple has a displayable name of", tuple.displayname);
+         * ```
          * @type {string}
          */
         get displayname() {
