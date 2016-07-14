@@ -5,7 +5,7 @@
       "kind": "table",
       "keys": [
         {
-          "comment": "vocabulary",
+          "comment": null,
           "annotations": {},
           "unique_columns": [
             "column_with_name"
@@ -202,14 +202,6 @@
       "annotations": {}
     }
   },
-  "table_names": [
-    "category",
-    "accommodation",
-    "accommodation_image",
-    "booking",
-    "foreign_tourist"
-  ],
-  "comment": null,
   "annotations": {
     "tag:misd.isi.edu,2015:display": {
       "name_style": {
