@@ -46,7 +46,7 @@ var ERMrest = (function (module) {
      * @desc This function is used to configure the module
      */
     function configure(http, q) {
-        module._http = http;
+        module._http = module._wrap_http(http);
         module._q = q;
     }
 
@@ -1054,7 +1054,7 @@ var ERMrest = (function (module) {
     function Column(table, jsonColumn) {
 
         /**
-         * The ordinal number or position of this column relative to other 
+         * The ordinal number or position of this column relative to other
          * columns within the same scope.
          * TODO: to be implemented
          * @type {number}
