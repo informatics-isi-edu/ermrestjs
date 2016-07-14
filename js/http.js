@@ -16,23 +16,26 @@
 
 var ERMrest = (function (module) {
 
+    /**
+     * This is an experimental function for wrapping an http service.
+     * @memberof ERMrest
+     * @function
+     * @private
+     */
     module._wrap_http = function(http) {
-
         // wrapping function
         function wrap(method, fn, scope) {
             scope = scope || window;
             return function() {
-                /* TODO
-                 * Based on the method name, see if the config was passed, which
-                 * can be determined based on whether the arguments.length are
-                 * longer than the number of required parameters.
+                /* TODO: http convenience method parameters can be intercepted,
+                 * altered, and passed to the wrapped method here.
                  */
                 return fn.apply(scope, [ arguments[0], arguments[1], arguments[2] ] );
             }
         }
 
         // now wrap over the supported methods
-        var methods = ['get'];
+        var methods = ['get', 'put', 'post', 'delete'];
         for (var i=0, len=methods.length; i<len; i++) {
             http[methods[i]] = wrap(methods[i], http[methods[i]], http);
         }

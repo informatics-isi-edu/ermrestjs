@@ -46,7 +46,7 @@ var ERMrest = (function (module) {
      * @desc This function is used to configure the module
      */
     function configure(http, q) {
-        module._http = module._wrap_http(http);
+        module._http = http;
         module._q = q;
     }
 
