@@ -25,6 +25,8 @@ var ERMrest = (function(module) {
      */
     module._parse = function(uri) {
         // TODO parse a uri into some internal structure
-    }
+    };
+
+    return module;
 
 }(ERMrest || {}));
