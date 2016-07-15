@@ -175,7 +175,6 @@ to use for ERMrest JavaScript agents.
     * [.Reference](#ERMrest.Reference)
         * [new Reference(uri)](#new_ERMrest.Reference_new)
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-        * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
             * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
@@ -185,6 +184,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+        * [.columns()](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -600,7 +600,7 @@ Constructor for Entity. This is a container in Table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
+| table | <code>[Table](#ERMrest.Table)</code> | 
 
 <a name="ERMrest.Table.Entity+count"></a>
 
@@ -614,7 +614,7 @@ get the number of rows
 
 | Param | Type |
 | --- | --- |
-| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
+| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
 
 <a name="ERMrest.Table.Entity+get"></a>
 
@@ -684,7 +684,7 @@ Delete rows from table based on the filter
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
 
 <a name="ERMrest.Table.Entity+put"></a>
 
@@ -1101,7 +1101,7 @@ get the key by the column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
 
 <a name="ERMrest.Key"></a>
 
@@ -1219,7 +1219,7 @@ get the mapping column given the from column
 
 | Param | Type |
 | --- | --- |
-| fromCol | <code>[Column](#ERMrest.Column)</code> |
+| fromCol | <code>[Column](#ERMrest.Column)</code> | 
 
 <a name="ERMrest.ForeignKeys"></a>
 
@@ -1267,7 +1267,7 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
 
 <a name="ERMrest.ForeignKeyRef"></a>
 
@@ -1290,8 +1290,8 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
-| jsonFKR | <code>Object</code> |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| jsonFKR | <code>Object</code> | 
 
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 
@@ -1332,7 +1332,7 @@ Indicates if the foreign key is simple (not composite)
 
 | Param | Type |
 | --- | --- |
-| limit | <code>Number</code> |
+| limit | <code>Number</code> | 
 
 <a name="ERMrest.Type"></a>
 
@@ -1349,7 +1349,7 @@ Indicates if the foreign key is simple (not composite)
 
 | Param |
 | --- |
-| name |
+| name | 
 
 <a name="ERMrest.Type+name"></a>
 
@@ -1509,7 +1509,6 @@ A malformed URI was passed to the API.
 * [.Reference](#ERMrest.Reference)
     * [new Reference(uri)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-    * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
         * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
@@ -1519,6 +1518,7 @@ A malformed URI was passed to the API.
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+    * [.columns()](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1993,7 +1993,7 @@ and therefore an asynchronous operation that returns a promise.
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
+| table | <code>[Table](#ERMrest.Table)</code> | 
 
 <a name="ERMrest.Datapath.DataPath+catalog"></a>
 
@@ -2033,7 +2033,7 @@ delete entities
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
 
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 
@@ -2045,7 +2045,7 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
 
@@ -2056,9 +2056,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
-| context |  |
-| link |  |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| context |  | 
+| link |  | 
 
 <a name="ERMrest.Datapath.PathTable"></a>
 
@@ -2079,9 +2079,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
-| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> |
-| alias | <code>string</code> |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> | 
+| alias | <code>string</code> | 
 
 <a name="ERMrest.Datapath.PathTable+datapath"></a>
 
@@ -2120,8 +2120,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> |
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
 
 <a name="ERMrest.Datapath.PathColumn+pathtable"></a>
 
@@ -2138,8 +2138,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> |
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
+| table | <code>[Table](#ERMrest.Table)</code> | 
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
 
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
@@ -2214,7 +2214,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filter |
+| filter | 
 
 <a name="ERMrest.Filters.Negation+toUri"></a>
 
@@ -2236,7 +2236,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters |
+| filters | 
 
 <a name="ERMrest.Filters.Conjunction+toUri"></a>
 
@@ -2258,7 +2258,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters |
+| filters | 
 
 <a name="ERMrest.Filters.Disjunction+toUri"></a>
 
@@ -2284,8 +2284,8 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> |
-| operator | <code>ERMrest.Filters.OPERATOR</code> |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
 
 <a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
 
@@ -2311,9 +2311,9 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> |
-| operator | <code>ERMrest.Filters.OPERATOR</code> |
-| rvalue | <code>String</code> &#124; <code>Number</code> |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| rvalue | <code>String</code> &#124; <code>Number</code> | 
 
 <a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
 
@@ -2390,3 +2390,4 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | A `URI` to a resource in an ERMrest service. |
+

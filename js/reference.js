@@ -55,6 +55,8 @@ var ERMrest = (function(module) {
     module.resolve = function(uri) {
         try {
             verify(uri, "'uri' must be specified");
+
+            var defer = module._q.defer();
             // TODO
             // parse the uri; validating its syntax here
             //  if invalid syntax; reject with malformed uri error
@@ -63,7 +65,11 @@ var ERMrest = (function(module) {
             // validate the model references in the `uri` parameter
             // this method needs to internally construct a reference object that
             // represents the `uri` parameter
-            notimplemented();
+
+            // build reference
+            var reference = new Reference(uri);
+            defer.resolve(reference);
+            return defer.promise;
         }
         catch (e) {
             return module._q.reject(e);
@@ -117,6 +123,8 @@ var ERMrest = (function(module) {
      */
     function Reference(uri) {
         this._uri = uri;
+        var context = module._parse(uri);
+        console.log(context);
         // TODO
         // The reference will also need a reference to the catalog or a
         // way to get a refernece to the catalog
@@ -353,10 +361,8 @@ var ERMrest = (function(module) {
                             slice = response.data.slice(i*25, (i+1)*25);
                         }
                         // go through each set of data and create a Page object for it
-                        this._pages.push(new Page(this, slice);
-                        if (i !== 0) {
-                            this._pages[i].
-                        }
+                        this._pages.push(new Page(this, slice));
+
                     }
 
                     return this._pages[0];
