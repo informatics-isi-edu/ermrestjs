@@ -76,12 +76,21 @@ $ make doc
 
 ## How to test the package
 
-We have just begun to integrate the test framework and continuous integration.
-More details coming.
+Before running the test cases you need to set the environment variables.
 
+```sh
+export ERMREST_URL=https://YOUR_ERMREST_URL/ermrest
+export AUTH_COOKIE=YOUR_ERMREST_COOKIE
 ```
+
+To execute test case run the following command
+
+```sh
 $ make test
 ```
+
+This command internally invokes the `node test/jasmine-runner.js` script.
+
 
 ## How to check your code quality
 

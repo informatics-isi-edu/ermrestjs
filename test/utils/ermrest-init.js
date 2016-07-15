@@ -1,4 +1,4 @@
-
+// Initialize ermrest configurations
 exports.init = function (options) {
 	options = options || {};
 

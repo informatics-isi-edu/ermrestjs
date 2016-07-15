@@ -1,0 +1,11 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "displayname_schema",
+    "createNew": true,
+    "path": "test/configuration/displayname.spec.conf/displayname_schema.json"
+  },
+  "tables": {
+    "createNew": true
+  }
+}

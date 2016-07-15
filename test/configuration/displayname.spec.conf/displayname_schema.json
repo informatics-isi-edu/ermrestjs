@@ -1,0 +1,214 @@
+{
+  "tables": {
+    "table_with_name": {
+      "comment": "domain",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_with_name"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_with_name",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_with_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_with_titlecase",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "title_case": true
+              }
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Table Name"
+        }
+      }
+    },
+    "table_with_titlecase": {
+      "comment": null,
+      "kind": "table",
+      "entityCount": 0,
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_with_name_2"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_with_titlecase",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_with_name_2",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name 2"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_without_display_annotation_3",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name_style": {
+            "title_case": true
+          }
+        }
+      }
+    },
+    "table_with_titlecase_without_underlinespace": {
+      "comment": null,
+      "kind": "table",
+      "entityCount": 0,
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_without_display_annotation"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_with_titlecase_without_underlinespace",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_without_display_annotation",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "column_with_underlinespace_without_titlecase",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "title_case": false,
+                "underline_space": true
+              }
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name_style": {
+            "title_case": true,
+            "underline_space": false
+          }
+        }
+      }
+    },
+    "table_without_display_annotation": {
+      "comment": "",
+      "kind": "table",
+      "entityCount": 0,
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_with_name_3"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_without_display_annotation",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_with_name_3",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "int4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name 3"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_without_display_annotation_2",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "timestamptz"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {}
+    }
+  },
+  "annotations": {
+    "tag:misd.isi.edu,2015:display": {
+      "name_style": {
+        "underline_space": true,
+        "title_case": false
+      }
+    }
+  },
+  "schema_name": "schema_with_underlinespace_without_titlecase"
+}
