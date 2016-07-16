@@ -324,4 +324,3 @@ var ERMrest = (function(module) {
     return module;
 
 }(ERMrest || {}));
-

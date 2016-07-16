@@ -16,6 +16,9 @@
 
 var ERMrest = (function(module) {
 
+    // attach this to the angular factory object
+    module.ermrestFactory.resolve = resolve;
+
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
@@ -41,7 +44,7 @@ var ERMrest = (function(module) {
      * ```
      * @memberof ERMrest
      * @function resolve
-     * @param {!string} uri A `URI` to a resource in an ERMrest service.
+     * @param {Object} location The location object from the $window resource
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
      * {@link ERMrest.MalformedURIError}
@@ -52,9 +55,9 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    module.resolve = function(uri) {
+    function resolve(location) {
         try {
-            verify(uri, "'uri' must be specified");
+            verify(location.href, "'uri' must be specified");
 
             var defer = module._q.defer();
             // TODO
@@ -67,14 +70,23 @@ var ERMrest = (function(module) {
             // represents the `uri` parameter
 
             // build reference
-            var reference = new Reference(uri);
+            var reference = new Reference(location);
+            var server = module.ermrestFactory.getServer(reference._serviceUrl);
+            server.catalogs.get(reference._catalogId).then(function success(catalog) {
+                // Should I make a setter here?
+                reference.catalog = catalog;
+                var schema = reference.schema = catalog.schemas.get(reference._schemaName);
+                reference.table = schema.tables.get(reference._tableName);
+            }, function error(response) {
+                // throw some exception
+            });
             defer.resolve(reference);
             return defer.promise;
         }
         catch (e) {
             return module._q.reject(e);
         }
-    };
+    }
 
     /**
      * Throws a 'not implemented' error.
@@ -121,10 +133,16 @@ var ERMrest = (function(module) {
      * @class
      * @param {!string} uri The `URI` for this reference.
      */
-    function Reference(uri) {
-        this._uri = uri;
-        var context = module._parse(uri);
-        console.log(context);
+    function Reference(location) {
+        this._uri = location.href;
+        var context = module._parse(location);
+
+        this._serviceUrl = context.serviceUrl;
+        this._catalogId  = context.catalogId;
+        this._schemaName = context.schemaName;
+        this._tableName  = context.tableName;
+
+        this.filter = context.filter;
         // TODO
         // The reference will also need a reference to the catalog or a
         // way to get a refernece to the catalog

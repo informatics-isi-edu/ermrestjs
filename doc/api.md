@@ -246,7 +246,7 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
-    * [.resolve(uri)](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.resolve(location)](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -2352,7 +2352,7 @@ URI should be to the ERMrest _service_. For example,
 
 <a name="ERMrest.resolve"></a>
 
-### ERMrest.resolve(uri) ⇒ <code>Promise</code>
+### ERMrest.resolve(location) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a
@@ -2389,5 +2389,5 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>string</code> | A `URI` to a resource in an ERMrest service. |
+| location | <code>Object</code> | The location object from the $window resource |
 
