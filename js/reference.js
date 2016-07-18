@@ -55,9 +55,9 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    function resolve(location) {
+    function resolve(uri) {
         try {
-            verify(location.href, "'uri' must be specified");
+            verify(uri, "'uri' must be specified");
 
             var defer = module._q.defer();
             // TODO
@@ -70,13 +70,11 @@ var ERMrest = (function(module) {
             // represents the `uri` parameter
 
             // build reference
-            var reference = new Reference(location);
+            var reference = new Reference(uri);
             var server = module.ermrestFactory.getServer(reference._serviceUrl);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
                 // Should I make a setter here?
-                reference.catalog = catalog;
-                var schema = reference.schema = catalog.schemas.get(reference._schemaName);
-                reference.table = schema.tables.get(reference._tableName);
+                
             }, function error(response) {
                 // throw some exception
             });
@@ -133,14 +131,14 @@ var ERMrest = (function(module) {
      * @class
      * @param {!string} uri The `URI` for this reference.
      */
-    function Reference(location) {
-        this._uri = location.href;
-        var context = module._parse(location);
+    function Reference(uri) {
+        this._uri = uri;
+        var context = module._parse(uri);
 
         this._serviceUrl = context.serviceUrl;
         this._catalogId  = context.catalogId;
-        this._schemaName = context.schemaName;
-        this._tableName  = context.tableName;
+        this.schemaName = context.schemaName;
+        this.tableName  = context.tableName;
 
         this.filter = context.filter;
         // TODO

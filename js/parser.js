@@ -24,16 +24,16 @@ var ERMrest = (function(module) {
     * @param {String} uri - uri to be parsed
     * @private
     */
-    module._parse = function(location) {
+    module._parse = function(uri) {
 
         var context = {};
 
-        context.uri = location.href;
-        context.serviceUrl = location.origin + '/ermrest';
+        context.uri = uri;
+        context.serviceUrl = uri.slice(0, uri.indexOf('edu')+3) + '/ermrest';
 
         // Then, parse the URL fragment id (aka, hash). Expected format:
         //  "#catalog_id/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
-        var hash = location.hash;
+        var hash = uri.substring(uri.indexOf('#'));
         if (hash === undefined || hash === '' || hash.length === 1) {
             return;
         }
@@ -232,7 +232,7 @@ var ERMrest = (function(module) {
         filter.setFilters(filters);
         return filter;
         //return {type: type, filters: filters};
-    };
+    }
 
     return module;
 
