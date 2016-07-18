@@ -29,6 +29,7 @@ JS_SRC=$(JS)/ermrest.js \
 	   $(JS)/errors.js \
 	   $(JS)/node.js \
 	   $(JS)/parser.js \
+	   $(JS)/http.js \
 	   $(JS)/reference.js
 
 # Angular-related API files
