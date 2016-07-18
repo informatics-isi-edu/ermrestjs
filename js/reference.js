@@ -133,7 +133,8 @@ var ERMrest = (function(module) {
      *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
-     * @param {!string} uri The `URI` for this reference.
+     * @param {String} uri - The `URI` for this reference.
+     * @param {Object} location object attached to window (optional)
      */
     function Reference(uri, location) {
         this._uri = uri;
@@ -145,9 +146,6 @@ var ERMrest = (function(module) {
         this._tableName  = context.tableName;
 
         this.filter = context.filter;
-        // TODO
-        // The reference will also need a reference to the catalog or a
-        // way to get a refernece to the catalog
     }
 
     Reference.prototype = {
@@ -182,14 +180,14 @@ var ERMrest = (function(module) {
          */
          columns: function() {
              // TODO: errors should be caught by resolve function, maybe some here (not sure)
-             if (this._columns === undefined) {
-                 this._columns = [];
-                 for (var i = 0; this._table.column_definitions.length; i++) {
-                     var column = this._table.column_definitions[i];
-                     columns.push(new Column(this._table, column));
-                 }
-             }
-             return columns;
+            //  if (this._columns === undefined) {
+            //      this._columns = [];
+            //      for (var i = 0; this._table.column_definitions.length; i++) {
+            //          var column = this._table.column_definitions[i];
+            //          columns.push(new Column(this._table, column));
+            //      }
+            //  }
+            //  return columns;
          },
 
         /**
@@ -361,35 +359,35 @@ var ERMrest = (function(module) {
                 // methods implemented in the other scripts
 
                 // TODO: get the server
-                var uri = server.uri + "/catalog/" + this._catalogId + "/schema/" +
-                    module._fixedEncodeURIComponent(this._schemaName) + ":" +
-                    module._fixedEncodeURIComponent(this._table.name);
-                    // TODO: filters
-
-
-                return module._http.get(uri).then(function success(response) {
-                    // should a Page have all the data or just the limit's worth?
-                    this._data = response.data;
-                    this._pages = [];
-                    var length = Math.ceil(response.data.length/limit);
-                    // section the set of data into sites of size = limit
-                    for (var i = 0; i < length; i++) {
-                        var slice;
-                        if (i === length-1) {
-                            slice = response.data.slice(i*25);
-                        } else {
-                            slice = response.data.slice(i*25, (i+1)*25);
-                        }
-                        // go through each set of data and create a Page object for it
-                        this._pages.push(new Page(this, slice));
-
-                    }
-
-                    return this._pages[0];
-                }, function error(response) {
-                    var error = module._responseToError(response);
-                    return module._q.reject(error);
-                });
+                // var uri = server.uri + "/catalog/" + this._catalogId + "/schema/" +
+                //     module._fixedEncodeURIComponent(this._schemaName) + ":" +
+                //     module._fixedEncodeURIComponent(this._table.name);
+                //     // TODO: filters
+                //
+                //
+                // return module._http.get(uri).then(function success(response) {
+                //     // should a Page have all the data or just the limit's worth?
+                //     this._data = response.data;
+                //     this._pages = [];
+                //     var length = Math.ceil(response.data.length/limit);
+                //     // section the set of data into sites of size = limit
+                //     for (var i = 0; i < length; i++) {
+                //         var slice;
+                //         if (i === length-1) {
+                //             slice = response.data.slice(i*25);
+                //         } else {
+                //             slice = response.data.slice(i*25, (i+1)*25);
+                //         }
+                //         // go through each set of data and create a Page object for it
+                //         this._pages.push(new Page(this, slice));
+                //
+                //     }
+                //
+                //     return this._pages[0];
+                // }, function error(response) {
+                //     var error = module._responseToError(response);
+                //     return module._q.reject(error);
+                // });
             }
             catch (e) {
                 return module._q.reject(e);
@@ -715,19 +713,19 @@ var ERMrest = (function(module) {
          */
         get displayname() {
             // TODO: what is row name if no annotation?
-            if (this._displayname === undefined) {
-                var tableDisplayAnnotation = "tag:isrd.isi.edu,2016:table-display";
-                if(this._ref.table.annotations.contains(tableDisplayAnnotation)) {
-                    var annotation = this._ref.table.annotations.get(tableDisplayAnnotation);
-                    if (annotation.row_name) {
-                        var pattern = annotation.row_name;
-                        // TODO: parse the pattern to get all `{***}` tokens
-                        //    -  implement pattern expansion funcion?
-                    }
-                }
-            }
-
-            return this._displayname;
+            // if (this._displayname === undefined) {
+            //     var tableDisplayAnnotation = "tag:isrd.isi.edu,2016:table-display";
+            //     if(this._ref.table.annotations.contains(tableDisplayAnnotation)) {
+            //         var annotation = this._ref.table.annotations.get(tableDisplayAnnotation);
+            //         if (annotation.row_name) {
+            //             var pattern = annotation.row_name;
+            //             // TODO: parse the pattern to get all `{***}` tokens
+            //             //    -  implement pattern expansion funcion?
+            //         }
+            //     }
+            // }
+            //
+            // return this._displayname;
         }
     };
 

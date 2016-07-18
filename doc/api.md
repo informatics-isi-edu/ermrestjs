@@ -173,7 +173,7 @@ to use for ERMrest JavaScript agents.
     * [.MalformedURIError](#ERMrest.MalformedURIError)
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(uri)](#new_ERMrest.Reference_new)
+        * [new Reference(uri, location)](#new_ERMrest.Reference_new)
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
@@ -1507,7 +1507,7 @@ A malformed URI was passed to the API.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(uri)](#new_ERMrest.Reference_new)
+    * [new Reference(uri, location)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
@@ -1526,7 +1526,7 @@ A malformed URI was passed to the API.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(uri)
+#### new Reference(uri, location)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1543,6 +1543,7 @@ Usage:
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | The `URI` for this reference. |
+| location | <code>Object</code> | object attached to window (optional) |
 
 <a name="ERMrest.Reference+uri"></a>
 
