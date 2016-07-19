@@ -143,6 +143,22 @@ var ERMrest = (function(module) {
         constructor: Reference,
 
         /**
+         * The display name for this reference.
+         * @type {string}
+         */
+        get displayname () {
+            /* Note that displayname is context dependent. For instance,
+             * a reference to an entity set will use the table displayname
+             * as the reference displayname. However, a 'related' reference
+             * will use the FKR's displayname (actually its "to name" or
+             * "from name"). Like a Person table might have a FKR to its parent.
+             * In one directoin, the FKR is named "parent" in the other
+             * direction it is named "child".
+             */
+            return this._displayname;
+        },
+
+        /**
          * The string form of the `URI` for this reference.
          * @type {string}
          */
@@ -207,15 +223,16 @@ var ERMrest = (function(module) {
          * The members of this object are _contextualized references_.
          *
          * These references will behave and reflect state according to the mode.
-         * For instance, in a `view` mode on a table some columns may be hidden.
+         * For instance, in a `record` mode on a table some columns may be
+         * hidden.
          *
          * Usage:
          * ```
          * // assumes we have an uncontextualized `Reference` object
-         * var viewable = reference.contextualize.view;
+         * var recordref = reference.contextualize.record;
          * ```
-         * The `reference` is unchanged, while `viewable` now represents a
-         * reconfigured reference. For instance, `viewable.columns` may be
+         * The `reference` is unchanged, while `recordref` now represents a
+         * reconfigured reference. For instance, `recordref.columns` may be
          * different compared to `reference.columns`.
          */
         contextualize: {
@@ -229,19 +246,19 @@ var ERMrest = (function(module) {
              */
 
             /**
-             * The _view_ context of this reference.
+             * The _record_ context of this reference.
              * @type {ERMrest.Reference}
              */
-            get view() {
+            get record() {
                 // TODO: remember these are copies of this reference.
                 return undefined;
             },
 
             /**
-             * The _edit_ context of this reference.
+             * The _entry_ context of this reference.
              * @type {ERMrest.Reference}
              */
-            get edit() {
+            get entry() {
                 // TODO: remember these are copies of this reference.
                 return undefined;
             }
@@ -418,14 +435,11 @@ var ERMrest = (function(module) {
          * ignore `B` and think of this relationship as `A <-> C`, unless `B`
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
-         *
-         * _Note_: Initially, this will only reflect relationships based on
-         * "inbound" references.
          * @type {ERMrest.Reference[]}
          */
-        get relatedReferences() {
-            if (this._relatedReferences === undefined) {
-                this._relatedReferences = [];
+        get related() {
+            if (this._related === undefined) {
+                this._related = [];
                 /* TODO
                  * Assuming this reference is to a table, introspect the
                  * model to find all "inbound" FK references to the table.
@@ -443,9 +457,46 @@ var ERMrest = (function(module) {
                  * than the simpler implicit `/D` form of joining so that
                  * we handle cases where there are more than one FK reference
                  * from `D` to `C` in this example.
+                 *
+                 * We can implement this in two phases clearly:
+                 * phase 1: implement just those direct 'inbound' references
+                 * phase 2: implement the associative references
+                 *
+                 * On contextualization:
+                 * The 'related' references should be contextualized based on
+                 * the same 'context' as this reference. If this reference is
+                 * in a record, entry, facet, etc. mode then its related
+                 * references should be returned in that mode as well.
+                 *
+                 * On related reference columns:
+                 * The columns of the related reference (i.e.,
+                 * `reference.columns` should _not_ include the foriegn key
+                 * that was used in the FK to this reference, as if it were
+                 * hidden. Think of the Record display use case. When you
+                 * have nested tables, you don't want those tables to be
+                 * repeating the same FKR over and over again. You might as
+                 * well ignore those columns in that context.
+                 *
+                 * Preserve all model details privately:
+                 * But keep in mind, just because you do not _publicly_ expose
+                 * ignored columns (via `reference.columns`) you still need to
+                 * know about them _internally_. Remember that _contextualizing_
+                 * is just a veneer on top of the real state information.
+                 *
+                 * On displayname:
+                 * See the comment on `Reference.displayname` getter. A related
+                 * reference should be named based on the FKR 'from name' if it
+                 * is an 'inbound' FKR. Those that are formed based on
+                 * association tables should be named based on the 'to name' of
+                 * the association table's outbound FKR.
+                 *
+                 * On visibility and ordering:
+                 * See the new annotation https://github.com/informatics-isi-edu/ermrest/blob/master/user-doc/annotation.md#2016-visible-foreign-keys
+                 * This annotation should be consulted for determining whether
+                 * to hide some references and how to order them.
                  */
             }
-            return this._relatedReferences;
+            return this._related;
         }
     };
 
