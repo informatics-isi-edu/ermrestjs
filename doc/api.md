@@ -80,7 +80,6 @@ to use for ERMrest JavaScript agents.
         * [.get(name)](#ERMrest.Row+get) ⇒ <code>Object</code>
     * [.Columns](#ERMrest.Columns)
         * [new Columns(table)](#new_ERMrest.Columns_new)
-        * [.table](#ERMrest.Columns+table) : <code>Table</code>
         * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
         * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
@@ -822,7 +821,6 @@ The row returned from the ith result in the Rows.data.
 
 * [.Columns](#ERMrest.Columns)
     * [new Columns(table)](#new_ERMrest.Columns_new)
-    * [.table](#ERMrest.Columns+table) : <code>Table</code>
     * [.all()](#ERMrest.Columns+all) ⇒ <code>Array</code>
     * [.length()](#ERMrest.Columns+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Columns+names) ⇒ <code>Array</code>
@@ -840,12 +838,6 @@ Constructor for Columns.
 | --- | --- | --- |
 | table | <code>Table</code> | Required |
 
-<a name="ERMrest.Columns+table"></a>
-
-#### columns.table : <code>Table</code>
-The table that these columns belong to.
-
-**Kind**: instance property of <code>[Columns](#ERMrest.Columns)</code>  
 <a name="ERMrest.Columns+all"></a>
 
 #### columns.all() ⇒ <code>Array</code>

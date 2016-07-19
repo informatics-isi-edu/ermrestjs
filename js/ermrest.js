@@ -1000,11 +1000,7 @@ var ERMrest = (function (module) {
     function Columns(table) {
         this._columns = [];
 
-        /**
-         * @type {Table}
-         * @desc The table that these columns belong to.
-         */
-        this.table = table;
+        this._table = table;
     }
 
     Columns.prototype = {
@@ -1115,7 +1111,7 @@ var ERMrest = (function (module) {
             // get column orders from annotation
             var orders = -1;
             try {
-                var annot = this.table.annotations.get("tag:isrd.isi.edu,2016:visible-columns");
+                var annot = this._table.annotations.get("tag:isrd.isi.edu,2016:visible-columns");
                 if (annot && annot.content) {
                     orders = this._getColumnOrders(context, annot.content);
                 }
