@@ -67,10 +67,13 @@ var ERMrest = (function (module) {
             throw new module.InvalidInputError("URI undefined or null");
 
         if (typeof params === 'undefined' || params === null) {
-            params = {'cid': null};
+            // Set default cid to a truthy string because a true null will not
+            // appear as a query parameter but we want to track cid even when cid
+            // isn't provided
+            params = {'cid': 'null'};
         }
 
-        var server = _servers[uri];
+        var server = _servers[uri]; // TODO this lookup should factor in params
         if (!server) {
             server = new Server(uri, params);
 
@@ -90,20 +93,19 @@ var ERMrest = (function (module) {
     function Server(uri, params) {
 
         /**
-         *
+         * The URI of the ERMrest service
          * @type {string}
          */
         this.uri = uri;
 
         /**
-         *
-         * @type {string}
+         * The wrapped http service for this server instance.
+         * @private
+         * @type {Object}
          */
-
-        if (typeof params.cid === 'undefined') {
-            params.cid = null;
-        }
-        this._cid = params.cid;
+        this._http = module._wrap_http(module._http);
+        this._http.params = params || {};
+        this._http.params.cid = this._http.params.cid || null;
 
         /**
          *
@@ -195,13 +197,14 @@ var ERMrest = (function (module) {
     function Catalog(server, id) {
 
         /**
-         *
+         * For internal use only. A reference to the server instance.
+         * @private
          * @type {ERMrest.Server}
          */
         this.server = server;
 
         /**
-         *
+         * The catalog identifier.
          * @type {string}
          */
         this.id = id;
@@ -232,7 +235,7 @@ var ERMrest = (function (module) {
         _introspect: function () {
             // load all schemas
             var self = this;
-            return module._http.get(this._uri + "/schema").then(function (response) {
+            return this.server._http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
@@ -584,7 +587,8 @@ var ERMrest = (function (module) {
      * @desc
      * Constructor for Entity. This is a container in Table
      */
-    function Entity(table) {
+    function Entity(server, table) {
+        this._server = server;
         this._table = table;
     }
 
@@ -710,7 +714,7 @@ var ERMrest = (function (module) {
 
             uri = uri + "/row_count:=cnt(*)";
 
-            return module._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return response.data[0].row_count;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -738,7 +742,7 @@ var ERMrest = (function (module) {
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -765,7 +769,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return this.server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -792,7 +796,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return module._http.get(uri).then(function(response) {
+            return this.server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -812,7 +816,7 @@ var ERMrest = (function (module) {
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return module._http.delete(uri).then(function(response) {
+            return this.server._http.delete(uri).then(function(response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -832,7 +836,7 @@ var ERMrest = (function (module) {
 
             var uri = this._toURI();
 
-            return module._http.put(uri, rows).then(function(response) {
+            return this.server._http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -865,7 +869,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return module._http.post(uri, rows).then(function(response) {
+            return this.server._http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
