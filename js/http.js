@@ -99,13 +99,13 @@ var ERMrest = (function (module) {
                     }
 
                     // make sure arguments has a config, and config has a params
-                    args[cfg_idx] = args[cfg_idx] || {};
-                    args[cfg_idx].params = args[cfg_idx].params || {};
+                    var config = args[cfg_idx] = args[cfg_idx] || {};
+                    config.params = config.params || {};
 
                     // now add default params iff they do not collide
                     for (var key in this.params) {
-                        if (!(key in args[cfg_idx].params)) {
-                            args[cfg_idx].params[key] = this.params[key];
+                        if (!(key in config.params)) {
+                            config.params[key] = this.params[key];
                         }
                     }
                 }
@@ -151,9 +151,8 @@ var ERMrest = (function (module) {
 
         // now wrap over the supported methods
         var wrapper = {};
-        var methods = ['get', 'delete', 'head', 'jsonp', 'post', 'put', 'patch'];
-        for (var i=0, len=methods.length; i<len; i++) {
-            wrapper[methods[i]] = wrap(methods[i], http[methods[i]], http);
+        for (var method in _method_to_config_idx) {
+            wrapper[method] = wrap(method, http[method], http);
         }
 
         return wrapper;
