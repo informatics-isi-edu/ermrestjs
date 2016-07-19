@@ -147,7 +147,8 @@ $(TEST): $(PKG)
 # Rule to install the package
 .PHONY: install
 install: $(PKG) $(NGAPI)
-	test -d $(dir $(ERMRESTJSDIR)) && mkdir -p $(ERMRESTJSDIR)
+	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
+	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
 	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
 	cp $(NGAPI) $(ERMRESTJSDIR)/$(notdir $(NGAPI))
 	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
