@@ -99,7 +99,7 @@ var ERMrest = (function (module) {
                 // now call the fn, with retry logic
                 var deferred = module._q.defer();
                 var max_retries = this.max_retries || _default_max_retries;
-                var delay = (this.initial_delay || _initial_delay);
+                var delay = this.initial_delay || _initial_delay;
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
