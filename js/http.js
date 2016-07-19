@@ -17,6 +17,31 @@
 var ERMrest = (function (module) {
 
     /**
+     * Enumeration of HTTP Response Status Codes, which are used within this
+     * sub-module. For internal use only.
+     * @private
+     * @type {Object}
+     */
+    var _http_status_codes = {
+        timed_out: 0,
+        no_content: 204,
+        not_found: 404,
+        internal_server_error: 500,
+        service_unavailable: 503
+    }
+
+    /**
+     * Retriable error codes. These can sometimes indicate transient errors
+     * that can be resolved simply by retrying the request, up to a limit.
+     * @private
+     * @type {Array<Number>}
+     */
+    var _retriable_error_codes = [
+        _http_status_codes.timed_out,
+        _http_status_codes.internal_server_error,
+        _http_status_codes.service_unavailable];
+
+    /**
      * Mapping from convenience method name to its config argument index.
      * @private
      * @type {Object}
@@ -32,6 +57,24 @@ var ERMrest = (function (module) {
     };
 
     /**
+     * Default maximum allowable retries. This can be overridden by setting
+     * the `max_retries` property on the wrapped http object.
+     * @private
+     * @type {Number}
+     */
+    var _default_max_retries = 10;
+
+    /**
+     * Initial timeout delay. This dely will be doubled each time to perform
+     * an exponential backoff retry protocol. Units in mililiseconds. This
+     * can be overridden by setting the `initial_dely` property on the wrapped
+     * http object.
+     * @private
+     * @type {Number}
+     */
+    var _default_initial_delay = 100;
+
+    /**
      * This is an experimental function for wrapping an http service.
      * @memberof ERMrest
      * @function
@@ -45,43 +88,75 @@ var ERMrest = (function (module) {
             var cfg_idx = _method_to_config_idx[method];
             return function() {
                 // if no default params, then just call the fn
-                if (!this.params) {
-                    return fn.apply(scope, arguments );
-                }
+                var args;
+                if (this.params) {
+                    // not allowed to alter 'arguments' so you must make a shallow
+                    // copy. it is also an 'array-like' object but not an actual
+                    // array, therefore arguments.slice() does not work.
+                    args = [];
+                    for (var i=0, len=arguments.length; i<len; i++) {
+                        args[i] = arguments[i];
+                    }
 
-                // not allowed to alter 'arguments' so you must make a shallow
-                // copy. it is also an 'array-like' object but not an actual
-                // array, therefore arguments.slice() does not work.
-                var args = [];
-                for (var i=0, len=arguments.length; i<len; i++) {
-                    args[i] = arguments[i];
-                }
+                    // make sure arguments has a config, and config has a params
+                    var config = args[cfg_idx] = args[cfg_idx] || {};
+                    config.params = config.params || {};
 
-                // make sure arguments has a config, and config has a params
-                args[cfg_idx] = args[cfg_idx] || {};
-                args[cfg_idx].params = args[cfg_idx].params || {};
-
-                // now add default params iff they do not collide
-                for (var key in this.params) {
-                    if (!(key in args[cfg_idx].params)) {
-                        args[cfg_idx].params[key] = this.params[key];
+                    // now add default params iff they do not collide
+                    for (var key in this.params) {
+                        if (!(key in config.params)) {
+                            config.params[key] = this.params[key];
+                        }
                     }
                 }
+                else {
+                    args = arguments;
+                }
 
-                // now call the fn
-                return fn.apply(scope, args );
-            }
+                // now call the fn, with retry logic
+                var deferred = module._q.defer();
+                var max_retries = this.max_retries || _default_max_retries;
+                var delay = this.initial_delay || _default_initial_delay;
+                var count = 0;
+                function asyncfn() {
+                    fn.apply(scope, args).then(function(response) {
+                        deferred.resolve(response);
+                    },
+                    function(response) {
+                        if (response.status in _retriable_error_codes && count < max_retries) {
+                            count += 1;
+                            setTimeout(asyncfn, delay);
+                            delay *= 2;
+                        } else if (count && method == 'delete' && response.status == _http_status_codes.not_found) {
+                            /* SPECIAL CASE: "retried delete"
+                             * This indicates that a 'delete' was attempted, but
+                             * failed due to a transient error. It was retried
+                             * at least one more time and at some point
+                             * succeeded.
+                             *
+                             * Both of the currently supported delete operations
+                             * (entity/ and attribute/) return 204 No Content.
+                             */
+                            response.status = _http_status_codes.no_content;
+                            deferred.resolve(response);
+                        } else {
+                            deferred.reject(response);
+                        }
+                    });
+                }
+                asyncfn();
+                return deferred.promise;
+            };
         }
 
         // now wrap over the supported methods
         var wrapper = {};
-        var methods = ['get', 'put', 'post', 'delete'];
-        for (var i=0, len=methods.length; i<len; i++) {
-            wrapper[methods[i]] = wrap(methods[i], http[methods[i]], http);
+        for (var method in _method_to_config_idx) {
+            wrapper[method] = wrap(method, http[method], http);
         }
 
         return wrapper;
-    }
+    };
 
     return module;
 

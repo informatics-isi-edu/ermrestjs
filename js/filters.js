@@ -66,18 +66,22 @@ var ERMrest = (function(module) {
             // loop through individual filters to create filter strings
             var filterStrings = [];
             for (var i = 0; i < this.filters.length; i++) {
-                filterStrings[i] = this.filters[i].toUri();
+                if (this.filters[i] instanceof Conjunction || this.filters[i] instanceof Disjunction) {
+                    filterStrings[i] = "(" + this.filters[i].toUri() + ")";
+                } else {
+                    filterStrings[i] = this.filters[i].toUri();
+                }
             }
 
             // combine filter strings
-            var uri = "(";
+            var uri = "";
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + filterStrings[j];
                 else
                     uri = uri + "&" + filterStrings[j];
             }
-            uri = uri + ")";
+            uri = uri;
 
             return uri;
         }
@@ -103,18 +107,22 @@ var ERMrest = (function(module) {
             // loop through individual filters to create filter strings
             var filterStrings = [];
             for (var i = 0; i < this.filters.length; i++) {
-                filterStrings[i] = this.filters[i].toUri();
+                if (this.filters[i] instanceof Conjunction || this.filters[i] instanceof Disjunction) {
+                    filterStrings[i] = "(" + this.filters[i].toUri() + ")";
+                } else {
+                    filterStrings[i] = this.filters[i].toUri();
+                }
             }
 
             // combine filter strings
-            var uri = "(";
+            var uri = "";
             for (var j = 0; j < filterStrings.length; j++) {
                 if (j === 0)
                     uri = uri + filterStrings[j];
                 else
                     uri = uri + ";" + filterStrings[j];
             }
-            uri = uri + ")";
+            uri = uri;
 
             return uri;
         }

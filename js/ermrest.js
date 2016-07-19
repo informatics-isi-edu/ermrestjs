@@ -499,7 +499,7 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.Table.Entity}
          */
-        this.entity = new Entity(this);
+        this.entity = new Entity(this.schema.catalog.server, this);
 
         /**
          *
@@ -583,6 +583,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest.Table
      * @constructor
+     * @param {ERMrest.Server} server
      * @param {ERMrest.Table} table
      * @desc
      * Constructor for Entity. This is a container in Table
@@ -733,8 +734,7 @@ var ERMrest = (function (module) {
          *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
-         *
-         * In order to use before & after on a rowset, limit must be speficied,
+         * In order to use before & after on a Rows, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          */
         get: function (filter, limit, columns, sortby) {
@@ -762,6 +762,8 @@ var ERMrest = (function (module) {
          *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
+         * In order to use before & after on a Rows, limit must be speficied,
+         * output columns and sortby needs to have columns of a key
          *
          */
         getBefore: function (filter, limit, columns, sortby, row) {
@@ -769,7 +771,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return this.server._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
                 var error = module._responseToError(response);
@@ -796,7 +798,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return this.server._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
                 var error = module._responseToError(response);
@@ -816,7 +818,7 @@ var ERMrest = (function (module) {
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return this.server._http.delete(uri).then(function(response) {
+            return this._server._http.delete(uri).then(function(response) {
                 return response.data;
             }, function (response) {
                 var error = module._responseToError(response);
@@ -836,7 +838,7 @@ var ERMrest = (function (module) {
 
             var uri = this._toURI();
 
-            return this.server._http.put(uri, rows).then(function(response) {
+            return this._server._http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function (response) {
                 var error = module._responseToError(response);
@@ -869,7 +871,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return this.server._http.post(uri, rows).then(function(response) {
+            return this._server._http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
