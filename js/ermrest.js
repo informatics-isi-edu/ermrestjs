@@ -583,6 +583,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest.Table
      * @constructor
+     * @param {ERMrest.Server} server
      * @param {ERMrest.Table} table
      * @desc
      * Constructor for Entity. This is a container in Table
@@ -770,7 +771,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return this.server._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -797,7 +798,7 @@ var ERMrest = (function (module) {
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return this.server._http.get(uri).then(function(response) {
+            return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function(response) {
                 var error = module._responseToError(response);
@@ -817,7 +818,7 @@ var ERMrest = (function (module) {
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return this.server._http.delete(uri).then(function(response) {
+            return this._server._http.delete(uri).then(function(response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -837,7 +838,7 @@ var ERMrest = (function (module) {
 
             var uri = this._toURI();
 
-            return this.server._http.put(uri, rows).then(function(response) {
+            return this._server._http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
@@ -870,7 +871,7 @@ var ERMrest = (function (module) {
                 }
             }
 
-            return this.server._http.post(uri, rows).then(function(response) {
+            return this._server._http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
                 var error = module._responseToError(response);
