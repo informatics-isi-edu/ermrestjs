@@ -22,7 +22,6 @@ to use for ERMrest JavaScript agents.
         * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
     * [.Catalog](#ERMrest.Catalog)
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-        * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
     * [.Schemas](#ERMrest.Schemas)
@@ -272,6 +271,8 @@ to use for ERMrest JavaScript agents.
 <a name="ERMrest.Server+uri"></a>
 
 #### server.uri : <code>string</code>
+The URI of the ERMrest service
+
 **Kind**: instance property of <code>[Server](#ERMrest.Server)</code>  
 <a name="ERMrest.Server+catalogs"></a>
 
@@ -329,7 +330,6 @@ Get a catalog by id. This call does catalog introspection.
 
 * [.Catalog](#ERMrest.Catalog)
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
-    * [.server](#ERMrest.Catalog+server) : <code>[Server](#ERMrest.Server)</code>
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
 
@@ -344,13 +344,11 @@ Constructor for the Catalog.
 | server | <code>[Server](#ERMrest.Server)</code> | the server object. |
 | id | <code>string</code> | the catalog id. |
 
-<a name="ERMrest.Catalog+server"></a>
-
-#### catalog.server : <code>[Server](#ERMrest.Server)</code>
-**Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+id"></a>
 
 #### catalog.id : <code>string</code>
+The catalog identifier.
+
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+schemas"></a>
 
