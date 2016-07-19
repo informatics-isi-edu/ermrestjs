@@ -37,7 +37,7 @@ describe('For determining order of visible columns, ', function () {
         var columns = schema.tables.get(table).columns;
 
         Object.keys(cases).forEach(function (key) {
-            expect(columns.contextualize(key).names()).toEqual(cases[key]);
+            expect(columns._contextualize(key).names()).toEqual(cases[key]);
         });
     }
 

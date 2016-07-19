@@ -1102,13 +1102,8 @@ var ERMrest = (function (module) {
             return this._columns[pos];
         },
 
-        /***
-         * Get columns based on the context.
-         *
-         * @param {string} context
-         * @returns {ERMrest.Columns} columns with predefined order based on the context.
-         */
-        contextualize: function (context) {
+        // Get columns based on the context.
+        _contextualize: function (context) {
 
             // get column orders from annotation
             var orders = -1;

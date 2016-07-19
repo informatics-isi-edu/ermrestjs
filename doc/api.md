@@ -593,6 +593,7 @@ Preferred display name for user presentation only.
     * [.post(rows, defaults)](#ERMrest.Table.Entity+post) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Table.Entity_new"></a>
+
 ##### new Entity(server, table)
 Constructor for Entity. This is a container in Table
 
