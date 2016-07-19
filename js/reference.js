@@ -136,7 +136,7 @@ var ERMrest = (function(module) {
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
-        this._filter      = context.filter;
+        this._filter     = context.filter;
     }
 
     Reference.prototype = {

@@ -58,7 +58,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
-                * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+                * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
                 * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
                 * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
                 * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
@@ -521,7 +521,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
-            * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+            * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
             * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
             * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
             * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
@@ -585,7 +585,7 @@ Preferred display name for user presentation only.
 **Kind**: static class of <code>[Table](#ERMrest.Table)</code>  
 
 * [.Entity](#ERMrest.Table.Entity)
-    * [new Entity(table)](#new_ERMrest.Table.Entity_new)
+    * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
     * [.count([filter])](#ERMrest.Table.Entity+count) ⇒ <code>Promise</code>
     * [.get([filter], [limit], [columns], [sortby])](#ERMrest.Table.Entity+get) ⇒ <code>Promise</code>
     * [.getBefore(filter, limit, [columns], [sortby], row)](#ERMrest.Table.Entity+getBefore) ⇒ <code>Promise</code>
@@ -596,12 +596,13 @@ Preferred display name for user presentation only.
 
 <a name="new_ERMrest.Table.Entity_new"></a>
 
-##### new Entity(table)
+##### new Entity(server, table)
 Constructor for Entity. This is a container in Table
 
 
 | Param | Type |
 | --- | --- |
+| server | <code>[Server](#ERMrest.Server)</code> | 
 | table | <code>[Table](#ERMrest.Table)</code> | 
 
 <a name="ERMrest.Table.Entity+count"></a>
@@ -622,8 +623,7 @@ get the number of rows
 
 ##### entity.get([filter], [limit], [columns], [sortby]) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
-
-In order to use before & after on a rowset, limit must be speficied,
+In order to use before & after on a Rows, limit must be speficied,
 output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
@@ -642,6 +642,8 @@ output columns and sortby needs to have columns of a key
 
 ##### entity.getBefore(filter, limit, [columns], [sortby], row) ⇒ <code>Promise</code>
 get a page of rows before a specific row
+In order to use before & after on a Rows, limit must be speficied,
+output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
 **Returns**: <code>Promise</code> - promise returning rowset if resolved or
