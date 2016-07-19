@@ -583,6 +583,7 @@ var ERMrest = (function (module) {
     /**
      * @memberof ERMrest.Table
      * @constructor
+     * @param {ERMrest.Server} server
      * @param {ERMrest.Table} table
      * @desc
      * Constructor for Entity. This is a container in Table
