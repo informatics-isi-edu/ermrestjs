@@ -499,7 +499,7 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.Table.Entity}
          */
-        this.entity = new Entity(this);
+        this.entity = new Entity(this.schema.catalog.server, this);
 
         /**
          *
