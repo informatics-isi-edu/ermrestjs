@@ -44,7 +44,7 @@ var ERMrest = (function(module) {
      * ```
      * @memberof ERMrest
      * @function resolve
-     * @param {Object} location The location object from the $window resource
+     * @param {Object} ermerstUri -  An ermrest resource URI object with a baseUri and hash property
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
      * {@link ERMrest.MalformedURIError}
@@ -55,9 +55,10 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    function resolve(location) {
+    function resolve(ermrestUri) {
         try {
-            verify(location.href, "'uri' must be specified");
+            var uri = ermrestUri.baseUri + ermrestUri.hash;
+            verify(uri, "'uri' must be specified");
 
             var defer = module._q.defer();
             // TODO
@@ -70,7 +71,7 @@ var ERMrest = (function(module) {
             // represents the `uri` parameter
 
             // build reference
-            var reference = new Reference(location.href, location);
+            var reference = new Reference(ermrestUri);
             var server = this.getServer(reference._serviceUrl);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
                 // Should I make a setter here?
@@ -133,14 +134,13 @@ var ERMrest = (function(module) {
      *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
-     * @param {String} uri - The `URI` for this reference.
-     * @param {Object} location object attached to window (optional)
+     * @param {Object} ermrestUri - An ermrest resource URI object with a baseUri and hash property
      */
-    function Reference(uri, location) {
-        this._uri = uri;
-        var context = module._parse(uri, location);
+    function Reference(ermrestUri) {
+        this._uri = ermrestUri.baseUri + ermrestUri.hash;
+        var context = module._parse(this._uri);
 
-        this._serviceUrl = context.serviceUrl;
+        this._serviceUrl = ermrestUri.baseUri;
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;

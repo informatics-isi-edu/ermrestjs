@@ -21,44 +21,38 @@ var ERMrest = (function(module) {
      * internal representation of the URI.
      * @memberof ERMrest
      * @function _parse
-     * @param {String} uri - uri to be parsed
-     * @param {Object} location - location object from the $window resource
+     * @param {String} uri - ermrest resource URI to be parsed
      * @private
      */
-    module._parse = function(uri, location) {
+    module._parse = function(uri) {
 
         var context = {};
 
         context.uri = uri;
 
-        if (location) {
-            context.serviceUrl = location.origin + '/ermrest';
-        } else {
-            // parse to the end of the FQDN terminating in .edu, .org etc
-        }
-
-        // Then, parse the URL fragment id (aka, hash). Expected format:
-        //  "#catalog_id/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
-        var hash = uri.substring(uri.indexOf('#'));
-        if (hash === undefined || hash === '' || hash.length === 1) {
-            return;
-        }
-
-        // parse out @sort(...)
-        if (hash.indexOf("@sort(") !== -1) {
+        var hash = uri;
+        // Parse out @sort(...) parameter and assign to context
+        // Expected format:
+        //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
+        if (uri.indexOf("@sort(") !== -1) {
             context.sort = hash.match(/@sort\((.*)\)/)[1];
             hash = hash.split("@sort(")[0];
         }
 
-        // start extracting values after '#' symbol
-        var parts = hash.substring(1).split('/');
+        // Split the URI on '/'
+        // Expected format:
+        //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
+        var parts = hash.split('/');
+        if (parts.length < 6) {
+            throw new MalformedURIError("Uri does not have enough qualifying information");
+        }
 
-        // parts[0] should be the catalog id only
-        context.catalogId = parts[0];
+        // parts[5] should be the catalog id only
+        context.catalogId = parts[5];
 
-        // parts[1] should be <schema-name>:<table-name>
-        if (parts[1]) {
-            var params = parts[1].split(':');
+        // parts[7] should be <schema-name>:<table-name>
+        if (parts[7]) {
+            var params = parts[7].split(':');
             if (params.length > 1) {
                 context.schemaName = decodeURIComponent(params[0]);
                 context.tableName = decodeURIComponent(params[1]);
@@ -69,10 +63,10 @@ var ERMrest = (function(module) {
         }
 
         // If there are filters appended to the URL, add them to context.js
-        if (parts[2]) {
+        if (parts[8]) {
             // split by ';' and '&'
             var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-            var items = parts[2].match(regExp);
+            var items = parts[8].match(regExp);
 
             // if a single filter
             if (items.length === 1) {
@@ -109,10 +103,10 @@ var ERMrest = (function(module) {
                         type = "Disjunction";
                     } else if (type === "Conjunction" && items[i] === ";") {
                         // using combination of ! and & without ()
-                        throw new Error("Invalid filter " + parts[2]);
+                        throw new InvalidFilterOperatorError("Invalid filter " + parts[8]);
                     } else if (type === "Disjunction" && items[i] === "&") {
                         // using combination of ! and & without ()
-                        throw new Error("Invalid filter " + parts[2]);
+                        throw new InvalidFilterOperatorError("Invalid filter " + parts[8]);
                     } else if (items[i] !== "&" && items[i] !== ";") {
                         // single filter on the first level
                         var binaryFilter = _processSingleFilterString(items[i]);
@@ -194,7 +188,7 @@ var ERMrest = (function(module) {
                 return filter;
             } else {
                 // invalid filter
-                throw new Error("Invalid filter " + filterString);
+                throw new InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         } else {
             f = filterString.split("::");
@@ -204,7 +198,7 @@ var ERMrest = (function(module) {
                 return filter;
             } else {
                 // invalid filter error
-                throw new Error("Invalid filter " + filterString);
+                throw new InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         }
     }
@@ -228,10 +222,10 @@ var ERMrest = (function(module) {
                 type = "Disjunction";
             } else if (type === "Conjunction" && filterStrings[i] === ";") {
                 // TODO throw invalid filter error (using combination of ! and &)
-                throw new Error("Invalid filter " + filterStrings);
+                throw new InvalidFilterOperatorError("Invalid filter " + filterStrings);
             } else if (type === "Disjunction" && filterStrings[i] === "&") {
                 // TODO throw invalid filter error (using combination of ! and &)
-                throw new Error("Invalid filter " + filterStrings);
+                throw new InvalidFilterOperatorError("Invalid filter " + filterStrings);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i]);

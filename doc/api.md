@@ -172,8 +172,12 @@ to use for ERMrest JavaScript agents.
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
+    * [.ParsedFilter](#ERMrest.ParsedFilter)
+        * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
+        * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
+        * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(uri, location)](#new_ERMrest.Reference_new)
+        * [new Reference(ermrestUri)](#new_ERMrest.Reference_new)
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
@@ -246,7 +250,7 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri)](#ERMrest.getServer) ⇒ <code>[Server](#ERMrest.Server)</code>
-    * [.resolve(location)](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.resolve(ermerstUri)](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -1501,13 +1505,53 @@ A malformed URI was passed to the API.
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 
+<a name="ERMrest.ParsedFilter"></a>
+
+### ERMrest.ParsedFilter
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.ParsedFilter](#ERMrest.ParsedFilter)
+    * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
+    * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
+    * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
+
+<a name="new_ERMrest.ParsedFilter_new"></a>
+
+#### new ParsedFilter(type)
+Constructor for a ParsedFilter.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| type | <code>String</code> | type of filter |
+
+<a name="ERMrest.ParsedFilter+setFilters"></a>
+
+#### parsedFilter.setFilters(filters)
+**Kind**: instance method of <code>[ParsedFilter](#ERMrest.ParsedFilter)</code>  
+
+| Param | Description |
+| --- | --- |
+| filters | array of binary predicate |
+
+<a name="ERMrest.ParsedFilter+setBinaryPredicate"></a>
+
+#### parsedFilter.setBinaryPredicate(colname, operator, value)
+**Kind**: instance method of <code>[ParsedFilter](#ERMrest.ParsedFilter)</code>  
+
+| Param | Description |
+| --- | --- |
+| colname |  |
+| operator | '=', '::gt::', '::lt::', etc. |
+| value |  |
+
 <a name="ERMrest.Reference"></a>
 
 ### ERMrest.Reference
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(uri, location)](#new_ERMrest.Reference_new)
+    * [new Reference(ermrestUri)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
@@ -1526,7 +1570,7 @@ A malformed URI was passed to the API.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(uri, location)
+#### new Reference(ermrestUri)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1542,8 +1586,7 @@ Usage:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| uri | <code>string</code> | The `URI` for this reference. |
-| location | <code>Object</code> | object attached to window (optional) |
+| ermrestUri | <code>Object</code> | An ermrest resource URI object with a baseUri and hash property |
 
 <a name="ERMrest.Reference+uri"></a>
 
@@ -2353,7 +2396,7 @@ URI should be to the ERMrest _service_. For example,
 
 <a name="ERMrest.resolve"></a>
 
-### ERMrest.resolve(location) ⇒ <code>Promise</code>
+### ERMrest.resolve(ermerstUri) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a
@@ -2390,5 +2433,5 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 
 | Param | Type | Description |
 | --- | --- | --- |
-| location | <code>Object</code> | The location object from the $window resource |
+| ermerstUri | <code>Object</code> | An ermrest resource URI object with a baseUri and hash property |
 
