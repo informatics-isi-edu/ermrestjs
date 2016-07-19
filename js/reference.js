@@ -16,9 +16,6 @@
 
 var ERMrest = (function(module) {
 
-    // attach this to the angular factory object
-    module.ermrestFactory.resolve = resolve;
-
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
@@ -55,7 +52,7 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    function resolve(ermrestUri) {
+    module.resolve = function(ermrestUri) {
         try {
             var uri = ermrestUri.baseUri + ermrestUri.hash;
             verify(uri, "'uri' must be specified");
@@ -67,12 +64,12 @@ var ERMrest = (function(module) {
             context.baseUri = ermrestUri.baseUri;
             var reference = new Reference(context);
 
-            var server = this.getServer(reference._serviceUrl);
+            var server = this.ermrestFactory.getServer(reference._serviceUrl);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
 
                 reference._catalog = catalog;
                 var schema = reference._schema = catalog.schemas.get(reference._schemaName);
-                reference.table = schema.tables.get(reference._tableName);
+                reference._table = schema.tables.get(reference._tableName);
 
                 defer.resolve(reference);
 
@@ -86,7 +83,7 @@ var ERMrest = (function(module) {
         catch (e) {
             return module._q.reject(e);
         }
-    }
+    };
 
     /**
      * Throws a 'not implemented' error.
@@ -139,7 +136,7 @@ var ERMrest = (function(module) {
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
-        this.filter      = context.filter;
+        this._filter      = context.filter;
     }
 
     Reference.prototype = {
@@ -172,17 +169,7 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-         columns: function() {
-             // TODO: errors should be caught by resolve function, maybe some here (not sure)
-            //  if (this._columns === undefined) {
-            //      this._columns = [];
-            //      for (var i = 0; this._table.column_definitions.length; i++) {
-            //          var column = this._table.column_definitions[i];
-            //          columns.push(new Column(this._table, column));
-            //      }
-            //  }
-            //  return columns;
-         },
+         columns: null,
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_

@@ -176,8 +176,9 @@ to use for ERMrest JavaScript agents.
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(ermrestUri)](#new_ERMrest.Reference_new)
+        * [new Reference(context)](#new_ERMrest.Reference_new)
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+        * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
             * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
@@ -187,7 +188,6 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-        * [.columns()](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1549,8 +1549,9 @@ Constructor for a ParsedFilter.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(ermrestUri)](#new_ERMrest.Reference_new)
+    * [new Reference(context)](#new_ERMrest.Reference_new)
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+    * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
         * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
@@ -1560,7 +1561,6 @@ Constructor for a ParsedFilter.
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-    * [.columns()](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1568,7 +1568,7 @@ Constructor for a ParsedFilter.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(ermrestUri)
+#### new Reference(context)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1584,12 +1584,33 @@ Usage:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| ermrestUri | <code>Object</code> | An ermrest resource URI object with a baseUri and hash property |
+| context | <code>Object</code> | The context object generated from parsing the URI |
 
 <a name="ERMrest.Reference+uri"></a>
 
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+columns"></a>
+
+#### reference.columns : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+The array of column definitions which represent the model of
+the resources accessible via this reference.
+
+_Note_: in database jargon, technically everything returned from
+ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
+and the definitions of those attributes are represented here as the
+array of [Column](#ERMrest.Column)s. The column definitions may be
+contextualized (see [contextualize](#ERMrest.Reference+contextualize)).
+
+Usage:
+```
+for (var i=0, len=reference.columns.length; i<len; i++) {
+  var col = reference.columns[i];
+  console.log("Column name:", col.name, "has display name:", col.displayname);
+}
+```
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
@@ -1706,27 +1727,6 @@ _Note_: Initially, this will only reflect relationships based on
 "inbound" references.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+columns"></a>
-
-#### reference.columns() : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
-The array of column definitions which represent the model of
-the resources accessible via this reference.
-
-_Note_: in database jargon, technically everything returned from
-ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
-and the definitions of those attributes are represented here as the
-array of [Column](#ERMrest.Column)s. The column definitions may be
-contextualized (see [contextualize](#ERMrest.Reference+contextualize)).
-
-Usage:
-```
-for (var i=0, len=reference.columns.length; i<len; i++) {
-  var col = reference.columns[i];
-  console.log("Column name:", col.name, "has display name:", col.displayname);
-}
-```
-
-**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(tbd) ⇒ <code>Promise</code>
