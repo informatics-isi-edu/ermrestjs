@@ -61,22 +61,17 @@ var ERMrest = (function(module) {
             verify(uri, "'uri' must be specified");
 
             var defer = module._q.defer();
-            // TODO
-            // parse the uri; validating its syntax here
-            //  if invalid syntax; reject with malformed uri error
-            // make a uri to the catalog schema resource
-            // get the catalog/N/schema
-            // validate the model references in the `uri` parameter
-            // this method needs to internally construct a reference object that
-            // represents the `uri` parameter
 
             // build reference
-            var reference = new Reference(ermrestUri);
+            var context = module._parse(uri);
+            context.baseUri = ermrestUri.baseUri;
+            var reference = new Reference(context);
+
             var server = this.getServer(reference._serviceUrl);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
                 // Should I make a setter here?
-                reference.catalog = catalog;
-                var schema = reference.schema = catalog.schemas.get(reference._schemaName);
+                reference._catalog = catalog;
+                var schema = reference._schema = catalog.schemas.get(reference._schemaName);
                 reference.table = schema.tables.get(reference._tableName);
                 defer.resolve(reference);
             }, function error(error) {
@@ -134,18 +129,15 @@ var ERMrest = (function(module) {
      *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
-     * @param {Object} ermrestUri - An ermrest resource URI object with a baseUri and hash property
+     * @param {Object} context - The context object generated from parsing the URI
      */
-    function Reference(ermrestUri) {
-        this._uri = ermrestUri.baseUri + ermrestUri.hash;
-        var context = module._parse(this._uri);
-
-        this._serviceUrl = ermrestUri.baseUri;
+    function Reference(context) {
+        this._uri        = context.uri;
+        this._serviceUrl = context.baseUri;
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
-
-        this.filter = context.filter;
+        this.filter      = context.filter;
     }
 
     Reference.prototype = {
