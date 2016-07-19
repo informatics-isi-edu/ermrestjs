@@ -733,8 +733,7 @@ var ERMrest = (function (module) {
          *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get table rows with option filter, row limit and selected columns (in this order).
-         *
-         * In order to use before & after on a rowset, limit must be speficied,
+         * In order to use before & after on a Rows, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          */
         get: function(filter, limit, columns, sortby) {
@@ -762,6 +761,8 @@ var ERMrest = (function (module) {
          *     ERMrest.Conflict, ERMrest.ForbiddenError or ERMrest.Unauthorized if rejected
          * @desc
          * get a page of rows before a specific row
+         * In order to use before & after on a Rows, limit must be speficied,
+         * output columns and sortby needs to have columns of a key
          *
          */
         getBefore: function(filter, limit, columns, sortby, row) {

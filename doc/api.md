@@ -570,8 +570,7 @@ get the number of rows
 <a name="ERMrest.Table.Entity+get"></a>
 ##### entity.get([filter], [limit], [columns], [sortby]) ⇒ <code>Promise</code>
 get table rows with option filter, row limit and selected columns (in this order).
-
-In order to use before & after on a rowset, limit must be speficied,
+In order to use before & after on a Rows, limit must be speficied,
 output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
@@ -589,6 +588,8 @@ output columns and sortby needs to have columns of a key
 <a name="ERMrest.Table.Entity+getBefore"></a>
 ##### entity.getBefore(filter, limit, [columns], [sortby], row) ⇒ <code>Promise</code>
 get a page of rows before a specific row
+In order to use before & after on a Rows, limit must be speficied,
+output columns and sortby needs to have columns of a key
 
 **Kind**: instance method of <code>[Entity](#ERMrest.Table.Entity)</code>  
 **Returns**: <code>Promise</code> - promise returning rowset if resolved or

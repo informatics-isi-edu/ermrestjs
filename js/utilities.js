@@ -139,6 +139,91 @@ var ERMrest = (function(module) {
         }
     };
 
+    module._makeRequest = {
+        get: function(url) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            _retryRequest("get", url, null, deferred, retryCount, delay);
+            return deferred.promise;
+        },
+
+        put: function(url, data) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            _retryRequest("put", url, data, deferred, retryCount, delay);
+            return deferred.promise;
+        },
+
+        post: function(url, data) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            _retryRequest("post", url, data, deferred, retryCount, delay);
+            return deferred.promise;
+        },
+
+        delete: function(url) {
+            var deferred = module._q.defer();
+            var retryCount = 0;
+            var delay = 0; // ms
+            _retryRequest("delete", url, null, deferred, retryCount, delay);
+            return deferred.promise;
+        }
+    };
+
+    /**
+     *
+     * @param method 'get', 'put', 'post', 'delete'
+     * @param url request url
+     * @param data request data
+     * @param deferred
+     * @param retryCount keep count of number of retries
+     * @param delay milliseconds to delay before retry
+     * @private
+     */
+    function _retryRequest (method, url, data, deferred, retryCount, delay) {
+
+        var requestObj = {
+            method: method,
+            url: url
+        };
+
+        if (method === 'put' || method === 'post') {
+            requestObj.data = data;
+        }
+
+        var self = this;
+
+        // make http request
+        module._http(requestObj).then(function(response) {
+            // successful
+            deferred.resolve(response);
+        }, function(response) {
+            if ((response.status === 0 || response.status === 500 || response.status === 503) && retryCount < 10 ) {
+                // if error is 0, 500 or 503, and retry count is less than 10, retry
+                retryCount += 1;
+                // retry after delay
+                delay = 2^retryCount * 100; // exponential backoff
+                console.log("retry #" + retryCount);
+                setTimeout(_retryRequest(method, url, data, deferred, retryCount, delay), delay);
+            } else if (self.method === 'delete' && response.status === 404){
+                // SPECIAL CASE:
+                // if method is delete and error is 409 not found
+                // return a success promise
+                deferred.resolve(response);
+            } else {
+                // max retries reached or
+                // reached returnable error, reject
+                console.log("max retries reached");
+                deferred.reject(response);
+            }
+
+        });
+
+    }
+
     return module;
 
 }(ERMrest || {}));
