@@ -70,7 +70,7 @@ var ERMrest = (function (module) {
 
                 // now call the fn
                 return fn.apply(scope, args );
-            }
+            };
         }
 
         // now wrap over the supported methods
@@ -81,7 +81,7 @@ var ERMrest = (function (module) {
         }
 
         return wrapper;
-    }
+    };
 
     return module;
 
