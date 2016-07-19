@@ -172,17 +172,18 @@ to use for ERMrest JavaScript agents.
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
     * [.Reference](#ERMrest.Reference)
         * [new Reference(uri)](#new_ERMrest.Reference_new)
+        * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
-            * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
-            * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
+            * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+            * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-        * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+        * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1348,17 +1349,18 @@ A malformed URI was passed to the API.
 
 * [.Reference](#ERMrest.Reference)
     * [new Reference(uri)](#new_ERMrest.Reference_new)
+    * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
-        * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-    * [.relatedReferences](#ERMrest.Reference+relatedReferences) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+    * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1383,6 +1385,11 @@ Usage:
 | --- | --- | --- |
 | uri | <code>string</code> | The `URI` for this reference. |
 
+<a name="ERMrest.Reference+displayname"></a>
+#### reference.displayname : <code>string</code>
+The display name for this reference.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+uri"></a>
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
@@ -1439,31 +1446,32 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 The members of this object are _contextualized references_.
 
 These references will behave and reflect state according to the mode.
-For instance, in a `view` mode on a table some columns may be hidden.
+For instance, in a `record` mode on a table some columns may be 
+hidden.
 
 Usage:
 ```
 // assumes we have an uncontextualized `Reference` object
-var viewable = reference.contextualize.view;
+var recordref = reference.contextualize.record;
 ```
-The `reference` is unchanged, while `viewable` now represents a
-reconfigured reference. For instance, `viewable.columns` may be
+The `reference` is unchanged, while `recordref` now represents a
+reconfigured reference. For instance, `recordref.columns` may be
 different compared to `reference.columns`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 
 * [.contextualize](#ERMrest.Reference+contextualize)
-    * [.view](#ERMrest.Reference+contextualize.view) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.edit](#ERMrest.Reference+contextualize.edit) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
 
-<a name="ERMrest.Reference+contextualize.view"></a>
-##### contextualize.view : <code>[Reference](#ERMrest.Reference)</code>
-The _view_ context of this reference.
+<a name="ERMrest.Reference+contextualize.record"></a>
+##### contextualize.record : <code>[Reference](#ERMrest.Reference)</code>
+The _record_ context of this reference.
 
 **Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
-<a name="ERMrest.Reference+contextualize.edit"></a>
-##### contextualize.edit : <code>[Reference](#ERMrest.Reference)</code>
-The _edit_ context of this reference.
+<a name="ERMrest.Reference+contextualize.entry"></a>
+##### contextualize.entry : <code>[Reference](#ERMrest.Reference)</code>
+The _entry_ context of this reference.
 
 **Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
 <a name="ERMrest.Reference+canCreate"></a>
@@ -1494,8 +1502,8 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+relatedReferences"></a>
-#### reference.relatedReferences : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+<a name="ERMrest.Reference+related"></a>
+#### reference.related : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
 The "related" references. Relationships are defined by foreign key
 references between [Table](#ERMrest.Table)s. Those references can be
 considered "outbound" where the table has FKRs to other entities or
@@ -1508,9 +1516,6 @@ entities in `B` establish relationships between entities in `A` and
 ignore `B` and think of this relationship as `A <-> C`, unless `B`
 has other moderating attributes, for instance that indicate the 
 `type` of relationship, but this is a model-depenent detail.
-
-_Note_: Initially, this will only reflect relationships based on
-"inbound" references.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+create"></a>
