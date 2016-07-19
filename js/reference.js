@@ -69,11 +69,13 @@ var ERMrest = (function(module) {
 
             var server = this.getServer(reference._serviceUrl);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
-                // Should I make a setter here?
+
                 reference._catalog = catalog;
                 var schema = reference._schema = catalog.schemas.get(reference._schemaName);
                 reference.table = schema.tables.get(reference._tableName);
+
                 defer.resolve(reference);
+
             }, function error(error) {
                 // throw some exception
                 defer.reject(error);
