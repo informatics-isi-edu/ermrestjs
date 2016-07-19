@@ -17,6 +17,31 @@
 var ERMrest = (function (module) {
 
     /**
+     * Enumeration of HTTP Response Status Codes, which are used within this
+     * sub-module. For internal use only.
+     * @private
+     * @type {Object}
+     */
+    var _http_status_codes = {
+        timed_out: 0,
+        no_content: 204,
+        not_found: 404,
+        internal_server_error: 500,
+        service_unavailable: 503
+    }
+
+    /**
+     * Retriable error codes. These can sometimes indicate transient errors
+     * that can be resolved simply by retrying the request, up to a limit.
+     * @private
+     * @type {Array<Number>}
+     */
+    var _retriable_error_codes = [
+        _http_status_codes.timed_out,
+        _http_status_codes.internal_server_error,
+        _http_status_codes.service_unavailable];
+
+    /**
      * Mapping from convenience method name to its config argument index.
      * @private
      * @type {Object}
@@ -30,14 +55,6 @@ var ERMrest = (function (module) {
         put: 2,
         patch: 2
     };
-
-    /**
-     * Retriable error codes. These can sometimes indicate transient errors
-     * that can be resolved simply by retrying the request, up to a limit.
-     * @private
-     * @type {Array<Number>}
-     */
-    var _retriable_error_codes = [0, 500, 503];
 
     /**
      * Default maximum allowable retries. This can be overridden by setting
@@ -105,39 +122,42 @@ var ERMrest = (function (module) {
                     fn.apply(scope, args).then(function(response) {
                         deferred.resolve(response);
                     },
-                    function(error) {
-                        if (error.status in _retriable_error_codes && count < max_retries) {
+                    function(response) {
+                        if (response.status in _retriable_error_codes && count < max_retries) {
                             count += 1;
-                            console.log("[debug] retry count: " + count); // TODO remove this after debug
                             setTimeout(asyncfn, delay);
                             delay *= 2;
-                        } else if (count && method === 'delete' && error.status === 404) {
+                        } else if (count && method == 'delete' && response.status == _http_status_codes.not_found) {
                             /* SPECIAL CASE: "retried delete"
                              * This indicates that a 'delete' was attempted, but
-                             * failed due to a transient error. It was retried 
-                             * at least one more time and at some point 
+                             * failed due to a transient error. It was retried
+                             * at least one more time and at some point
                              * succeeded.
+                             *
+                             * Both of the currently supported delete operations
+                             * (entity/ and attribute/) return 204 No Content.
                              */
-                            deferred.resolve(); // TODO should this return something?
+                            response.status = _http_status_codes.no_content;
+                            deferred.resolve(response);
                         } else {
-                            deferred.reject(error);
+                            deferred.reject(response);
                         }
                     });
                 }
                 asyncfn();
                 return deferred.promise;
-            }
+            };
         }
 
         // now wrap over the supported methods
         var wrapper = {};
-        var methods = ['get', 'put', 'post', 'delete']; // TODO might as well include all of the supported convenience methods here
+        var methods = ['get', 'delete', 'head', 'jsonp', 'post', 'put', 'patch'];
         for (var i=0, len=methods.length; i<len; i++) {
             wrapper[methods[i]] = wrap(methods[i], http[methods[i]], http);
         }
 
         return wrapper;
-    }
+    };
 
     return module;
 
