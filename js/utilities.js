@@ -139,6 +139,7 @@ var ERMrest = (function(module) {
         }
     };
 
+    /*
     module._makeRequest = {
         get: function(url) {
             var deferred = module._q.defer();
@@ -182,7 +183,7 @@ var ERMrest = (function(module) {
      * @param retryCount keep count of number of retries
      * @param delay milliseconds to delay before retry
      * @private
-     */
+     *
     function _retryRequest (method, url, data, deferred, retryCount, delay) {
 
         var requestObj = {
@@ -223,6 +224,7 @@ var ERMrest = (function(module) {
         });
 
     }
+    */
 
     return module;
 
