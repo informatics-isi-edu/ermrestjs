@@ -41,7 +41,11 @@ var ERMrest = (function(module) {
      * ```
      * @memberof ERMrest
      * @function resolve
-     * @param {Object} ermerstUri -  An ermrest resource URI object with a baseUri and hash property
+     * @param {string} uri -  An ERMrest resource URI, such as
+     * `https://example.org/ermrest/catalog/1/entity/s:t/k=123`.
+     * @param {Object} [params] - An optional parameters object. The (key, value)
+     * pairs from the object are converted to URL `key=value` query parameters
+     * and appended to every request to the ERMrest service.
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
      * {@link ERMrest.MalformedURIError}
@@ -52,27 +56,17 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    module.resolve = function(ermrestUri, params) {
+    module.resolve = function (uri, params) {
         try {
-            if (typeof params === 'undefined' || params === null) {
-                // Set default cid to a truthy string because a true null will not
-                // appear as a query parameter but we want to track cid even when cid
-                // isn't provided
-                params = {'cid': 'null'};
-            }
-
-            var uri = ermrestUri.baseUri + ermrestUri.hash;
             verify(uri, "'uri' must be specified");
-
             var defer = module._q.defer();
 
             // build reference
             var context = module._parse(uri);
-            context.baseUri = ermrestUri.baseUri;
             var reference = new Reference(context);
 
-            var server = this.ermrestFactory.getServer(reference._serviceUrl, params);
-            server.catalogs.get(reference._catalogId).then(function success(catalog) {
+            var server = module.ermrestFactory.getServer(reference._serviceUrl, params);
+            server.catalogs.get(reference._catalogId).then(function (catalog) {
 
                 reference._catalog = catalog;
                 reference._schema  = catalog.schemas.get(reference._schemaName);
@@ -81,8 +75,7 @@ var ERMrest = (function(module) {
 
                 defer.resolve(reference);
 
-            }, function error(error) {
-                // throw some exception
+            }, function (error) {
                 defer.reject(error);
             });
 
@@ -118,7 +111,7 @@ var ERMrest = (function(module) {
      */
     function verify(test, message) {
         if (! test) {
-            throw new ERMrest.InvalidInputError(message);
+            throw new module.InvalidInputError(message);
         }
     }
 
