@@ -59,14 +59,12 @@ var ERMrest = (function(module) {
             context.sort = path.match(/@sort\((.*)\)/)[1];
             path = path.split("@sort(")[0];
         }
-        console.log(path);
 
         // Split the URI on '/'
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
         var parts = path.split('/');
 
-        console.log(parts);
         if (parts.length < 3) {
             throw new MalformedURIError("Uri does not have enough qualifying information");
         }
