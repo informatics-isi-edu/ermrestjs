@@ -392,6 +392,12 @@ var ERMrest = (function (module) {
             this.tables._push(new Table(this, jsonTable));
         }
 
+        /**
+         * @desc Documentation for this schema
+         * @type {string}
+         */
+        this.comment = jsonSchema.comment;
+
     }
 
     Schema.prototype = {
@@ -557,6 +563,12 @@ var ERMrest = (function (module) {
          * @type {ERMrest.ForeignKeys}
          */
         this.foreignKeys = new ForeignKeys();
+
+        /**
+         * @desc Documentation for this table
+         * @type {string}
+         */
+        this.comment = jsonTable.comment;
 
     }
 
@@ -1204,6 +1216,7 @@ var ERMrest = (function (module) {
         this.default = jsonColumn.default;
 
         /**
+         * @desc Documentation for this column
          * @type {string}
          */
         this.comment = jsonColumn.comment;
@@ -1493,6 +1506,12 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonKey.annotations[uri];
             this.annotations._push(new Annotation("key", uri, jsonAnnotation));
         }
+
+        /**
+         * @desc Documentation for this key
+         * @type {string}
+         */
+        this.comment = jsonKey.comment;
     }
 
     Key.prototype = {
@@ -1762,6 +1781,12 @@ var ERMrest = (function (module) {
                 this.ignore = true;
             }
         }
+
+        /**
+         * @desc Documentation for this foreign key reference
+         * @type {string}
+         */
+        this.comment = jsonFKR.comment;
 
     }
 
