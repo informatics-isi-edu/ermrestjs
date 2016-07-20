@@ -17,32 +17,53 @@
 var ERMrest = (function(module) {
 
     /**
+     * The ERMrest service name. Internal use only.
+     * @type {string}
+     * @private
+     */
+    var _service_name = 'ermrest';
+
+    /**
+     * The length of the ERMrest service name. Internal use only.
+     * @type {Number}
+     * @private
+     */
+    var _service_name_len = _service_name.length;
+
+    /**
      * This is an internal function that parses a URI and constructs an
      * internal representation of the URI.
      * @memberof ERMrest
      * @function _parse
-     * @param {String} uri - ermrest resource URI to be parsed
+     * @param {String} uri An ERMrest resource URI to be parsed.
+     * @returns {Object} An object containing the parsed components of the URI.
+     * @throws {ERMrest.InvalidInputError} If the URI does not contain the
+     * service name.
      * @private
      */
-    module._parse = function(uri) {
+    module._parse = function (uri) {
+        var svc_idx = uri.indexOf(_service_name);
+        if (svc_idx < 0) {
+            throw new module.InvalidInputError('The URI does not contain the expected service name: ' + _service_name);
+        }
+        var context = {
+            uri: uri,
+            baseUri: uri.slice(0,svc_idx+_service_name_len)
+        };
+        var path = context.path = uri.slice(svc_idx+_service_name_len);
 
-        var context = {};
-
-        context.uri = uri;
-
-        var hash = uri;
         // Parse out @sort(...) parameter and assign to context
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
         if (uri.indexOf("@sort(") !== -1) {
-            context.sort = hash.match(/@sort\((.*)\)/)[1];
-            hash = hash.split("@sort(")[0];
+            context.sort = path.match(/@sort\((.*)\)/)[1];
+            path = path.split("@sort(")[0];
         }
 
         // Split the URI on '/'
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
-        var parts = hash.split('/');
+        var parts = path.split('/');
         if (parts.length < 6) {
             throw new MalformedURIError("Uri does not have enough qualifying information");
         }
