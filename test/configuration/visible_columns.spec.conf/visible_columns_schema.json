@@ -1,0 +1,96 @@
+{
+  "tables": {
+    "table_without_annotation": {
+      "kind": "table",
+      "keys": [],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_without_annotation",
+      "schema_name": "visible_columns_schemas",
+      "column_definitions": [
+        {
+          "name": "column_1",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "column_2",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "table_with_all_contexts": {
+      "kind": "table",
+      "keys": [],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_with_all_contexts",
+      "schema_name": "visible_columns_schemas",
+      "column_definitions": [
+        {
+          "name": "column_1",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "column_2",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "column_3",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry": ["column_1", "column_2"],
+          "edit": ["column_1", "column_3"],
+          "create": ["column_2", "column_3"],
+          "record": ["column_1"],
+          "filter": ["column_2"],
+          "compact": ["column_3"],
+          "*": []
+        }
+      }
+    },
+    "table_with_entry_filter_star": {
+      "kind": "table",
+      "keys": [],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_with_entry_filter_compact_star",
+      "schema_name": "visible_columns_schemas",
+      "column_definitions": [
+        {
+          "name": "column_1",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "column_2",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry": ["column_1"],
+          "filter": ["no_a_column", "not_a_column_2", "column_2", "not_a_column_3"],
+          "compact": ["column_2", "column_1", "column_2", "column_1"],
+          "*": ["column_2"]
+        }
+      }
+    }
+  },
+  "schema_name": "visible_columns_schema"
+}

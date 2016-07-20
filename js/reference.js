@@ -42,6 +42,7 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @function resolve
      * @param {Object} ermerstUri -  An ermrest resource URI object with a baseUri and hash property
+     * @param {Object} params - An optional parameters object that should include a `cid`
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
      * {@link ERMrest.MalformedURIError}
