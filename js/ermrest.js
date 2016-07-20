@@ -366,9 +366,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonSchema.annotations[uri];
             this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -522,9 +522,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonTable.annotations[uri];
             this.annotations._push(new Annotation("table", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -1120,7 +1120,7 @@ var ERMrest = (function (module) {
             // get column orders from annotation
             var orders = -1;
             try {
-                var annot = this._table.annotations.get("tag:isrd.isi.edu,2016:visible-columns");
+                var annot = this._table.annotations.get(module._annotations.VISIBLE_COLUMNS);
                 if (annot && annot.content) {
                     orders = this._getColumnOrders(context, annot.content);
                 }
@@ -1236,9 +1236,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -1774,9 +1774,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonFKR.annotations[uri];
             this.annotations._push(new Annotation("foreignkeyref", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
