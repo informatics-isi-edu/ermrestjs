@@ -276,7 +276,7 @@ var ERMrest = (function (module) {
     Schemas.prototype = {
         constructor: Schemas,
 
-        _push: function(schema) {
+        _push: function (schema) {
             this._schemas[schema.name] = schema;
         },
 
@@ -296,7 +296,7 @@ var ERMrest = (function (module) {
          *
          * @returns {Array} Array of all schemas in the catalog
          */
-        all: function() {
+        all: function () {
             var array = [];
             for (var key in this._schemas) {
                 array.push(this._schemas[key]);
@@ -423,7 +423,7 @@ var ERMrest = (function (module) {
     Tables.prototype = {
         constructor: Tables,
 
-        _push: function(table) {
+        _push: function (table) {
             this._tables[table.name] = table;
         },
 
@@ -431,7 +431,7 @@ var ERMrest = (function (module) {
          *
          * @returns {Array} array of tables
          */
-        all: function() {
+        all: function () {
             var array = [];
             for (var key in this._tables) {
                 array.push(this._tables[key]);
@@ -542,7 +542,7 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.Columns}
          */
-        this.columns = new Columns();
+        this.columns = new Columns(this);
         for (var i = 0; i < jsonTable.column_definitions.length; i++) {
             var jsonColumn = jsonTable.column_definitions[i];
             this.columns._push(new Column(this, jsonColumn));
@@ -579,7 +579,7 @@ var ERMrest = (function (module) {
 
         },
 
-        _buildForeignKeys: function() {
+        _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
             this.foreignKeys = new ForeignKeys();
@@ -615,7 +615,7 @@ var ERMrest = (function (module) {
          * @private
          * @desc <service>/catalog/<cid>/<api>/<schema>:<table>
          */
-        _getBaseURI: function(api) {
+        _getBaseURI: function (api) {
             return this._table.schema.catalog._uri + "/" + api + "/" +
                 module._fixedEncodeURIComponent(this._table.schema.name) + ":" +
                 module._fixedEncodeURIComponent(this._table.name);
@@ -633,7 +633,7 @@ var ERMrest = (function (module) {
          * @private
          * @desc get ermrest URI
          */
-        _toURI: function(filter, output, sortby, paging, row, limit) {
+        _toURI: function (filter, output, sortby, paging, row, limit) {
 
             var api = (output === null || output === undefined) ? "entity" : "attribute";
 
@@ -672,7 +672,7 @@ var ERMrest = (function (module) {
                 uri = uri + ")";
 
                 // paging requires sortby
-                if (paging  !== undefined && paging !== null && row !== undefined && row !== null) {
+                if (paging !== undefined && paging !== null && row !== undefined && row !== null) {
                     if (paging === "before") {
                         uri = uri + "@before(";
                     } else {
@@ -717,7 +717,7 @@ var ERMrest = (function (module) {
          * @desc get the number of rows
          *
          */
-        count: function(filter) {
+        count: function (filter) {
 
             var uri = this._getBaseURI("aggregate");
 
@@ -729,7 +729,7 @@ var ERMrest = (function (module) {
 
             return this._server._http.get(uri).then(function(response) {
                 return response.data[0].row_count;
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -749,14 +749,14 @@ var ERMrest = (function (module) {
          * In order to use before & after on a Rows, limit must be speficied,
          * output columns and sortby needs to have columns of a key
          */
-        get: function(filter, limit, columns, sortby) {
+        get: function (filter, limit, columns, sortby) {
 
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
             return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -778,14 +778,14 @@ var ERMrest = (function (module) {
          * output columns and sortby needs to have columns of a key
          *
          */
-        getBefore: function(filter, limit, columns, sortby, row) {
+        getBefore: function (filter, limit, columns, sortby, row) {
             var uri =
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
             return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -805,14 +805,14 @@ var ERMrest = (function (module) {
          * get a page of rows after a specific row
          *
          */
-        getAfter: function(filter, limit, columns, sortby, row) {
+        getAfter: function (filter, limit, columns, sortby, row) {
             var uri =
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
             return this._server._http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -832,7 +832,7 @@ var ERMrest = (function (module) {
 
             return this._server._http.delete(uri).then(function(response) {
                 return response.data;
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -852,7 +852,7 @@ var ERMrest = (function (module) {
 
             return this._server._http.put(uri, rows).then(function(response) {
                 return response.data;
-            }, function(response) {
+            }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
@@ -928,7 +928,7 @@ var ERMrest = (function (module) {
          *
          * @returns {number}
          */
-        length: function() {
+        length: function () {
             return this.data.length;
         },
 
@@ -936,7 +936,7 @@ var ERMrest = (function (module) {
          *
          * @returns {Row}
          */
-        get: function(index) {
+        get: function (index) {
             return new Row(this.data[index]);
         },
 
@@ -947,7 +947,7 @@ var ERMrest = (function (module) {
          * @desc get the rows of the next page
          *
          */
-        after: function() {
+        after: function () {
 
             return this._table.entity.getAfter(this._filter, this._limit, this._output, this._sortby, this.data[this.data.length - 1]);
         },
@@ -960,7 +960,7 @@ var ERMrest = (function (module) {
          * @desc get the rowset of the previous page
          *
          */
-        before: function() {
+        before: function () {
 
             return this._table.entity.getBefore(this._filter, this._limit, this._output, this._sortby, this.data[0]);
         }
@@ -987,7 +987,7 @@ var ERMrest = (function (module) {
          *
          * @returns {Array} Array of column names
          */
-        names: function() {
+        names: function () {
             return Object.keys(this.data);
         },
 
@@ -996,7 +996,7 @@ var ERMrest = (function (module) {
          * @param {string} name name of column
          * @returns {Object} column value
          */
-        get: function(name) {
+        get: function (name) {
             if (!(name in this.data)) {
                 throw new module.NotFoundError("", "Column " + name + " not found in row.");
             }
@@ -1006,31 +1006,54 @@ var ERMrest = (function (module) {
 
     /**
      * @memberof ERMrest
+     * @param {Table} table Required
      * @constructor
      * @desc
      * Constructor for Columns.
      */
-    function Columns() {
-        this._columns = {};
+    function Columns(table) {
+        this._columns = [];
+
+        this._table = table;
     }
 
     Columns.prototype = {
         constructor: Columns,
 
-        _push: function(column) {
-            this._columns[column.name] = column;
+        _push: function (column) {
+            this._columns.push(column);
+        },
+
+        // Returns column orders that are specified in annotations.
+        _getColumnOrders: function (context, annotation) {
+
+            if (context in annotation) {
+                if (Array.isArray(annotation[context])) {
+                    return annotation[context]; // found the context
+                } else {
+                    return this._getColumnOrders(annotation[context], annotation); // go to next level
+                }
+            }
+
+            // if context is edit or create, but there's no annotation for those
+            if (["edit", "create"].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
+                return annotation.entry;
+            }
+
+            //if context wasn't in the annotations but there is a default context
+            if (Array.isArray(annotation["*"])) {
+                return annotation["*"];
+            }
+
+            return -1; // there was no annotation, return all
         },
 
         /**
          *
          * @returns {Array} array of all columns
          */
-        all: function() {
-            var array = [];
-            for (var key in this._columns) {
-                array.push(this._columns[key]);
-            }
-            return array;
+        all: function () {
+            return this._columns;
         },
 
         create: function () {
@@ -1042,7 +1065,7 @@ var ERMrest = (function (module) {
          * @returns {Number} number of columns
          */
         length: function () {
-            return Object.keys(this._columns).length;
+            return this._columns.length;
         },
 
         /**
@@ -1050,7 +1073,20 @@ var ERMrest = (function (module) {
          * @returns {Array} names of columns
          */
         names: function () {
-            return Object.keys(this._columns);
+            return Array.prototype.map.call(this._columns, function (column) {
+                return column.name;
+            });
+        },
+
+        /**
+         *
+         * @param {string} name name of the column
+         * @returns {boolean} whether Columns has this column or not
+         */
+        has: function (name) {
+            return this._columns.filter(function (column) {
+                    return column.name == name;
+                }).length > 0;
         },
 
         /**
@@ -1059,15 +1095,59 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Column} column
          */
         get: function (name) {
-            if (!(name in this._columns)) {
-                throw new module.NotFoundError("", "Column " + name + " not found in table.");
+            var result = this._columns.filter(function (column) {
+                return column.name == name;
+            });
+
+            if (result.length) {
+                return result[0];
             }
-            return this._columns[name];
+            throw new module.NotFoundError("", "Column " + name + " not found in table.");
         },
 
+        /**
+         *
+         * @param {int} pos
+         * @returns {ERMrest.Column}
+         */
         getByPosition: function (pos) {
+            return this._columns[pos];
+        },
 
+        // Get columns based on the context.
+        _contextualize: function (context) {
+
+            // get column orders from annotation
+            var orders = -1;
+            try {
+                var annot = this._table.annotations.get("tag:isrd.isi.edu,2016:visible-columns");
+                if (annot && annot.content) {
+                    orders = this._getColumnOrders(context, annot.content);
+                }
+            } catch (exception) {
+            }
+
+            // no annotation
+            if (orders == -1) {
+                return this;
+            }
+
+            // build the columns
+            var columns = new Columns(this._table);
+            for (var i = 0; i < orders.length; i++) {
+                try {
+                    var c = this.get(orders[i]);
+
+                    if (!columns.has(c.name)) { // not already in the columns.
+                        columns._push(c);
+                    }
+                } catch (exception) {
+                    //do nothing, go to the next column
+                }
+            }
+            return columns;
         }
+
     };
 
 
@@ -1097,7 +1177,7 @@ var ERMrest = (function (module) {
          * @param {Object} data The 'raw' data value.
          * @returns {string} The formatted value.
          */
-        this.formatvalue = function(data) {
+        this.formatvalue = function (data) {
             if (data) {
                 /* TODO format the raw value based on the column definition
                  * type, heuristics, annotations, etc.
@@ -1194,10 +1274,10 @@ var ERMrest = (function (module) {
 
         },
 
-        _equals: function(column) {
+        _equals: function (column) {
             return (column.table.schema.name === this.table.schema.name &&
-                column.table.name === this.table.name &&
-                column.name === this.name);
+            column.table.name === this.table.name &&
+            column.name === this.name);
         }
 
     };
@@ -1216,7 +1296,7 @@ var ERMrest = (function (module) {
     Annotations.prototype = {
         constructor: Annotations,
 
-        _push: function(annotation) {
+        _push: function (annotation) {
             this._annotations[annotation._uri] = annotation;
         },
 
@@ -1224,7 +1304,7 @@ var ERMrest = (function (module) {
          *
          * @returns {ERMrest.Annotation[]} list of all annotations
          */
-        all: function() {
+        all: function () {
             var array = [];
             for (var key in this._annotations) {
                 array.push(this._annotations[key]);
@@ -1272,9 +1352,9 @@ var ERMrest = (function (module) {
          * @param {string} uri uri of annotation
          * @returns {boolean} whether or not annotation exists
          */
-         contains: function (uri) {
-             return (uri in this._annotations);
-         }
+        contains: function (uri) {
+            return (uri in this._annotations);
+        }
     };
 
 
@@ -1325,7 +1405,7 @@ var ERMrest = (function (module) {
     Keys.prototype = {
         constructor: Keys,
 
-        _push: function(key) {
+        _push: function (key) {
             this._keys.push(key);
         },
 
@@ -1333,7 +1413,7 @@ var ERMrest = (function (module) {
          *
          * @returns {Key[]} a list of all Keys
          */
-        all: function() {
+        all: function () {
             return this._keys;
         },
 
@@ -1488,7 +1568,7 @@ var ERMrest = (function (module) {
                     var foundMatchingCol = false;
                     for (var b = 0; b < colsB.length; b++) {
                         var colB = colsB[b];
-                        if (colA._equals(colB)){
+                        if (colA._equals(colB)) {
                             foundMatchingCol = true;
                             break;
                         }
@@ -1568,7 +1648,7 @@ var ERMrest = (function (module) {
     ForeignKeys.prototype = {
         constructor: ForeignKeys,
 
-        _push: function(foreignKeyRef) {
+        _push: function (foreignKeyRef) {
             this._foreignKeys.push(foreignKeyRef);
             this._mappings.push(foreignKeyRef.mapping);
         },
@@ -1577,7 +1657,7 @@ var ERMrest = (function (module) {
          *
          * @returns {ERMrest.ForeignKeyRef[]} an array of all foreign key references
          */
-        all: function() {
+        all: function () {
             return this._foreignKeys;
         },
 
