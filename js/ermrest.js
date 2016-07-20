@@ -368,9 +368,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonSchema.annotations[uri];
             this.annotations._push(new Annotation("schema", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -393,6 +393,12 @@ var ERMrest = (function (module) {
             var jsonTable = jsonSchema.tables[key];
             this.tables._push(new Table(this, jsonTable));
         }
+
+        /**
+         * @desc Documentation for this schema
+         * @type {string}
+         */
+        this.comment = jsonSchema.comment;
 
     }
 
@@ -518,9 +524,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonTable.annotations[uri];
             this.annotations._push(new Annotation("table", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -559,6 +565,12 @@ var ERMrest = (function (module) {
          * @type {ERMrest.ForeignKeys}
          */
         this.foreignKeys = new ForeignKeys();
+
+        /**
+         * @desc Documentation for this table
+         * @type {string}
+         */
+        this.comment = jsonTable.comment;
 
     }
 
@@ -1110,7 +1122,7 @@ var ERMrest = (function (module) {
             // get column orders from annotation
             var orders = -1;
             try {
-                var annot = this._table.annotations.get("tag:isrd.isi.edu,2016:visible-columns");
+                var annot = this._table.annotations.get(module._annotations.VISIBLE_COLUMNS);
                 if (annot && annot.content) {
                     orders = this._getColumnOrders(context, annot.content);
                 }
@@ -1206,6 +1218,7 @@ var ERMrest = (function (module) {
         this.default = jsonColumn.default;
 
         /**
+         * @desc Documentation for this column
          * @type {string}
          */
         this.comment = jsonColumn.comment;
@@ -1225,9 +1238,9 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonColumn.annotations[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
@@ -1495,6 +1508,12 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonKey.annotations[uri];
             this.annotations._push(new Annotation("key", uri, jsonAnnotation));
         }
+
+        /**
+         * @desc Documentation for this key
+         * @type {string}
+         */
+        this.comment = jsonKey.comment;
     }
 
     Key.prototype = {
@@ -1757,13 +1776,19 @@ var ERMrest = (function (module) {
             var jsonAnnotation = jsonFKR.annotations[uri];
             this.annotations._push(new Annotation("foreignkeyref", uri, jsonAnnotation));
 
-            if (uri === "tag:misd.isi.edu,2015:hidden") {
+            if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
-            } else if (uri === "tag:isrd.isi.edu,2016:ignore" &&
+            } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
         }
+
+        /**
+         * @desc Documentation for this foreign key reference
+         * @type {string}
+         */
+        this.comment = jsonFKR.comment;
 
     }
 

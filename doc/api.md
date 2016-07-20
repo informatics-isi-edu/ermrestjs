@@ -38,6 +38,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+        * [.comment](#ERMrest.Schema+comment) : <code>string</code>
     * [.Tables](#ERMrest.Tables)
         * [new Tables()](#new_ERMrest.Tables_new)
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
@@ -56,6 +57,7 @@ to use for ERMrest JavaScript agents.
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
             * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+            * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -123,6 +125,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Key+table) : <code>Table</code>
         * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.comment](#ERMrest.Key+comment) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
@@ -146,6 +149,7 @@ to use for ERMrest JavaScript agents.
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+        * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
@@ -419,6 +423,7 @@ get schema by schema name
     * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
+    * [.comment](#ERMrest.Schema+comment) : <code>string</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 
@@ -456,6 +461,12 @@ Preferred display name for user presentation only.
 <a name="ERMrest.Schema+tables"></a>
 
 #### schema.tables : <code>[Tables](#ERMrest.Tables)</code>
+**Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
+<a name="ERMrest.Schema+comment"></a>
+
+#### schema.comment : <code>string</code>
+Documentation for this schema
+
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Tables"></a>
 
@@ -522,6 +533,7 @@ get table by table name
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
         * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+        * [.comment](#ERMrest.Table+comment) : <code>string</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -582,6 +594,12 @@ Preferred display name for user presentation only.
 
 #### table.foreignKeys : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+comment"></a>
+
+#### table.comment : <code>string</code>
+Documentation for this table
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table.Entity"></a>
 
 #### Table.Entity
@@ -605,8 +623,8 @@ Constructor for Entity. This is a container in Table
 
 | Param | Type |
 | --- | --- |
-| server | <code>[Server](#ERMrest.Server)</code> | 
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| server | <code>[Server](#ERMrest.Server)</code> |
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Table.Entity+count"></a>
 
@@ -620,7 +638,7 @@ get the number of rows
 
 | Param | Type |
 | --- | --- |
-| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+get"></a>
 
@@ -691,7 +709,7 @@ Delete rows from table based on the filter
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+put"></a>
 
@@ -887,7 +905,7 @@ Constructor for Columns.
 
 | Param | Type |
 | --- | --- |
-| pos | <code>int</code> | 
+| pos | <code>int</code> |
 
 <a name="ERMrest.Column"></a>
 
@@ -956,6 +974,8 @@ TODO: to be implemented
 <a name="ERMrest.Column+comment"></a>
 
 #### column.comment : <code>string</code>
+Documentation for this column
+
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+ignore"></a>
 
@@ -1134,7 +1154,7 @@ get the key by the column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.Key"></a>
 
@@ -1146,6 +1166,7 @@ get the key by the column set
     * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.comment](#ERMrest.Key+comment) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
@@ -1172,6 +1193,12 @@ Reference to the table that this Key belongs to.
 <a name="ERMrest.Key+annotations"></a>
 
 #### key.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
+**Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
+<a name="ERMrest.Key+comment"></a>
+
+#### key.comment : <code>string</code>
+Documentation for this key
+
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+simple"></a>
 
@@ -1252,7 +1279,7 @@ get the mapping column given the from column
 
 | Param | Type |
 | --- | --- |
-| fromCol | <code>[Column](#ERMrest.Column)</code> | 
+| fromCol | <code>[Column](#ERMrest.Column)</code> |
 
 <a name="ERMrest.ForeignKeys"></a>
 
@@ -1300,7 +1327,7 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.ForeignKeyRef"></a>
 
@@ -1314,6 +1341,7 @@ get the foreign key of the given column set
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
+    * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
@@ -1323,8 +1351,8 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| jsonFKR | <code>Object</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| jsonFKR | <code>Object</code> |
 
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 
@@ -1349,6 +1377,12 @@ use index 0 since all refCols should be of the same schema:table
 
 #### foreignKeyRef.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+comment"></a>
+
+#### foreignKeyRef.comment : <code>string</code>
+Documentation for this foreign key reference
+
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+simple"></a>
 
 #### foreignKeyRef.simple : <code>Boolean</code>
@@ -1365,7 +1399,7 @@ Indicates if the foreign key is simple (not composite)
 
 | Param | Type |
 | --- | --- |
-| limit | <code>Number</code> | 
+| limit | <code>Number</code> |
 
 <a name="ERMrest.Type"></a>
 
@@ -1382,7 +1416,7 @@ Indicates if the foreign key is simple (not composite)
 
 | Param |
 | --- |
-| name | 
+| name |
 
 <a name="ERMrest.Type+name"></a>
 
@@ -2071,7 +2105,7 @@ and therefore an asynchronous operation that returns a promise.
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Datapath.DataPath+catalog"></a>
 
@@ -2111,7 +2145,7 @@ delete entities
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 
@@ -2123,7 +2157,7 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
 
@@ -2134,9 +2168,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| context |  | 
-| link |  | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| context |  |
+| link |  |
 
 <a name="ERMrest.Datapath.PathTable"></a>
 
@@ -2157,9 +2191,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> | 
-| alias | <code>string</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> |
+| alias | <code>string</code> |
 
 <a name="ERMrest.Datapath.PathTable+datapath"></a>
 
@@ -2198,8 +2232,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 <a name="ERMrest.Datapath.PathColumn+pathtable"></a>
 
@@ -2216,8 +2250,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
@@ -2292,7 +2326,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filter | 
+| filter |
 
 <a name="ERMrest.Filters.Negation+toUri"></a>
 
@@ -2314,7 +2348,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Conjunction+toUri"></a>
 
@@ -2336,7 +2370,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Disjunction+toUri"></a>
 
@@ -2362,8 +2396,8 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
 
 <a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
 
@@ -2389,9 +2423,9 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
-| rvalue | <code>String</code> &#124; <code>Number</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
+| rvalue | <code>String</code> &#124; <code>Number</code> |
 
 <a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
 
@@ -2470,4 +2504,3 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
-
