@@ -186,7 +186,9 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-         columns: this._columns,
+         get columns() {
+             return this._columns;
+         },
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_
@@ -355,10 +357,13 @@ var ERMrest = (function(module) {
                 var defer = module._q.defer();
 
                 // TODO add limit to request
-                var self = this;
+
+                // attach `this` (Reference) to a variable
+                // `this` inside the Promise request is a Window object
+                var ownReference = this;
                 module._http.get(this._uri).then(function readReference(response) {
-                    console.log(self);
-                    var page = new Page(this, response.data);
+
+                    var page = new Page(ownReference, response.data);
 
                     defer.resolve(page);
 
@@ -535,8 +540,9 @@ var ERMrest = (function(module) {
          */
         get tuples() {
             if (this._tuples === undefined) {
-                for (var i = 0; i < this._data.length; i++) {
-                    this._tuples[i] = new Tuple(this._ref, this._data[i]);
+                this._tuples = [];
+                for (i = 0; i < this._data.length; i++) {
+                    this._tuples.push(new Tuple(this._ref, this._data[i]));
                 }
             }
             return this._tuples;
