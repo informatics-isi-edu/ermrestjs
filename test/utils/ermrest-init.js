@@ -9,8 +9,6 @@ exports.init = function (options) {
 
 	ermRest.setUserCookie(authCookie);
 
-	console.log(url + " " + authCookie);
-
 	var server = ermRest.ermrestFactory.getServer(url);
 
 	return {

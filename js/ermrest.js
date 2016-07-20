@@ -54,6 +54,8 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @function
      * @param {string} uri URI of the ERMrest service.
+     * @param {Object} [params={cid:'null'}] An optional server query parameter
+     * appended to the end of any request to the server.
      * @return {ERMrest.Server} Returns a server instance.
      * @throws {ERMrest.InvalidInputError} URI is missing
      * @desc
