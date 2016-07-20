@@ -28,7 +28,7 @@ var ERMrest = (function (module) {
         not_found: 404,
         internal_server_error: 500,
         service_unavailable: 503
-    }
+    };
 
     /**
      * Retriable error codes. These can sometimes indicate transient errors
