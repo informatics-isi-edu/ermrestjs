@@ -59,21 +59,24 @@ var ERMrest = (function(module) {
             context.sort = path.match(/@sort\((.*)\)/)[1];
             path = path.split("@sort(")[0];
         }
+        console.log(path);
 
         // Split the URI on '/'
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
         var parts = path.split('/');
-        if (parts.length < 6) {
+
+        console.log(parts);
+        if (parts.length < 3) {
             throw new MalformedURIError("Uri does not have enough qualifying information");
         }
 
         // parts[5] should be the catalog id only
-        context.catalogId = parts[5];
+        context.catalogId = parts[2];
 
         // parts[7] should be <schema-name>:<table-name>
-        if (parts[7]) {
-            var params = parts[7].split(':');
+        if (parts[4]) {
+            var params = parts[4].split(':');
             if (params.length > 1) {
                 context.schemaName = decodeURIComponent(params[0]);
                 context.tableName = decodeURIComponent(params[1]);
@@ -84,10 +87,10 @@ var ERMrest = (function(module) {
         }
 
         // If there are filters appended to the URL, add them to context.js
-        if (parts[8]) {
+        if (parts[5]) {
             // split by ';' and '&'
             var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-            var items = parts[8].match(regExp);
+            var items = parts[5].match(regExp);
 
             // if a single filter
             if (items.length === 1) {
