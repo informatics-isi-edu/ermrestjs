@@ -33,6 +33,7 @@
     "jasmine-spec-reporter": "^2.5.0",
     "jsdoc": "x",
     "jsdoc-to-markdown": "x",
-    "jshint": "x"
+    "jshint": "x",
+    "nock": "x"
   }
 }
