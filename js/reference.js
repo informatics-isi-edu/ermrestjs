@@ -52,8 +52,15 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    module.resolve = function(ermrestUri) {
+    module.resolve = function(ermrestUri, params) {
         try {
+            if (typeof params === 'undefined' || params === null) {
+                // Set default cid to a truthy string because a true null will not
+                // appear as a query parameter but we want to track cid even when cid
+                // isn't provided
+                params = {'cid': 'null'};
+            }
+
             var uri = ermrestUri.baseUri + ermrestUri.hash;
             verify(uri, "'uri' must be specified");
 
@@ -64,7 +71,7 @@ var ERMrest = (function(module) {
             context.baseUri = ermrestUri.baseUri;
             var reference = new Reference(context);
 
-            var server = this.ermrestFactory.getServer(reference._serviceUrl);
+            var server = this.ermrestFactory.getServer(reference._serviceUrl, params);
             server.catalogs.get(reference._catalogId).then(function success(catalog) {
 
                 reference._catalog = catalog;
