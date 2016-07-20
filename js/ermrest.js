@@ -393,6 +393,7 @@ var ERMrest = (function (module) {
         }
 
         /**
+         * @desc Documentation for this schema
          * @type {string}
          */
         this.comment = jsonSchema.comment;
@@ -564,7 +565,7 @@ var ERMrest = (function (module) {
         this.foreignKeys = new ForeignKeys();
 
         /**
-         *
+         * @desc Documentation for this table
          * @type {string}
          */
         this.comment = jsonTable.comment;
@@ -1135,6 +1136,7 @@ var ERMrest = (function (module) {
         this.default = jsonColumn.default;
 
         /**
+         * @desc Documentation for this column
          * @type {string}
          */
         this.comment = jsonColumn.comment;
@@ -1426,7 +1428,7 @@ var ERMrest = (function (module) {
         }
 
         /**
-         *
+         * @desc Documentation for this key
          * @type {string}
          */
         this.comment = jsonKey.comment;
@@ -1701,7 +1703,7 @@ var ERMrest = (function (module) {
         }
 
         /**
-         *
+         * @desc Documentation for this foreign key reference
          * @type {string}
          */
         this.comment = jsonFKR.comment;

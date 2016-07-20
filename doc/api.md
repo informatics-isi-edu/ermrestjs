@@ -459,6 +459,8 @@ Preferred display name for user presentation only.
 <a name="ERMrest.Schema+comment"></a>
 
 #### schema.comment : <code>string</code>
+Documentation for this schema
+
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Tables"></a>
 
@@ -589,6 +591,8 @@ Preferred display name for user presentation only.
 <a name="ERMrest.Table+comment"></a>
 
 #### table.comment : <code>string</code>
+Documentation for this table
+
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table.Entity"></a>
 
@@ -938,6 +942,8 @@ TODO: to be implemented
 <a name="ERMrest.Column+comment"></a>
 
 #### column.comment : <code>string</code>
+Documentation for this column
+
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+ignore"></a>
 
@@ -1159,6 +1165,8 @@ Reference to the table that this Key belongs to.
 <a name="ERMrest.Key+comment"></a>
 
 #### key.comment : <code>string</code>
+Documentation for this key
+
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+simple"></a>
 
@@ -1340,6 +1348,8 @@ use index 0 since all refCols should be of the same schema:table
 <a name="ERMrest.ForeignKeyRef+comment"></a>
 
 #### foreignKeyRef.comment : <code>string</code>
+Documentation for this foreign key reference
+
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+simple"></a>
 
