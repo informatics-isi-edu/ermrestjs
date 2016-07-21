@@ -3,7 +3,7 @@
     "schema": {
         "name": "product",   
         "createNew": true,  
-        "path": "test/specs/sample/conf/product.schema.json"
+        "path": "test/specs/sample/conf/schema.json"
     },
     "tables": {
         "createNew": true
