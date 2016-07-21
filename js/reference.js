@@ -542,7 +542,7 @@ var ERMrest = (function(module) {
         get tuples() {
             if (this._tuples === undefined) {
                 this._tuples = [];
-                for (i = 0; i < this._data.length; i++) {
+                for (var i = 0; i < this._data.length; i++) {
                     this._tuples.push(new Tuple(this._ref, this._data[i]));
                 }
             }
