@@ -361,7 +361,8 @@ var ERMrest = (function(module) {
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                module._http.get(this._uri).then(function readReference(response) {
+                var limitedUri = this._uri + "?limit=" + limit;
+                module._http.get(limitedUri).then(function readReference(response) {
 
                     var page = new Page(ownReference, response.data);
 
