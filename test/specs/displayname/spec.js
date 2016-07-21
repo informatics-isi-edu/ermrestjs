@@ -12,7 +12,7 @@ describe('For determining display name, ', function () {
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
         ermrestUtils.importData({
-            setup: require('./conf.json'),
+            setup: require('./displayname.conf.json'),
             url: includes.url,
             authCookie: includes.authCookie
         }).then(function (data) {
@@ -82,7 +82,7 @@ describe('For determining display name, ', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
         ermrestUtils.tear({
-            setup: require('./conf.json'),
+            setup: require('./displayname.conf.json'),
             catalogId: catalog_id,
             url: includes.url,
             authCookie: includes.authCookie
