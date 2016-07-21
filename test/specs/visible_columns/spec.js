@@ -11,7 +11,7 @@ describe('For determining order of visible columns, ', function () {
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
         ermrestUtils.importData({
-            setup: require('./conf.json'),
+            setup: require('./visible_columns.conf.json'),
             url: includes.url,
             authCookie: includes.authCookie
         }).then(function (data) {
@@ -95,7 +95,7 @@ describe('For determining order of visible columns, ', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
         ermrestUtils.tear({
-            setup: require('./conf.json'),
+            setup: require('./visible_columns.conf.json'),
             catalogId: catalog_id,
             url: includes.url,
             authCookie: includes.authCookie
