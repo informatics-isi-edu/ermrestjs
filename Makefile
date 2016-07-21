@@ -6,6 +6,11 @@
 # Install target
 ERMRESTJSDIR=/var/www/html/ermrestjs
 
+
+# Travis Install target
+ERMRESTJSTRAVISDIR=/var/www/ermrestjs
+
+
 # Project name
 PROJ=ermrest
 
@@ -152,6 +157,15 @@ install: $(PKG) $(NGAPI)
 	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
 	cp $(NGAPI) $(ERMRESTJSDIR)/$(notdir $(NGAPI))
 	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
+
+# Rule to install the package
+.PHONY: installTravis
+installTravis: $(PKG) $(NGAPI)
+	test -d $(dir $(ERMRESTJSTRAVISDIR)) || mkdir -p $(dir $(ERMRESTJSTRAVISDIR))
+	test -d $(ERMRESTJSTRAVISDIR) || mkdir -p $(ERMRESTJSTRAVISDIR)
+	cp $(PKG) $(ERMRESTJSTRAVISDIR)/$(notdir $(PKG))
+	cp $(NGAPI) $(ERMRESTJSTRAVISDIR)/$(notdir $(NGAPI))
+	cp $(MIN) $(ERMRESTJSTRAVISDIR)/$(notdir $(MIN)) || true
 
 # Rules for help/usage
 .PHONY: help usage
