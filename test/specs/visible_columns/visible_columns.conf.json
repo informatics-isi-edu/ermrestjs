@@ -3,7 +3,7 @@
   "schema": {
     "name": "visible_columns_schema",
     "createNew": true,
-    "path": "test/configuration/visible_columns.spec.conf/visible_columns_schema.json"
+    "path": "test/specs/visible_columns/conf/visible_columns/schema.json"
   },
   "tables": {
     "createNew": true

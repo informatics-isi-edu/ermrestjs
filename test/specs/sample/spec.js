@@ -1,5 +1,5 @@
 
-var includes = require(__dirname + '/../utils/ermrest-init.js').init();
+var includes = require('./../../utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermRest = includes.ermRest;
@@ -12,7 +12,7 @@ describe('In ERMrest,', function () {
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
         ermrestUtils.importData({
-            setup: require('../configuration/sample.spec.conf.json'),
+            setup: require('./product.conf.json'),
             url: includes.url ,
             authCookie : includes.authCookie
         }).then(function(data) {
@@ -84,7 +84,7 @@ describe('In ERMrest,', function () {
     afterAll(function(done) {
         enableNet();
         ermrestUtils.tear({
-            setup: require('../configuration/sample.spec.conf.json'),
+            setup: require('./product.conf.json'),
             catalogId: catalog_id,
             url:  includes.url ,
             authCookie : includes.authCookie

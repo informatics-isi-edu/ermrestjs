@@ -1,7 +1,9 @@
 {
   "spec_dir": "test/specs",
   "spec_files": [
-    "**/*[sS]pec.js"
+    "sample/spec.js",
+    "displayname/spec.js",
+    "visible_columns/spec.js"
   ],
   "helpers": [],
   "stopSpecOnExpectationFailure": false,

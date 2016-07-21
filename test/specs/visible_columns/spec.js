@@ -1,6 +1,6 @@
 // Unit Test that are related to annotations should be here
 
-var includes = require(__dirname + '/../utils/ermrest-init.js').init();
+var includes = require('./../../utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermrestUtils = includes.ermrestUtils;
@@ -11,7 +11,7 @@ describe('For determining order of visible columns, ', function () {
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
         ermrestUtils.importData({
-            setup: require('../configuration/visible_columns.spec.conf.json'),
+            setup: require('./visible_columns.conf.json'),
             url: includes.url,
             authCookie: includes.authCookie
         }).then(function (data) {
@@ -95,7 +95,7 @@ describe('For determining order of visible columns, ', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
         ermrestUtils.tear({
-            setup: require('../configuration/visible_columns.spec.conf.json'),
+            setup: require('./visible_columns.conf.json'),
             catalogId: catalog_id,
             url: includes.url,
             authCookie: includes.authCookie
