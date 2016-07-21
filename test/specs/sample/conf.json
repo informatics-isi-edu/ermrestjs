@@ -10,6 +10,6 @@
     },
     "entities": {
         "createNew": true,
-        "path": "test/specs/sample/conf/data/product"
+        "path": "test/specs/sample/conf/data"
     }
 }
