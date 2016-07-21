@@ -57,10 +57,10 @@ $ make all
 
 To deploy the packages run:
 ```
-$ make [INSTALLDIR=dir] install
+$ make [ERMRESTJSDIR=dir] install
 ```
 
-Set `INSTALLDIR` to specify a target deployment location. By default, it the
+Set `ERMRESTJSDIR` to specify a target deployment location. By default, it the
 install target is `/var/www/html/ermrestjs`. If this directory does not exist,
 it will first create it. You may need to run `make install` with _super user_
 privileges depending on the installation directory you chose.
