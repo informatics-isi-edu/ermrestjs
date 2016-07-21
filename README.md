@@ -6,18 +6,19 @@ project is a work in progress. The API is undergoing frequent changes._
 
 ## Runtime environments
 
-We intend for ermrestjs to be usable in browsers and nodejs.
-- Browsers: the library should work in current versions of Firefox, Chrome,
-  Safari, Edge, and Internet Explorer (10+).
-- Nodejs: experimental, more information coming.
-- AngularJS: should work with AngularJS 1.x.
+We intend for ermrestjs to be usable in browser and node environments.
+- Browsers: ermrestjs should work in current versions of Firefox, Chrome,
+    Safari, Edge, and Internet Explorer (10+).
+- Node: while not the main target of ermrestjs, it includes bindings for 
+    node.
+- Angular: while ermrestjs is intended to be framework-neutral, it includes
+    bindings for angular 1.x.
 
 ## Library
 
 The library consists of the following scripts:
 - `ermrest.js`: a complete, non-minified script.
 - `ermrest.min.js`: a complete, minified script.
-- `ngermrest.js`: add-on for using either of the above scripts in AngularJS.
 
 ## Documention
 
@@ -105,7 +106,7 @@ $ make lint
 
 To check with Closure compiler run `make all`.
 
-## Contributing
+## How to contribute
 
 When developing new code for ermrestjs, please remember to run the build tools
 _before_ submitting Pull Requests (PR).
@@ -117,7 +118,7 @@ Steps to make a contribution:
 3. update the documentation (if applicable);
 4. update the unit tests (if applicable);
 5. make sure there are no warnings or errors from static analysis programs
-  (`make lint` and `make all` should be free of errors);
+  (`make all` should be free of warnings and errors);
 6. make sure that all tests are passing before submitting the request
   (`make test` should be free of errors);
 7. make your pull request, and prepare for comments.
