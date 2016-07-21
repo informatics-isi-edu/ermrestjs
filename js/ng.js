@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-if (angular && angular.module) {
+if (typeof angular === 'object' && angular.module) {
 
     angular.module('ERMrest', [])
 
