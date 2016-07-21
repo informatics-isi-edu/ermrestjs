@@ -22,7 +22,7 @@ BOWER=bower_components
 JS=js
 
 # Pure ERMrest API
-JS_SRC=$(JS)/ermrest.js \
+SOURCE=$(JS)/ermrest.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -30,13 +30,8 @@ JS_SRC=$(JS)/ermrest.js \
 	   $(JS)/node.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
+	   $(JS)/ng.js \
 	   $(JS)/reference.js
-
-# Angular-related API files
-NG_SRC=$(JS)/ngermrest.js
-
-# All source
-SOURCE=$(JS_SRC) $(NG_SRC)
 
 # Build target
 BUILD=build
@@ -44,7 +39,6 @@ BUILD=build
 # Project package full/minified
 PKG=$(BUILD)/$(PROJ).js
 MIN=$(BUILD)/$(PROJ).min.js
-NGAPI=$(BUILD)/ng$(PROJ).js
 
 # Documentation target
 DOC=doc
@@ -59,25 +53,20 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(PKG) $(MIN) $(NGAPI)
+$(BUILD): $(LINT) $(PKG) $(MIN)
 
 # Rule to build the library (non-minified)
 .PHONY: package
-package: $(PKG) $(NGAPI)
+package: $(PKG)
 
-$(PKG): $(JS_SRC)
+$(PKG): $(SOURCE)
 	mkdir -p $(BUILD)
-	cat $(JS_SRC) > $(PKG)
+	cat $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(JS_SRC) $(BIN)
+$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(JS_SRC) --language_in=ECMASCRIPT5_STRICT > $(MIN)
-
-# Rule to build the ng only api
-$(NGAPI): $(NG_SRC)
-	mkdir -p $(BUILD)
-	cat $(NG_SRC) > $(NGAPI)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
@@ -146,11 +135,10 @@ $(TEST): $(PKG)
 
 # Rule to install the package
 .PHONY: install
-install: $(PKG) $(NGAPI)
+install: $(PKG)
 	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
 	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
 	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
-	cp $(NGAPI) $(ERMRESTJSDIR)/$(notdir $(NGAPI))
 	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
 
 # Rules for help/usage
