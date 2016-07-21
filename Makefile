@@ -152,7 +152,6 @@ installTravis: $(PKG) $(NGAPI)
 	test -d $(dir $(ERMRESTJSTRAVISDIR)) || mkdir -p $(dir $(ERMRESTJSTRAVISDIR))
 	test -d $(ERMRESTJSTRAVISDIR) || mkdir -p $(ERMRESTJSTRAVISDIR)
 	cp $(PKG) $(ERMRESTJSTRAVISDIR)/$(notdir $(PKG))
-	cp $(NGAPI) $(ERMRESTJSTRAVISDIR)/$(notdir $(NGAPI))
 	cp $(MIN) $(ERMRESTJSTRAVISDIR)/$(notdir $(MIN)) || true
 
 # Rules for help/usage
