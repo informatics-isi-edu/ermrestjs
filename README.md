@@ -24,6 +24,8 @@ The library consists of the following scripts:
 
 See the [API reference](doc/api.md).
 
+See the [Angular Bindings](doc/angular.md).
+
 ## Development dependencies
 
 We use a combination of [nodejs](https://www.nodejs.org), npm, and good old
