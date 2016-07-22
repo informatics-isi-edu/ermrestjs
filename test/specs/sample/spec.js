@@ -1,5 +1,5 @@
 
-var includes = require(__dirname + '/../utils/ermrest-init.js').init();
+var includes = require('./../../utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermRest = includes.ermRest;
@@ -18,7 +18,7 @@ describe('In ERMrest,', function () {
 
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
-        importUtils.importSchemas(["/configuration/sample.spec.conf.json"])
+        importUtils.importSchemas(["/sample/product.conf.json"])
             .then(function(catalogId) {
                 console.log("Data imported with catalogId " + catalogId);
                 catalog_id = catalogId;
@@ -79,7 +79,7 @@ describe('In ERMrest,', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function(done) {
         enableNet();
-        importUtils.tear(['/configuration/sample.spec.conf.json'], catalog_id, true).then(function() {
+        importUtils.tear(['/sample/product.conf.json'], catalog_id, true).then(function() {
             done();
         }, function(err) {
             done.fail();

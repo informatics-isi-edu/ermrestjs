@@ -69,8 +69,9 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._catalogId).then(function (catalog) {
 
                 reference._catalog = catalog;
-                var schema = reference._schema = catalog.schemas.get(reference._schemaName);
-                reference._table = schema.tables.get(reference._tableName);
+                reference._schema  = catalog.schemas.get(reference._schemaName);
+                reference._table   = reference._schema.tables.get(reference._tableName);
+                reference._columns = reference._table.columns.all();
 
                 defer.resolve(reference);
 
@@ -185,7 +186,9 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-         columns: null,
+         get columns() {
+             return this._columns;
+         },
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_
@@ -351,41 +354,26 @@ var ERMrest = (function(module) {
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-                // TODO the real stuff goes here
-                // this can probably be direct calls to the module._http
-                // I do not think we need to re-use the current ...entity.get(...)
-                // methods implemented in the other scripts
+                var defer = module._q.defer();
 
-                // TODO: get the server
-                // var uri = server.uri + "/catalog/" + this._catalogId + "/schema/" +
-                //     module._fixedEncodeURIComponent(this._schemaName) + ":" +
-                //     module._fixedEncodeURIComponent(this._table.name);
-                //     // TODO: filters
-                //
-                //
-                // return module._http.get(uri).then(function success(response) {
-                //     // should a Page have all the data or just the limit's worth?
-                //     this._data = response.data;
-                //     this._pages = [];
-                //     var length = Math.ceil(response.data.length/limit);
-                //     // section the set of data into sites of size = limit
-                //     for (var i = 0; i < length; i++) {
-                //         var slice;
-                //         if (i === length-1) {
-                //             slice = response.data.slice(i*25);
-                //         } else {
-                //             slice = response.data.slice(i*25, (i+1)*25);
-                //         }
-                //         // go through each set of data and create a Page object for it
-                //         this._pages.push(new Page(this, slice));
-                //
-                //     }
-                //
-                //     return this._pages[0];
-                // }, function error(response) {
-                //     var error = module._responseToError(response);
-                //     return module._q.reject(error);
-                // });
+                // TODO add limit to request
+
+                // attach `this` (Reference) to a variable
+                // `this` inside the Promise request is a Window object
+                var ownReference = this;
+                var limitedUri = this._uri + "?limit=" + limit;
+                module._http.get(limitedUri).then(function readReference(response) {
+
+                    var page = new Page(ownReference, response.data);
+
+                    defer.resolve(page);
+
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -553,8 +541,9 @@ var ERMrest = (function(module) {
          */
         get tuples() {
             if (this._tuples === undefined) {
+                this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples[i] = new Tuple(this._ref, this._data[i]);
+                    this._tuples.push(new Tuple(this._ref, this._data[i]));
                 }
             }
             return this._tuples;
