@@ -32,11 +32,11 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
 	   $(JS)/errors.js \
-	   $(JS)/node.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
-	   $(JS)/ng.js \
-	   $(JS)/reference.js
+	   $(JS)/reference.js \
+	   $(JS)/node.js \
+	   $(JS)/ng.js
 
 # Build target
 BUILD=build
