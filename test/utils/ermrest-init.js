@@ -5,9 +5,6 @@ exports.init = function (options) {
 	var url = options.url || process.env.ERMREST_URL,
 	    authCookie = options.ermrest_cookie || process.env.AUTH_COOKIE;
 
-
-	if(process.env.TRAVIS) url = "http://localhost/ermrest";
-
 	var ermRest = require(process.env.PWD + "/build/ermrest.js");
 
 	ermRest.setUserCookie(authCookie);
