@@ -15,8 +15,35 @@
  */
 if (typeof angular === 'object' && angular.module) {
 
-    angular.module('ERMrest', [])
+    /* This is the current way to use ERMrest in an Angular application.
+     * First, your application or module should depend on 'ermrestjs' then
+     * when you need ERMrest services, use a dependency on 'ERMrest'.
+     */
+    angular.module('ermrestjs', [])
+    .factory('ERMrest', ['$window', '$http', '$q', function ($window, $http, $q) {
+        if ($window.ERMrest) {
+            // we assume that http and q have not been passed yet
+            $window.ERMrest.configure($http, $q);
+            // now save a copy in _thirdParty for future reference
+            $window._thirdParty = $window._thirdParty || {};
+            $window._thirdParty.ERMrest = $window.ERMrest;
+            // delete or undefine the global var
+            try {
+                delete $window.ERMrest;
+            }
+            catch (e) {
+                // <IE8 does not permit delete of window vars
+                // see http://jameshill.io/articles/angular-third-party-injection-pattern/
+                $window.ERMrest = undefined;
+            }
+        }
+        return $window._thirdParty.ERMrest;
+    }]);
 
+    /* The following style of Angular module is deprecated. We will leave it for
+     * now until we have removed its usage from the UI applications.
+     */
+    angular.module('ERMrest', [])
     .factory('ermrestServerFactory', ['$http', '$q', function ($http, $q) {
         ERMrest.configure($http, $q);
         return ERMrest.ermrestFactory;
