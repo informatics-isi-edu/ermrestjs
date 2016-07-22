@@ -16,6 +16,7 @@ exports.init = function (options) {
 		ermRest: ermRest,
 		server: server,
 		url: url,
-		authCookie: authCookie
+		authCookie: authCookie,
+		importUtils: require("./ermrest-import.js")
 	};
 };

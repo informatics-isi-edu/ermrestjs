@@ -4,32 +4,28 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 
 var server = includes.server;
 var ermrestUtils = includes.ermrestUtils;
+var importUtils = includes.importUtils;
 
 describe('For determining order of visible columns, ', function () {
-    var catalog_id, schemaName, schema, catalog;
+    var catalog_id, schemaName = "visible_columns_schema", schema, catalog;
 
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
-        ermrestUtils.importData({
-            setup: require('../configuration/visible_columns.spec.conf.json'),
-            url: includes.url,
-            authCookie: includes.authCookie
-        }).then(function (data) {
-            catalog_id = data.catalogId;
-            schemaName = data.schema.name;
-            console.log("Data imported with catalogId " + data.catalogId);
-            server.catalogs.get(catalog_id).then(function (response) {
+        importUtils.importSchemas(["/configuration/visible_columns.spec.conf.json"])
+            .then(function(catalogId) {
+                console.log("Data imported with catalogId " + catalogId);
+                catalog_id = catalogId;
+                return server.catalogs.get(catalog_id);
+            }).then(function (response) {
                 schema = response.schemas.get(schemaName);
                 done();
-            }, function (err) {
-                console.dir(err);
-                done.fail();
+            }, function(err) {
+                catalogId = err.catalogId;
+                done.fail(err);
+            }).catch(function(err)   {
+                console.log(err);
+                done.fail(err);
             });
-        }, function (err) {
-            console.log("Unable to import data");
-            console.dir(err);
-            done.fail();
-        });
     });
 
     // Helper function to add 'expect' based on test cases and the specified table
@@ -94,16 +90,9 @@ describe('For determining order of visible columns, ', function () {
 
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
-        ermrestUtils.tear({
-            setup: require('../configuration/visible_columns.spec.conf.json'),
-            catalogId: catalog_id,
-            url: includes.url,
-            authCookie: includes.authCookie
-        }).then(function (data) {
+        importUtils.tear(["/configuration/visible_columns.spec.conf.json"], catalog_id, true).then(function() {
             done();
-        }, function (err) {
-            console.log("Unable to import data");
-            console.dir(err);
+        }, function(err) {
             done.fail();
         });
     })

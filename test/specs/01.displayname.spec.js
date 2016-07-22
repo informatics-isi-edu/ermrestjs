@@ -5,26 +5,22 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var server = includes.server;
 var ermRest = includes.ermRest;
 var ermrestUtils = includes.ermrestUtils;
+var importUtils = includes.importUtils;
 
 describe('For determining display name, ', function () {
-    var catalog_id, schemaName, schema, catalog;
+    var catalog_id, schemaName = "schema_with_underlinespace_without_titlecase", schema, catalog;
 
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
-        ermrestUtils.importData({
-            setup: require('../configuration/displayname.spec.conf.json'),
-            url: includes.url,
-            authCookie: includes.authCookie
-        }).then(function (data) {
-            catalog_id = data.catalogId;
-            schemaName = data.schema.name;
-            console.log("Data imported with catalogId " + data.catalogId);
-            done();
-        }, function (err) {
-            console.log("Unable to import data");
-            console.dir(err);
-            done.fail();
-        });
+        importUtils.importSchemas(["/configuration/displayname.spec.conf.json"])
+            .then(function(catalogId) {
+                console.log("Data imported with catalogId " + catalogId);
+                catalog_id = catalogId;
+                done();
+            }, function(err) {
+                catalogId = err.catalogId;
+                done.fail(err);
+            });
     });
 
     // Test Cases:
@@ -35,6 +31,9 @@ describe('For determining display name, ', function () {
             expect(schema.displayname).toBe("schema with underlinespace without titlecase");
             done();
         }, function (err) {
+            console.dir(err);
+            done.fail();
+        }).catch(function(err) {
             console.dir(err);
             done.fail();
         });
@@ -81,16 +80,9 @@ describe('For determining display name, ', function () {
 
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
-        ermrestUtils.tear({
-            setup: require('../configuration/displayname.spec.conf.json'),
-            catalogId: catalog_id,
-            url: includes.url,
-            authCookie: includes.authCookie
-        }).then(function (data) {
+        importUtils.tear(["/configuration/displayname.spec.conf.json"], catalog_id, true).then(function() {
             done();
-        }, function (err) {
-            console.log("Unable to import data");
-            console.dir(err);
+        }, function(err) {
             done.fail();
         });
     })

@@ -4,35 +4,30 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var server = includes.server;
 var ermRest = includes.ermRest;
 var ermrestUtils = includes.ermrestUtils;
+var importUtils = includes.importUtils;
+
 var nock = require('nock');
 
 describe('In ERMrest,', function () {
-    var catalog_id, schemaName, schema, catalog;
+    var catalog_id, schemaName = "product", schema, catalog;
     
-    // This function should be present in all spec files. It will add sample database and configurations.
-    beforeAll(function (done) {
-        ermrestUtils.importData({
-            setup: require('../configuration/sample.spec.conf.json'),
-            url: includes.url ,
-            authCookie : includes.authCookie
-        }).then(function(data) {
-            catalog_id = data.catalogId;
-            schemaName = data.schema.name;
-            console.log("Data imported with catalogId " + data.catalogId);
-            done();
-        }, function(err) {
-            console.log("Unable to import data");
-            console.dir(err);
-            done.fail();
-        });
-    });
-
-
     var enableNet = function() {
         nock.cleanAll();
         nock.enableNetConnect();
     };
 
+    // This function should be present in all spec files. It will add sample database and configurations.
+    beforeAll(function (done) {
+        importUtils.importSchemas(["/configuration/sample.spec.conf.json"])
+            .then(function(catalogId) {
+                console.log("Data imported with catalogId " + catalogId);
+                catalog_id = catalogId;
+                done();
+            }, function(err) {
+                catalogId = err.catalogId;
+                done.fail(err);
+            });
+    });
 
     it("should test http retries", function(done) {
         nock.disableNetConnect();
@@ -54,6 +49,7 @@ describe('In ERMrest,', function () {
         
     });
 
+    
     // Test Cases:
     it('should introspect catalog', function(done) {
         expect(server.catalogs).toBeDefined();
@@ -83,17 +79,10 @@ describe('In ERMrest,', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function(done) {
         enableNet();
-        ermrestUtils.tear({
-            setup: require('../configuration/sample.spec.conf.json'),
-            catalogId: catalog_id,
-            url:  includes.url ,
-            authCookie : includes.authCookie
-        }).then(function(data) {
+        importUtils.tear(['/configuration/sample.spec.conf.json'], catalog_id, true).then(function() {
             done();
         }, function(err) {
-            console.log("Unable to import data");
-            console.dir(err);
             done.fail();
         });
-    })
+    });
 });
