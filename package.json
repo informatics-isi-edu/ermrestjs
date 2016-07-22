@@ -36,6 +36,7 @@
     "jshint": "x",
     "nock": "x",
     "require-reload": "^0.2.2",
-    "request":"x"
+    "request":"x",
+    "set-cookie-parser": "x"
   }
 }

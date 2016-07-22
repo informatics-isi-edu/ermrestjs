@@ -29,15 +29,18 @@ if (process.env.TRAVIS) {
           if (!error && response.statusCode == 200) {
             var cookies = require('set-cookie-parser').parse(response); 
             cookies.forEach(function(c) {
-              if (c.name == "webauthn") process.env.AUTH_COOKIE = c.name + "=" + c.value + ";";
+              if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
             });
+            console.log(process.env['AUTH_COOKIE']);
             if (process.env.AUTH_COOKIE) run();
+            
           } else {
             console.dir(error);
           }
       });
 } else {
-  run();
+	process.env.authn
+    run();
 }
 
 
