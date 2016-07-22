@@ -1,14 +1,67 @@
 language: node_js
+
 node_js:
 - stable
+
+addons:
+  postgresq: '9.4'
+
+python:
+- 2.7
+
 notifications:
   email:
     on_success: change
     on_failure: always
+
 cache:
   directories:
   - node_modules
   - bower_components
+
+before_install:
+  - sudo apt-get update
+  - sudo service postgresql stop
+  - sudo apt-get purge postgresql-9.1 postgresql-9.2 postgresql-9.3
+  - sudo service postgresql start 9.4
+  - sudo apt-get -y install libpq-dev postgresql-server-dev-9.4 python-dev
+  - sudo apt-get -y install chkconfig apache2 ssl-cert libapache2-mod-wsgi python python-dateutil
+    python-ply python-tz
+  - sudo apt-get purge python-psycopg2
+  - sudo pip install web.py
+  - sudo pip install psycopg2
+  - sudo a2enmod ssl
+  - sudo a2ensite default-ssl
+  - chkconfig apache2 on
+  - cd ..
+  - git clone https://github.com/informatics-isi-edu/webauthn.git
+  - cd webauthn
+  - sudo make testvars
+  - sudo make install
+  - sudo make deploy
+  - cd ..
+  - git clone https://github.com/informatics-isi-edu/ermrest.git
+  - cd ermrest
+  - sudo make install PLATFORM=ubuntu1204
+  - sudo make deploy PLATFORM=ubuntu1204
+  - cd ..
+  - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
+  - cd ../ermrestjs
+  - sudo npm install
+
+install:
+  - sudo make build
+  - sudo service apache2 restart
+  - sudo ls -l /etc/apache2/conf.d
+  - sudo ls -lR /var/run/apache2
+
+before_script:
+  - sudo -H -u webauthn webauthn2-manage adduser test1
+  - sudo -H -u webauthn webauthn2-manage passwd test1 dummypassword
+  - sudo -H -u webauthn webauthn2-manage addattr admin
+  - sudo -H -u webauthn webauthn2-manage assign test1 admin
+
 env:
   global:
   - secure: TBTq6fxGLwsimS+KClPFjFltRfNiNcj01ztbPgtFARlNTPWkoq43av3rCuBZLAeudiFqFxqArVNiQ+hRnL8PDqQNldAdZEkB9jqcGQKHh+S9u3sU9mGLFvXkbIwLo3NWCSYs1S48SBMtr7LZkCU/0jxgNWk/Y4tPjs7lBxcq9aLIUJPcygv6UXrVWwlRcY3J0/2ttflaim59XIXUy2Oxmn7ulXPthIpjwbNoQE0jRkoZgwEWKnLLmUT0fdb2nR75jnqg9NklcThoYWpJeyM0f/uSMQJsvltK9nPQrMAybiNrwIWB8ijYJ8FWU91ebzek8JZhsXEQIaDiO3xTPPL/9OVUZGUiWunjfRIA+3WDTekgJyd52l+3VaIUMnz/+mDiKDqPh6ena9dpaRNcdGT72CPaewmcibGB+1iDJXjm4ph5ySNncI0zhDRMBD49hhrW9C+x2Y05qb13wGAdtoLIA9R1m/CZcXuC0LrUMK2KaWEhjFJKJ51mXi0BXYG4scVePmYp2Mrs6sjdhRnceIu7qxTfdvLq8g6WDhQrpV0LsKGHR3J40ThNqA2aLzOfuCwCBGeJ0qVknkAd4H7xRT9a3OuQUUOdzPZ5ltBxQLGxk10uO8DivaOcpgkt13zf3eVZeMGz9pTyGJk9v4vGyeq8wKb2x+ZW/Bz/xVrDcci9BfM= # AUTH_COOKIE
