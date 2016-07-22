@@ -36,12 +36,12 @@ if (process.env.TRAVIS) {
 	    });
 	    console.log(process.env['AUTH_COOKIE']);
 	    if (process.env.AUTH_COOKIE) run();
+	    else console.log("Unable to retreive authcoooie");
+	    
 	  } else {
 	    console.dir(error);
 	  }
-	}).catch(function(err) {
-		console.dir(error);
-	});
+	})
 } else {
     run();
 }
