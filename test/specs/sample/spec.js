@@ -28,27 +28,6 @@ describe('In ERMrest,', function () {
                 done.fail(err);
             });
     });
-
-    it("should test http retries", function(done) {
-        nock.disableNetConnect();
-        includes.ermRest._http.max_retries = 1;
-        includes.ermRest._http.initial_delay = 100;
-        
-        var id = "jhgjhgjhg",  options = {allowUnmocked: true};;
-        nock("https://dev.isrd.isi.edu", options)
-          .get("/ermrest/catalog/" + id + "/schema")
-          .reply(500, 'Error message');
-
-        var startTime = (new Date()).getTime();
-
-        server.catalogs.get(id).then(null, function(err) {
-            expect((new Date().getTime()) - startTime).toBeGreaterThan(100);
-            enableNet();
-            done();
-        });
-        
-    });
-
     
     // Test Cases:
     it('should introspect catalog', function(done) {

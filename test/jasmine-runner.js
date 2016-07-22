@@ -21,25 +21,28 @@ var run = function() {
 }; 
 
 if (process.env.TRAVIS) {
-      require('request')({
-          url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
-          method: 'POST',
-          body: 'username=test1&password=dummypassword'
-      }, function(error, response, body) {
-          if (!error && response.statusCode == 200) {
-            var cookies = require('set-cookie-parser').parse(response); 
-            cookies.forEach(function(c) {
-              if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
-            });
-            console.log(process.env['AUTH_COOKIE']);
-            if (process.env.AUTH_COOKIE) run();
-            
-          } else {
-            console.dir(error);
-          }
-      });
+	process.env.ERMREST_URL = "http://localhost/ermrest";
+	console.log(process.env.ERMREST_URL);
+	require('request')({
+	  url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
+	  method: 'POST',
+	  body: 'username=test1&password=dummypassword'
+	}, function(error, response, body) {
+	  if (!error && response.statusCode == 200) {
+	    var cookies = require('set-cookie-parser').parse(response); 
+	    console.log(cookies);
+	    cookies.forEach(function(c) {
+	      if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
+	    });
+	    console.log(process.env['AUTH_COOKIE']);
+	    if (process.env.AUTH_COOKIE) run();
+	    else console.log("Unable to retreive authcoooie");
+	    
+	  } else {
+	    console.dir(error);
+	  }
+	})
 } else {
-	process.env.authn
     run();
 }
 
