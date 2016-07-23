@@ -71,7 +71,7 @@ var runSpecs = function() {
 	jrunner.addReporter(new SpecReporter());   
 
 	// Set timeout to a large value 
-	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
+	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 	jrunner.onComplete(function(passed) {
 		deleteCatalog();
@@ -113,5 +113,13 @@ if (process.env.TRAVIS) {
 } else {
     runSpecs();
 }
+
+// Catch unhandled exceptions and show the stack trace. This is most
+// useful when running the jasmine specs.
+process.on('uncaughtException', function(e) {
+	console.log('Caught unhandled exception: ' + e.toString());
+	console.log(e.stack);
+	deleteCatalog();
+});
 
 
