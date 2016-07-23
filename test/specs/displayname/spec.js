@@ -12,7 +12,7 @@ describe('For determining display name, ', function () {
 
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
-        importUtils.importSchemas(["/displayname/displayname.conf.json"])
+        importUtils.importSchemas(["/displayname/displayname.conf.json"], process.env.DEFAULT_CATALOG)
             .then(function(catalogId) {
                 console.log("Data imported with catalogId " + catalogId);
                 catalog_id = catalogId;
@@ -80,7 +80,7 @@ describe('For determining display name, ', function () {
 
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function (done) {
-        importUtils.tear(["/displayname/displayname.conf.json"], catalog_id, true).then(function() {
+        importUtils.tear(["/displayname/displayname.conf.json"], process.env.DEFAULT_CATALOG).then(function() {
             done();
         }, function(err) {
             done.fail();

@@ -1,5 +1,5 @@
 var q = require('q');
-
+var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require('ermrest-data-utils');
 
@@ -11,7 +11,7 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 
 	var configFilePath = configFilePaths.shift();
 
-	var config = require(process.env.PWD + "/test/specs" + configFilePath);
+	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
 	
 	if (catalogId) config.catalog.id = catalogId;
 	else delete config.catalog.id;
@@ -49,7 +49,7 @@ var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
 	}
 
 	var configFilePath = configFilePaths.shift();
-	var config = require(process.env.PWD + "/test/specs" + configFilePath);
+	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
 
 	if (deleteCatalog) {
 		configFilePaths = [];

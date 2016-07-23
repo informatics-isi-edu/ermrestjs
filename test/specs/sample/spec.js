@@ -18,7 +18,7 @@ describe('In ERMrest,', function () {
 
     // This function should be present in all spec files. It will add sample database and configurations.
     beforeAll(function (done) {
-        importUtils.importSchemas(["/sample/product.conf.json"])
+        importUtils.importSchemas(["/sample/product.conf.json","/displayname/displayname.conf.json"], process.env.DEFAULT_CATALOG)
             .then(function(catalogId) {
                 console.log("Data imported with catalogId " + catalogId);
                 catalog_id = catalogId;
@@ -58,7 +58,7 @@ describe('In ERMrest,', function () {
     // This function should be present in all spec files. It will remove the newly created catalog
     afterAll(function(done) {
         enableNet();
-        importUtils.tear(['/sample/product.conf.json'], catalog_id, true).then(function() {
+        importUtils.tear(['/sample/product.conf.json',"/displayname/displayname.conf.json"], process.env.DEFAULT_CATALOG).then(function() {
             done();
         }, function(err) {
             done.fail();
