@@ -1699,16 +1699,20 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.ColSet} colset
          * @throws {ERMrest.NotFoundError} foreign key not found
-         * @returns {ERMrest.ForeignKeyRef} foreign key reference of the colset
+         * @returns {ERMrest.ForeignKeyRef[]} foreign key reference of the colset
          * @desc get the foreign key of the given column set
          */
         get: function (colset) {
             // find ForeignKeyRef with the same colset
+            var fks = [];
             for (var i = 0; i < this._foreignKeys.length; i++) {
                 var fkr = this._foreignKeys[i];
                 if (colset._equals(fkr.colset)) {
-                    return fkr;
+                    fks.push(fkr);
                 }
+            }
+            if(fks.length > 0){
+                return fks;
             }
 
             throw new module.NotFoundError("", "Foreign Key not found for the colset.");
