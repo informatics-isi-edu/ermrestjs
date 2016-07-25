@@ -21,9 +21,9 @@
     "postgresql",
     "library"
   ],
-  "dependencies" : {
-    "request-q": "x",
-    "q": "x"
+  "dependencies": {
+    "q": "x",
+    "request-q": "x"
   },
   "devDependencies": {
     "bower": "x",
@@ -34,6 +34,9 @@
     "jsdoc": "x",
     "jsdoc-to-markdown": "x",
     "jshint": "x",
-    "nock": "x"
+    "nock": "x",
+    "require-reload": "^0.2.2",
+    "request":"x",
+    "set-cookie-parser": "x"
   }
 }
