@@ -577,6 +577,27 @@ var ERMrest = (function (module) {
     Table.prototype = {
         constructor: Table,
 
+        /**
+         * Get all FKRs that reference this table.
+         * 
+         * @type {ERMrest.ForeignKeys}
+         */
+        get referredBy(){
+            if(this._refferedBy === undefined){
+                this._refferedBy = new ForeignKeys();
+                this.schema.tables.all().forEach(function(table, table_name, tables){
+                    if(table.name != this.name){
+                        table.foreignKeys.all().forEach(function(fk, fk_name, fks){
+                            if(fk.key.table.name == this.name){
+                                this._refferedBy._push(fk);
+                            }
+                        });
+                    }
+                });
+            }
+            return this._refferedBy;
+        },
+
         delete: function () {
 
         },
