@@ -3,13 +3,13 @@
     "schema": {
         "name": "reference_schema",
         "createNew": true,
-        "path": "test/specs/reference/conf/reference/schema.json"
+        "path": "test/specs/reference/conf/reference_schema/schema.json"
     },
     "tables": {
         "createNew": true
     },
     "entities": {
         "createNew": true,
-        "path": "test/specs/reference/conf/reference/data"
+        "path": "test/specs/reference/conf/reference_schema/data"
     }
 }
