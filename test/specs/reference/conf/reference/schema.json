@@ -1,0 +1,40 @@
+{
+  "schema_name": "reference_schema",
+  "tables": {
+    "reference_table": {
+      "comment": "Table to represent a testable reference object",
+      "kind": "table",
+      "keys": [],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "reference_table",
+      "schema_name": "reference_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "typename": "integer"
+          }
+        }
+      ],
+      "annotations": {}
+    }
+  },
+  "table_names": [
+      "reference_table"
+  ],
+  "comment": null,
+  "annotations": {}
+}

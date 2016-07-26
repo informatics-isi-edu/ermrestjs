@@ -16,6 +16,8 @@
 
 var ERMrest = (function(module) {
 
+    module.ParsedFilter = ParsedFilter;
+
     /**
      * The ERMrest service name. Internal use only.
      * @type {string}
