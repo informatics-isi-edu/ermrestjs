@@ -1789,6 +1789,25 @@ var ERMrest = (function (module) {
         this.mapping = new Mapping(foreignKeyCols, referencedCols);
 
         /**
+         * The exact `names` array in foreign key definition
+         * TODO: it may need to change based on its usage
+         * @type {Array}
+         */
+        this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
+
+        /**
+         * TODO: default value is the name of table for now. Should use heuristics instead.
+         * @type {string}
+         */
+        this.from_name = table.name;
+
+        /**
+         * TODO: default value is the name of reffered table for now. Should use heuristics instead.
+         * @type {string}
+         */
+        this.to_name = refTable.name;
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -1806,6 +1825,16 @@ var ERMrest = (function (module) {
             } else if (uri === module._annotations.IGNORE &&
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
+            }
+
+            // determine the from_name and to_name using the annotation
+            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation != null) {
+                if(jsonAnnotation.from_name){
+                    this.from_name = jsonAnnotation.from_name;
+                }
+                if(jsonAnnotation.to_name){
+                    this.to_name = jsonAnnotation.to_name;
+                }
             }
         }
 
