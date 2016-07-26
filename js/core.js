@@ -567,6 +567,12 @@ var ERMrest = (function (module) {
         this.foreignKeys = new ForeignKeys();
 
         /**
+         * All the FKRs to this table.
+         * @type {ERMrest.ForeignKeys}
+         */
+        this.refferedBy = new ForeignKeys();
+
+        /**
          * @desc Documentation for this table
          * @type {string}
          */
@@ -577,38 +583,22 @@ var ERMrest = (function (module) {
     Table.prototype = {
         constructor: Table,
 
-        /**
-         * Get all FKRs that reference this table.
-         * 
-         * @type {ERMrest.ForeignKeys}
-         */
-        get referredBy(){
-            if(this._refferedBy === undefined){
-                this._refferedBy = new ForeignKeys();
-                this.schema.tables.all().forEach(function(table, table_name, tables){
-                    if(table.name != this.name){
-                        table.foreignKeys.all().forEach(function(fk, fk_name, fks){
-                            if(fk.key.table.name == this.name){
-                                this._refferedBy._push(fk);
-                            }
-                        });
-                    }
-                });
-            }
-            return this._refferedBy;
-        },
-
         delete: function () {
 
         },
 
+        // build foreignKeys of this table and refferedBy of corresponding tables.
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
             this.foreignKeys = new ForeignKeys();
             for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
                 var jsonFKs = this._jsonTable.foreign_keys[i];
-                this.foreignKeys._push(new ForeignKeyRef(this, jsonFKs));
+                var foreignKeyRef = new ForeignKeyRef(this, jsonFKs);
+                // build foreignKeys of current table
+                this.foreignKeys._push(foreignKeyRef);
+                // add to refferedBy of the key table
+                foreignKeyRef.key.table.refferedBy._push(foreignKeyRef);
             }
         }
 
@@ -1826,7 +1816,7 @@ var ERMrest = (function (module) {
             }
 
             // determine the from_name and to_name using the annotation
-            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation != null) {
+            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
                 if(jsonAnnotation.from_name){
                     this.from_name = jsonAnnotation.from_name;
                 }
