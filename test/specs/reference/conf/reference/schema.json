@@ -4,7 +4,15 @@
     "reference_table": {
       "comment": "Table to represent a testable reference object",
       "kind": "table",
-      "keys": [],
+      "keys": [
+          {
+              "comment": null,
+              "annotations": {},
+              "unique_columns": [
+                  "id"
+              ]
+          }
+      ],
       "entityCount": 0,
       "foreign_keys": [],
       "table_name": "reference_table",
