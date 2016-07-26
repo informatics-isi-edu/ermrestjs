@@ -16,7 +16,6 @@ exports.execute = function (options) {
         });
 
         it("should make 1 http retry", function(done) {
-	        nock.disableNetConnect();
 	        
 	        var id = "jhgjhgjhg",  ops = {allowUnmocked: true};;
 	        nock(options.url.replace('ermrest', ''), ops)
