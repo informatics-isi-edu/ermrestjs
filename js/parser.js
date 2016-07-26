@@ -138,7 +138,8 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                context.filter = {type: type, filters: filters};
+                context.filter = new ParsedFilter(type);
+                context.filter.setFilters(filters);
             }
         }
         return context;
