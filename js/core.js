@@ -1796,16 +1796,14 @@ var ERMrest = (function (module) {
         this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
 
         /**
-         * TODO: default value is the name of table for now. Should use heuristics instead.
          * @type {string}
          */
-        this.from_name = table.name;
+        this.from_name = "";
 
         /**
-         * TODO: default value is the name of reffered table for now. Should use heuristics instead.
          * @type {string}
          */
-        this.to_name = refTable.name;
+        this.to_name = "";
 
         /**
          * @type {boolean}
