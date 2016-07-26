@@ -5,7 +5,7 @@ var ermRest = includes.ermRest;
 var ermrestUtils = includes.ermrestUtils;
 
 describe("For determining reference objects and it's child objects, ", function () {
-    var catalog_id, schemaName, uri, reference, page;
+    var catalog_id, schemaName, uri, reference, page, tuple;
     var tableName = "reference_table", entityId = 9000, limit = 1;
 
     // This function should be present in all spec files. It will add sample database and configurations.
@@ -69,7 +69,6 @@ describe("For determining reference objects and it's child objects, ", function 
 
     it('read should return a Page object that is defined.', function(done) {
         reference.read(limit).then(function (response) {
-            console.log(response);
             page = response;
 
             expect(page).toEqual(jasmine.any(Object));
@@ -79,6 +78,35 @@ describe("For determining reference objects and it's child objects, ", function 
             console.dir(err);
             done.fail();
         });
+    });
+
+    it('page should be properly defined based on constructor.', function() {
+        expect(page._ref).toBe(reference);
+        expect(page._data.length).toBe(1);
+        expect(page._data[0].id).toBe(entityId.toString());
+    });
+
+    it('page should have methods properly defined.', function() {
+        expect(page.tuples).toBeDefined();
+    });
+
+    it('tuples should return an Array of Tuple objects.', function() {
+        tuple = page.tuples[0];
+        expect(page._tuples).toBeDefined();
+        expect(tuple._data).toBe(page._data[0]);
+        expect(tuple._ref).toBe(reference);
+    });
+
+    it('tuples should have methods properly defined.', function() {
+        expect(tuple.values).toBeDefined();
+    });
+
+    it('values should return only the values of the tuple.', function() {
+        var values = tuple.values;
+        // based on order in reference_table.json
+        expect(values[0]).toBe('9000');
+        expect(values[1]).toBe('Hank');
+        expect(values[2]).toBe('12');
     });
 
     // This function should be present in all spec files. It will remove the newly created catalog
