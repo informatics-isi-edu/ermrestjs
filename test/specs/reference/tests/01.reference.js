@@ -1,7 +1,6 @@
 exports.execute = function (options) {
 
     describe("For determining reference objects and it's child objects,", function () {
-        var singleEnitityUri, multipleEntityUri;
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
@@ -9,11 +8,11 @@ exports.execute = function (options) {
             lowerLimit = 8999,
             upperLimit = 9010;
 
-        singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
-        + schemaName + ":" + tableName + "/id=" + entityId;
+        var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaName + ":" + tableName + "/id=" + entityId;
 
-        multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-        + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+        var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
 
         // Test Cases:
@@ -101,7 +100,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('for multiple entities,', function() {
+        describe('for multiple entities with limit less than the number of referenced entities,', function() {
             var reference, page, tuple;
             var limit = 5;
 
@@ -145,10 +144,70 @@ exports.execute = function (options) {
                 expect(tuples.length).toBe(limit);
                 expect(tuples[0]._data).toBe(page._data[0]);
                 expect(tuples[4]._data).toBe(page._data[4]);
+                expect(tuples[5]).toBeUndefined();
             });
 
             it('values should return only the values of the tuple.', function() {
                 for(var i = 0; i < limit; i++) {
+                    var tuple = tuples[i];
+                    var values = tuple.values;
+                    // based on order in reference_table.json
+                    expect(values[0]).toBe(tuple._data.id);
+                    expect(values[1]).toBe(tuple._data.name);
+                    expect(values[2]).toBe(tuple._data.value.toString());
+                }
+            });
+        });
+
+        // There are only 8 entities and limit is set to 10, only 8 should be returned
+        describe('for multiple entities with limit greater than the number of referenced entities,', function() {
+            var reference, page, tuple;
+            var limit = 10;
+
+            it('resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('read should return a Page object that is defined.', function(done) {
+                reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            // See comment above the describe
+            it('page should have less entities than limit.', function() {
+                expect(page._data.length).toBeLessThan(limit);
+            });
+
+            it('tuples should return an Array of Tuple objects.', function() {
+                tuples = page.tuples;
+
+                expect(page._tuples).toBeDefined();
+                expect(tuples.length).toBe(page._data.length);
+                expect(tuples.length).toBeLessThan(limit);
+                expect(tuples[0]._data).toBe(page._data[0]);
+                expect(tuples[7]._data).toBe(page._data[7]);
+                expect(tuples[8]).toBeUndefined();
+            });
+
+            it('values should return only the values of the tuple.', function() {
+                for(var i = 0; i < page._data.length; i++) {
                     var tuple = tuples[i];
                     var values = tuple.values;
                     // based on order in reference_table.json
