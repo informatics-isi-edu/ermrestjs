@@ -123,8 +123,8 @@ var ERMrest = (function (module) {
                         deferred.resolve(response);
                     },
                     function(response) {
-                        var status = response.status || response.statusCode;
-                        if ((_retriable_error_codes.indexOf(status) != -1) && count < max_retries) {
+                        response.status = response.status || response.statusCode;
+                        if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries) {
                             count += 1;
                             setTimeout(asyncfn, delay);
                             delay *= 2;

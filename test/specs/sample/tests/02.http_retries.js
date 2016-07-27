@@ -3,7 +3,7 @@ var nock = require('nock');
 exports.execute = function (options) {
 
     describe('For determining http behavior on errocode 500, ', function () {
-        var server, ermRest;
+        var server, ermRest, url, ops = {allowUnmocked: true}, catalog, schema, table, id = "3423423";
 
 	    var enableNet = function() {
 	        nock.cleanAll();
@@ -13,24 +13,55 @@ exports.execute = function (options) {
         beforeAll(function () {
             server = options.server;
             ermRest = options.ermRest;
+            catalog = options.catalog;
+            schema = catalog.schemas.get('public');
+            //table = schema.tables.get('form_test');
+            url = options.url.replace('ermrest', '');
         });
 
-        it("should make 1 http retry", function(done) {
+        it("should make 5 http retries and then call error callback", function(done) {
 	        
-	        var id = "jhgjhgjhg",  ops = {allowUnmocked: true};;
-	        nock(options.url.replace('ermrest', ''), ops)
+        	server._http.max_retries = 5;
+        	server._http.initial_delay = 50;
+        	var delay  = server._http.max_retries * server._http.initial_delay;
+
+	        nock(url, ops)
 	          .get("/ermrest/catalog/" + id + "/schema")
-	          .reply(500, 'Error message');
+	          .reply(500, 'Error message')
+	          .persist();
 
 	        var startTime = (new Date()).getTime();
 
 	        server.catalogs.get(id).then(null, function(err) {
-	            expect((new Date().getTime()) - startTime).toBeGreaterThan(100);
-	            enableNet();
+	            expect((new Date().getTime()) - startTime).toBeGreaterThan(delay);
+	            nock.cleanAll();
 	            done();
+	        }).catch(function() {
+	        	expect(false).toBe(true);
+	        	nock.cleanAll();
+	        	done();
 	        });
 	        
 	    });
+
+	    it("should give a 401 Unauthorized Error on catalog retreival", function(done) {
+	        
+	        nock(url, ops)
+	          .get("/ermrest/catalog/" + id + "/schema")
+	          .reply(401, 'Unauthorized user')
+
+	        server.catalogs.get(id).then(null, function(err) {
+	        	expect(err instanceof ermRest.UnauthorizedError).toBeTruthy();
+	        	nock.cleanAll();
+	            done();
+	        }).catch(function() {
+	        	expect(false).toBe(true);
+	        	nock.cleanAll();
+	        	done();
+	        });
+	        
+	    });
+
 
 	    afterAll(function() {
 	    	enableNet();
