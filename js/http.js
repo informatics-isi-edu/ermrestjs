@@ -28,7 +28,7 @@ var ERMrest = (function (module) {
         not_found: 404,
         internal_server_error: 500,
         service_unavailable: 503
-    }
+    };
 
     /**
      * Retriable error codes. These can sometimes indicate transient errors
@@ -123,7 +123,8 @@ var ERMrest = (function (module) {
                         deferred.resolve(response);
                     },
                     function(response) {
-                        if (response.status in _retriable_error_codes && count < max_retries) {
+                        var status = response.status || response.statusCode;
+                        if ((_retriable_error_codes.indexOf(status) != -1) && count < max_retries) {
                             count += 1;
                             setTimeout(asyncfn, delay);
                             delay *= 2;

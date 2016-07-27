@@ -1,0 +1,11 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "schema_with_underlinespace_without_titlecase",
+    "createNew": true,
+    "path": "test/specs/annotation/conf/displayname/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  }
+}

@@ -17,9 +17,9 @@
 var ERMrest = (function(module) {
 
     /**
-     * This function resolves a URI reference to a {@link ERMrest.Reference} 
-     * object. It validates the syntax of the URI and validates that the 
-     * references to model elements in it are correct. This function makes a 
+     * This function resolves a URI reference to a {@link ERMrest.Reference}
+     * object. It validates the syntax of the URI and validates that the
+     * references to model elements in it are correct. This function makes a
      * call to the ERMrest server in order to get the `schema` which it uses to
      * validate the URI path.
      *
@@ -41,7 +41,11 @@ var ERMrest = (function(module) {
      * ```
      * @memberof ERMrest
      * @function resolve
-     * @param {!string} uri A `URI` to a resource in an ERMrest service.
+     * @param {string} uri -  An ERMrest resource URI, such as
+     * `https://example.org/ermrest/catalog/1/entity/s:t/k=123`.
+     * @param {Object} [params] - An optional parameters object. The (key, value)
+     * pairs from the object are converted to URL `key=value` query parameters
+     * and appended to every request to the ERMrest service.
      * @return {Promise} Promise when resolved passes the
      * {@link ERMrest.Reference} object. If rejected, passes one of:
      * {@link ERMrest.MalformedURIError}
@@ -52,18 +56,30 @@ var ERMrest = (function(module) {
      * {@link ERMrest.Unauthorized},
      * {@link ERMrest.NotFoundError},
      */
-    module.resolve = function(uri) {
+    module.resolve = function (uri, params) {
         try {
             verify(uri, "'uri' must be specified");
-            // TODO
-            // parse the uri; validating its syntax here
-            //  if invalid syntax; reject with malformed uri error
-            // make a uri to the catalog schema resource
-            // get the catalog/N/schema
-            // validate the model references in the `uri` parameter
-            // this method needs to internally construct a reference object that
-            // represents the `uri` parameter
-            notimplemented();
+            var defer = module._q.defer();
+
+            // build reference
+            var context = module._parse(uri);
+            var reference = new Reference(context);
+
+            var server = module.ermrestFactory.getServer(reference._serviceUrl, params);
+            server.catalogs.get(reference._catalogId).then(function (catalog) {
+
+                reference._catalog = catalog;
+                reference._schema  = catalog.schemas.get(reference._schemaName);
+                reference._table   = reference._schema.tables.get(reference._tableName);
+                reference._columns = reference._table.columns.all();
+
+                defer.resolve(reference);
+
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
         }
         catch (e) {
             return module._q.reject(e);
@@ -95,7 +111,7 @@ var ERMrest = (function(module) {
      */
     function verify(test, message) {
         if (! test) {
-            throw new ERMrest.InvalidInputError(message);
+            throw new module.InvalidInputError(message);
         }
     }
 
@@ -109,17 +125,19 @@ var ERMrest = (function(module) {
      * reference to server-side resources could change.
      *
      * Usage:
-     *  Clients _do not_ directly access this constructor. 
+     *  Clients _do not_ directly access this constructor.
      *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
-     * @param {!string} uri The `URI` for this reference.
+     * @param {Object} context - The context object generated from parsing the URI
      */
-    function Reference(uri) {
-        this._uri = uri;
-        // TODO
-        // The reference will also need a reference to the catalog or a 
-        // way to get a refernece to the catalog
+    function Reference(context) {
+        this._uri        = context.uri;
+        this._serviceUrl = context.baseUri;
+        this._catalogId  = context.catalogId;
+        this._schemaName = context.schemaName;
+        this._tableName  = context.tableName;
+        this._filter     = context.filter;
     }
 
     Reference.prototype = {
@@ -133,7 +151,7 @@ var ERMrest = (function(module) {
             /* Note that displayname is context dependent. For instance,
              * a reference to an entity set will use the table displayname
              * as the reference displayname. However, a 'related' reference
-             * will use the FKR's displayname (actually its "to name" or 
+             * will use the FKR's displayname (actually its "to name" or
              * "from name"). Like a Person table might have a FKR to its parent.
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
@@ -153,7 +171,7 @@ var ERMrest = (function(module) {
          * The array of column definitions which represent the model of
          * the resources accessible via this reference.
          *
-         * _Note_: in database jargon, technically everything returned from 
+         * _Note_: in database jargon, technically everything returned from
          * ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
          * and the definitions of those attributes are represented here as the
          * array of {@link ERMrest.Column}s. The column definitions may be
@@ -168,16 +186,18 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-        columns: null,
+         get columns() {
+             return this._columns;
+         },
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_
-         * unique. Meaning, that it can only refere to a single data element, 
-         * like a single row. This is determined based on whether the reference 
+         * unique. Meaning, that it can only refere to a single data element,
+         * like a single row. This is determined based on whether the reference
          * filters on a unique key.
          *
          * As a simple example, the following would make a unique reference:
-         * 
+         *
          * ```
          * https://example.org/ermrest/catalog/42/entity/s:t/key=123
          * ```
@@ -206,7 +226,7 @@ var ERMrest = (function(module) {
          * The members of this object are _contextualized references_.
          *
          * These references will behave and reflect state according to the mode.
-         * For instance, in a `record` mode on a table some columns may be 
+         * For instance, in a `record` mode on a table some columns may be
          * hidden.
          *
          * Usage:
@@ -219,7 +239,7 @@ var ERMrest = (function(module) {
          * different compared to `reference.columns`.
          */
         contextualize: {
-            /* TODO: you'll need to figure out how to allow the following 
+            /* TODO: you'll need to figure out how to allow the following
              * getters to have access to `this` with respect to the Refernece
              * object not the nested contextualize object. A simple test can be
              * done. The brute force way would be to introduce a `Contextualize`
@@ -304,9 +324,9 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * Reads the referenced resources and returns a promise for a page of 
-         * tuples. The `limit` parameter is required and must be a positive 
-         * integer. The page of tuples returned will be described by the 
+         * Reads the referenced resources and returns a promise for a page of
+         * tuples. The `limit` parameter is required and must be a positive
+         * integer. The page of tuples returned will be described by the
          * {@link ERMrest.Reference#columns} array of column definitions.
          *
          * Usage:
@@ -334,11 +354,26 @@ var ERMrest = (function(module) {
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-                // TODO the real stuff goes here
-                // this can probably be direct calls to the module._http
-                // I do not think we need to re-use the current ...entity.get(...)
-                // methods implemented in the other scripts
-                notimplemented();
+                var defer = module._q.defer();
+
+                // TODO add limit to request
+
+                // attach `this` (Reference) to a variable
+                // `this` inside the Promise request is a Window object
+                var ownReference = this;
+                var limitedUri = this._uri + "?limit=" + limit;
+                module._http.get(limitedUri).then(function readReference(response) {
+
+                    var page = new Page(ownReference, response.data);
+
+                    defer.resolve(page);
+
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -381,12 +416,12 @@ var ERMrest = (function(module) {
          * considered "outbound" where the table has FKRs to other entities or
          * "inbound" where other entities have FKRs to this entity. Finally,
          * entities can be "associated" by means of associative entities. Those
-         * are entities in another table that establish _many-to-many_ 
+         * are entities in another table that establish _many-to-many_
          * relationships between entities. If this help `A <- B -> C` where
          * entities in `B` establish relationships between entities in `A` and
          * `C`. Thus entities in `A` and `C` may be associated and we may
          * ignore `B` and think of this relationship as `A <-> C`, unless `B`
-         * has other moderating attributes, for instance that indicate the 
+         * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
          * @type {ERMrest.Reference[]}
          */
@@ -400,7 +435,7 @@ var ERMrest = (function(module) {
                  * The new Reference object may be a copy of this reference.
                  * Conceptually, if you think of the ERMrest URL the
                  * refernece is an extension of the current URL path.
-                 * Assume something that might look like this: 
+                 * Assume something that might look like this:
                  *  `A/B/b=123/C`
                  * After finding incoming references from `D` to `C` the
                  * corresponding related reference might look something like
@@ -418,11 +453,11 @@ var ERMrest = (function(module) {
                  * On contextualization:
                  * The 'related' references should be contextualized based on
                  * the same 'context' as this reference. If this reference is
-                 * in a record, entry, facet, etc. mode then its related 
+                 * in a record, entry, facet, etc. mode then its related
                  * references should be returned in that mode as well.
                  *
                  * On related reference columns:
-                 * The columns of the related reference (i.e., 
+                 * The columns of the related reference (i.e.,
                  * `reference.columns` should _not_ include the foriegn key
                  * that was used in the FK to this reference, as if it were
                  * hidden. Think of the Record display use case. When you
@@ -439,7 +474,7 @@ var ERMrest = (function(module) {
                  * On displayname:
                  * See the comment on `Reference.displayname` getter. A related
                  * reference should be named based on the FKR 'from name' if it
-                 * is an 'inbound' FKR. Those that are formed based on 
+                 * is an 'inbound' FKR. Those that are formed based on
                  * association tables should be named based on the 'to name' of
                  * the association table's outbound FKR.
                  *
@@ -470,12 +505,12 @@ var ERMrest = (function(module) {
      * Constructs a new Page. A _page_ represents a set of results returned from
      * ERMrest. It may not represent the complete set of results. There is an
      * iterator pattern used here, where its {@link ERMrest.Page#previous} and
-     * {@link ERMrest.Page#next} properties will give the client a 
-     * {@link ERMrest.Reference} to the previous and next set of results, 
+     * {@link ERMrest.Page#next} properties will give the client a
+     * {@link ERMrest.Reference} to the previous and next set of results,
      * respectively.
      *
      * Usage:
-     *  Clients _do not_ directly access this constructor. 
+     *  Clients _do not_ directly access this constructor.
      *  See {@link ERMrest.Reference#read}.
      * @memberof ERMrest
      * @class
@@ -505,12 +540,13 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Tuple[]}
          */
         get tuples() {
-            if (this._tuple === undefined) {
-                for (var i=0, len=this._data.length; i<len; i++) {
-                    this._tuple[i] = new Tuple(this._ref, page._data[i]);
+            if (this._tuples === undefined) {
+                this._tuples = [];
+                for (var i = 0; i < this._data.length; i++) {
+                    this._tuples.push(new Tuple(this._ref, this._data[i]));
                 }
             }
-            return this._tuple;
+            return this._tuples;
         },
 
         /**
@@ -554,11 +590,11 @@ var ERMrest = (function(module) {
 
 
     /**
-     * Constructs a new Tuple. In database jargon, a tuple is a row in a 
+     * Constructs a new Tuple. In database jargon, a tuple is a row in a
      * relation. This object represents a row returned by a query to ERMrest.
      *
      * Usage:
-     *  Clients _do not_ directly access this constructor. 
+     *  Clients _do not_ directly access this constructor.
      *  See {@link ERMrest.Page#tuples}.
      * @memberof ERMrest
      * @class
@@ -594,6 +630,8 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canUpdate() {
+            // catalog/ + id + /meta/content_read_user
+            // content_write_user
             return undefined;
         },
 
@@ -650,8 +688,8 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The array of formatted values of this tuple. The ordering of the 
-         * values in the array matches the ordering of the columns in the 
+         * The array of formatted values of this tuple. The ordering of the
+         * values in the array matches the ordering of the columns in the
          * reference (see {@link ERMrest.Reference#columns}).
          *
          * Usage (iterating over all values in the tuple):
@@ -673,7 +711,7 @@ var ERMrest = (function(module) {
         get values() {
             if (this._values === undefined) {
                 this._values = [];
-                for (var i=0; i<this._ref.columns.length; i++) {
+                for (var i = 0; i < this._ref.columns.length; i++) {
                     var col = this._ref.columns[i];
                     this._values[i] = col.formatvalue(this._data[col.name]);
                 }
@@ -695,8 +733,20 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            // TODO do this on demand
-            return undefined;
+            // TODO: what is row name if no annotation?
+            // if (this._displayname === undefined) {
+            //     var tableDisplayAnnotation = "tag:isrd.isi.edu,2016:table-display";
+            //     if(this._ref.table.annotations.contains(tableDisplayAnnotation)) {
+            //         var annotation = this._ref.table.annotations.get(tableDisplayAnnotation);
+            //         if (annotation.row_name) {
+            //             var pattern = annotation.row_name;
+            //             // TODO: parse the pattern to get all `{***}` tokens
+            //             //    -  implement pattern expansion funcion?
+            //         }
+            //     }
+            // }
+            //
+            // return this._displayname;
         }
     };
 

@@ -67,7 +67,7 @@ var ERMrest = (function(module) {
         var displayname = element.name;
         var hasDisplayName = false;
         try {
-            var display_annotation = element.annotations.get("tag:misd.isi.edu,2015:display");
+            var display_annotation = element.annotations.get(module._annotations.DISPLAY);
             if (display_annotation && display_annotation.content) {
 
                 //get the specified display name
@@ -203,6 +203,17 @@ var ERMrest = (function(module) {
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
     }
+
+    /**
+     * @desc List of annotations that ermrestjs supports.
+     * @private
+     */
+    module._annotations = {
+        DISPLAY: "tag:misd.isi.edu,2015:display",
+        HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
+        IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
+        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns"
+    };
 
     return module;
 

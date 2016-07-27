@@ -1,3 +1,5 @@
+var requireReload = require('./require-reload.js').reload;
+
 // Initialize ermrest configurations
 exports.init = function (options) {
 	options = options || {};
@@ -5,11 +7,9 @@ exports.init = function (options) {
 	var url = options.url || process.env.ERMREST_URL,
 	    authCookie = options.ermrest_cookie || process.env.AUTH_COOKIE;
 
-	var ermRest = require(process.env.PWD + "/build/ermrest.js");
+	var ermRest = requireReload(process.env.PWD + "/build/ermrest.js");
 
 	ermRest.setUserCookie(authCookie);
-
-	console.log(url + " " + authCookie);
 
 	var server = ermRest.ermrestFactory.getServer(url);
 
@@ -18,6 +18,7 @@ exports.init = function (options) {
 		ermRest: ermRest,
 		server: server,
 		url: url,
-		authCookie: authCookie
+		authCookie: authCookie,
+		importUtils: require("./ermrest-import.js")
 	};
 };
