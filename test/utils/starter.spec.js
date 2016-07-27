@@ -49,10 +49,10 @@ exports.runTests = function (options) {
             importUtils.tear(schemaConfs, process.env.DEFAULT_CATALOG).then(function () {
                 done();
             }, function (err) {
-                done.fail();
+                done.fail(err);
             }).catch(function(err) {
                 console.log(err);
-                done.fail();
+                done.fail(err);
             });
         })
     });

@@ -36,7 +36,7 @@ if (process.env.TRAVIS) {
 process.on('uncaughtException', function(e) {
 	console.log('Caught unhandled exception: ' + e.toString());
 	console.log(e.stack);
-	jUtils.deleteCatalog();
+	jasmineUtils.deleteCatalog();
 });
 
 
