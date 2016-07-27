@@ -139,6 +139,71 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     * @function
+     * @param {Object} value A boolean value to transform
+     * @param {Object} [options] Configuration options
+     * @return {string} A string representation of a boolean value
+     * @desc Formats a given boolean value into a string for display
+     */
+    module._printBoolean = function(value, options) {
+        if (value === null) {
+            return '';
+        }
+        // TODO: What kinds of options are we supporting?
+        // Maybe a default value other than empty string if value === null?
+        return Boolean(value).toString();
+    }
+
+    /**
+     * @function
+     * @param {Object} value An integer value to transform
+     * @param {Object} [options] Configuration options
+     * @return {string} A string representation of value
+     * @desc Formats a given integer value into a whole number (with a thousands
+     * separator if necessary), which is transformed into a string for display.
+     */
+    module._printInteger = function(value, options) {
+        if (value === null) {
+            return '';
+        }
+
+        // Remove fractional digits; implicitly transform value to number type
+        value = Math.trunc(value);
+
+        // Add comma separators
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        // Use of .toLocaleString() = better internationalization (not just a comma but can accommodate other symbols as separators)
+        // return Number(parseInt(value, 10)).toLocaleString();
+    }
+
+    module._printDatetime = function(value, options) {
+        if (value === null) {
+            return '';
+        }
+        // TODO: Possible options: timezone support, local timezone support, JSON,
+        // ISOString, UTCString, get year, get month, get milliseconds, get minutes..
+        return new Date(value).toISOString();
+    }
+
+    module._printFloat = function(value, options) {
+        if (value === null) {
+            return '';
+        }
+        value = parseFloat(value);
+        if (options.numDigitsAfterDecPt) { // terminology?? "mantissa"
+            value = value.toFixed(options.numDigitsAfterDecPt);
+        } else {
+            value = value.toFixed(2); // this rounds the number, is ok?
+        }
+
+        // Add comma separators
+        var parts = value.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
+    }
+
     return module;
 
 }(ERMrest || {}));
