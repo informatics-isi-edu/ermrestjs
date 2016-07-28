@@ -20,6 +20,8 @@ exports.runTests = function (options) {
 
     describe(description, function () {
 
+        require('./jasmine-matchers.js').execute();
+
         // Import the schemas
         beforeAll(function (done) {
             importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG)
