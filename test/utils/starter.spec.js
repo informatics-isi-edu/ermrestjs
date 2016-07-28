@@ -12,7 +12,7 @@ exports.runTests = function (options) {
         server: server,
         importUtils: importUtils,
         description: options.description,
-        schemaConfs: options.schemaConfs,
+        schemaConfs: options.schemaConfigurations,
         ermRest: includes.ermRest,
         url: includes.url,
         authCookie: includes.authCookie
@@ -49,10 +49,10 @@ exports.runTests = function (options) {
             importUtils.tear(schemaConfs, process.env.DEFAULT_CATALOG).then(function () {
                 done();
             }, function (err) {
-                done.fail();
+                done.fail(err);
             }).catch(function(err) {
                 console.log(err);
-                done.fail();
+                done.fail(err);
             });
         })
     });
