@@ -16,17 +16,6 @@
 
 var ERMrest = (function(module) {
 
-    module._contexts = Object.freeze({
-        COMPACT: 'compact',
-        CREATE: 'create',
-        DETAILED: 'detailed',
-        EDIT: 'edit',
-        ENTRY: 'entry',
-        FILTER: 'filter',
-        RECORD: 'record',
-        DEFAULT: '*'
-    });
-
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
