@@ -139,6 +139,7 @@ var ERMrest = (function(module) {
         this._tableName  = context.tableName;
         this._filter     = context.filter;
 
+        this._parsedContext = context;
         this.contextualize._reference = this;
     }
 
@@ -375,7 +376,7 @@ var ERMrest = (function(module) {
                 var ownReference = this;
                 var limitedUri = this._uri + "?limit=" + limit;
                 module._http.get(limitedUri).then(function readReference(response) {
-                    
+
                     var page = new Page(ownReference, response.data);
 
                     defer.resolve(page);
@@ -508,7 +509,7 @@ var ERMrest = (function(module) {
      * @returns {ERMrest.Reference} The copy of the reference object.
      */
     function _referenceCopy(source) {
-        return Object.assign({}, source);
+        return Object.assign(Object.create(Reference.prototype), source);
     }
 
 

@@ -56,6 +56,14 @@ exports.execute = function (options) {
                 expect(reference._columns).toBeDefined();
             });
 
+            it('contextualize.record should return a contextualized reference object.', function() {
+                var recordReference = reference.contextualize.record;
+
+                expect(recordReference).not.toBe(reference);
+                expect(recordReference.columns.length).not.toBe(reference.columns.length);
+                expect(recordReference.columns.length).toBe(2);
+            });
+
             // Single Entity specific tests
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
