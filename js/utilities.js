@@ -147,11 +147,11 @@ var ERMrest = (function(module) {
      * @desc Formats a given boolean value into a string for display
      */
     module._printBoolean = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
         if (value === null) {
             return '';
         }
         // TODO: What kinds of options are we supporting?
-        // Maybe a default value other than empty string if value === null?
         return Boolean(value).toString();
     }
 
@@ -164,11 +164,13 @@ var ERMrest = (function(module) {
      * separator if necessary), which is transformed into a string for display.
      */
     module._printInteger = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
         if (value === null) {
             return '';
         }
 
         // Remove fractional digits; implicitly transform value to number type
+        // TODO: Truncate or round?
         value = Math.trunc(value);
 
         // Add comma separators
@@ -179,6 +181,8 @@ var ERMrest = (function(module) {
     }
 
     module._printDatetime = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
+
         if (value === null) {
             return '';
         }
@@ -188,18 +192,23 @@ var ERMrest = (function(module) {
     }
 
     module._printFloat = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
+
         if (value === null) {
             return '';
         }
+
         value = parseFloat(value);
-        if (options.numDigitsAfterDecPt) { // terminology?? "mantissa"
-            value = value.toFixed(options.numDigitsAfterDecPt);
+        if (options.numDecDigits) { // terminology?? "mantissa"
+            value = value.toFixed(options.numDecDigits);
         } else {
             value = value.toFixed(2); // this rounds the number, is ok?
         }
+        // Remove leading zeroes
+        value = value.toString().replace(/^0+(?!\.|$)/, '');
 
         // Add comma separators
-        var parts = value.toString().split(".");
+        var parts = value.split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
     }
