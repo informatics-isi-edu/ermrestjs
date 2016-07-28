@@ -2,6 +2,7 @@ var q = require('q');
 var Jasmine = require('jasmine');
 var SpecReporter = require('jasmine-spec-reporter');
 var jrunner = new Jasmine();
+var ermrestUtils = require('ermrest-data-utils');
 
 // Util function to create a catalog before running all specs
 // Returns a promise
@@ -9,23 +10,17 @@ var createCatalog = function() {
 	var defer = q.defer();
 
 	// make http request to create a catalog to be used across all specs
-	require('request')({
-	  url:  process.env.ERMREST_URL + "/catalog",
-	  method: 'POST',
-	  headers: {
-	    'Cookie': process.env.AUTH_COOKIE
-	  }
-	}, function(error, response, body) {
-	  if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-	  	var catalog = JSON.parse(body);
-	  	process.env.DEFAULT_CATALOG = catalog.id;
-	    console.log("Catalog created with id " + catalog.id);
-	    defer.resolve(catalog.id);
-	  } else {
-	  	console.log("Unable to create catalog");
+	ermrestUtils.importData({
+        setup: { catalog: {} },
+        url: process.env.ERMREST_URL,
+        authCookie: process.env.AUTH_COOKIE
+    }).then(function (data) {
+    	process.env.DEFAULT_CATALOG = data.catalogId;
+	    defer.resolve(data.catalogId);
+    }, function (err) {
+        console.log("Unable to create catalog");
 	    defer.reject(error);
-	  }
-	})
+    });
 
 	return defer.promise;
 };
@@ -37,21 +32,17 @@ var deleteCatalog = function(catalogId) {
 	var defer = q.defer();
 	catalogId = catalogId || process.env.DEFAULT_CATALOG;
 	if (catalogId) {
-		require('request')({
-		  url:  process.env.ERMREST_URL + "/catalog/" + catalogId,
-		  method: 'DELETE',
-		  headers: {
-		    'Cookie': process.env.AUTH_COOKIE
-		  }
-		}, function(error, response, body) {
-		  if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-		  	console.log("Catalog deleted with id " + catalogId);
+		ermrestUtils.tear({
+	        setup: { catalog : { } },
+	        catalogId: catalogId,
+	        url:  process.env.ERMREST_URL ,
+	        authCookie : process.env.AUTH_COOKIE
+	    }).then(function(data) {
 		  	defer.resolve();
-		  } else {
-		  	console.log("Unable to delete catalog");
+	    }, function(err) {
+	        console.log("Unable to delete catalog");
 		    defer.reject(error);
-		  }
-		});
+	    });
 	} else {
 		defer.resolve("no catalogId found");
 	}

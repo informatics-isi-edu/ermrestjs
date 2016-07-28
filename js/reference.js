@@ -363,7 +363,7 @@ var ERMrest = (function(module) {
                 var ownReference = this;
                 var limitedUri = this._uri + "?limit=" + limit;
                 module._http.get(limitedUri).then(function readReference(response) {
-
+                    
                     var page = new Page(ownReference, response.data);
 
                     defer.resolve(page);
