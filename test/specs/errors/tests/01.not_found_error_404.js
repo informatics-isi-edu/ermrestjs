@@ -1,17 +1,15 @@
 exports.execute = function (options) {
 
     describe('For determining NotFound exceptions, ', function () {
-        var server, ermRest, url, ops = {allowUnmocked: true}, catalog, schema, table, keys, key, colset, id = "3423423";
+        var server, ermRest, url, ops = {allowUnmocked: true}, catalog, schema, table, column, id = "3423423";
 
         beforeAll(function () {
             server = options.server;
             ermRest = options.ermRest;
             catalog = options.catalog;
-            schema = catalog.schemas.get('visible_columns_schema');
-            table = schema.tables.get('table_without_annotation');
-            keys = table.keys.all();
-            key = keys[0];
-            colset = keys[1].colset;
+            schema = catalog.schemas.get('error_schema');
+            table = schema.tables.get('valid_table_name');
+            column = table.columns.get('valid_column_name');
             url = options.url.replace('ermrest', '');
         });
 
@@ -45,13 +43,16 @@ exports.execute = function (options) {
 	        	.toThrow(new ermRest.NotFoundError("", "Table " + tableName + " not found in schema."));
 	    });
 
-	    it("should throw NotFound error on non existing annotation retreival on a schema as well as a table", function() {
+	    it("should throw NotFound error on non existing annotation retreival on a schema, table and column", function() {
 	    	var annotationName = "non_existing_annotation";
 
 	    	expect(function() { schema.annotations.get(annotationName); } )
 	        	.toThrow(new ermRest.NotFoundError("", "Annotation " + annotationName + " not found."));
 
         	expect(function() { table.annotations.get(annotationName); } )
+	        	.toThrow(new ermRest.NotFoundError("", "Annotation " + annotationName + " not found."));
+
+        	expect(function() { column.annotations.get(annotationName); } )
 	        	.toThrow(new ermRest.NotFoundError("", "Annotation " + annotationName + " not found."));
 	    });
 
@@ -60,12 +61,5 @@ exports.execute = function (options) {
 	    	expect(function() { table.columns.get(column_name); } )
 	        	.toThrow(new ermRest.NotFoundError("", "Column " + column_name + " not found in table."));
 	    });
-/*
-	    it("should throw NotFound error on non existing key retreival", function() {
-	    	var key_name = "non_existing_key";
-	    	expect(function() { table.keys.get(key_name); } )
-	        	.toThrow(new ermRest.NotFoundError("", "Key " + key_name + " not found in table."));
-	    });
-*/
     });
 };

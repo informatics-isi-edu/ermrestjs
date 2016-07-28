@@ -1,0 +1,61 @@
+{
+  "tables": {
+    "valid_table_name": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        },
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "valid_column_name"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "valid_table_name",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "valid_column_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Valid Table Name"
+        }
+      }
+    }
+  },
+  "annotations": {},
+  "schema_name": "error_schema"
+}
