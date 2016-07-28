@@ -139,7 +139,6 @@ var ERMrest = (function(module) {
         this._tableName  = context.tableName;
         this._filter     = context.filter;
 
-        this._parsedContext = context;
         this.contextualize._reference = this;
     }
 
@@ -263,7 +262,7 @@ var ERMrest = (function(module) {
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
-                    if (source._columns.indexOf(column)) {
+                    if (source._columns.indexOf(column) != -1) {
                         newRef._columns.push(column);
                     }
                 }
@@ -509,7 +508,10 @@ var ERMrest = (function(module) {
      * @returns {ERMrest.Reference} The copy of the reference object.
      */
     function _referenceCopy(source) {
-        return Object.assign(Object.create(Reference.prototype), source);
+        var referenceCopy = Object.create(Reference.prototype);
+        // referenceCopy must be defined before _clone can copy values from source to referenceCopy
+        module._clone(referenceCopy, source);
+        return referenceCopy;
     }
 
 
