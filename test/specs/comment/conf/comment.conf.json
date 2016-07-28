@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "comment",
+        "createNew": true,
+        "path": "test/specs/comment/conf/comment/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}
