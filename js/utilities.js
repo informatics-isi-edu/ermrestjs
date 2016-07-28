@@ -175,22 +175,95 @@ var ERMrest = (function(module) {
 
         // Add comma separators
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-        // Use of .toLocaleString() = better internationalization (not just a comma but can accommodate other symbols as separators)
-        // return Number(parseInt(value, 10)).toLocaleString();
     }
 
+    /**
+     * @function
+     * @param {Object} value An datetime value to transform
+     * @param {Object} [options] Configuration options
+     * @return {string} A string representation of value
+     * @desc Formats a given datetime value into a string for display.
+     */
     module._printDatetime = function(value, options) {
         options = (typeof options === 'undefined') ? {} : options;
-
         if (value === null) {
             return '';
         }
-        // TODO: Possible options: timezone support, local timezone support, JSON,
-        // ISOString, UTCString, get year, get month, get milliseconds, get minutes..
-        return new Date(value).toISOString();
+        var year, month, date, hour, minute, second, ms;
+        try {
+            value = value.toString();
+            value = new Date(value);
+            // Later when we support more formats, we'll probably need to manually
+            // construct the date time with the following pieces:
+
+            // year = value.getFullYear();
+            // month = value.getMonth() + 1;
+            // date = value.getDate();
+            // hour = value.getHours();
+            // minute = value.getMinutes();
+            // second = value.getSeconds();
+            // ms = value.getMilliseconds();
+        } catch (exception) {
+            // Is this the right error?
+            throw new module.InvalidInputError("Couldn't extract datetime from input" + exception);
+        }
+
+        if (typeof value.getTime() !== 'number') {
+            // Invalid datetime
+            throw new module.InvalidInputError("Couldn't transform input to a valid datetime");
+        }
+
+        // ISOString format: YYYY-MM-DDTHH:mm:ss.sssZ
+        return value.toISOString();
+    };
+
+    /**
+     * @function
+     * @param {Object} value A date value to transform
+     * @param {Object} [options] Configuration options. Two accepted so far: {separator: '-', leadingZero: false}
+     * @return {string} A string representation of value
+     * @desc Formats a given date[time] value into a date string for display.
+     * If any time information is provided, it will be left off.
+     */
+    module._printDate = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
+        if (value === null) {
+            return '';
+        }
+        var year, month, date;
+        try {
+            value = value.toString();
+            value = new Date(value);
+            year = value.getFullYear();
+            month = value.getMonth() + 1; // 1-12, not 0-11
+            date = value.getDate();
+        } catch (exception) {
+            // Is this the right error?
+            throw new module.InvalidInputError("Couldn't extract date info from input" + exception);
+        }
+
+        if (typeof value.getTime() !== 'number' || Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(date)) {
+            // Invalid date
+            throw new module.InvalidInputError("Couldn't transform input to a valid date");
+        }
+
+        var separator = options.separator ? options.separator : '/';
+
+        if (options.leadingZero === true) {
+            // Attach a leading 0 to month and date
+            month = (month > 0 && month < 10) ? '0' + month : month;
+            date = (date > 0 && date < 10) ? '0' + date : date;
+        }
+        return year + separator + month + separator + date;
     }
 
+    /**
+     * @function
+     * @param {Object} value An float value to transform
+     * @param {Object} [options] Configuration options. One accepted so far: {numDecDigits: 5}
+     * @return {string} A string representation of value
+     * @desc Formats a given float value into a string for display. Removes leading 0s; adds thousands separator.
+     */
     module._printFloat = function(value, options) {
         options = (typeof options === 'undefined') ? {} : options;
 
@@ -199,11 +272,12 @@ var ERMrest = (function(module) {
         }
 
         value = parseFloat(value);
-        if (options.numDecDigits) { // terminology?? "mantissa"
-            value = value.toFixed(options.numDecDigits);
+        if (options.numDecDigits) {
+            value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
         } else {
-            value = value.toFixed(2); // this rounds the number, is ok?
+            value = value.toFixed(2);
         }
+
         // Remove leading zeroes
         value = value.toString().replace(/^0+(?!\.|$)/, '');
 

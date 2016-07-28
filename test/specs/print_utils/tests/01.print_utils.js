@@ -26,5 +26,25 @@ exports.execute = function (options) {
             expect(_printInteger(1234.56)).toBe('1,234');
             expect(_printInteger(0001)).toBe('1');
         });
+
+        it('_printDate() should format dates correctly.', function () {
+            var _printDate = module._printDate;
+            expect(_printDate(null)).toBe('');
+            expect(_printDate('2012-04-25 13:00:00.00 PST', {
+                separator: '.',
+                leadingZero: true
+            })).toBe('2012.04.25');
+            // Put _printDate in a function so _printDate won't throw an error
+            // before test gets to check for .toThrow()
+            expect(function() {
+                _printDate(1234.56)
+            }).toThrowError(module.InvalidInputError);
+        });
+
+        it('_printDatetime() should format datetimes correctly.', function () {
+            var _printDatetime = module._printDatetime;
+            expect(_printDatetime(null)).toBe('');
+            expect(_printDatetime('2015-04-25')).toBe('2015-04-25T00:00:00.000Z');
+        });
     });
 };
