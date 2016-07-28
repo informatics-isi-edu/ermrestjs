@@ -16,6 +16,17 @@
 
 var ERMrest = (function(module) {
 
+    module._contexts = {
+        COMPACT: 'compact',
+        CREATE: 'create',
+        DETAILED: 'detailed',
+        EDIT: 'edit',
+        ENTRY: 'entry',
+        FILTER: 'filter',
+        RECORD: 'record',
+        DEFAULT: '*'
+    }
+
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
@@ -257,7 +268,7 @@ var ERMrest = (function(module) {
             get record() {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
-                var columnOrders = source._table.columns._contextualize('record').all();
+                var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
 
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
