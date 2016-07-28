@@ -41,10 +41,10 @@ exports.execute = function (options) {
             }).toThrowError(module.InvalidInputError);
         });
 
-        it('_printDatetime() should format datetimes correctly.', function () {
-            var _printDatetime = module._printDatetime;
-            expect(_printDatetime(null)).toBe('');
-            expect(_printDatetime('2015-04-25')).toBe('2015-04-25T00:00:00.000Z');
+        it('_printTimestamp() should format timestamps correctly.', function () {
+            var _printTimestamp = module._printTimestamp;
+            expect(_printTimestamp(null)).toBe('');
+            expect(_printTimestamp('2015-04-25')).toBe('2015-04-25T00:00:00.000Z');
         });
     });
 };

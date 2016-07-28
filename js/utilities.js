@@ -179,12 +179,12 @@ var ERMrest = (function(module) {
 
     /**
      * @function
-     * @param {Object} value An datetime value to transform
+     * @param {Object} value An timestamp value to transform
      * @param {Object} [options] Configuration options
-     * @return {string} A string representation of value
-     * @desc Formats a given datetime value into a string for display.
+     * @return {string} A string representation of value. Default is ISO string.
+     * @desc Formats a given timestamp value into a string for display.
      */
-    module._printDatetime = function(value, options) {
+    module._printTimestamp = function(value, options) {
         options = (typeof options === 'undefined') ? {} : options;
         if (value === null) {
             return '';
@@ -205,12 +205,12 @@ var ERMrest = (function(module) {
             // ms = value.getMilliseconds();
         } catch (exception) {
             // Is this the right error?
-            throw new module.InvalidInputError("Couldn't extract datetime from input" + exception);
+            throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
         }
 
         if (typeof value.getTime() !== 'number') {
-            // Invalid datetime
-            throw new module.InvalidInputError("Couldn't transform input to a valid datetime");
+            // Invalid timestamp
+            throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
         }
 
         // ISOString format: YYYY-MM-DDTHH:mm:ss.sssZ
