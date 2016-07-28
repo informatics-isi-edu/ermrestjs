@@ -16,7 +16,7 @@
 
 var ERMrest = (function(module) {
 
-    module._contexts = {
+    module._contexts = Object.freeze({
         COMPACT: 'compact',
         CREATE: 'create',
         DETAILED: 'detailed',
@@ -25,7 +25,7 @@ var ERMrest = (function(module) {
         FILTER: 'filter',
         RECORD: 'record',
         DEFAULT: '*'
-    }
+    });
 
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
