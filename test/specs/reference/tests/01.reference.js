@@ -40,6 +40,8 @@ exports.execute = function (options) {
                 expect(reference._schemaName).toBe(schemaName);
                 expect(reference._tableName).toBe(tableName);
                 expect(reference._filter instanceof options.ermRest.ParsedFilter).toBeDefined();
+
+                expect(reference.contextualize._reference).toBe(reference);
             });
 
             // Methods that are currently implemented
@@ -54,6 +56,30 @@ exports.execute = function (options) {
                 expect(reference._schema).toBeDefined();
                 expect(reference._table).toBeDefined();
                 expect(reference._columns).toBeDefined();
+            });
+
+            it('contextualize.record should return a contextualized reference object.', function() {
+                var recordReference = reference.contextualize.record;
+
+                // Make sure Reference prototype is available
+                expect(recordReference.uri).toBeDefined();
+                expect(recordReference.columns).toBeDefined();
+                expect(recordReference.read).toBeDefined();
+
+                // The only difference should be the set of columns returned
+                expect(recordReference).not.toBe(reference);
+                expect(recordReference.columns.length).not.toBe(reference.columns.length);
+                expect(recordReference.columns.length).toBe(2);
+
+                var columns = Array.prototype.map.call(recordReference.columns, function(column){
+                    return column.name;
+                });
+                expect(columns).toEqual(["name", "value"]);
+
+                expect(recordReference.uri).toBe(reference.uri);
+                expect(recordReference._serviceUrl).toBe(reference._serviceUrl);
+                // If catalog is the same, so will be the schema and table
+                expect(recordReference._catalog).toBe(reference._catalog);
             });
 
             // Single Entity specific tests
