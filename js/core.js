@@ -1558,6 +1558,19 @@ var ERMrest = (function (module) {
 
     ColSet.prototype = {
         constructor: ColSet,
+        
+        /**
+         * 
+         * @returns {String} string representation of colset
+         */
+        toString: function(){
+            return this.columns.slice().sort(function(a,b){
+                //sort columns based on name
+                return a.name.localeCompare(b.name);
+            }).map(function(col){
+                return [col.table.schema.name, col.table.name, col.name].join(":");
+            }).join(",");
+        },
 
         /**
          *

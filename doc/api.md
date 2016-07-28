@@ -131,6 +131,7 @@ to use for ERMrest JavaScript agents.
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+        * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>String</code>
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
@@ -1225,6 +1226,7 @@ Indicates if the key is simple (not composite)
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+    * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>String</code>
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
 <a name="new_ERMrest.ColSet_new"></a>
@@ -1241,6 +1243,11 @@ Constructor for ColSet, a set of Column objects.
 
 #### colSet.columns : <code>Array</code>
 **Kind**: instance property of <code>[ColSet](#ERMrest.ColSet)</code>  
+<a name="ERMrest.ColSet+toString"></a>
+
+#### colSet.toString() ⇒ <code>String</code>
+**Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
+**Returns**: <code>String</code> - string representation of colset  
 <a name="ERMrest.ColSet+length"></a>
 
 #### colSet.length() ⇒ <code>Number</code>
