@@ -106,26 +106,26 @@ exports.execute = function(options) {
 
         });
 
-        describe('refferedBy in Table class,', function() {
+        describe('referredBy in Table class,', function() {
             it('should return the inbound foreign keys that are defined in schema.', function() {
                 var output = [
                     "common_schema_1:table_1_schema_1:first_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key",
                     "common_schema_1:table_1_schema_1:second_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key"
                 ];
-                expect(table2_schema1.refferedBy.all().map(function(fk) {
+                expect(table2_schema1.referredBy.all().map(function(fk) {
                     return fk.toString();
                 })).toHaveSameItems(output, true);
             });
 
             it('should support foreign keys from different schemas.', function() {
                 var output = ["common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2>common_schema_2:table_1_schema_2:table_1_first_key,common_schema_2:table_1_schema_2:table_1_second_key"];
-                expect(table1_schema2.refferedBy.all().map(function(fk) {
+                expect(table1_schema2.referredBy.all().map(function(fk) {
                     return fk.toString();
                 })).toHaveSameItems(output, true);
             });
 
             it('should return an empty array when table does not have any inbound foreign keys.', function() {
-                expect(table1_schema1.refferedBy.all()).toHaveSameItems([]);
+                expect(table1_schema1.referredBy.all()).toHaveSameItems([]);
             });
         });
 

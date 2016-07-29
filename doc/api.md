@@ -57,7 +57,7 @@ to use for ERMrest JavaScript agents.
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
             * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
-            * [.refferedBy](#ERMrest.Table+refferedBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+            * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -541,7 +541,7 @@ get table by table name
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
         * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
-        * [.refferedBy](#ERMrest.Table+refferedBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+        * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -603,9 +603,9 @@ Preferred display name for user presentation only.
 
 #### table.foreignKeys : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-<a name="ERMrest.Table+refferedBy"></a>
+<a name="ERMrest.Table+referredBy"></a>
 
-#### table.refferedBy : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+#### table.referredBy : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
 All the FKRs to this table.
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  

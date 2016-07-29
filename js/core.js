@@ -570,7 +570,7 @@ var ERMrest = (function (module) {
          * All the FKRs to this table.
          * @type {ERMrest.ForeignKeys}
          */
-        this.refferedBy = new ForeignKeys();
+        this.referredBy = new ForeignKeys();
 
         /**
          * @desc Documentation for this table
@@ -587,7 +587,7 @@ var ERMrest = (function (module) {
 
         },
 
-        // build foreignKeys of this table and refferedBy of corresponding tables.
+        // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
@@ -597,8 +597,8 @@ var ERMrest = (function (module) {
                 var foreignKeyRef = new ForeignKeyRef(this, jsonFKs);
                 // build foreignKeys of current table
                 this.foreignKeys._push(foreignKeyRef);
-                // add to refferedBy of the key table
-                foreignKeyRef.key.table.refferedBy._push(foreignKeyRef);
+                // add to referredBy of the key table
+                foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
         }
 
