@@ -191,7 +191,7 @@ exports.execute = function (options) {
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(multipleEntityUri + "@sort(value)", {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
@@ -219,6 +219,22 @@ exports.execute = function (options) {
             // See comment above the describe
             it('page should have less entities than limit.', function() {
                 expect(page._data.length).toBeLessThan(limit);
+            });
+
+            it('page should have entities ordered by value.', function() {
+                var data = page._data;
+                // check that the first value is not the first in the defined data set in the .json file
+                expect(data[0].id).not.toBe((lowerLimit + 1).toString());
+                expect(data[0].value).toBe(1);
+
+                // The last tuple in the data set happens to have the largest value
+                // Range was 10 entries, 8999 < id < 9010, but only 8 in the set, hence -3
+                expect(data[data.length-1].id).toBe((upperLimit - 3).toString());
+                expect(data[data.length-1].value).toBe(160);
+
+                for (var i = 0; i < data.length - 1; i++) {
+                    expect(data[i].value).toBeLessThan(data[i+1].value)
+                }
             });
 
             it('tuples should return an Array of Tuple objects.', function() {
