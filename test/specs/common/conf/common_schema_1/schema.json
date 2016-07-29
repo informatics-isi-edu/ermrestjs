@@ -11,17 +11,17 @@
                 {
                     "comment": "with annotation",
                     "names": [
-                        ["schema_1", "table_1_first_fk_name_1"],
-                        ["schema_1", "table_1_first_fk_name_2"]
+                        ["common_schema_1", "table_1_first_fk_name_1"],
+                        ["common_schema_1", "table_1_first_fk_name_2"]
                     ],
                     "foreign_key_columns": [{
                         "table_name": "table_1_schema_1",
-                        "schema_name": "schema_1",
+                        "schema_name": "common_schema_1",
                         "column_name": "first_fk_from_table_2"
                     }],
                     "referenced_columns": [{
                         "table_name": "table_2_schema_1",
-                        "schema_name": "schema_1",
+                        "schema_name": "common_schema_1",
                         "column_name": "table_2_key"
                     }],
                     "annotation": {
@@ -36,12 +36,12 @@
                     "names": [],
                     "foreign_key_columns": [{
                         "table_name": "table_1_schema_1",
-                        "schema_name": "schema_1",
+                        "schema_name": "common_schema_1",
                         "column_name": "second_fk_from_table_2"
                     }],
                     "referenced_columns": [{
                         "table_name": "table_2_schema_1",
-                        "schema_name": "schema_1",
+                        "schema_name": "common_schema_1",
                         "column_name": "table_2_key"
                     }]
                 }
@@ -74,20 +74,20 @@
                 "names": [],
                 "foreign_key_columns": [{
                     "table_name": "table_2_schema_1",
-                    "schema_name": "schema_1",
+                    "schema_name": "common_schema_1",
                     "column_name": "fk_1_from_table_1_schema_2"
                 }, {
                     "table_name": "table_2_schema_1",
-                    "schema_name": "schema_1",
+                    "schema_name": "common_schema_1",
                     "column_name": "fk_2_from_table_1_schema_2"
                 }],
                 "referenced_columns": [{
                     "table_name": "table_1_schema_2",
-                    "schema_name": "schema_2",
+                    "schema_name": "common_schema_2",
                     "column_name": "table_1_first_key"
                 }, {
                     "table_name": "table_1_schema_2",
-                    "schema_name": "schema_2",
+                    "schema_name": "common_schema_2",
                     "column_name": "table_1_second_key"
                 }]
             }],
@@ -109,5 +109,5 @@
             }]
         }
     },
-    "schema_name": "schema_1"
+    "schema_name": "common_schema_1"
 }
