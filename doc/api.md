@@ -104,6 +104,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.toString()](#ERMrest.Column+toString)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -131,7 +132,7 @@ to use for ERMrest JavaScript agents.
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
-        * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>String</code>
+        * [.toString()](#ERMrest.ColSet+toString)
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
@@ -940,6 +941,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.toString()](#ERMrest.Column+toString)
 
 <a name="new_ERMrest.Column_new"></a>
 
@@ -1028,6 +1030,13 @@ Formats a value corresponding to this column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
 
+<a name="ERMrest.Column+toString"></a>
+
+#### column.toString()
+returns string representation of Column
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+**Retuns**: <code>string</code> string representation of Column  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
@@ -1227,7 +1236,7 @@ Indicates if the key is simple (not composite)
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
-    * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>String</code>
+    * [.toString()](#ERMrest.ColSet+toString)
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
 <a name="new_ERMrest.ColSet_new"></a>
@@ -1246,9 +1255,11 @@ Constructor for ColSet, a set of Column objects.
 **Kind**: instance property of <code>[ColSet](#ERMrest.ColSet)</code>  
 <a name="ERMrest.ColSet+toString"></a>
 
-#### colSet.toString() ⇒ <code>String</code>
+#### colSet.toString()
+returns string representation of colset object
+
 **Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
-**Returns**: <code>String</code> - string representation of colset  
+**Retuns**: <code>string</code> string representation of colset object  
 <a name="ERMrest.ColSet+length"></a>
 
 #### colSet.length() ⇒ <code>Number</code>
@@ -1430,10 +1441,10 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
 #### foreignKeyRef.toString()
-returns string representation of the object
+returns string representation of ForeignKeyRef object
 
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
-**Retuns**: <code>string</code> string representation of the object  
+**Retuns**: <code>string</code> string representation of ForeignKeyRef object  
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>

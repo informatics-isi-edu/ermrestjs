@@ -1287,6 +1287,14 @@ var ERMrest = (function (module) {
     Column.prototype = {
         constructor: Column,
 
+        /**
+         * returns string representation of Column
+         * @retuns {string} string representation of Column
+         */
+        toString: function() {
+            return [this.table.schema.name, this.table.name, this.name].join(":");
+        },
+
         delete: function () {
 
         },
@@ -1564,15 +1572,14 @@ var ERMrest = (function (module) {
         constructor: ColSet,
         
         /**
-         * 
-         * @returns {String} string representation of colset
+         * returns string representation of colset object
+         * @retuns {string} string representation of colset object
          */
         toString: function(){
             return this.columns.slice().sort(function(a,b){
-                //sort columns based on name
                 return a.name.localeCompare(b.name);
             }).map(function(col){
-                return [col.table.schema.name, col.table.name, col.name].join(":");
+                return col.toString();
             }).join(",");
         },
 
@@ -1630,6 +1637,23 @@ var ERMrest = (function (module) {
     Mapping.prototype = {
         constructor: Mapping,
 
+        /**
+         * returns string representation of Mapping object
+         * @retuns {string} string representation of Mapping object
+         */
+        toString: function() {
+            // changing from and to to Colset, makes this easier.
+            [this.from, this.to].map(function(columns){
+                // create toString for from and to
+                return columns.slice().sort(function(a, b){
+                    return a.name.localeCompare(b.name);
+                }).map(function(col){
+                    return col.toString();
+                }).join(",");
+            }).join(">");
+            return [from_cols, to_cols].join(">"); 
+        },
+        
         /**
          *
          * @returns {Number} number of mapping columns
@@ -1855,11 +1879,10 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of the object
-         * @retuns {string} string representation of the object
+         * returns string representation of ForeignKeyRef object
+         * @retuns {string} string representation of ForeignKeyRef object
          */
         toString: function (){
-            //TODO Is this good enough?
             return [this.colset.toString(), this.key.colset.toString()].join(">");
         },
 
