@@ -169,9 +169,8 @@ var ERMrest = (function(module) {
             return '';
         }
 
-        // Remove fractional digits; implicitly transform value to number type
-        // TODO: Truncate or round?
-        value = Math.trunc(value);
+        // Remove fractional digits
+        value = Math.round(value);
 
         // Add comma separators
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -189,7 +188,7 @@ var ERMrest = (function(module) {
         if (value === null) {
             return '';
         }
-        var year, month, date, hour, minute, second, ms;
+        // var year, month, date, hour, minute, second, ms;
         try {
             value = value.toString();
             value = new Date(value);
@@ -213,8 +212,14 @@ var ERMrest = (function(module) {
             throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
         }
 
+        // Convert offset in minutes to UTC offset in hours
+        var offset = (value.getTimezoneOffset() * -1) / 60;
+
         // ISOString format: YYYY-MM-DDTHH:mm:ss.sssZ
-        return value.toISOString();
+        // Replace the 'T' separator in ISO format with a space for better readability
+        // Add UTC offset (e.g. 'UTC-7');
+        // Final default format: YYYY-MM-DD HH:mm:ss.sss UTC+/-offset
+        return value.toISOString().replace(/T/, ' ').replace(/Z/, ' UTC' + offset);
     };
 
     /**

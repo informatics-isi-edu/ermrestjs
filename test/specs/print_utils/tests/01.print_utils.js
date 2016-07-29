@@ -23,7 +23,7 @@ exports.execute = function (options) {
         it('_printInteger() should format integers correctly.', function () {
             var _printInteger = module._printInteger;
             expect(_printInteger(null)).toBe('');
-            expect(_printInteger(1234.56)).toBe('1,234');
+            expect(_printInteger(1234.56)).toBe('1,235');
             expect(_printInteger(0001)).toBe('1');
         });
 
@@ -37,14 +37,19 @@ exports.execute = function (options) {
             // Put _printDate in a function so _printDate won't throw an error
             // before test gets to check for .toThrow()
             expect(function() {
-                _printDate(1234.56)
+                _printDate(123.45)
             }).toThrowError(module.InvalidInputError);
         });
 
         it('_printTimestamp() should format timestamps correctly.', function () {
             var _printTimestamp = module._printTimestamp;
+            // In PDT, timezone offset would be 'UTC-7'
+            var timezoneOffset = 'UTC' + (new Date().getTimezoneOffset() * -1) / 60;
             expect(_printTimestamp(null)).toBe('');
-            expect(_printTimestamp('2015-04-25')).toBe('2015-04-25T00:00:00.000Z');
+            expect(_printTimestamp('2015-04-25')).toBe('2015-04-25 00:00:00.000 ' + timezoneOffset);
+            expect(function() {
+                _printTimestamp()
+            }).toThrowError(module.InvalidInputError);
         });
     });
 };
