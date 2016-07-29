@@ -642,7 +642,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI(api);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri
             }
 
             // selected columns only
@@ -724,7 +726,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI("aggregate");
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri;
             }
 
             uri = uri + "/row_count:=cnt(*)";
