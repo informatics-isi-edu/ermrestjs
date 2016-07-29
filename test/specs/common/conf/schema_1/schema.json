@@ -1,0 +1,113 @@
+{
+    "tables": {
+        "table_1_schema_1": {
+            "comment": "has two outbound fk to table_2_schema_1, it has foreign-key annotation",
+            "kind": "table",
+            "table_name": "table_1_schema_1",
+            "keys": [{
+                "unique_columns": ["table_1_key"]
+            }],
+            "foreign_keys": [
+                {
+                    "comment": "with annotation",
+                    "names": [
+                        ["schema_1", "table_1_first_fk_name_1"],
+                        ["schema_1", "table_1_first_fk_name_2"]
+                    ],
+                    "foreign_key_columns": [{
+                        "table_name": "table_1_schema_1",
+                        "schema_name": "schema_1",
+                        "column_name": "first_fk_from_table_2"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_2_schema_1",
+                        "schema_name": "schema_1",
+                        "column_name": "table_2_key"
+                    }],
+                    "annotation": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "from_name": "from_name_value",
+                            "to_name": "to_name_value"
+                        }
+                    }
+                },
+                {
+                    "comment": "without annotation",
+                    "names": [],
+                    "foreign_key_columns": [{
+                        "table_name": "table_1_schema_1",
+                        "schema_name": "schema_1",
+                        "column_name": "second_fk_from_table_2"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_2_schema_1",
+                        "schema_name": "schema_1",
+                        "column_name": "table_2_key"
+                    }]
+                }
+            ],
+            "column_definitions": [{
+                "name": "table_1_key",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "first_fk_from_table_2",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "second_fk_from_table_2",
+                "type": {
+                    "typename": "text"
+                }
+            }]
+        },
+        "table_2_schema_1": {
+            "comment": "table_1_schema_1 has inbound fk to this and this has outbound fk to table_1_schema_2",
+            "kind": "table",
+            "table_name": "table_2_schema_1",
+            "keys": [{
+                "unique_columns": ["table_2_key"]
+            }],
+            "foreign_keys": [{
+                "names": [],
+                "foreign_key_columns": [{
+                    "table_name": "table_2_schema_1",
+                    "schema_name": "schema_1",
+                    "column_name": "fk_1_from_table_1_schema_2"
+                }, {
+                    "table_name": "table_2_schema_1",
+                    "schema_name": "schema_1",
+                    "column_name": "fk_2_from_table_1_schema_2"
+                }],
+                "referenced_columns": [{
+                    "table_name": "table_1_schema_2",
+                    "schema_name": "schema_2",
+                    "column_name": "table_1_first_key"
+                }, {
+                    "table_name": "table_1_schema_2",
+                    "schema_name": "schema_2",
+                    "column_name": "table_1_second_key"
+                }]
+            }],
+            "column_definitions": [{
+                "name": "table_2_key",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "fk_1_from_table_1_schema_2",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "fk_2_from_table_1_schema_2",
+                "type": {
+                    "typename": "text"
+                }
+            }]
+        }
+    },
+    "schema_name": "schema_1"
+}
