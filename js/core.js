@@ -653,7 +653,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI(api);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri
             }
 
             // selected columns only
@@ -735,7 +737,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI("aggregate");
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri;
             }
 
             uri = uri + "/row_count:=cnt(*)";
@@ -1049,13 +1053,13 @@ var ERMrest = (function (module) {
             }
 
             // if context is edit or create, but there's no annotation for those
-            if (["edit", "create"].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
+            if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
                 return annotation.entry;
             }
 
             //if context wasn't in the annotations but there is a default context
-            if (Array.isArray(annotation["*"])) {
-                return annotation["*"];
+            if (Array.isArray(annotation[module._contexts.DEFAULT])) {
+                return annotation[module._contexts.DEFAULT];
             }
 
             return -1; // there was no annotation, return all
