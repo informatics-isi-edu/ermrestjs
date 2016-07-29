@@ -1854,6 +1854,15 @@ var ERMrest = (function (module) {
     ForeignKeyRef.prototype = {
         constructor: ForeignKeyRef,
 
+        /**
+         * returns string representation of the object
+         * @retuns {string} string representation of the object
+         */
+        toString: function (){
+            //TODO Is this good enough?
+            return [this.colset.toString(), this.key.colset.toString()].join(">");
+        },
+
         delete: function () {
 
         },

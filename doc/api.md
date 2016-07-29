@@ -156,6 +156,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+        * [.toString()](#ERMrest.ForeignKeyRef+toString)
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -1364,6 +1365,7 @@ get the foreign key of the given column set
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+    * [.toString()](#ERMrest.ForeignKeyRef+toString)
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -1425,6 +1427,13 @@ Documentation for this foreign key reference
 Indicates if the foreign key is simple (not composite)
 
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+toString"></a>
+
+#### foreignKeyRef.toString()
+returns string representation of the object
+
+**Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+**Retuns**: <code>string</code> string representation of the object  
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>
