@@ -96,6 +96,32 @@ exports.execute = function() {
                         };
                     }
                 };
+            },
+            toBeAnyOf: function(util, customEqualityTesters) {
+                function craftMessage(actual, expected){
+                    if (Array.isArray(expected)) {
+                        return "Expected '" + actual + "' to be any one of these:\n" + expected.join(" | "); 
+                    } else{ 
+                        return "Expected value must be an array.";
+                    }
+                };
+                return {
+                    compare: function(actual, expected){
+                        var result = false;
+                        if(Array.isArray(expected)){
+                            for (var i = 0; i < expected.length; i++) {
+                                if (actual === expected[i]) {
+                                    result = true;
+                                    break;
+                                }
+                            }
+                        }
+                        return {
+                            pass: result,
+                            message: craftMessage(actual, expected)
+                        };
+                    }
+                }
             }
         });
     });
