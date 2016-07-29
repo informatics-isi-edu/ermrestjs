@@ -1643,15 +1643,14 @@ var ERMrest = (function (module) {
          */
         toString: function() {
             // changing from and to to Colset, makes this easier.
-            [this.from, this.to].map(function(columns){
+            return [this._from, this._to].map(function(columns){
                 // create toString for from and to
                 return columns.slice().sort(function(a, b){
                     return a.name.localeCompare(b.name);
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
-            }).join(">");
-            return [from_cols, to_cols].join(">"); 
+            }).join(">"); 
         },
         
         /**

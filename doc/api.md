@@ -136,6 +136,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+        * [.toString()](#ERMrest.Mapping+toString)
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
@@ -1272,6 +1273,7 @@ returns string representation of colset object
 
 * [.Mapping](#ERMrest.Mapping)
     * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+    * [.toString()](#ERMrest.Mapping+toString)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
     * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
@@ -1285,6 +1287,13 @@ returns string representation of colset object
 | from | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of from Columns |
 | to | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of to Columns |
 
+<a name="ERMrest.Mapping+toString"></a>
+
+#### mapping.toString()
+returns string representation of Mapping object
+
+**Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
+**Retuns**: <code>string</code> string representation of Mapping object  
 <a name="ERMrest.Mapping+length"></a>
 
 #### mapping.length() ⇒ <code>Number</code>
