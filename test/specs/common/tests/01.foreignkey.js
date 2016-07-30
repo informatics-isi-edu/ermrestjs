@@ -179,8 +179,7 @@ exports.execute = function(options) {
                         // NOTE: this if statement assumes that foreignKey with annotation in table1_schema1 has defiend names.
                         if (fk.annotations.length() > 0) {
                             expect(fk.constraint_names).toEqual([
-                                ["common_schema_1", "table_1_first_fk_name_1"],
-                                ["common_schema_1", "table_1_first_fk_name_2"]
+                                ["common_schema_1", "table_1_first_fk_name_1"]
                             ]);
                         }
                     });
@@ -199,7 +198,6 @@ exports.execute = function(options) {
                 it('should return the values that are defined in foreign-key annotation.', function() {
                     table1_schema1.foreignKeys.all().forEach(function(fk, index) {
                         // NOTE: this if statement assumes that only one foreignKey in table1_schema1 has annotation.
-                        //TODO wtf
                         if (fk.annotations.length() > 0) {
                             expect(fk.from_name).toBe("from_name_value");
                             expect(fk.to_name).toBe("to_name_value");
