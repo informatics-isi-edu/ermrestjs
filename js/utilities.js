@@ -212,14 +212,7 @@ var ERMrest = (function(module) {
             throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
         }
 
-        // Convert offset in minutes to UTC offset in hours
-        var offset = (value.getTimezoneOffset() * -1) / 60;
-
-        // ISOString format: YYYY-MM-DDTHH:mm:ss.sssZ
-        // Replace the 'T' separator in ISO format with a space for better readability
-        // Add UTC offset (e.g. 'UTC-7');
-        // Final default format: YYYY-MM-DD HH:mm:ss.sss UTC+/-offset
-        return value.toISOString().replace(/T/, ' ').replace(/Z/, ' UTC' + offset);
+        return value.toLocaleString();
     };
 
     /**
@@ -264,7 +257,7 @@ var ERMrest = (function(module) {
 
     /**
      * @function
-     * @param {Object} value An float value to transform
+     * @param {Object} value A float value to transform
      * @param {Object} [options] Configuration options. One accepted so far: {numDecDigits: 5}
      * @return {string} A string representation of value
      * @desc Formats a given float value into a string for display. Removes leading 0s; adds thousands separator.
@@ -292,6 +285,38 @@ var ERMrest = (function(module) {
         return parts.join(".");
     }
 
+    /**
+     * @function
+     * @param {Object} value A text value to transform
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string representation of value
+     * @desc Formats a given text value into a string for display.
+     */
+    module._printText = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
+        if (value === null) {
+            return '';
+        }
+        return value.toString();
+    }
+
+    /**
+     * @function
+     * @param {Object} value The Markdown to transform
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string representation of value
+     * @desc Formats Markdown syntax into an HTML string for display.
+     */
+    module._printMarkdown = function(value, options) {
+        options = (typeof options === 'undefined') ? {} : options;
+        if (value === null) {
+            return '';
+        }
+        var md = require('markdown-it')()
+            .use(require('markdown-it-sub')) // add subscript support
+            .use(require('markdown-it-sup')); // add superscript support
+        return md.renderInline(value);
+    }
     /**
      * @desc List of annotations that ermrestjs supports.
      * @private

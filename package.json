@@ -22,6 +22,9 @@
     "library"
   ],
   "dependencies": {
+    "markdown-it": "^7.0.0",
+    "markdown-it-sub": "^1.0.0",
+    "markdown-it-sup": "^1.0.0",
     "q": "x",
     "request-q": "x"
   },
@@ -36,7 +39,7 @@
     "jshint": "x",
     "nock": "x",
     "require-reload": "^0.2.2",
-    "request":"x",
+    "request": "x",
     "set-cookie-parser": "x"
   }
 }
