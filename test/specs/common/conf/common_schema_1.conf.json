@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "common_schema_1",   
+        "createNew": true,  
+        "path": "test/specs/common/conf/common_schema_1/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

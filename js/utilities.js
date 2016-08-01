@@ -143,12 +143,28 @@ var ERMrest = (function(module) {
      * @desc List of annotations that ermrestjs supports.
      * @private
      */
-    module._annotations = {
+    module._annotations = Object.freeze({
         DISPLAY: "tag:misd.isi.edu,2015:display",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
-        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns"
-    };
+        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
+        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key"
+    });
+
+    /**
+     * @desc List of contexts that ermrestjs supports.
+     * @private
+     */
+    module._contexts = Object.freeze({
+        COMPACT: 'compact',
+        CREATE: 'create',
+        DETAILED: 'detailed',
+        EDIT: 'edit',
+        ENTRY: 'entry',
+        FILTER: 'filter',
+        RECORD: 'record',
+        DEFAULT: '*'
+    });
 
     return module;
 

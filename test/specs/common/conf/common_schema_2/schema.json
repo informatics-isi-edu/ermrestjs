@@ -1,0 +1,24 @@
+{
+    "tables": {
+        "table_1_schema_2": {
+            "comment": "has inboud fk from table_2_schema_1",
+            "kind": "table",
+            "table_name": "table_1_schema_2",
+            "keys": [
+                { "unique_columns": ["table_1_first_key", "table_1_second_key"] }
+            ],
+            "column_definitions": [
+                {
+                    "name": "table_1_first_key",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_second_key",
+                    "type": { "typename": "text" }
+                }
+            ],
+            "foreign_keys": []
+        }
+    },
+    "schema_name": "common_schema_2"
+}

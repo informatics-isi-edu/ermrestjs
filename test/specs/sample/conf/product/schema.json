@@ -6,7 +6,7 @@
       "entityCount": 0,
       "keys": [
         {
-          "comment": null,
+          "comment": "some comment",
           "annotations": {},
           "unique_columns": [
             "title"
@@ -22,7 +22,7 @@
       ],
       "foreign_keys": [
         {
-          "comment": null,
+          "comment": "some comment",
           "foreign_key_columns": [
             {
               "table_name": "accommodation",

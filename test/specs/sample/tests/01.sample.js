@@ -34,5 +34,13 @@ exports.execute = function (options) {
         it('should have catalog id', function () {
             expect(catalog.id).toBe(catalogId);
         });
+
+        it("should test custom matcher toHaveSameItems", function() {
+            // second argument to the toHaveSameItems function takes a boolean value
+            // It determines ignore sorting or not, default is false
+            expect([1,2,3]).toHaveSameItems([1,3,2], true);
+            expect([1,2,3]).toHaveSameItems([1,2,3]);
+            expect([schema,catalogId, schemaName, server]).toHaveSameItems([ schema, catalogId, server, schemaName], true);
+        });
     });
 }
