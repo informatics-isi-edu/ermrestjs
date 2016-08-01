@@ -1572,15 +1572,15 @@ var ERMrest = (function (module) {
         constructor: ColSet,
         
         /**
-         * returns string representation of colset object
+         * returns string representation of colset object: (s:t:c1,s:t:c2)
          * @retuns {string} string representation of colset object
          */
         toString: function(){
-            return this.columns.slice().sort(function(a,b){
+            return "(" + this.columns.slice().sort(function(a,b){
                 return a.name.localeCompare(b.name);
             }).map(function(col){
                 return col.toString();
-            }).join(",");
+            }).join(",") + ")";
         },
 
         /**
@@ -1878,11 +1878,11 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of ForeignKeyRef object
+         * returns string representation of ForeignKeyRef object (s:t:keyCol1, s:t:keyCol2)=(s:t:FKCol,s:t:FKCol)
          * @retuns {string} string representation of ForeignKeyRef object
          */
         toString: function (){
-            return [this.colset.toString(), this.key.colset.toString()].join(">");
+            return [this.key.colset.toString(),this.colset.toString()].join("=");
         },
 
         delete: function () {

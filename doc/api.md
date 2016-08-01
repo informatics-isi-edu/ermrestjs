@@ -1257,7 +1257,7 @@ Constructor for ColSet, a set of Column objects.
 <a name="ERMrest.ColSet+toString"></a>
 
 #### colSet.toString()
-returns string representation of colset object
+returns string representation of colset object: (s:t:c1,s:t:c2)
 
 **Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
 **Retuns**: <code>string</code> string representation of colset object  
@@ -1450,7 +1450,7 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
 #### foreignKeyRef.toString()
-returns string representation of ForeignKeyRef object
+returns string representation of ForeignKeyRef object (s:t:keyCol1, s:t:keyCol2)=(s:t:FKCol,s:t:FKCol)
 
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 **Retuns**: <code>string</code> string representation of ForeignKeyRef object  

@@ -28,8 +28,8 @@ exports.execute = function(options) {
             describe('.all() ', function() {
                 it('should return the foreign keys that are defined in schema.', function() {
                     var output = [
-                        "common_schema_1:table_1_schema_1:first_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key",
-                        "common_schema_1:table_1_schema_1:second_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key"
+                        "(common_schema_1:table_2_schema_1:table_2_key)=(common_schema_1:table_1_schema_1:first_fk_from_table_2)",
+                        "(common_schema_1:table_2_schema_1:table_2_key)=(common_schema_1:table_1_schema_1:second_fk_from_table_2)"
                     ];
                     expect(table1_schema1.foreignKeys.all().map(function(fk) {
                         return fk.toString();
@@ -37,7 +37,7 @@ exports.execute = function(options) {
                 });
 
                 it('should support foreign keys from different schemas.', function() {
-                    var output = ["common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2>common_schema_2:table_1_schema_2:table_1_first_key,common_schema_2:table_1_schema_2:table_1_second_key"];
+                    var output = ["(common_schema_2:table_1_schema_2:table_1_first_key,common_schema_2:table_1_schema_2:table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)"];
                     expect(table2_schema1.foreignKeys.all().map(function(fk) {
                         return fk.toString();
                     })).toHaveSameItems(output, true);
@@ -50,14 +50,14 @@ exports.execute = function(options) {
 
             describe('.colsets() ', function() {
                 it('should return the columns that are defined in foreign keys in schema.', function() {
-                    var output = ["common_schema_1:table_1_schema_1:first_fk_from_table_2", "common_schema_1:table_1_schema_1:second_fk_from_table_2"];
+                    var output = ["(common_schema_1:table_1_schema_1:first_fk_from_table_2)", "(common_schema_1:table_1_schema_1:second_fk_from_table_2)"];
                     expect(table1_schema1.foreignKeys.colsets().map(function(colset) {
                         return colset.toString();
                     })).toHaveSameItems(output, true);
                 });
 
                 it('should support foreign keys from different schemas.', function() {
-                    var output = ["common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2"];
+                    var output = ["(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)"];
                     expect(table2_schema1.foreignKeys.colsets().map(function(colset) {
                         return colset.toString();
                     })).toHaveSameItems(output, true);
@@ -109,8 +109,8 @@ exports.execute = function(options) {
         describe('referredBy in Table class,', function() {
             it('should return the inbound foreign keys that are defined in schema.', function() {
                 var output = [
-                    "common_schema_1:table_1_schema_1:first_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key",
-                    "common_schema_1:table_1_schema_1:second_fk_from_table_2>common_schema_1:table_2_schema_1:table_2_key"
+                    "(common_schema_1:table_2_schema_1:table_2_key)=(common_schema_1:table_1_schema_1:first_fk_from_table_2)",
+                    "(common_schema_1:table_2_schema_1:table_2_key)=(common_schema_1:table_1_schema_1:second_fk_from_table_2)"
                 ];
                 expect(table2_schema1.referredBy.all().map(function(fk) {
                     return fk.toString();
@@ -118,7 +118,7 @@ exports.execute = function(options) {
             });
 
             it('should support foreign keys from different schemas.', function() {
-                var output = ["common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2>common_schema_2:table_1_schema_2:table_1_first_key,common_schema_2:table_1_schema_2:table_1_second_key"];
+                var output = ["(common_schema_2:table_1_schema_2:table_1_first_key,common_schema_2:table_1_schema_2:table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)"];
                 expect(table1_schema2.referredBy.all().map(function(fk) {
                     return fk.toString();
                 })).toHaveSameItems(output, true);
