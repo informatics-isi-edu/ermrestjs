@@ -504,7 +504,7 @@ var ERMrest = (function(module) {
                 // inbound FKRs
                 for (var i=0; i < this._table.refferdBy.length(); i++){
                     var fkr = this._table.refferdBy.all()[i];
-                    var newRef = shallowCopy(this);
+                    var newRef = _referenceCopy(this);
                     
                     newRef._schema = fkr.colset.columns[0].table.schema;
                     newRef._schemaName = fkr.colset.columns[0].table.schema.name;
