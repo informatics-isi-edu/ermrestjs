@@ -37,7 +37,7 @@ exports.testForErrors = function(errorTypes, cb, message, mockUrl) {
 			return;
 		}
 			
-		it("should give a " 
+		it("should raise a " 
 			+ (mockUrl ? "HTTP " : "") 
 			+ (error.code != undefined  ? (error.code + " ") : "") 
 			+ error.type 

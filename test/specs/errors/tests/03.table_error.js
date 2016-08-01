@@ -12,6 +12,7 @@ exports.execute = function (options) {
         beforeAll(function () {
             catalog = options.catalog;
             schema = catalog.schemas.get('error_schema');
+            table = schema.tables.get('valid_table_name');
         });
 
         var tableName = "non_existing_table";
@@ -20,6 +21,14 @@ exports.execute = function (options) {
                 .toThrow(error);
             done();
         }, "non existing table retreival");
+
+
+        it("should raise a NotFound error on non existing annotation retreival on a table", function() {
+            var annotationName = "non_existing_annotation";
+
+            expect(function() { table.annotations.get(annotationName); })
+                .toThrow(new ermRest.NotFoundError("", "Annotation " + annotationName + " not found."));
+        });
 
     });
 };

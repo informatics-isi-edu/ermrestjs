@@ -24,17 +24,6 @@ exports.execute = function (options) {
 	        });
         }, "existing catalog retreival", "/ermrest/catalog/" + id + "/schema");
 
-        httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
-        	server.catalogs.get(id).then(null, function(err) {
-        		expect(err instanceof ermRest[error.type]).toBeTruthy();
-	            done();
-	        }).catch(function(e) {
-	        	console.dir(e);
-	        	expect(false).toBe(true);
-	        	done();
-	        });
-        }, "existing catalog retreival", "/ermrest/catalog/" + id + "/schema");
-
 
         afterEach(function() {
     		nock.cleanAll();
