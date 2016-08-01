@@ -312,9 +312,9 @@ var ERMrest = (function(module) {
         if (value === null) {
             return '';
         }
-        var md = require('markdown-it')()
-            .use(require('markdown-it-sub')) // add subscript support
-            .use(require('markdown-it-sup')); // add superscript support
+        // var md = require('markdown-it')()
+        //     .use(require('markdown-it-sub')) // add subscript support
+        //     .use(require('markdown-it-sup')); // add superscript support
         return md.renderInline(value);
     }
     /**

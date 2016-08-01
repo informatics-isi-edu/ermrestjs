@@ -22,9 +22,6 @@
     "library"
   ],
   "dependencies": {
-    "markdown-it": "^7.0.0",
-    "markdown-it-sub": "^1.0.0",
-    "markdown-it-sup": "^1.0.0",
     "q": "x",
     "request-q": "x"
   },

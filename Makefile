@@ -36,7 +36,8 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
-	   $(JS)/ng.js
+	   $(JS)/ng.js \
+	   markdown-it/markdown-it.min.js \
 
 # Build target
 BUILD=build
