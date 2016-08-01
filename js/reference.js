@@ -139,6 +139,8 @@ var ERMrest = (function(module) {
         this._tableName  = context.tableName;
         this._filter     = context.filter;
 
+        this._context = module._contexts.DEFAULT;
+
         this.contextualize._reference = this;
     }
 
@@ -259,6 +261,7 @@ var ERMrest = (function(module) {
                 var newRef = _referenceCopy(source);
                 var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
 
+                newRef._context = module._contexts.RECORD;
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
@@ -495,6 +498,41 @@ var ERMrest = (function(module) {
                  * This annotation should be consulted for determining whether
                  * to hide some references and how to order them.
                  */
+
+                // TODO visible FKRs
+                
+                // inbound FKRs
+                for (var i=0; i < this._table.refferdBy.length(); i++){
+                    var fkr = this._table.refferdBy.all()[i];
+                    var newRef = shallowCopy(this);
+                    
+                    newRef._schema = fkr.colset.columns[0].table.schema;
+                    newRef._schemaName = fkr.colset.columns[0].table.schema.name;
+                    newRef._table = fkr.colset.columns[0].table;
+                    newRef._tableName = fkr.colset.columns[0].table.name;
+
+                    // NOTE: related reference is not contextualized
+                    var columns = newRef._table.columns.all();
+                    newRef._columns = [];
+                    for (var j=0; j < columns.length; j++) {
+                        if(fkr.colset.columns.indexOf(column) != -1){
+                            newRef._columns.push(columns[j]);
+                        }
+                    }
+
+                    if (fkr.from_name) {
+                        newRef._displayname = fkr.from_name;
+                    } else {
+                        // TODO heuristics
+                        newRef._displayname = newRef._table.displayname;
+                    }
+
+                    newRef._uri = this._uri.concat("/").concat(fkr.colset.toString());
+                    // newRef._uri = this._uri.concat("/").concat(fkr.toString()); //TODO ermrest doesn't support this yet
+                    
+                    this._related.push(newRef);
+                }
+                
             }
             return this._related;
         }
