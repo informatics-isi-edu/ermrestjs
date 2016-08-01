@@ -147,7 +147,7 @@ var ERMrest = (function(module) {
      * @constructor
      */
     function ServiceUnavailableError(status, message) {
-        this.code = 500;
+        this.code = 503;
         this.status = status;
         this.message = message;
     }
