@@ -138,6 +138,8 @@ var ERMrest = (function(module) {
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
         this._filter     = context.filter;
+
+        this.contextualize._reference = this;
     }
 
     Reference.prototype = {
@@ -253,8 +255,18 @@ var ERMrest = (function(module) {
              * @type {ERMrest.Reference}
              */
             get record() {
-                // TODO: remember these are copies of this reference.
-                return undefined;
+                var source = this._reference;
+                var newRef = _referenceCopy(source);
+                var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
+
+                newRef._columns = [];
+                for (var i = 0; i < columnOrders.length; i++) {
+                    var column = columnOrders[i];
+                    if (source._columns.indexOf(column) != -1) {
+                        newRef._columns.push(column);
+                    }
+                }
+                return newRef;
             },
 
             /**
@@ -496,8 +508,10 @@ var ERMrest = (function(module) {
      * @returns {ERMrest.Reference} The copy of the reference object.
      */
     function _referenceCopy(source) {
-        // TODO: make a (copy-on-write) copy of the source reference
-        return source; // TODO
+        var referenceCopy = Object.create(Reference.prototype);
+        // referenceCopy must be defined before _clone can copy values from source to referenceCopy
+        module._clone(referenceCopy, source);
+        return referenceCopy;
     }
 
 

@@ -16,6 +16,8 @@
 
 var ERMrest = (function(module) {
 
+    module.ParsedFilter = ParsedFilter;
+
     /**
      * The ERMrest service name. Internal use only.
      * @type {string}
@@ -136,7 +138,8 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                context.filter = {type: type, filters: filters};
+                context.filter = new ParsedFilter(type);
+                context.filter.setFilters(filters);
             }
         }
         return context;

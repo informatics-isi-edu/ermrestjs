@@ -57,6 +57,7 @@ to use for ERMrest JavaScript agents.
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
             * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+            * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -103,6 +104,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.toString()](#ERMrest.Column+toString)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -130,9 +132,11 @@ to use for ERMrest JavaScript agents.
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+        * [.toString()](#ERMrest.ColSet+toString)
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
         * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+        * [.toString()](#ERMrest.Mapping+toString)
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
@@ -141,16 +145,20 @@ to use for ERMrest JavaScript agents.
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
         * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
         * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
-        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+        * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
         * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
         * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+        * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
+        * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
+        * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+        * [.toString()](#ERMrest.ForeignKeyRef+toString)
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -533,6 +541,7 @@ get table by table name
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
         * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+        * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -593,6 +602,12 @@ Preferred display name for user presentation only.
 <a name="ERMrest.Table+foreignKeys"></a>
 
 #### table.foreignKeys : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+referredBy"></a>
+
+#### table.referredBy : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
+All the FKRs to this table.
+
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+comment"></a>
 
@@ -927,6 +942,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.toString()](#ERMrest.Column+toString)
 
 <a name="new_ERMrest.Column_new"></a>
 
@@ -1015,6 +1031,13 @@ Formats a value corresponding to this column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
 
+<a name="ERMrest.Column+toString"></a>
+
+#### column.toString()
+returns string representation of Column
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+**Retuns**: <code>string</code> string representation of Column  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
@@ -1214,6 +1237,7 @@ Indicates if the key is simple (not composite)
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+    * [.toString()](#ERMrest.ColSet+toString)
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
 <a name="new_ERMrest.ColSet_new"></a>
@@ -1230,6 +1254,13 @@ Constructor for ColSet, a set of Column objects.
 
 #### colSet.columns : <code>Array</code>
 **Kind**: instance property of <code>[ColSet](#ERMrest.ColSet)</code>  
+<a name="ERMrest.ColSet+toString"></a>
+
+#### colSet.toString()
+returns string representation of colset object
+
+**Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
+**Retuns**: <code>string</code> string representation of colset object  
 <a name="ERMrest.ColSet+length"></a>
 
 #### colSet.length() ⇒ <code>Number</code>
@@ -1242,6 +1273,7 @@ Constructor for ColSet, a set of Column objects.
 
 * [.Mapping](#ERMrest.Mapping)
     * [new Mapping(from, to)](#new_ERMrest.Mapping_new)
+    * [.toString()](#ERMrest.Mapping+toString)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
     * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
@@ -1255,6 +1287,13 @@ Constructor for ColSet, a set of Column objects.
 | from | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of from Columns |
 | to | <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code> | array of to Columns |
 
+<a name="ERMrest.Mapping+toString"></a>
+
+#### mapping.toString()
+returns string representation of Mapping object
+
+**Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
+**Retuns**: <code>string</code> string representation of Mapping object  
 <a name="ERMrest.Mapping+length"></a>
 
 #### mapping.length() ⇒ <code>Number</code>
@@ -1291,7 +1330,7 @@ get the mapping column given the from column
     * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
     * [.length()](#ERMrest.ForeignKeys+length) ⇒ <code>Number</code>
     * [.mappings()](#ERMrest.ForeignKeys+mappings) ⇒ <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code>
-    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+    * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 
 <a name="ERMrest.ForeignKeys+all"></a>
 
@@ -1315,11 +1354,11 @@ get the mapping column given the from column
 **Returns**: <code>[Array.&lt;Mapping&gt;](#ERMrest.Mapping)</code> - mappings  
 <a name="ERMrest.ForeignKeys+get"></a>
 
-#### foreignKeys.get(colset) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+#### foreignKeys.get(colset) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
 get the foreign key of the given column set
 
 **Kind**: instance method of <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>  
-**Returns**: <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code> - foreign key reference of the colset  
+**Returns**: <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code> - foreign key reference of the colset  
 **Throws**:
 
 - <code>[NotFoundError](#ERMrest.NotFoundError)</code> foreign key not found
@@ -1339,10 +1378,14 @@ get the foreign key of the given column set
     * [.colset](#ERMrest.ForeignKeyRef+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.key](#ERMrest.ForeignKeyRef+key) : <code>[Key](#ERMrest.Key)</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : <code>[Mapping](#ERMrest.Mapping)</code>
+    * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
+    * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
+    * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+    * [.toString()](#ERMrest.ForeignKeyRef+toString)
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -1369,6 +1412,21 @@ use index 0 since all refCols should be of the same schema:table
 
 #### foreignKeyRef.mapping : <code>[Mapping](#ERMrest.Mapping)</code>
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+constraint_names"></a>
+
+#### foreignKeyRef.constraint_names : <code>Array</code>
+The exact `names` array in foreign key definition
+TODO: it may need to change based on its usage
+
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+from_name"></a>
+
+#### foreignKeyRef.from_name : <code>string</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+to_name"></a>
+
+#### foreignKeyRef.to_name : <code>string</code>
+**Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
 #### foreignKeyRef.ignore : <code>boolean</code>
@@ -1389,6 +1447,13 @@ Documentation for this foreign key reference
 Indicates if the foreign key is simple (not composite)
 
 **Kind**: instance property of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+<a name="ERMrest.ForeignKeyRef+toString"></a>
+
+#### foreignKeyRef.toString()
+returns string representation of ForeignKeyRef object
+
+**Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
+**Retuns**: <code>string</code> string representation of ForeignKeyRef object  
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
 #### foreignKeyRef.getDomainValues(limit) ⇒ <code>Promise</code>

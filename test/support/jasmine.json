@@ -1,8 +1,11 @@
 {
   "spec_dir": "test/specs",
   "spec_files": [
-    "sample/spec.js",
-    "annotation/spec.js"
+    "common/spec.js",
+    "parser/spec.js",
+    "annotation/spec.js",
+    "reference/spec.js",
+    "sample/spec.js"
   ],
   "helpers": [],
   "stopSpecOnExpectationFailure": false,
