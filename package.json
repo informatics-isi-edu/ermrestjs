@@ -23,7 +23,10 @@
   ],
   "dependencies": {
     "q": "x",
-    "request-q": "x"
+    "request-q": "x",
+    "markdown-it": "x",
+    "markdown-it-sub": "x",
+    "markdown-it-sup": "x"
   },
   "devDependencies": {
     "bower": "x",
