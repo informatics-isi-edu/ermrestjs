@@ -567,6 +567,12 @@ var ERMrest = (function (module) {
         this.foreignKeys = new ForeignKeys();
 
         /**
+         * All the FKRs to this table.
+         * @type {ERMrest.ForeignKeys}
+         */
+        this.referredBy = new ForeignKeys();
+
+        /**
          * @desc Documentation for this table
          * @type {string}
          */
@@ -581,13 +587,18 @@ var ERMrest = (function (module) {
 
         },
 
+        // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
             this.foreignKeys = new ForeignKeys();
             for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
                 var jsonFKs = this._jsonTable.foreign_keys[i];
-                this.foreignKeys._push(new ForeignKeyRef(this, jsonFKs));
+                var foreignKeyRef = new ForeignKeyRef(this, jsonFKs);
+                // build foreignKeys of current table
+                this.foreignKeys._push(foreignKeyRef);
+                // add to referredBy of the key table
+                foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
         }
 
@@ -642,7 +653,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI(api);
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri
             }
 
             // selected columns only
@@ -724,7 +737,9 @@ var ERMrest = (function (module) {
             var uri = this._getBaseURI("aggregate");
 
             if (filter !== undefined && filter !== null) {
-                uri = uri + "/" + filter.toUri();
+                var filterUri = filter.toUri();
+                // Set filter in url only if the filterURI is not empty
+                if (filterUri.trim().length) uri = uri + "/" + filterUri;
             }
 
             uri = uri + "/row_count:=cnt(*)";
@@ -1038,13 +1053,13 @@ var ERMrest = (function (module) {
             }
 
             // if context is edit or create, but there's no annotation for those
-            if (["edit", "create"].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
+            if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
                 return annotation.entry;
             }
 
             //if context wasn't in the annotations but there is a default context
-            if (Array.isArray(annotation["*"])) {
-                return annotation["*"];
+            if (Array.isArray(annotation[module._contexts.DEFAULT])) {
+                return annotation[module._contexts.DEFAULT];
             }
 
             return -1; // there was no annotation, return all
@@ -1271,6 +1286,14 @@ var ERMrest = (function (module) {
 
     Column.prototype = {
         constructor: Column,
+
+        /**
+         * returns string representation of Column
+         * @retuns {string} string representation of Column
+         */
+        toString: function() {
+            return [this.table.schema.name, this.table.name, this.name].join(":");
+        },
 
         delete: function () {
 
@@ -1547,6 +1570,18 @@ var ERMrest = (function (module) {
 
     ColSet.prototype = {
         constructor: ColSet,
+        
+        /**
+         * returns string representation of colset object
+         * @retuns {string} string representation of colset object
+         */
+        toString: function(){
+            return this.columns.slice().sort(function(a,b){
+                return a.name.localeCompare(b.name);
+            }).map(function(col){
+                return col.toString();
+            }).join(",");
+        },
 
         /**
          *
@@ -1602,6 +1637,22 @@ var ERMrest = (function (module) {
     Mapping.prototype = {
         constructor: Mapping,
 
+        /**
+         * returns string representation of Mapping object
+         * @retuns {string} string representation of Mapping object
+         */
+        toString: function() {
+            // changing from and to to Colset, makes this easier.
+            return [this._from, this._to].map(function(columns){
+                // create toString for from and to
+                return columns.slice().sort(function(a, b){
+                    return a.name.localeCompare(b.name);
+                }).map(function(col){
+                    return col.toString();
+                }).join(",");
+            }).join(">"); 
+        },
+        
         /**
          *
          * @returns {Number} number of mapping columns
@@ -1699,16 +1750,20 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.ColSet} colset
          * @throws {ERMrest.NotFoundError} foreign key not found
-         * @returns {ERMrest.ForeignKeyRef} foreign key reference of the colset
+         * @returns {ERMrest.ForeignKeyRef[]} foreign key reference of the colset
          * @desc get the foreign key of the given column set
          */
         get: function (colset) {
             // find ForeignKeyRef with the same colset
+            var fks = [];
             for (var i = 0; i < this._foreignKeys.length; i++) {
                 var fkr = this._foreignKeys[i];
                 if (colset._equals(fkr.colset)) {
-                    return fkr;
+                    fks.push(fkr);
                 }
+            }
+            if(fks.length > 0){
+                return fks;
             }
 
             throw new module.NotFoundError("", "Foreign Key not found for the colset.");
@@ -1764,6 +1819,23 @@ var ERMrest = (function (module) {
         this.mapping = new Mapping(foreignKeyCols, referencedCols);
 
         /**
+         * The exact `names` array in foreign key definition
+         * TODO: it may need to change based on its usage
+         * @type {Array}
+         */
+        this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
+
+        /**
+         * @type {string}
+         */
+        this.from_name = "";
+
+        /**
+         * @type {string}
+         */
+        this.to_name = "";
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -1782,6 +1854,16 @@ var ERMrest = (function (module) {
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
+
+            // determine the from_name and to_name using the annotation
+            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
+                if(jsonAnnotation.from_name){
+                    this.from_name = jsonAnnotation.from_name;
+                }
+                if(jsonAnnotation.to_name){
+                    this.to_name = jsonAnnotation.to_name;
+                }
+            }
         }
 
         /**
@@ -1794,6 +1876,14 @@ var ERMrest = (function (module) {
 
     ForeignKeyRef.prototype = {
         constructor: ForeignKeyRef,
+
+        /**
+         * returns string representation of ForeignKeyRef object
+         * @retuns {string} string representation of ForeignKeyRef object
+         */
+        toString: function (){
+            return [this.colset.toString(), this.key.colset.toString()].join(">");
+        },
 
         delete: function () {
 
