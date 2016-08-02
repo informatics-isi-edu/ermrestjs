@@ -9,22 +9,22 @@ exports.execute = function (options) {
         });
 
         // Test Cases:
-        it('schema_with_comment should have a non-null comment.', function () {
+        it('schema_with_comment should have a non-null .comment property.', function () {
             expect(schema.comment).toBe("schema with a comment");
         });
 
-        it('table_with_comment should have a non-null comment.', function () {
+        it('table_with_comment should have a non-null .comment property.', function () {
             expect(schema.tables.get('table_with_comment').comment).toBe("table with a comment");
         });
 
-        it('key should have a non-null comment.', function () {
-            var table = schema.tables.get('table_with_comment');
-            console.log(table.keys.all());
+        it('this key with a comment should have a non-null .comment property.', function () {
+            var key = schema.tables.get('table_with_comment').keys.all()[0];
+            expect(key.comment).toBe("key with a comment");
         });
 
-        it('foreign key should have a non-null comment.', function () {
-            var table = schema.tables.get('table_with_comment');
-            table.keys.all();
+        it('this foreign key with a comment should have a non-null .comment property.', function () {
+            var fkey = schema.tables.get('table_with_comment').foreignKeys.all()[0];
+            expect(fkey.comment).toBe("foreign key with a comment");
         });
     });
 };
