@@ -24,9 +24,10 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
     	process.env.catalogId = data.catalogId;
     	importSchemas(configFilePaths, defer, data.catalogId);
     }, function (err) {
-        console.log("Unable to import data");
-        console.dir(err);
         defer.reject(err);
+    }).catch(function(err) {
+    	console.log(err);
+    	defer.reject(err);
     });
 };
 
@@ -66,9 +67,10 @@ var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
     }).then(function(data) {
     	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
     }, function(err) {
-        console.log("Unable to delete data");
-        console.dir(err);
         defer.reject(err);
+    }).catch(function(err) {
+    	console.log(err);
+    	defer.reject(err);
     });
 };
 

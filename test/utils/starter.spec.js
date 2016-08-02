@@ -1,7 +1,7 @@
 exports.runTests = function (options) {
     var description = options.description;
-    var schemaConfs = options.schemaConfigurations;
-    var testCases = options.testCases;
+    var schemaConfs = options.schemaConfigurations || [];
+    var testCases = options.testCases || [];
 
 
     var includes = require('./ermrest-init.js').init();
@@ -51,10 +51,12 @@ exports.runTests = function (options) {
             importUtils.tear(schemaConfs, process.env.DEFAULT_CATALOG).then(function () {
                 done();
             }, function (err) {
-                done.fail(err);
+                if (options.considerTearError) done.fail(err);
+                else done();
             }).catch(function(err) {
                 console.log(err);
-                done.fail(err);
+                if (options.considerTearError) done.fail(err);
+                else done();
             });
         })
     });
