@@ -1,6 +1,5 @@
 var jasmineUtils = require('./utils/jasmine-runner-utils.js');
 
-
 // function to run all test specs
 var runSpecs = function() {
 	// Load the configuration file
@@ -20,11 +19,11 @@ if (process.env.TRAVIS) {
 	      if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
 	    });
 	    if (process.env.AUTH_COOKIE) runSpecs();
-	    else console.log("Unable to retreive authcoooie");
-
+	    else {
+	      throw new Error("Unable to retreive authcookie : " + error.message);
+		}
 	  } else {
-	  	console.log("Unable to retreive authcoooie");
-	    console.dir(error);
+	  	throw new Error("Unable to retreive authcookie ");
 	  }
 	});
 } else {
@@ -34,7 +33,14 @@ if (process.env.TRAVIS) {
 // Catch unhandled exceptions and show the stack trace. This is most
 // useful when running the jasmine specs.
 process.on('uncaughtException', function(e) {
-	console.log('Caught unhandled exception: ' + e.toString());
-	console.log(e.stack);
-	jasmineUtils.deleteCatalog();
+	if (e) {
+		console.log('Caught unhandled exception: ' + e.toString());
+		console.log(e.stack);
+	}
+	jasmineUtils.deleteCatalog().done(function() {
+		process.exit(1);
+	});
+	setTimeout(function() {
+		process.exit(1);
+	}, 3000);
 });
