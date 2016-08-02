@@ -5,7 +5,7 @@ exports.execute = function (options) {
 
     describe('For determining Table exceptions, ', function () {
         var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true}, 
-        			catalog, schema, id = "3423423";
+        			catalog, schema, table, id = "3423423";
 
 		httpError.setup(options);
 

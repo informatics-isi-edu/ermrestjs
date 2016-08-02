@@ -10,13 +10,6 @@
           "unique_columns": [
             "id"
           ]
-        },
-        {
-          "comment": null,
-          "annotations": {},
-          "unique_columns": [
-            "valid_column_name"
-          ]
         }
       ],
       "entityCount": 0,
