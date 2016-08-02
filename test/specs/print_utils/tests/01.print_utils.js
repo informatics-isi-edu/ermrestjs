@@ -46,10 +46,14 @@ exports.execute = function (options) {
         it('_printTimestamp() should format timestamps correctly.', function () {
             var _printTimestamp = module._printTimestamp;
             expect(_printTimestamp(null)).toBe('');
-            expect(_printTimestamp('2015-04-25')).toBe('4/24/2015, 5:00:00 PM');
             expect(function() {
                 _printTimestamp()
             }).toThrowError(module.InvalidInputError);
+            var testTime = new Date();
+            /* Default behavior w/o options parameter = transform time via toLocaleString().
+            Cannot use a static timestamp because toLocaleString() will return
+            different values in different test environments. */
+            expect(_printTimestamp(testTime)).toBe(testTime.toLocaleString());
         });
 
         it('_printText() should format text correctly.', function() {
