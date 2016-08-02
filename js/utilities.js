@@ -153,7 +153,7 @@ var ERMrest = (function(module) {
         }
         // TODO: What kinds of options are we supporting?
         return Boolean(value).toString();
-    }
+    };
 
     /**
      * @function
@@ -174,7 +174,7 @@ var ERMrest = (function(module) {
 
         // Add comma separators
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
+    };
 
     /**
      * @function
@@ -253,7 +253,7 @@ var ERMrest = (function(module) {
             date = (date > 0 && date < 10) ? '0' + date : date;
         }
         return year + separator + month + separator + date;
-    }
+    };
 
     /**
      * @function
@@ -283,7 +283,7 @@ var ERMrest = (function(module) {
         var parts = value.split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
-    }
+    };
 
     /**
      * @function
@@ -298,7 +298,7 @@ var ERMrest = (function(module) {
             return '';
         }
         return value.toString();
-    }
+    };
 
     /**
      * @function
@@ -312,9 +312,9 @@ var ERMrest = (function(module) {
         if (value === null) {
             return '';
         }
-       
         return module._markdownIt.renderInline(value);
-    }
+    };
+
     /**
      * @desc List of annotations that ermrestjs supports.
      * @private
