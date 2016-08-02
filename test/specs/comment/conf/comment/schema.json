@@ -33,7 +33,7 @@
           ],
           "referenced_columns": [
               {
-                  "table_name": "some_other_table",
+                  "table_name": "table_with_null_comment",
                   "schema_name": "schema_with_comment",
                   "column_name": "column3"
               }
@@ -80,7 +80,7 @@
         }
       }
     },
-    "some_other_table": {
+    "table_with_null_comment": {
         "comment": null,
         "kind": "table",
         "keys": [
@@ -99,7 +99,7 @@
             "annotations": {},
             "foreign_key_columns": [
                 {
-                    "table_name": "some_other_table",
+                    "table_name": "table_with_null_comment",
                     "schema_name": "schema_with_comment",
                     "column_name": "column3"
                 }
@@ -119,7 +119,7 @@
             ]
           }
         ],
-        "table_name": "some_other_table",
+        "table_name": "table_with_null_comment",
         "schema_name": "schema_with_comment",
         "column_definitions": [
           {
