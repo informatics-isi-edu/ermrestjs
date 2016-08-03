@@ -11,6 +11,7 @@ exports.execute = function (options) {
 
         beforeAll(function () {
             catalog = options.catalog;
+            server._http.max_retries = 0;
         });
 
         httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
@@ -23,7 +24,6 @@ exports.execute = function (options) {
 	        	done();
 	        });
         }, "existing catalog retreival", "/ermrest/catalog/" + id + "/schema");
-
 
         afterEach(function() {
     		nock.cleanAll();

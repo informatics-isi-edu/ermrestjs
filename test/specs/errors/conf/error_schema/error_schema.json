@@ -23,7 +23,7 @@
           "default": null,
           "nullok": false,
           "type": {
-            "typename": "text"
+            "typename": "markdown"
           },
           "annotations": {
             "tag:misd.isi.edu,2015:display": {

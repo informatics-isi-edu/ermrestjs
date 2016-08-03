@@ -5,7 +5,7 @@ exports.execute = function (options) {
 
     describe('For determining Entity exceptions, ', function () {
         var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true}, 
-        			catalog, schema, table, catalogId = "3423423", entityId = "8000";
+        			catalog, schema, table, column catalogId = "3423423", entityId = "8000";
 
 		httpError.setup(options);
 
@@ -13,13 +13,19 @@ exports.execute = function (options) {
             catalog = options.catalog;
             schema = catalog.schemas.get('error_schema');
             table = schema.tables.get('valid_table_name');
+            server._http.max_retries = 0;
+            
+            table.keys.all().forEach(function(k) {
+                k.colset.columns.forEach(function(c) {
+                    if (c.name == 'id') column = c;
+                });
+            });
         });
 
         httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
-            var filter = new ermRest.BinaryPredicate(table.columns.get("id"), "=", entityId);
+            var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
             var path = new ermRest.DataPath(table);
             path = path.filter(filter);
-
             path.entity.get().then(null, function(err) {
                 expect(err instanceof ermRest[error.type]).toBeTruthy();
                 done();
@@ -28,15 +34,11 @@ exports.execute = function (options) {
                 expect(false).toBe(true);
                 done();
             });
-        }, "entity retreival ", "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name/id=" + entityId);
+        }, "entity retreival using path", "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name/id=" + entityId);
 
-/*
+
         httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
-            var filter = new ermRest.BinaryPredicate(table.columns.get("id"), "=", entityId);
-            var path = new ermRest.DataPath(table);
-            path = path.filter(filter);
-
-            path.entity.get().then(null, function(err) {
+            table.entity.get(null, null, [column]).then(null, function(err) {
                 expect(err instanceof ermRest[error.type]).toBeTruthy();
                 done();
             }).catch(function(e) {
@@ -44,8 +46,7 @@ exports.execute = function (options) {
                 expect(false).toBe(true);
                 done();
             });
-        }, "entity retreival", "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name/id=" + entityId);
-        https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:project?cid=recordedit*/
+        }, "entity retreival using table.entity", "/ermrest/catalog/" + catalogId + "/attribute/error_schema:valid_table_name/id");
 
     });
 };
