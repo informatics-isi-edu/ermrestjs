@@ -38,16 +38,19 @@ exports.execute = function (options) {
             expect(key.comment).toBe(null);
         });
 
-        it('this foreign key with a comment should have a non-null .comment property.', function () {
-            var fkey = schema.tables.get('table_with_comment').foreignKeys.all()[0];
-            expect(fkey.hasOwnProperty('comment')).toBe(true);
-            expect(fkey.comment).toBe("foreign key with a comment");
-        });
-
-        it('this foreign key in table_with_comment should have a null .comment property.', function() {
-            var fkey = schema.tables.get('table_with_comment').foreignKeys.all()[1];
-            expect(fkey.hasOwnProperty('comment')).toBe(true);
-            expect(fkey.comment).toBe(null);
+        it('there should be 1 foreign key with a non-null .comment property and 1 foreign key with a null .comment property.', function () {
+            var fkeys = schema.tables.get('table_with_comment').foreignKeys.all();
+            var fkeysWithSpecifiedComment = 0;
+            var fkeysWithNullComment = 0;
+            for (var i = 0; i < fkeys.length; i++) {
+                if (fkeys[i].comment === null) {
+                    fkeysWithNullComment++;
+                } else if (fkeys[i].comment === "foreign key with a comment") {
+                    fkeysWithSpecifiedComment++;
+                }
+            }
+            expect(fkeysWithNullComment).toBe(1);
+            expect(fkeysWithSpecifiedComment).toBe(1);
         });
     });
 };
