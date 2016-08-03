@@ -750,9 +750,9 @@ var ERMrest = (function(module) {
             if (!this._displayname) {
                 var table = this._ref._table;
                 // if table has display row_name annotation
-                if (table.annotations.contains("tag:isrd.isi.edu,2016:table-display") &&
-                    table.annotations.get("tag:isrd.isi.edu,2016:table-display").contains("row_name")) {
-                    this._displayname = table.annotations.get("tag:isrd.isi.edu,2016:table-display").get("row_name"); // pattern
+                if (table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
+                    table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_name")) {
+                    this._displayname = table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_name"); // pattern
 
                     // replace patterns with values
                     var colnames = table.columns.names();
