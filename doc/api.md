@@ -39,6 +39,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
         * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+        * [.foreignKeyMap](#ERMrest.Schema+foreignKeyMap) : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
     * [.Tables](#ERMrest.Tables)
         * [new Tables()](#new_ERMrest.Tables_new)
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
@@ -432,6 +433,7 @@ get schema by schema name
     * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
     * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+    * [.foreignKeyMap](#ERMrest.Schema+foreignKeyMap) : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 
@@ -474,6 +476,12 @@ Preferred display name for user presentation only.
 
 #### schema.comment : <code>string</code>
 Documentation for this schema
+
+**Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
+<a name="ERMrest.Schema+foreignKeyMap"></a>
+
+#### schema.foreignKeyMap : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
+Stores all the constraint names of foreignkeys in this schema
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Tables"></a>

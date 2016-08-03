@@ -400,6 +400,12 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonSchema.comment;
 
+        /**
+         * @desc Stores all the constraint names of foreignkeys in this schema
+         * @type {Object.<string, ERMrest.ForeignKeyRef>}
+         */
+        this.foreignKeyMap = {};
+
     }
 
     Schema.prototype = {
@@ -655,7 +661,7 @@ var ERMrest = (function (module) {
             if (filter !== undefined && filter !== null) {
                 var filterUri = filter.toUri();
                 // Set filter in url only if the filterURI is not empty
-                if (filterUri.trim().length) uri = uri + "/" + filterUri
+                if (filterUri.trim().length) uri = uri + "/" + filterUri;
             }
 
             // selected columns only
@@ -1825,6 +1831,16 @@ var ERMrest = (function (module) {
          */
         this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
 
+        // add constraint names to schema.foreignKeyMap
+        for (var k = 0, constraint; k < this.constraint_names.length; k++) {
+            constraint = this.constraint_names[k];
+            try {
+                if (Array.isArray(constraint) && constraint.length == 2){
+                    catalog.schemas.get(constraint[0]).foreignKeyMap[constraint[1]] = this;
+                }
+            } catch (exception){}
+        }
+
         /**
          * @type {string}
          */
@@ -1858,10 +1874,10 @@ var ERMrest = (function (module) {
             // determine the from_name and to_name using the annotation
             if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
                 if(jsonAnnotation.from_name){
-                    this.from_name = jsonAnnotation.from_name;
+                    this.fromName = jsonAnnotation.from_name;
                 }
                 if(jsonAnnotation.to_name){
-                    this.to_name = jsonAnnotation.to_name;
+                    this.toName = jsonAnnotation.to_name;
                 }
             }
         }
