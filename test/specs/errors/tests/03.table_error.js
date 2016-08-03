@@ -30,5 +30,14 @@ exports.execute = function (options) {
                 .toThrow(new ermRest.NotFoundError("", "Annotation " + annotationName + " not found."));
         });
 
+        afterEach(function() {
+            nock.cleanAll();
+            nock.enableNetConnect();
+        });
+
+        afterAll(function() {
+            nock.cleanAll();
+            nock.enableNetConnect();
+        });
     });
 };

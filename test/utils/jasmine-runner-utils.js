@@ -2,6 +2,7 @@ var q = require('q');
 var Jasmine = require('jasmine');
 var SpecReporter = require('jasmine-spec-reporter');
 var jrunner = new Jasmine();
+jrunner.exitCodeReporter = new (require('./exit-code-reporter.js'))(jrunner);
 var ermrestUtils = require('ermrest-data-utils');
 
 // Util function to create a catalog before running all specs
@@ -70,7 +71,7 @@ exports.run = function(config) {
 	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
 	jrunner.onComplete(function(passed) {
-		console.log("Test suite " + passed ? "passed" : "failed");
+		console.log("Test suite " + (passed ? "passed" : "failed"));
 		deleteCatalog().done(function() {
 			if (!passed) process.exit(1);
 		});

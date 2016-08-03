@@ -44,9 +44,11 @@ exports.testForErrors = function(errorTypes, cb, message, mockUrl) {
 			+ " on " + message, function(done) {
 				
 				if (mockUrl) {
+					var url = mockUrl;
+					if (typeof mockUrl == 'function') url = mockUrl();
 					server._http.max_retries = 0;
 			        var scope = nock(ermrestUrl, ops)
-			          .get(mockUrl)
+			          .get(url)
 			          .reply(error.code, error.type);
 				}
 

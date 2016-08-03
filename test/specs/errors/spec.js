@@ -4,7 +4,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/errors/tests/01.catalog_error.js",
         "/errors/tests/02.schema_error.js",
         "/errors/tests/03.table_error.js",
-        "/errors/tests/03.entity_error.js",
+        "/errors/tests/04.entity_error.js"
     ],
     schemaConfigurations: [
         "/errors/conf/error.conf.json"

@@ -34,7 +34,7 @@ if (process.env.TRAVIS) {
 // useful when running the jasmine specs.
 process.on('uncaughtException', function(e) {
 	if (e) {
-		console.log('Caught unhandled exception: ' + e.toString());
+		console.log('Caught unhandled exception: ' + e.message);
 		console.log(e.stack);
 	}
 	jasmineUtils.deleteCatalog().done(function() {
