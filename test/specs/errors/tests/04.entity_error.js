@@ -24,9 +24,26 @@ exports.execute = function (options) {
             });
         });
 
+
+        describe("Entity POST(create) exceptions", function() {
+
+            httpError.testForErrors("POST", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+                table.entity.post([{ "valid_column_name" : "some randome value"}], [column.name]).then(null, function(err) {
+                    expect(err instanceof ermRest[error.type]).toBeTruthy();
+                    done();
+                }).catch(function(e) {
+                    console.dir(e);
+                    expect(false).toBe(true);
+                    done();
+                });
+            }, "entity creation using table.entity.post", function() {
+                return "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name";
+            });
+        });
+
         describe("Datapath GET exceptions", function() {
 
-            httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 var path = new ermRest.DataPath(table);
                 path = path.filter(filter);
@@ -44,9 +61,10 @@ exports.execute = function (options) {
 
         });
 
+
         describe("Attribute GET exceptions", function() {
 
-            httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.get(null, null, [column]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
                     done();
@@ -61,10 +79,11 @@ exports.execute = function (options) {
 
         });
 
-        describe("Entity POST(create) exceptions", function() {
+        describe("Aggregate GET(count) exceptions", function() {
 
-            httpError.testForErrors(["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
-                table.entity.post([{ "valid_column_name" : "some randome value"}], [column.name]).then(null, function(err) {
+            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+                var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
+                table.entity.count(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
                     done();
                 }).catch(function(e) {
@@ -72,8 +91,42 @@ exports.execute = function (options) {
                     expect(false).toBe(true);
                     done();
                 });
-            }, "entity creation using table.entity.post", function() {
-                return "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name?defaults=" + column.name + "&cid=null";
+            }, "entity retrieval using table.entity.get", function() {
+                return "/ermrest/catalog/" + catalogId + "/attribute/error_schema:valid_table_name/id";
+            });
+
+        });
+
+        describe("Entity PUT(updated) exceptions", function() {
+
+            httpError.testForErrors("PUT", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+                table.entity.put([{ "valid_column_name" : "some randome value"}]).then(null, function(err) {
+                    expect(err instanceof ermRest[error.type]).toBeTruthy();
+                    done();
+                }).catch(function(e) {
+                    console.dir(e);
+                    expect(false).toBe(true);
+                    done();
+                });
+            }, "entity update using table.entity.put", function() {
+                return "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name";
+            });
+        });
+
+        describe("Entity DELETE exceptions", function() {
+
+            httpError.testForErrors("DELETE", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+                var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
+                table.entity.delete(filter).then(null, function(err) {
+                    expect(err instanceof ermRest[error.type]).toBeTruthy();
+                    done();
+                }).catch(function(e) {
+                    console.dir(e);
+                    expect(false).toBe(true);
+                    done();
+                });
+            }, "entity update using table.entity.delete", function() {
+                return "/ermrest/catalog/" + catalogId + "/entity/a:=error_schema:valid_table_name";
             });
         });
 

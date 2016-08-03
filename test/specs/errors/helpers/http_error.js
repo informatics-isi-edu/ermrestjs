@@ -17,7 +17,7 @@ exports.setup = function(options) {
 	ermrestUrl = options.url.replace('ermrest', '');
 };
 
-exports.testForErrors = function(errorTypes, cb, message, mockUrl) {
+exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
 	if (!cb || typeof cb != 'function' || !message) return;
 
 	errorTypes.forEach(function(et) {
@@ -47,9 +47,19 @@ exports.testForErrors = function(errorTypes, cb, message, mockUrl) {
 					var url = mockUrl;
 					if (typeof mockUrl == 'function') url = mockUrl();
 					server._http.max_retries = 0;
-			        var scope = nock(ermrestUrl, ops)
-			          .get(url)
-			          .reply(error.code, error.type);
+		            
+	            	var scope = nock(ermrestUrl, ops)
+				       				.filteringPath(function(path){
+								        return url;
+								    });
+
+	            	if (method == "GET" || method == "DELETE") scope = scope[method.toLowerCase()](url);
+	            	else if (method == "POST" || method == "PUT") {
+	            		scope = scope.filteringRequestBody(/.*/, '*')
+	            		scope = scope[method.toLowerCase()](url, "*");
+	            	}
+
+               		scope.reply(error.code, error.type);
 				}
 
 				cb(error, done);
