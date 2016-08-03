@@ -5,8 +5,10 @@
     "parser/spec.js",
     "annotation/spec.js",
     "reference/spec.js",
-    "sample/spec.js",
-    "errors/spec.js"
+    "comment/spec.js",
+    "print_utils/spec.js"
+    "errors/spec.js",
+    "sample/spec.js"
   ],
   "helpers": [],
   "stopSpecOnExpectationFailure": false,
