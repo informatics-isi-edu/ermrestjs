@@ -38,6 +38,30 @@
                   "column_name": "column3"
               }
           ]
+        },
+        {
+          "comment": null,
+          "annotations": {},
+          "foreign_key_columns": [
+              {
+                  "table_name": "table_with_comment",
+                  "schema_name": "schema_with_comment",
+                  "column_name": "column1"
+              }
+          ],
+          "names": [
+              [
+                  "schema_with_comment",
+                  "column1_fkey"
+              ]
+          ],
+          "referenced_columns": [
+              {
+                  "table_name": "table_with_null_comment",
+                  "schema_name": "schema_with_comment",
+                  "column_name": "column4"
+              }
+          ]
         }
       ],
       "table_name": "table_with_comment",
@@ -90,35 +114,17 @@
             "unique_columns": [
               "column3"
             ]
-          }
-        ],
-        "entityCount": 0,
-        "foreign_keys": [
+          },
           {
             "comment": null,
             "annotations": {},
-            "foreign_key_columns": [
-                {
-                    "table_name": "table_with_null_comment",
-                    "schema_name": "schema_with_comment",
-                    "column_name": "column3"
-                }
-            ],
-            "names": [
-                [
-                    "schema_with_comment",
-                    "column3_fkey"
-                ]
-            ],
-            "referenced_columns": [
-                {
-                    "table_name": "table_with_comment",
-                    "schema_name": "schema_with_comment",
-                    "column_name": "column2"
-                }
+            "unique_columns": [
+              "column4"
             ]
           }
         ],
+        "entityCount": 0,
+        "foreign_keys": [],
         "table_name": "table_with_null_comment",
         "schema_name": "schema_with_comment",
         "column_definitions": [
@@ -129,6 +135,20 @@
             "nullok": false,
             "type": {
               "typename": "integer"
+            },
+            "annotations": {
+              "tag:misd.isi.edu,2015:display": {
+                "name": "Column Name"
+              }
+            }
+          },
+          {
+            "comment": null,
+            "name": "column4",
+            "default": null,
+            "nullok": false,
+            "type": {
+              "typename": "text"
             },
             "annotations": {
               "tag:misd.isi.edu,2015:display": {

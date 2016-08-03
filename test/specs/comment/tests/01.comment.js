@@ -44,8 +44,8 @@ exports.execute = function (options) {
             expect(fkey.comment).toBe("foreign key with a comment");
         });
 
-        it('this foreign key in table_with_null_comment should have a null .comment property.', function() {
-            var fkey = schema.tables.get('table_with_null_comment').foreignKeys.all()[0];
+        it('this foreign key in table_with_comment should have a null .comment property.', function() {
+            var fkey = schema.tables.get('table_with_comment').foreignKeys.all()[1];
             expect(fkey.hasOwnProperty('comment')).toBe(true);
             expect(fkey.comment).toBe(null);
         });
