@@ -27,7 +27,10 @@ BOWER=bower_components
 JS=js
 
 # Pure ERMrest API
-SOURCE=$(JS)/core.js \
+SOURCE=markdown-it/markdown-it.min.js \
+	   markdown-it/markdown-it-sub.min.js \
+	   markdown-it/markdown-it-sup.min.js \
+	   $(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -36,7 +39,7 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
-	   $(JS)/ng.js
+	   $(JS)/ng.js \
 
 # Build target
 BUILD=build

@@ -655,7 +655,7 @@ var ERMrest = (function (module) {
             if (filter !== undefined && filter !== null) {
                 var filterUri = filter.toUri();
                 // Set filter in url only if the filterURI is not empty
-                if (filterUri.trim().length) uri = uri + "/" + filterUri
+                if (filterUri.trim().length) uri = uri + "/" + filterUri;
             }
 
             // selected columns only
@@ -1570,7 +1570,7 @@ var ERMrest = (function (module) {
 
     ColSet.prototype = {
         constructor: ColSet,
-        
+
         /**
          * returns string representation of colset object
          * @retuns {string} string representation of colset object
@@ -1650,9 +1650,9 @@ var ERMrest = (function (module) {
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
-            }).join(">"); 
+            }).join(">");
         },
-        
+
         /**
          *
          * @returns {Number} number of mapping columns
