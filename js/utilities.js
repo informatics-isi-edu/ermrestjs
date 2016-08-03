@@ -140,6 +140,189 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * @desc An object of pretty print utility functions
+     * @private
+     */
+
+    module._formatUtils = {
+        /**
+         * @function
+         * @param {Object} value A boolean value to transform
+         * @param {Object} [options] Configuration options
+         * @return {string} A string representation of a boolean value
+         * @desc Formats a given boolean value into a string for display
+         */
+        printBoolean: function printBoolean(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            // TODO: What kinds of options are we supporting?
+            return Boolean(value).toString();
+        },
+
+        /**
+         * @function
+         * @param {Object} value An integer value to transform
+         * @param {Object} [options] Configuration options
+         * @return {string} A string representation of value
+         * @desc Formats a given integer value into a whole number (with a thousands
+         * separator if necessary), which is transformed into a string for display.
+         */
+        printInteger: function printInteger(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+
+            // Remove fractional digits
+            value = Math.round(value);
+
+            // Add comma separators
+            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        },
+
+        /**
+         * @function
+         * @param {Object} value An timestamp value to transform
+         * @param {Object} [options] Configuration options
+         * @return {string} A string representation of value. Default is ISO string.
+         * @desc Formats a given timestamp value into a string for display.
+         */
+        printTimestamp: function printTimestamp(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            // var year, month, date, hour, minute, second, ms;
+            try {
+                value = value.toString();
+                value = new Date(value);
+                // Later when we support more formats, we'll probably need to manually
+                // construct the date time with the following pieces:
+
+                // year = value.getFullYear();
+                // month = value.getMonth() + 1;
+                // date = value.getDate();
+                // hour = value.getHours();
+                // minute = value.getMinutes();
+                // second = value.getSeconds();
+                // ms = value.getMilliseconds();
+            } catch (exception) {
+                // Is this the right error?
+                throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
+            }
+
+            if (typeof value.getTime() !== 'number') {
+                // Invalid timestamp
+                throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
+            }
+
+            return value.toLocaleString();
+        },
+
+        /**
+         * @function
+         * @param {Object} value A date value to transform
+         * @param {Object} [options] Configuration options. Two accepted so far: {separator: '-', leadingZero: false}
+         * @return {string} A string representation of value
+         * @desc Formats a given date[time] value into a date string for display.
+         * If any time information is provided, it will be left off.
+         */
+        printDate: function printDate(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            var year, month, date;
+            try {
+                value = value.toString();
+                value = new Date(value);
+                year = value.getFullYear();
+                month = value.getMonth() + 1; // 1-12, not 0-11
+                date = value.getDate();
+            } catch (exception) {
+                // Is this the right error?
+                throw new module.InvalidInputError("Couldn't extract date info from input" + exception);
+            }
+
+            if (typeof value.getTime() !== 'number' || Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(date)) {
+                // Invalid date
+                throw new module.InvalidInputError("Couldn't transform input to a valid date");
+            }
+
+            var separator = options.separator ? options.separator : '/';
+
+            if (options.leadingZero === true) {
+                // Attach a leading 0 to month and date
+                month = (month > 0 && month < 10) ? '0' + month : month;
+                date = (date > 0 && date < 10) ? '0' + date : date;
+            }
+            return year + separator + month + separator + date;
+        },
+
+        /**
+         * @function
+         * @param {Object} value A float value to transform
+         * @param {Object} [options] Configuration options. One accepted so far: {numDecDigits: 5}
+         * @return {string} A string representation of value
+         * @desc Formats a given float value into a string for display. Removes leading 0s; adds thousands separator.
+         */
+        printFloat: function printFloat(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (value === null) {
+                return '';
+            }
+
+            value = parseFloat(value);
+            if (options.numDecDigits) {
+                value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
+            } else {
+                value = value.toFixed(2);
+            }
+
+            // Remove leading zeroes
+            value = value.toString().replace(/^0+(?!\.|$)/, '');
+
+            // Add comma separators
+            var parts = value.split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+        },
+
+        /**
+         * @function
+         * @param {Object} value A text value to transform
+         * @param {Object} [options] Configuration options.
+         * @return {string} A string representation of value
+         * @desc Formats a given text value into a string for display.
+         */
+        printText: function printText(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            return value.toString();
+        },
+
+        /**
+         * @function
+         * @param {Object} value The Markdown to transform
+         * @param {Object} [options] Configuration options.
+         * @return {string} A string representation of value
+         * @desc Formats Markdown syntax into an HTML string for display.
+         */
+        printMarkdown: function printMarkdown(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            return module._markdownIt.renderInline(value);
+        }
+    };
+
+    /**
      * @desc List of annotations that ermrestjs supports.
      * @private
      */

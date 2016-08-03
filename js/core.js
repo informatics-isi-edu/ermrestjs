@@ -1576,7 +1576,7 @@ var ERMrest = (function (module) {
 
     ColSet.prototype = {
         constructor: ColSet,
-        
+
         /**
          * returns string representation of colset object: (s:t:c1,s:t:c2)
          * @retuns {string} string representation of colset object
@@ -1656,9 +1656,9 @@ var ERMrest = (function (module) {
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
-            }).join(">"); 
+            }).join(">");
         },
-        
+
         /**
          *
          * @returns {Number} number of mapping columns

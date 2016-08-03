@@ -18,8 +18,7 @@ var createCatalog = function() {
     	process.env.DEFAULT_CATALOG = data.catalogId;
 	    defer.resolve(data.catalogId);
     }, function (err) {
-        console.log("Unable to create catalog");
-	    defer.reject(error);
+	    defer.reject(err);
     });
 
 	return defer.promise;
@@ -41,7 +40,7 @@ var deleteCatalog = function(catalogId) {
 		  	defer.resolve();
 	    }, function(err) {
 	        console.log("Unable to delete catalog");
-		    defer.reject(error);
+		    defer.reject(err);
 	    });
 	} else {
 		defer.resolve("no catalogId found");
@@ -68,10 +67,13 @@ exports.run = function(config) {
 	jrunner.addReporter(new SpecReporter());   
 
 	// Set timeout to a large value 
-	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
 	jrunner.onComplete(function(passed) {
-		deleteCatalog();
+		console.log("Test suite " + (passed ? "passed" : "failed"));
+		deleteCatalog().done(function() {
+			if (!passed) process.exit(1);
+		});
 	});
 
 	// Create a catalog and then
@@ -80,8 +82,8 @@ exports.run = function(config) {
 		jrunner.execute();
 	}, function(err) {
 		console.log("Unable to create default catalog");
-		console.dir(err);
+		process.exit(1);
 	}).catch(function(err) {
-		console.dir(err);
+		process.exit(1);
 	});
 };

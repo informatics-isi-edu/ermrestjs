@@ -23,7 +23,10 @@
   ],
   "dependencies": {
     "q": "x",
-    "request-q": "x"
+    "request-q": "x",
+    "markdown-it": "x",
+    "markdown-it-sub": "x",
+    "markdown-it-sup": "x"
   },
   "devDependencies": {
     "bower": "x",
@@ -36,7 +39,7 @@
     "jshint": "x",
     "nock": "x",
     "require-reload": "^0.2.2",
-    "request":"x",
+    "request": "x",
     "set-cookie-parser": "x"
   }
 }
