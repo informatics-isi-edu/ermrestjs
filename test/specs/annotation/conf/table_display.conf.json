@@ -1,7 +1,7 @@
 {
   "catalog": {},
   "schema": {
-    "name": "library",
+    "name": "schema_table_display",
     "createNew": true,
     "path": "test/specs/annotation/conf/table_display/schema.json"
   },
