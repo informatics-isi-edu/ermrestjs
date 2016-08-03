@@ -6,7 +6,9 @@
     "annotation/spec.js",
     "reference/spec.js",
     "sample/spec.js",
-    "comment/spec.js"
+    "print_utils/spec.js",
+    "comment/spec.js",
+    "print_utils/spec.js"
   ],
   "helpers": [],
   "stopSpecOnExpectationFailure": false,
