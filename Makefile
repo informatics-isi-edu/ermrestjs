@@ -26,11 +26,13 @@ BOWER=bower_components
 # JavaScript source and test specs
 JS=js
 
-# Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
+# LINT JS Source
+PLUGINS=markdown-it/markdown-it.min.js \
 	   markdown-it/markdown-it-sub.min.js \
 	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+
+# Pure ERMrest API
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -67,12 +69,12 @@ $(BUILD): $(LINT) $(PKG) $(MIN)
 .PHONY: package
 package: $(PKG)
 
-$(PKG): $(SOURCE)
+$(PKG): $(PLUGINS) $(SOURCE) 
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	cat $(PLUGINS) $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(BIN)
+$(MIN): $(PLUGINS) $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
 	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
