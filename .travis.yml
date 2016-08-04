@@ -55,7 +55,7 @@ before_install:
 install:
   - sudo make build
   - sudo service apache2 restart
-  - sudo ls -lR /var/www/html/ermrestjs
+  - sudo ls -lR 
 
 before_script:
   - sudo -H -u webauthn webauthn2-manage adduser test1
