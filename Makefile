@@ -6,11 +6,6 @@
 # Install target
 ERMRESTJSDIR=/var/www/html/ermrestjs
 
-
-# Travis Install target
-ERMRESTJSTRAVISDIR=/var/www/ermrestjs
-
-
 # Project name
 PROJ=ermrest
 
@@ -27,10 +22,7 @@ BOWER=bower_components
 JS=js
 
 # Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -39,7 +31,12 @@ SOURCE=markdown-it/markdown-it.min.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
-	   $(JS)/ng.js \
+	   $(JS)/ng.js
+
+# Third-party libraries bundled with ermrestjs
+VENDOR=vendor/markdown-it.min.js \
+	   vendor/markdown-it-sub.min.js \
+	   vendor/markdown-it-sup.min.js
 
 # Build target
 BUILD=build
@@ -67,14 +64,16 @@ $(BUILD): $(LINT) $(PKG) $(MIN)
 .PHONY: package
 package: $(PKG)
 
-$(PKG): $(SOURCE)
+$(PKG): $(SOURCE) $(VENDOR)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	cat $(VENDOR) $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(BIN)
+$(MIN): $(SOURCE) $(VENDOR) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > .make-min.js
+	cat $(VENDOR) .make-min.js > $(MIN)
+	rm .make-min.js
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
@@ -148,14 +147,6 @@ install: $(PKG)
 	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
 	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
 	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
-
-# Rule to install the package
-.PHONY: installTravis
-installTravis: $(PKG) $(NGAPI)
-	test -d $(dir $(ERMRESTJSTRAVISDIR)) || mkdir -p $(dir $(ERMRESTJSTRAVISDIR))
-	test -d $(ERMRESTJSTRAVISDIR) || mkdir -p $(ERMRESTJSTRAVISDIR)
-	cp $(PKG) $(ERMRESTJSTRAVISDIR)/$(notdir $(PKG))
-	cp $(MIN) $(ERMRESTJSTRAVISDIR)/$(notdir $(MIN)) || true
 
 # Rules for help/usage
 .PHONY: help usage
