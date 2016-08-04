@@ -125,7 +125,7 @@ exports.execute = function() {
                 }
             },
 
-            toThrowError: function(util, customEqualityTesters) {
+            toThrow: function(util, customEqualityTesters) {
                 return { 
                     compare: function(actual, expected) {
                         var result = false;
