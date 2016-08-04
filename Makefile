@@ -27,10 +27,7 @@ BOWER=bower_components
 JS=js
 
 # Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -39,7 +36,12 @@ SOURCE=markdown-it/markdown-it.min.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
-	   $(JS)/ng.js \
+	   $(JS)/ng.js
+
+# Third-party libraries bundled with ermrestjs
+VENDOR=vendor/markdown-it.min.js \
+	   vendor/markdown-it-sub.min.js \
+	   vendor/markdown-it-sup.min.js
 
 # Build target
 BUILD=build
@@ -67,14 +69,16 @@ $(BUILD): $(LINT) $(PKG) $(MIN)
 .PHONY: package
 package: $(PKG)
 
-$(PKG): $(SOURCE)
+$(PKG): $(SOURCE) $(VENDOR)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	cat $(SOURCE) $(VENDOR) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(BIN)
+$(MIN): $(SOURCE) $(VENDOR) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > .make-min.js
+	cat .make-min.js $(VENDOR) > $(MIN)
+	rm .make-min.js
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
