@@ -50,11 +50,12 @@ before_install:
   - sudo apt-get install -y nodejs
   - cd ermrestjs
   - sudo npm install
-  - sudo bower install
+  - bower install
 
 install:
   - sudo make build
   - sudo service apache2 restart
+  - sudo ls -lR /var/www/html/ermrestjs
 
 before_script:
   - sudo -H -u webauthn webauthn2-manage adduser test1
