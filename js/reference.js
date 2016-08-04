@@ -158,6 +158,9 @@ var ERMrest = (function(module) {
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
+            // TODO related reference displayname
+            if (!this._displayname)
+                this._displayname = this._table.displayname;
             return this._displayname;
         },
 
