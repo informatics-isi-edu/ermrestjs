@@ -71,13 +71,15 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         });
     };    
 
+    var ermrestJsPath = "../ermrestjs/";
+
     /*
      * Call this function to load all dependent scripts in order
      */
     loadScripts([
-        "/ermrestjs/bower_components/markdown-it/dist/markdown-it.min.js", 
-        "/ermrestjs/bower_components/markdown-it-sub/dist/markdown-it-sub.min.js", 
-        "/ermrestjs/bower_components/markdown-it-sup/dist/markdown-it-sup.min.js"], 
+        ermrestJsPath + "bower_components/markdown-it/dist/markdown-it.min.js", 
+        ermrestJsPath + "bower_components/markdown-it-sub/dist/markdown-it-sub.min.js", 
+        ermrestJsPath + "bower_components/markdown-it-sup/dist/markdown-it-sup.min.js"], 
         function() {
             ERMrest._markdownIt = window.markdownit()
                     .use(window.markdownitSub)
