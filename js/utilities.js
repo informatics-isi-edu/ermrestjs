@@ -358,7 +358,8 @@ var ERMrest = (function(module) {
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
-        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys"
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display"
     });
 
     /**

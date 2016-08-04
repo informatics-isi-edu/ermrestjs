@@ -784,21 +784,36 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            // TODO: what is row name if no annotation?
-            // if (this._displayname === undefined) {
-            //     var tableDisplayAnnotation = "tag:isrd.isi.edu,2016:table-display";
-            //     if(this._ref.table.annotations.contains(tableDisplayAnnotation)) {
-            //         var annotation = this._ref.table.annotations.get(tableDisplayAnnotation);
-            //         if (annotation.row_name) {
-            //             var pattern = annotation.row_name;
-            //             // TODO: parse the pattern to get all `{***}` tokens
-            //             //    -  implement pattern expansion funcion?
-            //         }
-            //     }
-            // }
-            //
-            // return this._displayname;
+            if (!this._displayname) {
+                var table = this._ref._table;
+                // if table has display row_name annotation
+                if (table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
+                    table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_name")) {
+                    this._displayname = table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_name"); // pattern
+
+                    // replace patterns with values
+                    var colnames = table.columns.names();
+                    for (var c = 0; c < colnames.length; c++) {
+                        var cname = colnames[c];
+                        var search = "{" + cname + "}";
+                        this._displayname = this._displayname.replace(new RegExp(search, 'g'), this._data[cname]);
+                    }
+
+                }
+                // no row_name annotation, use column with title, name, or label
+                else if (this._data.name) // TODO case insensitive
+                    this._displayname = this._data.name;
+                else if (this._data.title)
+                    this._displayname = this._data.title;
+                else if (this._data.label)
+                    this._displayname = this._data.label;
+                else
+                    this._displayname = "";
+            }
+
+            return this._displayname;
         }
+
     };
 
 
