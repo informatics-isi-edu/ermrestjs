@@ -612,8 +612,8 @@ var ERMrest = (function (module) {
         _visibleForeignKeys: function (context) {
             var orders = -1;
             try {
-                var annot = this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS);
-                if (context != undefined && annot && annot.content) {
+                var annot = this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS);
+                if (annot && annot.content) {
                     orders = module._getAnnotationValueByContext(context, annot.content);
                 }
             } catch (exception) {}

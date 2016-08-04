@@ -1,0 +1,11 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "visible_foreign_keys_schema",
+    "createNew": true,
+    "path": "test/specs/annotation/conf/visible_foreign_keys/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  }
+}
