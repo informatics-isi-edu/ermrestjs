@@ -26,7 +26,7 @@ exports.execute = function (options) {
         	var delay  = server._http.max_retries * server._http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id + "/schema?cid=null")
 	          .reply(500, 'Error message')
 	          .persist();
 
@@ -35,24 +35,6 @@ exports.execute = function (options) {
 	        server.catalogs.get(id).then(null, function(err) {
 	            expect((new Date().getTime()) - startTime).toBeGreaterThan(delay);
 	            nock.cleanAll();
-	            done();
-	        }).catch(function() {
-	        	expect(false).toBe(true);
-	        	nock.cleanAll();
-	        	done();
-	        });
-	        
-	    });
-
-	    it("should give a 401 Unauthorized Error on catalog retreival", function(done) {
-	        
-	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
-	          .reply(401, 'Unauthorized user')
-
-	        server.catalogs.get(id).then(null, function(err) {
-	        	expect(err instanceof ermRest.UnauthorizedError).toBeTruthy();
-	        	nock.cleanAll();
 	            done();
 	        }).catch(function() {
 	        	expect(false).toBe(true);

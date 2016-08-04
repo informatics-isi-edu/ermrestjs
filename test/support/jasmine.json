@@ -6,7 +6,7 @@
     "annotation/spec.js",
     "reference/spec.js",
     "comment/spec.js",
-    "print_utils/spec.js"
+    "print_utils/spec.js",
     "errors/spec.js",
     "sample/spec.js"
   ],

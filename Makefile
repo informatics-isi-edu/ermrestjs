@@ -63,7 +63,7 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(PKG) $(MIN)
+$(BUILD): $(PKG) $(MIN)
 
 # Rule to build the library (non-minified)
 .PHONY: package
@@ -76,7 +76,7 @@ $(PKG): $(PLUGINS) $(SOURCE)
 # Rule to build the minified package
 $(MIN): $(PLUGINS) $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(PLUGINS) $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
