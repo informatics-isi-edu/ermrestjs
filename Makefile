@@ -66,13 +66,13 @@ package: $(PKG)
 
 $(PKG): $(SOURCE) $(VENDOR)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) $(VENDOR) > $(PKG)
+	cat $(VENDOR) $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
 $(MIN): $(SOURCE) $(VENDOR) $(BIN)
 	mkdir -p $(BUILD)
 	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > .make-min.js
-	cat .make-min.js $(VENDOR) > $(MIN)
+	cat $(VENDOR) .make-min.js > $(MIN)
 	rm .make-min.js
 
 # Rule to lint the source (warn but don't terminate build on errors)
