@@ -606,6 +606,39 @@ var ERMrest = (function (module) {
                 // add to referredBy of the key table
                 foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
+        },
+
+        // returns visible foreignkeys.
+        _visibleForeignKeys: function (context) {
+            var orders = -1;
+            try {
+                var annot = this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS);
+                if (context != undefined && annot && annot.content) {
+                    orders = module._getAnnotationValueByContext(context, annot.content);
+                }
+            } catch (exception) {}
+
+            // no annoation, return all outbound and inbound fks
+            if (orders == -1) {
+                return this.foreignKeys.all().concat(this.referredBy.all());
+            }
+
+            for (var i = 0, result = [], fk; i < orders.length; i++) {
+                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
+                    continue; // the annotation value is not correct.
+                }
+                try {
+                    fk = this.schema.catalog.schemas.get(orders[i][0]).foreignKeyMap[orders[i][1]];
+                    if (result.indexOf(fk) == -1 && (this.foreignKeys.all().indexOf(fk) != -1 || this.referredBy.all().indexOf(fk) != -1)) {
+                        // avoid duplicate and if it's a valid outbound or inbound fk of this table.
+                        result.push(fk);
+                    }
+                } catch (exception){
+                    // if the schema name is not valid, it can throw an error
+                }
+            }
+
+            return result;
         }
 
     };
@@ -1047,30 +1080,6 @@ var ERMrest = (function (module) {
             this._columns.push(column);
         },
 
-        // Returns column orders that are specified in annotations.
-        _getColumnOrders: function (context, annotation) {
-
-            if (context in annotation) {
-                if (Array.isArray(annotation[context])) {
-                    return annotation[context]; // found the context
-                } else {
-                    return this._getColumnOrders(annotation[context], annotation); // go to next level
-                }
-            }
-
-            // if context is edit or create, but there's no annotation for those
-            if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
-                return annotation.entry;
-            }
-
-            //if context wasn't in the annotations but there is a default context
-            if (Array.isArray(annotation[module._contexts.DEFAULT])) {
-                return annotation[module._contexts.DEFAULT];
-            }
-
-            return -1; // there was no annotation, return all
-        },
-
         /**
          *
          * @returns {Array} array of all columns
@@ -1145,10 +1154,9 @@ var ERMrest = (function (module) {
             try {
                 var annot = this._table.annotations.get(module._annotations.VISIBLE_COLUMNS);
                 if (annot && annot.content) {
-                    orders = this._getColumnOrders(context, annot.content);
+                    orders = module._getAnnotationValueByContext(context, annot.content);
                 }
-            } catch (exception) {
-            }
+            } catch (exception) {}
 
             // no annotation
             if (orders == -1) {
@@ -1874,10 +1882,10 @@ var ERMrest = (function (module) {
             // determine the from_name and to_name using the annotation
             if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
                 if(jsonAnnotation.from_name){
-                    this.fromName = jsonAnnotation.from_name;
+                    this.from_name = jsonAnnotation.from_name;
                 }
                 if(jsonAnnotation.to_name){
-                    this.toName = jsonAnnotation.to_name;
+                    this.to_name = jsonAnnotation.to_name;
                 }
             }
         }
