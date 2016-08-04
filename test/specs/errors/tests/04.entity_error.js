@@ -92,7 +92,7 @@ exports.execute = function (options) {
                     done();
                 });
             }, "entity retrieval using table.entity.get", function() {
-                return "/ermrest/catalog/" + catalogId + "/attribute/error_schema:valid_table_name/id";
+                return "/ermrest/catalog/" + catalogId + "/aggregate/error_schema:valid_table_name/id";
             });
 
         });
