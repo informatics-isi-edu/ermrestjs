@@ -23,9 +23,9 @@ BOWER=bower_components
 JS=js
 
 # LINT JS Source
-PLUGINS=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
+VENDOR=vendor/markdown-it.min.js \
+	   vendor/markdown-it-sub.min.js \
+	   vendor/markdown-it-sup.min.js \
 
 # Pure ERMrest API
 SOURCE=$(JS)/core.js \
@@ -65,14 +65,16 @@ $(BUILD): $(PKG) $(MIN)
 .PHONY: package
 package: $(PKG)
 
-$(PKG): $(PLUGINS) $(SOURCE) 
+$(PKG): $(VENDOR) $(SOURCE) 
 	mkdir -p $(BUILD)
-	cat $(PLUGINS) $(SOURCE) > $(PKG)
+	cat $(VENDOR) $(SOURCE) > $(PKG)
 
 # Rule to build the minified package
-$(MIN): $(PLUGINS) $(SOURCE) $(BIN)
+$(MIN): $(VENDOR) $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(PLUGINS) $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > .make-min.js
+	cat $(VENDOR) .make-min.js > $(MIN)
+	rm .make-min.js
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
