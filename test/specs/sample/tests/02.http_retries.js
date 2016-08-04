@@ -19,7 +19,7 @@ exports.execute = function (options) {
 	        
 	        var id = "jhgjhgjhg",  ops = {allowUnmocked: true};;
 	        nock(options.url.replace('ermrest', ''), ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id + "/schema?cid=null")
 	          .reply(500, 'Error message');
 
 	        var startTime = (new Date()).getTime();
