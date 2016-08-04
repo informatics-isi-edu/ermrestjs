@@ -26,11 +26,10 @@ BOWER=bower_components
 # JavaScript source and test specs
 JS=js
 
+BOWERCOMPONENTS=bower_components
+
 # Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -148,6 +147,7 @@ install: $(PKG)
 	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
 	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
 	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
+	cp -R $(BOWERCOMPONENTS) $(ERMRESTJSDIR)
 
 # Rule to install the package
 .PHONY: installTravis
