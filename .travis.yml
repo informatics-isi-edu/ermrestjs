@@ -50,6 +50,7 @@ before_install:
   - sudo apt-get install -y nodejs
   - cd ermrestjs
   - sudo npm install
+  - sudo bower install
 
 install:
   - sudo make build
