@@ -40,12 +40,102 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "record": ["name", "value"]
+                },
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "record": [
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"],
+                        ["reference_schema", "fk_inbound_related_to_reference"]
+                    ]
                 }
             }
+        },
+        "inbound_related_reference_table": {
+            "comment": "has two inbound fks to refrence_table",
+            "kind": "table",
+            "table_name": "inbound_related_reference_table", 
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
+            "foreign_keys": [
+                {
+                    "comment": "has from_name",
+                    "names": [["reference_schema", "fromname_fk_inbound_related_to_reference"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "fk_to_reference_with_fromname"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "id"
+                    }],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "from_name": "from_name_value"
+                        }
+                    }
+                },
+                {
+                    "comment": "it's not included in record context",
+                    "names": [["reference_schema", "hidden_fk_inbound_related_to_reference"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "fk_to_reference_hidden"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["reference_schema", "fk_inbound_related_to_reference"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "fk_to_reference"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table",
+                        "schema_name": "reference_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_reference_with_fromname",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_reference_hidden",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_reference",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
         }
     },
     "table_names": [
-        "reference_table"
+        "reference_table",
+        "inbound_related_reference_table"
     ],
     "comment": null,
     "annotations": {}

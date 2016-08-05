@@ -502,26 +502,23 @@ var ERMrest = (function(module) {
                 
                 var visibleFKs = this._table._visibleForeignKeys(this._context);
 
-                for(var i = 0, fkr; i < visibleFKs; i++) {
+                for(var i = 0, fkr; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
                     
                     // inbound FKRs
-                    if (this._table.refferdBy.all().indexOf(fkr) != -1) {
+                    if (this._table.referredBy.all().indexOf(fkr) != -1) {
                         var newRef = _referenceCopy(this);
+
                         newRef._schema = fkr.colset.columns[0].table.schema;
                         newRef._schemaName = fkr.colset.columns[0].table.schema.name;
                         newRef._table = fkr.colset.columns[0].table;
                         newRef._tableName = fkr.colset.columns[0].table.name;
                         newRef._context = undefined; // NOTE: related reference is not contextualized
                         
-                        var columns = newRef._table.columns.all();
-                        newRef._columns = [];
-                        for (var j=0; j < columns.length; j++) {
+                        newRef._columns = newRef._table.columns.all().filter(function(col){
                             // remove the columns that are involved in the FKR
-                            if(fkr.colset.columns.indexOf(column) != -1){
-                                newRef._columns.push(columns[j]);
-                            }
-                        }
+                            return fkr.colset.columns.indexOf(col) == -1;
+                        });
                         
                         if (fkr.from_name) {
                             newRef._displayname = fkr.from_name;
@@ -529,7 +526,19 @@ var ERMrest = (function(module) {
                             newRef._displayname = newRef._table.displayname;
                         }
 
-                        newRef._uri = this._uri + "/" + fkr.colset.toString();
+                        var keyString = fkr.key.colset.columns.map(function(col){
+                            return col.name;
+                        }).join(",");
+
+                        var colSetString =fkr.colset.columns.map(function(col, index){
+                            if (index == 0){
+                                return col.toString();
+                            } else {
+                                return col.name;
+                            }
+                        }).join(",");
+
+                        newRef._uri = this._uri + "/(" + keyString + ")=(" + colSetString + ")";
 
                         this._related.push(newRef);
                     }
