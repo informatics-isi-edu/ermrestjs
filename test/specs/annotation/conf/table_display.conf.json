@@ -1,0 +1,15 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "schema_table_display",
+    "createNew": true,
+    "path": "test/specs/annotation/conf/table_display/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/annotation/conf/table_display/data"
+  }
+}

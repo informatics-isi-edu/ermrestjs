@@ -48,6 +48,7 @@ exports.execute = function (options) {
             it('reference should have methods properly defined.', function() {
                 expect(reference.uri).toBe(reference._uri);
                 expect(reference.columns).toBe(reference._columns);
+                expect(reference.displayname).toBe(reference._table.name);
                 expect(reference.read()).toBeDefined();
             });
 

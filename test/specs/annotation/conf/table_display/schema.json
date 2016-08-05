@@ -1,0 +1,106 @@
+{
+  "tables": {
+    "table_wo_title_wo_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_wo_title_wo_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "table_w_title_wo_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_title_wo_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "title",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "table_w_table_display_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_table_display_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "firstname",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "lastname",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "row_name": "{firstname} {lastname}"
+        }
+      }
+    }
+  },
+  "schema_name": "schema_table_display"
+}
