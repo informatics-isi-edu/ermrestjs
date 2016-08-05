@@ -15,6 +15,22 @@
                 {
                     "name": "table_1_second_key",
                     "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_text",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_longtext",
+                    "type": { "typename": "longtext" }
+                },
+                {
+                    "name": "table_1_shorttext",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_boolean",
+                    "type": { "typename": "boolean" }
                 }
             ],
             "foreign_keys": []
