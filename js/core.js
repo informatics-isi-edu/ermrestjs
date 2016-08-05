@@ -268,10 +268,10 @@ var ERMrest = (function (module) {
         },
 
         /**
-         * @desc return the corresponding object for the pair.
-         * @param {Array.<string>} name pair. Its length must be two.
+         * @desc returns the constraint object for the pair.
+         * @param {Array.<string>} pair constraint name array. Its length must be two.
          * @throws {ERMrest.NotFoundError} constraint not found
-         * @returns {Object} 
+         * @returns {Object} the constrant object
          */
         constraintByNamePair: function (pair) { 
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
