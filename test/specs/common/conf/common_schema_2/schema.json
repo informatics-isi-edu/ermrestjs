@@ -25,12 +25,16 @@
                     "type": { "typename": "longtext" }
                 },
                 {
-                    "name": "table_1_shorttext",
-                    "type": { "typename": "text" }
+                    "name": "table_1_date",
+                    "type": { "typename": "date" }
                 },
                 {
                     "name": "table_1_boolean",
                     "type": { "typename": "boolean" }
+                },
+                {
+                    "name": "table_1_timestamp",
+                    "type": { "typename": "timestamptz" }
                 }
             ],
             "foreign_keys": []

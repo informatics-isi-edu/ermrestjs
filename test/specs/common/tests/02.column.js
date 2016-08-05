@@ -47,7 +47,7 @@ exports.execute = function(options) {
                         var spy = spyOn(formatUtils, 'printText').and.callThrough();
                         var textCol = table1_schema2.columns.getByPosition(2);
                         formattedValue = textCol.formatvalue('text value');
-                        expect(spy).toHaveBeenCalled();
+                        expect(spy).toHaveBeenCalledWith('text value', undefined);
                         expect(formattedValue).toBe('text value');
                     });
 
@@ -56,16 +56,8 @@ exports.execute = function(options) {
                         var longtextCol = table1_schema2.columns.getByPosition(3);
                         var longtext = 'asjdf;laksjdf;laj ;lkajsd;f lkajsdf;lakjs f;lakjs df;lasjd f;ladsjf;alskdjfa ;lskdjf a;lsdkjf a;lskdfjal;sdkfj as;ldfkj as;dlf kjasl;fkaj;lfkjasl;fjas;ldfkjals;dfkjas;dlkfja;sldkfjasl;dkfjas;dlfkjasl;dfkja; lsdjfk a;lskdjf a;lsdfj as;ldfja;sldkfja;lskjdfa;lskdjfa;lsdkfja;sldkfjas;ldfkjas;dlfkjas;lfkja;sldkjf a;lsjf ;laskj fa;slk jfa;sld fjas;l js;lfkajs;lfkasjf;alsja;lk ;l kja';
                         formattedValue = longtextCol.formatvalue(longtext);
-                        expect(spy).toHaveBeenCalled();
+                        expect(spy).toHaveBeenCalledWith(longtext, undefined);
                         expect(formattedValue).toBe(longtext);
-                    });
-
-                    it('shorttext columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printText').and.callThrough();
-                        var shorttextCol = table1_schema2.columns.getByPosition(4);
-                        formattedValue = shorttextCol.formatvalue('sja;lk ;l kja');
-                        expect(spy).toHaveBeenCalled();
-                        expect(formattedValue).toBe('sja;lk ;l kja');
                     });
 
                     afterEach(function() {
@@ -78,12 +70,33 @@ exports.execute = function(options) {
                     it('boolean columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printBoolean').and.callThrough();
                         var col = table1_schema2.columns.getByPosition(5);
+
+                        var trueBoolean = col.formatvalue(true);
+                        expect(spy).toHaveBeenCalledWith(true, undefined);
+                        expect(trueBoolean).toEqual(jasmine.any(String));
+                        expect(trueBoolean).toBe('true');
+
+                        var falseBoolean = col.formatvalue(false);
+                        expect(spy).toHaveBeenCalledWith(false, undefined);
+                        expect(falseBoolean).toEqual(jasmine.any(String));
+                        expect(falseBoolean).toBe('false');
+
+                        expect(spy.calls.count()).toBe(2);
+                    });
+                });
+
+                xdescribe('should call printTimestamp() to format,', function() {
+                    it('timestamptz columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printTimestamp').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(6);
                         var formattedValue = col.formatvalue(true);
                         expect(spy).toHaveBeenCalled();
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('true');
                     });
                 });
+
+                // describe('should call printDate()')
             });
         });
     });
