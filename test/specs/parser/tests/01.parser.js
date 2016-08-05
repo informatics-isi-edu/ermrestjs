@@ -50,7 +50,8 @@ exports.execute = function (options) {
 
                 expect(context).toBeDefined();
                 expect(context.path).toBe(multipleFilterPath);
-                expect(context.sort).toBe(sort);
+                expect(context.sort[0].column).toBe("summary");
+                expect(context.sort[0].descending).toBe(false);
                 expect(context.catalogId).toBe(catalogId.toString());
                 expect(context.schemaName).toBe(schemaName);
                 expect(context.tableName).toBe(tableName);

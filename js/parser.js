@@ -48,18 +48,31 @@ var ERMrest = (function(module) {
         if (svc_idx < 0) {
             throw new module.InvalidInputError('The URI does not contain the expected service name: ' + _service_name);
         }
+
         var context = {
             uri: uri,
+            compactUri: uri,
             baseUri: uri.slice(0,svc_idx+_service_name_len)
         };
-        var path = context.path = uri.slice(svc_idx+_service_name_len);
+        var path = context.path = uri.slice(svc_idx+_service_name_len); // string after service
 
         // Parse out @sort(...) parameter and assign to context
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
         if (uri.indexOf("@sort(") !== -1) {
-            context.sort = path.match(/@sort\((.*)\)/)[1];
-            path = path.split("@sort(")[0];
+
+            var sorts = path.match(/@sort\((.*)\)/)[1].split(",");
+            path = path.split("@sort(")[0];  // anything before @sort(..)
+            context.compactUri = uri.split("@sort(")[0]; // remove @sort from uri
+
+            // TODO jchen multiple columns
+            context.sort = [];
+            for (var i = 0; i < sorts.length; i++) {
+                var sort = sorts[i];
+                var column = (sort.endsWith("::desc::") ?
+                    decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : sort);
+                context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
+            }
         }
 
         // Split the URI on '/'
@@ -68,7 +81,7 @@ var ERMrest = (function(module) {
         var parts = path.split('/');
 
         if (parts.length < 3) {
-            throw new MalformedURIError("Uri does not have enough qualifying information");
+            throw new module.MalformedURIError("Uri does not have enough qualifying information");
         }
 
         // parts[5] should be the catalog id only
@@ -127,10 +140,10 @@ var ERMrest = (function(module) {
                         type = "Disjunction";
                     } else if (type === "Conjunction" && items[i] === ";") {
                         // using combination of ! and & without ()
-                        throw new InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
                     } else if (type === "Disjunction" && items[i] === "&") {
                         // using combination of ! and & without ()
-                        throw new InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
                     } else if (items[i] !== "&" && items[i] !== ";") {
                         // single filter on the first level
                         var binaryFilter = _processSingleFilterString(items[i]);
@@ -213,7 +226,7 @@ var ERMrest = (function(module) {
                 return filter;
             } else {
                 // invalid filter
-                throw new InvalidFilterOperatorError("Invalid filter " + filterString);
+                throw new module.InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         } else {
             f = filterString.split("::");
@@ -223,7 +236,7 @@ var ERMrest = (function(module) {
                 return filter;
             } else {
                 // invalid filter error
-                throw new InvalidFilterOperatorError("Invalid filter " + filterString);
+                throw new module.InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         }
     }
@@ -247,10 +260,10 @@ var ERMrest = (function(module) {
                 type = "Disjunction";
             } else if (type === "Conjunction" && filterStrings[i] === ";") {
                 // TODO throw invalid filter error (using combination of ! and &)
-                throw new InvalidFilterOperatorError("Invalid filter " + filterStrings);
+                throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
             } else if (type === "Disjunction" && filterStrings[i] === "&") {
                 // TODO throw invalid filter error (using combination of ! and &)
-                throw new InvalidFilterOperatorError("Invalid filter " + filterStrings);
+                throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i]);
