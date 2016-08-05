@@ -24,12 +24,14 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+        * [.constraintByNamePair(name)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code>
     * [.Schemas](#ERMrest.Schemas)
         * [new Schemas()](#new_ERMrest.Schemas_new)
         * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
         * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
         * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
         * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+        * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
         * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
@@ -39,7 +41,6 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
         * [.comment](#ERMrest.Schema+comment) : <code>string</code>
-        * [.foreignKeyMap](#ERMrest.Schema+foreignKeyMap) : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
     * [.Tables](#ERMrest.Tables)
         * [new Tables()](#new_ERMrest.Tables_new)
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
@@ -349,6 +350,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+    * [.constraintByNamePair(name)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
 
@@ -371,6 +373,21 @@ The catalog identifier.
 
 #### catalog.schemas : <code>[Schemas](#ERMrest.Schemas)</code>
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
+<a name="ERMrest.Catalog+constraintByNamePair"></a>
+
+#### catalog.constraintByNamePair(name) ⇒ <code>Object</code>
+return the corresponding object for the pair.
+
+**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.NotFoundError)</code> constraint not found
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>Array.&lt;string&gt;</code> | pair. Its length must be two. |
+
 <a name="ERMrest.Schemas"></a>
 
 ### ERMrest.Schemas
@@ -382,6 +399,7 @@ The catalog identifier.
     * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
     * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
     * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+    * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Schemas_new"></a>
 
@@ -419,6 +437,18 @@ get schema by schema name
 | --- | --- | --- |
 | name | <code>string</code> | schema name |
 
+<a name="ERMrest.Schemas+has"></a>
+
+#### schemas.has(name) ⇒ <code>boolean</code>
+check for schema name existence
+
+**Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
+**Returns**: <code>boolean</code> - if the schema exists or not  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | schmea name |
+
 <a name="ERMrest.Schema"></a>
 
 ### ERMrest.Schema
@@ -433,7 +463,6 @@ get schema by schema name
     * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
     * [.comment](#ERMrest.Schema+comment) : <code>string</code>
-    * [.foreignKeyMap](#ERMrest.Schema+foreignKeyMap) : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 
@@ -476,12 +505,6 @@ Preferred display name for user presentation only.
 
 #### schema.comment : <code>string</code>
 Documentation for this schema
-
-**Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
-<a name="ERMrest.Schema+foreignKeyMap"></a>
-
-#### schema.foreignKeyMap : <code>Object.&lt;string, ERMrest.ForeignKeyRef&gt;</code>
-Stores all the constraint names of foreignkeys in this schema
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Tables"></a>

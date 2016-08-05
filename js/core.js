@@ -218,6 +218,11 @@ var ERMrest = (function (module) {
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+
+         // A map from schema name to constraint names to the actual object.
+         // this._constraintNames[schemaName][constraintName] will return an object.
+        this._constraintNames = {};
     }
 
     Catalog.prototype = {
@@ -260,8 +265,30 @@ var ERMrest = (function (module) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
-        }
+        },
 
+        /**
+         * @desc return the corresponding object for the pair.
+         * @param {Array.<string>} name pair. Its length must be two.
+         * @throws {ERMrest.NotFoundError} constraint not found
+         * @returns {Object} 
+         */
+        constraintByNamePair: function (pair) { 
+            if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
+                return this._constraintNames[pair[0]][pair[1]];
+            }
+            throw new module.NotFoundError("", "constraint [ " + pair.join(" ,") + " ] not found.");
+        },
+
+        // used in ForeignKeyRef to add the defined constraintNames.
+        _addConstraintName: function (pair, obj){
+            if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
+                if (!(pair[0] in this._constraintNames)) {
+                    this._constraintNames[pair[0]] = {};
+                }
+                this._constraintNames[pair[0]][pair[1]] = obj;
+            }
+        }
     };
 
 
@@ -326,6 +353,15 @@ var ERMrest = (function (module) {
             }
 
             return this._schemas[name];
+        },
+
+        /**
+         * @param {string} name schmea name
+         * @returns {boolean} if the schema exists or not
+         * @desc check for schema name existence
+         */
+        has: function (name) {
+            return name in this._schemas;
         }
     };
 
@@ -399,12 +435,6 @@ var ERMrest = (function (module) {
          * @type {string}
          */
         this.comment = jsonSchema.comment;
-
-        /**
-         * @desc Stores all the constraint names of foreignkeys in this schema
-         * @type {Object.<string, ERMrest.ForeignKeyRef>}
-         */
-        this.foreignKeyMap = {};
 
     }
 
@@ -613,7 +643,7 @@ var ERMrest = (function (module) {
             var orders = -1;
             try {
                 var annot = this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS);
-                if (annot && annot.content) {
+                if (context !== undefined && annot && annot.content) {
                     orders = module._getAnnotationValueByContext(context, annot.content);
                 }
             } catch (exception) {}
@@ -628,13 +658,13 @@ var ERMrest = (function (module) {
                     continue; // the annotation value is not correct.
                 }
                 try {
-                    fk = this.schema.catalog.schemas.get(orders[i][0]).foreignKeyMap[orders[i][1]];
+                    fk = this.schema.catalog.constraintByNamePair(orders[i]);
                     if (result.indexOf(fk) == -1 && (this.foreignKeys.all().indexOf(fk) != -1 || this.referredBy.all().indexOf(fk) != -1)) {
                         // avoid duplicate and if it's a valid outbound or inbound fk of this table.
                         result.push(fk);
                     }
                 } catch (exception){
-                    // if the schema name is not valid, it can throw an error
+                    // if the constraint name is not valid, this will catch the error
                 }
             }
 
@@ -1847,12 +1877,12 @@ var ERMrest = (function (module) {
          */
         this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
 
-        // add constraint names to schema.foreignKeyMap
+        // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
             constraint = this.constraint_names[k];
             try {
                 if (Array.isArray(constraint) && constraint.length == 2){
-                    catalog.schemas.get(constraint[0]).foreignKeyMap[constraint[1]] = this;
+                    catalog._addConstraintName(constraint, this);
                 }
             } catch (exception){}
         }
