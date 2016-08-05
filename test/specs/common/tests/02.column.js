@@ -1,4 +1,8 @@
 exports.execute = function(options) {
+    var sampleValues = {
+        date: '2016-05-02',
+        timestamptz: '2011-05-06T08:25:25-07:00'
+    };
 
     describe('About the Column class, ', function() {
         var schemaName1 = "common_schema_1",
@@ -66,6 +70,19 @@ exports.execute = function(options) {
                     });
                 });
 
+                describe('should call printDate() to format,', function() {
+                    it('date columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printDate').and.callThrough();
+                        var testVal = '2016-05-02 13:00:00.00 PST';
+                        var col = table1_schema2.columns.getByPosition(4);
+                        var options = {separator: '.', leadingZero: false};
+                        var formattedValue = col.formatvalue(testVal, options);
+                        expect(spy).toHaveBeenCalledWith(testVal, options);
+                        expect(formattedValue).toEqual(jasmine.any(String));
+                        expect(formattedValue).toBe('2016.5.2');
+                    });
+                });
+
                 describe('should call printBoolean() to format,', function() {
                     it('boolean columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printBoolean').and.callThrough();
@@ -85,18 +102,17 @@ exports.execute = function(options) {
                     });
                 });
 
-                xdescribe('should call printTimestamp() to format,', function() {
+                describe('should call printTimestamp() to format,', function() {
                     it('timestamptz columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printTimestamp').and.callThrough();
+                        var testVal = '2011-05-06T08:25:25-07:00';
                         var col = table1_schema2.columns.getByPosition(6);
-                        var formattedValue = col.formatvalue(true);
-                        expect(spy).toHaveBeenCalled();
+                        var formattedValue = col.formatvalue(testVal);
+                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('true');
+                        expect(formattedValue).toBe(new Date(testVal).toLocaleString());
                     });
                 });
-
-                // describe('should call printDate()')
             });
         });
     });
