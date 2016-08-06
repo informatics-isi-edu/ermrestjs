@@ -4,7 +4,7 @@
 .SUFFIXES:
 
 # Install target
-ERMRESTJSDIR=/var/www/html/ermrestjs
+ERMRESTJSDIR?=/var/www/html/ermrestjs
 
 # Project name
 PROJ=ermrest
@@ -40,8 +40,8 @@ SOURCE=markdown-it/markdown-it.min.js \
 BUILD=build
 
 # Project package full/minified
-PKG=$(BUILD)/$(PROJ).js
-MIN=$(BUILD)/$(PROJ).min.js
+PKG=$(PROJ).js
+MIN=$(PROJ).min.js
 
 # Documentation target
 DOC=doc
@@ -56,20 +56,20 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(PKG) $(MIN)
+$(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN)
 
 # Rule to build the library (non-minified)
 .PHONY: package
-package: $(PKG)
+package: $(BUILD)/$(PKG)
 
-$(PKG): $(SOURCE)
+$(BUILD)/$(PKG): $(SOURCE)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	cat $(SOURCE) > $(BUILD)/$(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(BIN)
+$(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
@@ -132,17 +132,25 @@ distclean: clean
 test:  $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(PKG)
+$(TEST): $(BUILD)/$(PKG)
 	node test/jasmine-runner.js
 	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install
-install: $(PKG)
+.PHONY: install installm
+install: $(ERMRESTJSDIR)/$(PKG)
+
+installm: install $(ERMRESTJSDIR)/$(MIN)
+
+$(ERMRESTJSDIR):
 	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
 	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
-	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
-	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
+
+$(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(PKG) $(ERMRESTJSDIR)/$(PKG)
+
+$(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
 
 # Rules for help/usage
 .PHONY: help usage
@@ -153,6 +161,7 @@ usage:
 	@echo "    deps      - local install of node and bower dependencies"
 	@echo "    updeps    - update local dependencies"
 	@echo "    install   - installs the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
+	@echo "    installm  - also nstalls the minified package"
 	@echo "    lint      - lint the source"
 	@echo "    build     - lint, package and minify"
 	@echo "    package   - concatenate into package"
