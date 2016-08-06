@@ -42,6 +42,7 @@ BUILD=build
 # Project package full/minified
 PKG=$(PROJ).js
 MIN=$(PROJ).min.js
+VER=$(PROJ).ver.txt
 
 # Documentation target
 DOC=doc
@@ -56,12 +57,18 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN)
+$(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
 
 # Rule to build the library (non-minified)
 .PHONY: package
-package: $(BUILD)/$(PKG)
+package: $(BUILD)/$(PKG) $(BUILD)/$(VER)
 
+# Rule to build the version number file
+$(BUILD)/$(VER): $(SOURCE)
+	mkdir -p $(BUILD)
+	git log --pretty=format:'%H' -n 1 > $(BUILD)/$(VER)
+
+# Rule to build the un-minified library
 $(BUILD)/$(PKG): $(SOURCE)
 	mkdir -p $(BUILD)
 	cat $(SOURCE) > $(BUILD)/$(PKG)
@@ -138,13 +145,16 @@ $(TEST): $(BUILD)/$(PKG)
 
 # Rule to install the package
 .PHONY: install installm
-install: $(ERMRESTJSDIR)/$(PKG)
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
 $(ERMRESTJSDIR):
 	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
 	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
+
+$(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
 
 $(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(PKG) $(ERMRESTJSDIR)/$(PKG)
