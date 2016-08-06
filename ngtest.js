@@ -253,7 +253,7 @@ angular.module("testApp", ['ermrestjs'])
         }));
 
         // change sort
-        return ref.sortReference([{"column":"accession", "descending":true}]).read(10);
+        return ref.sort([{"column":"accession", "descending":true}]).read(10);
     }, function error(response) {
         throw response;
     }).then(function(page){

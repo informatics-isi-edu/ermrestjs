@@ -453,7 +453,7 @@ var ERMrest = (function(module) {
          * {"column":columname, "descending":true|false}
          * in order of priority. Undfined, null or Empty array to use default sorting.
          */
-        sortReference: function(sort) {
+        sort: function(sort) {
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
