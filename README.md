@@ -60,7 +60,7 @@ $ make all
 To deploy the packages run the following command and _optionally_ you may set
 the `ERMRESTJSDIR` variable to an alternative deployment directory:
 
-```sh
+```
 $ make [ERMRESTJSDIR=dir] install
 ```
 
@@ -74,7 +74,7 @@ deployment directory. For example, if the default `/var/www/html` directory
 does not exist, you must create it first before running the install command. If
 it does not exist, you will get an error like this:
 
-```sh
+```
 make: *** No rule to make target `/var/www/html', needed by `/var/www/html/ermrestjs'.  Stop.
 ```
 
@@ -92,14 +92,14 @@ $ make doc
 
 Before running the test cases you need to set the environment variables.
 
-```sh
+```
 export ERMREST_URL=https://YOUR_ERMREST_URL/ermrest
 export AUTH_COOKIE=YOUR_ERMREST_COOKIE
 ```
 
 To execute test case run the following command
 
-```sh
+```
 $ make test
 ```
 
