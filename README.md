@@ -57,8 +57,10 @@ $ make all
 
 ## How to deploy ermrestjs
 
-To deploy the packages run:
-```
+To deploy the packages run the following command and _optionally_ you may set
+the `ERMRESTJSDIR` variable to an alternative deployment directory:
+
+```sh
 $ make [ERMRESTJSDIR=dir] install
 ```
 
@@ -66,6 +68,15 @@ Set `ERMRESTJSDIR` to specify a target deployment location. By default, it the
 install target is `/var/www/html/ermrestjs`. If this directory does not exist,
 it will first create it. You may need to run `make install` with _super user_
 privileges depending on the installation directory you chose.
+
+Note that the `Makefile` **will not** create the base directory of the
+deployment directory. For example, if the default `/var/www/html` directory
+does not exist, you must create it first before running the install command. If
+it does not exist, you will get an error like this:
+
+```sh
+make: *** No rule to make target `/var/www/html', needed by `/var/www/html/ermrestjs'.  Stop.
+```
 
 ## How to update the documentation
 

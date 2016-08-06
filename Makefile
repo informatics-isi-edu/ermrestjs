@@ -149,9 +149,14 @@ install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
-$(ERMRESTJSDIR):
-	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
-	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
+# Rule to make deployment dir
+# NOTE: we do not make the base dir, it must be present.
+#       For example `/var/www/html/ermrestjs` will require
+#       that `/var/www/html` exists. If it does not, then
+#       the user must create it _before_ attempting to
+#       install this package.
+$(ERMRESTJSDIR): $(dir $(ERMRESTJSDIR))
+	mkdir -p $(ERMRESTJSDIR)
 
 $(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
