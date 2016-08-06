@@ -1,23 +1,19 @@
 {
   "name": "ermrestjs",
-  "version": "0.0.0",
-  "private": true,
   "description": "ERMrest client library in JavaScript",
-  "main": "ermrest.js",
-  "moduleType": [
-    "globals"
+  "main": "build/ermrest.js",
+  "authors": [
+    "ISI"
   ],
+  "license": "Apache-2.0",
   "keywords": [
     "database",
     "rest",
     "postgresql",
     "library"
   ],
-  "authors": [
-    "ermrestjs authors"
-  ],
-  "license": "Apache-2.0",
-  "homepage": "www.isi.edu",
+  "homepage": "https://github.com/informatics-isi-edu/ermrestjs",
+  "private": true,
   "ignore": [
     "**/.*",
     "node_modules",
@@ -25,11 +21,12 @@
     "test",
     "tests",
     "dist",
-    "doc"
+    "doc",
+    "build"
   ],
   "dependencies": {
-      "angular": "x",
-      "angular-mocks": "x",
-      "jquery": "x"
+    "markdown-it": "x",
+    "markdown-it-sub": "x",
+    "markdown-it-sup" :"x"
   }
 }
