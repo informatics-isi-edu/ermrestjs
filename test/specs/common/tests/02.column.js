@@ -9,7 +9,7 @@ exports.execute = function(options) {
             schemaName2 = "common_schema_2";
         var table1_schema1, // has two outbound fks to table2_schema1. with foreign-key annotation.
             table2_schema1, // has outbound fk to table1_schema2.
-            table1_schema2, // doesn't have any outbound foreignkeys. in different schema.
+            table1_schema2, // has all the column types we support
             catalog;
 
         beforeAll(function(done) {
@@ -120,8 +120,8 @@ exports.execute = function(options) {
                     it('float4 columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.getByPosition(7);
-                        formattedValue = col.formatvalue('11.1');
-                        expect(spy).toHaveBeenCalledWith('11.1', undefined);
+                        formattedValue = col.formatvalue(11.1);
+                        expect(spy).toHaveBeenCalledWith(11.1, undefined);
                         expect(formattedValue).toBe('11.10');
                     });
 
@@ -129,14 +129,63 @@ exports.execute = function(options) {
                         var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.getByPosition(8);
                         var options = {numDecDigits: 7};
-                        formattedValue = col.formatvalue('234523523.023045230450245', options);
-                        expect(spy).toHaveBeenCalledWith('234523523.023045230450245', options);
+                        formattedValue = col.formatvalue(234523523.023045230450245, options);
+                        expect(spy).toHaveBeenCalledWith(234523523.023045230450245, options);
                         expect(formattedValue).toBe('234,523,523.0230452');
                     });
 
                     afterEach(function() {
                         expect(formattedValue).toEqual(jasmine.any(String));
                         formattedValue = undefined;
+                    });
+                });
+
+                describe('should call printInteger() to format,', function() {
+                    var formattedValue = undefined;
+
+                    it('int2 columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(9);
+                        var int2 = 32768;
+                        formattedValue = col.formatvalue(int2);
+                        expect(spy).toHaveBeenCalledWith(int2, undefined);
+                        expect(formattedValue).toBe('32,768');
+                    });
+
+                    it('int4 columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(10);
+                        var int4 = -2147483648;
+                        formattedValue = col.formatvalue(int4);
+                        expect(spy).toHaveBeenCalledWith(int4, undefined);
+                        expect(formattedValue).toBe('-2,147,483,648');
+                    });
+
+                    it('int8 columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(11);
+                        var int8 = 9007199254740991; // Max safe integer in JS
+                        var options = {numDecDigits: 7};
+                        formattedValue = col.formatvalue(int8);
+                        expect(spy).toHaveBeenCalledWith(int8, undefined);
+                        expect(formattedValue).toBe('9,007,199,254,740,991');
+                    });
+
+                    afterEach(function() {
+                        expect(formattedValue).toEqual(jasmine.any(String));
+                        formattedValue = undefined;
+                    });
+                });
+
+                describe('should call printMarkdown() to format,', function() {
+                    it('Markdown columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printMarkdown').and.callThrough();
+                        var testVal = '*taylor ^swift^*';
+                        var col = table1_schema2.columns.getByPosition(12);
+                        var formattedValue = col.formatvalue(testVal);
+                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+                        expect(formattedValue).toEqual(jasmine.any(String));
+                        expect(formattedValue).toBe('<em>taylor <sup>swift</sup></em>');
                     });
                 });
             });

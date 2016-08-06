@@ -43,6 +43,22 @@
                 {
                     "name": "table_1_float8",
                     "type": { "typename": "float8" }
+                },
+                {
+                    "name": "table_1_int2",
+                    "type": { "typename": "int2" }
+                },
+                {
+                    "name": "table_1_int4",
+                    "type": { "typename": "int4" }
+                },
+                {
+                    "name": "table_1_int8",
+                    "type": { "typename": "int8" }
+                },
+                {
+                    "name": "table_1_markdown",
+                    "type": { "typename": "markdown" }
                 }
             ],
             "foreign_keys": []
