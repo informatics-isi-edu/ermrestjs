@@ -113,6 +113,32 @@ exports.execute = function(options) {
                         expect(formattedValue).toBe(new Date(testVal).toLocaleString());
                     });
                 });
+
+                describe('should call printFloat() to format,', function() {
+                    var formattedValue = undefined;
+
+                    it('float4 columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(7);
+                        formattedValue = col.formatvalue('11.1');
+                        expect(spy).toHaveBeenCalledWith('11.1', undefined);
+                        expect(formattedValue).toBe('11.10');
+                    });
+
+                    it('float8 columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
+                        var col = table1_schema2.columns.getByPosition(8);
+                        var options = {numDecDigits: 7};
+                        formattedValue = col.formatvalue('234523523.023045230450245', options);
+                        expect(spy).toHaveBeenCalledWith('234523523.023045230450245', options);
+                        expect(formattedValue).toBe('234,523,523.0230452');
+                    });
+
+                    afterEach(function() {
+                        expect(formattedValue).toEqual(jasmine.any(String));
+                        formattedValue = undefined;
+                    });
+                });
             });
         });
     });
