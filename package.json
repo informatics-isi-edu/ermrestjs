@@ -9,8 +9,7 @@
     "build": "make build",
     "pretest": "make build",
     "test": "make test",
-    "docs": "make doc",
-    "postinstall": "bower cache clean && bower install"
+    "docs": "make doc"
   },
   "repository": {
     "type": "git",
