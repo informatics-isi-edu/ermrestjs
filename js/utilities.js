@@ -330,7 +330,8 @@ var ERMrest = (function(module) {
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
-        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key"
+        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display"
     });
 
     /**

@@ -1440,6 +1440,14 @@ var ERMrest = (function (module) {
     Annotation.prototype = {
         constructor: Annotation,
 
+        contains: function(name) {
+            return (name in this.content);
+        },
+
+        get: function(name) {
+            return this.content[name];
+        },
+
         _delete: function () {
 
         }

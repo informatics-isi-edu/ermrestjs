@@ -4,12 +4,7 @@
 .SUFFIXES:
 
 # Install target
-ERMRESTJSDIR=/var/www/html/ermrestjs
-
-
-# Travis Install target
-ERMRESTJSTRAVISDIR=/var/www/ermrestjs
-
+ERMRESTJSDIR?=/var/www/html/ermrestjs
 
 # Project name
 PROJ=ermrest
@@ -45,8 +40,9 @@ SOURCE=markdown-it/markdown-it.min.js \
 BUILD=build
 
 # Project package full/minified
-PKG=$(BUILD)/$(PROJ).js
-MIN=$(BUILD)/$(PROJ).min.js
+PKG=$(PROJ).js
+MIN=$(PROJ).min.js
+VER=$(PROJ).ver.txt
 
 # Documentation target
 DOC=doc
@@ -61,20 +57,26 @@ TEST=.make-test.js
 all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(PKG) $(MIN)
+$(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
 
 # Rule to build the library (non-minified)
 .PHONY: package
-package: $(PKG)
+package: $(BUILD)/$(PKG) $(BUILD)/$(VER)
 
-$(PKG): $(SOURCE)
+# Rule to build the version number file
+$(BUILD)/$(VER): $(SOURCE)
 	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(PKG)
+	git log --pretty=format:'%H' -n 1 > $(BUILD)/$(VER)
+
+# Rule to build the un-minified library
+$(BUILD)/$(PKG): $(SOURCE)
+	mkdir -p $(BUILD)
+	cat $(SOURCE) > $(BUILD)/$(PKG)
 
 # Rule to build the minified package
-$(MIN): $(SOURCE) $(BIN)
+$(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(MIN)
+	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
 
 # Rule to lint the source (warn but don't terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
@@ -137,25 +139,33 @@ distclean: clean
 test:  $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(PKG)
+$(TEST): $(BUILD)/$(PKG)
 	node test/jasmine-runner.js
 	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install
-install: $(PKG)
-	test -d $(dir $(ERMRESTJSDIR)) || mkdir -p $(dir $(ERMRESTJSDIR))
-	test -d $(ERMRESTJSDIR) || mkdir -p $(ERMRESTJSDIR)
-	cp $(PKG) $(ERMRESTJSDIR)/$(notdir $(PKG))
-	cp $(MIN) $(ERMRESTJSDIR)/$(notdir $(MIN)) || true
+.PHONY: install installm
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER)
 
-# Rule to install the package
-.PHONY: installTravis
-installTravis: $(PKG) $(NGAPI)
-	test -d $(dir $(ERMRESTJSTRAVISDIR)) || mkdir -p $(dir $(ERMRESTJSTRAVISDIR))
-	test -d $(ERMRESTJSTRAVISDIR) || mkdir -p $(ERMRESTJSTRAVISDIR)
-	cp $(PKG) $(ERMRESTJSTRAVISDIR)/$(notdir $(PKG))
-	cp $(MIN) $(ERMRESTJSTRAVISDIR)/$(notdir $(MIN)) || true
+installm: install $(ERMRESTJSDIR)/$(MIN)
+
+# Rule to make deployment dir
+# NOTE: we do not make the base dir, it must be present.
+#       For example `/var/www/html/ermrestjs` will require
+#       that `/var/www/html` exists. If it does not, then
+#       the user must create it _before_ attempting to
+#       install this package.
+$(ERMRESTJSDIR): $(dir $(ERMRESTJSDIR))
+	mkdir -p $(ERMRESTJSDIR)
+
+$(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
+
+$(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(PKG) $(ERMRESTJSDIR)/$(PKG)
+
+$(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
+	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
 
 # Rules for help/usage
 .PHONY: help usage
@@ -166,6 +176,7 @@ usage:
 	@echo "    deps      - local install of node and bower dependencies"
 	@echo "    updeps    - update local dependencies"
 	@echo "    install   - installs the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
+	@echo "    installm  - also installs the minified package"
 	@echo "    lint      - lint the source"
 	@echo "    build     - lint, package and minify"
 	@echo "    package   - concatenate into package"
