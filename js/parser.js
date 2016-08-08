@@ -65,10 +65,9 @@ var ERMrest = (function(module) {
             path = path.split("@sort(")[0];  // anything before @sort(..)
             context.compactUri = uri.split("@sort(")[0]; // remove @sort from uri
 
-            // TODO jchen multiple columns
             context.sort = [];
-            for (var i = 0; i < sorts.length; i++) {
-                var sort = sorts[i];
+            for (var s = 0; s < sorts.length; s++) {
+                var sort = sorts[s];
                 var column = (sort.endsWith("::desc::") ?
                     decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : sort);
                 context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
