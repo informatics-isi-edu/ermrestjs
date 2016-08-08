@@ -1940,11 +1940,21 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of ForeignKeyRef object (s:t:keyCol1, s:t:keyCol2)=(s:t:FKCol,s:t:FKCol)
+         * returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
          * @retuns {string} string representation of ForeignKeyRef object
          */
         toString: function (){
-            return [this.key.colset.toString(),this.colset.toString()].join("=");
+            // NOTE: the columns in key.colset may have a different order. So we should use the mapping.
+            var keyString = "", colSetString = "";
+            var fkrCols = this.colset.columns.slice().sort(function(a,b){
+                return a.name.localeCompare(b.name);
+            });
+            var columnsLength = fkrCols.length;
+            for (var i=0; i < columnsLength; i++) {
+                colSetString += fkrCols[i].toString() + (i < columnsLength -1 ?",": "");
+                keyString += this.mapping.get(fkrCols[i]).name + (i < columnsLength -1 ?",": "");
+            }
+            return "(" + keyString + ")=(" + colSetString + ")";
         },
 
         delete: function () {

@@ -526,19 +526,7 @@ var ERMrest = (function(module) {
                             newRef._displayname = newRef._table.displayname;
                         }
 
-                        var keyString = fkr.key.colset.columns.map(function(col){
-                            return col.name;
-                        }).join(",");
-
-                        var colSetString =fkr.colset.columns.map(function(col, index){
-                            if (index == 0){
-                                return col.toString();
-                            } else {
-                                return col.name;
-                            }
-                        }).join(",");
-
-                        newRef._uri = this._uri + "/(" + keyString + ")=(" + colSetString + ")";
+                        newRef._uri = this._uri + "/" + fkr.toString();
 
                         this._related.push(newRef);
                     }

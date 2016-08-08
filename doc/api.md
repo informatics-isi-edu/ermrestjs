@@ -1482,7 +1482,7 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
 #### foreignKeyRef.toString()
-returns string representation of ForeignKeyRef object (s:t:keyCol1, s:t:keyCol2)=(s:t:FKCol,s:t:FKCol)
+returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
 
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 **Retuns**: <code>string</code> string representation of ForeignKeyRef object  
