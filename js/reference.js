@@ -446,7 +446,6 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * TODO jchen write test for this method
          * Return a new Reference with the new sorting
          *
          * @param {Object[]} sort an array of objects in the format
