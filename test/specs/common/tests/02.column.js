@@ -1,22 +1,10 @@
 exports.execute = function(options) {
-    var sampleValues = {
-        date: '2016-05-02',
-        timestamptz: '2011-05-06T08:25:25-07:00'
-    };
 
     describe('About the Column class, ', function() {
-        var schemaName1 = "common_schema_1",
-            schemaName2 = "common_schema_2";
-        var table1_schema1, // has two outbound fks to table2_schema1. with foreign-key annotation.
-            table2_schema1, // has outbound fk to table1_schema2.
-            table1_schema2, // has all the column types we support
-            catalog;
+        var schemaName2 = 'common_schema_2', table1_schema2;
 
         beforeAll(function(done) {
-            catalog = options.catalog;
-            table1_schema1 = catalog.schemas.get(schemaName1).tables.get('table_1_schema_1');
-            table2_schema1 = catalog.schemas.get(schemaName1).tables.get('table_2_schema_1');
-            table1_schema2 = catalog.schemas.get(schemaName2).tables.get('table_1_schema_2');
+            table1_schema2 = options.catalog.schemas.get(schemaName2).tables.get('table_1_schema_2');
             done();
         });
 
