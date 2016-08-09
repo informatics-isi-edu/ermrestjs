@@ -30,6 +30,8 @@ exports.execute = function (options) {
             expect(printInteger(.0000)).toBe('0');
             expect(printInteger(23.101)).toBe('23');
             expect(printInteger(.1)).toBe('0');
+            expect(printInteger(-435.00)).toBe('-435');
+            expect(printInteger(-1435.00)).toBe('-1,435');
         });
 
         it('printDate() should format dates correctly.', function () {

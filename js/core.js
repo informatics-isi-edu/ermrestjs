@@ -1204,7 +1204,6 @@ var ERMrest = (function (module) {
             var type = this.type.name;
             var utils = module._formatUtils;
             switch(type) {
-                // case 'serial4': ??
                 case 'timestamptz':
                     data = utils.printTimestamp(data, options);
                     break;
