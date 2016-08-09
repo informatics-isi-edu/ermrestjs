@@ -641,12 +641,9 @@ var ERMrest = (function (module) {
         // returns visible foreignkeys.
         _visibleForeignKeys: function (context) {
             var orders = -1;
-            try {
-                var annot = this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS);
-                if (context !== undefined && annot && annot.content) {
-                    orders = module._getAnnotationValueByContext(context, annot.content);
-                }
-            } catch (exception) {}
+            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                orders = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+            }
 
             // no annoation, return all outbound and inbound fks
             if (orders == -1) {
@@ -1181,12 +1178,9 @@ var ERMrest = (function (module) {
 
             // get column orders from annotation
             var orders = -1;
-            try {
-                var annot = this._table.annotations.get(module._annotations.VISIBLE_COLUMNS);
-                if (annot && annot.content) {
-                    orders = module._getAnnotationValueByContext(context, annot.content);
-                }
-            } catch (exception) {}
+            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                orders = module._getAnnotationValueByContext(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+            }
 
             // no annotation
             if (orders == -1) {
