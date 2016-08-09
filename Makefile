@@ -21,13 +21,10 @@ BOWER=bower_components
 # JavaScript source and test specs
 JS=js
 
-# LINT JS Source
-VENDOR=
-
 # Pure ERMrest API
-SOURCE=vendor/markdown-it.min.js \
-	   vendor/markdown-it-sub.min.js \
-	   vendor/markdown-it-sup.min.js \
+SOURCE=markdown-it/markdown-it.min.js \
+	   markdown-it/markdown-it-sub.min.js \
+	   markdown-it/markdown-it-sup.min.js \
 	   $(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \

@@ -52,7 +52,6 @@ before_install:
   - sudo npm install
 
 install:
-  - sudo make lint
   - sudo make build
   - sudo service apache2 restart
 
