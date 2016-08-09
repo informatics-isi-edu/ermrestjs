@@ -71,7 +71,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         });
     };    
 
-    var ermrestJsPath = "../../ermrestjs/";
+    var ermrestJsPath = "/ermrestjs/";
 
     /*
      * Call this function to load all dependent scripts in order
