@@ -1,0 +1,181 @@
+{
+  "tables": {
+    "vfk_table_without_annotation": {
+      "comment": "doesn't have visible foreign key annotation. has two inbound and one outbound fk.",
+      "kind": "table",
+      "keys": [{
+          "unique_columns": ["id"]
+      }],
+      "table_name": "vfk_table_without_annotation",
+      "schema_name": "visible_foregin_keys_schema",
+      "foreign_keys": [
+        {
+          "names": [
+            ["visible_foregin_keys_schema", "fk_without_annotation_to_outbound"]
+          ],
+          "foreign_key_columns": [{
+            "table_name": "vfk_table_without_annotation",
+            "schema_name": "visible_foregin_keys_schema",
+            "column_name": "fk_from_outbound_related_table"
+          }],
+          "referenced_columns": [{
+            "table_name": "vfk_outbound_related_table",
+            "schema_name": "visible_foregin_keys_schema",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "fk_from_outbound_related_table",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "vfk_table_with_annotation": {
+      "comment": "has visible foreign key annotation. has two inbound and one outbound fk.",
+      "kind": "table",
+      "keys": [{
+          "unique_columns": ["id"]
+      }],
+      "table_name": "vfk_table_with_annotation",
+      "schema_name": "visible_foregin_keys_schema",
+      "foreign_keys": [{
+          "names": [
+            ["visible_foregin_keys_schema", "fk_with_annotation_to_outbound"]
+          ],
+          "foreign_key_columns": [{
+            "table_name": "vfk_table_with_annotation",
+            "schema_name": "visible_foregin_keys_schema",
+            "column_name": "fk_from_outbound_related_table"
+          }],
+          "referenced_columns": [{
+            "table_name": "vfk_outbound_related_table",
+            "schema_name": "visible_foregin_keys_schema",
+            "column_name": "id"
+          }]
+      }],
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "fk_from_outbound_related_table",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+          "entry": [
+            ["visible_foregin_keys_schema", "fk_with_annotation_to_outbound"]
+          ],
+          "edit": [
+            ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"]
+          ],
+          "record": [
+            ["visible_foregin_keys_schema", "some_name"],
+            ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"]
+          ],
+          "compact": [
+            ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"],
+            ["visible_foregin_keys_schema", "fk_with_annotation_to_outbound"],
+            ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"]
+          ],
+          "*": []
+        }
+      }
+    },
+    "vfk_inbound_related_table": {
+      "comment": "has fk to table_With_annotation and table_without_annotation",
+      "kind": "table",
+      "table_name": "vfk_inbound_related_table",
+      "schema": "visible_foregin_keys_schema",
+      "keys": [{
+          "unique_columns": ["id"]
+      }],
+      "foreign_keys": [
+        {
+          "names": [
+            ["visible_foregin_keys_schema", "fk_inbound_to_without_annotation"]
+          ],
+          "foreign_key_columns": [{
+              "table_name": "vfk_inbound_related_table",
+              "schema_name": "visible_foregin_keys_schema",
+              "column_name": "fk_from_table_without_annotation"
+          }],
+          "referenced_columns": [{
+              "table_name": "vfk_table_without_annotation",
+              "schema_name": "visible_foregin_keys_schema",
+              "column_name": "id"
+          }]
+        },
+        {
+          "names": [
+            ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"]
+          ],
+          "foreign_key_columns": [{
+              "table_name": "vfk_inbound_related_table",
+              "schema_name": "visible_foregin_keys_schema",
+              "column_name": "fk_from_table_with_annotation"
+          }],
+          "referenced_columns": [{
+              "table_name": "vfk_table_with_annotation",
+              "schema_name": "visible_foregin_keys_schema",
+              "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "fk_from_table_without_annotation",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "fk_from_table_with_annotation",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "vfk_outbound_related_table": {
+      "kind": "table",
+      "table_name": "vfk_outbound_related_table",
+      "schema": "visible_foregin_keys_schema",
+      "keys": [{
+          "unique_columns": ["id"]
+      }],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    }
+  },
+  "schema_name": "visible_foregin_keys_schema"
+}
