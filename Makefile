@@ -16,16 +16,13 @@ MODULES=node_modules
 BIN=$(MODULES)/.bin
 
 # Bower front end components
-BOWER=bower_components
+BOWERCOMPONENTS?=bower_components
 
 # JavaScript source and test specs
 JS=js
 
 # Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -144,8 +141,8 @@ $(TEST): $(BUILD)/$(PKG)
 	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install installm
-install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER)
+.PHONY: install installm 
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(BOWERCOMPONENTS)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
@@ -166,6 +163,9 @@ $(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
 
 $(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
+
+$(BOWERCOMPONENTS): $(dir $(BOWERCOMPONENTS))
+	cp -R $(BOWERCOMPONENTS) $(ERMRESTJSDIR)
 
 # Rules for help/usage
 .PHONY: help usage

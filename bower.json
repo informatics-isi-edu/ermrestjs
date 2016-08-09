@@ -28,8 +28,8 @@
     "doc"
   ],
   "dependencies": {
-      "angular": "x",
-      "angular-mocks": "x",
-      "jquery": "x"
+    "markdown-it": "x",
+    "markdown-it-sub": "x",
+    "markdown-it-sup": "x"
   }
 }
