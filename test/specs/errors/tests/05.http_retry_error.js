@@ -41,8 +41,7 @@ exports.execute = function (options) {
 
 	        server.catalogs.get(id).then(null, function(err) {
 	        	var currentTime = (new Date().getTime());
-	        	console.log(currentTime);
-	            expect(currentTime - startTime).toBeGreaterThan(delay);
+	        	expect(currentTime - startTime).toBeGreaterThan(delay);
 	            expect(err instanceof ermRest.ServiceUnavailableError).toBe(true);
 	            done();
 	        }).catch(function() {
