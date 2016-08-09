@@ -183,7 +183,6 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
-            // TODO: What kinds of options are we supporting?
             return Boolean(value).toString();
         },
 
