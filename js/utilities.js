@@ -142,7 +142,7 @@ var ERMrest = (function(module) {
      * @desc create an error object from http response
      */
     module._responseToError = function (response) {
-        var status = response.status;
+        var status = response.status || response.statusCode;
         switch(status) {
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);

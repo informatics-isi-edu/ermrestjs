@@ -2,6 +2,7 @@ var q = require('q');
 var Jasmine = require('jasmine');
 var SpecReporter = require('jasmine-spec-reporter');
 var jrunner = new Jasmine();
+jrunner.exitCodeReporter = new (require('./exit-code-reporter.js'))(jrunner);
 var ermrestUtils = require('ermrest-data-utils');
 
 // Util function to create a catalog before running all specs
