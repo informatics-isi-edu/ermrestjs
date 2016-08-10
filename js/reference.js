@@ -137,7 +137,6 @@ var ERMrest = (function(module) {
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
-        this._filter     = context.filter; // this is ParsedFilter object
         this._sort       = context.sort;
 
         this.contextualize._reference = this;
@@ -587,6 +586,7 @@ var ERMrest = (function(module) {
                         newRef._table = fkr.colset.columns[0].table;
                         newRef._tableName = fkr.colset.columns[0].table.name;
                         newRef._context = undefined; // NOTE: related reference is not contextualized
+                        delete newRef._sort;
                         
                         newRef._columns = newRef._table.columns.all().filter(function(col){
                             // remove the columns that are involved in the FKR
