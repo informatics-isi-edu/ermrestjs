@@ -77,9 +77,9 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Call this function to load all dependent scripts in order
      */
     loadScripts([
-        ermrestJsPath + "markdown-it/markdown-it.min.js", 
-        ermrestJsPath + "markdown-it/markdown-it-sub.min.js", 
-        ermrestJsPath + "markdown-it/markdown-it-sup.min.js"], 
+        ermrestJsPath + "vendor/markdown-it.min.js", 
+        ermrestJsPath + "vendor/markdown-it-sub.min.js", 
+        ermrestJsPath + "vendor/markdown-it-sup.min.js"], 
         function() {
             ERMrest._markdownIt = window.markdownit()
                     .use(window.markdownitSub)
