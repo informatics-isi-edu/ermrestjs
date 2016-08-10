@@ -133,7 +133,6 @@ var ERMrest = (function(module) {
      */
     function Reference(context) {
         this._uri        = context.uri;
-        this._compactUri = context.compactUri; // uri with out @sort
         this._serviceUrl = context.baseUri;
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
@@ -376,7 +375,7 @@ var ERMrest = (function(module) {
 
                 var defer = module._q.defer();
 
-                var uri = this._compactUri;
+                var uri = this._uri;
 
                 // add sorting
                 // get a list of columns in key

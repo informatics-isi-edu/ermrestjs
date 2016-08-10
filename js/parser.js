@@ -51,7 +51,6 @@ var ERMrest = (function(module) {
 
         var context = {
             uri: uri,
-            compactUri: uri,
             baseUri: uri.slice(0,svc_idx+_service_name_len)
         };
         var path = context.path = uri.slice(svc_idx+_service_name_len); // string after service
@@ -63,7 +62,7 @@ var ERMrest = (function(module) {
 
             var sorts = path.match(/@sort\((.*)\)/)[1].split(",");
             path = path.split("@sort(")[0];  // anything before @sort(..)
-            context.compactUri = uri.split("@sort(")[0]; // remove @sort from uri
+            context.uri = uri.split("@sort(")[0]; // remove @sort from uri
 
             context.sort = [];
             for (var s = 0; s < sorts.length; s++) {
