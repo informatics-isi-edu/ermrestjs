@@ -53,7 +53,7 @@ var ERMrest = (function(module) {
      * {@link ERMrest.InternalServerError},
      * {@link ERMrest.ConflictError},
      * {@link ERMrest.ForbiddenError},
-     * {@link ERMrest.Unauthorized},
+     * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
      */
     module.resolve = function (uri, params) {
@@ -137,7 +137,7 @@ var ERMrest = (function(module) {
         this._catalogId  = context.catalogId;
         this._schemaName = context.schemaName;
         this._tableName  = context.tableName;
-        this._filter     = context.filter;
+        this._sort       = context.sort;
 
         this.contextualize._reference = this;
     }
@@ -358,8 +358,10 @@ var ERMrest = (function(module) {
          *     ...
          *   });
          * ```
+         *
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
+         *
          * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
          * or {@link ERMrest.InvalidInputError} if `limit` is invalid, or
          * other errors TBD (TODO document other errors here).
@@ -372,13 +374,59 @@ var ERMrest = (function(module) {
 
                 var defer = module._q.defer();
 
-                // TODO add limit to request
+                var uri = this._uri;
+
+                // add sorting
+                // get a list of columns in key
+                var keys = this._table.keys.all().sort( function(a, b) {
+                    return a.colset.length() - b.colset.length();
+                });
+                var keycols = keys[0].colset.columns;
+
+                // append @sort(..) to uri
+                var sortby;
+                if (this._sort && this._sort.length > 0){
+                    sortby = this._sort;
+                } else if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
+                        this._table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_order")) {
+                    sortby = this._table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_order");
+                }
+
+                if (sortby) {
+
+                    // get a list of columns in sortby
+                    var sortCols = sortby.map(function(sort) {
+                        return sort.column;});
+
+                    for (var d = 0; d < sortby.length; d++) {
+                        // column name
+                        var sortCol = sortby[d].column;
+                        var order = (sortby[d].descending ? "::desc::" : "");
+                        if (d === 0)
+                            uri = uri + "@sort(" + module._fixedEncodeURIComponent(sortCol) + order;
+                        else
+                            uri = uri + "," + module._fixedEncodeURIComponent(sortCol) + order;
+                    }
+
+                    // ermrest requires key columns to in sort param
+                    for (var i = 0; i < keycols.length; i++) { // all the key columns
+                        var col = keycols[i].name;
+                        // add if key col is not in the sortby list
+                        if (!sortCols.includes(col)) {
+                            uri = uri + "," + module._fixedEncodeURIComponent(col);
+                        }
+                    }
+                    uri = uri + ")";
+                }
+
+
+                // add limit
+                uri = uri + "?limit=" + limit;
 
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                var limitedUri = this._uri + "?limit=" + limit;
-                module._http.get(limitedUri).then(function readReference(response) {
+                module._http.get(uri).then(function readReference(response) {
 
                     var page = new Page(ownReference, response.data);
 
@@ -394,6 +442,30 @@ var ERMrest = (function(module) {
             catch (e) {
                 return module._q.reject(e);
             }
+        },
+
+        /**
+         * Return a new Reference with the new sorting
+         *
+         * @param {Object[]} sort an array of objects in the format
+         * {"column":columname, "descending":true|false}
+         * in order of priority. Undfined, null or Empty array to use default sorting.
+         */
+        sort: function(sort) {
+
+            // make a Reference copy
+            var newReference = _referenceCopy(this);
+            // change ._sort
+            if (!sort || sort.length === 0) {
+                delete newReference._sort;
+            }
+            else {
+                verify((sort instanceof Array), "input should be an array");
+                verify(sort.every(module._isValidSortElement), "invalid arguments in array");
+                newReference._sort = sort;
+            }
+
+            return newReference;
         },
 
         /**
@@ -514,6 +586,7 @@ var ERMrest = (function(module) {
                         newRef._table = fkr.colset.columns[0].table;
                         newRef._tableName = fkr.colset.columns[0].table.name;
                         newRef._context = undefined; // NOTE: related reference is not contextualized
+                        delete newRef._sort;
                         
                         newRef._columns = [];
                         var refTableColumnlength = newRef._table.columns.all().length;
