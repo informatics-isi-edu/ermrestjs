@@ -107,11 +107,7 @@ $(MODULES): package.json
 	npm install
 	@touch $(MODULES)
 
-# Rule to install Bower front end components locally
-$(BOWERCOMPONENTS): $(BIN) bower.json
-	$(BIN)/bower install
-	@touch $(BOWERCOMPONENTS)
-
+# Rule for node deps
 .PHONY: deps
 deps: $(BIN)
 
@@ -130,7 +126,6 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -rf $(MODULES)
-	rm -rf $(BOWERCOMPONENTS)
 
 .PHONY: test
 test:  $(TEST)
