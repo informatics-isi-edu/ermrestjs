@@ -16,7 +16,7 @@ MODULES=node_modules
 BIN=$(MODULES)/.bin
 
 # Bower front end components
-BOWERCOMPONENTS?=bower_components
+VENDOR?=vendor
 
 # JavaScript source and test specs
 JS=js
@@ -146,7 +146,11 @@ $(TEST): $(BUILD)/$(PKG)
 
 # Rule to install the package
 .PHONY: install installm 
+<<<<<<< HEAD
 install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(LIBS)
+=======
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(VENDOR)
+>>>>>>> eaa6b19441667d5762dd0ef515d88c334a7c45e8
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
@@ -171,9 +175,14 @@ $(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
 $(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
 
+<<<<<<< HEAD
 # Rule to install vendor libs
 $(ERMRESTJSDIR)/$(VENDOR)/%: $(VENDOR)/% $(ERMRESTJSDIR)/$(VENDOR)
 	cp -f $< $@
+=======
+$(VENDOR): $(dir $(VENDOR))
+	cp -R $(VENDOR) $(ERMRESTJSDIR)
+>>>>>>> eaa6b19441667d5762dd0ef515d88c334a7c45e8
 
 # Rules for help/usage
 .PHONY: help usage
