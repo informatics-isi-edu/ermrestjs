@@ -273,7 +273,7 @@ var ERMrest = (function (module) {
          * @throws {ERMrest.NotFoundError} constraint not found
          * @returns {Object} the constrant object
          */
-        constraintByNamePair: function (pair) { 
+        constraintByNamePair: function (pair) {
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
                 return this._constraintNames[pair[0]][pair[1]];
             }
@@ -641,7 +641,7 @@ var ERMrest = (function (module) {
         // returns visible foreignkeys.
         _visibleForeignKeys: function (context) {
             var orders = -1;
-            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+            if (context !== undefined && this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
@@ -666,6 +666,23 @@ var ERMrest = (function (module) {
             }
 
             return result;
+        },
+
+        // figure out if Table is pure and binary association table.
+        // binary: Has 2 outbound foreign keys.
+        // pure: There are no other columns apart from the foreign key columns.
+        // NOTE: there can be columns that are type=serial and part of key and are not foreign key.
+        _isPureBinaryAssociation: function () {
+            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+                return false; // not binary
+            }
+            for (var i = 0; i < this.columns.length(); i++) {
+                var col = this.columns.getByPosition(i);
+                if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
+                    return false; // not pure
+                }
+            }
+            return true; // binary and pure
         }
 
     };
