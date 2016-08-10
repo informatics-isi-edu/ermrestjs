@@ -1,9 +1,9 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In single spec, ',
+    description: 'In sample spec, ',
     testCases: [
-        "/sample/tests/01.sample.js",
+        "/errors/tests/05.http_retry_error.js"
     ],
     schemaConfigurations: [
-        "/sample/conf/product.conf.json"
+        "/errors/conf/error.conf.json"
     ]
 });

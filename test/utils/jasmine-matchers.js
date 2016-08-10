@@ -97,6 +97,7 @@ exports.execute = function() {
                     }
                 };
             },
+
             toBeAnyOf: function(util, customEqualityTesters) {
                 function craftMessage(actual, expected){
                     if (Array.isArray(expected)) {
@@ -120,6 +121,36 @@ exports.execute = function() {
                             pass: result,
                             message: craftMessage(actual, expected)
                         };
+                    }
+                }
+            },
+
+            toThrow: function(util, customEqualityTesters) {
+                return { 
+                    compare: function(actual, expected) {
+                        var result = false;
+                        var exception;
+                        if (typeof actual != 'function') {
+                            throw new Error('Actual is not a function');
+                        }
+                        try {
+                            actual();
+                        } catch (e) {
+                            exception = e;
+                        }
+                        if (exception) {
+                            result = (expected === jasmine.undefined || util.equals(exception.code || exception.message || exception, expected.code || expected.message || expected, customEqualityTesters));
+                        }
+
+                        var message;
+                       
+                        if (exception && (expected === jasmine.undefined || !util.equals(exception.message || exception, expected.message || expected, customEqualityTesters))) {
+                          message = ["Expected function not to throw", expected ? expected.message || expected : "an exception", ", but it threw", exception.message || exception].join(' ');
+                        } else {
+                          message = "Expected function to throw an exception.";
+                        }
+
+                        return { pass: result, message: message };
                     }
                 }
             }

@@ -444,11 +444,11 @@ var ERMrest = (function(module) {
         get related() {
             if (this._related === undefined) {
                 this._related = [];
-                
+
                 var visibleFKs = this._table._visibleForeignKeys(this._context);
                 for(var i = 0, fkr; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
-                    
+
                     // inbound FKRs
                     if (this._table.referredBy.all().indexOf(fkr) != -1) {
                         var newRef = _referenceCopy(this);
@@ -471,7 +471,7 @@ var ERMrest = (function(module) {
                             newRef._tableName = otherFK.colset.columns[0].table.name;
 
                             newRef._columns = otherFK.key.table.columns.all();
-                            
+
                             if (otherFK.to_name) {
                                 newRef._displayname = otherFK.to_name;
                             } else {

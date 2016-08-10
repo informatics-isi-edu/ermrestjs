@@ -1249,15 +1249,43 @@ var ERMrest = (function (module) {
          * @param {Object} data The 'raw' data value.
          * @returns {string} The formatted value.
          */
-        this.formatvalue = function (data) {
-            if (data) {
-                /* TODO format the raw value based on the column definition
-                 * type, heuristics, annotations, etc.
-                 */
-                return data.toString();
-            } else {
-                return 'undefined';
+        this.formatvalue = function (data, options) {
+            if (data === undefined || data === null) {
+                return '';
             }
+            /* TODO format the raw value based on the column definition
+             * type, heuristics, annotations, etc.
+             */
+            var type = this.type.name;
+            var utils = module._formatUtils;
+            switch(type) {
+                case 'timestamptz':
+                    data = utils.printTimestamp(data, options);
+                    break;
+                case 'date':
+                    data = utils.printDate(data, options);
+                    break;
+                case 'float4':
+                case 'float8':
+                    data = utils.printFloat(data, options);
+                    break;
+                case 'numeric':
+                case 'int2':
+                case 'int4':
+                case 'int8':
+                    data = utils.printInteger(data, options);
+                    break;
+                case 'boolean':
+                    data = utils.printBoolean(data, options);
+                    break;
+                case 'markdown':
+                    data = utils.printMarkdown(data, options);
+                    break;
+                default: // includes 'text' and 'longtext' cases
+                    data = utils.printText(data, options);
+                    break;
+            }
+            return data.toString();
         };
 
         /**

@@ -4,7 +4,8 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require('ermrest-data-utils');
 
 var importSchemas = function(configFilePaths, defer, catalogId) {
-	if (configFilePaths.length == 0) {
+
+	if (!configFilePaths.length) {
 		defer.resolve(catalogId);
 		return;
 	}
@@ -34,7 +35,7 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 exports.importSchemas = function(configFilePaths, catalogId) {
 	var defer = q.defer();
 	if (!configFilePaths || !configFilePaths.length) {
-		defer.resolve();
+		defer.resolve(catalogId);
 		return defer.promise;
 	}
 

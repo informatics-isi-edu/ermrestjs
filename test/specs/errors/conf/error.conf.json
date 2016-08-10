@@ -1,0 +1,15 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "error_schema",
+    "createNew": true,
+    "path": "test/specs/errors/conf/error_schema/error_schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/errors/conf/error_schema/data"
+  }
+}

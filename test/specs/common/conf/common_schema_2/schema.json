@@ -15,6 +15,50 @@
                 {
                     "name": "table_1_second_key",
                     "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_text",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "table_1_longtext",
+                    "type": { "typename": "longtext" }
+                },
+                {
+                    "name": "table_1_date",
+                    "type": { "typename": "date" }
+                },
+                {
+                    "name": "table_1_boolean",
+                    "type": { "typename": "boolean" }
+                },
+                {
+                    "name": "table_1_timestamp",
+                    "type": { "typename": "timestamptz" }
+                },
+                {
+                    "name": "table_1_float4",
+                    "type": { "typename": "float4" }
+                },
+                {
+                    "name": "table_1_float8",
+                    "type": { "typename": "float8" }
+                },
+                {
+                    "name": "table_1_int2",
+                    "type": { "typename": "int2" }
+                },
+                {
+                    "name": "table_1_int4",
+                    "type": { "typename": "int4" }
+                },
+                {
+                    "name": "table_1_int8",
+                    "type": { "typename": "int8" }
+                },
+                {
+                    "name": "table_1_markdown",
+                    "type": { "typename": "markdown" }
                 }
             ],
             "foreign_keys": []
