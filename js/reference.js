@@ -465,10 +465,10 @@ var ERMrest = (function(module) {
                                 }
                             }
 
-                            newRef._schema = otherFK.colset.columns[0].table.schema;
-                            newRef._schemaName = otherFK.colset.columns[0].table.schema.name;
-                            newRef._table = otherFK.colset.columns[0].table;
-                            newRef._tableName = otherFK.colset.columns[0].table.name;
+                            newRef._schema = otherFK.key.table.schema;
+                            newRef._schemaName = otherFK.key.table.schema.name;
+                            newRef._table = otherFK.key.table;
+                            newRef._tableName = otherFK.key.table.name;
 
                             newRef._columns = otherFK.key.table.columns.all();
 
@@ -478,13 +478,7 @@ var ERMrest = (function(module) {
                                 newRef._displayname = otherFK.key.table.displayname;
                             }
 
-                            var otherFKKey = "", otherFKColSet = "";
-                            var otherFKCols = otherFK.colset.columns;
-                            for (var j = 0; j < otherFKCols.length; j++) {
-                                otherFKColSet += otherFKCols[j].name + (j < otherFKCols.length -1 ? "," : "");
-                                otherFKKey += otherFK.mapping.get(otherFKCols[j]).toString() + (j < otherFKCols.length -1 ? "," : "");
-                            }
-                            newRef._uri = this._uri + "/" + fkr.toString() + "/(" + otherFKColSet + ")=(" + otherFKKey + ")";
+                            newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
 
                         } else { // Simple inbound Table
                             newRef._schema = fkrTable.schema;

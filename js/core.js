@@ -1979,21 +1979,23 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
+         * returns string representation of ForeignKeyRef object
+         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,s:t:keyCol2)
          * @retuns {string} string representation of ForeignKeyRef object
          */
-        toString: function (){
-            // NOTE: the columns in key.colset may have a different order. So we should use the mapping.
-            var keyString = "", colSetString = "";
-            var fkrCols = this.colset.columns.slice().sort(function(a,b){
-                return a.name.localeCompare(b.name);
-            });
-            var columnsLength = fkrCols.length;
-            for (var i=0; i < columnsLength; i++) {
-                colSetString += fkrCols[i].toString() + (i < columnsLength -1 ?",": "");
-                keyString += this.mapping.get(fkrCols[i]).name + (i < columnsLength -1 ?",": "");
+        toString: function (reverse){
+            var leftString = "", rightString = "";
+            var columnsLength = this.colset.columns.length;
+            for (var i = 0; i < columnsLength; i++) {
+                var fromCol = this.colset.columns[i];
+                var toCol = this.mapping.get(fromCol);
+                var separator = (i < columnsLength -1 ?",": "");
+
+                leftString += (reverse ? fromCol.name : toCol.name) + separator;
+                rightString += (reverse ? toCol.toString() : fromCol.toString()) + separator;
             }
-            return "(" + keyString + ")=(" + colSetString + ")";
+
+            return "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {

@@ -16,7 +16,7 @@ exports.execute = function(options) {
             done();
         });
 
-        // Test Cases: 
+        // Test Cases:
         describe('foreignKeys in Table class, ', function() {
 
             it('should be defined.', function() {
@@ -37,10 +37,13 @@ exports.execute = function(options) {
                 });
 
                 it('should support foreign keys from different schemas.', function() {
-                    var output = ["(table_1_first_key,table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)"];
+                    var output = [
+                      "(table_1_first_key,table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)",
+                      "(table_1_second_key,table_1_first_key)=(common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2)"
+                    ];
                     expect(table2_schema1.foreignKeys.all().map(function(fk) {
                         return fk.toString();
-                    })).toEqual(output);
+                    })[0].toString()).toBeAnyOf(output);
                 });
 
                 it('should return an empty array when table does not have any foreign keys.', function() {
@@ -119,11 +122,12 @@ exports.execute = function(options) {
 
             it('should support foreign keys from different schemas.', function() {
                 var output = [
-                    "(table_1_first_key,table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)"
+                    "(table_1_first_key,table_1_second_key)=(common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2)",
+                    "(table_1_second_key,table_1_first_key)=(common_schema_1:table_2_schema_1:fk_2_from_table_1_schema_2,common_schema_1:table_2_schema_1:fk_1_from_table_1_schema_2)",
                 ];
                 expect(table1_schema2.referredBy.all().map(function(fk) {
                     return fk.toString();
-                })).toEqual(output);
+                })[0].toString()).toBeAnyOf(output);
             });
 
             it('should return an empty array when table does not have any inbound foreign keys.', function() {
