@@ -21,7 +21,7 @@ BOWERCOMPONENTS?=bower_components
 # JavaScript source and test specs
 JS=js
 
-# Pure ERMrest API
+# Project source files
 SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
@@ -32,6 +32,10 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
+
+# Vendor libs; it installs everything in that dir
+VENDOR=vendor
+LIBS=$(patsubst %, $(ERMRESTJSDIR)/%, $(wildcard $(VENDOR)/*))
 
 # Build target
 BUILD=build
@@ -107,12 +111,12 @@ $(MODULES): package.json
 	@touch $(MODULES)
 
 # Rule to install Bower front end components locally
-$(BOWER): $(BIN) bower.json
+$(BOWERCOMPONENTS): $(BIN) bower.json
 	$(BIN)/bower install
-	@touch $(BOWER)
+	@touch $(BOWERCOMPONENTS)
 
 .PHONY: deps
-deps: $(BIN) $(BOWER)
+deps: $(BIN) $(BOWERCOMPONENTS)
 
 .PHONY: updeps
 updeps:
@@ -130,7 +134,7 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -rf $(MODULES)
-	rm -rf $(BOWER)
+	rm -rf $(BOWERCOMPONENTS)
 
 .PHONY: test
 test:  $(TEST)
@@ -142,7 +146,7 @@ $(TEST): $(BUILD)/$(PKG)
 
 # Rule to install the package
 .PHONY: install installm 
-install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(BOWERCOMPONENTS)
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(LIBS)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
@@ -155,6 +159,9 @@ installm: install $(ERMRESTJSDIR)/$(MIN)
 $(ERMRESTJSDIR): $(dir $(ERMRESTJSDIR))
 	mkdir -p $(ERMRESTJSDIR)
 
+$(ERMRESTJSDIR)/$(VENDOR): $(ERMRESTJSDIR)
+	mkdir -p $(ERMRESTJSDIR)/$(VENDOR)
+
 $(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
 
@@ -164,8 +171,9 @@ $(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
 $(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
 
-$(BOWERCOMPONENTS): $(dir $(BOWERCOMPONENTS))
-	cp -R $(BOWERCOMPONENTS) $(ERMRESTJSDIR)
+# Rule to install vendor libs
+$(ERMRESTJSDIR)/$(VENDOR)/%: $(VENDOR)/% $(ERMRESTJSDIR)/$(VENDOR)
+	cp -f $< $@
 
 # Rules for help/usage
 .PHONY: help usage
