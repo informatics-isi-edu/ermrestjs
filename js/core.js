@@ -670,8 +670,7 @@ var ERMrest = (function (module) {
 
         // figure out if Table is pure and binary association table.
         // binary: Has 2 outbound foreign keys.
-        // pure: There are no other columns apart from the foreign key columns.
-        // NOTE: there can be columns that are type=serial and part of key and are not foreign key.
+        // pure: There are no other columns apart from the foreign key columns and columns that are part of key and have serial4 type.
         _isPureBinaryAssociation: function () {
             if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
                 return false; // not binary
