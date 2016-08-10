@@ -444,89 +444,71 @@ var ERMrest = (function(module) {
         get related() {
             if (this._related === undefined) {
                 this._related = [];
-                /* TODO
-                 * Assuming this reference is to a table, introspect the
-                 * model to find all "inbound" FK references to the table.
-                 * For each such FK reference, create a Reference object.
-                 * The new Reference object may be a copy of this reference.
-                 * Conceptually, if you think of the ERMrest URL the
-                 * refernece is an extension of the current URL path.
-                 * Assume something that might look like this:
-                 *  `A/B/b=123/C`
-                 * After finding incoming references from `D` to `C` the
-                 * corresponding related reference might look something like
-                 * this:
-                 *  `A/B/b=123/C/(fkeys:D)`
-                 * Note that we need to use the explicit `/(fkeys:D)` rather
-                 * than the simpler implicit `/D` form of joining so that
-                 * we handle cases where there are more than one FK reference
-                 * from `D` to `C` in this example.
-                 *
-                 * We can implement this in two phases clearly:
-                 * phase 1: implement just those direct 'inbound' references
-                 * phase 2: implement the associative references
-                 *
-                 * On contextualization:
-                 * The 'related' references should be contextualized based on
-                 * the same 'context' as this reference. If this reference is
-                 * in a record, entry, facet, etc. mode then its related
-                 * references should be returned in that mode as well.
-                 *
-                 * On related reference columns:
-                 * The columns of the related reference (i.e.,
-                 * `reference.columns` should _not_ include the foriegn key
-                 * that was used in the FK to this reference, as if it were
-                 * hidden. Think of the Record display use case. When you
-                 * have nested tables, you don't want those tables to be
-                 * repeating the same FKR over and over again. You might as
-                 * well ignore those columns in that context.
-                 *
-                 * Preserve all model details privately:
-                 * But keep in mind, just because you do not _publicly_ expose
-                 * ignored columns (via `reference.columns`) you still need to
-                 * know about them _internally_. Remember that _contextualizing_
-                 * is just a veneer on top of the real state information.
-                 *
-                 * On displayname:
-                 * See the comment on `Reference.displayname` getter. A related
-                 * reference should be named based on the FKR 'from name' if it
-                 * is an 'inbound' FKR. Those that are formed based on
-                 * association tables should be named based on the 'to name' of
-                 * the association table's outbound FKR.
-                 *
-                 * On visibility and ordering:
-                 * See the new annotation https://github.com/informatics-isi-edu/ermrest/blob/master/user-doc/annotation.md#2016-visible-foreign-keys
-                 * This annotation should be consulted for determining whether
-                 * to hide some references and how to order them.
-                 */
                 
                 var visibleFKs = this._table._visibleForeignKeys(this._context);
-
                 for(var i = 0, fkr; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
                     
                     // inbound FKRs
                     if (this._table.referredBy.all().indexOf(fkr) != -1) {
                         var newRef = _referenceCopy(this);
-
-                        newRef._schema = fkr.colset.columns[0].table.schema;
-                        newRef._schemaName = fkr.colset.columns[0].table.schema.name;
-                        newRef._table = fkr.colset.columns[0].table;
-                        newRef._tableName = fkr.colset.columns[0].table.name;
                         newRef._context = undefined; // NOTE: related reference is not contextualized
-                        
-                        newRef._columns = newRef._table.columns.all().filter(function(col){
-                            // remove the columns that are involved in the FKR
-                            return fkr.colset.columns.indexOf(col) == -1;
-                        });
-                        
-                        if (fkr.from_name) {
-                            newRef._displayname = fkr.from_name;
-                        } else {
-                            newRef._displayname = newRef._table.displayname;
-                        }
+                        newRef.contextualize._reference = newRef;
 
-                        newRef._uri = this._uri + "/" + fkr.toString();
+                        var fkrTable = fkr.colset.columns[0].table;
+                        if (fkrTable._isPureBinaryAssociation()) { // Association Table
+                            var otherFK;
+                            for (var k = 0; k < fkrTable.foreignKeys.length(); k++) {
+                                if(fkrTable.foreignKeys.all()[k] !== fkr) {
+                                    otherFK = fkrTable.foreignKeys.all()[k];
+                                    break;
+                                }
+                            }
+
+                            newRef._schema = otherFK.colset.columns[0].table.schema;
+                            newRef._schemaName = otherFK.colset.columns[0].table.schema.name;
+                            newRef._table = otherFK.colset.columns[0].table;
+                            newRef._tableName = otherFK.colset.columns[0].table.name;
+
+                            newRef._columns = otherFK.key.table.columns.all();
+                            
+                            if (otherFK.to_name) {
+                                newRef._displayname = otherFK.to_name;
+                            } else {
+                                newRef._displayname = otherFK.key.table.displayname;
+                            }
+
+                            var otherFKKey = "", otherFKColSet = "";
+                            var otherFKCols = otherFK.colset.columns;
+                            for (var j = 0; j < otherFKCols.length; j++) {
+                                otherFKColSet += otherFKCols[j].name + (j < otherFKCols.length -1 ? "," : "");
+                                otherFKKey += otherFK.mapping.get(otherFKCols[j]).toString() + (j < otherFKCols.length -1 ? "," : "");
+                            }
+                            newRef._uri = this._uri + "/" + fkr.toString() + "/(" + otherFKColSet + ")=(" + otherFKKey + ")";
+
+                        } else { // Simple inbound Table
+                            newRef._schema = fkrTable.schema;
+                            newRef._schemaName = fkrTable.schema.name;
+                            newRef._table = fkrTable;
+                            newRef._tableName = fkrTable.name;
+
+                            newRef._columns = [];
+                            for (var l = 0, col; l < newRef._table.columns.all().length; l++) {
+                                // remove the columns that are involved in the FKR
+                                col = newRef._table.columns.all()[l];
+                                if (fkr.colset.columns.indexOf(col) == -1) {
+                                    newRef._columns.push(col);
+                                }
+                            }
+
+                            if (fkr.from_name) {
+                                newRef._displayname = fkr.from_name;
+                            } else {
+                                newRef._displayname = newRef._table.displayname;
+                            }
+
+                            newRef._uri = this._uri + "/" + fkr.toString();
+                        }
 
                         this._related.push(newRef);
                     }
