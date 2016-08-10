@@ -462,6 +462,7 @@ var ERMrest = (function(module) {
             }
             else {
                 verify((sort instanceof Array), "input should be an array");
+                verify(sort.every(module._isValidSortElement), "invalid arguments in array");
                 newReference._sort = sort;
             }
 

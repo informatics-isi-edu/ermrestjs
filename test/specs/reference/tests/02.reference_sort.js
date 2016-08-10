@@ -8,27 +8,25 @@ exports.execute = function (options) {
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
 
+        var reference1, reference2;
+
+        beforeAll(function(done) {
+           options.ermRest.resolve(multipleEntityUri, {cid:"test"}).then(function(response) {
+               reference1 = response;
+               done();
+           },function (err) {
+               console.dir(err);
+               done.fail();
+           });
+        });
 
         // Test Cases:
         describe('Reference.sort() method, ', function() {
-            var reference, reference2, page;
+            var page;
             var limit = 10;
 
-            it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
-                    reference = response;
-
-                    expect(reference).toEqual(jasmine.any(Object));
-
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
-                });
-            });
-
             it('sort should return a new Reference with new sort. ', function() {
-                reference2 = reference.sort([{"column":"name", "descending":false}]);
+                reference2 = reference1.sort([{"column":"name", "descending":false}]);
                 expect(reference2._sort.length).toEqual(1);
                 expect(reference2._sort[0].column).toEqual("name");
                 expect(reference2._sort[0].descending).toEqual(false);

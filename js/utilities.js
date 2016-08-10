@@ -384,6 +384,12 @@ var ERMrest = (function(module) {
         }
     };
 
+    module._isValidSortElement = function(element, index, array) {
+        return (typeof element == 'object' &&
+            typeof element.column == 'string' &&
+            typeof element.descending == 'boolean');
+    };
+
     /**
      * @desc List of annotations that ermrestjs supports.
      * @private
