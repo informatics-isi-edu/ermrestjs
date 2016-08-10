@@ -588,10 +588,15 @@ var ERMrest = (function(module) {
                         newRef._context = undefined; // NOTE: related reference is not contextualized
                         delete newRef._sort;
                         
-                        newRef._columns = newRef._table.columns.all().filter(function(col){
+                        newRef._columns = [];
+                        var refTableColumnlength = newRef._table.columns.all().length;
+
+                        for (var j=0; j < refTableColumnlength; j++) {
+                            var col = newRef._table.columns.all()[j];
+
                             // remove the columns that are involved in the FKR
-                            return fkr.colset.columns.indexOf(col) == -1;
-                        });
+                            if (fkr.colset.columns.indexOf(col) == -1) newRef.columns.push(col);
+                        }
                         
                         if (fkr.from_name) {
                             newRef._displayname = fkr.from_name;

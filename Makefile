@@ -15,17 +15,11 @@ MODULES=node_modules
 # Node bin scripts
 BIN=$(MODULES)/.bin
 
-# Bower front end components
-BOWER=bower_components
-
 # JavaScript source and test specs
 JS=js
 
-# Pure ERMrest API
-SOURCE=markdown-it/markdown-it.min.js \
-	   markdown-it/markdown-it-sub.min.js \
-	   markdown-it/markdown-it-sup.min.js \
-	   $(JS)/core.js \
+# Project source files
+SOURCE=$(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -35,6 +29,10 @@ SOURCE=markdown-it/markdown-it.min.js \
 	   $(JS)/reference.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
+
+# Vendor libs; it installs everything in that dir
+VENDOR=vendor
+LIBS=$(patsubst %, $(ERMRESTJSDIR)/%, $(wildcard $(VENDOR)/*))
 
 # Build target
 BUILD=build
@@ -109,18 +107,13 @@ $(MODULES): package.json
 	npm install
 	@touch $(MODULES)
 
-# Rule to install Bower front end components locally
-$(BOWER): $(BIN) bower.json
-	$(BIN)/bower install
-	@touch $(BOWER)
-
+# Rule for node deps
 .PHONY: deps
-deps: $(BIN) $(BOWER)
+deps: $(BIN)
 
 .PHONY: updeps
 updeps:
 	npm update
-	$(BIN)/bower update
 
 # Rule to clean project directory
 .PHONY: clean
@@ -133,7 +126,6 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -rf $(MODULES)
-	rm -rf $(BOWER)
 
 .PHONY: test
 test:  $(TEST)
@@ -144,8 +136,8 @@ $(TEST): $(BUILD)/$(PKG)
 	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install installm
-install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER)
+.PHONY: install installm 
+install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(LIBS)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)
 
@@ -158,6 +150,9 @@ installm: install $(ERMRESTJSDIR)/$(MIN)
 $(ERMRESTJSDIR): $(dir $(ERMRESTJSDIR))
 	mkdir -p $(ERMRESTJSDIR)
 
+$(ERMRESTJSDIR)/$(VENDOR): $(ERMRESTJSDIR)
+	mkdir -p $(ERMRESTJSDIR)/$(VENDOR)
+
 $(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
 
@@ -166,6 +161,10 @@ $(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
 
 $(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
 	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
+
+# Rule to install vendor libs
+$(ERMRESTJSDIR)/$(VENDOR)/%: $(VENDOR)/% $(ERMRESTJSDIR)/$(VENDOR)
+	cp -f $< $@
 
 # Rules for help/usage
 .PHONY: help usage
