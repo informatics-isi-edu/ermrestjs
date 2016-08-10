@@ -24,12 +24,14 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+        * [.constraintByNamePair(pair)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code>
     * [.Schemas](#ERMrest.Schemas)
         * [new Schemas()](#new_ERMrest.Schemas_new)
         * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
         * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
         * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
         * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+        * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
         * [.catalog](#ERMrest.Schema+catalog) : <code>[Catalog](#ERMrest.Catalog)</code>
@@ -348,6 +350,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
+    * [.constraintByNamePair(pair)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
 
@@ -370,6 +373,22 @@ The catalog identifier.
 
 #### catalog.schemas : <code>[Schemas](#ERMrest.Schemas)</code>
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
+<a name="ERMrest.Catalog+constraintByNamePair"></a>
+
+#### catalog.constraintByNamePair(pair) ⇒ <code>Object</code>
+returns the constraint object for the pair.
+
+**Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
+**Returns**: <code>Object</code> - the constrant object  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.NotFoundError)</code> constraint not found
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| pair | <code>Array.&lt;string&gt;</code> | constraint name array. Its length must be two. |
+
 <a name="ERMrest.Schemas"></a>
 
 ### ERMrest.Schemas
@@ -381,6 +400,7 @@ The catalog identifier.
     * [.all()](#ERMrest.Schemas+all) ⇒ <code>Array</code>
     * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
     * [.get(name)](#ERMrest.Schemas+get) ⇒ <code>[Schema](#ERMrest.Schema)</code>
+    * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Schemas_new"></a>
 
@@ -417,6 +437,18 @@ get schema by schema name
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | schema name |
+
+<a name="ERMrest.Schemas+has"></a>
+
+#### schemas.has(name) ⇒ <code>boolean</code>
+check for schema name existence
+
+**Kind**: instance method of <code>[Schemas](#ERMrest.Schemas)</code>  
+**Returns**: <code>boolean</code> - if the schema exists or not  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | schmea name |
 
 <a name="ERMrest.Schema"></a>
 
@@ -1257,7 +1289,7 @@ Constructor for ColSet, a set of Column objects.
 <a name="ERMrest.ColSet+toString"></a>
 
 #### colSet.toString()
-returns string representation of colset object
+returns string representation of colset object: (s:t:c1,s:t:c2)
 
 **Kind**: instance method of <code>[ColSet](#ERMrest.ColSet)</code>  
 **Retuns**: <code>string</code> string representation of colset object  
@@ -1450,7 +1482,7 @@ Indicates if the foreign key is simple (not composite)
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
 #### foreignKeyRef.toString()
-returns string representation of ForeignKeyRef object
+returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
 
 **Kind**: instance method of <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>  
 **Retuns**: <code>string</code> string representation of ForeignKeyRef object  

@@ -146,12 +146,38 @@ var ERMrest = (function(module) {
 
     /**
      * @function
+     * @param {string} context the context that we want the value of.
+     * @param {ERMrest.Annotation} annotation the annotation object.
+     * @desc This function returns the list that should be used for the given context. 
+     * Used for visible columns and visible foreign keys.
+     */
+    module._getAnnotationValueByContext = function (context, annotation) {
+        if (context in annotation) {
+            if (Array.isArray(annotation[context])) {
+                return annotation[context]; // found the context
+            } else {
+                return module._getAnnotationValueByContext(annotation[context], annotation); // go to next level
+            }
+        }
+        // if context is edit or create, but there's no annotation for those
+        if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation[module._contexts.ENTRY])) {
+            return annotation[module._contexts.ENTRY];
+        }
+        //if context wasn't in the annotations but there is a default context
+        if (Array.isArray(annotation[module._contexts.DEFAULT])) {
+            return annotation[module._contexts.DEFAULT];
+        }
+        return -1; // there was no annotation
+    };
+
+    /**
+     * @function
      * @param {Object} response http response object
      * @return {Object} error object
      * @desc create an error object from http response
      */
     module._responseToError = function (response) {
-        var status = response.status;
+        var status = response.status || response.statusCode;
         switch(status) {
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
@@ -192,7 +218,6 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
-            // TODO: What kinds of options are we supporting?
             return Boolean(value).toString();
         },
 
@@ -400,6 +425,7 @@ var ERMrest = (function(module) {
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display"
     });
 

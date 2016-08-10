@@ -218,6 +218,11 @@ var ERMrest = (function (module) {
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+
+         // A map from schema name to constraint names to the actual object.
+         // this._constraintNames[schemaName][constraintName] will return an object.
+        this._constraintNames = {};
     }
 
     Catalog.prototype = {
@@ -260,8 +265,30 @@ var ERMrest = (function (module) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
             });
-        }
+        },
 
+        /**
+         * @desc returns the constraint object for the pair.
+         * @param {Array.<string>} pair constraint name array. Its length must be two.
+         * @throws {ERMrest.NotFoundError} constraint not found
+         * @returns {Object} the constrant object
+         */
+        constraintByNamePair: function (pair) { 
+            if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
+                return this._constraintNames[pair[0]][pair[1]];
+            }
+            throw new module.NotFoundError("", "constraint [ " + pair.join(" ,") + " ] not found.");
+        },
+
+        // used in ForeignKeyRef to add the defined constraintNames.
+        _addConstraintName: function (pair, obj){
+            if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
+                if (!(pair[0] in this._constraintNames)) {
+                    this._constraintNames[pair[0]] = {};
+                }
+                this._constraintNames[pair[0]][pair[1]] = obj;
+            }
+        }
     };
 
 
@@ -326,6 +353,15 @@ var ERMrest = (function (module) {
             }
 
             return this._schemas[name];
+        },
+
+        /**
+         * @param {string} name schmea name
+         * @returns {boolean} if the schema exists or not
+         * @desc check for schema name existence
+         */
+        has: function (name) {
+            return name in this._schemas;
         }
     };
 
@@ -600,6 +636,36 @@ var ERMrest = (function (module) {
                 // add to referredBy of the key table
                 foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
+        },
+
+        // returns visible foreignkeys.
+        _visibleForeignKeys: function (context) {
+            var orders = -1;
+            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                orders = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+            }
+
+            // no annoation, return all outbound and inbound fks
+            if (orders == -1) {
+                return this.foreignKeys.all().concat(this.referredBy.all());
+            }
+
+            for (var i = 0, result = [], fk; i < orders.length; i++) {
+                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
+                    continue; // the annotation value is not correct.
+                }
+                try {
+                    fk = this.schema.catalog.constraintByNamePair(orders[i]);
+                    if (result.indexOf(fk) == -1 && (this.foreignKeys.all().indexOf(fk) != -1 || this.referredBy.all().indexOf(fk) != -1)) {
+                        // avoid duplicate and if it's a valid outbound or inbound fk of this table.
+                        result.push(fk);
+                    }
+                } catch (exception){
+                    // if the constraint name is not valid, this will catch the error
+                }
+            }
+
+            return result;
         }
 
     };
@@ -1043,30 +1109,6 @@ var ERMrest = (function (module) {
             this._columns.push(column);
         },
 
-        // Returns column orders that are specified in annotations.
-        _getColumnOrders: function (context, annotation) {
-
-            if (context in annotation) {
-                if (Array.isArray(annotation[context])) {
-                    return annotation[context]; // found the context
-                } else {
-                    return this._getColumnOrders(annotation[context], annotation); // go to next level
-                }
-            }
-
-            // if context is edit or create, but there's no annotation for those
-            if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation.entry)) {
-                return annotation.entry;
-            }
-
-            //if context wasn't in the annotations but there is a default context
-            if (Array.isArray(annotation[module._contexts.DEFAULT])) {
-                return annotation[module._contexts.DEFAULT];
-            }
-
-            return -1; // there was no annotation, return all
-        },
-
         /**
          *
          * @returns {Array} array of all columns
@@ -1138,12 +1180,8 @@ var ERMrest = (function (module) {
 
             // get column orders from annotation
             var orders = -1;
-            try {
-                var annot = this._table.annotations.get(module._annotations.VISIBLE_COLUMNS);
-                if (annot && annot.content) {
-                    orders = this._getColumnOrders(context, annot.content);
-                }
-            } catch (exception) {
+            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                orders = module._getAnnotationValueByContext(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
             // no annotation
@@ -1196,15 +1234,43 @@ var ERMrest = (function (module) {
          * @param {Object} data The 'raw' data value.
          * @returns {string} The formatted value.
          */
-        this.formatvalue = function (data) {
-            if (data) {
-                /* TODO format the raw value based on the column definition
-                 * type, heuristics, annotations, etc.
-                 */
-                return data.toString();
-            } else {
-                return 'undefined';
+        this.formatvalue = function (data, options) {
+            if (data === undefined || data === null) {
+                return '';
             }
+            /* TODO format the raw value based on the column definition
+             * type, heuristics, annotations, etc.
+             */
+            var type = this.type.name;
+            var utils = module._formatUtils;
+            switch(type) {
+                case 'timestamptz':
+                    data = utils.printTimestamp(data, options);
+                    break;
+                case 'date':
+                    data = utils.printDate(data, options);
+                    break;
+                case 'float4':
+                case 'float8':
+                    data = utils.printFloat(data, options);
+                    break;
+                case 'numeric':
+                case 'int2':
+                case 'int4':
+                case 'int8':
+                    data = utils.printInteger(data, options);
+                    break;
+                case 'boolean':
+                    data = utils.printBoolean(data, options);
+                    break;
+                case 'markdown':
+                    data = utils.printMarkdown(data, options);
+                    break;
+                default: // includes 'text' and 'longtext' cases
+                    data = utils.printText(data, options);
+                    break;
+            }
+            return data.toString();
         };
 
         /**
@@ -1582,15 +1648,15 @@ var ERMrest = (function (module) {
         constructor: ColSet,
 
         /**
-         * returns string representation of colset object
+         * returns string representation of colset object: (s:t:c1,s:t:c2)
          * @retuns {string} string representation of colset object
          */
         toString: function(){
-            return this.columns.slice().sort(function(a,b){
+            return "(" + this.columns.slice().sort(function(a,b){
                 return a.name.localeCompare(b.name);
             }).map(function(col){
                 return col.toString();
-            }).join(",");
+            }).join(",") + ")";
         },
 
         /**
@@ -1835,6 +1901,16 @@ var ERMrest = (function (module) {
          */
         this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
 
+        // add constraint names to catalog
+        for (var k = 0, constraint; k < this.constraint_names.length; k++) {
+            constraint = this.constraint_names[k];
+            try {
+                if (Array.isArray(constraint) && constraint.length == 2){
+                    catalog._addConstraintName(constraint, this);
+                }
+            } catch (exception){}
+        }
+
         /**
          * @type {string}
          */
@@ -1888,11 +1964,21 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of ForeignKeyRef object
+         * returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
          * @retuns {string} string representation of ForeignKeyRef object
          */
         toString: function (){
-            return [this.colset.toString(), this.key.colset.toString()].join(">");
+            // NOTE: the columns in key.colset may have a different order. So we should use the mapping.
+            var keyString = "", colSetString = "";
+            var fkrCols = this.colset.columns.slice().sort(function(a,b){
+                return a.name.localeCompare(b.name);
+            });
+            var columnsLength = fkrCols.length;
+            for (var i=0; i < columnsLength; i++) {
+                colSetString += fkrCols[i].toString() + (i < columnsLength -1 ?",": "");
+                keyString += this.mapping.get(fkrCols[i]).name + (i < columnsLength -1 ?",": "");
+            }
+            return "(" + keyString + ")=(" + colSetString + ")";
         },
 
         delete: function () {

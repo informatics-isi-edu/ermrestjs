@@ -264,6 +264,7 @@ var ERMrest = (function(module) {
                 var newRef = _referenceCopy(source);
                 var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
 
+                newRef._context = module._contexts.RECORD;
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
@@ -572,6 +573,39 @@ var ERMrest = (function(module) {
                  * This annotation should be consulted for determining whether
                  * to hide some references and how to order them.
                  */
+                
+                var visibleFKs = this._table._visibleForeignKeys(this._context);
+
+                for(var i = 0, fkr; i < visibleFKs.length; i++) {
+                    fkr = visibleFKs[i];
+                    
+                    // inbound FKRs
+                    if (this._table.referredBy.all().indexOf(fkr) != -1) {
+                        var newRef = _referenceCopy(this);
+
+                        newRef._schema = fkr.colset.columns[0].table.schema;
+                        newRef._schemaName = fkr.colset.columns[0].table.schema.name;
+                        newRef._table = fkr.colset.columns[0].table;
+                        newRef._tableName = fkr.colset.columns[0].table.name;
+                        newRef._context = undefined; // NOTE: related reference is not contextualized
+                        
+                        newRef._columns = newRef._table.columns.all().filter(function(col){
+                            // remove the columns that are involved in the FKR
+                            return fkr.colset.columns.indexOf(col) == -1;
+                        });
+                        
+                        if (fkr.from_name) {
+                            newRef._displayname = fkr.from_name;
+                        } else {
+                            newRef._displayname = newRef._table.displayname;
+                        }
+
+                        newRef._uri = this._uri + "/" + fkr.toString();
+
+                        this._related.push(newRef);
+                    }
+
+                }
             }
             return this._related;
         }
