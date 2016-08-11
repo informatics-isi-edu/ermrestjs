@@ -641,7 +641,7 @@ var ERMrest = (function (module) {
         // returns visible foreignkeys.
         _visibleForeignKeys: function (context) {
             var orders = -1;
-            if (context !== undefined && this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
