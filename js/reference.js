@@ -260,6 +260,7 @@ var ERMrest = (function(module) {
             get record() {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
+                delete newRef._related;
                 var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
 
                 newRef._context = module._contexts.RECORD;
