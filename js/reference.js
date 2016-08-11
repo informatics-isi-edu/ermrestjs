@@ -542,15 +542,8 @@ var ERMrest = (function(module) {
                             newRef._schemaName = otherFK.key.table.schema.name;
                             newRef._table = otherFK.key.table;
                             newRef._tableName = otherFK.key.table.name;
-
                             newRef._columns = otherFK.key.table.columns.all();
-
-                            if (otherFK.to_name) {
-                                newRef._displayname = otherFK.to_name;
-                            } else {
-                                newRef._displayname = otherFK.key.table.displayname;
-                            }
-
+                            newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
                             newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
 
                         } else { // Simple inbound Table
@@ -568,12 +561,7 @@ var ERMrest = (function(module) {
                                 }
                             }
 
-                            if (fkr.from_name) {
-                                newRef._displayname = fkr.from_name;
-                            } else {
-                                newRef._displayname = newRef._table.displayname;
-                            }
-
+                            newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
                             newRef._uri = this._uri + "/" + fkr.toString();
                         }
 
