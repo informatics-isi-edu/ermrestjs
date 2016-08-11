@@ -720,7 +720,9 @@ var ERMrest = (function (module) {
          *
          * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
          * @param {ERMrest.Column[] | String[]} [output] selected columns
-         * @param {ERMrest.Column[] | String[]} [sortby] columns to sort in order, required is paging is specified
+         * @param {Object[]} [sortby] columns to sort in order, required is paging is specified.
+         * The format of object is {"column": ERMREST.Column | String, "order": asc | desc}
+         * This should be a list of columns in order of sort, followed by all the key columns
          * @param {"before" | "after"} [paging]
          * @param {Object} [row] json row object used for paging only
          * @param {Number} [limit] limit number of rows to return
@@ -757,8 +759,8 @@ var ERMrest = (function (module) {
             if (sortby !== undefined && sortby !== null) {
                 for (var d = 0; d < sortby.length; d++) {
                     var sortCol = sortby[d].column; // if string
-                    if (sortby[d] instanceof Column) { // if Column object
-                        sortCol = sortby[d].name;
+                    if (sortby[d].column instanceof Column) { // if Column object
+                        sortCol = sortby[d].column.name;
                     }
                     var order = (sortby[d].order === 'desc' ? "::desc::" : "");
                     if (d === 0)

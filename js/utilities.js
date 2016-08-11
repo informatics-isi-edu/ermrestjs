@@ -1,5 +1,40 @@
 var ERMrest = (function(module) {
 
+    // polyfill for Array.includes
+    // came from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes#Polyfill
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function(searchElement /*, fromIndex*/) {
+            'use strict';
+            if (this == null) {
+                throw new TypeError('Array.prototype.includes called on null or undefined');
+            }
+
+            var O = Object(this);
+            var len = parseInt(O.length, 10) || 0;
+            if (len === 0) {
+                return false;
+            }
+            var n = parseInt(arguments[1], 10) || 0;
+            var k;
+            if (n >= 0) {
+                k = n;
+            } else {
+                k = len + n;
+                if (k < 0) {k = 0;}
+            }
+            var currentElement;
+            while (k < len) {
+                currentElement = O[k];
+                if (searchElement === currentElement ||
+                    (searchElement !== searchElement && currentElement !== currentElement)) { // NaN !== NaN
+                    return true;
+                }
+                k++;
+            }
+            return false;
+        };
+    }
+
     /**
      * @function
      * @param {Object} copyTo the object to copy values to.
@@ -113,7 +148,7 @@ var ERMrest = (function(module) {
      * @function
      * @param {string} context the context that we want the value of.
      * @param {ERMrest.Annotation} annotation the annotation object.
-     * @desc This function returns the list that should be used for the given context. 
+     * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
     module._getAnnotationValueByContext = function (context, annotation) {
@@ -345,6 +380,39 @@ var ERMrest = (function(module) {
             }
             return module._markdownIt.renderInline(value);
         }
+    };
+
+    module._parsedFilterToERMrestFilter = function(filter, table) {
+        if (filter.type === "BinaryPredicate") {
+            return new ERMrest.BinaryPredicate(
+                table.columns.get(filter.column),
+                filter.operator,
+                filter.value
+            );
+        } else {
+            // convert nested filter structure to Conjunction or Disjunction filter
+            var filters = [];
+
+            if (filter.filters) {
+                for (var i = 0; i < filter.filters.length; i++) {
+                    var f = filter.filters[i];
+                    var f1 = parsedFilterToERMrestFilter(f, table);
+                    filters.push(f1);
+                }
+            }
+
+            if (filter.type === "Conjunction") {
+                return new ERMrest.Conjunction(filters);
+            } else {
+                return new ERMrest.Disjunction(filters);
+            }
+        }
+    };
+
+    module._isValidSortElement = function(element, index, array) {
+        return (typeof element == 'object' &&
+            typeof element.column == 'string' &&
+            typeof element.descending == 'boolean');
     };
 
     /**

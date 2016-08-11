@@ -1,4 +1,4 @@
-angular.module("testApp", ['ERMrest'])
+angular.module("testApp", ['ermrestjs'])
 
     .controller('mainController', ['ermrestServerFactory', function(ermrestServerFactory) {
 
@@ -238,4 +238,32 @@ angular.module("testApp", ['ERMrest'])
         }, function(response) {
             console.log(response);
         });
-    }]);
+    }])
+
+.controller("ReferenceController", ['ERMrest', function(ERMrest) {
+    var ref;
+    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::4000&id::lt::5000@sort(accession::desc::,id)", {cid: "test"}).then(function(reference) {
+        console.log("Reference:", reference);
+        ref = reference;
+        return reference.read(10);
+    }).then(function getPage(page) {
+        // sorted by id
+        console.log(page.tuples.map(function(tuple){
+            return tuple._data.id;
+        }));
+
+        // change sort
+        return ref.sort([{"column":"accession", "descending":true}]).read(10);
+    }, function error(response) {
+        throw response;
+    }).then(function(page){
+
+        // sorted by accession
+        console.log(page.tuples.map(function(tuple){
+            return tuple._data.accession;
+        }));
+    }, function(error) {
+        throw error;
+    }).catch (function genericCatch(exception) {
+    });
+}]);
