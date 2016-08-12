@@ -26,17 +26,17 @@ exports.execute = function (options) {
         it('should use the defined order in anntoations based on its context.', function(){
             runTestCases(tableWithAnnotation, {
                 "entry": ["fk_with_annotation_to_outbound"],
-                "edit": ["fk_inbound_to_with_annotation"],
+                "entry/edit": ["fk_inbound_to_with_annotation"],
                 "*": []
             }, true);
         });
 
-        it('should use `entry` context when context is `edit` or `create` and they are not present in annotation.', function () {
+        it('should use `entry` context when context is `entry/edit` or `entry/create` and they are not present in annotation.', function () {
             runTestCases(tableWithAnnotation, {
-                "create": ["fk_with_annotation_to_outbound"]
+                "entry/create": ["fk_with_annotation_to_outbound"]
             }, true);
-        }); 
-        
+        });
+
         it('should use default (`*`) context for any context not matched by a more specific context name.', function () {
             runTestCases(tableWithAnnotation, {
                 "filter": []
@@ -45,7 +45,7 @@ exports.execute = function (options) {
 
         it('should ignore the constraint names that do not correspond to any inbound or outbound foreign key of the table.', function () {
             runTestCases(tableWithAnnotation, {
-                "record": ["fk_inbound_to_with_annotation"] 
+                "record": ["fk_inbound_to_with_annotation"]
             }, true);
         });
 
@@ -54,7 +54,7 @@ exports.execute = function (options) {
                 "compact": [
                     "fk_inbound_to_with_annotation",
                     "fk_with_annotation_to_outbound"
-                ] 
+                ]
             }, true);
         });
 
@@ -63,7 +63,7 @@ exports.execute = function (options) {
                 "filter": [
                     "fk_inbound_to_without_annotation",
                     "fk_without_annotation_to_outbound"
-                ] 
+                ]
             }, false);
         });
 

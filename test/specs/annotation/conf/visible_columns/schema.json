@@ -52,8 +52,8 @@
       "annotations": {
         "tag:isrd.isi.edu,2016:visible-columns": {
           "entry": ["column_1", "column_2"],
-          "edit": ["column_1", "column_3"],
-          "create": ["column_2", "column_3"],
+          "entry/edit": ["column_1", "column_3"],
+          "entry/create": ["column_2", "column_3"],
           "record": ["column_1"],
           "filter": ["column_2"],
           "compact": ["column_3"],

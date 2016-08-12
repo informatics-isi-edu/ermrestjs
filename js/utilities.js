@@ -5,7 +5,7 @@ var ERMrest = (function(module) {
     if (!Array.prototype.includes) {
         Array.prototype.includes = function(searchElement /*, fromIndex*/) {
             'use strict';
-            if (this == null) {
+            if (this === null) {
                 throw new TypeError('Array.prototype.includes called on null or undefined');
             }
 
@@ -148,21 +148,29 @@ var ERMrest = (function(module) {
      * @function
      * @param {string} context the context that we want the value of.
      * @param {ERMrest.Annotation} annotation the annotation object.
-     * @desc This function returns the list that should be used for the given context. 
+     * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
     module._getAnnotationValueByContext = function (context, annotation) {
-        if (context in annotation) {
-            if (Array.isArray(annotation[context])) {
-                return annotation[context]; // found the context
-            } else {
-                return module._getAnnotationValueByContext(annotation[context], annotation); // go to next level
+        var contextedAnnot;
+        if (context in annotation) { // exact context
+            contextedAnnot = annotation[context];
+        } else {
+            for (var key in annotation) { // partial context
+                if (annotation.hasOwnProperty(key) && context.indexOf(key) != -1) {
+                    contextedAnnot = annotation[key];
+                    break;
+                }
             }
         }
-        // if context is edit or create, but there's no annotation for those
-        if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation[module._contexts.ENTRY])) {
-            return annotation[module._contexts.ENTRY];
+        if (contextedAnnot) { // found the context
+            if (Array.isArray(contextedAnnot)) {
+                return contextedAnnot;
+            } else {
+                return module._getAnnotationValueByContext(contextedAnnot, annotation); // go to next level
+            }
         }
+
         //if context wasn't in the annotations but there is a default context
         if (Array.isArray(annotation[module._contexts.DEFAULT])) {
             return annotation[module._contexts.DEFAULT];
@@ -435,9 +443,9 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
-        CREATE: 'create',
+        CREATE: 'entry/create',
         DETAILED: 'detailed',
-        EDIT: 'edit',
+        EDIT: 'entry/edit',
         ENTRY: 'entry',
         FILTER: 'filter',
         RECORD: 'record',
