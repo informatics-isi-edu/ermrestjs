@@ -1981,7 +1981,7 @@ var ERMrest = (function (module) {
 
         /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,s:t:keyCol2)
+         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
          * @retuns {string} string representation of ForeignKeyRef object
          */
         toString: function (reverse){
@@ -1993,7 +1993,13 @@ var ERMrest = (function (module) {
                 var separator = (i < columnsLength -1 ?",": "");
 
                 leftString += (reverse ? fromCol.name : toCol.name) + separator;
-                rightString += (reverse ? toCol.toString() : fromCol.toString()) + separator;
+                if (reverse) {
+                    rightString += (i === 0 ? toCol.toString() : toCol.name);
+                } else {
+                    rightString += (i === 0 ? fromCol.toString() : fromCol.name);
+                }
+                rightString += separator;
+
             }
 
             return "(" + leftString + ")=(" + rightString + ")";
