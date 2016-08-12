@@ -79,7 +79,7 @@ var ERMrest = (function(module) {
                 for (var s = 0; s < sorts.length; s++) {
                     var sort = sorts[s];
                     var column = (sort.endsWith("::desc::") ?
-                        decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : sort);
+                        decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : decodeURIComponent(sort));
                     context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
                 }
             }
@@ -92,7 +92,9 @@ var ERMrest = (function(module) {
                     context.paging.row = {};
                     var row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
                     for (var i = 0; i < context.sort.length; i++) {
-                        context.paging.row[context.sort[i].column] = decodeURIComponent(row[i]);
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        var value = (row[i] === "::null::" ? null : (row[i] === "" ? "" : decodeURIComponent(row[i])));
+                        context.paging.row[context.sort[i].column] = value;
                     }
                 }
 
@@ -103,7 +105,9 @@ var ERMrest = (function(module) {
                     context.paging.row = {};
                     var row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
                     for (var i = 0; i < context.sort.length; i++) {
-                        context.paging.row[context.sort[i].column] = decodeURIComponent(row[i]);
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        var value = (row[i] === "::null::" ? null : (row[i] === "" ? "" : decodeURIComponent(row[i])));
+                        context.paging.row[context.sort[i].column] = value;
                     }
                 }
             }

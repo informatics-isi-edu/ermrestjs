@@ -73,10 +73,51 @@ var ERMrest = (function(module) {
                 reference._table   = reference._schema.tables.get(reference._tableName);
                 reference._columns = reference._table.columns.all();
 
-                var keys = reference._table.keys.all().sort(function (a, b) {
-                    return a.colset.length() - b.colset.length();
+                // find the shortest key
+                // a key should have all not null columns
+                
+                // get a list of not null keys
+                var keys = reference._table.keys.all();
+                var notNullKeys = [];
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (!key.colset.columns.map(function(column) {
+                        return column.nullok;
+                    }).includes(true)){
+                        notNullKeys.push(key);
+                    }
+                }
+
+                // sort keys by length
+                var sortedKeys = notNullKeys.sort(function (a, b) {
+                    var val = a.colset.length() - b.colset.length();
+
+                    // if key length equal, choose the one with integer/serial key over text
+                    if (val === 0) {
+
+                        // get a list of column types, and check if every type is int/serial
+                        // return 1 if true, 0 for false
+                        var aSerial = (a.colset.columns.map(function(column) {
+                            return column.type.name;
+                        }).every(function(current, index, array) {
+                            return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"))
+                        }) ? 1 : 0);
+
+                        var bSerial = (b.colset.columns.map(function(column) {
+                            return column.type.name;
+                        }).every(function(current, index, array) {
+                            return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"))
+                        }) ? 1 : 0);
+
+                        return bSerial - aSerial; // will make a before b if negative, b before a if positive
+                    } else
+                        return val;
                 });
-                reference._shortestKey = keys[0].colset.columns;
+
+                if (sortedKeys.length === 0) {
+                    throw Error("No valid key found in the table. Valid key should have a not null column");
+                }
+                reference._shortestKey = sortedKeys[0].colset.columns;
 
                 defer.resolve(reference);
 

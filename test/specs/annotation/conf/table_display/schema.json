@@ -18,6 +18,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "integer"
           }
@@ -48,6 +49,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "integer"
           }
@@ -78,6 +80,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "integer"
           }

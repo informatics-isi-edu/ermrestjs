@@ -3,7 +3,7 @@ exports.execute = function (options) {
     // Test Cases:
     //   1. Sorting not specified, shortest key used
     //   2. Sort specified in schema
-    //   3. Sort specified in URL.
+    //   3. Sort specified in URL, shortest not null integer/serial key is used.
     // Sub-cases:
     //   1. Next with more data
     //   2. Next with no more data
@@ -51,11 +51,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should be sorted by ascending id by default. ', function() {
+            it('tuples should be sorted by ascending value by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
                 for(var i = 0; i < tuples.length - 1; i++) {
-                    expect(tuples[i]._data.id).toBeLessThan(tuples[i+1]._data.id);
+                    expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                 }
             });
 
@@ -84,7 +84,7 @@ exports.execute = function (options) {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
                     for(var i = 0; i < tuples.length - 1; i++) {
-                        expect(tuples[i]._data.id).toBeLessThan(tuples[i+1]._data.id);
+                        expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
 
@@ -124,7 +124,7 @@ exports.execute = function (options) {
                     tuples = page2.tuples;
                     expect(tuples.length === 10);
                     for(var i = 0; i < tuples.length - 1; i++) {
-                        expect(tuples[i]._data.id).toBeLessThan(tuples[i+1]._data.id);
+                        expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
             });

@@ -2,7 +2,15 @@
   "tables": {
     "table_without_annotation": {
       "kind": "table",
-      "keys": [],
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_1"
+          ]
+        }
+      ],
       "entityCount": 0,
       "foreign_keys": [],
       "table_name": "table_without_annotation",
@@ -10,6 +18,7 @@
       "column_definitions": [
         {
           "name": "column_1",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
@@ -24,7 +33,15 @@
     },
     "table_with_all_contexts": {
       "kind": "table",
-      "keys": [],
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_1"
+          ]
+        }
+      ],
       "entityCount": 0,
       "foreign_keys": [],
       "table_name": "table_with_all_contexts",
@@ -32,6 +49,7 @@
       "column_definitions": [
         {
           "name": "column_1",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
@@ -63,7 +81,15 @@
     },
     "table_with_entry_filter_star": {
       "kind": "table",
-      "keys": [],
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "column_1"
+          ]
+        }
+      ],
       "entityCount": 0,
       "foreign_keys": [],
       "table_name": "table_with_entry_filter_compact_star",
@@ -71,6 +97,7 @@
       "column_definitions": [
         {
           "name": "column_1",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
