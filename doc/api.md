@@ -207,6 +207,7 @@ to use for ERMrest JavaScript agents.
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.Page](#ERMrest.Page)
@@ -1726,6 +1727,7 @@ Constructor for a ParsedFilter.
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
 
@@ -1936,6 +1938,17 @@ other errors TBD (TODO document other errors here).
 | Param | Type | Description |
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
+
+<a name="ERMrest.Reference+sort"></a>
+
+#### reference.sort(sort)
+Return a new Reference with the new sorting
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sort | <code>Array.&lt;Object&gt;</code> | an array of objects in the format {"column":columname, "descending":true|false} in order of priority. Undfined, null or Empty array to use default sorting. |
 
 <a name="ERMrest.Reference+update"></a>
 
@@ -2594,7 +2607,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 [InternalServerError](#ERMrest.InternalServerError),
 [ConflictError](#ERMrest.ConflictError),
 [ForbiddenError](#ERMrest.ForbiddenError),
-[ERMrest.Unauthorized](ERMrest.Unauthorized),
+[UnauthorizedError](#ERMrest.UnauthorizedError),
 [NotFoundError](#ERMrest.NotFoundError),  
 
 | Param | Type | Description |
