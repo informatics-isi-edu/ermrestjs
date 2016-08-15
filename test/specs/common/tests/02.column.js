@@ -26,11 +26,43 @@ exports.execute = function(options) {
             describe('the .formatvalue property, ', function() {
                 var formatUtils = options.includes.ermRest._formatUtils;
 
-                it('should be empty string if column value is null.', function() {
-                    var column = table1_schema2.columns.get('table_1_text');
-                    expect(column.formatvalue(null)).toEqual(jasmine.any(String));
-                    expect(column.formatvalue(null)).toBe('');
-                });
+                describe('when column value is null, ', function() {
+                    var columnWithAnnotation, columnWithoutAnnotation;
+
+                    beforeAll(function(done){
+                        columnWithAnnotation = table1_schema2.columns.get('table_1_show_nulls_annotation');
+                        columnWithoutAnnotation = table1_schema2.columns.get('table_1_text');
+                        done();
+                    });
+
+                    function runShowNullTestCases (column, testCases){
+                        for(key in testCases){
+                            expect(column.formatvalue(null, {context:key})).toBe(testCases[key]);
+                        }
+                    }
+                    it('should return the value that is defined in its `show_nulls` display annotation based on context.', function() {
+                        runShowNullTestCases(
+                            columnWithAnnotation,
+                            {"record": "empty", "detailed": "", "compact": "", "entry/edit": null, "*": "default"}
+                        );
+                    });
+                    it('when the specified context is not defined in its `show_nulls` display annotation should return the value that is defined in default context .', function() {
+                        runShowNullTestCases(columnWithAnnotation,{"filter": "default"});
+                    });
+                    it('when the specfied context and default context are not defined in column, should return the value that is defined in its table `show_nulls` display annotation based on context.', function() {
+                        runShowNullTestCases(columnWithoutAnnotation, {"entry/create": "table"});
+                    });
+                    it('when the specfied context and default context are not defined in column and table, should return the value that is defined in its schema `show_nulls` display annotation based on context.', function() {
+                        runShowNullTestCases(columnWithoutAnnotation, {"entry": "schema"});
+                    });
+                    it('should return null when `show_nulls` annotation is not defined for `detailed` context.', function() {
+                        runShowNullTestCases(columnWithoutAnnotation, {"detailed": null});
+                    });
+                    it('should return empty string when `show_nulls` annotation is not defined for any context other than `detailed`.', function() {
+                        runShowNullTestCases(columnWithoutAnnotation,{"filter": ""});
+                    });
+                })
+
 
                 describe('should call printText() to format,', function() {
                     var formattedValue = undefined;

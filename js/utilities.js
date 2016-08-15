@@ -151,32 +151,44 @@ var ERMrest = (function(module) {
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
-    module._getAnnotationValueByContext = function (context, annotation) {
-        var contextedAnnot;
-        if (context in annotation) { // exact context
-            contextedAnnot = annotation[context];
-        } else {
-            for (var key in annotation) { // partial context
-                if (annotation.hasOwnProperty(key) && context.indexOf(key) != -1) {
-                    contextedAnnot = annotation[key];
-                    break;
-                }
-            }
-        }
-        if (contextedAnnot) { // found the context
+    module._getAnnotationArrayValue = function (context, annotation) {
+        var contextedAnnot = module._getAnnotationValueByContext(context, annotation);
+        if (contextedAnnot !== -1) { // found the context
             if (Array.isArray(contextedAnnot)) {
                 return contextedAnnot;
             } else {
-                return module._getAnnotationValueByContext(contextedAnnot, annotation); // go to next level
+                return module._getAnnotationArrayValue(contextedAnnot, annotation); // go to next level
+            }
+        }
+
+        return -1; // there was no annotation
+    };
+
+    /**
+    * @param {string} context the context that we want the value of.
+    * @param {ERMrest.Annotation} annotation the annotation object.
+    * @desc returns the annotation value based on the given context.
+    */
+    module._getAnnotationValueByContext = function (context, annotation) {
+        // exact context
+        if (context in annotation) {
+            return annotation[context];
+        }
+
+        // partial context
+        for (var key in annotation) {
+            if (annotation.hasOwnProperty(key) && context.indexOf(key) != -1) {
+                return annotation[key];
             }
         }
 
         //if context wasn't in the annotations but there is a default context
-        if (Array.isArray(annotation[module._contexts.DEFAULT])) {
+        if (module._contexts.DEFAULT in annotation) {
             return annotation[module._contexts.DEFAULT];
         }
+
         return -1; // there was no annotation
-    };
+    }
 
     /**
      * @function
