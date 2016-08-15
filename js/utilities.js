@@ -170,25 +170,23 @@ var ERMrest = (function(module) {
     * @desc returns the annotation value based on the given context.
     */
     module._getAnnotationValueByContext = function (context, annotation) {
-        // exact context
-        if (context in annotation) {
-            return annotation[context];
+        // NOTE: We assume that context names are seperated with `/`
+        var partial = context,
+            parts = context.split("/");
+        while (partial !== "") {
+          if (partial in annotation) { // found the context
+            return annotation[partial];
+          }
+          parts.splice(-1,1); // remove the last part
+          partial = parts.join("/");
         }
-
-        // partial context
-        for (var key in annotation) {
-            if (annotation.hasOwnProperty(key) && context.indexOf(key) != -1) {
-                return annotation[key];
-            }
-        }
-
         //if context wasn't in the annotations but there is a default context
         if (module._contexts.DEFAULT in annotation) {
             return annotation[module._contexts.DEFAULT];
         }
-
-        return -1; // there was no annotation
-    }
+        // there was no annotation
+        return -1;
+    };
 
     /**
      * @function
