@@ -378,10 +378,16 @@ var ERMrest = (function(module) {
 
                 // add sorting
                 // get a list of columns in key
-                var keys = this._table.keys.all().sort( function(a, b) {
-                    return a.colset.length() - b.colset.length();
-                });
-                var keycols = keys[0].colset.columns;
+                // if table has no key, use all columns as key
+                var keycols;
+                if (this._table.keys.length() === 0) {
+                    keycols = this._table.columns.all();
+                } else {
+                    var keys = this._table.keys.all().sort( function(a, b) {
+                        return a.colset.length() - b.colset.length();
+                    });
+                    keycols = keys[0].colset.columns;
+                }
 
                 // append @sort(..) to uri
                 var sortby;
