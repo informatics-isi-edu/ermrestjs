@@ -733,6 +733,14 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Whether there is more entities before this page
+         * @returns {boolean}
+         */
+        get hasPrevious() {
+            return this._hasPrevious;
+        },
+
+        /**
          * A reference to the previous set of results.
          *
          * Usage:
@@ -760,6 +768,14 @@ var ERMrest = (function(module) {
                 return newReference;
             }
             return null;
+        },
+
+        /**
+         * Whether there is more entities after this page
+         * @returns {boolean}
+         */
+        get hasNext() {
+            return this._hasNext;
         },
 
         /**
