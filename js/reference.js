@@ -461,8 +461,17 @@ var ERMrest = (function(module) {
                         hasPrevious = true;
                         hasNext = (response.data.length > limit);
                     }
-                    if (response.data.length > limit)
-                        response.data.splice(response.data.length-1); // remove the extra row
+
+                    // Because read() reads one extra row to determine whether the new page has previous or next
+                    // We need to remove those extra row of data from the result
+                    if (response.data.length > limit) {
+                        // if no paging or @after, remove last row
+                        if (!ownReference._paging || !ownReference._paging.before)
+                            response.data.splice(response.data.length-1);
+                       else // @before, remove first row
+                            response.data.splice(0, 1);
+
+                    }
                     var page = new Page(ownReference, response.data, hasPrevious, hasNext);
 
                     defer.resolve(page);
