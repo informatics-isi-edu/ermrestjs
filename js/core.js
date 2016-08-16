@@ -673,37 +673,31 @@ var ERMrest = (function (module) {
         // pure: There are no other columns apart from the foreign key columns and columns that are part of key and have serial4 type.
         _isPureBinaryAssociation: function () {
             if(this._isPureBinaryAssociation_cached === undefined) {
-                var result;
-                if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
-                    result = false; // not binary
-                } else {
-                    result = true;
-
-                    // all columns of foreignkeys are part of the same key.
-                    var colsets = this.foreignKeys.colsets();
-                    var checkKeys = function (el, index, columns){
-                        return el.memberOfKeys.length == 1 && el.memberOfKeys[0] === columns[0].memberOfKeys[0];
-                    };
-                    for(var i = 0, colset; i < colsets.length && result; i++) {
-                        colset = colsets[i];
-                        result = colset.columns.every(checkKeys); //for each colset
-                        if (result && i !== 0) {
-                            result = colset.columns[0].memberOfKeys[0] === colsets[0].columns[0].memberOfKeys[0]; //across colsets
-                        }
-                    }
-
-                    for (var j = 0, col; j < this.columns.length() && result; j++) {
-                        col = this.columns.getByPosition(j);
-                        if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
-                            result = false; // not pure
-                        }
-                    }
-                }
-
-                this._isPureBinaryAssociation_cached = result;
+                this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
             }
             return this._isPureBinaryAssociation_cached;
-        }
+        },
+
+        _computePureBinaryAssociation: function () {
+            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+                return false; // not binary
+            }
+
+            var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
+                return res.concat(colset.columns);
+            }, [])); // set of foreignkey columns
+
+            var tempKeys = this.keys.all().filter(function(key) {
+                var keyCols = key.colset.columns;
+                return !(keyCols.length == 1 && keyCols[0].type.name == "serial4"  && !(keyCols[0] in fkColset.columns));
+            }); // the key that should contain foreign key columns.
+
+            if (tempKeys.length != 1) {
+                return false;
+            }
+
+            return fkColset._equals(tempKeys[0].colset); // check for purity
+        },
 
     };
 
