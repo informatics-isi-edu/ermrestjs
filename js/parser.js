@@ -61,7 +61,7 @@ var ERMrest = (function(module) {
         } else if (uri.indexOf("@after(") !== -1) {
             context.uri = uri.split("@after(")[0]; // remove modifiers from uri
         } else if (uri.indexOf("?limit=") !== -1) {
-            context.uri = uri.split("?limit=(")[0]; // remove modifiers from uri
+            context.uri = uri.split("?limit=")[0]; // remove modifiers from uri
         }
 
         var modifierPath = uri.split(context.uri)[1];
