@@ -669,19 +669,36 @@ var ERMrest = (function (module) {
         },
 
         // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys.
+        // binary: Has 2 outbound foreign keys and there is a composite key constraint combining all the columns from both foreign keys.
         // pure: There are no other columns apart from the foreign key columns and columns that are part of key and have serial4 type.
         _isPureBinaryAssociation: function () {
-            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
-                return false; // not binary
-            }
-            for (var i = 0; i < this.columns.length(); i++) {
-                var col = this.columns.getByPosition(i);
-                if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
-                    return false; // not pure
+            if(this._isPureBinaryAssociation_cached === undefined) {
+                var result;
+                if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+                    result = false; // not binary
+                } else {
+                    result = true;
+
+                    var colsets = this.foreignKeys.colsets();
+                    var checkKeys = function (el, index, columns){
+                        return el.memberOfKeys.length == 1 && el.memberOfKeys[0] === columns[0].memberOfKeys[0];
+                    };
+                    for(var i = 0, res; i < colsets.length && result; i++) {
+                        // all the columns of foreignkeys are part of the key.
+                        result = colsets[i].columns.every(checkKeys);
+                    }
+
+                    for (var j = 0; j < this.columns.length() && result; j++) {
+                        var col = this.columns.getByPosition(j);
+                        if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
+                            result = false; // not pure
+                        }
+                    }
                 }
+
+                this._isPureBinaryAssociation_cached = result;
             }
-            return true; // binary and pure
+            return this._isPureBinaryAssociation_cached;
         }
 
     };
