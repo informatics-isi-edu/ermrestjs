@@ -679,13 +679,17 @@ var ERMrest = (function (module) {
                 } else {
                     result = true;
 
+                    // all the columns of foreignkeys are part of the key.
                     var colsets = this.foreignKeys.colsets();
                     var checkKeys = function (el, index, columns){
                         return el.memberOfKeys.length == 1 && el.memberOfKeys[0] === columns[0].memberOfKeys[0];
                     };
-                    for(var i = 0, res; i < colsets.length && result; i++) {
-                        // all the columns of foreignkeys are part of the key.
-                        result = colsets[i].columns.every(checkKeys);
+                    for(var i = 0, colset; i < colsets.length && result; i++) {
+                        colset = colsets[i];
+                        result = colset.columns.every(checkKeys); //for each colset
+                        if (result && i !== 0) {
+                            result = colset.columns[0].memberOfKeys[0] === colset[0].columns[0].memberOfKeys[0]; //across colsets
+                        }
                     }
 
                     for (var j = 0; j < this.columns.length() && result; j++) {
