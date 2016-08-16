@@ -50,10 +50,12 @@ var ERMrest = (function(module) {
         }
 
         var context = {
-            uri: uri,
-            baseUri: uri.slice(0,svc_idx+_service_name_len)
+            uri: uri, // full uri without modifiers
+            baseUri: uri.slice(0,svc_idx+_service_name_len), // ermrest service url
+            path: uri.slice(svc_idx+_service_name_len) // full path without service
         };
-        var path = context.path = uri.slice(svc_idx+_service_name_len); // string after service
+
+        // remove modifiers from uri
         if (uri.indexOf("@sort(") !== -1) {
             context.uri = uri.split("@sort(")[0]; // remove modifiers from uri
         } else if (uri.indexOf("@before(") !== -1) {
@@ -64,7 +66,8 @@ var ERMrest = (function(module) {
             context.uri = uri.split("?limit=")[0]; // remove modifiers from uri
         }
 
-        var modifierPath = uri.split(context.uri)[1];
+        var modifierPath = uri.split(context.uri)[1]; // modifiers string
+        var shortPath = (modifierPath === "" ? context.path : context.path.split(modifierPath)[0]); // path without modifiers
 
         // Parse out @sort(...) parameter and assign to context
         // Expected format:
@@ -73,7 +76,6 @@ var ERMrest = (function(module) {
             if (modifierPath.indexOf("@sort(") !== -1) {
 
                 var sorts = modifierPath.match(/@sort\(([^\)]*)\)/)[1].split(",");
-                path = path.split("@sort(")[0];  // anything before @sort(..)
 
                 context.sort = [];
                 for (var s = 0; s < sorts.length; s++) {
@@ -116,7 +118,7 @@ var ERMrest = (function(module) {
         // Split the URI on '/'
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
-        var parts = path.split('/');
+        var parts = shortPath.split('/');
 
         if (parts.length < 3) {
             throw new module.MalformedURIError("Uri does not have enough qualifying information");
