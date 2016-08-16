@@ -679,7 +679,7 @@ var ERMrest = (function (module) {
                 } else {
                     result = true;
 
-                    // all the columns of foreignkeys are part of the key.
+                    // all columns of foreignkeys are part of the same key.
                     var colsets = this.foreignKeys.colsets();
                     var checkKeys = function (el, index, columns){
                         return el.memberOfKeys.length == 1 && el.memberOfKeys[0] === columns[0].memberOfKeys[0];
@@ -688,12 +688,12 @@ var ERMrest = (function (module) {
                         colset = colsets[i];
                         result = colset.columns.every(checkKeys); //for each colset
                         if (result && i !== 0) {
-                            result = colset.columns[0].memberOfKeys[0] === colset[0].columns[0].memberOfKeys[0]; //across colsets
+                            result = colset.columns[0].memberOfKeys[0] === colsets[0].columns[0].memberOfKeys[0]; //across colsets
                         }
                     }
 
-                    for (var j = 0; j < this.columns.length() && result; j++) {
-                        var col = this.columns.getByPosition(j);
+                    for (var j = 0, col; j < this.columns.length() && result; j++) {
+                        col = this.columns.getByPosition(j);
                         if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
                             result = false; // not pure
                         }
