@@ -49,22 +49,25 @@ exports.execute = function(options) {
                     it('when the specified context is not defined in its `show_nulls` display annotation should return the value that is defined in default context .', function() {
                         runShowNullTestCases(columnWithAnnotation,{"filter": "default"});
                     });
-                    it('when the specfied context and default context are not defined in column, should return the value that is defined in its table `show_nulls` display annotation based on context.', function() {
+                    it('when `show_nulls` annotation is not defined in column, should return the value that is defined in its table `show_nulls` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry/create": "table"});
                     });
-                    it('when the specfied context and default context are not defined in column and table, should return the value that is defined in its schema `show_nulls` display annotation based on context.', function() {
+                    it('when `show_nulls` annotation is not defined in column or table, should return the value that is defined in its schema `show_nulls` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry": "schema"});
                     });
-                    it('should return null when `show_nulls` annotation is not defined for `detailed` context.', function() {
+                    it('when `show_nulls` annotation is not defined and context is `detailed`, should return null.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"detailed": null});
                     });
-                    it('should return empty string when `show_nulls` annotation is not defined for any context other than `detailed`.', function() {
+                    it('when `show_nulls` annotation is not defined and context is not `detailed`, should return empty string.', function() {
                         runShowNullTestCases(columnWithoutAnnotation,{"filter": ""});
                     });
-                    it('should return empty string if context is not specified in options.', function() {
-                        expect(columnWithAnnotation.formatvalue(null)).toBe("");
+                    it('when context is not specified in options and default context is defined in annotation, should use the default context.', function() {
+                        expect(columnWithAnnotation.formatvalue(null)).toBe("default");
+                    });
+
+                    it('when context is not specified in options and default context it not defined in annotation, should return an empty string.', function() {
                         expect(columnWithoutAnnotation.formatvalue(null)).toBe("");
-                    })
+                    });
                 })
 
 

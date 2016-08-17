@@ -1401,9 +1401,9 @@ var ERMrest = (function (module) {
                 value = "";
             } else if (typeof value !== "string") { // default
                 if (context === module._contexts.DETAILED) {
-                    value = null;
+                    value = null; // default null value for DETAILED context
                 } else {
-                    value = "";
+                    value = ""; //default null value
                 }
             }
 
