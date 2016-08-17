@@ -121,7 +121,7 @@ var ERMrest = (function(module) {
         }
 
         // if name styles are undefined, get them from the parent element
-        // Note: underline_space and title_case might be null.
+        // NOTE: underline_space and title_case might be null.
         if(parentElement){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
@@ -171,7 +171,7 @@ var ERMrest = (function(module) {
     */
     module._getAnnotationValueByContext = function (context, annotation) {
         if (typeof context !== "string") {
-            return -1; // if context is undefined or not an string.
+            return -1; // context must be a string;
         }
 
         // NOTE: We assume that context names are seperated with `/`
@@ -184,12 +184,12 @@ var ERMrest = (function(module) {
           parts.splice(-1,1); // remove the last part
           partial = parts.join("/");
         }
-        //if context wasn't in the annotations but there is a default context
+        // if context wasn't in the annotations but there is a default context
         if (module._contexts.DEFAULT in annotation) {
             return annotation[module._contexts.DEFAULT];
         }
-        // there was no annotation
-        return -1;
+
+        return -1; // there was no annotation
     };
 
     /**
