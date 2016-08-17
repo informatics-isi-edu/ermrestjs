@@ -61,6 +61,10 @@ exports.execute = function(options) {
                     it('should return empty string when `show_nulls` annotation is not defined for any context other than `detailed`.', function() {
                         runShowNullTestCases(columnWithoutAnnotation,{"filter": ""});
                     });
+                    it('should return empty string if context is not specified in options.', function() {
+                        expect(columnWithAnnotation.formatvalue(null)).toBe("");
+                        expect(columnWithoutAnnotation.formatvalue(null)).toBe("");
+                    })
                 })
 
 
