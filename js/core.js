@@ -692,11 +692,19 @@ var ERMrest = (function (module) {
                 return !(keyCols.length == 1 && keyCols[0].type.name == "serial4"  && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
-            if (tempKeys.length != 1) {
-                return false;
+            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+                return false; // not binary
             }
 
-            return fkColset._equals(tempKeys[0].colset); // check for purity
+            // check for purity:
+            for (var i = 0, col; i < this.columns.length(); i++) {
+                col = this.columns.getByPosition(i);
+                if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
+                    return false; // there is a column that is not part of fk and not ID
+                }
+            }
+
+            return true;
         },
 
     };
