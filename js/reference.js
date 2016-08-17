@@ -808,7 +808,7 @@ var ERMrest = (function(module) {
                 this._values = [];
                 for (var i = 0; i < this._ref.columns.length; i++) {
                     var col = this._ref.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name]);
+                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._ref._context});
                 }
             }
             return this._values;

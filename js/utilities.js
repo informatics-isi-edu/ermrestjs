@@ -5,7 +5,7 @@ var ERMrest = (function(module) {
     if (!Array.prototype.includes) {
         Array.prototype.includes = function(searchElement /*, fromIndex*/) {
             'use strict';
-            if (this == null) {
+            if (this === null) {
                 throw new TypeError('Array.prototype.includes called on null or undefined');
             }
 
@@ -121,7 +121,7 @@ var ERMrest = (function(module) {
         }
 
         // if name styles are undefined, get them from the parent element
-        // Note: underline_space and title_case might be null.
+        // NOTE: underline_space and title_case might be null.
         if(parentElement){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
@@ -151,22 +151,43 @@ var ERMrest = (function(module) {
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
-    module._getAnnotationValueByContext = function (context, annotation) {
-        if (context in annotation) {
-            if (Array.isArray(annotation[context])) {
-                return annotation[context]; // found the context
+    module._getAnnotationArrayValue = function (context, annotation) {
+        var contextedAnnot = module._getAnnotationValueByContext(context, annotation);
+        if (contextedAnnot !== -1) { // found the context
+            if (Array.isArray(contextedAnnot)) {
+                return contextedAnnot;
             } else {
-                return module._getAnnotationValueByContext(annotation[context], annotation); // go to next level
+                return module._getAnnotationArrayValue(contextedAnnot, annotation); // go to next level
             }
         }
-        // if context is edit or create, but there's no annotation for those
-        if ([module._contexts.EDIT, module._contexts.CREATE].indexOf(context) != -1 && Array.isArray(annotation[module._contexts.ENTRY])) {
-            return annotation[module._contexts.ENTRY];
+
+        return -1; // there was no annotation
+    };
+
+    /**
+    * @param {string} context the context that we want the value of.
+    * @param {ERMrest.Annotation} annotation the annotation object.
+    * @desc returns the annotation value based on the given context.
+    */
+    module._getAnnotationValueByContext = function (context, annotation) {
+        if (typeof context === "string") {
+            // NOTE: We assume that context names are seperated with `/`
+            var partial = context,
+                parts = context.split("/");
+            while (partial !== "") {
+              if (partial in annotation) { // found the context
+                return annotation[partial];
+              }
+              parts.splice(-1,1); // remove the last part
+              partial = parts.join("/");
+            }
         }
-        //if context wasn't in the annotations but there is a default context
-        if (Array.isArray(annotation[module._contexts.DEFAULT])) {
+
+        // if context wasn't in the annotations but there is a default context
+        if (module._contexts.DEFAULT in annotation) {
             return annotation[module._contexts.DEFAULT];
         }
+
         return -1; // there was no annotation
     };
 
@@ -435,9 +456,9 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
-        CREATE: 'create',
+        CREATE: 'entry/create',
         DETAILED: 'detailed',
-        EDIT: 'edit',
+        EDIT: 'entry/edit',
         ENTRY: 'entry',
         FILTER: 'filter',
         RECORD: 'record',
