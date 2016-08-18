@@ -842,8 +842,21 @@ var ERMrest = (function(module) {
                 this._values = [];
                 for (var i = 0; i < this._ref.columns.length; i++) {
                     var col = this._ref.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name]);
+                    this._values[i] = col.formatvalue(this._data[col.name], { context: this._ref._context });
                 }
+
+                /*
+                 * use this variable to avoid using computed formatted values in other columns while templating 
+                 */
+                var formattedValues = [];
+
+                // format values according to column display annotation
+                for (i = 0; i < this._ref.columns.length; i++) {
+                    var tempCol = this._ref.columns[i];
+                    formattedValues[i] = tempCol.formatPresentation(this._values[i], { values : this._values, columns: this._ref.columns, context: this._ref._context });
+                }
+
+                this._values = formattedValues;
             }
             return this._values;
         },

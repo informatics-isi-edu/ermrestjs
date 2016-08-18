@@ -5,7 +5,7 @@ var ERMrest = (function(module) {
     if (!Array.prototype.includes) {
         Array.prototype.includes = function(searchElement /*, fromIndex*/) {
             'use strict';
-            if (this == null) {
+            if (this === null) {
                 throw new TypeError('Array.prototype.includes called on null or undefined');
             }
 
@@ -378,7 +378,8 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
-            return module._markdownIt.renderInline(value);
+
+            return module._markdownIt.render(value);
         }
     };
 
@@ -415,6 +416,64 @@ var ERMrest = (function(module) {
             typeof element.descending == 'boolean');
     };
 
+    module._bindCustomMarkdownTags = function(md, mdContainer) {
+
+        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        md.use(mdContainer, 'iframe', {
+            /*
+             * Checks whether string matches format "::: iframe [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */ 
+            validate: function(params) {
+                return params.trim().match(/^iframe\s+(\[[^\]]*\]\([^\[\]]*?\)(\{.*\})?)$/i);
+            },
+
+            render: function (tokens, idx) {
+                // Get token string after regeexp matching to determine actual internal markdown 
+                var m = tokens[idx].info.trim().match(/^iframe\s+(\[[^\]]*\]\([^\[\]]*?\)(\{.*\})?)$/i);
+
+                // If this is the opening tag i.e. starts with "::: iframe " 
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+
+                    // Extract remaining string before closing tag and get its parsed markdown attributes
+                    var attrs = md.parseInline(m[1]), html = "";
+
+                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+
+                        // Check If the markdown is a link
+                        if (attrs[0].children[0].type == "link_open") {
+                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
+
+                            // Add all attributes to the iframe
+                            openingLink.attrs.forEach(function(attr) {
+                                if (attr[0] == "href") {
+                                    iframeHTML += 'src="' + attr[1] + '"';
+                                } else {
+                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                }
+                               iframeHTML += " ";
+                            });
+                            html += iframeHTML + "></iframe>";
+
+                            // If there is a caption then add it as a "div" with "caption" class
+                            if (attrs[0].children[1].type == "text") {
+                               html = '<div class="caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                            }
+
+                            // Encapsulate the iframe inside a div
+                            html = '<p>' + html + "</p>";
+                        }  
+                    }
+
+                    return html;
+                } else {
+                  // closing tag 
+                  return '';
+                }
+            }
+        });
+    };
+
     /**
      * @desc List of annotations that ermrestjs supports.
      * @private
@@ -426,7 +485,8 @@ var ERMrest = (function(module) {
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
-        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display"
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
     });
 
     /**

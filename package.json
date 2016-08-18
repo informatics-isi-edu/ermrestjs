@@ -26,7 +26,9 @@
     "request-q": "x",
     "markdown-it": "x",
     "markdown-it-sub": "x",
-    "markdown-it-sup": "x"
+    "markdown-it-sup": "x",
+    "markdown-it-attrs": "x",
+    "markdown-it-container": "x"
   },
   "devDependencies": {
     "bower": "x",

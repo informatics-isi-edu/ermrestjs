@@ -173,13 +173,105 @@
                     "row_order": [{"column":"name", "descending":false}]
                 }
             }
+        },
+        "reference_values": {
+            "comment": "Table to represent a testable reference object with markdown_pattern values",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "reference_values",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "{name}"
+                        }
+                    }
+                },
+                {
+                    "name": "url",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "[link]({url}/{name})"
+                        }
+                    }
+                },
+                {
+                    "name": "image",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "![image](http://example.com/{id}.png)"
+                        }
+                    }
+                },
+                {
+                    "name": "image_with_size",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "![image with size]({url}/{id}.png){width=400 height=400}"
+                        }
+                    }
+                },
+                {
+                    "name": "download_link",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "[download link]({url}){download}"
+                        }
+                    }
+                },
+                {
+                    "name": "iframe",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : ":::iframe [{name} caption](http://example.com/iframe){width=300} \n:::"
+                        }
+                    }
+                }
+            ],
+            "annotations": { }
         }
-
     },
     "table_names": [
         "reference_table",
         "inbound_related_reference_table",
-        "sorted_table"
+        "sorted_table",
+        "reference_values_table"
     ],
     "comment": null,
     "annotations": {}

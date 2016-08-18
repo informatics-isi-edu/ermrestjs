@@ -1,9 +1,12 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In sample spec, ',
+    description: 'In reference,',
     testCases: [
-        "/errors/tests/05.http_retry_error.js"
+        "/reference/tests/01.reference.js",
+        "/reference/tests/02.related_reference.js",
+        "/reference/tests/03.reference_sort.js",
+        "/reference/tests/04.reference_values.js"
     ],
     schemaConfigurations: [
-        "/errors/conf/error.conf.json"
+        "/reference/conf/reference.conf.json"
     ]
 });

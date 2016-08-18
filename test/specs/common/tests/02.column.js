@@ -173,7 +173,7 @@ exports.execute = function(options) {
                         var formattedValue = col.formatvalue(testVal);
                         expect(spy).toHaveBeenCalledWith(testVal, undefined);
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('<em>taylor <sup>swift</sup></em>');
+                        expect(formattedValue).toBe('<p><em>taylor <sup>swift</sup></em></p>\n');
                     });
                 });
             });

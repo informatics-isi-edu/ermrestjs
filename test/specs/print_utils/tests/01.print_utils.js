@@ -69,12 +69,27 @@ exports.execute = function (options) {
         it('printMarkdown() should process Markdown into HTML.', function() {
             var printMarkdown = formatUtils.printMarkdown;
             expect(printMarkdown(null)).toBe('');
-            expect(printMarkdown('*markdown*')).toBe('<em>markdown</em>');
-            expect(printMarkdown('markdown')).toBe('markdown');
+            expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n');
+            expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n');
             expect(printMarkdown("![a random image](random_image.com)"))
-                .toBe('<img src="random_image.com" alt="a random image">');
-            expect(printMarkdown('H~2~0')).toBe('H<sub>2</sub>0');
-            expect(printMarkdown('13^th^')).toBe('13<sup>th</sup>');
+                .toBe('<p><img src="random_image.com" alt="a random image"></p>\n');
+            expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n');
+            expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n');
+            
+            // Check for iframe 
+            expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
+                .toBe('<p><div class="caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></p>');
+            
+            // Check for anchor tags
+            expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
+                .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
+        
+            expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
+                .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n');
+        
+            expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
+                .toBe('<p><strong>Image With Size</strong>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
+             
         });
     });
 };

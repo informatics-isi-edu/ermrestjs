@@ -1274,6 +1274,57 @@ var ERMrest = (function (module) {
         };
 
         /**
+         * Formats the presentation value corresponding to this column definition.
+         * @param {String} data The 'formatted' data value.
+         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @returns {string} The presenation value.
+         */
+        this.formatPresentation = function(data, options) {
+            
+            var utils = module._formatUtils, values = options.values, columns = options.columns;
+
+            /*
+             * TODO: Add code to handle `pre_format` in the annotation
+             */
+
+            if (!this.annotations.contains(module._annotations.COLUMN_DISPLAY) ||
+                !this.annotations.get(module._annotations.COLUMN_DISPLAY).contains("markdown_pattern")) {
+                return data;
+            }
+
+            var pattern = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
+
+            // If pattern is not of type string then return the value as it is
+            if (typeof pattern != 'string') return data;
+
+            /* 
+             * Code to do template/string replacement using values and set pattern as null if any of the
+             * values turn out to be null or undefined
+             */
+            for (var c = 0; c < columns.length; c++) {
+                var cname = columns[c].name;
+                var search = "{" + cname + "}";
+
+                // Check for a match for the search string
+                if (pattern.match(search)) {
+                    if (values[c]) {
+                        pattern = pattern.replace(new RegExp(search, 'g'), values[c]);
+                    } else {
+                        pattern = null;
+                        break;
+                    }
+                }
+            }
+
+            if (pattern === null) {
+                // TODO: Change this to return values on basis of `show_nulls`
+                return '';
+            }
+                
+            return utils.printMarkdown(pattern, options);
+        };
+
+        /**
          *
          * @type {ERMrest.Table}
          */
