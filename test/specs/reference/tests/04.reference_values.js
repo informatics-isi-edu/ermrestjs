@@ -53,6 +53,7 @@ exports.execute = function (options) {
 
             it("should return 9 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
+                console.log(values);
                 expect(values.length).toBe(9);
             });
             
@@ -76,8 +77,8 @@ exports.execute = function (options) {
                           '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '<p><div class="caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p>** date is :**</p>\n',
-                          '<h1>Name is Hank</h1>\n<p>&lt;p&gt;** date is :**&lt;/p&gt;\n<code>2016&amp;#x2F;8&amp;#x2F;17</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n',
+                          '<h1>Name is Hank</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;8&amp;#x2F;17</code></p>\n'];
 
             testTupleValidity(0, values);
         });
@@ -91,8 +92,8 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p>** date is :**</p>\n',
-                          '<h1>Name is Harold</h1>\n<p>&lt;p&gt;** date is :**&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n',
+                          '<h1>Name is Harold</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
 
             testTupleValidity(1, values);            
         });
@@ -106,7 +107,7 @@ exports.execute = function (options) {
                           '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '',
-                          '<p>** date is :**</p>\n',
+                          '<p><strong>date is :</strong></p>\n',
                           ''];
 
             testTupleValidity(2, values);
@@ -121,8 +122,8 @@ exports.execute = function (options) {
                           '',
                           '',
                           '',
-                          '<p>** date is :**</p>\n',
-                          '<h1>Name is</h1>\n<p>&lt;p&gt;** date is :**&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n',
+                          '<h1>Name is</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
 
             testTupleValidity(3, values);
         });
@@ -136,7 +137,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">weird &amp; HTML &lt;  caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p>** date is :**</p>\n',
+                          '<p><strong>date is :</strong></p>\n',
                           ''];
 
             testTupleValidity(4, values);
@@ -151,7 +152,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p>** date is :**</p>\n',
+                          '<p><strong>date is :</strong></p>\n',
                           ''];
 
             testTupleValidity(5, values);
@@ -166,7 +167,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p>** date is :**</p>\n',
+                          '<p><strong>date is :</strong></p>\n',
                           ''];
 
             testTupleValidity(6, values);
