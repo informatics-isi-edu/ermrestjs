@@ -1,7 +1,7 @@
-[{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com", "some_date": "2016-08-18"},
- {"id":4001, "some_markdown": "**date is :**", "name":"Harold", "some_date": "2016-08-01"},
+[{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com"},
+ {"id":4001, "some_markdown": "**date is :**", "name":"Harold"},
  {"id":4002, "some_markdown": "**date is :**", "url": "https://www.google.com"},
- {"id":4003, "some_markdown": "**date is :**", "some_date": "2016-08-01"},
+ {"id":4003, "some_markdown": "**date is :**"},
  {"id":4004, "some_markdown": "**date is :**", "name": "weird & HTML < " },
  {"id":4005, "some_markdown": "**date is :**", "name": "<a href='javascript:alert();'></a>" },
  {"id":4006, "some_markdown": "**date is :**", "name": "<script>alert();</script>" }]

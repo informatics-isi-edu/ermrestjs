@@ -51,10 +51,9 @@ exports.execute = function (options) {
 
         var testTupleValidity = function(tupleIndex, expectedValues) {
 
-            it("should return 9 values for a tuple", function() {
+            it("should return 8 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                console.log(values);
-                expect(values.length).toBe(9);
+                expect(values.length).toBe(8);
             });
             
             checkValue("id", tupleIndex, 0, expectedValues);
@@ -64,12 +63,10 @@ exports.execute = function (options) {
             checkValue("image_with_size", tupleIndex, 4, expectedValues);
             checkValue("download_link", tupleIndex, 5, expectedValues);
             checkValue("iframe", tupleIndex, 6, expectedValues);
-            checkValue("some_markdown", tupleIndex, 7, expectedValues);
-            checkValue("some_date", tupleIndex, 8, expectedValues);
-            
+            checkValue("some_markdown", tupleIndex, 7, expectedValues);            
         };
 
-        describe('for tuple 0 with row values {"id":4000, "some_markdown": "** date is :**", "name":"Hank", "url": "https://www.google.com", "some_date": "2016-08-18"},', function() {
+        describe('for tuple 0 with row values {"id":4000, "some_markdown": "** date is :**", "name":"Hank", "url": "https://www.google.com"},', function() {
             var values = ['4000',
                           '<h2>Hank</h2>\n',
                           '<p><a href="https://www.google.com/Hank">link</a></p>\n',
@@ -77,13 +74,12 @@ exports.execute = function (options) {
                           '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '<p><div class="caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>date is :</strong></p>\n',
-                          '<h1>Name is Hank</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;8&amp;#x2F;17</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(0, values);
         });
 
-        describe('for tuple 1 with row values {"id":4001, "some_markdown": "** date is :**", "name":"Harold", "some_date": "2016-08-01"},', function() {
+        describe('for tuple 1 with row values {"id":4001, "some_markdown": "** date is :**", "name":"Harold"},', function() {
 
             var values = ['4001',
                           '<h2>Harold</h2>\n',
@@ -92,8 +88,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>date is :</strong></p>\n',
-                          '<h1>Name is Harold</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(1, values);            
         });
@@ -107,13 +102,12 @@ exports.execute = function (options) {
                           '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '',
-                          '<p><strong>date is :</strong></p>\n',
-                          ''];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(2, values);
         });
 
-        describe('for tuple 3 with row values {"id":4003, "some_markdown": "** date is :**", "some_date": "2016-08-01"},', function() {
+        describe('for tuple 3 with row values {"id":4003, "some_markdown": "** date is :**"},', function() {
 
             var values = ['4003',
                           '',
@@ -122,8 +116,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '',
-                          '<p><strong>date is :</strong></p>\n',
-                          '<h1>Name is</h1>\n<p>&lt;p&gt;&lt;strong&gt;date is :&lt;/strong&gt;&lt;/p&gt;\n<code>2016&amp;#x2F;7&amp;#x2F;31</code></p>\n'];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(3, values);
         });
@@ -137,8 +130,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">weird &amp; HTML &lt;  caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>date is :</strong></p>\n',
-                          ''];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(4, values);
         });
@@ -152,8 +144,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>date is :</strong></p>\n',
-                          ''];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(5, values);
         });
@@ -167,8 +158,7 @@ exports.execute = function (options) {
                           '',
                           '',
                           '<p><div class="caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>date is :</strong></p>\n',
-                          ''];
+                          '<p><strong>date is :</strong></p>\n'];
 
             testTupleValidity(6, values);
         });

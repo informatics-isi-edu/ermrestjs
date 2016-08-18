@@ -269,20 +269,6 @@
                         "typename": "markdown"
                     },
                     "default": "**date is :**"
-                },
-                {
-                    "name": "some_date",
-                    "type": {
-                        "typename": "date"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "# Name is {{#name}}{{.}}{{/name}} \n{{some_markdown}} `{{some_date}}`"
-                        },
-                        "tag:misd.isi.edu,2015:display" : {
-                            "*": ""
-                        }
-                    }
                 }
             ],
             "annotations": { }
