@@ -43,9 +43,9 @@ exports.execute = function (options) {
         });
 
 
-        var checkValue = function(columnName, tupleIndex, valueIndex, expectedValue) {
-            it("should check " + columnName + " to be `" + expectedValue + "`", function() {
-                expect(tuples[tupleIndex].values[valueIndex]).toBe(expectedValue);
+        var checkValue = function(columnName, tupleIndex, valueIndex, expectedValues) {
+            it("should check " + columnName + " to be `" + expectedValues[valueIndex] + "`", function() {
+                expect(tuples[tupleIndex].values[valueIndex]).toBe(expectedValues[valueIndex]);
             });
         };
 
@@ -56,15 +56,15 @@ exports.execute = function (options) {
                 expect(values.length).toBe(9);
             });
             
-            checkValue("id", tupleIndex, 0, expectedValues[0]);
-            checkValue("name", tupleIndex, 1, expectedValues[1]);
-            checkValue("url", tupleIndex, 2, expectedValues[2]);
-            checkValue("image", tupleIndex, 3, expectedValues[3]);
-            checkValue("image_with_size", tupleIndex, 4, expectedValues[4]);
-            checkValue("download_link", tupleIndex, 5, expectedValues[5]);
-            checkValue("iframe", tupleIndex, 6, expectedValues[6]);
-            checkValue("some_markdown", tupleIndex, 7, expectedValues[7]);
-            checkValue("some_date", tupleIndex, 8, expectedValues[8]);
+            checkValue("id", tupleIndex, 0, expectedValues);
+            checkValue("name", tupleIndex, 1, expectedValues);
+            checkValue("url", tupleIndex, 2, expectedValues);
+            checkValue("image", tupleIndex, 3, expectedValues);
+            checkValue("image_with_size", tupleIndex, 4, expectedValues);
+            checkValue("download_link", tupleIndex, 5, expectedValues);
+            checkValue("iframe", tupleIndex, 6, expectedValues);
+            checkValue("some_markdown", tupleIndex, 7, expectedValues);
+            checkValue("some_date", tupleIndex, 8, expectedValues);
             
         };
 
