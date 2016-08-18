@@ -82,7 +82,7 @@
           "entry": [
             ["visible_foregin_keys_schema", "fk_with_annotation_to_outbound"]
           ],
-          "edit": [
+          "entry/edit": [
             ["visible_foregin_keys_schema", "fk_inbound_to_with_annotation"]
           ],
           "record": [
