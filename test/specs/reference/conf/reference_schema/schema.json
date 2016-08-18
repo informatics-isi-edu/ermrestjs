@@ -204,7 +204,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "{name}"
+                            "markdown_pattern" : "## {{name}}"
                         }
                     }
                 },
@@ -215,7 +215,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "[link]({url}/{name})"
+                            "markdown_pattern" : "[link]({{url}}/{{name}})"
                         }
                     }
                 },
@@ -226,7 +226,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "![image](http://example.com/{id}.png)"
+                            "markdown_pattern" : "![image](http://example.com/{{id}}.png)"
                         }
                     }
                 },
@@ -237,7 +237,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "![image with size]({url}/{id}.png){width=400 height=400}"
+                            "markdown_pattern" : "![image with size]({{url}}/{{id}}.png){width=400 height=400}"
                         }
                     }
                 },
@@ -248,7 +248,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : "[download link]({url}){download}"
+                            "markdown_pattern" : "[download link]({{url}}){download}"
                         }
                     }
                 },
@@ -259,7 +259,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
-                            "markdown_pattern" : ":::iframe [{name} caption](http://example.com/iframe){width=300} \n:::"
+                            "markdown_pattern" : ":::iframe [{{name}} caption](http://example.com/iframe){width=300} \n:::"
                         }
                     }
                 }

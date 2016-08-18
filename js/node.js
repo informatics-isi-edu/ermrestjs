@@ -19,7 +19,13 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     };
 
     /*
+     * Inject _mustache module in Ermrest
+     */
+    ERMrest._mustache = require('mustache');
+
+    /*
      * Inject _markdownIt module in ERMrest
+     * Make markdownit use Sub, Sup and Attrs plugin
      */
     ERMrest._markdownIt = require('markdown-it')()
                             .use(require('markdown-it-sub')) // add subscript support
@@ -81,12 +87,26 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Call this function to load all dependent scripts in order
      */
     loadScripts([
-        ermrestJsPath + "vendor/markdown-it.js", 
+        // Mustache script
+        ermrestJsPath + "vendor/mustache.min.js", 
+
+        // Markdown-it and dependent plugin scripts
+        ermrestJsPath + "vendor/markdown-it.min.js", 
+
         ermrestJsPath + "vendor/markdown-it-sub.min.js", 
         ermrestJsPath + "vendor/markdown-it-sup.min.js",
         ermrestJsPath + "vendor/markdown-it-attrs.js",
-        ermrestJsPath + "vendor/markdown-it-container.js"], 
+        ermrestJsPath + "vendor/markdown-it-container.min.js"], 
         function() {
+            /*
+             * Inject _mustache module in Ermrest
+             */
+            Ermrest._mustache = window.Mustache;
+
+            /*
+             * Inject _markdownIt module in ERMrest
+             * Make markdownit use Sub, Sup and Attrs plugin
+             */
             ERMrest._markdownIt = window.markdownit()
                     .use(window.markdownitSub)
                     .use(window.markdownitSup)

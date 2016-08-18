@@ -1281,7 +1281,7 @@ var ERMrest = (function (module) {
          */
         this.formatPresentation = function(data, options) {
             
-            var utils = module._formatUtils, values = options.values, columns = options.columns;
+            var utils = module._formatUtils, values = options.values, keyValues = {}, columns = options.columns;
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
@@ -1292,36 +1292,50 @@ var ERMrest = (function (module) {
                 return data;
             }
 
+            // Set pattern from the annotation value
             var pattern = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
 
-            // If pattern is not of type string then return the value as it is
-            if (typeof pattern != 'string') return data;
+            // If pattern is not of type string or is undefined/null then return the value as it is
+            if (typeof pattern !== 'string') return data;
+
+            /* 
+             * Code to validate values and set pattern as null if any of the
+             * values turn out to be null or undefined
+             * As well as set key-value pairs in the keyValues object for further usage while templating
+             */
+            for (var i = 0; i < columns.length; i++) {
+                var cname = columns[i].name;
+                
+                keyValues[cname] = values[i];
+
+                // Check for a match for the search string
+                var search = "{{" + cname + "}}";
+
+                // If the search column is found in the pattern
+                if (pattern && pattern.match(search)) {
+
+                    // If the value for th search column is null,undefined or empty then set pattern to null
+                    if (values[i] === null || values[i] === undefined || values[i] === '') {
+                        pattern = null;
+                    }
+                }
+            }
+
+            // TODO: If pattern is null due to some values being null or empty return value on basis of `show_nulls`
+            if (pattern === null) {
+                return '';
+            }
 
             /* 
              * Code to do template/string replacement using values and set pattern as null if any of the
              * values turn out to be null or undefined
              */
-            for (var c = 0; c < columns.length; c++) {
-                var cname = columns[c].name;
-                var search = "{" + cname + "}";
-
-                // Check for a match for the search string
-                if (pattern.match(search)) {
-                    if (values[c]) {
-                        pattern = pattern.replace(new RegExp(search, 'g'), values[c]);
-                    } else {
-                        pattern = null;
-                        break;
-                    }
-                }
-            }
-
-            if (pattern === null) {
-                // TODO: Change this to return values on basis of `show_nulls`
-                return '';
-            }
-                
-            return utils.printMarkdown(pattern, options);
+            var value = module._renderTemplate(pattern, keyValues, options);
+                            
+            /*
+             * Call printmarkdown to generate HTML from the final generated string after templating and return it
+             */
+            return utils.printMarkdown(value, options);
         };
 
         /**

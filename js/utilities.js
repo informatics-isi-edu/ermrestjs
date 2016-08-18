@@ -416,6 +416,13 @@ var ERMrest = (function(module) {
             typeof element.descending == 'boolean');
     };
 
+    /*
+     * @function
+     * @private
+     * @param {Object} md The markdown-it object
+     * @param {Object} md The markdown-it-container object.
+     * @desc Sets functionality for custom markdown tags like `iframe` using `markdown-it-container` plugin.
+     */
     module._bindCustomMarkdownTags = function(md, mdContainer) {
 
         // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
@@ -472,6 +479,36 @@ var ERMrest = (function(module) {
                 }
             }
         });
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {String} template The template string to transform
+     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Returns a string produced as a result of templating using `Mustache`.
+     */
+    module._renderTemplate = function(template, keyValues, options) {
+        
+        // Inject the encode function in the keyValues object
+        keyValues.encode = function() {
+            return function(text, render) {
+                return encodeURIComponent(render(text));
+            };
+        };
+
+        // Inject other functions provided in the options.functions array if needed
+        if (options.functions && options.functions.length) {
+            options.functions.forEach(function(f) {
+                keyValues[f.name] = function() {
+                    return f.fn;
+                };
+            });
+        }
+
+        return module._mustache.render(template, keyValues);
     };
 
     /**

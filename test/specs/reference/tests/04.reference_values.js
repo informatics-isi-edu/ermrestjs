@@ -54,8 +54,8 @@ exports.execute = function (options) {
                 // id at index 0 should be set to 4000
                 expect(values[0]).toBe('4000');
 
-                // name should be set to Hank
-                expect(values[1]).toBe('<p>Hank</p>\n');
+                // name should be set to '<h2>Hank<h2>/n'
+                expect(values[1]).toBe('<h2>Hank</h2>\n');
 
                 // url 
                 expect(values[2]).toBe('<p><a href="https://www.google.com/Hank">link</a></p>\n');
@@ -89,8 +89,8 @@ exports.execute = function (options) {
                 // id at index 0 should be set to 4001
                 expect(values[0]).toBe('4001');
 
-                // name should be set to Harold
-                expect(values[1]).toBe('<p>Harold</p>\n');
+                // name should be set to '<h2>Harold<h2>/n'
+                expect(values[1]).toBe('<h2>Harold</h2>\n');
 
                 // url 
                 expect(values[2]).toBe('');
@@ -194,8 +194,8 @@ exports.execute = function (options) {
                 // id at index 0 should be set to 4004
                 expect(values[0]).toBe('4004');
 
-                // name should be set to '<p>weird &amp; HTML &lt;</p>'
-                expect(values[1]).toBe('<p>weird &amp; HTML &lt;</p>\n');
+                // name should be set to '<h2>weird &amp; HTML &lt;</h2>\n'
+                expect(values[1]).toBe('<h2>weird &amp; HTML &lt;</h2>\n');
 
                 // url 
                 expect(values[2]).toBe('');
@@ -229,8 +229,8 @@ exports.execute = function (options) {
                 // id at index 0 should be set to 4005
                 expect(values[0]).toBe('4005');
 
-                // name should be set to '<a href='javascript:alert();'></a>'
-                expect(values[1]).toBe("<p>&lt;a href='javascript:alert();'&gt;&lt;/a&gt;</p>\n");
+                // name should be set to '<h2>&lt;a href='javascript:alert();'&gt;&lt;/a&gt;</h2>\n'
+                expect(values[1]).toBe("<h2>&lt;a href='javascript:alert();'&gt;&lt;/a&gt;</h2>\n");
 
                 // url 
                 expect(values[2]).toBe('');
@@ -264,8 +264,8 @@ exports.execute = function (options) {
                 // id at index 0 should be set to 4006
                 expect(values[0]).toBe('4006');
 
-                // name should be set to '<p>weird &amp; HTML &lt;</p>'
-                expect(values[1]).toBe('<p>&lt;script&gt;alert();&lt;/script&gt;</p>\n');
+                // name should be set to '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n'
+                expect(values[1]).toBe('<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n');
 
                 // url 
                 expect(values[2]).toBe('');
