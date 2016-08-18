@@ -17,6 +17,7 @@
 var ERMrest = (function(module) {
 
     module.ParsedFilter = ParsedFilter;
+    module.Location = Location;
 
     /**
      * The ERMrest service name. Internal use only.
@@ -49,105 +50,109 @@ var ERMrest = (function(module) {
             throw new module.InvalidInputError('The URI does not contain the expected service name: ' + _service_name);
         }
 
-        var context = {
-            uri: uri, // full uri without modifiers
-            baseUri: uri.slice(0,svc_idx+_service_name_len), // ermrest service url
-            path: uri.slice(svc_idx+_service_name_len) // full path without service
-        };
+        return new Location(uri);
 
-        // remove modifiers from uri
+    };
+
+    /**
+     *
+     * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
+     * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
+     * catalog: the catalog identifier for one dataset such as 42.
+     * api: the API or data resource space identifier such as entity, attribute, attributegroup, or aggregate.
+     * path: the data path which identifies one filtered entity set with optional joined context.
+     * sort: optional @sort
+     * paging: optional @before/@after
+     * limit: optional ?limit
+     *
+     * @param {String} uri full path
+     * @constructor
+     */
+    function Location(uri) {
+
+        // full uri
+        this._uri = uri;
+
+        // compactUri is the full uri without modifiers
         if (uri.indexOf("@sort(") !== -1) {
-            context.uri = uri.split("@sort(")[0]; // remove modifiers from uri
+            this._compactUri = uri.split("@sort(")[0];
         } else if (uri.indexOf("@before(") !== -1) {
-            context.uri = uri.split("@before(")[0]; // remove modifiers from uri
+            this._compactUri = uri.split("@before(")[0];
         } else if (uri.indexOf("@after(") !== -1) {
-            context.uri = uri.split("@after(")[0]; // remove modifiers from uri
+            this._compactUri = uri.split("@after(")[0];
         } else if (uri.indexOf("?limit=") !== -1) {
-            context.uri = uri.split("?limit=")[0]; // remove modifiers from uri
+            this._compactUri = uri.split("?limit=")[0];
+        } else {
+            this._compactUri = uri;
         }
 
-        var modifierPath = uri.split(context.uri)[1]; // modifiers string
-        var shortPath = (modifierPath === "" ? context.path : context.path.split(modifierPath)[0]); // path without modifiers
+        // service
+        var parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
+        this._service = parts[1];
 
-        // Parse out @sort(...) parameter and assign to context
-        // Expected format:
-        //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
-        if (modifierPath) {
-            if (modifierPath.indexOf("@sort(") !== -1) {
+        // catalog id
+        this._catalog = parts[2];
 
-                var sorts = modifierPath.match(/@sort\(([^\)]*)\)/)[1].split(",");
+        // api
+        this._api = parts[3];
 
-                context.sort = [];
-                for (var s = 0; s < sorts.length; s++) {
-                    var sort = sorts[s];
-                    var column = (sort.endsWith("::desc::") ?
-                        decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : decodeURIComponent(sort));
-                    context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
-                }
+        // path is everything after catalog id
+        this._path = parts[4];
+
+        var modifiers = uri.split(this._compactUri)[1]; // emtpy string if no modifiers
+
+        // compactPath is path without modifiers
+        this._compactPath = (modifiers === "" ? this._path : this._path.split(modifiers)[0]);
+
+        // sort and paging
+        if (modifiers) {
+            if (modifiers.indexOf("@sort(") !== -1) {
+                this._sort = modifiers.match(/(@sort\([^\)]*\))/)[1];
             }
-
             // sort must specified to use @before and @after
-            if (modifierPath.indexOf("@before(") !== -1) {
-                if (context.sort) {
-                    context.paging = {};
-                    context.paging.before = true;
-                    context.paging.row = {};
-                    var row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
-                    for (var i = 0; i < context.sort.length; i++) {
-                        // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
-                        context.paging.row[context.sort[i].column] = value;
-                    }
+            if (modifiers.indexOf("@before(") !== -1) {
+                if (this._sort) {
+                    this._paging = modifiers.match(/(@before\([^\)]*\))/)[1];
+                } else {
+                    throw new Error("Invalid uri: " + this._uri + ". Sort modifier required with paging");
                 }
-
-            } else if (modifierPath.indexOf("@after(") !== -1) {
-                if (context.sort) {
-                    context.paging = {};
-                    context.paging.before = false;
-                    context.paging.row = {};
-                    var row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
-                    for (var i = 0; i < context.sort.length; i++) {
-                        // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
-                        context.paging.row[context.sort[i].column] = value;
-                    }
+            } else if (modifiers.indexOf("@after(") !== -1) {
+                if (this._sort) {
+                    this._paging = modifiers.match(/(@after\([^\)]*\))/)[1];
+                } else {
+                    throw new Error("Invalid uri: " + this._uri + ". Sort modifier required with paging");
                 }
             }
         }
 
-        // Split the URI on '/'
-        // Expected format:
-        //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
-        var parts = shortPath.split('/');
+        // Split compact path on '/'
+        // Expected format: "[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
+        parts = this._compactPath.split('/');
 
-        if (parts.length < 3) {
-            throw new module.MalformedURIError("Uri does not have enough qualifying information");
-        }
-
-        // parts[5] should be the catalog id only
-        context.catalogId = parts[2];
-
-        // parts[7] should be <schema-name>:<table-name>
-        if (parts[4]) {
-            var params = parts[4].split(':');
+        // first schema name and first table name
+        // we can't handle complex path right now, only knows the first schema and table
+        // so after doing a Reference.relate() and generate a new uri/location, we don't have schema/table information here
+        if (parts[0]) {
+            var params = parts[0].split(':');
             if (params.length > 1) {
-                context.schemaName = decodeURIComponent(params[0]);
-                context.tableName = decodeURIComponent(params[1]);
+                this._firstSchemaName = decodeURIComponent(params[0]);
+                this._firstTableName = decodeURIComponent(params[1]);
             } else {
-                context.schemaName = '';
-                context.tableName = decodeURIComponent(params[0]);
+                this._firstSchemaName = '';
+                this._firstTableName = decodeURIComponent(params[0]);
             }
         }
 
-        // If there are filters appended to the URL, add them to context.js
-        if (parts[5]) {
+        // If there are filters appended to the URL
+        // this is not used right now, but keep it in parsing
+        if (parts[1]) {
             // split by ';' and '&'
             var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-            var items = parts[5].match(regExp);
+            var items = parts[1].match(regExp);
 
             // if a single filter
             if (items.length === 1) {
-                context.filter = _processSingleFilterString(items[0]);
+                this._firstFilter = _processSingleFilterString(items[0]);
 
             } else {
                 var filters = [];
@@ -191,11 +196,181 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                context.filter = new ParsedFilter(type);
-                context.filter.setFilters(filters);
+                this._firstFilter = new ParsedFilter(type);
+                this._firstFilter.setFilters(filters);
             }
         }
-        return context;
+
+    }
+
+    Location.prototype = {
+
+        get uri() {
+            return this._uri;
+        },
+
+        get compactUri() {
+            return this._compactUri;
+        },
+
+        get service() {
+            return this._service;
+        },
+
+        get catalog() {
+            return this._catalog;
+        },
+
+        get api() {
+            return this._api;
+        },
+
+        get path() {
+            return this._path;
+        },
+
+        get compactPath() {
+            return this._compactPath;
+        },
+
+        get firstSchemaName() {
+            return this._firstSchemaName;
+        },
+
+        get firstTableName() {
+            return this._firstTableName;
+        },
+
+        get sort() {
+            return this._sort;
+        },
+
+        /**
+         * get the sorting object, null if no sorting
+         * @returns {Object[]} in this format [{"column":colname, "descending":true},...]
+         */
+        get sortObject() {
+            if (this._sortObject === undefined) {
+                if (this._sort !== undefined) {
+                    var sorts = this._sort.match(/@sort\(([^\)]*)\)/)[1].split(",");
+
+                    this._sortObject = [];
+                    for (var s = 0; s < sorts.length; s++) {
+                        var sort = sorts[s];
+                        var column = (sort.endsWith("::desc::") ?
+                            decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : decodeURIComponent(sort));
+                        this._sortObject.push({"column": column, "descending": sort.endsWith("::desc::")});
+                    }
+                } else {
+                    this._sortObject = null;
+                }
+            }
+            return this._sortObject;
+        },
+
+        /**
+         * change sort with new sort Object
+         * @param {Object[]} so in this format [{"column":colname, "descending":true},...]
+         */
+        set sortObject(so) {
+            if ((!so && !this._sort) || (so === this._sort))
+                return;
+
+            // null or undefined = remove sort
+            var oldSortString = (this._sort? this._sort : "");
+            if (!so || so.length === 0) {
+                delete this._sort;
+                this._sortObject = null;
+            } else {
+                this._sortObject = so;
+                this._sort = module._getSortModifier(so);
+            }
+
+            // update uri/path
+            var newSortString = (this._sort? this._sort : "");
+            if (oldSortString !== "") {
+                this._uri = this._uri.replace(oldSortString, newSortString);
+                this._path = this._path.replace(oldSortString, newSortString);
+            } else { // add sort
+                // since there was no sort, there isn't paging, and we are totally ignoring ?limit in the uri
+                this._uri = this._compactUri + newSortString;
+                this._path = this._compactPath + newSortString;
+            }
+        },
+
+        get paging() {
+            return this._paging;
+        },
+
+        /**
+         * get paging object, null if no paging
+         * @returns {Object} in this format {"before":boolean, "row":[v1, v2, v3...]} where v is in same column order as in sort
+         */
+        get pagingObject() {
+            if (this._pagingObject === undefined) {
+                if (this._paging) {
+                    this.sortObject; // create this._sortObject if it hasn't
+                    if (this._paging.indexOf("@before") !== -1) {
+                        this._pagingObject = {};
+                        this._pagingObject.before = true;
+                        this._pagingObject.row = [];
+                        var row = this._paging.match(/@before\(([^\)]*)\)/)[1].split(",");
+                        for (var i = 0; i < this._sortObject.length; i++) {
+                            // ::null:: to null, empty string to "", otherwise decode value
+                            var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                            this._pagingObject.row.push(value);
+                        }
+                    } else if (this._paging.indexOf("@after(") !== -1) {
+                        this._pagingObject = {};
+                        this._pagingObject.before = false;
+                        this._pagingObject.row = [];
+                        var row = this._paging.match(/@after\(([^\)]*)\)/)[1].split(",");
+                        for (var i = 0; i < this._sortObject.length; i++) {
+                            // ::null:: to null, empty string to "", otherwise decode value
+                            var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                            this._pagingObject.row.push(value);
+                        }
+                    }
+                } else {
+                    this._pagingObject = null;
+                }
+            }
+            return this._pagingObject;
+        },
+
+        /**
+         * change the paging with new pagingObject
+         * @param {Object} po in this format {"before":boolean, "row":[v1, v2, v3...]} where v is in same column order as in sort
+         */
+        set pagingObject(po) {
+            if ((!po && !this._paging) || (po === this._paging))
+                return;
+
+            // null or undefined = remove paing
+            if (!po || po === {}) {
+                delete this._paging;
+                this._sortObject = null;
+            }
+
+            var oldPagingString = (this._paging? this._paging : "");
+            if (this._sort) {
+                this._pagingObject = po;
+                this._paging = module._getPagingModifier(po);
+            } else {
+                throw Error("Error setPagingObject: Paging not allowed without sort");
+            }
+
+            //  update uri/path
+            var newPagingString = (this._paging? this._paging : "");
+            if (oldPagingString !== "") {
+                this._uri = this._uri.replace(oldPagingString, newPagingString);
+                this._path = this._path.replace(oldPagingString, newPagingString);
+            } else { // add paging
+                // append to the end, we are totally ignoring ?limit in the uri
+                this._uri = this._compactUri + this._sort + newPagingString;
+                this._path = this._compactPath + this._sort + newPagingString;
+            }
+        }
     };
 
     /**

@@ -93,9 +93,9 @@ exports.execute = function(options) {
 
         describe('for pure and binray association foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function (){
-                expect(related[2]._catalogId).toBe(catalog_id.toString());
-                expect(related[2]._schemaName).toBe(schemaName);
-                expect(related[2]._tableName).toBe(inboudTableName);
+                expect(related[2]._location.catalog).toBe(catalog_id.toString());
+                expect(related[2]._table.schema.name).toBe(schemaName);
+                expect(related[2]._table.name).toBe(inboudTableName);
             });
 
             describe('.displayname, ', function (){
