@@ -106,6 +106,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>string</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -207,6 +208,7 @@ to use for ERMrest JavaScript agents.
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.Page](#ERMrest.Page)
@@ -974,6 +976,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>string</code>
     * [.toString()](#ERMrest.Column+toString)
 
 <a name="new_ERMrest.Column_new"></a>
@@ -1062,6 +1065,19 @@ Formats a value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+
+<a name="ERMrest.Column+formatPresentation"></a>
+
+#### column.formatPresentation(data, options) ⇒ <code>string</code>
+Formats the presentation value corresponding to this column definition.
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+**Returns**: <code>string</code> - The presenation value.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>String</code> | The 'formatted' data value. |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -1726,6 +1742,7 @@ Constructor for a ParsedFilter.
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
 
@@ -1936,6 +1953,17 @@ other errors TBD (TODO document other errors here).
 | Param | Type | Description |
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
+
+<a name="ERMrest.Reference+sort"></a>
+
+#### reference.sort(sort)
+Return a new Reference with the new sorting
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sort | <code>Array.&lt;Object&gt;</code> | an array of objects in the format {"column":columname, "descending":true|false} in order of priority. Undfined, null or Empty array to use default sorting. |
 
 <a name="ERMrest.Reference+update"></a>
 
@@ -2594,7 +2622,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 [InternalServerError](#ERMrest.InternalServerError),
 [ConflictError](#ERMrest.ConflictError),
 [ForbiddenError](#ERMrest.ForbiddenError),
-[ERMrest.Unauthorized](ERMrest.Unauthorized),
+[UnauthorizedError](#ERMrest.UnauthorizedError),
 [NotFoundError](#ERMrest.NotFoundError),  
 
 | Param | Type | Description |

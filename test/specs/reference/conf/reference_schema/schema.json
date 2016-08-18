@@ -262,6 +262,24 @@
                             "markdown_pattern" : ":::iframe [{{name}} caption](http://example.com/iframe){width=300} \n:::"
                         }
                     }
+                },
+                {
+                    "name": "some_markdown",
+                    "type": {
+                        "typename": "markdown"
+                    },
+                    "default": "**date is :**"
+                },
+                {
+                    "name": "some_date",
+                    "type": {
+                        "typename": "date"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "markdown_pattern" : "# Name is {{#name}}{{.}}{{/name}} \n{{some_markdown}} `{{some_date}}`"
+                        }
+                    }
                 }
             ],
             "annotations": { }
