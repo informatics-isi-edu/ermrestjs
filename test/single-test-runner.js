@@ -29,7 +29,7 @@ process.on('uncaughtException', function(e) {
 	console.log(e.stack);
 	if (!process.catalogDeleted) {
 		process.catalogDeleted = true;
-		//jasmineUtils.deleteCatalog();
+		jasmineUtils.deleteCatalog();
 	} else {
 		process.exit(1);
 	}
@@ -40,9 +40,9 @@ process.on('SIGINT', function(code) {
 	if (!process.catalogDeleted) {
 	    process.catalogDeleted = true;
 	    console.log('About to exit because of SIGINT (ctrl + c)');
-	    //jasmineUtils.deleteCatalog().done(function() {
-	    //	process.exit(1);
-	    //});
+	    jasmineUtils.deleteCatalog().done(function() {
+	    	process.exit(1);
+	    });
 	} else {
 		process.exit(1);
 	}
