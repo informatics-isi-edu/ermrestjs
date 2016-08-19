@@ -106,7 +106,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>string</code>
+        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -976,7 +976,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>string</code>
+    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString)
 
 <a name="new_ERMrest.Column_new"></a>
@@ -1068,11 +1068,11 @@ Formats a value corresponding to this column definition.
 
 <a name="ERMrest.Column+formatPresentation"></a>
 
-#### column.formatPresentation(data, options) ⇒ <code>string</code>
+#### column.formatPresentation(data, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
 
 **Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
-**Returns**: <code>string</code> - The presenation value.  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
 
 | Param | Type | Description |
 | --- | --- | --- |
