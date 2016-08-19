@@ -273,7 +273,7 @@ var ERMrest = (function (module) {
          * @throws {ERMrest.NotFoundError} constraint not found
          * @returns {Object} the constrant object
          */
-        constraintByNamePair: function (pair) { 
+        constraintByNamePair: function (pair) {
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
                 return this._constraintNames[pair[0]][pair[1]];
             }
@@ -683,7 +683,7 @@ var ERMrest = (function (module) {
         _visibleForeignKeys: function (context) {
             var orders = -1;
             if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                orders = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+                orders = module._getAnnotationArrayValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
             // no annoation, return all outbound and inbound fks
@@ -1222,7 +1222,7 @@ var ERMrest = (function (module) {
             // get column orders from annotation
             var orders = -1;
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                orders = module._getAnnotationValueByContext(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+                orders = module._getAnnotationArrayValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
             // no annotation
@@ -1277,7 +1277,7 @@ var ERMrest = (function (module) {
          */
         this.formatvalue = function (data, options) {
             if (data === undefined || data === null) {
-                return '';
+                return this._getNullValue(options ? options.context : undefined);
             }
             /* TODO format the raw value based on the column definition
              * type, heuristics, annotations, etc.
@@ -1371,6 +1371,7 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+        this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
 
         /**
          * @type {string}
@@ -1412,6 +1413,43 @@ var ERMrest = (function (module) {
             return (column.table.schema.name === this.table.schema.name &&
             column.table.name === this.table.name &&
             column.name === this.name);
+        },
+
+        // find the null value for the column based on context and annotation
+        _getNullValue: function (context) {
+            if (context in this._nullValue) { // use the cached value
+                return this._nullValue[context];
+            }
+
+            var value = -1,
+                displayAnnot = module._annotations.DISPLAY,
+                elements = [this, this.table, this.table.schema];
+
+            // first look at the column, then table, and at last schema for annotation.
+            for (var i=0; i < elements.length; i++) {
+                if (elements[i].annotations.contains(displayAnnot)) {
+                    var annotation = elements[i].annotations.get(displayAnnot);
+                    if(annotation.content.show_nulls){
+                        value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
+                        if (value !== -1) break; //found the value
+                    }
+                }
+            }
+
+            if (value === false) { //eliminate the field
+                value = null;
+            } else if (value === true) { //empty field
+                value = "";
+            } else if (typeof value !== "string") { // default
+                if (context === module._contexts.DETAILED) {
+                    value = null; // default null value for DETAILED context
+                } else {
+                    value = ""; //default null value
+                }
+            }
+
+            this._nullValue[context] = value; // cache the value
+            return value;
         }
 
     };

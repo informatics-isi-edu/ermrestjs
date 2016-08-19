@@ -23,8 +23,8 @@ exports.execute = function (options) {
         it('should use the defined order in annotations based on its context.', function () {
             runTestCases('table_with_all_contexts', {
                 "entry": ['column_1', 'column_2'],
-                "edit": ['column_1', 'column_3'],
-                "create": ['column_2', 'column_3'],
+                "entry/edit": ['column_1', 'column_3'],
+                "entry/create": ['column_2', 'column_3'],
                 "record": ['column_1'],
                 "filter": ['column_2'],
                 "compact": ['column_3'],
@@ -32,9 +32,9 @@ exports.execute = function (options) {
             });
         });
 
-        it('should use `entry` context when context is `edit` or `create` and they are not present in annotation.', function () {
+        it('should use `entry` context when context is `entry/edit` or `entry/create` and they are not present in annotation.', function () {
             runTestCases('table_with_entry_filter_compact_star', {
-                "edit": ['column_1'], 'create': ['column_1']
+                "entry/edit": ['column_1'], 'entry/create': ['column_1']
             });
         });
 
@@ -48,7 +48,7 @@ exports.execute = function (options) {
             var expected = ['column_1', 'column_2'];
             runTestCases('table_without_annotation', {
                 "entry": expected,
-                "edit": expected,
+                "entry/edit": expected,
                 "create": expected,
                 "record": expected,
                 "filter": expected,

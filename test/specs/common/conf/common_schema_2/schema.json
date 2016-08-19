@@ -59,10 +59,39 @@
                 {
                     "name": "table_1_markdown",
                     "type": { "typename": "markdown" }
+                },
+                {
+                    "name": "table_1_show_nulls_annotation",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "show_nulls": {
+                                "record": "empty",
+                                "detailed": true,
+                                "compact": "",
+                                "entry/edit": false,
+                                "*": "default"
+                            }
+                        }
+                    }
                 }
             ],
-            "foreign_keys": []
+            "foreign_keys": [],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "show_nulls": {
+                        "entry/create": "table"
+                    }
+                }
+            }
         }
     },
-    "schema_name": "common_schema_2"
+    "schema_name": "common_schema_2",
+    "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+            "show_nulls": {
+                "entry": "schema"
+            }
+        }
+    }
 }

@@ -617,12 +617,12 @@ var ERMrest = (function(module) {
                  * This annotation should be consulted for determining whether
                  * to hide some references and how to order them.
                  */
-                
+
                 var visibleFKs = this._table._visibleForeignKeys(this._context);
 
                 for(var i = 0, fkr; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
-                    
+
                     // inbound FKRs
                     if (this._table.referredBy.all().indexOf(fkr) != -1) {
                         var newRef = _referenceCopy(this);
@@ -646,7 +646,7 @@ var ERMrest = (function(module) {
                             // remove the columns that are involved in the FKR
                             if (fkr.colset.columns.indexOf(col) == -1) newRef.columns.push(col);
                         }
-                        
+
                         if (fkr.from_name) {
                             newRef._displayname = fkr.from_name;
                         } else {
@@ -934,7 +934,7 @@ var ERMrest = (function(module) {
                 this._values = [];
                 for (var i = 0; i < this._ref.columns.length; i++) {
                     var col = this._ref.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name]);
+                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._ref._context});
                 }
             }
             return this._values;
