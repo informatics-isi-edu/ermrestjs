@@ -845,10 +845,14 @@ var ERMrest = (function(module) {
          */
         get values() {
             if (this._values === undefined) {
+
                 this._values = [];
+                this.isHTML = [];
+                var keyValues = {};
+
                 for (var i = 0; i < this._ref.columns.length; i++) {
                     var col = this._ref.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._ref._context});
+                    keyValues[col.name] = col.formatvalue(this._data[col.name], {context:this._ref._context});
                 }
 
                 /*
@@ -859,10 +863,16 @@ var ERMrest = (function(module) {
                 // format values according to column display annotation
                 for (i = 0; i < this._ref.columns.length; i++) {
                     var tempCol = this._ref.columns[i];
-                    formattedValues[i] = tempCol.formatPresentation(this._values[i], { values : this._values, columns: this._ref.columns, context: this._ref._context });
+                    formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._ref.columns, context: this._ref._context });
                 }
 
-                this._values = formattedValues;
+                var self = this;
+
+                formattedValues.forEach(function(fv) {
+                    self._values.push(fv.value);
+                    self.isHTML.push(fv.isHTML);
+                });
+
             }
             return this._values;
         },

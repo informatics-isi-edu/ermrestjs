@@ -204,15 +204,15 @@ exports.execute = function(options) {
                     });
                 });
 
-                describe('should call printMarkdown() to format,', function() {
+                describe('should not call printMarkdown() to format,', function() {
                     it('Markdown columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printMarkdown').and.callThrough();
                         var testVal = '*taylor ^swift^*';
                         var col = table1_schema2.columns.get('table_1_markdown');
                         var formattedValue = col.formatvalue(testVal);
-                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+                        expect(spy).not.toHaveBeenCalledWith(testVal, undefined);
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('<p><em>taylor <sup>swift</sup></em></p>\n');
+                        expect(formattedValue).toBe('*taylor ^swift^*');
                     });
                 });
             });

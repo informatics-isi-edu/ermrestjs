@@ -1264,7 +1264,7 @@ var ERMrest = (function (module) {
                     data = utils.printBoolean(data, options);
                     break;
                 case 'markdown':
-                    data = utils.printMarkdown(data, options);
+                    // Do nothing as we will format markdown at the end of format
                     break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
@@ -1277,65 +1277,59 @@ var ERMrest = (function (module) {
          * Formats the presentation value corresponding to this column definition.
          * @param {String} data The 'formatted' data value.
          * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
-         * @returns {string} The presenation value.
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
             
-            var utils = module._formatUtils, values = options.values, keyValues = {}, columns = options.columns;
+            var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            if (!this.annotations.contains(module._annotations.COLUMN_DISPLAY) ||
-                !this.annotations.get(module._annotations.COLUMN_DISPLAY).contains("markdown_pattern")) {
-                return data;
+            var isMarkdownPattern = false, isMarkdownType = false;
+
+            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY) && this.annotations.get(module._annotations.COLUMN_DISPLAY).contains("markdown_pattern")) {
+                isMarkdownPattern = true;
             }
 
-            // Set pattern from the annotation value
-            var pattern = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
+            if (this.type.name === 'markdown') {
+                isMarkdownType = true;
+            }
 
-            // If pattern is not of type string or is undefined/null then return the value as it is
-            if (typeof pattern !== 'string') return data;
+            if (!isMarkdownPattern && !isMarkdownType) {
+                return { isHTML: false, value: data };
+            }
 
-            /* 
-             * Code to validate values and set pattern as null if any of the
-             * values turn out to be null or undefined
-             * As well as set key-value pairs in the keyValues object for further usage while templating
-             */
-            for (var i = 0; i < columns.length; i++) {
-                var cname = columns[i].name;
-                
-                keyValues[cname] = values[i];
+            var value = data;
 
-                // Check for a match for the search string
-                var search = "{{" + cname + "}}";
+            // If there is any markdown pattern then evaluate it
+            if (isMarkdownPattern) {
+                // Get markdown pattern from the annotation value
+                var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
 
-                // If the search column is found in the pattern
-                if (pattern && pattern.match(search)) {
+                // If template is of type string 
+                if (typeof template == 'string') {
+                   
+                    /* 
+                     * Code to do template/string replacement using values and set template as null if any of the
+                     * values turn out to be null or undefined
+                     */
+                    value = module._renderTemplate(template, keyValues, options);
 
-                    // If the value for th search column is null,undefined or empty then set pattern to null
-                    if (values[i] === null || values[i] === undefined || values[i] === '') {
-                        pattern = null;
-                    }
                 }
             }
 
-            // TODO: If pattern is null due to some values being null or empty return value on basis of `show_nulls`
-            if (pattern === null) {
-                return this._getNullValue(options ? options.context : undefined);
+            // If value is null or empty, return value on basis of `show_nulls`
+            if (value === null || value === '') {
+                return { isHTML: false, value: this._getNullValue(options ? options.context : undefined) };
             }
 
-            /* 
-             * Code to do template/string replacement using values and set pattern as null if any of the
-             * values turn out to be null or undefined
-             */
-            var value = module._renderTemplate(pattern, keyValues, options);
-                            
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-            return utils.printMarkdown(value, options);
+            value = utils.printMarkdown(value, options);
+            return { isHTML: true, value: value };
         };
 
         /**
