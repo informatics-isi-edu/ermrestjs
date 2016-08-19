@@ -669,8 +669,9 @@ var ERMrest = (function (module) {
         },
 
         // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys and there is a composite key constraint combining all the columns from both foreign keys.
-        // pure: There are no other columns apart from the foreign key columns and columns that are part of key and have serial4 type.
+        // binary: Has 2 outbound foreign keys.
+        // pure: there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
         _isPureBinaryAssociation: function () {
             if(this._isPureBinaryAssociation_cached === undefined) {
                 this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
@@ -683,28 +684,21 @@ var ERMrest = (function (module) {
                 return false; // not binary
             }
 
+            var serialTypes = ["serial2", "serial4", "serial8"];
             var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
                 return res.concat(colset.columns);
             }, [])); // set of foreignkey columns
 
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && keyCols[0].type.name == "serial4"  && !(keyCols[0] in fkColset.columns));
+                return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
-            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
-                return false; // not binary
+            if (tempKeys.length != 1) {
+                return false; // not pure
             }
 
-            // check for purity:
-            for (var i = 0, col; i < this.columns.length(); i++) {
-                col = this.columns.getByPosition(i);
-                if (!(col.memberOfKeys.length && col.type.name == "serial4") && !col.memberOfForeignKeys.length) {
-                    return false; // there is a column that is not part of fk and not ID
-                }
-            }
-
-            return true;
+            return fkColset._equals(tempKeys[0].colset); // check for purity
         },
 
     };
