@@ -95,7 +95,7 @@ var ERMrest = (function(module) {
                     var row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
                     for (var i = 0; i < context.sort.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : (row[i] === "" ? "" : decodeURIComponent(row[i])));
+                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         context.paging.row[context.sort[i].column] = value;
                     }
                 }
@@ -108,7 +108,7 @@ var ERMrest = (function(module) {
                     var row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
                     for (var i = 0; i < context.sort.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : (row[i] === "" ? "" : decodeURIComponent(row[i])));
+                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         context.paging.row[context.sort[i].column] = value;
                     }
                 }
