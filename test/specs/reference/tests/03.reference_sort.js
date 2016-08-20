@@ -27,9 +27,9 @@ exports.execute = function (options) {
 
             it('sort should return a new Reference with new sort. ', function() {
                 reference2 = reference1.sort([{"column":"name", "descending":false}]);
-                expect(reference2._sort.length).toEqual(1);
-                expect(reference2._sort[0].column).toEqual("name");
-                expect(reference2._sort[0].descending).toEqual(false);
+                expect(reference2._location.sortObject.length).toEqual(1);
+                expect(reference2._location.sortObject[0].column).toEqual("name");
+                expect(reference2._location.sortObject[0].descending).toEqual(false);
             });
 
             it('read should return a Page object that is defined.', function(done) {
