@@ -398,6 +398,12 @@
                             "markdown_pattern" : "{{{some_markdown_with_pattern}}} {{name}} \n{{{some_markdown}}}"
                         }
                     }
+                },
+                {
+                    "name": "some_gene_sequence",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": { }

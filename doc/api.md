@@ -221,6 +221,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+        * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -2077,6 +2078,7 @@ if (reference.next) {
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+    * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -2148,6 +2150,21 @@ Usage (getting a specific value by column position):
 var column = reference.columns[8]; // the 8th column in this refernece
 console.log(tuple.displayname, "has a", column.displayname,
     "with value", tuple.values[column.position]);
+```
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+isHTML"></a>
+
+#### tuple.isHTML : <code>Array.&lt;string&gt;</code>
+The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
+values in the array matches the ordering of the columns in the
+reference (see [columns](#ERMrest.Reference+columns)).
+
+Usage (iterating over all values in the tuple):
+```
+for (var i=0; len=reference.columns.length; i<len; i++) {
+  console.log(tuple.displayname, tuple.isHTML[i] ? " has an HTML value" : " does not has an HTML value");
+}
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  

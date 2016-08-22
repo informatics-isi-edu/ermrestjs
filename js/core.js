@@ -1299,6 +1299,9 @@ var ERMrest = (function (module) {
                 case 'markdown':
                     // Do nothing as we will format markdown at the end of format
                     break;
+                case 'gene_sequence':
+                    // Do nothing
+                    break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
                     break;
