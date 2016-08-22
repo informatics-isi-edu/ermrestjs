@@ -1309,7 +1309,7 @@ var ERMrest = (function (module) {
                 var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
 
                 // If template is of type string 
-                if (typeof template == 'string') {
+                if (typeof template === 'string') {
                    
                     /* 
                      * Code to do template/string replacement using values and set template as null if any of the

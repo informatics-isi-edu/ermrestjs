@@ -864,6 +864,11 @@ var ERMrest = (function(module) {
                 for (i = 0; i < this._ref.columns.length; i++) {
                     var tempCol = this._ref.columns[i];
                     formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._ref.columns, context: this._ref._context });
+                    
+                    if (tempCol.type.name === "gene_sequence") {
+                        formattedValues[i].isHTML = true;
+                    }
+
                 }
 
                 var self = this;
