@@ -44,7 +44,9 @@
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
                     "record": [
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
-                        ["reference_schema", "fk_inbound_related_to_reference"]
+                        ["reference_schema", "fk_inbound_related_to_reference"],
+                        ["reference_schema", "toname_fk_association_related_to_reference"],
+                        ["reference_schema", "id_fk_association_related_to_reference"]
                     ]
                 }
             }
@@ -132,6 +134,118 @@
                 }
             ]
         },
+        "association_table_with_toname": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. the fk to inbound_related_reference_table has to_name annotation",
+            "kind": "table",
+            "table_name": "association_table_with_toname",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "toname_fk_association_related_to_reference"]
+                    ],
+                    "comment": "fk to reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_toname",
+                        "column_name": "id_from_ref_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "comment": "fk to inbound_related_reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_toname",
+                        "column_name": "id_from_inbound_related_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "inbound_related_reference_table",
+                        "column_name": "id"
+                    }],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "to_name": "to_name_value"
+                        }
+                    }
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_from_ref_table",
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_from_inbound_related_table",
+                    "type": {"typename":"text"}
+                }
+            ]
+        },
+        "association_table_with_id": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. has an ID column",
+            "kind": "table",
+            "table_name": "association_table_with_id",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+            }, {
+                "unique_columns": ["ID"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "id_fk_association_related_to_reference"]
+                    ],
+                    "comment": "fk to reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_id",
+                        "column_name": "id_from_ref_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "comment": "fk to inbound_related_reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_id",
+                        "column_name": "id_from_inbound_related_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "inbound_related_reference_table",
+                        "column_name": "id"
+                    }],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                  "name": "ID",
+                  "type": {"typename":"serial4"}
+                },
+                {
+                    "name": "id_from_ref_table",
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_from_inbound_related_table",
+                    "type": {"typename":"text"}
+                }
+            ]
+          },
         "sorted_table": {
             "comment": "",
             "kind": "table",
