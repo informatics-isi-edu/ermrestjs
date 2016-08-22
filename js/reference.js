@@ -779,7 +779,8 @@ var ERMrest = (function(module) {
 
                 // update its location by adding the tuple’s key filter to the URI
                 // don't keep any modifiers
-                var uri = this._pageRef._location.compactUri + "/";
+                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
+                    this._pageRef._location.api + "/" + this._pageRef._table.schema.name + ":" + this._pageRef._table.name + "/";
                 for (var k = 0; k < this._pageRef._shortestKey.length; k++) {
                     var col = this._pageRef._shortestKey[k].name;
                     if (k === 0) {
