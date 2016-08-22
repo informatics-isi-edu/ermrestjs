@@ -400,6 +400,58 @@ var ERMrest = (function(module) {
                 return '';
             }
             return module._markdownIt.renderInline(value);
+        },
+
+        /**
+         * @function
+         * @param {string} value The gene sequence to transform
+         * @param {Object} [options] Configuration options. Accepted parameters
+         * are "increment" (desired number of characters in each segment) and
+         * "separator" (desired separator between segments).
+         * @return {string} A string representation of value
+         * @desc Formats a gene sequence into a string for display. By default,
+         * it will split gene sequence into an increment of 10 characters and
+         * insert an empty space in between each increment.
+         */
+        printGeneSeq: function printGeneSeq(value, options) {
+            options = (typeof options === 'undefined') ? {increment: 10, separator: ' '} : options;
+
+            if (value === null) {
+                return '';
+            }
+
+            // Default increment is 10; default separator is a space.
+            if (!options.increment) {
+                options.increment = 10;
+            }
+
+            if (!options.separator) {
+                options.separator = ' ';
+            }
+
+            var inc = parseInt(options.increment, 10);
+            var separator = options.separator;
+
+            // Reset the increment to 0 if it's negative
+            if (inc <= -1) {
+                inc = 0;
+            }
+
+            var formattedSeq = '`';
+            for (var i = 0, len = value.length; i < len; i += inc) {
+                formattedSeq += value.substring(i, i + inc) + separator;
+            }
+
+            // Slice off the unnecessary separator at the end
+            if (formattedSeq.substring(0, formattedSeq.length - 1) == separator) {
+                formattedSeq = formattedSeq.slice(0, -1);
+            }
+
+            // Add the ending backtick at the end
+            formattedSeq += '`';
+
+            // Run it through printMarkdown to get the sequence in a fixed-width font
+            return module._formatUtils.printMarkdown(formattedSeq);
         }
     };
 

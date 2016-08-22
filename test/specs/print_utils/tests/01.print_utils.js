@@ -76,5 +76,23 @@ exports.execute = function (options) {
             expect(printMarkdown('H~2~0')).toBe('H<sub>2</sub>0');
             expect(printMarkdown('13^th^')).toBe('13<sup>th</sup>');
         });
+
+        it('printGeneSeq() should format gene sequences correctly.', function() {
+            var printGeneSeq = formatUtils.printGeneSeq;
+            expect(printGeneSeq(null)).toBe('');
+
+            var input = 'GATCTCGATGACTGAGAGGTA';
+            var defaultFormat = '<code>GATCTCGATG ACTGAGAGGT A</code>';
+            var incrementOf5WithDashes = '<code>GATCT-CGATG-ACTGA-GAGGT-A</code>';
+
+            expect(printGeneSeq(input)).toBe(defaultFormat);
+            expect(printGeneSeq(input, {
+                increment: -34
+            })).toBe(defaultFormat);
+            expect(printGeneSeq(input, {
+                separator: '-',
+                increment: 5
+            })).toBe(incrementOf5WithDashes);
+        });
     });
 };
