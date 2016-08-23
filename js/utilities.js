@@ -413,37 +413,48 @@ var ERMrest = (function(module) {
          * it will split gene sequence into an increment of 10 characters and
          * insert an empty space in between each increment.
          */
+
         printGeneSeq: function printGeneSeq(value, options) {
-            options = (typeof options === 'undefined') ? {increment: 10, separator: ' '} : options;
+            options = (typeof options === 'undefined') ? {} : options;
 
             if (value === null) {
                 return '';
             }
-
-            // Default increment is 10; default separator is a space.
-            if (!options.increment) {
-                options.increment = 10;
-            }
-
+            // Default separator is a space.
             if (!options.separator) {
                 options.separator = ' ';
             }
-
+            // Default increment is 10
+            if (!options.increment) {
+                options.increment = 10;
+            }
             var inc = parseInt(options.increment, 10);
-            var separator = options.separator;
 
-            // Reset the increment to 0 if it's negative
+            if (inc == 0) {
+                return value.toString();
+            }
+
+            // Reset the increment if it's negative
             if (inc <= -1) {
-                inc = 0;
+                inc = 1;
             }
 
             var formattedSeq = '`';
-            for (var i = 0, len = value.length; i < len; i += inc) {
-                formattedSeq += value.substring(i, i + inc) + separator;
+            var separator = options.separator;
+            while (value.length >= inc) {
+                // Get the first inc number of chars
+                var chunk = value.slice(0, inc);
+                // Append the chunk and separator
+                formattedSeq += chunk + separator;
+                // Remove this chunk from value
+                value = value.slice(inc);
             }
 
-            // Slice off the unnecessary separator at the end
-            if (formattedSeq.substring(0, formattedSeq.length - 1) == separator) {
+            // Append any remaining chars from value that was too small to form an increment
+            formattedSeq += value;
+
+            // Slice off separator at the end
+            if (formattedSeq.slice(-1) == separator) {
                 formattedSeq = formattedSeq.slice(0, -1);
             }
 

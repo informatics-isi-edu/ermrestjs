@@ -80,19 +80,27 @@ exports.execute = function (options) {
         it('printGeneSeq() should format gene sequences correctly.', function() {
             var printGeneSeq = formatUtils.printGeneSeq;
             expect(printGeneSeq(null)).toBe('');
+            var testCases = [
+                {
+                    input: 'as',
+                    defaultFormat: '<code>as</code>',
+                    negativeIncrement: '<code>a s</code>',
+                    incrementOf5WithDashes: '<code>as</code>',
+                },
+                {
+                    input: 'GATCTCGATGACTGAGAGGTA',
+                    defaultFormat: '<code>GATCTCGATG ACTGAGAGGT A</code>',
+                    negativeIncrement: '<code>G A T C T C G A T G A C T G A G A G G T A</code>',
+                    incrementOf5WithDashes: '<code>GATCT-CGATG-ACTGA-GAGGT-A</code>',
+                }
+            ];
 
-            var input = 'GATCTCGATGACTGAGAGGTA';
-            var defaultFormat = '<code>GATCTCGATG ACTGAGAGGT A</code>';
-            var incrementOf5WithDashes = '<code>GATCT-CGATG-ACTGA-GAGGT-A</code>';
-
-            expect(printGeneSeq(input)).toBe(defaultFormat);
-            expect(printGeneSeq(input, {
-                increment: -34
-            })).toBe(defaultFormat);
-            expect(printGeneSeq(input, {
-                separator: '-',
-                increment: 5
-            })).toBe(incrementOf5WithDashes);
+            for (var i = 0, len = testCases.length; i < len; i++) {
+                var testCase = testCases[i];
+                expect(printGeneSeq(testCase.input)).toBe(testCase.defaultFormat);
+                expect(printGeneSeq(testCase.input, {increment: -34})).toBe(testCase.negativeIncrement);
+                expect(printGeneSeq(testCase.input, {separator: '-', increment: 5})).toBe(testCase.incrementOf5WithDashes);
+            }
         });
     });
 };
