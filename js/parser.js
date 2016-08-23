@@ -50,33 +50,75 @@ var ERMrest = (function(module) {
         }
 
         var context = {
-            uri: uri,
-            baseUri: uri.slice(0,svc_idx+_service_name_len)
+            uri: uri, // full uri without modifiers
+            baseUri: uri.slice(0,svc_idx+_service_name_len), // ermrest service url
+            path: uri.slice(svc_idx+_service_name_len) // full path without service
         };
-        var path = context.path = uri.slice(svc_idx+_service_name_len); // string after service
+
+        // remove modifiers from uri
+        if (uri.indexOf("@sort(") !== -1) {
+            context.uri = uri.split("@sort(")[0]; // remove modifiers from uri
+        } else if (uri.indexOf("@before(") !== -1) {
+            context.uri = uri.split("@before(")[0]; // remove modifiers from uri
+        } else if (uri.indexOf("@after(") !== -1) {
+            context.uri = uri.split("@after(")[0]; // remove modifiers from uri
+        } else if (uri.indexOf("?limit=") !== -1) {
+            context.uri = uri.split("?limit=")[0]; // remove modifiers from uri
+        }
+
+        var modifierPath = uri.split(context.uri)[1]; // modifiers string
+        var shortPath = (modifierPath === "" ? context.path : context.path.split(modifierPath)[0]); // path without modifiers
 
         // Parse out @sort(...) parameter and assign to context
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
-        if (uri.indexOf("@sort(") !== -1) {
+        if (modifierPath) {
+            if (modifierPath.indexOf("@sort(") !== -1) {
 
-            var sorts = path.match(/@sort\((.*)\)/)[1].split(",");
-            path = path.split("@sort(")[0];  // anything before @sort(..)
-            context.uri = uri.split("@sort(")[0]; // remove @sort from uri
+                var sorts = modifierPath.match(/@sort\(([^\)]*)\)/)[1].split(",");
 
-            context.sort = [];
-            for (var s = 0; s < sorts.length; s++) {
-                var sort = sorts[s];
-                var column = (sort.endsWith("::desc::") ?
-                    decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : sort);
-                context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
+                context.sort = [];
+                for (var s = 0; s < sorts.length; s++) {
+                    var sort = sorts[s];
+                    var column = (sort.endsWith("::desc::") ?
+                        decodeURIComponent(sort.match(/(.*)::desc::/)[1]) : decodeURIComponent(sort));
+                    context.sort.push({"column": column, "descending": sort.endsWith("::desc::")});
+                }
+            }
+
+            // sort must specified to use @before and @after
+            if (modifierPath.indexOf("@before(") !== -1) {
+                if (context.sort) {
+                    context.paging = {};
+                    context.paging.before = true;
+                    context.paging.row = {};
+                    var row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
+                    for (var i = 0; i < context.sort.length; i++) {
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        context.paging.row[context.sort[i].column] = value;
+                    }
+                }
+
+            } else if (modifierPath.indexOf("@after(") !== -1) {
+                if (context.sort) {
+                    context.paging = {};
+                    context.paging.before = false;
+                    context.paging.row = {};
+                    var row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
+                    for (var i = 0; i < context.sort.length; i++) {
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        context.paging.row[context.sort[i].column] = value;
+                    }
+                }
             }
         }
 
         // Split the URI on '/'
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
-        var parts = path.split('/');
+        var parts = shortPath.split('/');
 
         if (parts.length < 3) {
             throw new module.MalformedURIError("Uri does not have enough qualifying information");
