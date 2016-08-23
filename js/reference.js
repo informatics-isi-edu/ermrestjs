@@ -374,6 +374,8 @@ var ERMrest = (function(module) {
 
                 var uri = this._location.compactUri;
 
+                var sortObject, col;
+
                 // if no sorting provided, use schema defined sort if that's present
                 // If neither one present, use shortestkey
                 var addkey = true;
@@ -384,9 +386,9 @@ var ERMrest = (function(module) {
                         addkey = true;
                     } else {
                         // use shortest key as sort
-                        var sortObject = [];
+                        sortObject = [];
                         for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                            var col = this._shortestKey[sk].name;
+                            col = this._shortestKey[sk].name;
                             sortObject.push({"column":col, "descending":false});
                         }
                         this._location.sortObject = sortObject; // this will update location.sort and all the uri and path
@@ -400,9 +402,9 @@ var ERMrest = (function(module) {
                 if (addkey) {
                     var sortCols = this._location.sortObject.map(function(sort) {
                         return sort.column;});
-                    var sortObject = this._location.sortObject;
+                    sortObject = this._location.sortObject;
                     for (var i = 0; i < this._shortestKey.length; i++) { // all the key columns
-                        var col = this._shortestKey[i].name;
+                        col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
                             sortObject.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort

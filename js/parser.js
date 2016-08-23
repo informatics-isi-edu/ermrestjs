@@ -357,13 +357,12 @@ var ERMrest = (function(module) {
             var row, i, value;
             if (this._pagingObject === undefined) {
                 if (this._paging) {
-                    this.sortObject; // create this._sortObject if it hasn't
                     if (this._paging.indexOf("@before") !== -1) {
                         this._pagingObject = {};
                         this._pagingObject.before = true;
                         this._pagingObject.row = [];
                         row = this._paging.match(/@before\(([^\)]*)\)/)[1].split(",");
-                        for (i = 0; i < this._sortObject.length; i++) {
+                        for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
                             // ::null:: to null, empty string to "", otherwise decode value
                             value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                             this._pagingObject.row.push(value);
@@ -373,7 +372,7 @@ var ERMrest = (function(module) {
                         this._pagingObject.before = false;
                         this._pagingObject.row = [];
                         row = this._paging.match(/@after\(([^\)]*)\)/)[1].split(",");
-                        for (i = 0; i < this._sortObject.length; i++) {
+                        for (i = 0; i < this.sortObject.length; i++) { // use getter to force sortobject to be created, it could be undefined
                             // ::null:: to null, empty string to "", otherwise decode value
                             value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                             this._pagingObject.row.push(value);
