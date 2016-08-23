@@ -17,7 +17,6 @@
 var ERMrest = (function(module) {
 
     module.ParsedFilter = ParsedFilter;
-    module.Location = Location;
 
     /**
      * The ERMrest service name. Internal use only.
@@ -206,6 +205,15 @@ var ERMrest = (function(module) {
     Location.prototype = {
 
         /**
+         * Override the toString function
+         * @returns {String} the string representation of the Location, which is the full URI.
+         */
+        toString: function(){
+            return this._uri;
+        },
+
+
+        /**
          *
          * @returns {String} The full URI of the location
          */
@@ -325,7 +333,7 @@ var ERMrest = (function(module) {
                 this._sortObject = null;
             } else {
                 this._sortObject = so;
-                this._sort = module._getSortModifier(so);
+                this._sort = _getSortModifier(so);
             }
 
             // update uri/path
@@ -401,7 +409,7 @@ var ERMrest = (function(module) {
             var oldPagingString = (this._paging? this._paging : "");
             if (this._sort) {
                 this._pagingObject = po;
-                this._paging = module._getPagingModifier(po);
+                this._paging = _getPagingModifier(po);
             } else {
                 throw Error("Error setPagingObject: Paging not allowed without sort");
             }
@@ -416,7 +424,68 @@ var ERMrest = (function(module) {
                 this._uri = this._compactUri + this._sort + newPagingString;
                 this._path = this._compactPath + this._sort + newPagingString;
             }
+        },
+
+        /**
+         * Makes a shallow copy of the Location object
+         * @returns {ERMrest.Location} new location object
+         * @private
+         */
+        _clone: function() {
+            var copy = Object.create(Location.prototype);
+            for (var key in this) {
+                // only copy those properties that were set in the object, this
+                // will skip properties from the source object's prototype
+                if (this.hasOwnProperty(key)) {
+                    copy[key] = this[key];
+                }
+            }
+            return copy;
         }
+    };
+
+    /**
+     * for testingiven sort object, get the string modifier
+     * @param {Object[]} sort [{"column":colname, "descending":boolean}, ...]
+     * @return {string} string modifier @sort(...)
+     * @private
+     */
+    _getSortModifier = function(sort) {
+
+        // if no sorting
+        if (!sort || sort.length === 0) {
+            return "";
+        }
+
+        var modifier = "@sort(";
+        for (var i = 0; i < sort.length; i++) {
+            if (i !== 0) modifier = modifier + ",";
+            modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
+        }
+        modifier = modifier + ")";
+        return modifier;
+    };
+
+    /**
+     * given paging object, get the paging modifier
+     * @param {Object} paging {"before":boolean, "row":[c1,c2,c3..]}
+     * @return {string} string modifier @paging(...)
+     * @private
+     */
+    _getPagingModifier = function(paging) {
+
+        // no paging
+        if (!paging) {
+            return "";
+        }
+
+        var modifier = (paging.before ? "@before(" : "@after(");
+        for (var i = 0; i < paging.row.length; i++) {
+            if (i !== 0) modifier = modifier + ",";
+            modifier = modifier + (paging.row[i] === "null" ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
+        }
+        modifier = modifier + ")";
+        return modifier;
     };
 
     /**

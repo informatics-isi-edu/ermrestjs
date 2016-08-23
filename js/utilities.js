@@ -437,50 +437,6 @@ var ERMrest = (function(module) {
     };
 
     /**
-     * given sort object, get the string modifier
-     * @param {Object[]} sort [{"column":colname, "descending":boolean}, ...]
-     * @return {string} string modifier @sort(...)
-     * @private
-     */
-    module._getSortModifier = function(sort) {
-
-        // if no sorting
-        if (!sort || sort.length === 0) {
-            return "";
-        }
-
-        var modifier = "@sort(";
-        for (var i = 0; i < sort.length; i++) {
-            if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
-        }
-        modifier = modifier + ")";
-        return modifier;
-    };
-
-    /**
-     * given paging object, get the paging modifier
-     * @param {Object} paging {"before":boolean, "row":[c1,c2,c3..]}
-     * @return {string} string modifier @paging(...)
-     * @private
-     */
-    module._getPagingModifier = function(paging) {
-
-        // no paging
-        if (!paging) {
-            return "";
-        }
-
-        var modifier = (paging.before ? "@before(" : "@after(");
-        for (var i = 0; i < paging.row.length; i++) {
-            if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + (paging.row[i] === "null" ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
-        }
-        modifier = modifier + ")";
-        return modifier;
-    };
-
-    /**
      * @desc List of annotations that ermrestjs supports.
      * @private
      */

@@ -478,18 +478,15 @@ var ERMrest = (function(module) {
             // make a Reference copy
             var newReference = _referenceCopy(this);
 
-            // change by updating location
-            var uri = this._location.compactUri;
             if (sort) {
                 verify((sort instanceof Array), "input should be an array");
                 verify(sort.every(module._isValidSortElement), "invalid arguments in array");
 
-                // create new ._location using the new sort
-                // any paging is removed at resort
-                uri = uri + module._getSortModifier(sort);
             }
 
-            newReference._location = new module.Location(uri);
+            newReference._location = this._location._clone();
+            newReference._location.pagingObject = null;
+            newReference._location.sortObject = sort;
 
             return newReference;
         },
@@ -567,7 +564,7 @@ var ERMrest = (function(module) {
                             newRef._shortestKey = newRef._table.shortestKey;
                             newRef._columns = otherFK.key.table.columns.all();
                             newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
-                            newRef._location = new module.Location(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+                            newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         } else { // Simple inbound Table
                             newRef._table = fkrTable;
@@ -583,7 +580,7 @@ var ERMrest = (function(module) {
                             }
 
                             newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
-                            newRef._location = new module.Location(this._location.compactUri + "/" + fkr.toString());
+                            newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
                         }
 
                         this._related.push(newRef);
@@ -697,8 +694,9 @@ var ERMrest = (function(module) {
                     var col = newReference._location.sortObject[i].column;
                     paging.row.push(this._data[0][col]); // first row
                 }
-                // create new _location
-                newReference._location = new module.Location(newReference._location.compactUri + newReference._location.sort + module._getPagingModifier(paging));
+
+                newReference._location = this._ref._location._clone();
+                newReference._location.pagingObject = paging;
                 return newReference;
             }
             return null;
@@ -738,8 +736,9 @@ var ERMrest = (function(module) {
                     var col = newReference._location.sortObject[i].column;
                     paging.row.push(this._data[this._data.length-1][col]); // last row
                 }
-                // create new _location
-                newReference._location = new module.Location(newReference._location.compactUri + newReference._location.sort + module._getPagingModifier(paging));
+
+                newReference._location = this._ref._location._clone();
+                newReference._location.pagingObject = paging;
                 return newReference;
             }
             return null;
@@ -789,7 +788,7 @@ var ERMrest = (function(module) {
                         uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
                     }
                 }
-                this._ref._location = new module.Location(uri);
+                this._ref._location = module._parse(uri);
             }
             return this._ref;
         },
