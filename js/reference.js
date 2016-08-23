@@ -564,61 +564,84 @@ var ERMrest = (function(module) {
             if (this._related === undefined) {
                 this._related = [];
 
-                var visibleFKs = this._table._visibleForeignKeys(this._context);
+                var visibleFKs = this._table._visibleForeignKeys(this._context),
+                    notSorted;
+                if (visibleFKs) {
+                    notSorted = true
+                    visibleFKs = this._table.referredBy.all();
+                }
+
                 for(var i = 0, fkr; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
-                    // inbound FKRs
-                    if (this._table.referredBy.all().indexOf(fkr) != -1) {
-                        var newRef = _referenceCopy(this);
-                        newRef.contextualize._reference = newRef;
-                        delete newRef._context; // NOTE: related reference is not contextualized
-                        delete newRef._sort;
-                        delete newRef._paging;
+                    var newRef = _referenceCopy(this);
+                    newRef.contextualize._reference = newRef;
+                    delete newRef._context; // NOTE: related reference is not contextualized
+                    delete newRef._sort;
+                    delete newRef._paging;
 
-                        newRef._shortestKey = newRef._table.shortestKey;
-                        
-                        var fkrTable = fkr.colset.columns[0].table;
-                        if (fkrTable._isPureBinaryAssociation()) { // Association Table
-                            var otherFK;
-                            for (var k = 0; k < fkrTable.foreignKeys.length(); k++) {
-                                if(fkrTable.foreignKeys.all()[k] !== fkr) {
-                                    otherFK = fkrTable.foreignKeys.all()[k];
-                                    break;
-                                }
+                    newRef._shortestKey = newRef._table.shortestKey;
+
+                    var fkrTable = fkr.colset.columns[0].table;
+                    if (fkrTable._isPureBinaryAssociation()) { // Association Table
+                        var otherFK;
+                        for (var k = 0; k < fkrTable.foreignKeys.length(); k++) {
+                            if(fkrTable.foreignKeys.all()[k] !== fkr) {
+                                otherFK = fkrTable.foreignKeys.all()[k];
+                                break;
                             }
-
-                            newRef._schema = otherFK.key.table.schema;
-                            newRef._schemaName = otherFK.key.table.schema.name;
-                            newRef._table = otherFK.key.table;
-                            newRef._tableName = otherFK.key.table.name;
-                            newRef._columns = otherFK.key.table.columns.all();
-                            newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
-                            newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
-
-                        } else { // Simple inbound Table
-                            newRef._schema = fkrTable.schema;
-                            newRef._schemaName = fkrTable.schema.name;
-                            newRef._table = fkrTable;
-                            newRef._tableName = fkrTable.name;
-
-                            newRef._columns = [];
-                            for (var l = 0, col; l < newRef._table.columns.all().length; l++) {
-                                // remove the columns that are involved in the FKR
-                                col = newRef._table.columns.all()[l];
-                                if (fkr.colset.columns.indexOf(col) == -1) {
-                                    newRef._columns.push(col);
-                                }
-                            }
-
-                            newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
-                            newRef._uri = this._uri + "/" + fkr.toString();
                         }
 
-                        this._related.push(newRef);
+                        newRef._schema = otherFK.key.table.schema;
+                        newRef._schemaName = otherFK.key.table.schema.name;
+                        newRef._table = otherFK.key.table;
+                        newRef._tableName = otherFK.key.table.name;
+                        newRef._columns = otherFK.key.table.columns.all();
+                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
+                        newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
+                        newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
+                        newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
+                    } else { // Simple inbound Table
+                        newRef._schema = fkrTable.schema;
+                        newRef._schemaName = fkrTable.schema.name;
+                        newRef._table = fkrTable;
+                        newRef._tableName = fkrTable.name;
+
+                        newRef._columns = [];
+                        for (var l = 0, col; l < newRef._table.columns.all().length; l++) {
+                            // remove the columns that are involved in the FKR
+                            col = newRef._table.columns.all()[l];
+                            if (fkr.colset.columns.indexOf(col) == -1) {
+                                newRef._columns.push(col);
+                            }
+                        }
+
+                        newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
+                        newRef._uri = this._uri + "/" + fkr.toString();
+                        newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
+                        newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
                     }
 
+                    this._related.push(newRef);
                 }
+
+                if (notSorted && this._related.length != 0) {
+                    return this._related.sort(function (a, b) {
+                        // displayname
+                        if (a._displayname != b._displayname) {
+                            return a._displayname.localeCompare(b._displayname);
+                        }
+
+                        // columns
+                        if (a._related_key_column_positions != b._related_key_column_positions) {
+                            return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
+                        }
+
+                        // foreignkey columns
+                        return a._related_fk_column_positions >= b._related_fk_column_positions ? 1 : -1;
+                    });
+                }
+
             }
             return this._related;
         }

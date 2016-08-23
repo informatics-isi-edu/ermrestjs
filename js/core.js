@@ -679,8 +679,8 @@ var ERMrest = (function (module) {
             }
         },
 
-        // returns visible foreignkeys.
-        _visibleForeignKeys: function (context) {
+        // returns visible inbound foreignkeys.
+        _visibleInboundForeignKeys: function (context) {
             var orders = -1;
             if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getAnnotationArrayValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
@@ -688,7 +688,7 @@ var ERMrest = (function (module) {
 
             // no annoation, return all outbound and inbound fks
             if (orders == -1) {
-                return this.foreignKeys.all().concat(this.referredBy.all());
+                return -1;
             }
 
             for (var i = 0, result = [], fk; i < orders.length; i++) {
@@ -697,8 +697,8 @@ var ERMrest = (function (module) {
                 }
                 try {
                     fk = this.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && (this.foreignKeys.all().indexOf(fk) != -1 || this.referredBy.all().indexOf(fk) != -1)) {
-                        // avoid duplicate and if it's a valid outbound or inbound fk of this table.
+                    if (result.indexOf(fk) == -1 && this.referredBy.all().indexOf(fk) != -1) {
+                        // avoid duplicate and if it's a valid inbound fk of this table.
                         result.push(fk);
                     }
                 } catch (exception){
@@ -1805,6 +1805,13 @@ var ERMrest = (function (module) {
             } else return false;
 
             return true;
+        },
+
+        // return the index of columns in the actual table
+        _getColumnPositions: function () {
+            return this.columns.map(function(col){
+                return col.table.indexOf(col);
+            }).sort();
         }
 
     };
