@@ -26,13 +26,6 @@ var ERMrest = (function(module) {
     var _service_name = 'ermrest';
 
     /**
-     * The length of the ERMrest service name. Internal use only.
-     * @type {Number}
-     * @private
-     */
-    var _service_name_len = _service_name.length;
-
-    /**
      * This is an internal function that parses a URI and constructs an
      * internal representation of the URI.
      * @memberof ERMrest
@@ -361,6 +354,7 @@ var ERMrest = (function(module) {
          * @returns {Object} in this format {"before":boolean, "row":[v1, v2, v3...]} where v is in same column order as in sort
          */
         get pagingObject() {
+            var row, i, value;
             if (this._pagingObject === undefined) {
                 if (this._paging) {
                     this.sortObject; // create this._sortObject if it hasn't
@@ -368,20 +362,20 @@ var ERMrest = (function(module) {
                         this._pagingObject = {};
                         this._pagingObject.before = true;
                         this._pagingObject.row = [];
-                        var row = this._paging.match(/@before\(([^\)]*)\)/)[1].split(",");
-                        for (var i = 0; i < this._sortObject.length; i++) {
+                        row = this._paging.match(/@before\(([^\)]*)\)/)[1].split(",");
+                        for (i = 0; i < this._sortObject.length; i++) {
                             // ::null:: to null, empty string to "", otherwise decode value
-                            var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                            value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                             this._pagingObject.row.push(value);
                         }
                     } else if (this._paging.indexOf("@after(") !== -1) {
                         this._pagingObject = {};
                         this._pagingObject.before = false;
                         this._pagingObject.row = [];
-                        var row = this._paging.match(/@after\(([^\)]*)\)/)[1].split(",");
-                        for (var i = 0; i < this._sortObject.length; i++) {
+                        row = this._paging.match(/@after\(([^\)]*)\)/)[1].split(",");
+                        for (i = 0; i < this._sortObject.length; i++) {
                             // ::null:: to null, empty string to "", otherwise decode value
-                            var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                            value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                             this._pagingObject.row.push(value);
                         }
                     }
