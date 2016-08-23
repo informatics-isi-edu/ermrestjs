@@ -7,6 +7,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/04.paging.js"
     ],
     schemaConfigurations: [
-        "/reference/conf/reference.conf.json"
+        "/reference/conf/reference.conf.json",
+        "/reference/conf/reference_2.conf.json"
     ]
 });

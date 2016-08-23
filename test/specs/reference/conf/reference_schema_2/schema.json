@@ -1,0 +1,189 @@
+{
+    "schema_name": "reference_schema_2",
+    "tables": {
+        "reference_table_no_order": {
+            "comment": "doesn't have visible foreign keys annotation",
+            "kind": "table",
+            "table_name": "reference_table_no_order",
+            "schema_name": "reference_schema_2",
+            "foreign_keys": [],
+            "keys": [{
+                "comment": null,
+                "annotations": {},
+                "unique_columns": [
+                    "id_1", "id_2"
+                ]
+            }, {
+                "comment": null,
+                "annotations": {},
+                "unique_columns": [
+                    "id_2", "id_3"
+                ]
+            }, {
+                "comment": null,
+                "annotations": {},
+                "unique_columns": [
+                    "id_1"
+                ]
+            }],
+            "column_definitions": [{
+                "name": "id_1",
+                "nullok": false,
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "id_2",
+                "nullok": false,
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "id_3",
+                "nullok": false,
+                "type": {
+                    "typename": "text"
+                }
+            }],
+            "annotations": {}
+        },
+        "related_reference_no_order": {
+            "kind": "table",
+            "table_name": "related_reference_no_order",
+            "schema_name": "reference_schema_2",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
+            "foreign_keys": [{
+                "foreign_key_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_5"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_6"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_2"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_3"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "from_name": "other_related"
+                    }
+                }
+            }, {
+                "comment": "should be third: order of foreign key columns",
+                "foreign_key_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_3"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_4"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_2"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_3"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "from_name": "other_related"
+                    }
+                }
+            }, {
+                "comment": "should be second: order of key columns",
+                "foreign_key_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_1"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "col_from_ref_no_order_2"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_1"
+                }, {
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_2"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "from_name": "other_related"
+                    }
+                }
+            }, {
+                "comment": "should be first: displayname",
+                "foreign_key_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "related_reference_no_order",
+                    "column_name": "id"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "reference_schema_2",
+                    "table_name": "reference_table_no_order",
+                    "column_name": "id_1"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "from_name": "first_related"
+                    }
+                }
+            }],
+            "column_definitions": [{
+                "name": "id",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_1",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_2",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_3",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_4",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_5",
+                "type": {
+                    "typename": "text"
+                }
+            }, {
+                "name": "col_from_ref_no_order_6",
+                "type": {
+                    "typename": "text"
+                }
+            }]
+        }
+    },
+    "comment": null,
+    "annotations": {}
+}

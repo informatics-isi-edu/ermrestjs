@@ -15,7 +15,7 @@ exports.execute = function (options) {
         // Helper function to add 'expect' based on test cases and the specified table
         function runTestCases(table, cases, check_order) {
             Object.keys(cases).forEach(function (context) {
-                var fk_names = schema.tables.get(table)._visibleForeignKeys(context).map( function(fk){
+                var fk_names = schema.tables.get(table)._visibleInboundForeignKeys(context).map( function(fk){
                     return fk.constraint_names[0][1]; // return the actual constraint_name
                 });
                 expect(fk_names).toHaveSameItems(cases[context], !check_order);
@@ -25,7 +25,7 @@ exports.execute = function (options) {
         // Test Cases:
         it('should use the defined order in anntoations based on its context.', function(){
             runTestCases(tableWithAnnotation, {
-                "entry": ["fk_with_annotation_to_outbound"],
+                "entry": [],
                 "entry/edit": ["fk_inbound_to_with_annotation"],
                 "*": []
             }, true);
@@ -33,7 +33,7 @@ exports.execute = function (options) {
 
         it('should use `entry` context when context is `entry/edit` or `entry/create` and they are not present in annotation.', function () {
             runTestCases(tableWithAnnotation, {
-                "entry/create": ["fk_with_annotation_to_outbound"]
+                "entry/create": []
             }, true);
         });
 
@@ -52,19 +52,13 @@ exports.execute = function (options) {
         it('should ignore repetitive constraint names and just consider the first one.', function () {
             runTestCases(tableWithAnnotation, {
                 "compact": [
-                    "fk_inbound_to_with_annotation",
-                    "fk_with_annotation_to_outbound"
+                    "fk_inbound_to_with_annotation"
                 ]
             }, true);
         });
 
         it('should use the default order when context not matched by a more specific context name and default (`*`) context is not present.', function () {
-            runTestCases(tableWithoutAnnotation, {
-                "filter": [
-                    "fk_inbound_to_without_annotation",
-                    "fk_without_annotation_to_outbound"
-                ]
-            }, false);
+            expect(schema.tables.get(tableWithoutAnnotation)._visibleInboundForeignKeys("filter")).toBe(-1);
         });
 
 

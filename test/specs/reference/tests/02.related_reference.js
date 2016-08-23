@@ -15,6 +15,14 @@ exports.execute = function(options) {
 
         var reference, related;
 
+        function checkReferenceColumns(tesCases) {
+            tesCases.forEach(function(test){
+                expect(test.ref.columns.map(function(col){
+                    return col.name;
+                })).toEqual(test.expected);
+            });
+        }
+
         beforeAll(function(done) {
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
@@ -25,7 +33,7 @@ exports.execute = function(options) {
             }, function(err) {
                 console.dir(err);
                 done.fail();
-            })
+            });
         });
 
         it('should be defined and not empty.', function() {
@@ -60,18 +68,13 @@ exports.execute = function(options) {
             });
 
             it('.columns should be properly defiend based on schema', function() {
-                var cases = [{
+                checkReferenceColumns([{
                     ref: related[0],
                     expected: ["id", "fk_to_reference_hidden", "fk_to_reference"]
                 }, {
                     ref: related[1],
                     expected: ["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden"]
-                }];
-                cases.forEach(function(test){
-                    expect(test.ref.columns.map(function(col){
-                        return col.name;
-                    })).toEqual(test.expected);
-                });
+                }]);
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -150,5 +153,53 @@ exports.execute = function(options) {
             });
 
         });
+
+        describe('when visible foreign keys are not defined, ', function() {
+            var schemaName2 = "reference_schema_2",
+                tableName2 = "reference_table_no_order",
+                related2;
+
+            var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/"
+                + schemaName2 + ":" + tableName2;
+
+            beforeAll(function(done) {
+                options.ermRest.resolve(noOrderUri, {
+                    cid: "test"
+                }).then(function(response) {
+                    related2 = response.contextualize.record.related;
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should include all foreign keys.', function() {
+                expect(related2.length).toBe(4);
+            });
+
+            it('should be sorted by displayname.', function() {
+                expect(related2[0].displayname).toBe("first_related");
+            });
+
+            it('should be sorted by order of key columns when displayname is the same.', function (){
+                checkReferenceColumns([{
+                    ref: related2[1],
+                    expected: [
+                        "id", "col_from_ref_no_order_3", "col_from_ref_no_order_4", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
+            });
+
+            it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
+                checkReferenceColumns([{
+                    ref: related2[2],
+                    expected:[
+                        "id", "col_from_ref_no_order_1", "col_from_ref_no_order_2", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
+            });
+        });
+
     });
 };
