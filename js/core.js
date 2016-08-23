@@ -686,9 +686,8 @@ var ERMrest = (function (module) {
                 orders = module._getAnnotationArrayValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
-            // no annoation, return all outbound and inbound fks
             if (orders == -1) {
-                return -1;
+                return -1; // no annoation
             }
 
             for (var i = 0, result = [], fk; i < orders.length; i++) {
@@ -1810,7 +1809,7 @@ var ERMrest = (function (module) {
         // return the index of columns in the actual table
         _getColumnPositions: function () {
             return this.columns.map(function(col){
-                return col.table.indexOf(col);
+                return col.table.columns.all().indexOf(col);
             }).sort();
         }
 

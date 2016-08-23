@@ -564,10 +564,10 @@ var ERMrest = (function(module) {
             if (this._related === undefined) {
                 this._related = [];
 
-                var visibleFKs = this._table._visibleForeignKeys(this._context),
+                var visibleFKs = this._table._visibleInboundForeignKeys(this._context),
                     notSorted;
-                if (visibleFKs) {
-                    notSorted = true
+                if (visibleFKs === -1) {
+                    notSorted = true;
                     visibleFKs = this._table.referredBy.all();
                 }
 
@@ -625,7 +625,7 @@ var ERMrest = (function(module) {
                     this._related.push(newRef);
                 }
 
-                if (notSorted && this._related.length != 0) {
+                if (notSorted && this._related.length !== 0) {
                     return this._related.sort(function (a, b) {
                         // displayname
                         if (a._displayname != b._displayname) {
@@ -633,7 +633,7 @@ var ERMrest = (function(module) {
                         }
 
                         // columns
-                        if (a._related_key_column_positions != b._related_key_column_positions) {
+                        if (a._related_key_column_positions.join(",") != b._related_key_column_positions.join(",")) {
                             return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
                         }
 
