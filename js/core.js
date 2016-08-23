@@ -623,6 +623,47 @@ var ERMrest = (function (module) {
 
         },
 
+        get shortestKey() {
+            if (!this._shortestKey) {
+
+                if (this.keys.length() === 0) { // no key, use all columns
+                    this._shortestKey = this.columns.all();
+                } else {
+                    var keys = this.keys.all();
+
+                    // sort keys by length
+                    var sortedKeys = keys.sort(function (a, b) {
+                        var val = a.colset.length() - b.colset.length();
+
+                        // if key length equal, choose the one with integer/serial key over text
+                        if (val === 0) {
+
+                            // get a list of column types, and check if every type is int/serial
+                            // return 1 if true, 0 for false
+                            var aSerial = (a.colset.columns.map(function (column) {
+                                return column.type.name;
+                            }).every(function (current, index, array) {
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
+                            }) ? 1 : 0);
+
+                            var bSerial = (b.colset.columns.map(function (column) {
+                                return column.type.name;
+                            }).every(function (current, index, array) {
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
+                            }) ? 1 : 0);
+
+                            return bSerial - aSerial; // will make a before b if negative, b before a if positive
+                        } else
+                            return val;
+                    });
+
+                    this._shortestKey = sortedKeys[0].colset.columns;
+                }
+            }
+
+            return this._shortestKey;
+        },
+
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection

@@ -20,6 +20,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -110,6 +111,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -265,6 +267,97 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "value",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_order": [{"column":"name", "descending":false}]
+                }
+            }
+        },
+        "paging_table_no_sort": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "value"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "paging_table_no_sort",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "value",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "paging_table_w_sort": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "paging_table_w_sort",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
