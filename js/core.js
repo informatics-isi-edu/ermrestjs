@@ -569,6 +569,7 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+        this._visibleInboundForeignKeys_cached = {}; // Used in _visibleInboundForeignKeys
 
         /**
          * @type {string}
@@ -681,12 +682,17 @@ var ERMrest = (function (module) {
 
         // returns visible inbound foreignkeys.
         _visibleInboundForeignKeys: function (context) {
+            if(context in this._visibleInboundForeignKeys_cached) {
+                return this._visibleInboundForeignKeys_cached[context];
+            }
+
             var orders = -1;
             if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getAnnotationArrayValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
             if (orders == -1) {
+                this._visibleInboundForeignKeys_cached[context] = -1;
                 return -1; // no annoation
             }
 
@@ -705,6 +711,7 @@ var ERMrest = (function (module) {
                 }
             }
 
+            this._visibleInboundForeignKeys_cached[context] = result;
             return result;
         },
 
