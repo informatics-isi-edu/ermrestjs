@@ -39,7 +39,7 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @function _parse
      * @param {String} uri An ERMrest resource URI to be parsed.
-     * @returns {Object} An object containing the parsed components of the URI.
+     * @returns {ERMrest.Location} Location object created from the URI.
      * @throws {ERMrest.InvalidInputError} If the URI does not contain the
      * service name.
      * @private
@@ -265,22 +265,22 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @returns {string} The first schema in <schema:table> found in the URI
+         * @returns {string} The schema name in the projection table
          */
         get firstSchemaName() {
             return this._firstSchemaName;
         },
 
         /**
-         *
-          * @returns {string} The first table in <schema:table> found in the URI
+         * Subject to change soon
+         * @returns {string} The table name in the projection table
          */
         get firstTableName() {
             return this._firstTableName;
         },
 
         /**
-         *
+         * Subject to change soon
          * @returns {String} The sort modifier in the string format of @sort(...)
          */
         get sort() {
