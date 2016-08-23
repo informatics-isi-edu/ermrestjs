@@ -643,13 +643,13 @@ var ERMrest = (function (module) {
                             var aSerial = (a.colset.columns.map(function (column) {
                                 return column.type.name;
                             }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"))
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
                             }) ? 1 : 0);
 
                             var bSerial = (b.colset.columns.map(function (column) {
                                 return column.type.name;
                             }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"))
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
                             }) ? 1 : 0);
 
                             return bSerial - aSerial; // will make a before b if negative, b before a if positive

@@ -40,10 +40,10 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "record": ["name", "value"]
+                    "detailed": ["name", "value"]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
-                    "record": [
+                    "detailed": [
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
                         ["reference_schema", "fk_inbound_related_to_reference"],
                         ["reference_schema", "toname_fk_association_related_to_reference"],
