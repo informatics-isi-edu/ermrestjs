@@ -263,9 +263,9 @@ var ERMrest = (function(module) {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
                 delete newRef._related;
-                var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
+                var columnOrders = source._table.columns._contextualize(module._contexts.DETAILED).all();
 
-                newRef._context = module._contexts.RECORD;
+                newRef._context = module._contexts.DETAILED;
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
