@@ -1760,6 +1760,11 @@ var ERMrest = (function (module) {
          * @type {Array}
          */
         this.columns = columns;
+
+        // the index of columns in the actual table
+        this._columnPositions = columns.map(function(col){
+            return col.table.columns.all().indexOf(col);
+        }).sort();
     }
 
     ColSet.prototype = {
@@ -1812,13 +1817,6 @@ var ERMrest = (function (module) {
 
             return true;
         },
-
-        // return the index of columns in the actual table
-        _getColumnPositions: function () {
-            return this.columns.map(function(col){
-                return col.table.columns.all().indexOf(col);
-            }).sort();
-        }
 
     };
 
