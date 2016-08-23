@@ -205,42 +205,84 @@ var ERMrest = (function(module) {
 
     Location.prototype = {
 
+        /**
+         *
+         * @returns {String} The full URI of the location
+         */
         get uri() {
             return this._uri;
         },
 
+        /**
+         *
+         * @returns {String} The URI without modifiers or queries
+         */
         get compactUri() {
             return this._compactUri;
         },
 
+        /**
+         *
+         * @returns {String} The URI of ermrest service
+         */
         get service() {
             return this._service;
         },
 
+        /**
+         *
+         * @returns {String} catalog id
+         */
         get catalog() {
             return this._catalog;
         },
 
+        /**
+         *
+         * @returns {String} API of the ermrest service.
+         * API includes entity, attribute, aggregate, attributegroup
+         */
         get api() {
             return this._api;
         },
 
+        /**
+         *
+         * @returns {String} Path portion of the URI
+         * This is everything after the catalog id
+         */
         get path() {
             return this._path;
         },
 
+        /**
+         *
+         * @returns {String} Path without modifiers or queries
+         */
         get compactPath() {
             return this._compactPath;
         },
 
+        /**
+         *
+         * @returns {string} The first schema in <schema:table> found in the URI
+         */
         get firstSchemaName() {
             return this._firstSchemaName;
         },
 
+        /**
+         *
+          * @returns {string} The first table in <schema:table> found in the URI
+         */
         get firstTableName() {
             return this._firstTableName;
         },
 
+        /**
+         *
+         * @returns {String} The sort modifier in the string format of @sort(...)
+         */
         get sort() {
             return this._sort;
         },
@@ -298,6 +340,10 @@ var ERMrest = (function(module) {
             }
         },
 
+        /**
+         *
+         * @returns {String} The string format of the paging modifier in the form of @before(..) or @after(...)
+         */
         get paging() {
             return this._paging;
         },
