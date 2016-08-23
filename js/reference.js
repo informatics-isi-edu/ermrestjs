@@ -413,11 +413,11 @@ var ERMrest = (function(module) {
                 // ermrest requires key columns to be in sort param
                 // add them if they are missing
                 for (var i = 0; i < this._shortestKey.length; i++) { // all the key columns
-                    var col = this._shortestKey[i].name;
-                    // add if key col is not in the sortby list
-                    if (!sortCols.includes(col)) {
-                        this._sort.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort
-                        uri = uri + "," + module._fixedEncodeURIComponent(col);
+                    var keyCol = this._shortestKey[i].name;
+                    // add if keyCol is not in the sortby list
+                    if (!sortCols.includes(keyCol)) {
+                        this._sort.push({"column":module._fixedEncodeURIComponent(keyCol), "descending":false}); // add key to sort
+                        uri = uri + "," + module._fixedEncodeURIComponent(keyCol);
                     }
                 }
                 uri = uri + ")";
@@ -427,8 +427,8 @@ var ERMrest = (function(module) {
                     uri = uri + (this._paging.before? "@before(" : "@after(");
 
                     for (var s = 0; s < this._sort.length; s++) {
-                        var col = this._sort[s].column;
-                        var value = this._paging.row[col];
+                        var column = this._sort[s].column;
+                        var value = this._paging.row[column];
                         if (value === null)
                             value = "::null::";
                         else

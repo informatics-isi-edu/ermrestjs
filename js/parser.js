@@ -68,7 +68,9 @@ var ERMrest = (function(module) {
 
         var modifierPath = uri.split(context.uri)[1]; // modifiers string
         var shortPath = (modifierPath === "" ? context.path : context.path.split(modifierPath)[0]); // path without modifiers
-
+        
+        var i, value, row;
+        
         // Parse out @sort(...) parameter and assign to context
         // Expected format:
         //  ".../catalog/catalog_id/entity/[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*][@sort(column[::desc::])]"
@@ -92,10 +94,10 @@ var ERMrest = (function(module) {
                     context.paging = {};
                     context.paging.before = true;
                     context.paging.row = {};
-                    var row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
-                    for (var i = 0; i < context.sort.length; i++) {
+                    row = modifierPath.match(/@before\(([^\)]*)\)/)[1].split(",");
+                    for (i = 0; i < context.sort.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         context.paging.row[context.sort[i].column] = value;
                     }
                 }
@@ -105,10 +107,10 @@ var ERMrest = (function(module) {
                     context.paging = {};
                     context.paging.before = false;
                     context.paging.row = {};
-                    var row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
-                    for (var i = 0; i < context.sort.length; i++) {
+                    row = modifierPath.match(/@after\(([^\)]*)\)/)[1].split(",");
+                    for (i = 0; i < context.sort.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
-                        var value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         context.paging.row[context.sort[i].column] = value;
                     }
                 }
@@ -152,7 +154,7 @@ var ERMrest = (function(module) {
             } else {
                 var filters = [];
                 var type = null;
-                for (var i = 0; i < items.length; i++) {
+                for (i = 0; i < items.length; i++) {
                     // process anything that's inside () first
                     if (items[i].startsWith("(")) {
                         items[i] = items[i].replace("(", "");

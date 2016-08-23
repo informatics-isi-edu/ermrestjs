@@ -131,7 +131,7 @@ distclean: clean
 test:  $(TEST)
 
 # Rule to run the unit tests
-$(TEST): $(BUILD)/$(PKG)
+$(TEST): $(BUILD)
 	node test/jasmine-runner.js
 	@touch $(TEST)
 
