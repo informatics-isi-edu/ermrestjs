@@ -76,9 +76,9 @@ $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
 	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
 
-# Rule to lint the source (warn but don't terminate build on errors)
+# Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $(SOURCE), $?)  || true
+	$(BIN)/jshint $(filter $(SOURCE), $?)
 	@touch $(LINT)
 
 .PHONY: lint
