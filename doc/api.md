@@ -192,7 +192,7 @@ to use for ERMrest JavaScript agents.
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(context)](#new_ERMrest.Reference_new)
+        * [new Reference(location)](#new_ERMrest.Reference_new)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
@@ -219,6 +219,7 @@ to use for ERMrest JavaScript agents.
         * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+        * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -1719,7 +1720,7 @@ Constructor for a ParsedFilter.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(context)](#new_ERMrest.Reference_new)
+    * [new Reference(location)](#new_ERMrest.Reference_new)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
@@ -1740,7 +1741,7 @@ Constructor for a ParsedFilter.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(context)
+#### new Reference(location)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1756,7 +1757,7 @@ Usage:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| context | <code>Object</code> | The context object generated from parsing the URI |
+| location | <code>ERMrest.Location</code> | The location object generated from parsing the URI |
 
 <a name="ERMrest.Reference+displayname"></a>
 
@@ -2077,6 +2078,7 @@ if (reference.next) {
 
 * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+    * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2100,6 +2102,13 @@ Usage:
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
 | data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
 
+<a name="ERMrest.Tuple+reference"></a>
+
+#### tuple.reference ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+This is the reference of the Tuple
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
 <a name="ERMrest.Tuple+canUpdate"></a>
 
 #### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
