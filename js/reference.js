@@ -62,16 +62,15 @@ var ERMrest = (function(module) {
             var defer = module._q.defer();
 
             // build reference
-            var context = module._parse(uri);
-            var reference = new Reference(context);
+            var location = module._parse(uri);
+            var reference = new Reference(location);
 
-            var server = module.ermrestFactory.getServer(reference._serviceUrl, params);
-            server.catalogs.get(reference._catalogId).then(function (catalog) {
+            var server = module.ermrestFactory.getServer(reference._location.service, params);
+            server.catalogs.get(reference._location.catalog).then(function (catalog) {
 
-                reference._catalog = catalog;
-                reference._schema  = catalog.schemas.get(reference._schemaName);
-                reference._table   = reference._schema.tables.get(reference._tableName);
+                reference._table   = catalog.schemas.get(reference._location.firstSchemaName).tables.get(reference._location.firstTableName);
                 reference._columns = reference._table.columns.all();
+                reference._shortestKey = reference._table.shortestKey;
 
                 defer.resolve(reference);
 
@@ -129,16 +128,10 @@ var ERMrest = (function(module) {
      *  See {@link ERMrest.resolve}.
      * @memberof ERMrest
      * @class
-     * @param {Object} context - The context object generated from parsing the URI
+     * @param {ERMrest.Location} location - The location object generated from parsing the URI
      */
-    function Reference(context) {
-        this._uri        = context.uri;
-        this._serviceUrl = context.baseUri;
-        this._catalogId  = context.catalogId;
-        this._schemaName = context.schemaName;
-        this._tableName  = context.tableName;
-        this._sort       = context.sort;
-
+    function Reference(location) {
+        this._location   = location;
         this.contextualize._reference = this;
     }
 
@@ -169,7 +162,7 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get uri() {
-            return this._uri;
+            return this._location.compactUri;
         },
 
         /**
@@ -194,6 +187,10 @@ var ERMrest = (function(module) {
          get columns() {
              return this._columns;
          },
+
+        get location() {
+            return this._location;
+        },
 
         /**
          * A Boolean value that indicates whether this Reference is _inherently_
@@ -261,9 +258,9 @@ var ERMrest = (function(module) {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
                 delete newRef._related;
-                var columnOrders = source._table.columns._contextualize(module._contexts.RECORD).all();
+                var columnOrders = source._table.columns._contextualize(module._contexts.DETAILED).all();
 
-                newRef._context = module._contexts.RECORD;
+                newRef._context = module._contexts.DETAILED;
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
@@ -375,67 +372,87 @@ var ERMrest = (function(module) {
 
                 var defer = module._q.defer();
 
-                var uri = this._uri;
+                var uri = this._location.compactUri;
 
-                // add sorting
-                // get a list of columns in key
-                // if table has no key, use all columns as key
-                var keycols;
-                if (this._table.keys.length() === 0) {
-                    keycols = this._table.columns.all();
-                } else {
-                    var keys = this._table.keys.all().sort( function(a, b) {
-                        return a.colset.length() - b.colset.length();
-                    });
-                    keycols = keys[0].colset.columns;
-                }
+                var sortObject, col;
 
-                // append @sort(..) to uri
-                var sortby;
-                if (this._sort && this._sort.length > 0){
-                    sortby = this._sort;
-                } else if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
+                // if no sorting provided, use schema defined sort if that's present
+                // If neither one present, use shortestkey
+                var addkey = true;
+                if (!this._location.sortObject || (this._location.sortObject.length === 0)) {
+                    if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
                         this._table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_order")) {
-                    sortby = this._table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_order");
-                }
-
-                if (sortby) {
-
-                    // get a list of columns in sortby
-                    var sortCols = sortby.map(function(sort) {
-                        return sort.column;});
-
-                    for (var d = 0; d < sortby.length; d++) {
-                        // column name
-                        var sortCol = sortby[d].column;
-                        var order = (sortby[d].descending ? "::desc::" : "");
-                        if (d === 0)
-                            uri = uri + "@sort(" + module._fixedEncodeURIComponent(sortCol) + order;
-                        else
-                            uri = uri + "," + module._fixedEncodeURIComponent(sortCol) + order;
+                        this._location.sortObject = this._table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_order");
+                        addkey = true;
+                    } else {
+                        // use shortest key as sort
+                        sortObject = [];
+                        for (var sk = 0; sk < this._shortestKey.length; sk++) {
+                            col = this._shortestKey[sk].name;
+                            sortObject.push({"column":col, "descending":false});
+                        }
+                        this._location.sortObject = sortObject; // this will update location.sort and all the uri and path
+                        addkey = false;
                     }
 
-                    // ermrest requires key columns to in sort param
-                    for (var i = 0; i < keycols.length; i++) { // all the key columns
-                        var col = keycols[i].name;
+                }
+
+                // ermrest requires key columns to be in sort param
+                // add them if they are missing
+                if (addkey) {
+                    var sortCols = this._location.sortObject.map(function(sort) {
+                        return sort.column;});
+                    sortObject = this._location.sortObject;
+                    for (var i = 0; i < this._shortestKey.length; i++) { // all the key columns
+                        col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
-                            uri = uri + "," + module._fixedEncodeURIComponent(col);
+                            sortObject.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort
                         }
                     }
-                    uri = uri + ")";
+                    this._location.sortObject = sortObject;
                 }
+
+                // insert @sort()
+                if (this._location.sort)
+                    uri = uri + this._location.sort;
+
+                // insert paging
+                if (this._location.paging)
+                    uri = uri + this._location.paging;
 
 
                 // add limit
-                uri = uri + "?limit=" + limit;
+                uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
 
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
                 module._http.get(uri).then(function readReference(response) {
 
-                    var page = new Page(ownReference, response.data);
+                    var hasPrevious, hasNext = false;
+                    if (!ownReference._location.paging) { // first page
+                        hasPrevious = false;
+                        hasNext = (response.data.length > limit);
+                    } else if (ownReference._location.pagingObject.before) { // has @before()
+                        hasPrevious = (response.data.length > limit);
+                        hasNext = true;
+                    } else { // has @after()
+                        hasPrevious = true;
+                        hasNext = (response.data.length > limit);
+                    }
+
+                    // Because read() reads one extra row to determine whether the new page has previous or next
+                    // We need to remove those extra row of data from the result
+                    if (response.data.length > limit) {
+                        // if no paging or @after, remove last row
+                        if (!ownReference._location.pagingObject || !ownReference._location.pagingObject.before)
+                            response.data.splice(response.data.length-1);
+                       else // @before, remove first row
+                            response.data.splice(0, 1);
+
+                    }
+                    var page = new Page(ownReference, response.data, hasPrevious, hasNext);
 
                     defer.resolve(page);
 
@@ -462,15 +479,16 @@ var ERMrest = (function(module) {
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
-            // change ._sort
-            if (!sort || sort.length === 0) {
-                delete newReference._sort;
-            }
-            else {
+
+            if (sort) {
                 verify((sort instanceof Array), "input should be an array");
                 verify(sort.every(module._isValidSortElement), "invalid arguments in array");
-                newReference._sort = sort;
+
             }
+
+            newReference._location = this._location._clone();
+            newReference._location.pagingObject = null;
+            newReference._location.sortObject = sort;
 
             return newReference;
         },
@@ -533,7 +551,6 @@ var ERMrest = (function(module) {
                         var newRef = _referenceCopy(this);
                         newRef.contextualize._reference = newRef;
                         delete newRef._context; // NOTE: related reference is not contextualized
-                        delete newRef._sort;
 
                         var fkrTable = fkr.colset.columns[0].table;
                         if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -545,19 +562,15 @@ var ERMrest = (function(module) {
                                 }
                             }
 
-                            newRef._schema = otherFK.key.table.schema;
-                            newRef._schemaName = otherFK.key.table.schema.name;
                             newRef._table = otherFK.key.table;
-                            newRef._tableName = otherFK.key.table.name;
+                            newRef._shortestKey = newRef._table.shortestKey;
                             newRef._columns = otherFK.key.table.columns.all();
                             newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
-                            newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
+                            newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         } else { // Simple inbound Table
-                            newRef._schema = fkrTable.schema;
-                            newRef._schemaName = fkrTable.schema.name;
                             newRef._table = fkrTable;
-                            newRef._tableName = fkrTable.name;
+                            newRef._shortestKey = newRef._table.shortestKey;
 
                             newRef._columns = [];
                             for (var l = 0, col; l < newRef._table.columns.all().length; l++) {
@@ -569,7 +582,7 @@ var ERMrest = (function(module) {
                             }
 
                             newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
-                            newRef._uri = this._uri + "/" + fkr.toString();
+                            newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
                         }
 
                         this._related.push(newRef);
@@ -612,10 +625,15 @@ var ERMrest = (function(module) {
      * @param {!ERMrest.Reference} reference The reference object from which
      * this data was acquired.
      * @param {!Object[]} data The data returned from ERMrest.
+     * @param {boolean} hasNext Whether there is more data before this Page
+     * @param {boolean} hasPrevious Whether there is more data after this Page
+     *
      */
-    function Page(reference, data) {
+    function Page(reference, data, hasPrevious, hasNext) {
         this._ref = reference;
         this._data = data;
+        this._hasNext = hasNext;
+        this._hasPrevious = hasPrevious;
     }
 
     Page.prototype = {
@@ -645,6 +663,14 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Whether there is more entities before this page
+         * @returns {boolean}
+         */
+        get hasPrevious() {
+            return this._hasPrevious;
+        },
+
+        /**
          * A reference to the previous set of results.
          *
          * Usage:
@@ -659,8 +685,31 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference|undefined}
          */
         get previous() {
-            // TODO: a reference to previous entity set
-            return undefined;
+            if (this._hasPrevious) {
+                var newReference = _referenceCopy(this._ref);
+
+                // update paging by creating a new location
+                var paging = {};
+                paging.before = true;
+                paging.row = [];
+                for (var i = 0; i < newReference._location.sortObject.length; i++) {
+                    var col = newReference._location.sortObject[i].column;
+                    paging.row.push(this._data[0][col]); // first row
+                }
+
+                newReference._location = this._ref._location._clone();
+                newReference._location.pagingObject = paging;
+                return newReference;
+            }
+            return null;
+        },
+
+        /**
+         * Whether there is more entities after this page
+         * @returns {boolean}
+         */
+        get hasNext() {
+            return this._hasNext;
         },
 
         /**
@@ -678,8 +727,23 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference|undefined}
          */
         get next() {
-            // TODO: a reference to next entity set
-            return undefined;
+            if (this._hasNext) {
+                var newReference = _referenceCopy(this._ref);
+
+                // update paging by creating a new location
+                var paging = {};
+                paging.before = false;
+                paging.row = [];
+                for (var i = 0; i < newReference._location.sortObject.length; i++) {
+                    var col = newReference._location.sortObject[i].column;
+                    paging.row.push(this._data[this._data.length-1][col]); // last row
+                }
+
+                newReference._location = this._ref._location._clone();
+                newReference._location.pagingObject = paging;
+                return newReference;
+            }
+            return null;
         }
     };
 
@@ -697,13 +761,39 @@ var ERMrest = (function(module) {
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(reference, data) {
-        this._ref = reference;
+    function Tuple(pageReference, data) {
+        this._pageRef = pageReference;
         this._data = data;
     }
 
     Tuple.prototype = {
         constructor: Tuple,
+
+        /**
+         * This is the reference of the Tuple
+         * @returns {ERMrest.Reference|*} reference of the Tuple
+         */
+        get reference() {
+
+            if (this._ref === undefined) {
+                this._ref = _referenceCopy(this._pageRef);
+
+                // update its location by adding the tuple’s key filter to the URI
+                // don't keep any modifiers
+                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
+                    this._pageRef._location.api + "/" + this._pageRef._table.schema.name + ":" + this._pageRef._table.name + "/";
+                for (var k = 0; k < this._pageRef._shortestKey.length; k++) {
+                    var col = this._pageRef._shortestKey[k].name;
+                    if (k === 0) {
+                        uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                    } else {
+                        uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                    }
+                }
+                this._ref._location = module._parse(uri);
+            }
+            return this._ref;
+        },
 
         /**
          * Indicates whether the client can update this tuple. Because
@@ -806,9 +896,9 @@ var ERMrest = (function(module) {
         get values() {
             if (this._values === undefined) {
                 this._values = [];
-                for (var i = 0; i < this._ref.columns.length; i++) {
-                    var col = this._ref.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._ref._context});
+                for (var i = 0; i < this._pageRef.columns.length; i++) {
+                    var col = this._pageRef.columns[i];
+                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._pageRef._context});
                 }
             }
             return this._values;
@@ -829,7 +919,7 @@ var ERMrest = (function(module) {
          */
         get displayname() {
             if (!this._displayname) {
-                var table = this._ref._table;
+                var table = this._pageRef._table;
                 // if table has display row_name annotation
                 if (table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
                     table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_name")) {

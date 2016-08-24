@@ -524,7 +524,6 @@ var ERMrest = (function(module) {
         EDIT: 'entry/edit',
         ENTRY: 'entry',
         FILTER: 'filter',
-        RECORD: 'record',
         DEFAULT: '*'
     });
 

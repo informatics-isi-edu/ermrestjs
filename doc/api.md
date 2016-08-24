@@ -192,7 +192,7 @@ to use for ERMrest JavaScript agents.
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(context)](#new_ERMrest.Reference_new)
+        * [new Reference(location)](#new_ERMrest.Reference_new)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
@@ -211,12 +211,15 @@ to use for ERMrest JavaScript agents.
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, data)](#new_ERMrest.Page_new)
+        * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+        * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
         * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+        * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
         * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+        * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -1717,7 +1720,7 @@ Constructor for a ParsedFilter.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(context)](#new_ERMrest.Reference_new)
+    * [new Reference(location)](#new_ERMrest.Reference_new)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
@@ -1738,7 +1741,7 @@ Constructor for a ParsedFilter.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(context)
+#### new Reference(location)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1754,7 +1757,7 @@ Usage:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| context | <code>Object</code> | The context object generated from parsing the URI |
+| location | <code>ERMrest.Location</code> | The location object generated from parsing the URI |
 
 <a name="ERMrest.Reference+displayname"></a>
 
@@ -1980,14 +1983,16 @@ Deletes the referenced resources.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, data)](#new_ERMrest.Page_new)
+    * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
     * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
+    * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
     * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+    * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
     * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, data)
+#### new Page(reference, data, hasNext, hasPrevious)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2004,6 +2009,8 @@ Usage:
 | --- | --- | --- |
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
+| hasNext | <code>boolean</code> | Whether there is more data before this Page |
+| hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
 
 <a name="ERMrest.Page+tuples"></a>
 
@@ -2020,6 +2027,12 @@ for (var i=0, len=page.tuples.length; i<len; i++) {
 ```
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+hasPrevious"></a>
+
+#### page.hasPrevious ⇒ <code>boolean</code>
+Whether there is more entities before this page
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+previous"></a>
 
 #### page.previous : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
@@ -2034,6 +2047,12 @@ if (reference.previous) {
   );
 }
 ```
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+hasNext"></a>
+
+#### page.hasNext ⇒ <code>boolean</code>
+Whether there is more entities after this page
 
 **Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+next"></a>
@@ -2059,6 +2078,7 @@ if (reference.next) {
 
 * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+    * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2082,6 +2102,13 @@ Usage:
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
 | data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
 
+<a name="ERMrest.Tuple+reference"></a>
+
+#### tuple.reference ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+This is the reference of the Tuple
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
 <a name="ERMrest.Tuple+canUpdate"></a>
 
 #### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
