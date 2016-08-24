@@ -242,7 +242,7 @@ angular.module("testApp", ['ermrestjs'])
 
 .controller("ReferenceController", ['ERMrest', function(ERMrest) {
     var ref;
-    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::4000&id::lt::5000@sort(accession::desc::,id)", {cid: "test"}).then(function(reference) {
+    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id::desc::)", {cid: "test"}).then(function(reference) {
         console.log("Reference:", reference);
         ref = reference;
         return reference.read(10);
@@ -261,6 +261,30 @@ angular.module("testApp", ['ermrestjs'])
         // sorted by accession
         console.log(page.tuples.map(function(tuple){
             return tuple._data.accession;
+        }));
+    }, function(error) {
+        throw error;
+    }).catch (function genericCatch(exception) {
+    });
+
+
+    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id)@after(4898)", {cid: "test"}).then(function(reference) {
+        console.log("Reference:", reference);
+        ref = reference;
+        return reference.read(10);
+    }).then(function getPage(page) {
+        // sorted by id
+        console.log(page.tuples.map(function(tuple){
+            return tuple._data.id;
+        }));
+
+        return page.previous.read(10);
+    }, function error(response) {
+        throw response;
+    }).then(function(page){
+
+        console.log(page.tuples.map(function(tuple){
+            return tuple._data.id;
         }));
     }, function(error) {
         throw error;

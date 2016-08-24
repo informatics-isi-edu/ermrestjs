@@ -3,7 +3,9 @@ exports.execute = function(options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
-            inboutTableName = "inbound_related_reference_table",
+            inboudTableName = "inbound_related_reference_table",
+            AssociationTableWithToName = "association_table_with_toname",
+            AssociationTableWithID = "association_table_with_id",
             entityId = 9003,
             relatedEntityId = 3,
             limit = 1;
@@ -26,18 +28,20 @@ exports.execute = function(options) {
             })
         });
 
-        it('should not be empty.', function() {
+        it('should be defined and not empty.', function() {
+            expect(reference.related).toBeDefined();
             expect(reference.related).not.toEqual([]);
         });
+
         it('should only include visible foreign keys that are defined in the annotation.', function() {
-            expect(reference.related.length).toBe(2); // is this enough?
+            expect(reference.related.length).toBe(4);
         });
 
         describe('for inbound foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function() {
-                expect(related[0]._catalogId).toBe(catalog_id.toString());
-                expect(related[0]._schemaName).toBe(schemaName);
-                expect(related[0]._tableName).toBe(inboutTableName);
+                expect(related[0]._location.catalog).toBe(catalog_id.toString());
+                expect(related[0]._table.schema.name).toBe(schemaName);
+                expect(related[0]._table.name).toBe(inboudTableName);
             });
 
             describe('.displayname, ', function() {
@@ -83,7 +87,67 @@ exports.execute = function(options) {
                     console.dir(err);
                     done.fail();
                 });
-            })
+            });
+
+        });
+
+        describe('for pure and binray association foreign keys, ', function() {
+            it('should have the correct catalog, schema, and table.', function (){
+                expect(related[2]._location.catalog).toBe(catalog_id.toString());
+                expect(related[2]._table.schema.name).toBe(schemaName);
+                expect(related[2]._table.name).toBe(inboudTableName);
+            });
+
+            describe('.displayname, ', function (){
+                it('should use to_name when annotation is present.', function() {
+                  expect(related[2].displayname).toBe("to_name_value");
+                });
+
+                it('should use the name of the table when annotation is not present.', function() {
+                  expect(related[3].displayname).toBe(inboudTableName);
+                });
+            });
+
+            it('.uri should be properly defiend based on schema.', function() {
+              expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+              expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_id:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+            });
+
+            it('.columns should be properly defiend based on schema', function() {
+              [related[2], related[3]].forEach(function(ref){
+                  expect(ref.columns.map(function(col){
+                      return col.name;
+                  })).toEqual(["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]);
+              });
+            });
+
+            it('.read should return a Page object that is defined.', function(done) {
+                related[2].read(limit).then(function(response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data[0].id).toBe("1");
+                    expect(page._data.length).toBe(limit);
+
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+
+                related[3].read(limit).then(function(response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data[0].id).toBe("2");
+                    expect(page._data.length).toBe(limit);
+
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
 
         });
     });
