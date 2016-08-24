@@ -1340,6 +1340,9 @@ var ERMrest = (function (module) {
                 case 'markdown':
                     data = utils.printMarkdown(data, options);
                     break;
+                case 'gene_sequence':
+                    data = utils.printGeneSeq(data, options);
+                    break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
                     break;
