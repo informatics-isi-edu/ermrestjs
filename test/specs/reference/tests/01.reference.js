@@ -34,29 +34,25 @@ exports.execute = function (options) {
             });
 
             it('reference should be properly defined based on the constructor.', function() {
-                expect(reference._uri).toBe(singleEnitityUri);
-                expect(reference._serviceUrl).toBe(options.url);
-                expect(reference._catalogId).toBe(catalog_id.toString());
-                expect(reference._schemaName).toBe(schemaName);
-                expect(reference._tableName).toBe(tableName);
-                expect(reference._filter instanceof options.ermRest.ParsedFilter).toBeDefined();
+                expect(reference._location.uri).toBe(singleEnitityUri);
+                expect(reference._location.service).toBe(options.url);
+                expect(reference._location.catalog).toBe(catalog_id.toString());
+                expect(reference._location.firstSchemaName).toBe(schemaName);
+                expect(reference._location.firstTableName).toBe(tableName);
 
                 expect(reference.contextualize._reference).toBe(reference);
             });
 
             // Methods that are currently implemented
             it('reference should have methods properly defined.', function() {
-                expect(reference.uri).toBe(reference._uri);
+                expect(reference.uri).toBe(reference._location.uri);
                 expect(reference.columns).toBe(reference._columns);
                 expect(reference.displayname).toBe(reference._table.name);
                 expect(reference.read()).toBeDefined();
             });
 
             it('reference should be properly defined after the callback is resolved.', function() {
-                expect(reference._catalog).toBeDefined();
-                expect(reference._schema).toBeDefined();
                 expect(reference._table).toBeDefined();
-                expect(reference._columns).toBeDefined();
             });
 
             it('contextualize.record should return a contextualized reference object.', function() {
@@ -78,9 +74,9 @@ exports.execute = function (options) {
                 expect(columns).toEqual(["name", "value"]);
 
                 expect(recordReference.uri).toBe(reference.uri);
-                expect(recordReference._serviceUrl).toBe(reference._serviceUrl);
+                expect(recordReference._location.service).toBe(reference._location.service);
                 // If catalog is the same, so will be the schema and table
-                expect(recordReference._catalog).toBe(reference._catalog);
+                expect(recordReference._location.catalog).toBe(reference._location.catalog);
             });
 
             // Single Entity specific tests
@@ -111,7 +107,7 @@ exports.execute = function (options) {
                 tuple = page.tuples[0];
                 expect(page._tuples).toBeDefined();
                 expect(tuple._data).toBe(page._data[0]);
-                expect(tuple._ref).toBe(reference);
+                expect(tuple._pageRef).toBe(reference);
             });
 
             it('tuples should have methods properly defined.', function() {

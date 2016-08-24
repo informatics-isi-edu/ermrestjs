@@ -83,6 +83,8 @@ exports.tear = function(configFilePaths, catalogId, deleteCatalog) {
 		return defer.promise;
 	}
 	
+	configFilePaths = configFilePaths.reverse();
+	
 	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
 
 	return defer.promise;
