@@ -215,6 +215,18 @@ exports.execute = function(options) {
                         expect(formattedValue).toBe('<em>taylor <sup>swift</sup></em>');
                     });
                 });
+
+                describe('should call printGeneSeq() to format,', function() {
+                    it('gene_sequence columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printGeneSeq').and.callThrough();
+                        var testVal = 'GATCGATCGCGTATT';
+                        var col = table1_schema2.columns.get('table_1_gene_sequence');
+                        var formattedValue = col.formatvalue(testVal);
+                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+                        expect(formattedValue).toEqual(jasmine.any(String));
+                        expect(formattedValue).toBe('<code>GATCGATCGC GTATT</code>');
+                    });
+                });
             });
         });
     });

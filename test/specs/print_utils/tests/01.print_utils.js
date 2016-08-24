@@ -76,5 +76,33 @@ exports.execute = function (options) {
             expect(printMarkdown('H~2~0')).toBe('H<sub>2</sub>0');
             expect(printMarkdown('13^th^')).toBe('13<sup>th</sup>');
         });
+
+        it('printGeneSeq() should format gene sequences correctly.', function() {
+            var printGeneSeq = formatUtils.printGeneSeq;
+            expect(printGeneSeq(null)).toBe('');
+            expect(printGeneSeq('sample', {increment: 0})).toBe('<code>sample</code>');
+            
+            var testCases = [
+                {
+                    input: 'as',
+                    defaultFormat: '<code>as</code>',
+                    negativeIncrement: '<code>a s</code>',
+                    incrementOf5WithDashes: '<code>as</code>',
+                },
+                {
+                    input: 'GATCTCGATGACTGAGAGGTA',
+                    defaultFormat: '<code>GATCTCGATG ACTGAGAGGT A</code>',
+                    negativeIncrement: '<code>G A T C T C G A T G A C T G A G A G G T A</code>',
+                    incrementOf5WithDashes: '<code>GATCT-CGATG-ACTGA-GAGGT-A</code>',
+                }
+            ];
+
+            for (var i = 0, len = testCases.length; i < len; i++) {
+                var testCase = testCases[i];
+                expect(printGeneSeq(testCase.input)).toBe(testCase.defaultFormat);
+                expect(printGeneSeq(testCase.input, {increment: -34})).toBe(testCase.negativeIncrement);
+                expect(printGeneSeq(testCase.input, {separator: '-', increment: 5})).toBe(testCase.incrementOf5WithDashes);
+            }
+        });
     });
 };

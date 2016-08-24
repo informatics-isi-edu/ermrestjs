@@ -666,7 +666,40 @@ var ERMrest = (function (module) {
             }
 
             return result;
-        }
+        },
+
+        // figure out if Table is pure and binary association table.
+        // binary: Has 2 outbound foreign keys.
+        // pure: there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
+        _isPureBinaryAssociation: function () {
+            if(this._isPureBinaryAssociation_cached === undefined) {
+                this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
+            }
+            return this._isPureBinaryAssociation_cached;
+        },
+
+        _computePureBinaryAssociation: function () {
+            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+                return false; // not binary
+            }
+
+            var serialTypes = ["serial2", "serial4", "serial8"];
+            var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
+                return res.concat(colset.columns);
+            }, [])); // set of foreignkey columns
+
+            var tempKeys = this.keys.all().filter(function(key) {
+                var keyCols = key.colset.columns;
+                return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
+            }); // the key that should contain foreign key columns.
+
+            if (tempKeys.length != 1) {
+                return false; // not pure
+            }
+
+            return fkColset._equals(tempKeys[0].colset); // check for purity
+        },
 
     };
 
@@ -1265,6 +1298,9 @@ var ERMrest = (function (module) {
                     break;
                 case 'markdown':
                     data = utils.printMarkdown(data, options);
+                    break;
+                case 'gene_sequence':
+                    data = utils.printGeneSeq(data, options);
                     break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
@@ -2002,21 +2038,29 @@ var ERMrest = (function (module) {
         constructor: ForeignKeyRef,
 
         /**
-         * returns string representation of ForeignKeyRef object (keyCol1, keyCol2)=(s:t:FKCol1,s:t:FKCol1,s:t:FKCol2)
+         * returns string representation of ForeignKeyRef object
+         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
          * @retuns {string} string representation of ForeignKeyRef object
          */
-        toString: function (){
-            // NOTE: the columns in key.colset may have a different order. So we should use the mapping.
-            var keyString = "", colSetString = "";
-            var fkrCols = this.colset.columns.slice().sort(function(a,b){
-                return a.name.localeCompare(b.name);
-            });
-            var columnsLength = fkrCols.length;
-            for (var i=0; i < columnsLength; i++) {
-                colSetString += fkrCols[i].toString() + (i < columnsLength -1 ?",": "");
-                keyString += this.mapping.get(fkrCols[i]).name + (i < columnsLength -1 ?",": "");
+        toString: function (reverse){
+            var leftString = "", rightString = "";
+            var columnsLength = this.colset.columns.length;
+            for (var i = 0; i < columnsLength; i++) {
+                var fromCol = this.colset.columns[i];
+                var toCol = this.mapping.get(fromCol);
+                var separator = (i < columnsLength -1 ?",": "");
+
+                leftString += (reverse ? fromCol.name : toCol.name) + separator;
+                if (reverse) {
+                    rightString += (i === 0 ? toCol.toString() : toCol.name);
+                } else {
+                    rightString += (i === 0 ? fromCol.toString() : fromCol.name);
+                }
+                rightString += separator;
+
             }
-            return "(" + keyString + ")=(" + colSetString + ")";
+
+            return "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {
