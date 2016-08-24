@@ -81,7 +81,6 @@ exports.execute = function (options) {
             var printGeneSeq = formatUtils.printGeneSeq;
             expect(printGeneSeq(null)).toBe('');
             expect(printGeneSeq('sample', {increment: 0})).toBe('<code>sample</code>');
-            
             var testCases = [
                 {
                     input: 'as',
