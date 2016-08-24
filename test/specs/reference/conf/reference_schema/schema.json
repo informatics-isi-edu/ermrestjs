@@ -495,7 +495,7 @@
                 {
                     "name": "some_gene_sequence",
                     "type": {
-                        "typename": "text"
+                        "typename": "gene_sequence"
                     }
                 }
             ],

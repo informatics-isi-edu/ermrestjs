@@ -74,6 +74,10 @@
                             }
                         }
                     }
+                },
+                {
+                    "name": "table_1_gene_sequence",
+                    "type": { "typename": "gene_sequence" }
                 }
             ],
             "foreign_keys": [],
