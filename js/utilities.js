@@ -400,6 +400,69 @@ var ERMrest = (function(module) {
                 return '';
             }
             return module._markdownIt.renderInline(value);
+        },
+
+        /**
+         * @function
+         * @param {string} value The gene sequence to transform
+         * @param {Object} [options] Configuration options. Accepted parameters
+         * are "increment" (desired number of characters in each segment) and
+         * "separator" (desired separator between segments).
+         * @return {string} A string representation of value
+         * @desc Formats a gene sequence into a string for display. By default,
+         * it will split gene sequence into an increment of 10 characters and
+         * insert an empty space in between each increment.
+         */
+
+        printGeneSeq: function printGeneSeq(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (value === null) {
+                return '';
+            }
+            // Default separator is a space.
+            if (!options.separator) {
+                options.separator = ' ';
+            }
+            // Default increment is 10
+            if (!options.increment) {
+                options.increment = 10;
+            }
+            var inc = parseInt(options.increment, 10);
+
+            if (inc === 0) {
+                return value.toString();
+            }
+
+            // Reset the increment if it's negative
+            if (inc <= -1) {
+                inc = 1;
+            }
+
+            var formattedSeq = '`';
+            var separator = options.separator;
+            while (value.length >= inc) {
+                // Get the first inc number of chars
+                var chunk = value.slice(0, inc);
+                // Append the chunk and separator
+                formattedSeq += chunk + separator;
+                // Remove this chunk from value
+                value = value.slice(inc);
+            }
+
+            // Append any remaining chars from value that was too small to form an increment
+            formattedSeq += value;
+
+            // Slice off separator at the end
+            if (formattedSeq.slice(-1) == separator) {
+                formattedSeq = formattedSeq.slice(0, -1);
+            }
+
+            // Add the ending backtick at the end
+            formattedSeq += '`';
+
+            // Run it through printMarkdown to get the sequence in a fixed-width font
+            return module._formatUtils.printMarkdown(formattedSeq);
         }
     };
 
