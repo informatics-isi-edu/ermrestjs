@@ -19,7 +19,7 @@ exports.execute = function(options) {
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
             }).then(function(response) {
-                reference = response.contextualize.record;
+                reference = response.contextualize.detailed;
                 related = reference.related;
                 done();
             }, function(err) {

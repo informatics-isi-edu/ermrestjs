@@ -55,8 +55,8 @@ exports.execute = function (options) {
                 expect(reference._table).toBeDefined();
             });
 
-            it('contextualize.record should return a contextualized reference object.', function() {
-                var recordReference = reference.contextualize.record;
+            it('contextualize.detailed should return a contextualized reference object.', function() {
+                var recordReference = reference.contextualize.detailed;
 
                 // Make sure Reference prototype is available
                 expect(recordReference.uri).toBeDefined();
