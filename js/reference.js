@@ -549,7 +549,8 @@ var ERMrest = (function(module) {
                     visibleFKs = this._table.referredBy.all();
                 }
 
-                for(var i = 0, fkr; i < visibleFKs.length; i++) {
+                var i, j, col, fkr;
+                for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
                     var newRef = _referenceCopy(this);
@@ -559,9 +560,9 @@ var ERMrest = (function(module) {
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
                         var otherFK;
-                        for (var k = 0; k < fkrTable.foreignKeys.length(); k++) {
-                            if(fkrTable.foreignKeys.all()[k] !== fkr) {
-                                otherFK = fkrTable.foreignKeys.all()[k];
+                        for (j = 0; j < fkrTable.foreignKeys.length(); j++) {
+                            if(fkrTable.foreignKeys.all()[j] !== fkr) {
+                                otherFK = fkrTable.foreignKeys.all()[j];
                                 break;
                             }
                         }
@@ -569,7 +570,19 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._columns = otherFK.key.table.columns.all();
+                        // NOTE: columns of assocation table that are not part of any keys + all the columns of the other table
+                        newRef._columns = [];
+                        for (j = 0; j < fkrTable.columns.length(); j++) {
+                            col = fkrTable.columns.getByPosition(j);
+                            if (col.memberOfKeys.length === 0) {
+                                newRef._columns.push(col);
+                            }
+                        }
+                        for (j = 0; j < otherFK.key.table.columns.length(); j++) {
+                            // for large datasets loop/push is faster than concat
+                            newRef._columns.push(otherFK.key.table.columns.getByPosition(j));
+                        }
+
                         newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
@@ -582,13 +595,14 @@ var ERMrest = (function(module) {
                         newRef._shortestKey = newRef._table.shortestKey;
 
                         newRef._columns = [];
-                        for (var l = 0, col; l < newRef._table.columns.all().length; l++) {
+                        for (j = 0; j < newRef._table.columns.all().length; j++) {
                             // remove the columns that are involved in the FKR
-                            col = newRef._table.columns.all()[l];
+                            col = newRef._table.columns.getByPosition(j);
                             if (fkr.colset.columns.indexOf(col) == -1) {
                                 newRef._columns.push(col);
                             }
                         }
+
                         newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
 

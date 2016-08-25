@@ -42,7 +42,7 @@ exports.execute = function(options) {
         });
 
         it('should only include visible foreign keys that are defined in the annotation.', function() {
-            expect(reference.related.length).toBe(4);
+            expect(reference.related.length).toBe(5);
         });
 
         describe('for inbound foreign keys, ', function() {
@@ -111,17 +111,31 @@ exports.execute = function(options) {
                 });
             });
 
+            describe('.columns, ', function() {
+                it('should ignore all the foreign keys that create the connection for assocation.', function() {
+                    checkReferenceColumns([{
+                        ref: related[2],
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                    }]);
+                });
+                it('should ignore extra serial key columns in the assocation table', function() {
+                    checkReferenceColumns([{
+                        ref: related[3],
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                    }]);
+                });
+
+                it('should include extra columns of association table', function() {
+                    checkReferenceColumns([{
+                        ref: related[4],
+                        expected:["extra", "id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                    }]);
+                });
+            });
+
             it('.uri should be properly defiend based on schema.', function() {
               expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
               expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_id:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-            });
-
-            it('.columns should be properly defiend based on schema', function() {
-              [related[2], related[3]].forEach(function(ref){
-                  expect(ref.columns.map(function(col){
-                      return col.name;
-                  })).toEqual(["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]);
-              });
             });
 
             it('.read should return a Page object that is defined.', function(done) {
