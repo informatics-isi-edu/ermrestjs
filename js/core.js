@@ -1346,6 +1346,9 @@ var ERMrest = (function (module) {
                 case 'markdown':
                     data = utils.printMarkdown(data, options);
                     break;
+                case 'gene_sequence':
+                    data = utils.printGeneSeq(data, options);
+                    break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
                     break;
@@ -1817,7 +1820,7 @@ var ERMrest = (function (module) {
         // the index of columns in the actual table
         _getColumnPositions: function() {
             if(this._columnPositions === undefined) {
-                this._columnPositions = columns.map(function(col){
+                this._columnPositions = this.columns.map(function(col){
                     return col.table.columns.all().indexOf(col);
                 }).sort();
             }

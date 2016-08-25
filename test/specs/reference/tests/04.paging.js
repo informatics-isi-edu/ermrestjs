@@ -54,7 +54,11 @@ exports.execute = function (options) {
             it('tuples should be sorted by ascending value by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
+                var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                 for(var i = 0; i < tuples.length - 1; i++) {
+                    expect(tuples[i].reference._location.uri).toBe(
+                        options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                        + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                     expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                 }
             });
@@ -83,7 +87,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
@@ -123,7 +131,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length === 10);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
@@ -177,7 +189,11 @@ exports.execute = function (options) {
             it('tuples should be sorted by name. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
+                var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                 for(var i = 0; i < tuples.length - 1; i++) {
+                    expect(tuples[i].reference._location.uri).toBe(
+                        options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                        + tableNameWSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                     expect(tuples[i]._data.name).toBeLessThan(tuples[i+1]._data.name);
                 }
             });
@@ -206,7 +222,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by name. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameWSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.name).toBeLessThan(tuples[i+1]._data.name);
                     }
                 });
@@ -246,7 +266,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length === 10);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameWSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.name).toBeLessThan(tuples[i+1]._data.name);
                     }
                 });
@@ -265,7 +289,7 @@ exports.execute = function (options) {
 
         describe("Paging with with url specified sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-                + tableNameNoSort + "@sort(value)";
+                + tableNameNoSort + "/value::lt::1000@sort(value)";
 
             var reference1, reference2, reference3, tuples;
             var page1, page2, page3;
@@ -300,7 +324,11 @@ exports.execute = function (options) {
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
+                var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                 for(var i = 0; i < tuples.length - 1; i++) {
+                    expect(tuples[i].reference._location.uri).toBe(
+                        options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                        + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                     expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                 }
             });
@@ -329,7 +357,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
@@ -369,7 +401,11 @@ exports.execute = function (options) {
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length === 10);
+                    var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
+                        expect(tuples[i].reference._location.uri).toBe(
+                            options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+                            + tableNameNoSort + "/" + shortestkey + "=" + tuples[i]._data[shortestkey]);
                         expect(tuples[i]._data.value).toBeLessThan(tuples[i+1]._data.value);
                     }
                 });
