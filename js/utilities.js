@@ -518,12 +518,12 @@ var ERMrest = (function(module) {
              * String inside '{}' is Optional, specifies attributes to be applied to prev element
              */ 
             validate: function(params) {
-                return params.trim().match(/^iframe\s+(.*)$/i);
+                return params.trim().match(/iframe\s+(.*)$/i);
             },
 
             render: function (tokens, idx) {
                 // Get token string after regexp matching to determine actual internal markdown 
-                var m = tokens[idx].info.trim().match(/^iframe\s+(.*)$/i);
+                var m = tokens[idx].info.trim().match(/iframe\s+(.*)$/i);
 
                 // If this is the opening tag i.e. starts with "::: iframe " 
                 if (tokens[idx].nesting === 1 && m.length > 0) {
