@@ -599,8 +599,8 @@ var ERMrest = (function(module) {
                         newRef._columns = otherFK.key.table.columns.all();
                         newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
                         newRef._uri = this._uri + "/" + fkr.toString() + "/" + otherFK.toString(true);
-                        newRef._related_key_column_positions = fkr.key.colset._columnPositions;
-                        newRef._related_fk_column_positions = otherFK.colset._columnPositions;
+                        newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
+                        newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
                     } else { // Simple inbound Table
                         newRef._schema = fkrTable.schema;
                         newRef._schemaName = fkrTable.schema.name;
@@ -618,8 +618,8 @@ var ERMrest = (function(module) {
 
                         newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
                         newRef._uri = this._uri + "/" + fkr.toString();
-                        newRef._related_key_column_positions = fkr.key.colset._columnPositions;
-                        newRef._related_fk_column_positions = fkr.colset._columnPositions;
+                        newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
+                        newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
                     }
 
                     this._related.push(newRef);
