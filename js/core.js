@@ -1338,7 +1338,7 @@ var ERMrest = (function (module) {
                     data = utils.printBoolean(data, options);
                     break;
                 case 'markdown':
-                    data = utils.printMarkdown(data, options);
+                    // Do nothing as we will format markdown at the end of format
                     break;
                 case 'gene_sequence':
                     data = utils.printGeneSeq(data, options);
@@ -1348,6 +1348,65 @@ var ERMrest = (function (module) {
                     break;
             }
             return data.toString();
+        };
+
+        /**
+         * Formats the presentation value corresponding to this column definition.
+         * @param {String} data The 'formatted' data value.
+         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         */
+        this.formatPresentation = function(data, options) {
+            
+            var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
+
+            /*
+             * TODO: Add code to handle `pre_format` in the annotation
+             */
+
+            var isMarkdownPattern = false, isMarkdownType = false;
+
+            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY) && this.annotations.get(module._annotations.COLUMN_DISPLAY).contains("markdown_pattern")) {
+                isMarkdownPattern = true;
+            }
+
+            if (this.type.name === 'markdown') {
+                isMarkdownType = true;
+            }
+
+            if (!isMarkdownPattern && !isMarkdownType) {
+                return { isHTML: false, value: data };
+            }
+
+            var value = data;
+
+            // If there is any markdown pattern then evaluate it
+            if (isMarkdownPattern) {
+                // Get markdown pattern from the annotation value
+                var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
+
+                // If template is of type string 
+                if (typeof template === 'string') {
+                   
+                    /* 
+                     * Code to do template/string replacement using values and set template as null if any of the
+                     * values turn out to be null or undefined
+                     */
+                    value = module._renderTemplate(template, keyValues, options);
+
+                }
+            }
+
+            // If value is null or empty, return value on basis of `show_nulls`
+            if (value === null || value === '') {
+                return { isHTML: false, value: this._getNullValue(options ? options.context : undefined) };
+            }
+
+            /*
+             * Call printmarkdown to generate HTML from the final generated string after templating and return it
+             */
+            value = utils.printMarkdown(value, options);
+            return { isHTML: true, value: value };
         };
 
         /**
