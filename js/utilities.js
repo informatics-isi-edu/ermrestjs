@@ -399,7 +399,7 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
-            return module._markdownIt.renderInline(value);
+            return module._markdownIt.render(value);
         },
 
         /**
@@ -462,7 +462,7 @@ var ERMrest = (function(module) {
             formattedSeq += '`';
 
             // Run it through printMarkdown to get the sequence in a fixed-width font
-            return module._formatUtils.printMarkdown(formattedSeq);
+            return module._markdownIt.renderInline(formattedSeq);
         }
     };
 
@@ -499,6 +499,111 @@ var ERMrest = (function(module) {
             typeof element.descending == 'boolean');
     };
 
+    /*
+     * @function
+     * @private
+     * @param {Object} md The markdown-it object
+     * @param {Object} md The markdown-it-container object.
+     * @desc Sets functionality for custom markdown tags like `iframe` using `markdown-it-container` plugin.
+     */
+    module._bindCustomMarkdownTags = function(md, mdContainer) {
+
+        // Set typography to enable breaks on "\n"
+        md.set({ typographer: true });
+
+        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        md.use(mdContainer, 'iframe', {
+            /*
+             * Checks whether string matches format "::: iframe [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */ 
+            validate: function(params) {
+                return params.trim().match(/iframe\s+(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                // Get token string after regexp matching to determine actual internal markdown 
+                var m = tokens[idx].info.trim().match(/iframe\s+(.*)$/i);
+
+                // If this is the opening tag i.e. starts with "::: iframe " 
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+
+                    // Extract remaining string before closing tag and get its parsed markdown attributes
+                    var attrs = md.parseInline(m[1]), html = "";
+
+                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+
+                        // Check If the markdown is a link
+                        if (attrs[0].children[0].type == "link_open") {
+                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
+
+                            // Add all attributes to the iframe
+                            openingLink.attrs.forEach(function(attr) {
+                                if (attr[0] == "href") {
+                                    iframeHTML += 'src="' + attr[1] + '"';
+                                } else {
+                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                }
+                               iframeHTML += " ";
+                            });
+                            html += iframeHTML + "></iframe>";
+
+                            // If there is a caption then add it as a "div" with "caption" class
+                            if (attrs[0].children[1].type == "text") {
+                               html = '<div class="caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                            }
+
+                            // Encapsulate the iframe inside a div
+                            html = '<p>' + html + "</p>";
+                        }  
+                    }
+                    // if attrs was empty or it didn't find any link simply render the internal markdown
+                    if (html === "") {
+                        html = md.render(m[1]);
+                    }
+
+                    return html;
+                } else {
+                  // closing tag 
+                  return '';
+                }
+            }
+        });
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {String} template The template string to transform
+     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Returns a string produced as a result of templating using `Mustache`.
+     */
+    module._renderTemplate = function(template, keyValues, options) {
+        
+        var obj = {};
+        module._clone(obj, keyValues);
+
+        // Inject the encode function in the keyValues object
+        obj.encode = function() {
+            return function(text, render) {
+                return encodeURIComponent(render(text));
+            };
+        };
+
+        // Inject other functions provided in the options.functions array if needed
+        if (options.functions && options.functions.length) {
+            options.functions.forEach(function(f) {
+                obj[f.name] = function() {
+                    return f.fn;
+                };
+            });
+        }
+
+        return module._mustache.render(template, obj);
+    };
+
     /**
      * @desc List of annotations that ermrestjs supports.
      * @private
@@ -510,7 +615,8 @@ var ERMrest = (function(module) {
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
-        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display"
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
     });
 
     /**

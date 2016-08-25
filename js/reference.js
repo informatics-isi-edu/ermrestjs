@@ -937,13 +937,63 @@ var ERMrest = (function(module) {
          */
         get values() {
             if (this._values === undefined) {
+
                 this._values = [];
+                this._isHTML = [];
+                var keyValues = {};
+
                 for (var i = 0; i < this._pageRef.columns.length; i++) {
                     var col = this._pageRef.columns[i];
-                    this._values[i] = col.formatvalue(this._data[col.name], {context:this._pageRef._context});
+                    keyValues[col.name] = col.formatvalue(this._data[col.name], {context:this._pageRef._context});
                 }
+
+                /*
+                 * use this variable to avoid using computed formatted values in other columns while templating 
+                 */
+                var formattedValues = [];
+
+                // format values according to column display annotation
+                for (i = 0; i < this._pageRef.columns.length; i++) {
+                    var tempCol = this._pageRef.columns[i];
+                    formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                    
+                    if (tempCol.type.name === "gene_sequence") {
+                        formattedValues[i].isHTML = true;
+                    }
+
+                }
+
+                var self = this;
+
+                formattedValues.forEach(function(fv) {
+                    self._values.push(fv.value);
+                    self._isHTML.push(fv.isHTML);
+                });
+
             }
             return this._values;
+        },
+
+        /**
+         * The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
+         * values in the array matches the ordering of the columns in the
+         * reference (see {@link ERMrest.Reference#columns}).
+         *
+         * Usage (iterating over all values in the tuple):
+         * ```
+         * for (var i=0; len=reference.columns.length; i<len; i++) {
+         *   console.log(tuple.displayname, tuple.isHTML[i] ? " has an HTML value" : " does not has an HTML value");
+         * }
+         * ```
+         * @type {string[]}
+         */
+        get isHTML() {
+            // this._isHTML has not been populated then call this.values getter to populate values and isHTML array
+            if (!this._isHTML) {
+                var value = this.values;
+            }
+
+            return this._isHTML;
         },
 
         /**

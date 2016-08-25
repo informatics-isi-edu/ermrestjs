@@ -24,7 +24,26 @@ runSpecs();
 // Catch unhandled exceptions and show the stack trace. This is most
 // useful when running the jasmine specs.
 process.on('uncaughtException', function(e) {
-	console.log('Caught unhandled exception: ' + e.toString());
+	console.log('Caught unhandled exception: ');
+	console.log(e);
 	console.log(e.stack);
-	jasmineUtils.deleteCatalog();
+	if (!process.catalogDeleted) {
+		process.catalogDeleted = true;
+		jasmineUtils.deleteCatalog();
+	} else {
+		process.exit(1);
+	}
 });
+
+process.on('SIGINT', function(code) {
+	if (!process.catalogDeleted) {
+	    process.catalogDeleted = true;
+	    console.log('About to exit because of SIGINT (ctrl + c)');
+	    jasmineUtils.deleteCatalog().done(function() {
+	    	process.exit(1);
+	    });
+	} else {
+		process.exit(1);
+	}
+});
+

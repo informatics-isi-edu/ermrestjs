@@ -26,7 +26,10 @@
     "request-q": "x",
     "markdown-it": "x",
     "markdown-it-sub": "x",
-    "markdown-it-sup": "x"
+    "markdown-it-sup": "x",
+    "markdown-it-attrs": "x",
+    "markdown-it-container": "x",
+    "mustache": "x"
   },
   "devDependencies": {
     "bower": "x",
