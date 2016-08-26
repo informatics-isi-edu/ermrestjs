@@ -72,6 +72,8 @@ var ERMrest = (function(module) {
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
+                reference._checkPermissions();
+
                 defer.resolve(reference);
 
             }, function (error) {
@@ -288,6 +290,7 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canCreate() {
+            // check ACLs
             return undefined;
         },
 
@@ -308,7 +311,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canUpdate() {
-            return undefined;
+            if (this._canUpdate === undefined) {
+                this._checkPermissions();
+            }
+            return this._canUpdate;
         },
 
         /**
@@ -319,6 +325,65 @@ var ERMrest = (function(module) {
          */
         get canDelete() {
             return undefined;
+        },
+
+        /**
+         * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
+         * Sets a property on the reference object used by canCreate/canUpdate/canDelete
+         * @memberof ERMrest
+         * @private
+         */
+        _checkPermissions: function () {
+            var ignoreRecord = false,
+                editCatalog = false,
+                ignoreUri = module._annotations.IGNORE,
+                baseUrl = this.location.service,
+                self = this;
+
+            var ignoreOnTable = this._table.annotations[ignoreUri];
+            var ignoreOnSchema = this._table.schema.annotations[ignoreUri];
+
+            var ignoreTable = (ignoreOnTable !== undefined && (ignoreOnTable === null || ignoreOnTable === true || ignoreOnTable.indexOf('edit') > -1 || ignoreOnTable.indexOf('entry') > -1));
+            var ignoreSchema = (ignoreOnSchema !== undefined && (ignoreOnSchema === null || ignoreOnSchema === true || ignoreOnSchema.indexOf('edit') > -1 || ignoreOnSchema.indexOf('entry') > -1));
+            if (ignoreTable || ignoreSchema) ignoreRecord = true;
+
+
+            var catalogWriteUsersUri = baseUrl + "/catalog/" + this.location.catalog + "/meta/content_write_user";
+
+            // data comes back in the form of:
+            // meta: {data: [{k: content_write_user, v: <some-value>}, {...}, ...], ...}
+            module._http.get(catalogWriteUsersUri).then(function getMeta(meta){
+                var writeUsers = [],
+                    data = meta.data;
+
+                data.forEach(function(datum) {
+                    // Wildcard value under 'content_write_user' means anybody can write to the catalog, so allow editing of record.
+                    if (datum.v === '*') {
+                        editCatalog = true;
+                    } else {
+                        writeUsers.push(datum.v);
+                    }
+                });
+
+                if (writeUsers.length > 0) {
+                    // Get the user's session attributes
+                    module._http.get(baseUrl + "/authn/session").then(function getSession(session) {
+                        var sessionAttributes = session.data.attributes.map(function(a) {
+                            return a.id;
+                        });
+
+                        writeUsers.forEach(function(user) {
+                            if (sessionAttributes.indexOf(user) !== -1) {
+                                editCatalog = true;
+                            }
+                        });
+
+                        if (editCatalog && !ignoreRecord) self._canUpdate = true;
+                    }, function error(error) {
+                        console.log("Session not found", error);
+                    });
+                }
+            });
         },
 
         /**
@@ -607,7 +672,6 @@ var ERMrest = (function(module) {
         module._clone(referenceCopy, source);
         return referenceCopy;
     }
-
 
     /**
      * Constructs a new Page. A _page_ represents a set of results returned from
