@@ -37,10 +37,25 @@ process.on('uncaughtException', function(e) {
 		console.log('Caught unhandled exception: ' + e.message);
 		console.log(e.stack);
 	}
-	jasmineUtils.deleteCatalog().done(function() {
-		process.exit(1);
-	});
-	setTimeout(function() {
-		process.exit(1);
-	}, 3000);
+
+	if (!process.catalogDeleted) {
+		process.catalogDeleted = true;
+		jasmineUtils.deleteCatalog().done(function() {
+			process.exit(1);
+		});
+		setTimeout(function() {
+			process.exit(1);
+		}, 3000);
+	}
+});
+
+
+process.on('SIGINT', function(code) {
+	if (!process.catalogDeleted) {
+	    process.catalogDeleted = true;
+	    console.log('About to exit because of SIGINT (ctrl + c)');
+	    jasmineUtils.deleteCatalog().done(function() {
+	    	process.exit(1);
+	    });
+	}
 });

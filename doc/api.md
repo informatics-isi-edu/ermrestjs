@@ -106,6 +106,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -223,6 +224,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+        * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -978,6 +980,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString)
 
 <a name="new_ERMrest.Column_new"></a>
@@ -1066,6 +1069,19 @@ Formats a value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+
+<a name="ERMrest.Column+formatPresentation"></a>
+
+#### column.formatPresentation(data, options) ⇒ <code>Object</code>
+Formats the presentation value corresponding to this column definition.
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>String</code> | The 'formatted' data value. |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -2082,6 +2098,7 @@ if (reference.next) {
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
+    * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -2160,6 +2177,21 @@ Usage (getting a specific value by column position):
 var column = reference.columns[8]; // the 8th column in this refernece
 console.log(tuple.displayname, "has a", column.displayname,
     "with value", tuple.values[column.position]);
+```
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+isHTML"></a>
+
+#### tuple.isHTML : <code>Array.&lt;string&gt;</code>
+The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
+values in the array matches the ordering of the columns in the
+reference (see [columns](#ERMrest.Reference+columns)).
+
+Usage (iterating over all values in the tuple):
+```
+for (var i=0; len=reference.columns.length; i<len; i++) {
+  console.log(tuple.displayname, tuple.isHTML[i] ? " has an HTML value" : " does not has an HTML value");
+}
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
