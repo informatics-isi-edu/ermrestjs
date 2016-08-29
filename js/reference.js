@@ -67,12 +67,11 @@ var ERMrest = (function(module) {
 
             var server = module.ermrestFactory.getServer(reference._location.service, params);
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
+                reference._meta = catalog.meta;
 
                 reference._table   = catalog.schemas.get(reference._location.firstSchemaName).tables.get(reference._location.firstTableName);
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
-
-                reference._checkPermissions();
 
                 defer.resolve(reference);
 
@@ -165,6 +164,24 @@ var ERMrest = (function(module) {
          */
         get uri() {
             return this._location.compactUri;
+        },
+
+        /**
+         * The session object from the server
+         * @param {Object} session - the session object
+         */
+        set session(session) {
+            this._session = session;
+        },
+
+        /**
+         * NOTE: Shouldn't be used. A setter should not be defined without a getter.
+         * This function is for the linter. The session should already be available
+         * to the dev in the UI.
+         * @type {Object} session
+         */
+        get session() {
+            return this._session;
         },
 
         /**
@@ -312,7 +329,7 @@ var ERMrest = (function(module) {
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                this._checkPermissions();
+                this._canUpdate = this._checkPermissions();
             }
             return this._canUpdate;
         },
@@ -333,12 +350,12 @@ var ERMrest = (function(module) {
          * @memberof ERMrest
          * @private
          */
-        _checkPermissions: function () {
-            var ignoreRecord = false,
-                editCatalog = false,
+         _checkPermissions: function () {
+            var editCatalog = false,
+                ignoreRecord = false,
                 ignoreUri = module._annotations.IGNORE,
-                baseUrl = this.location.service,
-                self = this;
+                updateMetadata = this._meta.content_write_user,
+                writeUsers = [];
 
             var ignoreOnTable = this._table.annotations[ignoreUri];
             var ignoreOnSchema = this._table.schema.annotations[ignoreUri];
@@ -347,44 +364,26 @@ var ERMrest = (function(module) {
             var ignoreSchema = (ignoreOnSchema !== undefined && (ignoreOnSchema === null || ignoreOnSchema === true || ignoreOnSchema.indexOf('edit') > -1 || ignoreOnSchema.indexOf('entry') > -1));
             if (ignoreTable || ignoreSchema) ignoreRecord = true;
 
+            for (var i = 0; i < updateMetadata.length; i++) {
+                if (updateMetadata[i] === '*') {
+                    editCatalog = true;
+                } else {
+                    writeUsers.push(updateMetadata[i]);
+                }
+            }
 
-            var catalogWriteUsersUri = baseUrl + "/catalog/" + this.location.catalog + "/meta/content_write_user";
-
-            // data comes back in the form of:
-            // meta: {data: [{k: content_write_user, v: <some-value>}, {...}, ...], ...}
-            module._http.get(catalogWriteUsersUri).then(function getMeta(meta){
-                var writeUsers = [],
-                    data = meta.data;
-
-                data.forEach(function(datum) {
-                    // Wildcard value under 'content_write_user' means anybody can write to the catalog, so allow editing of record.
-                    if (datum.v === '*') {
-                        editCatalog = true;
-                    } else {
-                        writeUsers.push(datum.v);
-                    }
+            if (writeUsers.length > 0) {
+                var sessionAttributes = this._session.attributes.map(function(a) {
+                    return a.id;
                 });
 
-                if (writeUsers.length > 0) {
-                    // Get the user's session attributes
-                    module._http.get(baseUrl + "/authn/session").then(function getSession(session) {
-                        var sessionAttributes = session.data.attributes.map(function(a) {
-                            return a.id;
-                        });
-
-                        writeUsers.forEach(function(user) {
-                            if (sessionAttributes.indexOf(user) !== -1) {
-                                editCatalog = true;
-                            }
-                        });
-
-                        if (editCatalog && !ignoreRecord) self._canUpdate = true;
-                    }, function error(error) {
-                        console.log("Session not found", error);
-                    });
+                for (var j = 0; j < writeUsers.length; j++) {
+                    if (sessionAttributes.indexOf(writeUsers[j]) != -1) editCatalog = true;
                 }
-            });
-        },
+            }
+
+            return (editCatalog && !ignoreRecord);
+         },
 
         /**
          * Creates a set of resources.
@@ -970,7 +969,7 @@ var ERMrest = (function(module) {
                 }
 
                 /*
-                 * use this variable to avoid using computed formatted values in other columns while templating 
+                 * use this variable to avoid using computed formatted values in other columns while templating
                  */
                 var formattedValues = [];
 
@@ -978,7 +977,7 @@ var ERMrest = (function(module) {
                 for (i = 0; i < this._pageRef.columns.length; i++) {
                     var tempCol = this._pageRef.columns[i];
                     formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-                    
+
                     if (tempCol.type.name === "gene_sequence") {
                         formattedValues[i].isHTML = true;
                     }

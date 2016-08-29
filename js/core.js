@@ -177,6 +177,8 @@ var ERMrest = (function (module) {
                 var catalog = new Catalog(self._server, id);
                 catalog._introspect().then(function () {
                     self._catalogs[id] = catalog;
+                    return catalog._meta();
+                }).then(function getMeta() {
                     defer.resolve(catalog);
                 }, function (error) {
                     defer.reject(error);
@@ -223,6 +225,12 @@ var ERMrest = (function (module) {
          // A map from schema name to constraint names to the actual object.
          // this._constraintNames[schemaName][constraintName] will return an object.
         this._constraintNames = {};
+
+        /*
+         * Value that holds the meta resource object returned from the server for the catalog
+         * @type null
+         */
+        this.meta = null;
     }
 
     Catalog.prototype = {
@@ -261,6 +269,26 @@ var ERMrest = (function (module) {
                 }
 
                 return self.schemas;
+            }, function (response) {
+                var error = module._responseToError(response);
+                return module._q.reject(error);
+            });
+        },
+
+        /**
+         *
+         * @private
+         * @return {Promise} a promise that returns the meta object if resolved or
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         */
+        _meta: function () {
+            // load all meta data
+            var self = this;
+            return this.server._http.get(this._uri + "/meta").then(function (response) {
+                self.meta = response.data;
+
+                return self.meta;
             }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
@@ -1357,7 +1385,7 @@ var ERMrest = (function (module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
-            
+
             var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
 
             /*
@@ -1385,10 +1413,10 @@ var ERMrest = (function (module) {
                 // Get markdown pattern from the annotation value
                 var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
 
-                // If template is of type string 
+                // If template is of type string
                 if (typeof template === 'string') {
-                   
-                    /* 
+
+                    /*
                      * Code to do template/string replacement using values and set template as null if any of the
                      * values turn out to be null or undefined
                      */

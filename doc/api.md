@@ -196,6 +196,8 @@ to use for ERMrest JavaScript agents.
         * [new Reference(location)](#new_ERMrest.Reference_new)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+        * [.session](#ERMrest.Reference+session)
+        * [.session](#ERMrest.Reference+session) : <code>Object</code>
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
@@ -1739,6 +1741,8 @@ Constructor for a ParsedFilter.
     * [new Reference(location)](#new_ERMrest.Reference_new)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+    * [.session](#ERMrest.Reference+session)
+    * [.session](#ERMrest.Reference+session) : <code>Object</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
@@ -1785,6 +1789,25 @@ The display name for this reference.
 
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+session"></a>
+
+#### reference.session
+The session object from the server
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| session | <code>Object</code> | the session object |
+
+<a name="ERMrest.Reference+session"></a>
+
+#### reference.session : <code>Object</code>
+NOTE: Shouldn't be used. A setter should not be defined without a getter.
+This function is for the linter. The session should already be available
+to the dev in the UI.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+columns"></a>
