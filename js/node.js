@@ -101,7 +101,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
             /*
              * Inject _mustache module in Ermrest
              */
-            Ermrest._mustache = window.Mustache;
+            ERMrest._mustache = window.Mustache;
 
             /*
              * Inject _markdownIt module in ERMrest

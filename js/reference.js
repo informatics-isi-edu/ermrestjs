@@ -234,7 +234,7 @@ var ERMrest = (function(module) {
          * Usage:
          * ```
          * // assumes we have an uncontextualized `Reference` object
-         * var recordref = reference.contextualize.record;
+         * var recordref = reference.contextualize.detailed;
          * ```
          * The `reference` is unchanged, while `recordref` now represents a
          * reconfigured reference. For instance, `recordref.columns` may be
@@ -254,7 +254,7 @@ var ERMrest = (function(module) {
              * The _record_ context of this reference.
              * @type {ERMrest.Reference}
              */
-            get record() {
+            get detailed() {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
                 delete newRef._related;

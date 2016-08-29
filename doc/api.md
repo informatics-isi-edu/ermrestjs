@@ -199,7 +199,7 @@ to use for ERMrest JavaScript agents.
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
-            * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+            * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
             * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1742,7 +1742,7 @@ Constructor for a ParsedFilter.
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
-        * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
         * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1847,7 +1847,7 @@ hidden.
 Usage:
 ```
 // assumes we have an uncontextualized `Reference` object
-var recordref = reference.contextualize.record;
+var recordref = reference.contextualize.detailed;
 ```
 The `reference` is unchanged, while `recordref` now represents a
 reconfigured reference. For instance, `recordref.columns` may be
@@ -1856,12 +1856,12 @@ different compared to `reference.columns`.
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 
 * [.contextualize](#ERMrest.Reference+contextualize)
-    * [.record](#ERMrest.Reference+contextualize.record) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
     * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
 
-<a name="ERMrest.Reference+contextualize.record"></a>
+<a name="ERMrest.Reference+contextualize.detailed"></a>
 
-##### contextualize.record : <code>[Reference](#ERMrest.Reference)</code>
+##### contextualize.detailed : <code>[Reference](#ERMrest.Reference)</code>
 The _record_ context of this reference.
 
 **Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
