@@ -1359,14 +1359,18 @@ var ERMrest = (function (module) {
         this.formatPresentation = function(data, options) {
             
             var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
+            var isMarkdownPattern = false, isMarkdownType = false, annotation;
+
+            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
+                annotation = module._getAnnotationValueByContext(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+            }
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            var isMarkdownPattern = false, isMarkdownType = false;
-
-            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY) && this.annotations.get(module._annotations.COLUMN_DISPLAY).contains("markdown_pattern")) {
+            // If template is of type string 
+            if (annotation && (typeof annotation.markdown_pattern === 'string')) {
                 isMarkdownPattern = true;
             }
 
@@ -1383,18 +1387,14 @@ var ERMrest = (function (module) {
             // If there is any markdown pattern then evaluate it
             if (isMarkdownPattern) {
                 // Get markdown pattern from the annotation value
-                var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
+                var template = annotation.markdown_pattern; // pattern
 
-                // If template is of type string 
-                if (typeof template === 'string') {
-                   
-                    /* 
-                     * Code to do template/string replacement using values and set template as null if any of the
-                     * values turn out to be null or undefined
-                     */
-                    value = module._renderTemplate(template, keyValues, options);
-
-                }
+                
+                /* 
+                 * Code to do template/string replacement using values and set template as null if any of the
+                 * values turn out to be null or undefined
+                 */
+                value = module._renderTemplate(template, keyValues, options);
             }
 
             // If value is null or empty, return value on basis of `show_nulls`
