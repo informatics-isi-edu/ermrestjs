@@ -266,12 +266,24 @@ var ERMrest = (function(module) {
              * @type {ERMrest.Reference}
              */
             get detailed() {
+                return this._contextualize(module._contexts.DETAILED);
+            },
+
+            /**
+             * The _compact_ context of this reference.
+             * @type {ERMrest.Reference}
+             */
+            get compact() {
+                return this._contextualize(module._contexts.COMPACT);
+            },
+
+            _contextualize: function(context) {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
                 delete newRef._related;
-                var columnOrders = source._table.columns._contextualize(module._contexts.DETAILED).all();
+                var columnOrders = source._table.columns._contextualize(context).all();
 
-                newRef._context = module._contexts.DETAILED;
+                newRef._context = context;
                 newRef._columns = [];
                 for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
