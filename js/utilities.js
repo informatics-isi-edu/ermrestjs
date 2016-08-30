@@ -462,6 +462,9 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
+
+            if (options.inline) return module._markdownIt.renderInline(value);
+            
             return module._markdownIt.render(value);
         },
 

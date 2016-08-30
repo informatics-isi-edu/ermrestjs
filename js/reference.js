@@ -828,7 +828,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * A string representation of the whole page which uses table-display annotation.
+         * HTML representation of the whole page which uses table-display annotation.
          * For more info you can refer {ERM.reference.display}
          * 
          * Usage:
@@ -873,7 +873,10 @@ var ERMrest = (function(module) {
                     }
 
                     // Join the values array using the separator and prepend it with the prefix and append suffix to it.
-                    this._content = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+                    var pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+
+                    // Get the HTML generated using the markdown pattern generated above
+                    this._content =  module._formatUtils.printMarkdown(pattern);
                 } else {
                     this._content = null;
                 }
@@ -1108,9 +1111,11 @@ var ERMrest = (function(module) {
                     // Get formatted keyValues for a table for the data
                     var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
 
-                    // set this._displayname after formatting
-                    this._displayname = module._renderTemplate(template, keyValues);
+                    // get templated patten after replacing the values using Mustache
+                    var pattern = module._renderTemplate(template, keyValues);
 
+                    // Render markdown content for the pattern
+                    this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
                 }
                 // no row_name annotation, use column with title, name, or label
                 else if (this._data.name) // TODO case insensitive
