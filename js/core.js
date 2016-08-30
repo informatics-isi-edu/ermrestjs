@@ -716,8 +716,8 @@ var ERMrest = (function (module) {
         },
 
         // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys.
-        // pure: there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // pure: There is no extra column that is not part of any keys.
         // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
         _isPureBinaryAssociation: function () {
             if(this._isPureBinaryAssociation_cached === undefined) {
@@ -741,11 +741,15 @@ var ERMrest = (function (module) {
                 return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
-            if (tempKeys.length != 1) {
-                return false; // not pure
+            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+                return false; // not binary
             }
 
-            return fkColset._equals(tempKeys[0].colset); // check for purity
+            var nonKeyCols = this.columns.all().filter(function(col){
+                return col.memberOfKeys.length === 0;
+            }); // columns that are not part of any keys.
+
+            return nonKeyCols.length === 0; // check for purity
         },
 
     };
@@ -1363,7 +1367,7 @@ var ERMrest = (function (module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
-            
+
             var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
 
             /*
@@ -1391,10 +1395,10 @@ var ERMrest = (function (module) {
                 // Get markdown pattern from the annotation value
                 var template = this.annotations.get(module._annotations.COLUMN_DISPLAY).get("markdown_pattern"); // pattern
 
-                // If template is of type string 
+                // If template is of type string
                 if (typeof template === 'string') {
-                   
-                    /* 
+
+                    /*
                      * Code to do template/string replacement using values and set template as null if any of the
                      * values turn out to be null or undefined
                      */

@@ -570,18 +570,7 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        // NOTE: columns of assocation table that are not part of any keys + all the columns of the other table
-                        newRef._columns = [];
-                        for (j = 0; j < fkrTable.columns.length(); j++) {
-                            col = fkrTable.columns.getByPosition(j);
-                            if (col.memberOfKeys.length === 0) {
-                                newRef._columns.push(col);
-                            }
-                        }
-                        for (j = 0; j < otherFK.key.table.columns.length(); j++) {
-                            // for large datasets loop/push is faster than concat
-                            newRef._columns.push(otherFK.key.table.columns.getByPosition(j));
-                        }
+                        newRef._columns = otherFK.key.table.columns.all();
 
                         newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
@@ -948,7 +937,7 @@ var ERMrest = (function(module) {
                 }
 
                 /*
-                 * use this variable to avoid using computed formatted values in other columns while templating 
+                 * use this variable to avoid using computed formatted values in other columns while templating
                  */
                 var formattedValues = [];
 
@@ -956,7 +945,7 @@ var ERMrest = (function(module) {
                 for (i = 0; i < this._pageRef.columns.length; i++) {
                     var tempCol = this._pageRef.columns[i];
                     formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-                    
+
                     if (tempCol.type.name === "gene_sequence") {
                         formattedValues[i].isHTML = true;
                     }

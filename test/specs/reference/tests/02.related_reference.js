@@ -4,8 +4,9 @@ exports.execute = function(options) {
             schemaName = "reference_schema",
             tableName = "reference_table",
             inboudTableName = "inbound_related_reference_table",
-            AssociationTableWithToName = "association_table_with_toname",
-            AssociationTableWithID = "association_table_with_id",
+            associationTableWithToName = "association_table_with_toname",
+            associationTableWithID = "association_table_with_id",
+            AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
             relatedEntityId = 3,
             limit = 1;
@@ -43,6 +44,10 @@ exports.execute = function(options) {
 
         it('should only include visible foreign keys that are defined in the annotation.', function() {
             expect(reference.related.length).toBe(5);
+        });
+
+        it('should not be labeled as association when table has extra columns.', function (){
+            expect(related[4]._table.name).toBe(AssociationTableWithExtra);
         });
 
         describe('for inbound foreign keys, ', function() {
@@ -97,7 +102,6 @@ exports.execute = function(options) {
         describe('for pure and binray association foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function (){
                 expect(related[2]._location.catalog).toBe(catalog_id.toString());
-                expect(related[2]._table.schema.name).toBe(schemaName);
                 expect(related[2]._table.name).toBe(inboudTableName);
             });
 
@@ -122,13 +126,6 @@ exports.execute = function(options) {
                     checkReferenceColumns([{
                         ref: related[3],
                         expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
-                    }]);
-                });
-
-                it('should include extra columns of association table', function() {
-                    checkReferenceColumns([{
-                        ref: related[4],
-                        expected:["extra", "id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
                     }]);
                 });
             });

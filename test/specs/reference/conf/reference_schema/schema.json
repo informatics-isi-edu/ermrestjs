@@ -250,7 +250,7 @@
             ]
         },
         "association_table_with_extra": {
-            "comment": "has fk to reference_table and inbound_related_reference_table. has an extra column",
+            "comment": "has fk to reference_table and inbound_related_reference_table. has an extra column. since it has extra columns, it should not be consdered as association",
             "kind": "table",
             "table_name": "association_table_with_extra",
             "schema_name": "reference_schema",
