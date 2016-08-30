@@ -16,6 +16,7 @@ exports.execute = function (options) {
             server.catalogs.get(catalogId).then(function(response) {
                 catalog = response;
                 expect(catalog).toBeDefined();
+                expect(catalog.meta).toBeDefined();
                 expect(catalog.schemas).toBeDefined();
                 expect(catalog.schemas.get).toBeDefined();
                 schema = catalog.schemas.get(schemaName);
