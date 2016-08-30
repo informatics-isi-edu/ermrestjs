@@ -170,19 +170,11 @@ var ERMrest = (function(module) {
          * The session object from the server
          * @param {Object} session - the session object
          */
+        /* jshint ignore:start */
         set session(session) {
             this._session = session;
         },
-
-        /**
-         * NOTE: Shouldn't be used. A setter should not be defined without a getter.
-         * This function is for the linter. The session should already be available
-         * to the dev in the UI.
-         * @type {Object} session
-         */
-        get session() {
-            return this._session;
-        },
+        /* jshint ignore:end */
 
         /**
          * The array of column definitions which represent the model of
@@ -356,7 +348,7 @@ var ERMrest = (function(module) {
             var editCatalog = false,
                 ignoreRecord = false,
                 ignoreUri = module._annotations.IGNORE,
-                metadata = this._meta[permission],
+                acl = this._meta[permission],
                 users = [];
 
             var ignoreOnTable = this._table.annotations[ignoreUri];

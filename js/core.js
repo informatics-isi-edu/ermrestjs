@@ -176,9 +176,9 @@ var ERMrest = (function (module) {
 
                 var catalog = new Catalog(self._server, id);
                 catalog._introspect().then(function () {
-                    self._catalogs[id] = catalog;
                     return catalog._meta();
                 }).then(function getMeta() {
+                    self._catalogs[id] = catalog;
                     defer.resolve(catalog);
                 }, function (error) {
                     defer.reject(error);
