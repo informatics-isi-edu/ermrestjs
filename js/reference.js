@@ -307,8 +307,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canCreate() {
-            // check ACLs
-            return undefined;
+            if (this._canCreate === undefined) {
+                this._canCreate = this._checkPermissions();
+            }
+            return this._canCreate;
         },
 
         /**
