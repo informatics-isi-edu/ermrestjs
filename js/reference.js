@@ -528,6 +528,10 @@ var ERMrest = (function(module) {
         *
         *  The object has following properties
         *  {
+        *    rowName: "some_markdown" || undefined,
+        *    
+        *    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
+        *    
         *    type: "markdown",  // Possible values are table/markdown/module (Default is "table")
         *
         *    // If type is "markdown" then you will get these properties 

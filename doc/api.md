@@ -205,6 +205,7 @@ to use for ERMrest JavaScript agents.
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+        * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -218,6 +219,7 @@ to use for ERMrest JavaScript agents.
         * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
         * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
         * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+        * [.content](#ERMrest.Page+content) : <code>string</code> &#124; <code>null</code>
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
@@ -1748,6 +1750,7 @@ Constructor for a ParsedFilter.
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -1903,6 +1906,46 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+display"></a>
+
+#### reference.display : <code>Object</code>
+An object which contains row display type for this reference. 
+ Will be populated on basis of  "table-display" annotation. 
+
+ The object has following properties
+ {
+   rowName: "some_markdown" || undefined,
+   
+   rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
+   
+   type: "markdown",  // Possible values are table/markdown/module (Default is "table")
+
+   // If type is "markdown" then you will get these properties 
+   mardkownPattern = "ROW_MARKDOWN",
+   separator: "\n",  // Default is new line "\n"
+   suffix: "SOME_MARKDOWN",  //Default is empty string ""
+   prefix: "SOME_MARKDOWN",  //Default is empty string ""
+ 
+   // If type is "module" then you will get these properties
+   modulePath: "pathsuffix"
+ }
+```
+
+Usage :
+```
+var displayType = reference.display.type; // the displayType
+ if ( displayType === 'table') {
+   // go for default rendering of rows using tuple.values
+} else if (displayType === 'markdown') {
+   // Use the separator, suffix and prefix values while rendering tuples
+   // Tuple will have a "tuple.content" property that will have the actual markdown value
+   // derived from row_markdown_pattern after templating and rendering markdown
+} else if (displayType ===  'module') {
+  // Use modulePath to render the rows
+}
+```
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+related"></a>
 
 #### reference.related : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
@@ -2005,6 +2048,7 @@ Deletes the referenced resources.
     * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
     * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
     * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
+    * [.content](#ERMrest.Page+content) : <code>string</code> &#124; <code>null</code>
 
 <a name="new_ERMrest.Page_new"></a>
 
@@ -2083,6 +2127,21 @@ if (reference.next) {
   reference.next.read(10).then(
     ...
   );
+}
+```
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
+<a name="ERMrest.Page+content"></a>
+
+#### page.content : <code>string</code> &#124; <code>null</code>
+HTML representation of the whole page which uses table-display annotation.
+For more info you can refer {ERM.reference.display}
+
+Usage:
+```
+var content = page.content;
+if (content) {
+   console.log(content);
 }
 ```
 
@@ -2198,7 +2257,7 @@ for (var i=0; len=reference.columns.length; i<len; i++) {
 <a name="ERMrest.Tuple+displayname"></a>
 
 #### tuple.displayname : <code>string</code>
-The _disaply name_ of this tuple. For example, if this tuple is a
+The _display name_ of this tuple. For example, if this tuple is a
 row from a table, then the display name is defined by the heuristic
 or the annotation for the _row name_.
 
