@@ -576,9 +576,15 @@ var ERMrest = (function(module) {
                     // Set rowname value
                     this._display._rowName = annotation.row_name;
 
-                    // If row_markdown_pattern is not empty then set its associated properties
-                    // Else if module is not empty then set its associated properties
-                    if (typeof annotation.row_markdown_pattern === 'string') {
+                    // If module is not empty then set its associated properties
+                    // Else if row_markdown_pattern is not empty then set its associated properties
+                    if (typeof annotation.module === 'string') {
+                        
+                        // TODO: write code for module handling
+                        
+                        this._display.type = "module";
+
+                    } else if (typeof annotation.row_markdown_pattern === 'string') {
 
                         this._display.type = 'markdown';
 
@@ -594,9 +600,6 @@ var ERMrest = (function(module) {
                         // Insert suffix markdown after the last rowpattern expansion when presenting row sets. (Default empty string "".)
                         this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
 
-                    } else if (typeof annotation.module === 'string') {
-                        // TODO: write code for module handling
-                        this._display.type = "module";
                     }
                 }
             }
@@ -846,7 +849,7 @@ var ERMrest = (function(module) {
                 if (this._ref.display.type === 'markdown') {
 
                     // If the number of records are zero then simply return the value
-                    if (!this.data || !this._data.length) {
+                    if (!this._data || !this._data.length) {
                         return "";
                     }
 
@@ -856,7 +859,7 @@ var ERMrest = (function(module) {
                     for (var i = 0; i < this._data.length; i++) {
 
                         // Compute formatted value for each column
-                        var keyValues = module._getFormattedKeyValues(this._ref, this._data);
+                        var keyValues = module._getFormattedKeyValues(this._ref, this._data[i]);
 
                         // Code to do template/string replacement using keyValues 
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);

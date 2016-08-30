@@ -5,7 +5,8 @@ exports.execute = function (options) {
             schemaName = "schema_table_display",
             tableName1 = "table_wo_title_wo_annotation",
             tableName2 = "table_w_title_wo_annotation",
-            tableName3 = "table_w_table_display_annotation";
+            tableName3 = "table_w_table_display_annotation",
+            tableName4 = "table_w_table_display_annotation_w_markdown_pattern";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName1;
@@ -15,6 +16,9 @@ exports.execute = function (options) {
 
         var table3EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName3;
+
+        var table4EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableName4;
 
         describe('table entities without lable/name/title nor table-display:row_name annotation, ', function() {
             var reference, page, tuple;
@@ -31,6 +35,12 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
             });
 
             it('read should return a Page object that is defined.', function(done) {
@@ -73,6 +83,12 @@ exports.execute = function (options) {
                 });
             });
 
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
+            });
+
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
                     page = response;
@@ -113,6 +129,12 @@ exports.execute = function (options) {
                 });
             });
 
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
+            });
+
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
                     page = response;
@@ -136,5 +158,65 @@ exports.execute = function (options) {
             });
         });
 
+
+        describe('table entities with table-display.row_markdown_pattern annotation', function() {
+            var reference, page, tuple;
+            var limit = 20;
+
+            it('resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(table4EntityUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('reference.display should be an object that is defined and display.type is set to markdown', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('markdown');
+            });
+
+            var markdownPattern = ":::iframe [{{title}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
+            it("reference.display._markdownPattern should be '" + markdownPattern + "' ", function() {
+                expect(reference.display._markdownPattern).toEqual(markdownPattern);
+            });
+
+            it("reference.display._separator should be '\n'", function() {
+                expect(reference.display._separator).toEqual('\n');
+            });
+
+            it("reference.display._prefix should be '\n'", function() {
+                expect(reference.display._prefix).toEqual("## Movie titles \n\n");
+            });
+            
+            it("reference.display._suffix should be '\n'", function() {
+                expect(reference.display._suffix).toEqual("");
+            });
+
+            it('read should return a Page object that is defined.', function(done) {
+                reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            var content = "<h2>Movie titles</h2>\n<p><div class=\"caption\">Hamlet</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001\" ></iframe></p><p><div class=\"caption\">The Adventures of Huckleberry Finn</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002\" ></iframe></p><p><div class=\"caption\">Alice’s Adventures in Wonderland</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003\" ></iframe></p><p><div class=\"caption\">Pride and Prejudice</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004\" ></iframe></p><p><div class=\"caption\">Great Expectations</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005\" ></iframe></p><p><div class=\"caption\">David Copperfield</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006\" ></iframe></p><p><div class=\"caption\">Emma</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007\" ></iframe></p><p><div class=\"caption\">As You Like It</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008\" ></iframe></p><p><div class=\"caption\">The Adventures of Tom Sawyer</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009\" ></iframe></p><p><div class=\"caption\">Through the Looking Glass</div><iframe src=\"https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010\" ></iframe></p>"; 
+            it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
+                expect(page.content).toEqual(content);
+            });
+
+        });
     });
 };
