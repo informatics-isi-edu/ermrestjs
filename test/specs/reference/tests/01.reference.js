@@ -55,7 +55,9 @@ exports.execute = function (options) {
             });
 
             it('reference should be properly defined after the callback is resolved.', function() {
+                expect(reference._meta).toBeDefined();
                 expect(reference._table).toBeDefined();
+                expect(reference._shortestKey).toBeDefined();
             });
 
             it('contextualize.detailed should return a contextualized reference object.', function() {
