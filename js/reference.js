@@ -308,7 +308,7 @@ var ERMrest = (function(module) {
          */
         get canCreate() {
             if (this._canCreate === undefined) {
-                this._canCreate = this._checkPermissions();
+                this._canCreate = this._checkPermissions('content_write_user');
             }
             return this._canCreate;
         },
@@ -331,7 +331,7 @@ var ERMrest = (function(module) {
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                this._canUpdate = this._checkPermissions();
+                this._canUpdate = this._checkPermissions('content_write_user');
             }
             return this._canUpdate;
         },
@@ -352,12 +352,12 @@ var ERMrest = (function(module) {
          * @memberof ERMrest
          * @private
          */
-         _checkPermissions: function () {
+         _checkPermissions: function (permission) {
             var editCatalog = false,
                 ignoreRecord = false,
                 ignoreUri = module._annotations.IGNORE,
-                updateMetadata = this._meta.content_write_user,
-                writeUsers = [];
+                metadata = this._meta[permission],
+                users = [];
 
             var ignoreOnTable = this._table.annotations[ignoreUri];
             var ignoreOnSchema = this._table.schema.annotations[ignoreUri];
@@ -366,21 +366,21 @@ var ERMrest = (function(module) {
             var ignoreSchema = (ignoreOnSchema !== undefined && (ignoreOnSchema === null || ignoreOnSchema === true || ignoreOnSchema.indexOf('edit') > -1 || ignoreOnSchema.indexOf('entry') > -1));
             if (ignoreTable || ignoreSchema) ignoreRecord = true;
 
-            for (var i = 0; i < updateMetadata.length; i++) {
-                if (updateMetadata[i] === '*') {
+            for (var i = 0; i < metadata.length; i++) {
+                if (metadata[i] === '*') {
                     editCatalog = true;
                 } else {
-                    writeUsers.push(updateMetadata[i]);
+                    users.push(metadata[i]);
                 }
             }
 
-            if (writeUsers.length > 0) {
+            if (users.length > 0) {
                 var sessionAttributes = this._session.attributes.map(function(a) {
                     return a.id;
                 });
 
-                for (var j = 0; j < writeUsers.length; j++) {
-                    if (sessionAttributes.indexOf(writeUsers[j]) != -1) editCatalog = true;
+                for (var j = 0; j < users.length; j++) {
+                    if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
                 }
             }
 
