@@ -1,9 +1,9 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In reference,',
+    description: 'In annotations, ',
     testCases: [
-         "/reference/tests/05.reference_values.js"
+        "/annotation/tests/03.table_display.js"
     ],
     schemaConfigurations: [
-        "/reference/conf/reference.conf.json"
+        "/annotation/conf/table_display.conf.json"
     ]
 });

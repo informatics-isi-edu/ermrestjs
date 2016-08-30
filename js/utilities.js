@@ -192,6 +192,69 @@ var ERMrest = (function(module) {
     };
 
     /**
+    * @param {object} ref The object that we want the null value for.
+    * @param {string} context The context that we want the value of.
+    * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
+    * @desc returns the null value for the column based on context and annotation and sets in the ref object too.
+    */
+    module._getNullValue = function (ref, context, elements) {
+        if (context in ref._nullValue) { // use the cached value
+            return ref._nullValue[context];
+        }
+
+        var value = -1,
+            displayAnnot = module._annotations.DISPLAY;
+
+        // first look at the column, then table, and at last schema for annotation.
+        for (var i=0; i < elements.length; i++) {
+            if (elements[i].annotations.contains(displayAnnot)) {
+                var annotation = elements[i].annotations.get(displayAnnot);
+                if(annotation.content.show_nulls){
+                    value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
+                    if (value !== -1) break; //found the value
+                }
+            }
+        }
+
+        if (value === false) { //eliminate the field
+            value = null;
+        } else if (value === true) { //empty field
+            value = "";
+        } else if (typeof value !== "string") { // default
+            if (context === module._contexts.DETAILED) {
+                value = null; // default null value for DETAILED context
+            } else {
+                value = ""; //default null value
+            }
+        }
+
+        ref._nullValue[context] = value; // cache the value
+        return value;
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {object} ref The object that we want the formatted values for.
+     * @param {object} data The object which contains key value pairs of data to be transformed
+     * @return {object} A formatted keyvalue pair of object
+     * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
+     */
+    module._getFormattedKeyValues = function(ref, data) {
+        var keyValues = {};
+
+        for (var i = 0; i < ref.columns.length; i++) {
+            var col = ref.columns[i];
+            keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
+            
+            // Inject raw data in the keyvalues object prefixed with an '_'
+            keyValues["_" + col.name] = data[col.name];
+        }
+
+        return keyValues;
+    };
+
+    /**
      * @function
      * @param {Object} response http response object
      * @return {Object} error object
@@ -581,7 +644,8 @@ var ERMrest = (function(module) {
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
     module._renderTemplate = function(template, keyValues, options) {
-        
+        options = options || {};
+
         var obj = {};
         module._clone(obj, keyValues);
 
