@@ -23,6 +23,7 @@ exports.execute = function (options) {
             it('resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(singleEnitityUri, {cid: "test"}).then(function (response) {
                     reference = response;
+                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -48,6 +49,9 @@ exports.execute = function (options) {
                 expect(reference.uri).toBe(reference._location.uri);
                 expect(reference.columns).toBe(reference._columns);
                 expect(reference.displayname).toBe(reference._table.name);
+                expect(reference.session).toEqual(jasmine.any(Object));
+                expect(reference.canCreate).toBeDefined();
+                expect(reference.canUpdate).toBeDefined();
                 expect(reference.read()).toBeDefined();
             });
 
