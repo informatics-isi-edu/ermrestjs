@@ -339,6 +339,8 @@ var ERMrest = (function(module) {
         },
 
         /**
+
+        /**
          * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
          * Sets a property on the reference object used by canCreate/canUpdate/canDelete
          * @memberof ERMrest
@@ -346,23 +348,14 @@ var ERMrest = (function(module) {
          */
          _checkPermissions: function (permission) {
             var editCatalog = false,
-                ignoreRecord = false,
-                ignoreUri = module._annotations.IGNORE,
                 acl = this._meta[permission],
                 users = [];
 
-            var ignoreOnTable = this._table.annotations[ignoreUri];
-            var ignoreOnSchema = this._table.schema.annotations[ignoreUri];
-
-            var ignoreTable = (ignoreOnTable !== undefined && (ignoreOnTable === null || ignoreOnTable === true || ignoreOnTable.indexOf('edit') > -1 || ignoreOnTable.indexOf('entry') > -1));
-            var ignoreSchema = (ignoreOnSchema !== undefined && (ignoreOnSchema === null || ignoreOnSchema === true || ignoreOnSchema.indexOf('edit') > -1 || ignoreOnSchema.indexOf('entry') > -1));
-            if (ignoreTable || ignoreSchema) ignoreRecord = true;
-
-            for (var i = 0; i < metadata.length; i++) {
-                if (metadata[i] === '*') {
+            for (var i = 0; i < acl.length; i++) {
+                if (acl[i] === '*') {
                     editCatalog = true;
                 } else {
-                    users.push(metadata[i]);
+                    users.push(acl[i]);
                 }
             }
 
@@ -376,7 +369,7 @@ var ERMrest = (function(module) {
                 }
             }
 
-            return (editCatalog && !ignoreRecord);
+            return editCatalog;
          },
 
         /**
