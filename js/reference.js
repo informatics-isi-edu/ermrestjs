@@ -67,6 +67,7 @@ var ERMrest = (function(module) {
 
             var server = module.ermrestFactory.getServer(reference._location.service, params);
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
+                reference._meta = catalog.meta;
 
                 reference._table   = catalog.schemas.get(reference._location.firstSchemaName).tables.get(reference._location.firstTableName);
                 reference._columns = reference._table.columns.all();
@@ -164,6 +165,16 @@ var ERMrest = (function(module) {
         get uri() {
             return this._location.compactUri;
         },
+
+        /**
+         * The session object from the server
+         * @param {Object} session - the session object
+         */
+        /* jshint ignore:start */
+        set session(session) {
+            this._session = session;
+        },
+        /* jshint ignore:end */
 
         /**
          * The array of column definitions which represent the model of
@@ -288,7 +299,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canCreate() {
-            return undefined;
+            if (this._canCreate === undefined) {
+                this._canCreate = this._checkPermissions('content_write_user');
+            }
+            return this._canCreate;
         },
 
         /**
@@ -308,7 +322,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canUpdate() {
-            return undefined;
+            if (this._canUpdate === undefined) {
+                this._canUpdate = this._checkPermissions('content_write_user');
+            }
+            return this._canUpdate;
         },
 
         /**
@@ -320,6 +337,40 @@ var ERMrest = (function(module) {
         get canDelete() {
             return undefined;
         },
+
+        /**
+
+        /**
+         * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
+         * Sets a property on the reference object used by canCreate/canUpdate/canDelete
+         * @memberof ERMrest
+         * @private
+         */
+         _checkPermissions: function (permission) {
+            var editCatalog = false,
+                acl = this._meta[permission],
+                users = [];
+
+            for (var i = 0; i < acl.length; i++) {
+                if (acl[i] === '*') {
+                    editCatalog = true;
+                } else {
+                    users.push(acl[i]);
+                }
+            }
+
+            if (users.length > 0) {
+                var sessionAttributes = this._session.attributes.map(function(a) {
+                    return a.id;
+                });
+
+                for (var j = 0; j < users.length; j++) {
+                    if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
+                }
+            }
+
+            return editCatalog;
+         },
 
         /**
          * Creates a set of resources.
@@ -607,7 +658,6 @@ var ERMrest = (function(module) {
         module._clone(referenceCopy, source);
         return referenceCopy;
     }
-
 
     /**
      * Constructs a new Page. A _page_ represents a set of results returned from
@@ -906,7 +956,7 @@ var ERMrest = (function(module) {
                 }
 
                 /*
-                 * use this variable to avoid using computed formatted values in other columns while templating 
+                 * use this variable to avoid using computed formatted values in other columns while templating
                  */
                 var formattedValues = [];
 
@@ -914,7 +964,7 @@ var ERMrest = (function(module) {
                 for (i = 0; i < this._pageRef.columns.length; i++) {
                     var tempCol = this._pageRef.columns[i];
                     formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-                    
+
                     if (tempCol.type.name === "gene_sequence") {
                         formattedValues[i].isHTML = true;
                     }

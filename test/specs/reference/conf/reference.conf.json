@@ -1,5 +1,11 @@
 {
-    "catalog": {},
+    "catalog": {
+        "acls": [
+            { "name": "content_write_user", "user": "write-tester" },
+            { "name": "content_read_user", "user": "write-tester" },
+            { "name": "content_read_user", "user": "read-tester" }
+        ]
+    },
     "schema": {
         "name": "reference_schema",
         "createNew": true,
