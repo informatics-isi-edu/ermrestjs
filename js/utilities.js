@@ -154,7 +154,7 @@ var ERMrest = (function(module) {
     module._getAnnotationArrayValue = function (context, annotation) {
         var contextedAnnot = module._getAnnotationValueByContext(context, annotation);
         if (contextedAnnot !== -1) { // found the context
-            if (Array.isArray(contextedAnnot)) {
+            if (typeof contextedAnnot === 'object') {
                 return contextedAnnot;
             } else {
                 return module._getAnnotationArrayValue(contextedAnnot, annotation); // go to next level
@@ -163,6 +163,9 @@ var ERMrest = (function(module) {
 
         return -1; // there was no annotation
     };
+
+    // TODO:
+    module._getRecursiveAnnotationValue = module._getAnnotationArrayValue;
 
     /**
     * @param {string} context the context that we want the value of.
@@ -697,7 +700,8 @@ var ERMrest = (function(module) {
         EDIT: 'entry/edit',
         ENTRY: 'entry',
         FILTER: 'filter',
-        DEFAULT: '*'
+        DEFAULT: '*',
+        ROWNAME :'row_name'
     });
 
     return module;

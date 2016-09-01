@@ -195,9 +195,9 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-         get columns() {
+        get columns() {
              return this._columns;
-         },
+        },
 
         get location() {
             return this._location;
@@ -579,7 +579,6 @@ var ERMrest = (function(module) {
         *
         *  The object has following properties
         *  {
-        *    rowName: "some_markdown" || undefined,
         *    
         *    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
         *    
@@ -627,9 +626,6 @@ var ERMrest = (function(module) {
                     
                     // Set row_order value
                     this._display._rowOrder = annotation.row_order;
-
-                    // Set rowname value
-                    this._display._rowName = annotation.row_name;
 
                     // If module is not empty then set its associated properties
                     // Else if row_markdown_pattern is not empty then set its associated properties
@@ -1147,10 +1143,9 @@ var ERMrest = (function(module) {
 
         /**
          * The _display name_ of this tuple. For example, if this tuple is a
-         * row from a table, then the display name is defined by the heuristic
-         * or the annotation for the _row name_.
-         *
-         * TODO: add a @link to the ermrest row name annotation
+         * row from a table, then the display name is defined by the
+         * row_markdown_pattern annotation for the _row name_ context
+         * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
          *
          * Usage:
          * ```
@@ -1159,11 +1154,17 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
+            var self = this, table = this._pageRef._table, col;
             if (!this._displayname) {
+                var annotation;
+                // If table has table-display annotation then set it in annotation variable
+                if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    annotation = module._getAnnotationValueByContext(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                }
 
-                // if table has display.rowName property
-                if (typeof this._pageRef.display._rowName === 'string') {
-                    var template = this._pageRef.display._rowName;
+                // if annotation is populated and annotation has display.rowName property
+                if (annotation && typeof annotation.row_markdown_pattern === 'string') {
+                    var template = annotation.row_markdown_pattern;
                     
                     // Get formatted keyValues for a table for the data
                     var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
@@ -1174,15 +1175,44 @@ var ERMrest = (function(module) {
                     // Render markdown content for the pattern
                     this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
                 }
-                // no row_name annotation, use column with title, name, or label
-                else if (this._data.name) // TODO case insensitive
-                    this._displayname = this._data.name;
-                else if (this._data.title)
-                    this._displayname = this._data.title;
-                else if (this._data.label)
-                    this._displayname = this._data.label;
-                else
-                    this._displayname = "";
+                // no row_name annotation, use column with title, name, or id:text type
+                else if (typeof this._data.title === 'string') {
+                    col = table.columns.get("title");
+                    this._displayname = col.formatvalue(this._data.title, { context: self._pageRef.context });
+                }
+                else if (typeof this._data.name === 'string') {
+                    col = table.columns.get("name");
+                    this._displayname = col.formatvalue(this._data.name, { context: self._pageRef.context });
+                }
+                else  {  
+
+                    // Check for id column whose type should not be integer or serial
+                    var idCol = table.columns.all().filter(function (c) { 
+                        return ((c.name == "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
+                    });
+
+                    // If id column exists
+                    if (idCol.length && typeof this._data.id === 'string') {
+                        this._displayname = idCol[0].formatvalue(this._data.id, { context: self._pageRef.context });
+                    } else {
+                        // Get the columns for shortestKey
+                        var keyColumns = table.shortestKey;
+                        var values = [];
+
+                        // Iterate over the keycolumns to get their formatted values for `row_name` context
+                        keyColumns.forEach(function(c) {
+                            var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
+                            values.push(value);
+                        });
+
+                        /*
+                         * join all values by ':' to get the display_name
+                         * Eg: displayName for values=["12", "DNA results for human specimen"] would be
+                         * "12:DNA results for human specimen"
+                         */
+                        this._displayname = values.join(':');
+                    }
+                }
             }
 
             return this._displayname;

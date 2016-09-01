@@ -5,8 +5,9 @@ exports.execute = function (options) {
             schemaName = "schema_table_display",
             tableName1 = "table_wo_title_wo_annotation",
             tableName2 = "table_w_title_wo_annotation",
-            tableName3 = "table_w_table_display_annotation",
-            tableName4 = "table_w_table_display_annotation_w_markdown_pattern";
+            tableName3 = "table_w_composite_key_wo_annotation",
+            tableName4 = "table_w_table_display_annotation",
+            tableName5 = "table_w_table_display_annotation_w_markdown_pattern";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName1;
@@ -17,10 +18,14 @@ exports.execute = function (options) {
         var table3EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName3;
 
+    
         var table4EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName4;
 
-        describe('table entities without lable/name/title nor table-display:row_name annotation, ', function() {
+        var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableName5;
+
+        describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
             var reference, page, tuple;
             var limit = 10;
 
@@ -56,17 +61,17 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuple displayname should return empty string.', function() {
+            it('tuple displayname should return formatted value of id as it is the unique key.', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
-                    expect(displayname).toBe("");
+                    expect(displayname).toBe(tuple.values[0]);
                 }
             });
         });
 
-        describe('table entities with lable/name/title without table-display:row_name annotation, ', function() {
+        describe('table entities with name/title without table-display:row_name annotation, ', function() {
             var reference, page, tuple;
             var limit = 10;
 
@@ -107,7 +112,53 @@ exports.execute = function (options) {
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
-                    expect(displayname).toBe(tuple._data.title);
+                    expect(displayname).toBe(tuple.values[1]);
+                }
+            });
+        });
+
+         describe('table entities without name/title nor table-display:row_name context annotation with composite key, ', function() {
+            var reference, page, tuple;
+            var limit = 10;
+
+            it('resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(table3EntityUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
+            });
+
+            it('read should return a Page object that is defined.', function(done) {
+                reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('tuple displayname should return "id:label" column.', function() {
+                var tuples = page.tuples;
+                for(var i = 0; i < limit; i++) {
+                    var tuple = tuples[i];
+                    var displayname = tuple.displayname;
+                    expect(displayname).toBe(tuple.values[0] + ":" + tuple.values[1]);
                 }
             });
         });
@@ -117,7 +168,7 @@ exports.execute = function (options) {
             var limit = 5;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table3EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table4EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
@@ -153,7 +204,7 @@ exports.execute = function (options) {
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
-                    expect(displayname).toBe(tuple._data.firstname + " " + tuple._data.lastname);
+                    expect(displayname).toBe(tuple.values[1] + " " + tuple.values[2]);
                 }
             });
         });
@@ -164,7 +215,7 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table4EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table5EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
