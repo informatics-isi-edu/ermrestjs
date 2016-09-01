@@ -151,13 +151,13 @@ var ERMrest = (function(module) {
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
-    module._getAnnotationArrayValue = function (context, annotation) {
+    module._getRecursiveAnnotationValue = function (context, annotation) {
         var contextedAnnot = module._getAnnotationValueByContext(context, annotation);
         if (contextedAnnot !== -1) { // found the context
-            if (Array.isArray(contextedAnnot)) {
+            if (typeof contextedAnnot == "object") {
                 return contextedAnnot;
             } else {
-                return module._getAnnotationArrayValue(contextedAnnot, annotation); // go to next level
+                return module._getRecursiveAnnotationValue(contextedAnnot, annotation); // go to next level
             }
         }
 
@@ -516,22 +516,22 @@ var ERMrest = (function(module) {
             /*
              * Checks whether string matches format "::: iframe [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
              * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */ 
+             */
             validate: function(params) {
                 return params.trim().match(/iframe\s+(.*)$/i);
             },
 
             render: function (tokens, idx) {
-                // Get token string after regexp matching to determine actual internal markdown 
+                // Get token string after regexp matching to determine actual internal markdown
                 var m = tokens[idx].info.trim().match(/iframe\s+(.*)$/i);
 
-                // If this is the opening tag i.e. starts with "::: iframe " 
+                // If this is the opening tag i.e. starts with "::: iframe "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
 
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
 
-                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+                    if (attrs && attrs.length == 1 && attrs[0].children) {
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
@@ -555,7 +555,7 @@ var ERMrest = (function(module) {
 
                             // Encapsulate the iframe inside a div
                             html = '<p>' + html + "</p>";
-                        }  
+                        }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
                     if (html === "") {
@@ -564,7 +564,7 @@ var ERMrest = (function(module) {
 
                     return html;
                 } else {
-                  // closing tag 
+                  // closing tag
                   return '';
                 }
             }
@@ -581,7 +581,7 @@ var ERMrest = (function(module) {
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
     module._renderTemplate = function(template, keyValues, options) {
-        
+
         var obj = {};
         module._clone(obj, keyValues);
 

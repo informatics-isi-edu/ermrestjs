@@ -711,7 +711,7 @@ var ERMrest = (function (module) {
         _visibleForeignKeys: function (context) {
             var orders = -1;
             if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                orders = module._getAnnotationArrayValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+                orders = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
             // no annoation, return all outbound and inbound fks
@@ -1283,7 +1283,7 @@ var ERMrest = (function (module) {
             // get column orders from annotation
             var orders = -1;
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                orders = module._getAnnotationArrayValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
             // no annotation
