@@ -176,6 +176,8 @@ var ERMrest = (function (module) {
 
                 var catalog = new Catalog(self._server, id);
                 catalog._introspect().then(function () {
+                    return catalog._meta();
+                }).then(function getMeta() {
                     self._catalogs[id] = catalog;
                     defer.resolve(catalog);
                 }, function (error) {
@@ -223,6 +225,12 @@ var ERMrest = (function (module) {
          // A map from schema name to constraint names to the actual object.
          // this._constraintNames[schemaName][constraintName] will return an object.
         this._constraintNames = {};
+
+        /*
+         * Value that holds the meta resource object returned from the server for the catalog
+         * @type null
+         */
+        this.meta = null;
     }
 
     Catalog.prototype = {
@@ -261,6 +269,26 @@ var ERMrest = (function (module) {
                 }
 
                 return self.schemas;
+            }, function (response) {
+                var error = module._responseToError(response);
+                return module._q.reject(error);
+            });
+        },
+
+        /**
+         *
+         * @private
+         * @return {Promise} a promise that returns the meta object if resolved or
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         */
+        _meta: function () {
+            // load all meta data
+            var self = this;
+            return this.server._http.get(this._uri + "/meta").then(function (response) {
+                self.meta = response.data;
+
+                return self.meta;
             }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
@@ -1357,7 +1385,7 @@ var ERMrest = (function (module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
-            
+
             var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
             var isMarkdownPattern = false, isMarkdownType = false, annotation;
 
@@ -1369,7 +1397,7 @@ var ERMrest = (function (module) {
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            // If template is of type string 
+            // If template is of type string
             if (annotation && (typeof annotation.markdown_pattern === 'string')) {
                 isMarkdownPattern = true;
             }
@@ -1387,8 +1415,8 @@ var ERMrest = (function (module) {
             // If there is any markdown pattern then evaluate it
             if (isMarkdownPattern) {
                 // Get markdown pattern from the annotation value
-                var template = annotation.markdown_pattern; // pattern
 
+                var template = annotation.markdown_pattern; // pattern
                 
                 // Code to do template/string replacement using keyValues 
                 value = module._renderTemplate(template, keyValues, options);

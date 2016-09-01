@@ -23,6 +23,7 @@ exports.execute = function (options) {
             it('resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(singleEnitityUri, {cid: "test"}).then(function (response) {
                     reference = response;
+                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -48,11 +49,15 @@ exports.execute = function (options) {
                 expect(reference.uri).toBe(reference._location.uri);
                 expect(reference.columns).toBe(reference._columns);
                 expect(reference.displayname).toBe(reference._table.name);
+                expect(reference.canCreate).toBeDefined();
+                expect(reference.canUpdate).toBeDefined();
                 expect(reference.read()).toBeDefined();
             });
 
             it('reference should be properly defined after the callback is resolved.', function() {
+                expect(reference._meta).toBeDefined();
                 expect(reference._table).toBeDefined();
+                expect(reference._shortestKey).toBeDefined();
             });
 
             it('contextualize.detailed should return a contextualized reference object.', function() {
