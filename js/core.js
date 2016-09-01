@@ -1390,7 +1390,7 @@ var ERMrest = (function (module) {
             var isMarkdownPattern = false, isMarkdownType = false, annotation;
 
             if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
-                annotation = module._getAnnotationValueByContext(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+                annotation = module._getRecursiveAnnotationValue(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
             }
 
             /*

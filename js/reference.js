@@ -618,7 +618,7 @@ var ERMrest = (function(module) {
                 
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-                    annotation = module._getAnnotationValueByContext(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                    annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
 
                 // If annotation is defined then parse it
@@ -1159,7 +1159,7 @@ var ERMrest = (function(module) {
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-                    annotation = module._getAnnotationValueByContext(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                    annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
 
                 // if annotation is populated and annotation has display.rowName property

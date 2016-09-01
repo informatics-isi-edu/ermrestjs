@@ -1927,7 +1927,6 @@ An object which contains row display type for this reference.
 
  The object has following properties
  {
-   rowName: "some_markdown" || undefined,
    
    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
    
@@ -2271,10 +2270,9 @@ for (var i=0; len=reference.columns.length; i<len; i++) {
 
 #### tuple.displayname : <code>string</code>
 The _display name_ of this tuple. For example, if this tuple is a
-row from a table, then the display name is defined by the heuristic
-or the annotation for the _row name_.
-
-TODO: add a @link to the ermrest row name annotation
+row from a table, then the display name is defined by the
+row_markdown_pattern annotation for the _row name_ context
+or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
 
 Usage:
 ```
