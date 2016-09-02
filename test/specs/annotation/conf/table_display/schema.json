@@ -70,7 +70,7 @@
           "annotations": {},
           "unique_columns": [
             "id",
-            "label"
+            "description"
           ]
         }
       ],
@@ -87,7 +87,7 @@
           }
         },
         {
-          "name": "label",
+          "name": "description",
           "type": {
             "typename": "text"
           }

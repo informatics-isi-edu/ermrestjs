@@ -613,7 +613,7 @@ var ERMrest = (function(module) {
         **/  
         get display() {
             if (!this._display) {
-                this._display = { type: "table" };
+                this._display = { type: module._displayTypes.TABLE };
                 var annotation;
                 
                 // If table has table-display annotation then set it in annotation variable
@@ -633,11 +633,11 @@ var ERMrest = (function(module) {
                         
                         // TODO: write code for module handling
                         
-                        this._display.type = "module";
+                        this._display.type = module._displayTypes.MODULE;
 
                     } else if (typeof annotation.row_markdown_pattern === 'string') {
 
-                        this._display.type = 'markdown';
+                        this._display.type = module._displayTypes.MARKDOWN;
 
                         // Render the row by composing a markdown representation 
                         this._display._markdownPattern = annotation.row_markdown_pattern;
@@ -896,11 +896,11 @@ var ERMrest = (function(module) {
         get content() {
             if (this._content !== null) {
                 // If display type is markdown which means row_markdown_pattern is set in table-display 
-                if (this._ref.display.type === 'markdown') {
+                if (this._ref.display.type === module._displayTypes.MARKDOWN) {
 
-                    // If the number of records are zero then simply return the value
+                    // If the number of records are zero then simply return null
                     if (!this._data || !this._data.length) {
-                        return "";
+                        return null;
                     }
 
                     var values = [];
@@ -1175,42 +1175,59 @@ var ERMrest = (function(module) {
                     // Render markdown content for the pattern
                     this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
                 }
-                // no row_name annotation, use column with title, name, or id:text type
-                else if (typeof this._data.title === 'string') {
-                    col = table.columns.get("title");
-                    this._displayname = col.formatvalue(this._data.title, { context: self._pageRef.context });
-                }
-                else if (typeof this._data.name === 'string') {
-                    col = table.columns.get("name");
-                    this._displayname = col.formatvalue(this._data.name, { context: self._pageRef.context });
-                }
-                else  {  
+                // no row_name annotation, use column with title, name, term, label or id:text type
+                // or use the unique key 
+                else {
+
+                    var setDisplaynameForACol = function(name) {
+                        if (typeof self._data[name] === 'string') {
+                            col = table.columns.get(name);
+                            self._displayname = col.formatvalue(self._data[name], { context: self._pageRef.context });
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    var columns = ['title', 'Title', 'name', 'Name', 'term', 'Term', 'label', 'Label'];
+
+                    for (var i = 0; i < columns.length; i++) {
+                        if (setDisplaynameForACol(columns[i])) {
+                            return this._displayname;
+                        }
+                    }
+
 
                     // Check for id column whose type should not be integer or serial
                     var idCol = table.columns.all().filter(function (c) { 
-                        return ((c.name == "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
+                        return ((c.name == "id" || c.name == 'Id') && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
                     });
 
                     // If id column exists
                     if (idCol.length && typeof this._data.id === 'string') {
-                        this._displayname = idCol[0].formatvalue(this._data.id, { context: self._pageRef.context });
+                        this._displayname = idCol[0].formatvalue(this._data[idCol[0].name], { context: self._pageRef.context });
                     } else {
                         // Get the columns for shortestKey
                         var keyColumns = table.shortestKey;
-                        var values = [];
 
-                        // Iterate over the keycolumns to get their formatted values for `row_name` context
-                        keyColumns.forEach(function(c) {
-                            var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
-                            values.push(value);
-                        });
+                        if (keyColumns.length >= table.columns.length) {
+                            this._displayname = null;
+                        } else {
 
-                        /*
-                         * join all values by ':' to get the display_name
-                         * Eg: displayName for values=["12", "DNA results for human specimen"] would be
-                         * "12:DNA results for human specimen"
-                         */
-                        this._displayname = values.join(':');
+                            var values = [];
+
+                            // Iterate over the keycolumns to get their formatted values for `row_name` context
+                            keyColumns.forEach(function(c) {
+                                var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
+                                values.push(value);
+                            });
+
+                            /*
+                             * join all values by ':' to get the display_name
+                             * Eg: displayName for values=["12", "DNA results for human specimen"] would be
+                             * "12:DNA results for human specimen"
+                             */
+                            this._displayname = values.join(':');
+                        }
                     }
                 }
             }

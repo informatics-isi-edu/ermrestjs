@@ -701,6 +701,16 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    /*
+     * @desc List of display type for table-display annotation
+     * @private
+     */
+    module._displayTypes = Object.freeze({
+        TABLE: 'table',
+        MARKDOWN: 'markdown',
+        MODULE: 'module'
+    });
+
     return module;
 
 }(ERMrest || {}));
