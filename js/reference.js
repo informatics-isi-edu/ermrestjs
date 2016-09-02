@@ -1188,7 +1188,7 @@ var ERMrest = (function(module) {
                         return false;
                     };
 
-                    var columns = ['title', 'Title', 'name', 'Name', 'term', 'Term', 'label', 'Label'];
+                    var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
 
                     for (var i = 0; i < columns.length; i++) {
                         if (setDisplaynameForACol(columns[i])) {
@@ -1196,14 +1196,13 @@ var ERMrest = (function(module) {
                         }
                     }
 
-
                     // Check for id column whose type should not be integer or serial
                     var idCol = table.columns.all().filter(function (c) { 
-                        return ((c.name == "id" || c.name == 'Id') && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
+                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
                     });
 
                     // If id column exists
-                    if (idCol.length && typeof this._data.id === 'string') {
+                    if (idCol.length && typeof this._data[idCol[0].name] === 'string') {
                         this._displayname = idCol[0].formatvalue(this._data[idCol[0].name], { context: self._pageRef.context });
                     } else {
                         // Get the columns for shortestKey
