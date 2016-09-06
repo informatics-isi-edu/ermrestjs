@@ -9,12 +9,62 @@ exports.execute = function (options) {
     //   2. Next with no more data
     //   3. Previous with more data
     //   4. Previous with no more data
-    
+
     describe("For paging with previous and next,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableNameNoSort = "paging_table_no_sort",
             tableNameWSort = "paging_table_w_sort";
+
+        describe('page size, ', function() {
+            var limit = 5,
+                detailedLimit = 6,
+                defaultLimit = 1,
+                uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameWSort;
+
+            var reference, contextualizedReference;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(uri, {cid: "test"}).then(function(response) {
+                    reference = response;
+                    contextualizedReference = response.contextualize.detailed;
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                })
+            });
+
+            it('should be the value that is defined in read() function', function(done) {
+                contextualizedReference.read(limit).then(function(response){
+                    expect(response._data.length).toBe(limit);
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should use the value defined in `page_size` in Table Display annotation when `limit` in read() is not defined.', function() {
+                contextualizedReference.read().then(function(response){
+                    expect(response._data.length).toBe(detailedLimit);
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should use default value(1) when `limit` in read() and `page_size` in Table Display annotation are not defined.', function() {
+                reference.read().then(function(response){
+                    expect(response._data.length).toBe(defaultLimit);
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
 
 
         describe("Paging table with no sort", function() {

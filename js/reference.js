@@ -417,9 +417,20 @@ var ERMrest = (function(module) {
          */
         read: function(limit) {
             try {
-                verify(limit, "'limit' must be specified");
-                verify(typeof(limit) == 'number', "'limit' must be a number");
-                verify(limit > 0, "'limit' must be greater than 0");
+                if (typeof(limit) != 'number' || limit <= 0) {
+                    var content = -1;
+                    // get default page size from annotation
+                    if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                        content = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                    }
+
+                    if (content != -1 && typeof(content.page_size) == 'number') {
+                        limit = content.page_size; // default page_size is defined
+                    } else {
+                        limit = 1; // fixed default limit
+                    }
+                }
+
 
                 var defer = module._q.defer();
 
