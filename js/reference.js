@@ -627,6 +627,11 @@ var ERMrest = (function(module) {
                     // Set row_order value
                     this._display._rowOrder = annotation.row_order;
 
+                    // Set default page size value
+                    if (typeof annotation.page_size === 'number') {
+                        this._display._defaultPageSize = annotation.page_size;
+                    }
+
                     // If module is not empty then set its associated properties
                     // Else if row_markdown_pattern is not empty then set its associated properties
                     if (typeof annotation.module === 'string') {
