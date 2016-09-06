@@ -47,7 +47,8 @@
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
                         ["reference_schema", "fk_inbound_related_to_reference"],
                         ["reference_schema", "toname_fk_association_related_to_reference"],
-                        ["reference_schema", "id_fk_association_related_to_reference"]
+                        ["reference_schema", "id_fk_association_related_to_reference"],
+                        ["reference_schema", "extra_fk_association_related_to_reference"]
                     ]
                 }
             }
@@ -247,7 +248,62 @@
                     "type": {"typename":"text"}
                 }
             ]
-          },
+        },
+        "association_table_with_extra": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. has an extra column. since it has extra columns, it should not be consdered as association",
+            "kind": "table",
+            "table_name": "association_table_with_extra",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "extra_fk_association_related_to_reference"]
+                    ],
+                    "comment": "fk to reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_extra",
+                        "column_name": "id_from_ref_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "comment": "fk to inbound_related_reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_extra",
+                        "column_name": "id_from_inbound_related_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "inbound_related_reference_table",
+                        "column_name": "id"
+                    }],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                  "name": "extra",
+                  "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_from_ref_table",
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_from_inbound_related_table",
+                    "type": {"typename":"text"}
+                }
+            ]
+        },
         "sorted_table": {
             "comment": "",
             "kind": "table",

@@ -4,8 +4,9 @@ exports.execute = function(options) {
             schemaName = "reference_schema",
             tableName = "reference_table",
             inboudTableName = "inbound_related_reference_table",
-            AssociationTableWithToName = "association_table_with_toname",
-            AssociationTableWithID = "association_table_with_id",
+            associationTableWithToName = "association_table_with_toname",
+            associationTableWithID = "association_table_with_id",
+            AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
             relatedEntityId = 3,
             limit = 1;
@@ -14,6 +15,14 @@ exports.execute = function(options) {
             + schemaName + ":" + tableName + "/id=" + entityId;
 
         var reference, related;
+
+        function checkReferenceColumns(tesCases) {
+            tesCases.forEach(function(test){
+                expect(test.ref.columns.map(function(col){
+                    return col.name;
+                })).toEqual(test.expected);
+            });
+        }
 
         beforeAll(function(done) {
             options.ermRest.resolve(singleEnitityUri, {
@@ -25,7 +34,7 @@ exports.execute = function(options) {
             }, function(err) {
                 console.dir(err);
                 done.fail();
-            })
+            });
         });
 
         it('should be defined and not empty.', function() {
@@ -34,7 +43,11 @@ exports.execute = function(options) {
         });
 
         it('should only include visible foreign keys that are defined in the annotation.', function() {
-            expect(reference.related.length).toBe(4);
+            expect(reference.related.length).toBe(5);
+        });
+
+        it('should not be labeled as association when table has extra columns.', function (){
+            expect(related[4]._table.name).toBe(AssociationTableWithExtra);
         });
 
         describe('for inbound foreign keys, ', function() {
@@ -60,18 +73,13 @@ exports.execute = function(options) {
             });
 
             it('.columns should be properly defiend based on schema', function() {
-                var cases = [{
+                checkReferenceColumns([{
                     ref: related[0],
                     expected: ["id", "fk_to_reference_hidden", "fk_to_reference"]
                 }, {
                     ref: related[1],
                     expected: ["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden"]
-                }];
-                cases.forEach(function(test){
-                    expect(test.ref.columns.map(function(col){
-                        return col.name;
-                    })).toEqual(test.expected);
-                });
+                }]);
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -94,7 +102,6 @@ exports.execute = function(options) {
         describe('for pure and binray association foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function (){
                 expect(related[2]._location.catalog).toBe(catalog_id.toString());
-                expect(related[2]._table.schema.name).toBe(schemaName);
                 expect(related[2]._table.name).toBe(inboudTableName);
             });
 
@@ -108,17 +115,24 @@ exports.execute = function(options) {
                 });
             });
 
+            describe('.columns, ', function() {
+                it('should ignore all the foreign keys that create the connection for assocation.', function() {
+                    checkReferenceColumns([{
+                        ref: related[2],
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                    }]);
+                });
+                it('should ignore extra serial key columns in the assocation table', function() {
+                    checkReferenceColumns([{
+                        ref: related[3],
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                    }]);
+                });
+            });
+
             it('.uri should be properly defiend based on schema.', function() {
               expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
               expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_id:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-            });
-
-            it('.columns should be properly defiend based on schema', function() {
-              [related[2], related[3]].forEach(function(ref){
-                  expect(ref.columns.map(function(col){
-                      return col.name;
-                  })).toEqual(["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]);
-              });
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -150,5 +164,53 @@ exports.execute = function(options) {
             });
 
         });
+
+        describe('when visible foreign keys are not defined, ', function() {
+            var schemaName2 = "reference_schema_2",
+                tableName2 = "reference_table_no_order",
+                related2;
+
+            var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/"
+                + schemaName2 + ":" + tableName2;
+
+            beforeAll(function(done) {
+                options.ermRest.resolve(noOrderUri, {
+                    cid: "test"
+                }).then(function(response) {
+                    related2 = response.contextualize.detailed.related;
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should include all foreign keys.', function() {
+                expect(related2.length).toBe(4);
+            });
+
+            it('should be sorted by displayname.', function() {
+                expect(related2[0].displayname).toBe("first_related");
+            });
+
+            it('should be sorted by order of key columns when displayname is the same.', function (){
+                checkReferenceColumns([{
+                    ref: related2[1],
+                    expected: [
+                        "id", "col_from_ref_no_order_3", "col_from_ref_no_order_4", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
+            });
+
+            it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
+                checkReferenceColumns([{
+                    ref: related2[2],
+                    expected:[
+                        "id", "col_from_ref_no_order_1", "col_from_ref_no_order_2", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
+            });
+        });
+
     });
 };

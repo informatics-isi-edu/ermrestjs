@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "reference_schema_2",
+        "createNew": true,
+        "path": "test/specs/reference/conf/reference_schema_2/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

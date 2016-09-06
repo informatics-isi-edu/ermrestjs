@@ -597,6 +597,7 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+        this._visibleInboundForeignKeys_cached = {}; // Used in _visibleInboundForeignKeys
 
         /**
          * @type {string}
@@ -707,16 +708,20 @@ var ERMrest = (function (module) {
             }
         },
 
-        // returns visible foreignkeys.
-        _visibleForeignKeys: function (context) {
+        // returns visible inbound foreignkeys.
+        _visibleInboundForeignKeys: function (context) {
+            if(context in this._visibleInboundForeignKeys_cached) {
+                return this._visibleInboundForeignKeys_cached[context];
+            }
+
             var orders = -1;
             if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
-            // no annoation, return all outbound and inbound fks
             if (orders == -1) {
-                return this.foreignKeys.all().concat(this.referredBy.all());
+                this._visibleInboundForeignKeys_cached[context] = -1;
+                return -1; // no annoation
             }
 
             for (var i = 0, result = [], fk; i < orders.length; i++) {
@@ -725,8 +730,8 @@ var ERMrest = (function (module) {
                 }
                 try {
                     fk = this.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && (this.foreignKeys.all().indexOf(fk) != -1 || this.referredBy.all().indexOf(fk) != -1)) {
-                        // avoid duplicate and if it's a valid outbound or inbound fk of this table.
+                    if (result.indexOf(fk) == -1 && this.referredBy.all().indexOf(fk) != -1) {
+                        // avoid duplicate and if it's a valid inbound fk of this table.
                         result.push(fk);
                     }
                 } catch (exception){
@@ -734,12 +739,13 @@ var ERMrest = (function (module) {
                 }
             }
 
+            this._visibleInboundForeignKeys_cached[context] = result;
             return result;
         },
 
         // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys.
-        // pure: there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
+        // pure: There is no extra column that is not part of any keys.
         // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
         _isPureBinaryAssociation: function () {
             if(this._isPureBinaryAssociation_cached === undefined) {
@@ -763,11 +769,15 @@ var ERMrest = (function (module) {
                 return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
-            if (tempKeys.length != 1) {
-                return false; // not pure
+            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+                return false; // not binary
             }
 
-            return fkColset._equals(tempKeys[0].colset); // check for purity
+            var nonKeyCols = this.columns.all().filter(function(col){
+                return col.memberOfKeys.length === 0;
+            }); // columns that are not part of any keys.
+
+            return nonKeyCols.length === 0; // check for purity
         },
 
     };
@@ -1845,6 +1855,7 @@ var ERMrest = (function (module) {
          * @type {Array}
          */
         this.columns = columns;
+
     }
 
     ColSet.prototype = {
@@ -1896,8 +1907,17 @@ var ERMrest = (function (module) {
             } else return false;
 
             return true;
-        }
+        },
 
+        // the index of columns in the actual table
+        _getColumnPositions: function() {
+            if(this._columnPositions === undefined) {
+                this._columnPositions = this.columns.map(function(col){
+                    return col.table.columns.all().indexOf(col);
+                }).sort();
+            }
+            return this._columnPositions;
+        }
     };
 
 

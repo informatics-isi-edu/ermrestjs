@@ -9,6 +9,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/06.permissions.js"
     ],
     schemaConfigurations: [
-        "/reference/conf/reference.conf.json"
+        "/reference/conf/reference.conf.json",
+        "/reference/conf/reference_2.conf.json"
     ]
 });
