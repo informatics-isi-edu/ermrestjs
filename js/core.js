@@ -1400,7 +1400,7 @@ var ERMrest = (function (module) {
             var isMarkdownPattern = false, isMarkdownType = false, annotation;
 
             if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
-                annotation = module._getAnnotationValueByContext(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+                annotation = module._getRecursiveAnnotationValue(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
             }
 
             /*
@@ -1427,12 +1427,8 @@ var ERMrest = (function (module) {
                 // Get markdown pattern from the annotation value
 
                 var template = annotation.markdown_pattern; // pattern
-
-
-                /*
-                 * Code to do template/string replacement using values and set template as null if any of the
-                 * values turn out to be null or undefined
-                 */
+                
+                // Code to do template/string replacement using keyValues 
                 value = module._renderTemplate(template, keyValues, options);
             }
 
@@ -1551,39 +1547,7 @@ var ERMrest = (function (module) {
 
         // find the null value for the column based on context and annotation
         _getNullValue: function (context) {
-            if (context in this._nullValue) { // use the cached value
-                return this._nullValue[context];
-            }
-
-            var value = -1,
-                displayAnnot = module._annotations.DISPLAY,
-                elements = [this, this.table, this.table.schema];
-
-            // first look at the column, then table, and at last schema for annotation.
-            for (var i=0; i < elements.length; i++) {
-                if (elements[i].annotations.contains(displayAnnot)) {
-                    var annotation = elements[i].annotations.get(displayAnnot);
-                    if(annotation.content.show_nulls){
-                        value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
-                        if (value !== -1) break; //found the value
-                    }
-                }
-            }
-
-            if (value === false) { //eliminate the field
-                value = null;
-            } else if (value === true) { //empty field
-                value = "";
-            } else if (typeof value !== "string") { // default
-                if (context === module._contexts.DETAILED) {
-                    value = null; // default null value for DETAILED context
-                } else {
-                    value = ""; //default null value
-                }
-            }
-
-            this._nullValue[context] = value; // cache the value
-            return value;
+            return module._getNullValue(this, context, [this, this.table, this.table.schema]);
         }
 
     };

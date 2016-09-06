@@ -195,9 +195,9 @@ var ERMrest = (function(module) {
          * ```
          * @type {ERMrest.Column[]}
          */
-         get columns() {
+        get columns() {
              return this._columns;
-         },
+        },
 
         get location() {
             return this._location;
@@ -431,9 +431,8 @@ var ERMrest = (function(module) {
                 // If neither one present, use shortestkey
                 var addkey = true;
                 if (!this._location.sortObject || (this._location.sortObject.length === 0)) {
-                    if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
-                        this._table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_order")) {
-                        this._location.sortObject = this._table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_order");
+                    if (this.display._rowOrder) {
+                        this._location.sortObject = this.display._rowOrder;
                         addkey = true;
                     } else {
                         // use shortest key as sort
@@ -572,6 +571,91 @@ var ERMrest = (function(module) {
             catch (e) {
                 return module._q.reject(e);
             }
+        },
+
+      /**
+        *  An object which contains row display type for this reference. 
+        *  Will be populated on basis of  "table-display" annotation. 
+        *
+        *  The object has following properties
+        *  {
+        *    
+        *    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
+        *    
+        *    type: "markdown",  // Possible values are table/markdown/module (Default is "table")
+        *
+        *    // If type is "markdown" then you will get these properties 
+        *    mardkownPattern = "ROW_MARKDOWN",
+        *    separator: "\n",  // Default is new line "\n"
+        *    suffix: "SOME_MARKDOWN",  //Default is empty string ""
+        *    prefix: "SOME_MARKDOWN",  //Default is empty string ""
+        *  
+        *    // If type is "module" then you will get these properties
+        *    modulePath: "pathsuffix"
+        *  }
+        * ```
+        *
+        * Usage :
+        * ```
+        * var displayType = reference.display.type; // the displayType
+        *  if ( displayType === 'table') {
+        *    // go for default rendering of rows using tuple.values
+        * } else if (displayType === 'markdown') {
+        *    // Use the separator, suffix and prefix values while rendering tuples
+        *    // Tuple will have a "tuple.content" property that will have the actual markdown value
+        *    // derived from row_markdown_pattern after templating and rendering markdown
+        * } else if (displayType ===  'module') {
+        *   // Use modulePath to render the rows
+        * }
+        * ```
+        * @type {Object}
+        *
+        **/  
+        get display() {
+            if (!this._display) {
+                this._display = { type: module._displayTypes.TABLE };
+                var annotation;
+                
+                // If table has table-display annotation then set it in annotation variable
+                if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                }
+
+                // If annotation is defined then parse it
+                if (annotation) {
+                    
+                    // Set row_order value
+                    this._display._rowOrder = annotation.row_order;
+
+                    // If module is not empty then set its associated properties
+                    // Else if row_markdown_pattern is not empty then set its associated properties
+                    if (typeof annotation.module === 'string') {
+                        
+                        // TODO: write code for module handling
+                        
+                        this._display.type = module._displayTypes.MODULE;
+
+                    } else if (typeof annotation.row_markdown_pattern === 'string') {
+
+                        this._display.type = module._displayTypes.MARKDOWN;
+
+                        // Render the row by composing a markdown representation 
+                        this._display._markdownPattern = annotation.row_markdown_pattern;
+
+                        // Insert separator markdown text between each expanded rowpattern when presenting row sets. Default is new line "\n"
+                        this._display._separator = (typeof annotation.separator_markdown === 'string') ? annotation.separator_markdown : "\n";
+
+                        // Insert prefix markdown before the first rowpattern expansion when presenting row sets. (Default empty string "".)
+                        this._display._prefix = (typeof annotation.prefix_markdown === 'string') ? annotation.prefix_markdown : "";
+
+                        // Insert suffix markdown after the last rowpattern expansion when presenting row sets. (Default empty string "".)
+                        this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
+
+                    }
+                }
+            }
+
+            return this._display;
         },
 
         /**
@@ -825,6 +909,64 @@ var ERMrest = (function(module) {
                 return newReference;
             }
             return null;
+        },
+
+        /**
+         * HTML representation of the whole page which uses table-display annotation.
+         * For more info you can refer {ERM.reference.display}
+         * 
+         * Usage:
+         *```
+         * var content = page.content;
+         * if (content) {
+         *    console.log(content);
+         * }
+         *```
+         * @type {string|null}
+         */
+        get content() {
+            if (this._content !== null) {
+                // If display type is markdown which means row_markdown_pattern is set in table-display 
+                if (this._ref.display.type === module._displayTypes.MARKDOWN) {
+
+                    // If the number of records are zero then simply return null
+                    if (!this._data || !this._data.length) {
+                        return null;
+                    }
+
+                    var values = [];
+
+                    // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
+                    for (var i = 0; i < this._data.length; i++) {
+
+                        // Compute formatted value for each column
+                        var keyValues = module._getFormattedKeyValues(this._ref, this._data[i]);
+
+                        // Code to do template/string replacement using keyValues 
+                        var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
+
+                        // If value is null or empty, return value on basis of `show_nulls`
+                        if (value === null || value === '') {
+                            value = module._getNullValue(this, this._ref.context, [this._ref.table, this._ref.table.schema]);
+                        }
+
+                        // If final value is not null then push it in values array
+                        if (value !== null) {
+                            values.push(value);
+                        }
+                    }
+
+                    // Join the values array using the separator and prepend it with the prefix and append suffix to it.
+                    var pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+
+                    // Get the HTML generated using the markdown pattern generated above
+                    this._content =  module._formatUtils.printMarkdown(pattern);
+                } else {
+                    this._content = null;
+                }
+            }
+
+            return this._content;
         }
     };
 
@@ -979,12 +1121,7 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues = {};
-
-                for (var i = 0; i < this._pageRef.columns.length; i++) {
-                    var col = this._pageRef.columns[i];
-                    keyValues[col.name] = col.formatvalue(this._data[col.name], {context:this._pageRef._context});
-                }
+                var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
 
                 /*
                  * use this variable to avoid using computed formatted values in other columns while templating
@@ -1036,11 +1173,10 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The _disaply name_ of this tuple. For example, if this tuple is a
-         * row from a table, then the display name is defined by the heuristic
-         * or the annotation for the _row name_.
-         *
-         * TODO: add a @link to the ermrest row name annotation
+         * The _display name_ of this tuple. For example, if this tuple is a
+         * row from a table, then the display name is defined by the
+         * row_markdown_pattern annotation for the _row name_ context
+         * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
          *
          * Usage:
          * ```
@@ -1049,31 +1185,81 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
+            var self = this, table = this._pageRef._table, col;
             if (!this._displayname) {
-                var table = this._pageRef._table;
-                // if table has display row_name annotation
-                if (table.annotations.contains(module._annotations.TABLE_DISPLAY) &&
-                    table.annotations.get(module._annotations.TABLE_DISPLAY).contains("row_name")) {
-                    this._displayname = table.annotations.get(module._annotations.TABLE_DISPLAY).get("row_name"); // pattern
+                var annotation;
+                // If table has table-display annotation then set it in annotation variable
+                if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                }
 
-                    // replace patterns with values
-                    var colnames = table.columns.names();
-                    for (var c = 0; c < colnames.length; c++) {
-                        var cname = colnames[c];
-                        var search = "{" + cname + "}";
-                        this._displayname = this._displayname.replace(new RegExp(search, 'g'), this._data[cname]);
+                // if annotation is populated and annotation has display.rowName property
+                if (annotation && typeof annotation.row_markdown_pattern === 'string') {
+                    var template = annotation.row_markdown_pattern;
+                    
+                    // Get formatted keyValues for a table for the data
+                    var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
+
+                    // get templated patten after replacing the values using Mustache
+                    var pattern = module._renderTemplate(template, keyValues);
+
+                    // Render markdown content for the pattern
+                    this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
+                }
+                // no row_name annotation, use column with title, name, term, label or id:text type
+                // or use the unique key 
+                else {
+
+                    var setDisplaynameForACol = function(name) {
+                        if (typeof self._data[name] === 'string') {
+                            col = table.columns.get(name);
+                            self._displayname = col.formatvalue(self._data[name], { context: self._pageRef.context });
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
+
+                    for (var i = 0; i < columns.length; i++) {
+                        if (setDisplaynameForACol(columns[i])) {
+                            return this._displayname;
+                        }
                     }
 
+                    // Check for id column whose type should not be integer or serial
+                    var idCol = table.columns.all().filter(function (c) { 
+                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
+                    });
+
+                    // If id column exists
+                    if (idCol.length && typeof this._data[idCol[0].name] === 'string') {
+                        this._displayname = idCol[0].formatvalue(this._data[idCol[0].name], { context: self._pageRef.context });
+                    } else {
+                        // Get the columns for shortestKey
+                        var keyColumns = table.shortestKey;
+
+                        if (keyColumns.length >= table.columns.length) {
+                            this._displayname = null;
+                        } else {
+
+                            var values = [];
+
+                            // Iterate over the keycolumns to get their formatted values for `row_name` context
+                            keyColumns.forEach(function(c) {
+                                var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
+                                values.push(value);
+                            });
+
+                            /*
+                             * join all values by ':' to get the display_name
+                             * Eg: displayName for values=["12", "DNA results for human specimen"] would be
+                             * "12:DNA results for human specimen"
+                             */
+                            this._displayname = values.join(':');
+                        }
+                    }
                 }
-                // no row_name annotation, use column with title, name, or label
-                else if (this._data.name) // TODO case insensitive
-                    this._displayname = this._data.name;
-                else if (this._data.title)
-                    this._displayname = this._data.title;
-                else if (this._data.label)
-                    this._displayname = this._data.label;
-                else
-                    this._displayname = "";
             }
 
             return this._displayname;

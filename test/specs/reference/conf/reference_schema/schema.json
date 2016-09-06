@@ -343,7 +343,9 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
-                    "row_order": [{"column":"name", "descending":false}]
+                    "*" : {
+                        "row_order": [{"column":"name", "descending":false}]
+                    }
                 }
             }
         },
@@ -433,7 +435,9 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
-                    "row_order": [{"column":"name", "descending":false}]
+                    "*" : {
+                        "row_order": [{"column":"name", "descending":false}]
+                    }
                 }
             }
         },
