@@ -277,6 +277,14 @@ var ERMrest = (function(module) {
                 return this._contextualize(module._contexts.COMPACT);
             },
 
+            /**
+             * The _compact/brief_ context of this reference.
+             * @type {ERMrest.Reference}
+             */
+            get compactBrief() {
+                return this._contextualize(module._contexts.COMPACT_BRIEF);
+            },
+
             _contextualize: function(context) {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);

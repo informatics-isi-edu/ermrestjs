@@ -84,6 +84,28 @@ exports.execute = function (options) {
                 expect(recordReference._location.catalog).toBe(reference._location.catalog);
             });
 
+            it('contextualize.compactBreif should return a contextualized reference object.', function() {
+                var briefRecord = reference.contextualize.compactBrief;
+
+                // Make sure Reference prototype is available
+                expect(briefRecord.uri).toBeDefined();
+                expect(briefRecord.columns).toBeDefined();
+                expect(briefRecord.read).toBeDefined();
+
+                // The only difference should be the set of columns returned
+                expect(briefRecord).not.toBe(reference);
+                expect(briefRecord.columns.length).not.toBe(reference.columns.length);
+
+                var columns = Array.prototype.map.call(briefRecord.columns, function(column){
+                    return column.name;
+                });
+                expect(columns).toEqual(["name"]);
+
+                expect(briefRecord.uri).toBe(reference.uri);
+                expect(briefRecord._location.service).toBe(reference._location.service);
+                expect(briefRecord._table).toBe(reference._table);
+            });
+
             // Single Entity specific tests
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
