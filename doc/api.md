@@ -201,6 +201,8 @@ to use for ERMrest JavaScript agents.
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.contextualize](#ERMrest.Reference+contextualize)
             * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
+            * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
+            * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
             * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1747,6 +1749,8 @@ Constructor for a ParsedFilter.
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.contextualize](#ERMrest.Reference+contextualize)
         * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
         * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1873,12 +1877,26 @@ different compared to `reference.columns`.
 
 * [.contextualize](#ERMrest.Reference+contextualize)
     * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
     * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
 
 <a name="ERMrest.Reference+contextualize.detailed"></a>
 
 ##### contextualize.detailed : <code>[Reference](#ERMrest.Reference)</code>
 The _record_ context of this reference.
+
+**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
+<a name="ERMrest.Reference+contextualize.compact"></a>
+
+##### contextualize.compact : <code>[Reference](#ERMrest.Reference)</code>
+The _compact_ context of this reference.
+
+**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
+<a name="ERMrest.Reference+contextualize.compactBrief"></a>
+
+##### contextualize.compactBrief : <code>[Reference](#ERMrest.Reference)</code>
+The _compact/brief_ context of this reference.
 
 **Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
 <a name="ERMrest.Reference+contextualize.entry"></a>
