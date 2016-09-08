@@ -700,9 +700,10 @@ var ERMrest = (function(module) {
                                         linkTokens[0].children[i+2].type === 'link_close') {
 
                                         var link = linkTokens[0].children[i], listHTML = '<li><a ';
-                                        link.attrs.forEach(function(attr) {
-                                            listHTML +=  attr[0] + '="' + attr[1] + '" ';
-                                        });
+
+                                        for (var j=1; j<link.attrs.length; j++) {
+                                            listHTML +=  link.attrs[i][0] + '="' + link.attrs[j][1] + '" ';
+                                        }
 
                                         listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";       
                                         lists.push(listHTML);
@@ -719,11 +720,7 @@ var ERMrest = (function(module) {
 
                                 if (isValid) {
                                     var ullistHTML = '<ul class="dropdown-menu">' + lists.join('<br>') + '</ul>';
-                                    html = '<p><div class="btn-group markdown-dropdown">' 
-                                               + buttonHtml
-                                                + buttonDDHtml
-                                                  + ullistHTML
-                                                    + "</div></p>";
+                                    html = '<p><div class="btn-group markdown-dropdown">' + buttonHtml + buttonDDHtml + ullistHTML + "</div></p>";
                                 }
                             }
                         }
