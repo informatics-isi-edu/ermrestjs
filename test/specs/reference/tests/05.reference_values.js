@@ -113,8 +113,8 @@ exports.execute = function (options) {
                           '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '<p><div class="caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> Hank\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                          '<p><strong>date is :</strong></p>\n',
+                          '<p><strong>Name is :</strong> Hank\n<strong>date is :</strong></p>\n',
                           '<code>GATCGATCGC GTATT</code>'];
 
             // Change last false to true once gene_sequence type is added
@@ -123,7 +123,7 @@ exports.execute = function (options) {
             testTupleValidity(0, values, isHTML);
         });
 
-        describe('for tuple 1 with row values {"id":4001, "some_markdown": "** date is :**", "name":"Harold"},', function() {
+        describe('for tuple 1 with row values {"id":4001, "name":"Harold"},', function() {
 
             var values = ['4001',
                           '<h2>Harold</h2>\n',
@@ -142,7 +142,7 @@ exports.execute = function (options) {
             testTupleValidity(1, values, isHTML);            
         });
 
-        describe('for tuple 2 with row values {"id":4002, "some_markdown": "** date is :**", "url": "https://www.google.com"},', function() {
+        describe('for tuple 2 with row values {"id":4002, "url": "https://www.google.com"},', function() {
 
             var values = ['4002',
                           '<h2></h2>\n',
@@ -161,7 +161,7 @@ exports.execute = function (options) {
             testTupleValidity(2, values, isHTML);
         });
 
-        describe('for tuple 3 with row values {"id":4003, "some_markdown": "** date is :**"},', function() {
+        describe('for tuple 3 with row values {"id":4003 },', function() {
 
             var values = ['4003',
                           '<h2></h2>\n',
@@ -179,7 +179,7 @@ exports.execute = function (options) {
             testTupleValidity(3, values, isHTML);
         });
 
-        describe('for tuple 4 with row values {"id":4004, "some_markdown": "** date is :**", "name": "weird & HTML < " },', function() {
+        describe('for tuple 4 with row values {"id":4004, "name": "weird & HTML < " },', function() {
 
             var values = ['4004',
                           '<h2>weird &amp; HTML &lt;</h2>\n',
@@ -198,7 +198,7 @@ exports.execute = function (options) {
             testTupleValidity(4, values, isHTML);
         });
 
-        describe('for tuple 5 with row values {"id":4005, "some_markdown": "** date is :**", "name": "<a href=\'javascript:alert();\'></a>" },', function() {
+        describe('for tuple 5 with row values {"id":4005, "name": "<a href=\'javascript:alert();\'></a>" },', function() {
 
             var values = ['4005',
                           '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
@@ -217,7 +217,7 @@ exports.execute = function (options) {
             testTupleValidity(5, values, isHTML);
         });
 
-        describe('for tuple 6 with row values {"id":4006, "some_markdown": "** date is :**", "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" },', function() {
+        describe('for tuple 6 with row values {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" },', function() {
 
             var values = ['4006',
                           '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',

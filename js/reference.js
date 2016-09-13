@@ -69,7 +69,7 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
-                reference._table   = catalog.schemas.get(reference._location.firstSchemaName).tables.get(reference._location.firstTableName);
+                reference._table   = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
@@ -133,7 +133,24 @@ var ERMrest = (function(module) {
      */
     function Reference(location) {
         this._location   = location;
-        this.contextualize._reference = this;
+
+        /**
+         * The members of this object are _contextualized references_.
+         *
+         * These references will behave and reflect state according to the mode.
+         * For instance, in a `record` mode on a table some columns may be
+         * hidden.
+         *
+         * Usage:
+         * ```
+         * // assumes we have an uncontextualized `Reference` object
+         * var recordref = reference.contextualize.detailed;
+         * ```
+         * The `reference` is unchanged, while `recordref` now represents a
+         * reconfigured reference. For instance, `recordref.columns` may be
+         * different compared to `reference.columns`.
+         */
+        this.contextualize = new Contextualize(this);
     }
 
     Reference.prototype = {
@@ -233,63 +250,6 @@ var ERMrest = (function(module) {
              * on-demand.
              */
             return undefined; // TODO
-        },
-
-        /**
-         * The members of this object are _contextualized references_.
-         *
-         * These references will behave and reflect state according to the mode.
-         * For instance, in a `record` mode on a table some columns may be
-         * hidden.
-         *
-         * Usage:
-         * ```
-         * // assumes we have an uncontextualized `Reference` object
-         * var recordref = reference.contextualize.detailed;
-         * ```
-         * The `reference` is unchanged, while `recordref` now represents a
-         * reconfigured reference. For instance, `recordref.columns` may be
-         * different compared to `reference.columns`.
-         */
-        contextualize: {
-            /* TODO: you'll need to figure out how to allow the following
-             * getters to have access to `this` with respect to the Refernece
-             * object not the nested contextualize object. A simple test can be
-             * done. The brute force way would be to introduce a `Contextualize`
-             * class that gets instantiated. Or a better less brute force way
-             * would be to have another lazy getter for the contextualize
-             * property.
-             */
-
-            /**
-             * The _record_ context of this reference.
-             * @type {ERMrest.Reference}
-             */
-            get detailed() {
-                var source = this._reference;
-                var newRef = _referenceCopy(source);
-                delete newRef._related;
-                var columnOrders = source._table.columns._contextualize(module._contexts.DETAILED).all();
-
-                newRef._context = module._contexts.DETAILED;
-                newRef._columns = [];
-                for (var i = 0; i < columnOrders.length; i++) {
-                    var column = columnOrders[i];
-                    if (source._columns.indexOf(column) != -1) {
-                        newRef._columns.push(column);
-                    }
-                }
-                return newRef;
-            },
-
-            /**
-             * The _entry_ context of this reference.
-             * @type {ERMrest.Reference}
-             */
-            get entry() {
-                // TODO: remember these are copies of this reference.
-                return undefined;
-            }
         },
 
         /**
@@ -651,6 +611,11 @@ var ERMrest = (function(module) {
                     // Set row_order value
                     this._display._rowOrder = annotation.row_order;
 
+                    // Set default page size value
+                    if (typeof annotation.page_size === 'number') {
+                        this._display.defaultPageSize = annotation.page_size;
+                    }
+
                     // If module is not empty then set its associated properties
                     // Else if row_markdown_pattern is not empty then set its associated properties
                     if (typeof annotation.module === 'string') {
@@ -708,13 +673,13 @@ var ERMrest = (function(module) {
                     visibleFKs = this._table.referredBy.all();
                 }
 
-                var i, j, col, fkr;
+                var i, j, col, fkr, newRef;
                 for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
-                    var newRef = _referenceCopy(this);
-                    newRef.contextualize._reference = newRef;
+                    newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
+                    delete newRef._related;
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -758,7 +723,7 @@ var ERMrest = (function(module) {
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
                     }
-
+                    
                     this._related.push(newRef);
                 }
 
@@ -795,8 +760,58 @@ var ERMrest = (function(module) {
         var referenceCopy = Object.create(Reference.prototype);
         // referenceCopy must be defined before _clone can copy values from source to referenceCopy
         module._clone(referenceCopy, source);
+
+        referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
     }
+
+    function Contextualize(reference) {
+        this._reference = reference;
+    }
+
+    Contextualize.prototype = {
+
+        /**
+         * The _record_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get detailed() {
+            return this._contextualize(module._contexts.DETAILED);
+        },
+
+        /**
+         * The _compact_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compact() {
+            return this._contextualize(module._contexts.COMPACT);
+        },
+
+        /**
+         * The _compact/brief_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactBrief() {
+            return this._contextualize(module._contexts.COMPACT_BRIEF);
+        },
+
+        _contextualize: function(context) {
+            var source = this._reference;
+            var newRef = _referenceCopy(source);
+            delete newRef._related;
+
+            newRef._context = context;
+            var columnOrders = source._table.columns._contextualize(context).all();
+            newRef._columns = [];
+            for (var i = 0; i < columnOrders.length; i++) {
+                var column = columnOrders[i];
+                if (source._columns.indexOf(column) != -1) {
+                    newRef._columns.push(column);
+                }
+            }
+            return newRef;
+        }
+    };
 
     /**
      * Constructs a new Page. A _page_ represents a set of results returned from

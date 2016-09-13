@@ -38,8 +38,8 @@ exports.execute = function (options) {
                 expect(reference._location.uri).toBe(singleEnitityUri);
                 expect(reference._location.service).toBe(options.url);
                 expect(reference._location.catalog).toBe(catalog_id.toString());
-                expect(reference._location.firstSchemaName).toBe(schemaName);
-                expect(reference._location.firstTableName).toBe(tableName);
+                expect(reference._location.schemaName).toBe(schemaName);
+                expect(reference._location.tableName).toBe(tableName);
 
                 expect(reference.contextualize._reference).toBe(reference);
             });
@@ -82,6 +82,28 @@ exports.execute = function (options) {
                 expect(recordReference._location.service).toBe(reference._location.service);
                 // If catalog is the same, so will be the schema and table
                 expect(recordReference._location.catalog).toBe(reference._location.catalog);
+            });
+
+            it('contextualize.compactBreif should return a contextualized reference object.', function() {
+                var briefRecord = reference.contextualize.compactBrief;
+
+                // Make sure Reference prototype is available
+                expect(briefRecord.uri).toBeDefined();
+                expect(briefRecord.columns).toBeDefined();
+                expect(briefRecord.read).toBeDefined();
+
+                // The only difference should be the set of columns returned
+                expect(briefRecord).not.toBe(reference);
+                expect(briefRecord.columns.length).not.toBe(reference.columns.length);
+
+                var columns = Array.prototype.map.call(briefRecord.columns, function(column){
+                    return column.name;
+                });
+                expect(columns).toEqual(["name"]);
+
+                expect(briefRecord.uri).toBe(reference.uri);
+                expect(briefRecord._location.service).toBe(reference._location.service);
+                expect(briefRecord._table).toBe(reference._table);
             });
 
             // Single Entity specific tests

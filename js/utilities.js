@@ -692,6 +692,7 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
+        COMPACT_BRIEF: 'compact/breif',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
         EDIT: 'entry/edit',
