@@ -250,6 +250,10 @@ exports.execute = function (options) {
                 expect(reference.display._suffix).toEqual("");
             });
 
+            it("reference.display.defaultPageSize should be defined based on the annotation.", function() {
+                expect(reference.display.defaultPageSize).toEqual(10);
+            });
+
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
                     page = response;

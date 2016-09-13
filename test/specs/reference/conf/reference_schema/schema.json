@@ -40,7 +40,8 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "detailed": ["name", "value"]
+                    "detailed": ["name", "value"],
+                    "compact": ["name"]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
                     "detailed": [

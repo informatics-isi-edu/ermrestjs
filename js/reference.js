@@ -277,6 +277,14 @@ var ERMrest = (function(module) {
                 return this._contextualize(module._contexts.COMPACT);
             },
 
+            /**
+             * The _compact/brief_ context of this reference.
+             * @type {ERMrest.Reference}
+             */
+            get compactBrief() {
+                return this._contextualize(module._contexts.COMPACT_BRIEF);
+            },
+
             _contextualize: function(context) {
                 var source = this._reference;
                 var newRef = _referenceCopy(source);
@@ -638,6 +646,11 @@ var ERMrest = (function(module) {
                     
                     // Set row_order value
                     this._display._rowOrder = annotation.row_order;
+
+                    // Set default page size value
+                    if (typeof annotation.page_size === 'number') {
+                        this._display.defaultPageSize = annotation.page_size;
+                    }
 
                     // If module is not empty then set its associated properties
                     // Else if row_markdown_pattern is not empty then set its associated properties
