@@ -430,15 +430,16 @@ var ERMrest = (function(module) {
                     var loc = this._location, i;
 
                     uri = [loc.service, "catalog", loc.catalog, "attributegroup", loc.compactPath].join("/");
-                    // add the M !
-                    //TODO the difficult part
-
+                    // add M
+                    // var lastSlash = uri.lastIndexOf("/");
+                    // uri = uri.substring(0, lastSlash+1) + "M:=" + uri.substring(lastSlash+1);
+                    
                     // add other alias
                     var fkList = "";
-                    for (i = this._table.foreignKeys.length(); i >= 0 ; i++) {
-                        uri += "/F" + (i+1) + ":=left" + this._table.foreignKeys.all()[i] + "/";
+                    for (i = this._table.foreignKeys.length() - 1; i >= 0 ; i--) {
+                        uri += "/F" + (i+1) + ":=left" + this._table.foreignKeys.all()[i].toString() + "/$M/";
                         fkList += "F" + (i+1) + ":=array(F" + (i+1) + "*)" + (i != 0 ? ",":"");
-                    } // /F2:=left(id)=(s:t:c)/F1:=left(id2)=(s1:t1:c1)/
+                    } // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
 
                     // add the key
                     for (i = this._shortestKey.colset.columns - 1; i >= 0; i--) {
@@ -822,9 +823,16 @@ var ERMrest = (function(module) {
         if (this._ref._table.foreignKeys.length() > 0) {
             // attributegroup output
             this._data = data.map(function(item) {
-                return item.M[0]; // NOTE: the model alias must be M 
+                return item['M'][0]; // NOTE: the model alias must be M 
             });
-            this._linkedData = {}; //TODO
+            this._linkedData = {};
+            var i, fks = reference._table.foreignKeys.all(); 
+            for (i = fks.length - 1; i >= 0 ; i++) {
+                //TODO
+                this._linkedData[fks[i].constraint_names[0]] = this._data["F"+i][0];
+                // based on column? what about composite key?
+                // constraint name? then how we can use these?
+            }
         } else {
             // entity output
             this._data = data;
