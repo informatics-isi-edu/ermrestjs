@@ -194,16 +194,12 @@ to use for ERMrest JavaScript agents.
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
         * [new Reference(location)](#new_ERMrest.Reference_new)
+        * [.contextualize](#ERMrest.Reference+contextualize)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-        * [.contextualize](#ERMrest.Reference+contextualize)
-            * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
-            * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
-            * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
-            * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1742,16 +1738,12 @@ Constructor for a ParsedFilter.
 
 * [.Reference](#ERMrest.Reference)
     * [new Reference(location)](#new_ERMrest.Reference_new)
+    * [.contextualize](#ERMrest.Reference+contextualize)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-    * [.contextualize](#ERMrest.Reference+contextualize)
-        * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1784,6 +1776,25 @@ Usage:
 | --- | --- | --- |
 | location | <code>ERMrest.Location</code> | The location object generated from parsing the URI |
 
+<a name="ERMrest.Reference+contextualize"></a>
+
+#### reference.contextualize
+The members of this object are _contextualized references_.
+
+These references will behave and reflect state according to the mode.
+For instance, in a `record` mode on a table some columns may be
+hidden.
+
+Usage:
+```
+// assumes we have an uncontextualized `Reference` object
+var recordref = reference.contextualize.detailed;
+```
+The `reference` is unchanged, while `recordref` now represents a
+reconfigured reference. For instance, `recordref.columns` may be
+different compared to `reference.columns`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+displayname"></a>
 
 #### reference.displayname : <code>string</code>
@@ -1855,56 +1866,6 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 ```
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+contextualize"></a>
-
-#### reference.contextualize
-The members of this object are _contextualized references_.
-
-These references will behave and reflect state according to the mode.
-For instance, in a `record` mode on a table some columns may be
-hidden.
-
-Usage:
-```
-// assumes we have an uncontextualized `Reference` object
-var recordref = reference.contextualize.detailed;
-```
-The `reference` is unchanged, while `recordref` now represents a
-reconfigured reference. For instance, `recordref.columns` may be
-different compared to `reference.columns`.
-
-**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-
-* [.contextualize](#ERMrest.Reference+contextualize)
-    * [.detailed](#ERMrest.Reference+contextualize.detailed) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.compact](#ERMrest.Reference+contextualize.compact) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.compactBrief](#ERMrest.Reference+contextualize.compactBrief) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.entry](#ERMrest.Reference+contextualize.entry) : <code>[Reference](#ERMrest.Reference)</code>
-
-<a name="ERMrest.Reference+contextualize.detailed"></a>
-
-##### contextualize.detailed : <code>[Reference](#ERMrest.Reference)</code>
-The _record_ context of this reference.
-
-**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
-<a name="ERMrest.Reference+contextualize.compact"></a>
-
-##### contextualize.compact : <code>[Reference](#ERMrest.Reference)</code>
-The _compact_ context of this reference.
-
-**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
-<a name="ERMrest.Reference+contextualize.compactBrief"></a>
-
-##### contextualize.compactBrief : <code>[Reference](#ERMrest.Reference)</code>
-The _compact/brief_ context of this reference.
-
-**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
-<a name="ERMrest.Reference+contextualize.entry"></a>
-
-##### contextualize.entry : <code>[Reference](#ERMrest.Reference)</code>
-The _entry_ context of this reference.
-
-**Kind**: static property of <code>[contextualize](#ERMrest.Reference+contextualize)</code>  
 <a name="ERMrest.Reference+canCreate"></a>
 
 #### reference.canCreate : <code>boolean</code> &#124; <code>undefined</code>
