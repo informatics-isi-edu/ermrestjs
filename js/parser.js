@@ -121,17 +121,25 @@ var ERMrest = (function(module) {
         // Expected format: "[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
         parts = this._compactPath.split('/');
 
+        // if has linking, use the last part as the main table
+        var linking = parts[parts.length - 1].match(/(\(.*\)=\(.*:.*:.*\))/);
+        if (linking && linking[1]) {
+            var rightParts = linking[1].split("=")[1].match(/\(([^:]*):([^:]*):([^\)]*)\)/);
+            this._schemaName = rightParts[1];
+            this._tableName = rightParts[2];
+        }
+
         // first schema name and first table name
         // we can't handle complex path right now, only knows the first schema and table
         // so after doing a Reference.relate() and generate a new uri/location, we don't have schema/table information here
         if (parts[0]) {
             var params = parts[0].split(':');
             if (params.length > 1) {
-                this._firstSchemaName = decodeURIComponent(params[0]);
-                this._firstTableName = decodeURIComponent(params[1]);
+                this._projectionSchemaName = decodeURIComponent(params[0]);
+                this._projectionTableName = decodeURIComponent(params[1]);
             } else {
-                this._firstSchemaName = '';
-                this._firstTableName = decodeURIComponent(params[0]);
+                this._projectionSchemaName = '';
+                this._projectionTableName = decodeURIComponent(params[0]);
             }
         }
 
@@ -268,16 +276,32 @@ var ERMrest = (function(module) {
          *
          * @returns {string} The schema name in the projection table
          */
-        get firstSchemaName() {
-            return this._firstSchemaName;
+        get projectionSchemaName() {
+            return this._projectionSchemaName;
         },
 
         /**
          * Subject to change soon
          * @returns {string} The table name in the projection table
          */
-        get firstTableName() {
-            return this._firstTableName;
+        get projectionTableName() {
+            return this._projectionTableName;
+        },
+
+        /**
+         *
+         * @returns {string} the schema name which the uri referres to
+         */
+        get schemaName() {
+            return (this._schemaName? this._schemaName : this._projectionSchemaName);
+        },
+
+        /**
+         *
+         * @returns {string} the table name which the uri referres to
+         */
+        get tableName() {
+            return (this._tableName? this._tableName : this._projectionTableName);
         },
 
         /**
