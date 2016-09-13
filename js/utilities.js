@@ -649,14 +649,13 @@ var ERMrest = (function(module) {
             },
 
             render: function (tokens, idx) {
-                
-                var html = "";
 
+                var html = "";
                 // Get token string after regeexp matching to determine caption and other links
                 var m = tokens[idx].info.trim().match(/dropdown\s+(.*)$/i);
-                        
+
                 if (tokens[idx].nesting === 1 && m && m.length > 0) {
-                    
+
                     // If content found after dropdown string 
                     if (m && m.length > 0) {
 
@@ -669,15 +668,15 @@ var ERMrest = (function(module) {
 
                             var caption = linkTokens[0].children[0].content;
                             var cTokens = md.parse(caption);
-                            
+
                             // If caption is set for the dropdown button between
                             if (cTokens.length === 3 && cTokens[0].type === 'paragraph_open' && cTokens[1].type === 'inline' && cTokens[2].type === 'paragraph_close') {
-                               
+
                                 // Build button html and button dropdown html
                                 var classes = [];
                                 var buttonHtml = '<button type="button" ';
                                 var buttonDDHtml = '<button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ';
-                                
+
                                 // If the caption has any attrs add them to the button
                                 if (cTokens[0].attrs) {
                                     cTokens[0].attrs.forEach(function(a) {
@@ -688,10 +687,10 @@ var ERMrest = (function(module) {
                                         }
                                     });
                                 }
-                                
+
                                 buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  cTokens[1].content + '</button>';
                                 buttonDDHtml += ' class="btn btn-primary dropdown-toggle ' + classes.join(' ') + '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
-                                
+
                                 // Build unordered list
                                 var lists = [], isValid = true;
                                 for (var i=1 ;i < linkTokens[0].children.length;i=i+3) {
@@ -700,16 +699,14 @@ var ERMrest = (function(module) {
                                         linkTokens[0].children[i+2].type === 'link_close') {
 
                                         var link = linkTokens[0].children[i], listHTML = '<li><a ';
-
-                                        for (var j=1; j<link.attrs.length; j++) {
-                                            listHTML +=  link.attrs[i][0] + '="' + link.attrs[j][1] + '" ';
+                                        for (var j=0; j< link.attrs.length; j++) {
+                                            listHTML +=  link.attrs[j][0] + '="' + link.attrs[j][1] + '" ';
                                         }
 
                                         listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";       
                                         lists.push(listHTML);
-                                        
                                         // If the next element in the list is of type text skip it
-                                        if (linkTokens[0].children[i+3] && linkTokens[0].children[i+3].type === 'text') {
+                                        if (linkTokens[0].children[i+3] &&      linkTokens[0].children[i+3].type === 'text') {
                                           i++;
                                         }
                                     } else {
