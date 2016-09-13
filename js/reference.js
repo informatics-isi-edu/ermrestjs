@@ -649,7 +649,7 @@ var ERMrest = (function(module) {
 
                     // Set default page size value
                     if (typeof annotation.page_size === 'number') {
-                        this._display._defaultPageSize = annotation.page_size;
+                        this._display.defaultPageSize = annotation.page_size;
                     }
 
                     // If module is not empty then set its associated properties
