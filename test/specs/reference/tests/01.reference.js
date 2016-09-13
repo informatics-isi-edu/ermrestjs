@@ -38,8 +38,8 @@ exports.execute = function (options) {
                 expect(reference._location.uri).toBe(singleEnitityUri);
                 expect(reference._location.service).toBe(options.url);
                 expect(reference._location.catalog).toBe(catalog_id.toString());
-                expect(reference._location.firstSchemaName).toBe(schemaName);
-                expect(reference._location.firstTableName).toBe(tableName);
+                expect(reference._location.schemaName).toBe(schemaName);
+                expect(reference._location.tableName).toBe(tableName);
 
                 expect(reference.contextualize._reference).toBe(reference);
             });

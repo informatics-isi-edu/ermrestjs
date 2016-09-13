@@ -69,7 +69,7 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
-                reference._table   = catalog.schemas.get(reference._location.firstSchemaName).tables.get(reference._location.firstTableName);
+                reference._table   = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
