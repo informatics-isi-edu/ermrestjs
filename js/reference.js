@@ -384,27 +384,49 @@ var ERMrest = (function(module) {
                 var defer = module._q.defer();
 
                 var uri = this._location.compactUri;
-
-                // change api to attributegroup
+ 
+                /*
+                * Change api to attributegroup for retrieving the foreign key data
+                * This will just affect the http request and not this._location
+                *
+                * NOTE: 
+                * This piece of code is dependent on the same assumptions as the current parser, which are:
+                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
+                *   2. Filter comes before the link syntax.
+                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
+                */
                 if (this._table.foreignKeys.length() > 0) {
-                    var loc = this._location, i;
+                    var compactPath = this._location.compactPath,
+                        parts = compactPath.split('/'),
+                        tableIndex = 0,
+                        fkList = "",
+                        linking,
+                        k;
 
-                    uri = [loc.service, "catalog", loc.catalog, "attributegroup", loc.compactPath].join("/");
-                    // add M
-                    // var lastSlash = uri.lastIndexOf("/");
-                    // uri = uri.substring(0, lastSlash+1) + "M:=" + uri.substring(lastSlash+1);
+                    // add M alias to current table
+                    linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
+                    if (linking && linking[1]) { // the same logic as parser for finding the link syntax
+                        tableIndex = compactPath.lastIndexOf("/") + 1;
+                    }
+                    compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
+
+                    // create the uri with attributegroup and alias
+                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
                     
-                    // add other alias
-                    var fkList = "";
-                    for (i = this._table.foreignKeys.length() - 1; i >= 0 ; i--) {
-                        uri += "/F" + (i+1) + ":=left" + this._table.foreignKeys.all()[i].toString() + "/$M/";
-                        fkList += "F" + (i+1) + ":=array(F" + (i+1) + "*)" + (i != 0 ? ",":"");
-                    } // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
+                    // add joins for foreign keys
+                    for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
+                        // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
+                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
 
-                    // add the key
-                    for (i = this._shortestKey.colset.columns - 1; i >= 0; i--) {
-                        uri += this._shortestKey.colset.columns[i].name + (i != 0 ? "," : ";");
-                    } // key1,key2,key3;
+                        // F2:array(F2:*),F1:array(F1:*)
+                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
+                    }
+
+                    // add keys
+                    for (k = this._shortestKey.length - 1; k >= 0; k--) {
+                        // key1,key2,key3;
+                        uri += this._shortestKey[k].name + (k !== 0 ? "," : ";");
+                    }
 
                     uri += "M:=array(M:*)," + fkList;      
                 }
@@ -835,24 +857,24 @@ var ERMrest = (function(module) {
      */
     function Page(reference, data, hasPrevious, hasNext) {
         this._ref = reference;
-        if (this._ref._table.foreignKeys.length() > 0) {
-            // attributegroup output
-            this._data = data.map(function(item) {
-                return item['M'][0]; // NOTE: the model alias must be M 
-            });
-            this._linkedData = {};
-            var i, fks = reference._table.foreignKeys.all(); 
-            for (i = fks.length - 1; i >= 0 ; i++) {
-                //TODO
-                this._linkedData[fks[i].constraint_names[0]] = this._data["F"+i][0];
-                // based on column? what about composite key?
-                // constraint name? then how we can use these?
+
+        this._linkedData = []; // NOTE: this._linkedData[i] = {`s:constraintName`: data}
+
+        if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
+            this._data = [];            
+            var i, j, fks = reference._table.foreignKeys.all();
+            for (i = 0; i < data.length; i++) {
+                this._data.push(data[i].M[0]); 
+
+                this._linkedData.push({});
+                for (j = fks.length - 1; j >= 0 ; j--) {
+                    this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                }
             }
-        } else {
-            // entity output
+        } else { // entity output
             this._data = data;
-            this._linkedData = {};
         }
+
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
     }
