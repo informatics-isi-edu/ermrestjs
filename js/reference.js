@@ -858,7 +858,14 @@ var ERMrest = (function(module) {
     function Page(reference, data, hasPrevious, hasNext) {
         this._ref = reference;
 
-        this._linkedData = []; // NOTE: this._linkedData[i] = {`s:constraintName`: data}
+        /*
+         * This is the structure of this._linkedData
+         * this._linkedData[i] = {`s:constraintName`: data}
+         * That is for retrieving data for a foreign key, you should do the following:
+         * 
+         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join(":")];
+         */
+        this._linkedData = [];
 
         if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
             this._data = [];            
