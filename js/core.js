@@ -268,6 +268,17 @@ var ERMrest = (function (module) {
                     }
                 }
 
+                // find alternative tables
+                // requires foreign keys built
+                for (s = 0; s < schemaNames.length; s++) {
+                    schema = self.schemas.get(schemaNames[s]);
+                    tables = schema.tables.names();
+                    for (t = 0; t < tables.length; t++) {
+                        table = schema.tables.get(tables[t]);
+                        table._findAlternatives();
+                    }
+                }
+
                 return self.schemas;
             }, function (response) {
                 var error = module._responseToError(response);
@@ -464,6 +475,23 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonSchema.comment;
 
+        /**
+         * get app links from annotation
+         * in the form {context: app, ...}
+         * @type {{}}
+         * @private
+         */
+        this._appLinks = {}; // {context:app, ...}
+        if (this.annotations.contains(module._annotations.APP_LINKS)) {
+            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
+            for(var context in payload) {
+                if (Object.values(module._contexts).contains(payload[context])) // if pointing to another context
+                    this._appLinks[context] = payload[payload[context]];
+                else
+                    this._appLinks[context] = payload[context];
+            }
+        }
+
     }
 
     Schema.prototype = {
@@ -471,6 +499,15 @@ var ERMrest = (function (module) {
 
         delete: function () {
 
+        },
+
+        getAppLink: function (context) {
+            if (context in this._appLinks)
+                return this._appLinks[context];
+            else if (module._contexts.DEFAULT in this._appLinks)
+                return this._appLinks[module._context.DEFAULT];
+            else
+                return null;
         }
 
     };
@@ -580,6 +617,13 @@ var ERMrest = (function (module) {
         this.ignore = false;
 
         /**
+         * this defaults to itself on the first pass of introspection
+         * then might be changed on the second pass if this is an alternative table
+         * @type {ERMrest.Table}
+         */
+        this._baseTable = this;
+
+        /**
          *
          * @type {ERMrest.Annotations}
          */
@@ -642,6 +686,23 @@ var ERMrest = (function (module) {
          * @type {string}
          */
         this.comment = jsonTable.comment;
+
+        /**
+         * get app links from annotation
+         * in the form {context: app, ...}
+         * @type {{}}
+         * @private
+         */
+        if (this.annotations.contains(module._annotations.APP_LINKS)) {
+            this._appLinks = {}; // {context:app, ...}
+            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
+            for(var context in payload) {
+                if (Object.values(module._contexts).contains(payload[context])) // if pointing to another context
+                    this._appLinks[context] = payload[payload[context]];
+                else
+                    this._appLinks[context] = payload[context];
+            }
+        }
 
     }
 
@@ -706,6 +767,191 @@ var ERMrest = (function (module) {
                 // add to referredBy of the key table
                 foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
+        },
+
+        // TODO jchen
+        /**
+         * Find alternative tables for each table. This should only be called during the 3rd pass of introspection,
+         * after foreign keys have been built
+         *
+         * Constraints:
+         *
+         * 1. There is no in-bound foreign keys to the alternative tables.
+         * 2. a base table cannot be an alternative table for other base tables (i.e. flat 2-level forest)
+         * 3. alternative table has exactly one base-table.
+         * 4. alternative table must have exactly one not-null unique key that is a foreign key to the base table.
+         * 5. All alternative tables associated with the base table have not-null unique keys that are foreign keys to the SAME primary keys of the base table.
+         *
+         *
+         * @private
+         */
+        _findAlternatives: function () {
+            this._alternatives = {}; // in the form {context: table, ...}
+            this._altSharedKey = null; // base table and alt tables should have this and in common
+            if (this.annotations.contains(module._annotations.TABLE_ALTERNATIVES)){
+                var alternatives = this.annotations.get(module._annotations.TABLE_ALTERNATIVES).content;
+                for(var context in alternatives) {
+                    var schema = alternatives[context][0];
+                    var table = alternatives[context][1];
+                    var altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
+
+                    // check constraints
+
+                    // 1. alt should have no incoming foreign keys
+                    if (altTable.referredBy.length() > 0) {
+                        console.log("Invalid schema: " + altTable.name + " is an alternative table with incoming reference");
+                        console.log("Ignoring " + altTable.name);
+                        continue;
+                    }
+
+                    // 2. two level only
+                    if (altTable.annotations.contains(module._annotations.TABLE_ALTERNATIVES)) {
+                        console.log("Invalid schema: " + altTable.name + " is an alternative table and a base table");
+                        console.log("Ignoring " + altTable.name);
+                        continue;
+                    }
+
+                    // 3. alt table has exactly one base table
+                    if (altTable._baseTable === altTable) { // does not have a base table yet
+                        altTable._baseTable = this;
+                    } else { // altTable has more than one base table
+                        console.log("Invalid schema: " + altTable.name + " has more than one base table");
+                        continue;
+                    }
+
+                    // 4.1 must have a (1) not-null (2) key which is a (3) foreign key to the base table.
+                    if (!this._altSharedKey) { // _altSharedKey is the Key used by all its alternative tables
+                        var bkeys = this.keys.all();
+                        for (var i = 0; i < bkeys.length; i++) {
+                            var key = bkeys[i];
+                            try {
+                                // (1) check columns are not null
+                                var columns = key.colset.columns;
+                                var nullok = columns.map(function(column){
+                                    return column.nullok;
+                                }).includes(true);
+                                if (nullok) {
+                                    // key allows null, go to next key
+                                    continue;
+                                }
+
+                                // (3) is a foreign key to the base table
+                                var fkeys = altTable.foreignKeys.all();
+                                for (var j = 0; j < fkeys.length; j++) {
+                                    var fkey = fkeys[j];
+                                    if (fkey.key === key) {
+                                        // found a foreign key matching the base table key
+                                        // (2) check it is also alternative table's key
+                                        altTable.keys.get(fkey.colset); // throws exception if not found
+                                        this._altSharedKey = key;
+                                        altTable._altForeignKey = fkey;
+                                        break;
+                                    }
+                                }
+
+                                if (this._altSharedKey)
+                                    break;
+                            } catch (error) {
+                                // key not found in alt table, go to next key
+                            }
+                        }
+
+
+
+                        if (!this._altSharedKey) {
+                            console.log("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");
+                            console.log(altTable.name + " ignored");
+                            continue;
+                        }
+                    } else {
+                        // 4.2 key must be the shared key among all alternative tables
+                        try {
+
+                            // (1) find base table shared key in alternative's foreign keys
+                            fkeys = altTable.foreignKeys.all();
+                            for (j = 0; j < fkeys.length; j++) {
+                                fkey = fkeys[j];
+                                if (fkey.key === this._altSharedKey) {
+                                    // found a foreign key matching the base table key
+                                    // (2) check it is also alternative table's key
+                                    altTable.keys.get(fkey.colset); // throws exception if not found
+                                    altTable._altForeignKey = fkey;
+                                    break;
+                                }
+                            }
+
+                        } catch (error) {
+                            console.log("Invalid schema: base table " + this.name);
+                            console.log("alternative tables should have a key that is a foreign key to the base table, and it shoud be shared among all alternative tables");
+                            console.log("All alternative tables of base table " + this.name + " are ignored");
+
+                            // since alt tables don't share the same key, ignore all the alt tables
+                            this._alternatives = {};
+                            return;
+                        }
+                    }
+
+                    // passed all contraints
+                    this._alternatives[context] = altTable;
+                }
+            }
+        },
+
+        /**
+         * get the table's alternative table of a given context
+         * If no alternative table found, return itself
+         * @param {ERMrest._annotations} context
+         *
+         */
+        getAlternativeTable: function (context) {
+            if (context in this._alternatives)
+                return this._alternatives[context];
+            else if (module._contexts.DEFAULT in this._alternatives)
+                return this._alternatives[module._contexts.DEFAULT];
+            else
+                return this;
+        },
+
+        get baseTable() {
+            return this._baseTable;
+        },
+
+        isAlternativeTable: function () {
+            return (this._baseTable !== this);
+        },
+
+        /**
+         * the key of this base table that is referenced by all of its alternative tables.
+         * @returns {ERMrest.Key} undefined if it is not a base table
+         */
+        get altSharedKey() {
+            return this._altSharedKey;
+        },
+
+        /**
+         * the foreign key of this alternative table that references the key in the base table,
+         * and is also a key in this alternative table.
+         * @returns {ERMrest.ForeignKeyRef} undefined if it is not an alternative table
+         */
+        get altForeignKey() {
+            return this._altForeignKey;
+        },
+
+        /**
+         *
+         * @param context
+         * @returns {*}
+         */
+        getAppLink: function (context) {
+            // use table level or schema level
+            if (this._appLinks) {
+                if (context in this._appLinks)
+                    return this._appLinks[context];
+                else if (module._contexts.DEFAULT in this._appLinks)
+                    return this._appLinks[module._context.DEFAULT];
+            }
+
+            return this.schema.getAppLink(context);
         },
 
         // returns visible inbound foreignkeys.
@@ -778,7 +1024,7 @@ var ERMrest = (function (module) {
             }); // columns that are not part of any keys.
 
             return nonKeyCols.length === 0; // check for purity
-        },
+        }
 
     };
 
@@ -1809,6 +2055,15 @@ var ERMrest = (function (module) {
          */
         get simple() {
             return this.colset.length() == 1;
+        },
+
+        /**
+         * whether key has a column
+         * @param {ERMrest.Column} column
+         * @returns {boolean}
+         */
+        containsColumn: function (column) {
+            return (this.colset.columns.indexOf(column) !== -1);
         }
     };
 
@@ -1955,6 +2210,23 @@ var ERMrest = (function (module) {
             }
 
             throw new module.NotFoundError("", "Mapping not found for column " + fromCol.name);
+        },
+
+        /**
+         *
+         * @param {ERMrest.Column} toCol
+         * @returns {ERMrest.Column} mapping column
+         * @throws {ERMrest.NotFoundError} no mapping column found
+         * @desc get the mapping column given the from column
+         */
+        getFromColumn: function (toCol) {
+            for (var i = 0; i < this._to.length; i++) {
+                if (toCol._equals(this._to[i])) {
+                    return this._from[i];
+                }
+            }
+
+            throw new module.NotFoundError("", "Mapping not found for column " + toCol.name);
         }
     };
 

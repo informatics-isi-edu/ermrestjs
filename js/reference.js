@@ -392,11 +392,19 @@ var ERMrest = (function(module) {
          */
         read: function(limit) {
             try {
+
+                var defer = module._q.defer();
+
+                // if this reference came from a tuple, use tuple object's data
+                if (this._tuple) {
+                    var page = new Page(this, this._tuple.data, false, false);
+                    defer.resolve(page);
+                    return defer.promise;
+                }
+
                 verify(limit, "'limit' must be specified");
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
-
-                var defer = module._q.defer();
 
                 var uri = this._location.compactUri;
 
@@ -735,6 +743,17 @@ var ERMrest = (function(module) {
 
             }
             return this._related;
+        },
+
+        getAppLink: function(context) {
+            return this._table.getAppLink(context);
+        },
+
+        setNewTable: function(table) {
+            this._table = table;
+            this._shortestKey = table.shortestKey;
+            this._displayname = table.displayname;
+            this._columns = table.columns.all();
         }
     };
 
@@ -788,16 +807,98 @@ var ERMrest = (function(module) {
             var source = this._reference;
             var newRef = _referenceCopy(source);
             delete newRef._related;
-
             newRef._context = context;
-            var columnOrders = source._table.columns._contextualize(context).all();
-            newRef._columns = [];
-            for (var i = 0; i < columnOrders.length; i++) {
-                var column = columnOrders[i];
-                if (source._columns.indexOf(column) != -1) {
-                    newRef._columns.push(column);
+
+            // if ._table._baseTable is not ._table (this is an alternative table),
+            // use the base table to get the alternative table of that context.
+            var altTable;
+            if (source._table.baseTable !== source._table)
+                altTable = source._table.baseTable.getAlternativeTable(context);
+            else
+                altTable = source._table.getAlternativeTable(context);
+
+            // if has alternative table, use it to contextualize, otherwise use base table
+            // if using alternative table, need to update reference's table, key, displayname, location
+            if (altTable !== source._table) {
+
+                // if source uri has no filter, swap the table only
+                // else use join
+                newRef.setNewTable(altTable);
+
+                if (source._location.filter === undefined) {
+                    // case 1: no filter
+                    newRef._location = module._parse(source._location.service + "/catalog/" + source._location.catalog + "/" +
+                            source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name);
+                } else {
+
+                    var newLocationString;
+
+                    // case 2: has single entity filter (without any join), swap table and switch to mapping key
+                    // /s:t/filter/join
+                    // filter is single entity if it is binary filters using the shared key of the alternative table
+                    // or a conjunction filter that is a key
+                    if (source._location.projectionSchemaName === source._location.schemaName &&
+                        source._location.projectionTableName === source._location.tableName) { // no join
+                        var sharedKey = source._table.altSharedKey;
+                        var filter = source._location.filter;
+                        if (filter.type === module.filterTypes.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
+                            if (filter.column === sharedKey.colset.columns[0].name) {
+                                var filterString = altTable.altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                    source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name + "/" +
+                                    filterString;
+                            }
+                        } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
+                            var keyColNames = sharedKey.colset.columns.map(function(column) {
+                                return column.name;
+                            });
+                            if (filter.filters.every(function (f) {
+                                return (f.type === module.filterTypes.BINARYPREDICATE &&
+                                     f.operator === "=" &&
+                                     keyColNames.contains(f.column));
+                                }))
+                            { // if every filter is a "=" binary predicate with columns in the sharedKey
+                                filterString = "";
+                                for (var i = 0; i < filter.filters.length; i++) {
+                                    var f = filter.filters[i];
+                                    // map base table column to alternative table column
+                                    var baseColumn = source._location._table.columns.get(f.column);
+                                    var altColumn = altTable.getFromColumn(baseColumn);
+                                    filterString += (i == 0? "" : "&") + altColumn.name + "=" + f.value;
+                                }
+                                newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                    source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name + "/" +
+                                    filterString;
+                            }
+                        }
+                    }
+
+                    if (newLocationString) {
+                        newRef._location = module._parse(newLocationString);
+                    } else {
+                         // all other cases, update uri with join to alternative table
+                        var fkey = newRef._table.altForeignKey;
+                        newRef._location = module._parse(source._location.compactUri + "/" + fkey.toString());
+                        // NOTE: parse will not work if there is a filter that's not the same key used in linking
+                        //       not able to convert filter to the join table
+                        //       can this happen? TODO
+                    }
+
+                }
+
+                newRef._columns = newRef._table.columns._contextualize(context).all();
+
+            } else {
+                var columnOrders = source._table.columns._contextualize(context).all();
+                newRef._columns = [];
+                for (i = 0; i < columnOrders.length; i++) {
+                    var column = columnOrders[i];
+                    if (source._columns.indexOf(column) != -1) {
+                        newRef._columns.push(column);
+                    }
                 }
             }
+
             return newRef;
         }
     };
@@ -1037,19 +1138,45 @@ var ERMrest = (function(module) {
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                // update its location by adding the tuple’s key filter to the URI
-                // don't keep any modifiers
                 var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
-                    this._pageRef._location.api + "/" + this._pageRef._table.schema.name + ":" + this._pageRef._table.name + "/";
-                for (var k = 0; k < this._pageRef._shortestKey.length; k++) {
-                    var col = this._pageRef._shortestKey[k].name;
-                    if (k === 0) {
-                        uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
-                    } else {
-                        uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                    this._pageRef._location.api + "/";
+
+                // if this is an alternative table, use base table
+                if (this._pageRef._table.isAlternativeTable()) {
+                    var baseTable = this._pageRef._table.baseTable;
+                    this._ref.setNewTable(baseTable);
+                    uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
+
+                    // convert filter columns to base table columns using shared key
+                    var fkey = this._pageRef._table.altForeignKey;
+                    var self = this;
+                    fkey.mapping.domain().forEach(function(altColumn, index, array) {
+                        var baseCol = fkey.mapping.get(altColumn);
+                        if (index === 0) {
+                            uri = uri + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                        } else {
+                            uri = uri + "&" + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                        }
+                    });
+                } else {
+                    // update its location by adding the tuple’s key filter to the URI
+                    // don't keep any modifiers
+                    uri = uri + this._ref._table.schema.name + ":" + this._ref._table.name + "/";
+                    for (var k = 0; k < this._ref._shortestKey.length; k++) {
+                        var col = this._pageRef._shortestKey[k].name;
+                        if (k === 0) {
+                            uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                        } else {
+                            uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                        }
                     }
                 }
+
                 this._ref._location = module._parse(uri);
+
+                // add the tuple to reference so that when calling read() we don't need to fetch the data again.
+                this._ref._tuple = this._tuple;
+
             }
             return this._ref;
         },

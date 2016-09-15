@@ -774,7 +774,9 @@ var ERMrest = (function(module) {
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
     });
 
     /**
@@ -803,6 +805,13 @@ var ERMrest = (function(module) {
         MODULE: 'module'
     });
 
+    module._apps = Object.freeze({
+        "tag:isrd.isi.edu,2016:chaise:record": "record",
+        "tag:isrd.isi.edu,2016:chaise:record-two": "record-two",
+        "tag:isrd.isi.edu,2016:chaise:viewer": "viewer",
+        "tag:isrd.isi.edu,2016:chaise:search": "search",
+        "tag:isrd.isi.edu,2016:chaise:recordset": "recordset"
+    });
     return module;
 
 }(ERMrest || {}));
