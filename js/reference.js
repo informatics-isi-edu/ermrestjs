@@ -320,12 +320,16 @@ var ERMrest = (function(module) {
             }
 
             if (users.length > 0) {
-                var sessionAttributes = this._session.attributes.map(function(a) {
-                    return a.id;
-                });
+                if(this._session) {
+                    var sessionAttributes = this._session.attributes.map(function(a) {
+                        return a.id;
+                    });
 
-                for (var j = 0; j < users.length; j++) {
-                    if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
+                    for (var j = 0; j < users.length; j++) {
+                        if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
+                    }
+                } else {
+                    editCatalog = undefined;
                 }
             }
 
