@@ -78,7 +78,7 @@ exports.execute = function (options) {
             
             // Check for iframe 
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<p><div class="caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></p>');
+                .toBe('<div class="embed-block"><div class="embed-caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></div>');
             
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))

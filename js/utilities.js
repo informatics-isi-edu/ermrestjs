@@ -616,11 +616,11 @@ var ERMrest = (function(module) {
 
                             // If there is a caption then add it as a "div" with "caption" class
                             if (attrs[0].children[1].type == "text") {
-                               html = '<div class="caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                               html = '<div class="embed-caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
                             }
 
                             // Encapsulate the iframe inside a div
-                            html = '<p>' + html + "</p>";
+                            html = '<div class="embed-block">' + html + "</div>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
