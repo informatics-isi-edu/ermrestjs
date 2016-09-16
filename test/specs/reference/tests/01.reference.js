@@ -84,7 +84,7 @@ exports.execute = function (options) {
                 expect(recordReference._location.catalog).toBe(reference._location.catalog);
             });
 
-            it('contextualize.compactBreif should return a contextualized reference object.', function() {
+            it('contextualize.compactBrief should return a contextualized reference object.', function() {
                 var briefRecord = reference.contextualize.compactBrief;
 
                 // Make sure Reference prototype is available

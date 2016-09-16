@@ -1901,22 +1901,22 @@ be determined and the value will be `undefined`.
 <a name="ERMrest.Reference+display"></a>
 
 #### reference.display : <code>Object</code>
-An object which contains row display type for this reference. 
- Will be populated on basis of  "table-display" annotation. 
+An object which contains row display type for this reference.
+ Will be populated on basis of  "table-display" annotation.
 
  The object has following properties
  {
-   
+
    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
-   
+
    type: "markdown",  // Possible values are table/markdown/module (Default is "table")
 
-   // If type is "markdown" then you will get these properties 
+   // If type is "markdown" then you will get these properties
    mardkownPattern = "ROW_MARKDOWN",
    separator: "\n",  // Default is new line "\n"
    suffix: "SOME_MARKDOWN",  //Default is empty string ""
    prefix: "SOME_MARKDOWN",  //Default is empty string ""
- 
+
    // If type is "module" then you will get these properties
    modulePath: "pathsuffix"
  }
