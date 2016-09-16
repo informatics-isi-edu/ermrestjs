@@ -246,7 +246,7 @@ var ERMrest = (function(module) {
         for (var i = 0; i < ref.columns.length; i++) {
             var col = ref.columns[i];
             keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-            
+
             // Inject raw data in the keyvalues object prefixed with an '_'
             keyValues["_" + col.name] = data[col.name];
         }
@@ -464,7 +464,7 @@ var ERMrest = (function(module) {
             }
 
             if (options.inline) return module._markdownIt.renderInline(value);
-            
+
             return module._markdownIt.render(value);
         },
 
@@ -692,7 +692,7 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
-        COMPACT_BRIEF: 'compact/breif',
+        COMPACT_BRIEF: 'compact/brief',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
         EDIT: 'entry/edit',
