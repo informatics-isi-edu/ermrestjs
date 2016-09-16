@@ -78,7 +78,7 @@ exports.execute = function (options) {
             
             // Check for iframe 
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<p><div class="caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></p>');
+                .toBe('<div class="embed-block"><div class="embed-caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></div>');
             
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
@@ -94,12 +94,12 @@ exports.execute = function (options) {
             
             // Check for iframe tag
             var iframeMarkdown = ':::iframe  [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::';
-            var iframeHTML = '<p><div class="caption">CAPTION</div><iframe src="https://dev.isrd.isi.edu/chaise/search" ></iframe></p>';
+            var iframeHTML = '<div class="embed-block"><div class="embed-caption">CAPTION</div><iframe src="https://dev.isrd.isi.edu/chaise/search" ></iframe></div>';
             expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
             // Check for dropdown tag
             var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
-            var dropdownHTML = '<p><div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><br><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><br><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div></p>';
+            var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><br><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><br><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
             expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);  
 
             expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);

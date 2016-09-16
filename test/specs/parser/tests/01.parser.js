@@ -26,8 +26,8 @@ exports.execute = function (options) {
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
                 expect(location.pagingObject).toBe(null);
-                expect(location.firstSchemaName).toBe(schemaName);
-                expect(location.firstTableName).toBe(tableName);
+                expect(location.schemaName).toBe(schemaName);
+                expect(location.tableName).toBe(tableName);
                 expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
@@ -74,8 +74,8 @@ exports.execute = function (options) {
                 expect(location.pagingObject.row.length).toBe(1);
                 expect(location.pagingObject.row[0]).toBe("some random text");
                 expect(location.catalog).toBe(catalogId.toString());
-                expect(location.firstSchemaName).toBe(schemaName);
-                expect(location.firstTableName).toBe(tableName);
+                expect(location.schemaName).toBe(schemaName);
+                expect(location.tableName).toBe(tableName);
                 expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
@@ -123,8 +123,8 @@ exports.execute = function (options) {
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
                 expect(location.pagingObject).toBe(null);
-                expect(location.firstSchemaName).toBe(schemaName);
-                expect(location.firstTableName).toBe(tableName);
+                expect(location.schemaName).toBe(schemaName);
+                expect(location.tableName).toBe(tableName);
                 expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
@@ -145,6 +145,68 @@ exports.execute = function (options) {
                 expect(filter2.column).toBe("id");
                 expect(filter2.operator).toBe("=");
                 expect(filter2.value).toBe(secondEntityId.toString());
+            });
+        });
+
+        describe('Entity linking,', function() {
+            var parsedFilter;
+            var lowerLimit = 1,
+                upperLimit = 10,
+                sort = "id,summary",
+                text = "some%20random%20text",
+                tableName2 = "parse_table_2";
+            var complexPath = "/catalog/" + catalogId + "/entity/" + schemaName + ":"
+                + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)"
+                + "@sort(" + sort + ")" + "@after(" + text + ")";
+
+            it('_parse should take a uri with multiple filters and return a location object.', function() {
+                var location = options.ermRest._parse(options.url + complexPath);
+                parsedFilter = location._firstFilter;
+
+                expect(location).toBeDefined();
+                expect(location.uri).toBe(options.url + complexPath);
+                expect(location.compactUri).toBe(options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":"
+                    + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)") ;
+                expect(location.api).toBe("entity");
+                expect(location.path).toBe(schemaName + ":"
+                    + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)"
+                    + "@sort(" + sort + ")"  + "@after(" + text + ")");
+                expect(location.compactPath).toBe(schemaName + ":"
+                    + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)" );
+                expect(location.sort).toBe("@sort(" + sort + ")");
+                expect(location.sortObject[0].column).toBe("id");
+                expect(location.sortObject[0].descending).toBe(false);
+                expect(location.sortObject[1].column).toBe("summary");
+                expect(location.sortObject[1].descending).toBe(false);
+                expect(location.paging).toBe("@after(" + text + ")");
+                expect(location.pagingObject.before).toBe(false);
+                expect(location.pagingObject.row.length).toBe(2);
+                expect(location.pagingObject.row[0]).toBe("some random text");
+                expect(location.catalog).toBe(catalogId.toString());
+                expect(location.projectionSchemaName).toBe(schemaName);
+                expect(location.projectionTableName).toBe(tableName);
+                expect(location.schemaName).toBe(schemaName);
+                expect(location.tableName).toBe(tableName2);
+                expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
+            });
+
+            it('parsedFilter should have methods and values properly defined.', function() {
+                expect(parsedFilter).toBeDefined();
+
+                expect(parsedFilter.type).toBe("Conjunction");
+                expect(parsedFilter.filters).toBeDefined();
+
+                var filter1 = parsedFilter.filters[0];
+                expect(filter1.type).toBe("BinaryPredicate");
+                expect(filter1.column).toBe("id");
+                expect(filter1.operator).toBe("::gt::");
+                expect(filter1.value).toBe(lowerLimit.toString());
+
+                var filter2 = parsedFilter.filters[1];
+                expect(filter2.type).toBe("BinaryPredicate");
+                expect(filter2.column).toBe("id");
+                expect(filter2.operator).toBe("::lt::");
+                expect(filter2.value).toBe(upperLimit.toString());
             });
         });
     });
