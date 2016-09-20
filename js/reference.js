@@ -320,12 +320,16 @@ var ERMrest = (function(module) {
             }
 
             if (users.length > 0) {
-                var sessionAttributes = this._session.attributes.map(function(a) {
-                    return a.id;
-                });
+                if(this._session) {
+                    var sessionAttributes = this._session.attributes.map(function(a) {
+                        return a.id;
+                    });
 
-                for (var j = 0; j < users.length; j++) {
-                    if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
+                    for (var j = 0; j < users.length; j++) {
+                        if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
+                    }
+                } else {
+                    editCatalog = undefined;
                 }
             }
 
@@ -580,22 +584,22 @@ var ERMrest = (function(module) {
         },
 
       /**
-        *  An object which contains row display type for this reference. 
-        *  Will be populated on basis of  "table-display" annotation. 
+        *  An object which contains row display type for this reference.
+        *  Will be populated on basis of  "table-display" annotation.
         *
         *  The object has following properties
         *  {
-        *    
+        *
         *    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
-        *    
+        *
         *    type: "markdown",  // Possible values are table/markdown/module (Default is "table")
         *
-        *    // If type is "markdown" then you will get these properties 
+        *    // If type is "markdown" then you will get these properties
         *    mardkownPattern = "ROW_MARKDOWN",
         *    separator: "\n",  // Default is new line "\n"
         *    suffix: "SOME_MARKDOWN",  //Default is empty string ""
         *    prefix: "SOME_MARKDOWN",  //Default is empty string ""
-        *  
+        *
         *    // If type is "module" then you will get these properties
         *    modulePath: "pathsuffix"
         *  }
@@ -616,12 +620,11 @@ var ERMrest = (function(module) {
         * ```
         * @type {Object}
         *
-        **/  
+        **/
         get display() {
             if (!this._display) {
                 this._display = { type: module._displayTypes.TABLE };
                 var annotation;
-                
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
@@ -629,7 +632,7 @@ var ERMrest = (function(module) {
 
                 // If annotation is defined then parse it
                 if (annotation) {
-                    
+
                     // Set row_order value
                     this._display._rowOrder = annotation.row_order;
 
@@ -641,16 +644,16 @@ var ERMrest = (function(module) {
                     // If module is not empty then set its associated properties
                     // Else if row_markdown_pattern is not empty then set its associated properties
                     if (typeof annotation.module === 'string') {
-                        
+
                         // TODO: write code for module handling
-                        
+
                         this._display.type = module._displayTypes.MODULE;
 
                     } else if (typeof annotation.row_markdown_pattern === 'string') {
 
                         this._display.type = module._displayTypes.MARKDOWN;
 
-                        // Render the row by composing a markdown representation 
+                        // Render the row by composing a markdown representation
                         this._display._markdownPattern = annotation.row_markdown_pattern;
 
                         // Insert separator markdown text between each expanded rowpattern when presenting row sets. Default is new line "\n"
@@ -745,7 +748,7 @@ var ERMrest = (function(module) {
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
                     }
-                    
+
                     this._related.push(newRef);
                 }
 
@@ -999,7 +1002,7 @@ var ERMrest = (function(module) {
         /**
          * HTML representation of the whole page which uses table-display annotation.
          * For more info you can refer {ERM.reference.display}
-         * 
+         *
          * Usage:
          *```
          * var content = page.content;
@@ -1011,7 +1014,7 @@ var ERMrest = (function(module) {
          */
         get content() {
             if (this._content !== null) {
-                // If display type is markdown which means row_markdown_pattern is set in table-display 
+                // If display type is markdown which means row_markdown_pattern is set in table-display
                 if (this._ref.display.type === module._displayTypes.MARKDOWN) {
 
                     // If the number of records are zero then simply return null
@@ -1027,7 +1030,7 @@ var ERMrest = (function(module) {
                         // Compute formatted value for each column
                         var keyValues = module._getFormattedKeyValues(this._ref, this._data[i]);
 
-                        // Code to do template/string replacement using keyValues 
+                        // Code to do template/string replacement using keyValues
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
 
                         // If value is null or empty, return value on basis of `show_nulls`
@@ -1281,7 +1284,7 @@ var ERMrest = (function(module) {
                 // if annotation is populated and annotation has display.rowName property
                 if (annotation && typeof annotation.row_markdown_pattern === 'string') {
                     var template = annotation.row_markdown_pattern;
-                    
+
                     // Get formatted keyValues for a table for the data
                     var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
 
@@ -1292,7 +1295,7 @@ var ERMrest = (function(module) {
                     this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
                 }
                 // no row_name annotation, use column with title, name, term, label or id:text type
-                // or use the unique key 
+                // or use the unique key
                 else {
 
                     var setDisplaynameForACol = function(name) {
@@ -1313,8 +1316,8 @@ var ERMrest = (function(module) {
                     }
 
                     // Check for id column whose type should not be integer or serial
-                    var idCol = table.columns.all().filter(function (c) { 
-                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));  
+                    var idCol = table.columns.all().filter(function (c) {
+                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
                     });
 
                     // If id column exists

@@ -112,7 +112,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
                           '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                          '<p><div class="caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>date is :</strong></p>\n',
                           '<p><strong>Name is :</strong> Hank\n<strong>date is :</strong></p>\n',
                           '<code>GATCGATCGC GTATT</code>'];
@@ -131,7 +131,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4001.png" alt="image"></p>\n',
                           '<p><img src="/4001.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<p><div class="caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> Harold\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           ''];
@@ -150,7 +150,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
                           '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                          '<p><div class="caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong><br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           ''];
@@ -169,7 +169,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
                           '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<p><div class="caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong><br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           ''];
@@ -187,7 +187,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4004.png" alt="image"></p>\n',
                           '<p><img src="/4004.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<p><div class="caption">weird &amp; HTML &lt;  caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption">weird &amp; HTML &lt;  caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           ''];
@@ -206,7 +206,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4005.png" alt="image"></p>\n',
                           '<p><img src="/4005.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<p><div class="caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           ''];
@@ -225,7 +225,7 @@ exports.execute = function (options) {
                           '<p><img src="http://example.com/4006.png" alt="image"></p>\n',
                           '<p><img src="/4006.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<p><div class="caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></p>',
+                          '<div class="embed-block"><div class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<code>GATCGATCGC GTATT</code>'];

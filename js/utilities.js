@@ -246,7 +246,7 @@ var ERMrest = (function(module) {
         for (var i = 0; i < ref.columns.length; i++) {
             var col = ref.columns[i];
             keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-            
+
             // Inject raw data in the keyvalues object prefixed with an '_'
             keyValues["_" + col.name] = data[col.name];
         }
@@ -464,7 +464,7 @@ var ERMrest = (function(module) {
             }
 
             if (options.inline) return module._markdownIt.renderInline(value);
-            
+
             return module._markdownIt.render(value);
         },
 
@@ -616,11 +616,11 @@ var ERMrest = (function(module) {
 
                             // If there is a caption then add it as a "div" with "caption" class
                             if (attrs[0].children[1].type == "text") {
-                               html = '<div class="caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                               html = '<div class="embed-caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
                             }
 
                             // Encapsulate the iframe inside a div
-                            html = '<p>' + html + "</p>";
+                            html = '<div class="embed-block">' + html + "</div>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
@@ -692,7 +692,7 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
-        COMPACT_BRIEF: 'compact/breif',
+        COMPACT_BRIEF: 'compact/brief',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
         EDIT: 'entry/edit',
