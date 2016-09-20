@@ -1770,6 +1770,14 @@ var ERMrest = (function (module) {
             uniqueColumns.push(col);
             col.memberOfKeys.push(this);
         }
+        // sort columns by name
+        uniqueColumns.sort(function(c1, c2) {
+            if (c1.name < c2.name)
+                return -1;
+            if (c1.name > c2.name)
+                return 1;
+            return 0;
+        });
 
         /**
          * @type {ERMrest.ColSet}
