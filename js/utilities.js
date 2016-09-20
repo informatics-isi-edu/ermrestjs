@@ -716,7 +716,7 @@ var ERMrest = (function(module) {
                                 }
 
                                 if (isValid) {
-                                    var ullistHTML = '<ul class="dropdown-menu">' + lists.join('<br>') + '</ul>';
+                                    var ullistHTML = '<ul class="dropdown-menu">' + lists.join('') + '</ul>';
                                     html = '<div class="btn-group markdown-dropdown">' + buttonHtml + buttonDDHtml + ullistHTML + "</div>";
                                 }
                             }
