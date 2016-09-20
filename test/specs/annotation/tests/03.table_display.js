@@ -153,12 +153,12 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuple displayname should return "id:label" column.', function() {
+            it('tuple displayname should return "description:id" column.', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
-                    expect(displayname).toBe(tuple.values[0] + ":" + tuple.values[1]);
+                    expect(displayname).toBe(tuple.values[1] + ":" + tuple.values[0]);
                 }
             });
         });
