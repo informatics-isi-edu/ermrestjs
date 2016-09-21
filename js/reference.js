@@ -537,44 +537,43 @@ var ERMrest = (function(module) {
             }
         },
 
-      /**
-        *  An object which contains row display type for this reference.
-        *  Will be populated on basis of  "table-display" annotation.
-        *
-        *  The object has following properties
-        *  {
-        *
-        *    rowOrder: [{ column: "NAME", descending: true/false }] || undefined,
-        *
-        *    type: "markdown",  // Possible values are table/markdown/module (Default is "table")
-        *
-        *    // If type is "markdown" then you will get these properties
-        *    mardkownPattern = "ROW_MARKDOWN",
-        *    separator: "\n",  // Default is new line "\n"
-        *    suffix: "SOME_MARKDOWN",  //Default is empty string ""
-        *    prefix: "SOME_MARKDOWN",  //Default is empty string ""
-        *
-        *    // If type is "module" then you will get these properties
-        *    modulePath: "pathsuffix"
-        *  }
-        * ```
-        *
-        * Usage :
-        * ```
-        * var displayType = reference.display.type; // the displayType
-        *  if ( displayType === 'table') {
-        *    // go for default rendering of rows using tuple.values
-        * } else if (displayType === 'markdown') {
-        *    // Use the separator, suffix and prefix values while rendering tuples
-        *    // Tuple will have a "tuple.content" property that will have the actual markdown value
-        *    // derived from row_markdown_pattern after templating and rendering markdown
-        * } else if (displayType ===  'module') {
-        *   // Use modulePath to render the rows
-        * }
-        * ```
-        * @type {Object}
-        *
-        **/
+        /**
+         * An object which contains row display properties for this reference.
+         * It is determined based on the `table-display` annotation. It has the
+         * following properties:
+         *
+         *   - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
+         *   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
+         *
+         * If type is `'markdown'`, the object will also these additional 
+         * properties:
+         *
+         *   - `markdownPattern`: markdown pattern,
+         *   - `separator`: markdown pattern (default: newline character `'\n'`),
+         *   - `suffix`: markdown pattern (detaul: empty string `''`),
+         *   - `prefix`: markdown pattern (detaul: empty string `''`)
+         *
+         * If type is `'module'`, the object will have these additional 
+         * properties:
+         *
+         *   - `modulePath`: `'pathsuffix'` (TODO: what is this!?)
+         *
+         * Usage :
+         * ```
+         * var displayType = reference.display.type; // the displayType
+         * if ( displayType === 'table') {
+         *    // go for default rendering of rows using tuple.values
+         * } else if (displayType === 'markdown') {
+         *    // Use the separator, suffix and prefix values while rendering tuples
+         *    // Tuple will have a "tuple.content" property that will have the actual markdown value
+         *    // derived from row_markdown_pattern after templating and rendering markdown
+         * } else if (displayType ===  'module') {
+         *   // Use modulePath to render the rows
+         * }
+         * ```
+         * @type {Object}
+         *
+         **/
         get display() {
             if (!this._display) {
                 this._display = { type: module._displayTypes.TABLE };
