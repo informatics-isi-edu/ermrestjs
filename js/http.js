@@ -120,7 +120,9 @@ var ERMrest = (function (module) {
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
-                        deferred.resolve(response);
+                        module._onload().then(function() {
+                            deferred.resolve(response);
+                        });
                     },
                     function(response) {
                         response.status = response.status || response.statusCode;
@@ -139,9 +141,15 @@ var ERMrest = (function (module) {
                              * (entity/ and attribute/) return 204 No Content.
                              */
                             response.status = _http_status_codes.no_content;
-                            deferred.resolve(response);
+                            
+                            module._onload().then(function() {
+                                deferred.resolve(response);
+                            });
                         } else {
-                            deferred.reject(response);
+                            
+                            module._onload().then(function() {
+                                deferred.reject(response);
+                            });
                         }
                     });
                 }
