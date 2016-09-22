@@ -342,13 +342,39 @@ var ERMrest = (function(module) {
          * [ {tuple},... ] for all entities to be created.
          * @returns {Promise} A promise for a TBD result.
          */
-        create: function(tbd) {
+        create: function(rows) {
             try {
-                // TODO
-                notimplemented();
+                verify(rows, "'rows' must be specified");
+                verify(typeof(rows) == 'array', "'rows' must be an array");
+                verify(rows.length > 0, "'rows' must have at least one row to create");
+
+                var defaults = getDefaults();
+
+                // rows = {
+                //     <form-property>: <val>,
+                //     ...
+                // }
+
+                // Tuple object = {
+                //     values: [<val>, ...]
+                // }
+                var self = this;
+                module._http.post(rows, defaults).then(function(response) {
+                    new page = new Page(self, response.data, false, false);
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
+            }
+
+            function getDefaults() {
+                var defaultValues = [];
+                return defaultValues;
             }
         },
 
@@ -772,6 +798,30 @@ var ERMrest = (function(module) {
          */
         get compactBrief() {
             return this._contextualize(module._contexts.COMPACT_BRIEF);
+        },
+
+        /**
+         * The _entry_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entry() {
+            return this._contextualize(module._contexts.ENTRY);
+        },
+
+        /**
+         * The _entry/create_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entryCreate() {
+            return this._contextualize(module._contexts.ENTRYCREATE);
+        },
+
+        /**
+         * The _entry/edit_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entryEdit() {
+            return this._contextualize(module._contexts.ENTRYEDIT);
         },
 
         _contextualize: function(context) {
