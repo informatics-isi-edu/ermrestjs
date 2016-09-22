@@ -37,11 +37,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
 
-    ERMrest._onload = function() {
-        defer = ERMrest._q.defer();
-        defer.resolve(ERMrest);
-        return defer.promise;
-    };
+    _scriptsLoaded = true;
 
     /*
      * Set ERMrest as a module 
@@ -124,7 +120,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
 
             _scriptsLoaded = true;
-            
+
             if (_defers.length) {
                 _defers.forEach(function(defer) {
                     defer.resolve(ERMrest);
