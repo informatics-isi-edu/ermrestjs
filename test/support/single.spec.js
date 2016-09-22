@@ -1,9 +1,6 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In reference,',
+    description: 'In print utilities, ',
     testCases: [
-        "/annotation/tests/03.table_display.js"
-    ],
-    schemaConfigurations: [
-        "/annotation/conf/table_display.conf.json"
+        "/print_utils/tests/01.print_utils.js"
     ]
 });

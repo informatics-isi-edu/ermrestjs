@@ -84,12 +84,25 @@ exports.execute = function (options) {
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
                 .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
         
+            // Check for link tag with download attribute
             expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
                 .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n');
-        
+            
+            // Check for image tag with size
             expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
                 .toBe('<p><strong>Image With Size</strong>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
-             
+            
+            // Check for iframe tag
+            var iframeMarkdown = ':::iframe  [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::';
+            var iframeHTML = '<div class="embed-block"><div class="embed-caption">CAPTION</div><iframe src="https://dev.isrd.isi.edu/chaise/search" ></iframe></div>';
+            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+            // Check for dropdown tag
+            var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
+            var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
+            expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);  
+
+            expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
         });
 
         it('printGeneSeq() should format gene sequences correctly.', function() {
@@ -118,5 +131,6 @@ exports.execute = function (options) {
                 expect(printGeneSeq(testCase.input, {separator: '-', increment: 5})).toBe(testCase.incrementOf5WithDashes);
             }
         });
+
     });
 };
