@@ -598,6 +598,7 @@ var ERMrest = (function (module) {
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._visibleInboundForeignKeys_cached = {}; // Used in _visibleInboundForeignKeys
+        this._visibleColumns_cached = {}; // Used in _visibleColumns
 
         /**
          * @type {string}
@@ -778,6 +779,76 @@ var ERMrest = (function (module) {
             }); // columns that are not part of any keys.
 
             return nonKeyCols.length === 0; // check for purity
+        },
+
+        // return visible PseudoColumns
+        _visiblePseudoColumns: function (context, columns) {
+            // TODO replace FK with PseudoColumn 
+
+            var visibleColumns = [], orders = -1, i, c;
+
+            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+            }
+       
+            if (orders === -1) { // heuristics
+                var compositeFKs = [], colAdded, j, fk;
+                for (i = 0; i < columns.length; i++) {
+                    c = columns[i];
+                    colAdded = false;
+                    for (j = 0; j < c.memberOfForeignKeys.length; j++) {
+                        fk = c.memberOfForeignKeys[j];
+
+                        if (fk.simple) { // simple FKR
+                            visibleColumns.push(fk);
+
+                        } else { // composite FKR
+                        
+                            // add the column once
+                            if (!colAdded) {
+                                visibleColumns.push(c);
+                                colAdded = true;
+                            }
+
+                            // hold composite FKR and avoid duplicate
+                            if (visibleColumns.indexOf(fk)) {
+                                compositeFKs.push(fk);
+                            }
+                        }
+                    }
+                }
+
+                // append composite FKRs
+                for (i = 0; i < compositeFKs.length; i++) {
+                    visibleColumns.push(compositeFKs[j]);
+                }
+            } else { // get from annotation
+                for (i = 0; i < orders.length; i++) {
+                    try {
+                        if (Array.isArray(orders[i])) {
+                            c = constraintByNamePair(oders[i]);
+                            // check if FK of this table
+                            if (this.foreignkeys.all().indexOf(c) === -1) {
+                                continue;
+                            }
+                        } else {
+                            c = this.columns.get(orders[i]);
+                            // check if in the columns
+                            if (columns.indexOf(c) === -1) {
+                                continue;
+                            }
+                        }
+
+                        // avoid duplicate
+                        if (visibleColumns.indexOf(c) !== -1) {
+                            visibleColumns.push(c);
+                        }
+                    } catch (exception) {}
+                }
+            }
+
+
+            return visibleColumns;
         },
 
     };
