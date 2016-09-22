@@ -337,14 +337,25 @@ var ERMrest = (function(module) {
          },
 
         /**
-         * Creates a set of resources.
-         * @param {!Array} tbd TBD parameters. Probably an array of tuples
-         * [ {tuple},... ] for all entities to be created.
-         * @returns {Promise} A promise for a TBD result.
+         * Creates a set of tuples in the references relation. Note, this
+         * operation sets the `defaults` list according to the table
+         * specification, and not according to the contents of in the input
+         * tuple.
+         * @param {!Array} data The array of data to be created as new tuples.
+         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
+         * or errors (TBD).
          */
-        create: function(tbd) {
+        create: function(data) {
             try {
                 // TODO
+                //  verify: data is not null, data has non empty tuple set
+                //  get the defaults list for the referenced relation's table
+                //  get the data
+                //  do the 'post' call
+                //  get the results from post (of course in a promise func)
+                //  make a page of tuples of the results (unless error)
+                //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
+                //  resolve the promise, passing back the page
                 notimplemented();
             }
             catch (e) {
@@ -545,7 +556,7 @@ var ERMrest = (function(module) {
          *   - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
          *   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
          *
-         * If type is `'markdown'`, the object will also these additional 
+         * If type is `'markdown'`, the object will also these additional
          * properties:
          *
          *   - `markdownPattern`: markdown pattern,
@@ -553,7 +564,7 @@ var ERMrest = (function(module) {
          *   - `suffix`: markdown pattern (detaul: empty string `''`),
          *   - `prefix`: markdown pattern (detaul: empty string `''`)
          *
-         * If type is `'module'`, the object will have these additional 
+         * If type is `'module'`, the object will have these additional
          * properties:
          *
          *   - `modulePath`: `'pathsuffix'` (TODO: what is this!?)
@@ -822,6 +833,14 @@ var ERMrest = (function(module) {
         constructor: Page,
 
         /**
+         * The page's associated reference.
+         * @type {ERMrest.Reference}
+         */
+        get reference() {
+            return this._ref;
+        },
+
+        /**
          * An array of processed tuples. The results will be processed
          * according to the contextualized scheme (model) of this reference.
          *
@@ -1085,7 +1104,7 @@ var ERMrest = (function(module) {
                 //   this tuple represents a row from a single table, and then
                 //   we may need to create a reference to that table
                 // - then, we can go back and call that reference
-                //   `return entity_reference.update(...);`
+                //   `return reference.update(...);`
                 notimplemented();
             }
             catch (e) {
