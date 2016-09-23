@@ -1,6 +1,9 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In print utilities, ',
+    description: 'In reference alternative tables, ',
     testCases: [
-        "/print_utils/tests/01.print_utils.js"
+        "/reference/tests/07.alternative_tables.js"
+    ],
+    schemaConfigurations: [
+        "/reference/conf/reference_altTables.conf.json"
     ]
 });
