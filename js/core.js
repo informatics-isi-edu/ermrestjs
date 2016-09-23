@@ -1623,6 +1623,44 @@ var ERMrest = (function (module) {
 
     };
 
+    /**
+     * @memberOf ERMrest
+     * @constructor
+     * @param {ERMrest.Column} column the column that this PseudoColumn will be created based on.
+     * @param {ERMrest.ForeginKeyRef} foreignKeyRef the foreignKeyRef that represents this PseudoColumn
+     * @desc
+     * Constructor for PseudoColumn
+     */
+    function PseudoColumn(column, foreignKey) {
+
+        this.isPseudoColumn = true;
+
+        var i = 0;
+        while(column.table.columns.get(foreignKey.constraint_names[0] + (i!==0) ? i: "")) {
+            i++;
+        }
+        this.name = foreignKey.constraint_names[0] + (i); 
+
+        this.formatvalue = undefined; // TODO
+
+        this.formatPresentation = undefined; // TODO
+
+        this.displayname = foreignKey.to_name !== "" ? foreignKey.to_name : column.displayname;
+
+        this.type = new Type("markdown");
+
+        this.comment = foreignKey.comment;
+
+        this.annotations = column.annotations;
+
+        this.table = column.table;
+
+        this._nullValue = {}; 
+        
+    }
+
+    PseudoColumn.prototype = Object.create(Column.prototype);
+    PseudoColumn.prototype.constructor = PseudoColumn;
 
     /**
      * @memberof ERMrest

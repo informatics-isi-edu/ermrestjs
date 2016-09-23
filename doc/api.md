@@ -108,6 +108,8 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
+    * [.PseudoColumn](#ERMrest.PseudoColumn)
+        * [new PseudoColumn(column, foreignKeyRef)](#new_ERMrest.PseudoColumn_new)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -1091,6 +1093,21 @@ returns string representation of Column
 
 **Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
 **Retuns**: <code>string</code> string representation of Column  
+<a name="ERMrest.PseudoColumn"></a>
+
+### ERMrest.PseudoColumn
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.PseudoColumn_new"></a>
+
+#### new PseudoColumn(column, foreignKeyRef)
+Constructor for PseudoColumn
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| column | <code>[Column](#ERMrest.Column)</code> | the column that this PseudoColumn will be created based on. |
+| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | the foreignKeyRef that represents this PseudoColumn |
+
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
