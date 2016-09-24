@@ -346,33 +346,60 @@ var ERMrest = (function(module) {
          * or errors (TBD).
          */
         create: function(data) {
+            var self = this;
             try {
-                // TODO
                 //  verify: data is not null, data has non empty tuple set
-                //  get the defaults list for the referenced relation's table
-                //  get the data
-                //  do the 'post' call
-                //  get the results from post (of course in a promise func)
-                //  make a page of tuples of the results (unless error)
-                //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
-                //  resolve the promise, passing back the page
-                verify(rows, "'rows' must be specified");
-                verify(typeof(rows) == 'array', "'rows' must be an array");
-                verify(rows.length > 0, "'rows' must have at least one row to create");
+                verify(data, "'data' must be specified");
+                verify(data.length > 0, "'data' must have at least one row to create");
 
+                var defer = module._q.defer();
+
+                //  get the defaults list for the referenced relation's table
                 var defaults = getDefaults();
 
-                // rows = {
-                //     <form-property>: <val>,
-                //     ...
-                // }
+                //  get and format the data
+                // var formattedData = formatData(data);
 
-                // Tuple object = {
-                //     values: [<val>, ...]
-                // }
-                var self = this;
-                module._http.post(rows, defaults).then(function(response) {
-                    new page = new Page(self, response.data, false, false);
+                // construct the uri
+                var uri = this._location.compactUri;
+                for (var i = 0; i < defaults.length; i++) {
+                    uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
+                }
+
+                //  do the 'post' call
+                module._http.post(uri, data, defaults).then(function(response) {
+                    console.log(response);
+                    //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
+                    var uri = self._location.compactUri + '/',
+                        keyName;
+
+                    self._shortestKey.push(self._table.columns.get("c_int"));
+                    // loop through each returned Row and get the key value
+                    for (var j = 0; j < response.data.length; j++) {
+                        if (j !== 0)
+                            uri += ';';
+                        // shortest key is made up from one column
+                        if (self._shortestKey.length == 1) {
+                            keyName = self._shortestKey[0].name;
+                            uri += keyName + '=' + response.data[j][keyName];
+                        } else {
+                            uri += '(';
+                            for (var k = 0; k < self._shortestKey.length; k++) {
+                                if (k !== 0)
+                                    uri += '&';
+                                keyName = self._shortestKey[k].name;
+                                uri += keyName + '=' + response.data[j][keyName];
+                            }
+                            uri += ')';
+                        }
+                    }
+
+                    var ref = new Reference(module._parse(uri));
+                    //  make a page of tuples of the results (unless error)
+                    var page = new Page(ref, response.data, false, false);
+
+                    //  resolve the promise, passing back the page
+                    return defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
@@ -385,8 +412,16 @@ var ERMrest = (function(module) {
             }
 
             function getDefaults() {
-                var defaultValues = [];
-                return defaultValues;
+                var defaults = module._columnDiff(self._table.columns._columns, self.columns);
+
+                var columns = self.columns;
+                for (var i = 0; i < columns.length; i++) {
+                    if (columns[i].type.name.indexOf("serial") === 0) {
+                        defaults.push(columns[i].name);
+                    }
+                }
+
+                return defaults;
             }
         },
 
