@@ -8,13 +8,12 @@ exports.execute = function (options) {
             lowerLimit = 8999,
             upperLimit = 9010;
 
-        var singleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
+        var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName;
 
-        var singleEntityUriWithFilter = singleEntityUri + "/id=" + entityId;
+        var singleEntityUri = baseUri + "/id=" + entityId;
 
-        var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
 
         // Test Cases:
@@ -23,13 +22,15 @@ exports.execute = function (options) {
 
             it('create should return a Page object that is defined.', function(done) {
                 var rows = [ {
+                        id: 9999,
                         name: "Paula",
                         value: 5
                     } ];
 
-                options.ermRest.resolve(singleEntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
+                    done();
                     return reference.create(rows);
                 }).then(function (response) {
                     page = response;
@@ -52,7 +53,7 @@ exports.execute = function (options) {
             var limit = 1;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(singleEntityUriWithFilter, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(singleEntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     reference.session = { attributes: [] };
 
@@ -66,7 +67,7 @@ exports.execute = function (options) {
             });
 
             it('reference should be properly defined based on the constructor.', function() {
-                expect(reference._location.uri).toBe(singleEntityUriWithFilter);
+                expect(reference._location.uri).toBe(singleEntityUri);
                 expect(reference._location.service).toBe(options.url);
                 expect(reference._location.catalog).toBe(catalog_id.toString());
                 expect(reference._location.schemaName).toBe(schemaName);

@@ -367,8 +367,7 @@ var ERMrest = (function(module) {
                 }
 
                 //  do the 'post' call
-                module._http.post(uri, data, defaults).then(function(response) {
-                    console.log(response);
+                module._http.post(uri, data).then(function(response) {
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
