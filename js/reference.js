@@ -858,7 +858,7 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         get entryCreate() {
-            return this._contextualize(module._contexts.ENTRYCREATE);
+            return this._contextualize(module._contexts.CREATE);
         },
 
         /**
@@ -866,7 +866,7 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         get entryEdit() {
-            return this._contextualize(module._contexts.ENTRYEDIT);
+            return this._contextualize(module._contexts.EDIT);
         },
 
         _contextualize: function(context) {

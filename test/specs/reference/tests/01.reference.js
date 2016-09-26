@@ -115,6 +115,7 @@ exports.execute = function (options) {
                 expect(recordReference._location.service).toBe(reference._location.service);
                 // If catalog is the same, so will be the schema and table
                 expect(recordReference._table).toBe(reference._table);
+                expect(recordReference._context).toBe("detailed");
             });
 
             it('contextualize.compactBrief should return a contextualized reference object.', function() {
@@ -128,6 +129,7 @@ exports.execute = function (options) {
                 // The only difference should be the set of columns returned
                 expect(briefRecord).not.toBe(reference);
                 expect(briefRecord.columns.length).not.toBe(reference.columns.length);
+                expect(briefRecord._context).toBe("compact/brief");
 
                 var columns = Array.prototype.map.call(briefRecord.columns, function(column){
                     return column.name;
