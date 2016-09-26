@@ -769,7 +769,6 @@ var ERMrest = (function (module) {
             }
         },
 
-        // TODO jchen
         /**
          * Find alternative tables for each table. This should only be called during the 3rd pass of introspection,
          * after foreign keys have been built
@@ -787,7 +786,7 @@ var ERMrest = (function (module) {
          */
         _findAlternatives: function () {
             this._alternatives = {}; // in the form {context: table, ...}
-            this._altSharedKey = null; // base table and alt tables should have this and in common
+            this._altSharedKey = null; // base table's shared key with its alternative tables
             if (this.annotations.contains(module._annotations.TABLE_ALTERNATIVES)){
                 var alternatives = this.annotations.get(module._annotations.TABLE_ALTERNATIVES).content;
                 for(var context in alternatives) {
@@ -844,7 +843,7 @@ var ERMrest = (function (module) {
                                         // (2) check it is also alternative table's key
                                         altTable.keys.get(fkey.colset); // throws exception if not found
                                         this._altSharedKey = key;
-                                        altTable._altForeignKey = fkey;
+                                        altTable._altForeignKey = fkey; // _altForeignKey is the FK and key in alt table and key of the _altSharedKey base table
                                         break;
                                     }
                                 }
@@ -855,8 +854,6 @@ var ERMrest = (function (module) {
                                 // key not found in alt table, go to next key
                             }
                         }
-
-
 
                         if (!this._altSharedKey) {
                             console.log("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");

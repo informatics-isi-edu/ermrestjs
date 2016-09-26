@@ -55,15 +55,17 @@ var ERMrest = (function(module) {
      * all the other join in between are ignored. Therefore, IF FILTER IS USED, uri must be this format
      *       /s:t/c=123/(c)=(s:t2:c2)    ==> one level linking, filter is converted from t to t2
      *       where filter is the key used in join, then filter can be converted from t to t2
-     *       Otherwise, filter is not parsed
+     *       Otherwise, filter's non key columns are not converted
      *
      *  V    /s:t/(c)=(s:t2:c2)                               ==> ._projectionTableName = t, ._tableName = t2
      *  V    /s:t/(c)=(s:t2:c2)/(c2)=(s:t3:c3)                ==> ._projectionTableName = t, ._tableName = t3, first join ignored
      *  V    /s:t/c=123/(c)=(s:t2:c2)                         ==> ._projectionTableName = t, ._tableName = t2
      *                                                            ._filter is converted for t2 (c2=123), but uri does not change
      *  X    /s:t/c=123/(c)=(s:t2:c2)/filter/(c2)=(s:t3:c3)   ==> can't handle this right now, result will be wrong, cannot convert nested join and filters
-     *  X    /s:t/ab="xyz"/(c)=(s:t2:c2)                      ==> filter should use the key used in linking
-     *  *    /s:t/(c)=(s:t2:c2)/c2=123                        ==> Not handled yet, but should be on the TODO
+     *  *    /s:t/ab="xyz"/(c)=(s:t2:c2)                      ==> unable to convert filter from t1 to t2, should use the key used in linking
+     *                                                            this does not affect read(), since filter is only used when contextualizing with
+     *                                                            alternative table. In that case, we do not expect this type of uri.
+     *  *    /s:t/(c)=(s:t2:c2)/c2=123                        ==> Not handled yet TODO
      *
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
@@ -170,67 +172,67 @@ var ERMrest = (function(module) {
         // If there are filters appended after projection table
         // modify the columns to the linked table
 
-            if (parts[1] && (!linking || (linking && parts.length > 2))) { // parts[1] could be linking if there's no filter
-                // split by ';' and '&'
-                var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-                var items = parts[1].match(regExp);
+        if (parts[1] && (!linking || (linking && parts.length > 2))) { // parts[1] could be linking if there's no filter
+            // split by ';' and '&'
+            var regExp = new RegExp('(;|&|[^;&]+)', 'g');
+            var items = parts[1].match(regExp);
 
-                // if a single filter
-                if (items.length === 1) {
-                    this._filter = _processSingleFilterString(items[0]);
+            // if a single filter
+            if (items.length === 1) {
+                this._filter = _processSingleFilterString(items[0]);
 
-                } else {
-                    var filters = [];
-                    var type = null;
-                    for (i = 0; i < items.length; i++) {
-                        // process anything that's inside () first
-                        if (items[i].startsWith("(")) {
-                            items[i] = items[i].replace("(", "");
-                            // collect all filters until reaches ")"
-                            var subfilters = [];
-                            while (true) {
-                                if (items[i].endsWith(")")) {
-                                    items[i] = items[i].replace(")", "");
-                                    subfilters.push(items[i]);
-                                    // get out of while loop
-                                    break;
-                                } else {
-                                    subfilters.push(items[i]);
-                                    i++;
-                                }
+            } else {
+                var filters = [];
+                var type = null;
+                for (i = 0; i < items.length; i++) {
+                    // process anything that's inside () first
+                    if (items[i].startsWith("(")) {
+                        items[i] = items[i].replace("(", "");
+                        // collect all filters until reaches ")"
+                        var subfilters = [];
+                        while (true) {
+                            if (items[i].endsWith(")")) {
+                                items[i] = items[i].replace(")", "");
+                                subfilters.push(items[i]);
+                                // get out of while loop
+                                break;
+                            } else {
+                                subfilters.push(items[i]);
+                                i++;
                             }
-
-                            filters.push(_processMultiFilterString(subfilters));
-
-                        } else if (type === null && items[i] === "&") {
-                            // first level filter type
-                            type = module.filterTypes.CONJUNCTION;
-                        } else if (type === null && items[i] === ";") {
-                            // first level filter type
-                            type = module.filterTypes.DISJUNCTION;
-                        } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
-                            // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
-                        } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
-                            // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
-                        } else if (items[i] !== "&" && items[i] !== ";") {
-                            // single filter on the first level
-                            var binaryFilter = _processSingleFilterString(items[i]);
-                            filters.push(binaryFilter);
                         }
+
+                        filters.push(_processMultiFilterString(subfilters));
+
+                    } else if (type === null && items[i] === "&") {
+                        // first level filter type
+                        type = module.filterTypes.CONJUNCTION;
+                    } else if (type === null && items[i] === ";") {
+                        // first level filter type
+                        type = module.filterTypes.DISJUNCTION;
+                    } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
+                        // using combination of ! and & without ()
+                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                    } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
+                        // using combination of ! and & without ()
+                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                    } else if (items[i] !== "&" && items[i] !== ";") {
+                        // single filter on the first level
+                        var binaryFilter = _processSingleFilterString(items[i]);
+                        filters.push(binaryFilter);
                     }
-
-                    this._filter = new ParsedFilter(type);
-                    this._filter.setFilters(filters);
                 }
 
-                // columns in the filters are on the projection table
-                // use the mapped columns to replace column name to the linked table's column names
-                if (colMapping) {
-                    _replaceFilterColumns(this._filter, colMapping);
-                }
+                this._filter = new ParsedFilter(type);
+                this._filter.setFilters(filters);
             }
+
+            // columns in the filters are on the projection table
+            // use the mapped columns to replace column name to the linked table's column names
+            if (colMapping) {
+                _replaceFilterColumns(this._filter, colMapping);
+            }
+        }
 
     }
 
