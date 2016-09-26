@@ -485,7 +485,7 @@ var ERMrest = (function (module) {
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             var payload = this.annotations.get(module._annotations.APP_LINKS).content;
             for(var context in payload) {
-                if (Object.values(module._contexts).contains(payload[context])) // if pointing to another context
+                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
                     this._appLinks[context] = payload[payload[context]];
                 else
                     this._appLinks[context] = payload[context];
@@ -697,7 +697,7 @@ var ERMrest = (function (module) {
             this._appLinks = {}; // {context:app, ...}
             var payload = this.annotations.get(module._annotations.APP_LINKS).content;
             for(var context in payload) {
-                if (Object.values(module._contexts).contains(payload[context])) // if pointing to another context
+                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
                     this._appLinks[context] = payload[payload[context]];
                 else
                     this._appLinks[context] = payload[context];
@@ -949,6 +949,9 @@ var ERMrest = (function (module) {
                     return this._appLinks[context];
                 else if (module._contexts.DEFAULT in this._appLinks)
                     return this._appLinks[module._context.DEFAULT];
+            } else if (this._baseTable !== this) {
+                // this is an alternative table, use base table's app link
+                return this._baseTable.getAppLink(context);
             }
 
             return this.schema.getAppLink(context);

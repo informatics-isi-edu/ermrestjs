@@ -42,6 +42,9 @@
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference_schema_altTables", "alt_table_detailed"],
           "compact": ["reference_schema_altTables", "alt_table_compact"]
+        },
+        "tag:isrd.isi.edu,2016:app-links": {
+          "detailed": "tag:isrd.isi.edu,2016:chaise:record"
         }
       }
     },
@@ -126,13 +129,146 @@
           }
         }
       ]
+    },
+    "base_table_no_app_link": {
+      "comment": "base table without app link annotation",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "base_table_no_app_link",
+      "schema_name": "reference_schema_altTables",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "typename": "integer"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-alternatives": {
+          "detailed": ["reference_schema_altTables", "alt_table_detailed_2"],
+          "compact": ["reference_schema_altTables", "alt_table_compact_2"]
+        }
+      }
+    },
+    "alt_table_detailed_2": {
+      "comment": "alternative table for detailed context",
+      "kind": "table",
+      "table_name": "alt_table_detailed_2",
+      "schema_name": "reference_schema_altTables",
+      "keys": [{
+        "unique_columns": ["idx"]
+      }],
+      "foreign_keys": [
+        {
+          "comment": null,
+          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "foreign_key_columns": [{
+            "table_name": "alt_table_detailed_2",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "idx"
+          }],
+          "referenced_columns": [{
+            "table_name": "base_table_no_app_link",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "id"
+          }],
+          "annotations": {}
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "idx",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "details",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
+    "alt_table_compact_2": {
+      "comment": "alternative table for compact context",
+      "kind": "table",
+      "table_name": "alt_table_compact_2",
+      "schema_name": "reference_schema_altTables",
+      "keys": [{
+        "unique_columns": ["idy"]
+      }],
+      "foreign_keys": [
+        {
+          "comment": null,
+          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "foreign_key_columns": [{
+            "table_name": "alt_table_compact_2",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "idy"
+          }],
+          "referenced_columns": [{
+            "table_name": "base_table_no_app_link",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "id"
+          }],
+          "annotations": {}
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "idy",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "summary",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
     }
   },
   "table_names": [
     "base_table",
     "alt_table_detailed",
-    "alt_table_compact"
+    "alt_table_compact",
+    "base_table_no_app_link",
+    "alt_table_detailed_2",
+    "alt_table_compact_2"
   ],
   "comment": null,
-  "annotations": {}
+  "annotations": {
+    "tag:isrd.isi.edu,2016:app-links": {
+      "detailed": "tag:isrd.isi.edu,2016:chaise:record"
+    }
+  }
 }

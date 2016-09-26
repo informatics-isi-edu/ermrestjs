@@ -795,6 +795,8 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
     /*
      * @desc List of display type for table-display annotation
      * @private
@@ -803,14 +805,6 @@ var ERMrest = (function(module) {
         TABLE: 'table',
         MARKDOWN: 'markdown',
         MODULE: 'module'
-    });
-
-    module._apps = Object.freeze({
-        "tag:isrd.isi.edu,2016:chaise:record": "record",
-        "tag:isrd.isi.edu,2016:chaise:record-two": "record-two",
-        "tag:isrd.isi.edu,2016:chaise:viewer": "viewer",
-        "tag:isrd.isi.edu,2016:chaise:search": "search",
-        "tag:isrd.isi.edu,2016:chaise:recordset": "recordset"
     });
     return module;
 

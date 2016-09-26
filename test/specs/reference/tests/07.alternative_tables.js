@@ -6,6 +6,8 @@ exports.execute = function (options) {
             baseTableName = "base_table",
             altDetailedTableName = "alt_table_detailed",
             altCompactTableName = "alt_table_compact",
+            baseTableNoLinkName = "base_table_no_app_link",
+            altDetailedTable2Name = "alt_table_detailed_2",
             entityId = "00001";
 
         var allEntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
@@ -17,6 +19,8 @@ exports.execute = function (options) {
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + baseTableName + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
 
+        var baseTable2Uri = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaName + ":" + baseTableNoLinkName;
 
         // Test Cases:
         describe('for no entity filters,', function() {
@@ -42,7 +46,7 @@ exports.execute = function (options) {
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTableName);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTableName);
                 expect(reference._table.baseTable.name).toBe(baseTableName);
-
+                expect(reference._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
             });
 
             it('1.3. reference should be properly defined', function() {
@@ -57,6 +61,7 @@ exports.execute = function (options) {
             it('1.4. contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTableName);
+                expect(reference2._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("idx");
                 expect(reference2._columns.length).toBe(2);
@@ -141,7 +146,7 @@ exports.execute = function (options) {
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTableName);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTableName);
                 expect(reference._table.baseTable.name).toBe(baseTableName);
-
+                expect(reference._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
             });
 
             it('2.3. reference should be properly defined', function() {
@@ -157,6 +162,7 @@ exports.execute = function (options) {
             it('2.4. contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTableName);
+                expect(reference2._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("idx");
                 expect(reference2._columns.length).toBe(2);
@@ -238,7 +244,7 @@ exports.execute = function (options) {
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTableName);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTableName);
                 expect(reference._table.baseTable.name).toBe(baseTableName);
-
+                expect(reference._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
             });
 
             it('3.3. reference should be properly defined', function() {
@@ -253,6 +259,7 @@ exports.execute = function (options) {
             it('3.4. contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTableName);
+                expect(reference2._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("idx");
                 expect(reference2._columns.length).toBe(2);
@@ -310,5 +317,37 @@ exports.execute = function (options) {
             });
         });
 
+        describe('for app linking,', function() {
+            var reference, reference2;
+
+            it('4.1. resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(baseTable2Uri, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('4.2. base table should have proper app link', function() {
+                expect(reference._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
+            });
+
+
+            it('4.3. contextualize (alternative) table should have proper app link', function() {
+                reference2 = reference.contextualize.detailed;
+                expect(reference2._table.name).toBe(altDetailedTable2Name);
+                expect(reference2._table.getAppLink("detailed")).toBe("tag:isrd.isi.edu,2016:chaise:record");
+            });
+
+
+        });
+
     });
+
 };
