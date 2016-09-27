@@ -71,13 +71,18 @@ var ERMrest = (function(module) {
 
                 // if schema was not provided in the URI
                 // find the schema
+                var schema;
                 if (!reference._location.schemaName) {
                     var schemas = catalog.schemas.all();
                     for (var i = 0; i < schemas.length; i++) {
                         if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
-                            reference._table = schemas[i].tables.get(reference._location.tableName);
+                            if (!schema)
+                                schema = schemas[i];
+                            else
+                                throw new Error("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
                         }
                     }
+                    reference._table = schema.tables.get(reference._location.tableName);
                 } else
                     reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
 
