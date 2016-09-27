@@ -208,13 +208,14 @@ to use for ERMrest JavaScript agents.
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-        * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.Page](#ERMrest.Page)
         * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+        * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
         * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
         * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
@@ -1767,7 +1768,7 @@ Constructor for a ParsedFilter.
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-    * [.create(tbd)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1925,7 +1926,7 @@ following properties:
   - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
 
-If type is `'markdown'`, the object will also these additional 
+If type is `'markdown'`, the object will also these additional
 properties:
 
   - `markdownPattern`: markdown pattern,
@@ -1933,7 +1934,7 @@ properties:
   - `suffix`: markdown pattern (detaul: empty string `''`),
   - `prefix`: markdown pattern (detaul: empty string `''`)
 
-If type is `'module'`, the object will have these additional 
+If type is `'module'`, the object will have these additional
 properties:
 
   - `modulePath`: `'pathsuffix'` (TODO: what is this!?)
@@ -1972,15 +1973,19 @@ has other moderating attributes, for instance that indicate the
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+create"></a>
 
-#### reference.create(tbd) ⇒ <code>Promise</code>
-Creates a set of resources.
+#### reference.create(data) ⇒ <code>Promise</code>
+Creates a set of tuples in the references relation. Note, this
+operation sets the `defaults` list according to the table
+specification, and not according to the contents of in the input
+tuple.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result.  
+**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
+or errors (TBD).  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tbd | <code>Array</code> | TBD parameters. Probably an array of tuples [ {tuple},... ] for all entities to be created. |
+| data | <code>Array</code> | The array of data to be created as new tuples. |
 
 <a name="ERMrest.Reference+read"></a>
 
@@ -2050,6 +2055,7 @@ Deletes the referenced resources.
 
 * [.Page](#ERMrest.Page)
     * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+    * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
     * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
     * [.previous](#ERMrest.Page+previous) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
@@ -2079,6 +2085,12 @@ Usage:
 | hasNext | <code>boolean</code> | Whether there is more data before this Page |
 | hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
 
+<a name="ERMrest.Page+reference"></a>
+
+#### page.reference : <code>[Reference](#ERMrest.Reference)</code>
+The page's associated reference.
+
+**Kind**: instance property of <code>[Page](#ERMrest.Page)</code>  
 <a name="ERMrest.Page+tuples"></a>
 
 #### page.tuples : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
