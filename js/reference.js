@@ -841,9 +841,10 @@ var ERMrest = (function(module) {
                         source._location.projectionTableName === source._location.tableName) { // no join
                         var sharedKey = source._table.altSharedKey;
                         var filter = source._location.filter;
+                        var filterString;
                         if (filter.type === module.filterTypes.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
                             if (filter.column === sharedKey.colset.columns[0].name) {
-                                var filterString = altTable.altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                filterString = altTable.altForeignKey.colset.columns[0].name + "=" + filter.value;
                                 newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                     source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name + "/" +
                                     filterString;
@@ -858,17 +859,17 @@ var ERMrest = (function(module) {
                                      keyColNames.contains(f.column));
                                 }))
                             { // if every filter is a "=" binary predicate with columns in the sharedKey
-                                var filterString1 = "";
+                                filterString = "";
                                 for (var j = 0; j < filter.filters.length; j++) {
                                     var f = filter.filters[j];
                                     // map base table column to alternative table column
                                     var baseColumn = source._location._table.columns.get(f.column);
                                     var altColumn = altTable.getFromColumn(baseColumn);
-                                    filterString1 += (j === 0? "" : "&") + altColumn.name + "=" + f.value;
+                                    filterString += (j === 0? "" : "&") + altColumn.name + "=" + f.value;
                                 }
                                 newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                     source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name + "/" +
-                                    filterString1;
+                                    filterString;
                             }
                         }
                     }

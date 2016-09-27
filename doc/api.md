@@ -54,6 +54,7 @@ to use for ERMrest JavaScript agents.
             * [.name](#ERMrest.Table+name)
             * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
             * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+            * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
             * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
             * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -61,6 +62,10 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [.altSharedKey](#ERMrest.Table+altSharedKey) ⇒ <code>[Key](#ERMrest.Key)</code>
+            * [.altForeignKey](#ERMrest.Table+altForeignKey) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+            * [.getAlternativeTable(context)](#ERMrest.Table+getAlternativeTable)
+            * [.getAppLink(context)](#ERMrest.Table+getAppLink) ⇒ <code>\*</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -132,6 +137,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
+        * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -143,6 +149,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+        * [.getFromColumn(toCol)](#ERMrest.Mapping+getFromColumn) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.ForeignKeys](#ERMrest.ForeignKeys)
         * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
@@ -576,6 +583,7 @@ get table by table name
         * [.name](#ERMrest.Table+name)
         * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
         * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+        * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -583,6 +591,10 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [.altSharedKey](#ERMrest.Table+altSharedKey) ⇒ <code>[Key](#ERMrest.Key)</code>
+        * [.altForeignKey](#ERMrest.Table+altForeignKey) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+        * [.getAlternativeTable(context)](#ERMrest.Table+getAlternativeTable)
+        * [.getAppLink(context)](#ERMrest.Table+getAppLink) ⇒ <code>\*</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -621,6 +633,13 @@ Constructor for Table.
 
 #### table.ignore : <code>boolean</code>
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+_baseTable"></a>
+
+#### table._baseTable : <code>[Table](#ERMrest.Table)</code>
+this defaults to itself on the first pass of introspection
+then might be changed on the second pass if this is an alternative table
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+annotations"></a>
 
 #### table.annotations : <code>[Annotations](#ERMrest.Annotations)</code>
@@ -655,6 +674,42 @@ All the FKRs to this table.
 Documentation for this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+altSharedKey"></a>
+
+#### table.altSharedKey ⇒ <code>[Key](#ERMrest.Key)</code>
+the key of this base table that is referenced by all of its alternative tables.
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+**Returns**: <code>[Key](#ERMrest.Key)</code> - undefined if it is not a base table  
+<a name="ERMrest.Table+altForeignKey"></a>
+
+#### table.altForeignKey ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+the foreign key of this alternative table that references the key in the base table,
+and is also a key in this alternative table.
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+**Returns**: <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code> - undefined if it is not an alternative table  
+<a name="ERMrest.Table+getAlternativeTable"></a>
+
+#### table.getAlternativeTable(context)
+get the table's alternative table of a given context
+If no alternative table found, return itself
+
+**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
+
+| Param | Type |
+| --- | --- |
+| context | <code>ERMrest._annotations</code> | 
+
+<a name="ERMrest.Table+getAppLink"></a>
+
+#### table.getAppLink(context) ⇒ <code>\*</code>
+**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
+
+| Param |
+| --- |
+| context | 
+
 <a name="ERMrest.Table.Entity"></a>
 
 #### Table.Entity
@@ -1245,6 +1300,7 @@ get the key by the column set
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
+    * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
 
@@ -1283,6 +1339,17 @@ Documentation for this key
 Indicates if the key is simple (not composite)
 
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
+<a name="ERMrest.Key+containsColumn"></a>
+
+#### key.containsColumn(column) ⇒ <code>boolean</code>
+whether key has a column
+
+**Kind**: instance method of <code>[Key](#ERMrest.Key)</code>  
+
+| Param | Type |
+| --- | --- |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+
 <a name="ERMrest.ColSet"></a>
 
 ### ERMrest.ColSet
@@ -1331,6 +1398,7 @@ returns string representation of colset object: (s:t:c1,s:t:c2)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
     * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+    * [.getFromColumn(toCol)](#ERMrest.Mapping+getFromColumn) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Mapping_new"></a>
 
@@ -1373,6 +1441,22 @@ get the mapping column given the from column
 | Param | Type |
 | --- | --- |
 | fromCol | <code>[Column](#ERMrest.Column)</code> | 
+
+<a name="ERMrest.Mapping+getFromColumn"></a>
+
+#### mapping.getFromColumn(toCol) ⇒ <code>[Column](#ERMrest.Column)</code>
+get the mapping column given the from column
+
+**Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
+**Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.NotFoundError)</code> no mapping column found
+
+
+| Param | Type |
+| --- | --- |
+| toCol | <code>[Column](#ERMrest.Column)</code> | 
 
 <a name="ERMrest.ForeignKeys"></a>
 
