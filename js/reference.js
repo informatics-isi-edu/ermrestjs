@@ -69,7 +69,18 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
-                reference._table   = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+                // if schema was not provided in the URI
+                // find the schema
+                if (!reference._location.schemaName) {
+                    var schemas = catalog.schemas.all();
+                    for (var i = 0; i < schemas.length; i++) {
+                        if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
+                            reference._table = schemas[i].tables.get(reference._location.tableName);
+                        }
+                    }
+                } else
+                    reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
