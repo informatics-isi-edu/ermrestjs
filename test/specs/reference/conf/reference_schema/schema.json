@@ -248,7 +248,12 @@
                     "name": "id_from_inbound_related_table",
                     "type": {"typename":"text"}
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "name": "association table displayname"
+                }
+            }
         },
         "association_table_with_extra": {
             "comment": "has fk to reference_table and inbound_related_reference_table. has an extra column. since it has extra columns, it should not be consdered as association",
