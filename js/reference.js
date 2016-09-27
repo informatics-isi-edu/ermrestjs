@@ -837,7 +837,7 @@ var ERMrest = (function(module) {
                     // /s:t/filter/join
                     // filter is single entity if it is binary filters using the shared key of the alternative table
                     // or a conjunction filter that is a key
-                    if (source._location.projectionSchemaName === source._location.schemaName &&
+                    if ((!source._location.projectionSchemaName || source._location.projectionSchemaName === source._location.schemaName) &&
                         source._location.projectionTableName === source._location.tableName) { // no join
                         var sharedKey = source._table.altSharedKey;
                         var filter = source._location.filter;
