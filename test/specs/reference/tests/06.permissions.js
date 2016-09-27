@@ -46,7 +46,7 @@ exports.execute = function (options) {
                 });
             });
 
-            xit("should return true for canUpdate and canCreate.", function () {
+            it("should return true for canUpdate and canCreate.", function () {
                 expect(reference.canUpdate).toBeTruthy();
                 expect(reference.canCreate).toBeTruthy();
             });
@@ -86,7 +86,7 @@ exports.execute = function (options) {
                 });
             });
 
-            xit("should return false for canUpdate and canCreate.", function () {
+            it("should return false for canUpdate and canCreate.", function () {
                 expect(reference.canUpdate).toBeFalsy();
                 expect(reference.canCreate).toBeFalsy();
             });
