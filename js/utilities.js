@@ -54,6 +54,32 @@ var ERMrest = (function(module) {
 
     /**
      * @function
+     * @param {Array} minuend an array of Column Objects
+     * @param {Array} subtrahend an array of Column Objects
+     * @desc
+     * This gets the difference between the two column sets. This is not the _symmetric_ difference.
+     * If minuend is [1,2,3,4,5]
+     * and subtrahend is [4,5,6]
+     * the difference is [1,2,3]
+     * The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
+     * @returns {Array} difference an array of Column Objects
+     */
+    module._columnDiff = function (minuend, subtrahend) {
+        var difference = [];
+
+        difference = minuend.filter(function(col) {
+            return subtrahend.indexOf(col) == -1;
+        });
+
+        difference = difference.map(function(col) {
+            return col.name;
+        });
+
+        return difference;
+    };
+
+    /**
+     * @function
      * @param {String} str string to be converted.
      * @desc
      * Converts a string to title case (separators are space, hyphen, and underscore)
@@ -643,7 +669,7 @@ var ERMrest = (function(module) {
             /*
              * Checks whether string matches format "::: dropdown DROPDOWN_TITLE{.btn-success} [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
              * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */ 
+             */
             validate: function(params) {
                 return params.trim().match(/dropdown\s+(.*)$/i);
             },
@@ -656,7 +682,7 @@ var ERMrest = (function(module) {
 
                 if (tokens[idx].nesting === 1 && m && m.length > 0) {
 
-                    // If content found after dropdown string 
+                    // If content found after dropdown string
                     if (m && m.length > 0) {
 
                         var linkTokens = md.parseInline(m[1]);
@@ -703,7 +729,7 @@ var ERMrest = (function(module) {
                                             listHTML +=  link.attrs[j][0] + '="' + link.attrs[j][1] + '" ';
                                         }
 
-                                        listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";       
+                                        listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";
                                         lists.push(listHTML);
                                         // If the next element in the list is of type text skip it
                                         if (linkTokens[0].children[i+3] &&      linkTokens[0].children[i+3].type === 'text') {

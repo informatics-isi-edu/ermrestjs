@@ -8,20 +8,52 @@ exports.execute = function (options) {
             lowerLimit = 8999,
             upperLimit = 9010;
 
-        var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + tableName + "/id=" + entityId;
+        var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaName + ":" + tableName;
 
-        var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+        var singleEntityUri = baseUri + "/id=" + entityId;
+
+        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
 
         // Test Cases:
+        describe('for a single entity,', function () {
+            var reference, page;
+
+            it('create should return a Page object that is defined.', function(done) {
+                var rows = [ {
+                        id: 9999,
+                        name: "Paula",
+                        value: 5
+                    } ];
+
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    done();
+                    return reference.create(rows);
+                }).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.data[0].id).toEqual(rows[0].id);
+                    expect(page.data[0].name).toequal(rows[0].name);
+                    expect(page.data[0].value).toEqual(rows[0].value);
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        })
+
         describe('for a single entity,', function() {
             var reference, page, tuple;
             var limit = 1;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(singleEnitityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(singleEntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     reference.session = { attributes: [] };
 
@@ -35,7 +67,7 @@ exports.execute = function (options) {
             });
 
             it('reference should be properly defined based on the constructor.', function() {
-                expect(reference._location.uri).toBe(singleEnitityUri);
+                expect(reference._location.uri).toBe(singleEntityUri);
                 expect(reference._location.service).toBe(options.url);
                 expect(reference._location.catalog).toBe(catalog_id.toString());
                 expect(reference._location.schemaName).toBe(schemaName);
@@ -51,6 +83,7 @@ exports.execute = function (options) {
                 expect(reference.displayname).toBe(reference._table.name);
                 expect(reference.canCreate).toBeDefined();
                 expect(reference.canUpdate).toBeDefined();
+                expect(reference.create()).toBeDefined();
                 expect(reference.read()).toBeDefined();
             });
 
@@ -81,7 +114,8 @@ exports.execute = function (options) {
                 expect(recordReference.uri).toBe(reference.uri);
                 expect(recordReference._location.service).toBe(reference._location.service);
                 // If catalog is the same, so will be the schema and table
-                expect(recordReference._location.catalog).toBe(reference._location.catalog);
+                expect(recordReference._table).toBe(reference._table);
+                expect(recordReference._context).toBe("detailed");
             });
 
             it('contextualize.compactBrief should return a contextualized reference object.', function() {
@@ -95,6 +129,7 @@ exports.execute = function (options) {
                 // The only difference should be the set of columns returned
                 expect(briefRecord).not.toBe(reference);
                 expect(briefRecord.columns.length).not.toBe(reference.columns.length);
+                expect(briefRecord._context).toBe("compact/brief");
 
                 var columns = Array.prototype.map.call(briefRecord.columns, function(column){
                     return column.name;
