@@ -1,3 +1,5 @@
+var _scriptsLoaded = false, _defers = [];
+
 // Check for whether the environment is Node.js or Browser
 if (typeof module === 'object' && module.exports && typeof require === 'function') {
     
@@ -34,6 +36,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
+
+    _scriptsLoaded = true;
 
     /*
      * Set ERMrest as a module 
@@ -114,6 +118,31 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
             // set custom markdown tags using markdown-it-container plugin
             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
+
+            _scriptsLoaded = true;
+
+            if (_defers.length) {
+                _defers.forEach(function(defer) {
+                    defer.resolve(ERMrest);
+                });
+            } 
+            
     });
 
 }
+
+/**
+ * @function
+ * @private
+ * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
+ * This function is used by http. It resolves promises by calling this function
+ * to make sure thirdparty scripts are loaded.
+ */
+ERMrest._onload = function() {
+    var defer = ERMrest._q.defer();
+    
+    if (_scriptsLoaded) defer.resolve(ERMrest);
+    else _defers.push(defer);
+
+    return defer.promise;
+};

@@ -246,7 +246,7 @@ var ERMrest = (function(module) {
         for (var i = 0; i < ref.columns.length; i++) {
             var col = ref.columns[i];
             keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-            
+
             // Inject raw data in the keyvalues object prefixed with an '_'
             keyValues["_" + col.name] = data[col.name];
         }
@@ -464,7 +464,7 @@ var ERMrest = (function(module) {
             }
 
             if (options.inline) return module._markdownIt.renderInline(value);
-            
+
             return module._markdownIt.render(value);
         },
 
@@ -570,7 +570,7 @@ var ERMrest = (function(module) {
      * @private
      * @param {Object} md The markdown-it object
      * @param {Object} md The markdown-it-container object.
-     * @desc Sets functionality for custom markdown tags like `iframe` using `markdown-it-container` plugin.
+     * @desc Sets functionality for custom markdown tags like `iframe` and `dropdown` using `markdown-it-container` plugin.
      */
     module._bindCustomMarkdownTags = function(md, mdContainer) {
 
@@ -578,6 +578,7 @@ var ERMrest = (function(module) {
         md.set({ typographer: true });
 
         // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        // Injects `iframe` tag
         md.use(mdContainer, 'iframe', {
             /*
              * Checks whether string matches format "::: iframe [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
@@ -616,11 +617,11 @@ var ERMrest = (function(module) {
 
                             // If there is a caption then add it as a "div" with "caption" class
                             if (attrs[0].children[1].type == "text") {
-                               html = '<div class="caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                               html = '<div class="embed-caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
                             }
 
                             // Encapsulate the iframe inside a div
-                            html = '<p>' + html + "</p>";
+                            html = '<div class="embed-block">' + html + "</div>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
@@ -633,6 +634,96 @@ var ERMrest = (function(module) {
                   // closing tag
                   return '';
                 }
+            }
+        });
+
+        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        // Injects `dropdwown` tag
+        md.use(mdContainer, 'dropdown', {
+            /*
+             * Checks whether string matches format "::: dropdown DROPDOWN_TITLE{.btn-success} [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */ 
+            validate: function(params) {
+                return params.trim().match(/dropdown\s+(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+
+                var html = "";
+                // Get token string after regeexp matching to determine caption and other links
+                var m = tokens[idx].info.trim().match(/dropdown\s+(.*)$/i);
+
+                if (tokens[idx].nesting === 1 && m && m.length > 0) {
+
+                    // If content found after dropdown string 
+                    if (m && m.length > 0) {
+
+                        var linkTokens = md.parseInline(m[1]);
+
+                        // If the linkTokens contains an inline tag
+                        // with children, and type is text for the first child
+                        if (linkTokens.length === 1 && linkTokens[0].type === 'inline' &&
+                            linkTokens[0].children.length && linkTokens[0].children[0].type === 'text') {
+
+                            var caption = linkTokens[0].children[0].content;
+                            var cTokens = md.parse(caption);
+
+                            // If caption is set for the dropdown button between
+                            if (cTokens.length === 3 && cTokens[0].type === 'paragraph_open' && cTokens[1].type === 'inline' && cTokens[2].type === 'paragraph_close') {
+
+                                // Build button html and button dropdown html
+                                var classes = [];
+                                var buttonHtml = '<button type="button" ';
+                                var buttonDDHtml = '<button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ';
+
+                                // If the caption has any attrs add them to the button
+                                if (cTokens[0].attrs) {
+                                    cTokens[0].attrs.forEach(function(a) {
+                                        if(a[0] === 'class') {
+                                            classes.push(a[1]);
+                                        } else {
+                                            buttonHtml += attr[0] + '="' + attr[1] + '" ';
+                                        }
+                                    });
+                                }
+
+                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  cTokens[1].content + '</button>';
+                                buttonDDHtml += ' class="btn btn-primary dropdown-toggle ' + classes.join(' ') + '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
+
+                                // Build unordered list
+                                var lists = [], isValid = true;
+                                for (var i=1 ;i < linkTokens[0].children.length;i=i+3) {
+                                    if (linkTokens[0].children[i].type === 'link_open' &&
+                                        linkTokens[0].children[i+1].type === 'text' &&
+                                        linkTokens[0].children[i+2].type === 'link_close') {
+
+                                        var link = linkTokens[0].children[i], listHTML = '<li><a ';
+                                        for (var j=0; j< link.attrs.length; j++) {
+                                            listHTML +=  link.attrs[j][0] + '="' + link.attrs[j][1] + '" ';
+                                        }
+
+                                        listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";       
+                                        lists.push(listHTML);
+                                        // If the next element in the list is of type text skip it
+                                        if (linkTokens[0].children[i+3] &&      linkTokens[0].children[i+3].type === 'text') {
+                                          i++;
+                                        }
+                                    } else {
+                                        isValid = false;
+                                        break;
+                                    }
+                                }
+
+                                if (isValid) {
+                                    var ullistHTML = '<ul class="dropdown-menu">' + lists.join('') + '</ul>';
+                                    html = '<div class="btn-group markdown-dropdown">' + buttonHtml + buttonDDHtml + ullistHTML + "</div>";
+                                }
+                            }
+                        }
+                    }
+                }
+                return html;
             }
         });
     };
@@ -692,7 +783,7 @@ var ERMrest = (function(module) {
      */
     module._contexts = Object.freeze({
         COMPACT: 'compact',
-        COMPACT_BRIEF: 'compact/breif',
+        COMPACT_BRIEF: 'compact/brief',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
         EDIT: 'entry/edit',

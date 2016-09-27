@@ -32,6 +32,8 @@ We use a combination of [nodejs](https://www.nodejs.org), npm, and good old
 fashioned [make](https://en.wikipedia.org/wiki/Makefile). However, you only
 need `make` to build the non-minified package and run the install command.
 
+Developers using Mac OS X should see this limitation [issue 207](https://github.com/informatics-isi-edu/ermrestjs/issues/207).
+
 ## How to get ermrestjs
 
 Clone the repo from GitHub.
