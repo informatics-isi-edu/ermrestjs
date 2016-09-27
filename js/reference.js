@@ -82,6 +82,9 @@ var ERMrest = (function(module) {
                                 throw new Error("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
                         }
                     }
+                    if (!schema)
+                        throw new Error("Table " + reference._location.tableName + " not found");
+
                     reference._table = schema.tables.get(reference._location.tableName);
                 } else
                     reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
