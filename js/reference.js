@@ -77,8 +77,6 @@ var ERMrest = (function(module) {
 
             }, function (error) {
                 defer.reject(error);
-            }).catch(function(exception) {
-                defer.reject(exception);
             });
 
             return defer.promise;
