@@ -1046,7 +1046,7 @@ var ERMrest = (function(module) {
                     for (var i = 0; i < this._data.length; i++) {
 
                         // Compute formatted value for each column
-                        var keyValues = module._getFormattedKeyValues(this._ref, this._data[i]);
+                        var keyValues = module._getFormattedKeyValues(this._ref.columns, this._ref._context, this._data[i]);
 
                         // Code to do template/string replacement using keyValues
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
@@ -1227,7 +1227,7 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
+                var keyValues = module._getFormattedKeyValues(this._pageRef.columns, this._pageRef._context, this._data);
 
                 /*
                  * use this variable to avoid using computed formatted values in other columns while templating
@@ -1291,83 +1291,9 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            var self = this, table = this._pageRef._table, col;
             if (!this._displayname) {
-                var annotation;
-                // If table has table-display annotation then set it in annotation variable
-                if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-                    annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
-                }
-
-                // if annotation is populated and annotation has display.rowName property
-                if (annotation && typeof annotation.row_markdown_pattern === 'string') {
-                    var template = annotation.row_markdown_pattern;
-
-                    // Get formatted keyValues for a table for the data
-                    var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
-
-                    // get templated patten after replacing the values using Mustache
-                    var pattern = module._renderTemplate(template, keyValues);
-
-                    // Render markdown content for the pattern
-                    this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
-                }
-                // no row_name annotation, use column with title, name, term, label or id:text type
-                // or use the unique key
-                else {
-
-                    var setDisplaynameForACol = function(name) {
-                        if (typeof self._data[name] === 'string') {
-                            col = table.columns.get(name);
-                            self._displayname = col.formatvalue(self._data[name], { context: self._pageRef.context });
-                            return true;
-                        }
-                        return false;
-                    };
-
-                    var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
-
-                    for (var i = 0; i < columns.length; i++) {
-                        if (setDisplaynameForACol(columns[i])) {
-                            return this._displayname;
-                        }
-                    }
-
-                    // Check for id column whose type should not be integer or serial
-                    var idCol = table.columns.all().filter(function (c) {
-                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
-                    });
-
-                    // If id column exists
-                    if (idCol.length && typeof this._data[idCol[0].name] === 'string') {
-                        this._displayname = idCol[0].formatvalue(this._data[idCol[0].name], { context: self._pageRef.context });
-                    } else {
-                        // Get the columns for shortestKey
-                        var keyColumns = table.shortestKey;
-
-                        if (keyColumns.length >= table.columns.length) {
-                            this._displayname = null;
-                        } else {
-
-                            var values = [];
-
-                            // Iterate over the keycolumns to get their formatted values for `row_name` context
-                            keyColumns.forEach(function(c) {
-                                var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
-                                values.push(value);
-                            });
-
-                            /*
-                             * join all values by ':' to get the display_name
-                             * Eg: displayName for values=["12", "DNA results for human specimen"] would be
-                             * "12:DNA results for human specimen"
-                             */
-                            this._displayname = values.join(':');
-                        }
-                    }
-                }
+                this._displayname = module._getRowName(this._pageRef._table, this._pageRef.columns, this._pageRef._context, this._data);
             }
-
             return this._displayname;
         }
 
