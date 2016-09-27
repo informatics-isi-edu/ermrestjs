@@ -858,17 +858,17 @@ var ERMrest = (function(module) {
                                      keyColNames.contains(f.column));
                                 }))
                             { // if every filter is a "=" binary predicate with columns in the sharedKey
-                                filterString = "";
-                                for (var i = 0; i < filter.filters.length; i++) {
-                                    var f = filter.filters[i];
+                                var filterString1 = "";
+                                for (var j = 0; j < filter.filters.length; j++) {
+                                    var f = filter.filters[j];
                                     // map base table column to alternative table column
                                     var baseColumn = source._location._table.columns.get(f.column);
                                     var altColumn = altTable.getFromColumn(baseColumn);
-                                    filterString += (i == 0? "" : "&") + altColumn.name + "=" + f.value;
+                                    filterString1 += (j === 0? "" : "&") + altColumn.name + "=" + f.value;
                                 }
                                 newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                     source._location.api + "/" + newRef._table.schema.name + ":" + newRef._table.name + "/" +
-                                    filterString;
+                                    filterString1;
                             }
                         }
                     }
@@ -891,7 +891,7 @@ var ERMrest = (function(module) {
             } else {
                 var columnOrders = source._table.columns._contextualize(context).all();
                 newRef._columns = [];
-                for (i = 0; i < columnOrders.length; i++) {
+                for (var i = 0; i < columnOrders.length; i++) {
                     var column = columnOrders[i];
                     if (source._columns.indexOf(column) != -1) {
                         newRef._columns.push(column);

@@ -271,11 +271,11 @@ var ERMrest = (function (module) {
                 // find alternative tables
                 // requires foreign keys built
                 for (s = 0; s < schemaNames.length; s++) {
-                    schema = self.schemas.get(schemaNames[s]);
-                    tables = schema.tables.names();
-                    for (t = 0; t < tables.length; t++) {
-                        table = schema.tables.get(tables[t]);
-                        table._findAlternatives();
+                    var schema1 = self.schemas.get(schemaNames[s]);
+                    var tables1 = schema1.tables.names();
+                    for (var t1 = 0; t1 < tables1.length; t1++) {
+                        var table1 = schema1.tables.get(tables1[t1]);
+                        table1._findAlternatives();
                     }
                 }
 
@@ -865,14 +865,14 @@ var ERMrest = (function (module) {
                         try {
 
                             // (1) find base table shared key in alternative's foreign keys
-                            fkeys = altTable.foreignKeys.all();
-                            for (j = 0; j < fkeys.length; j++) {
-                                fkey = fkeys[j];
-                                if (fkey.key === this._altSharedKey) {
+                            var fkeys1 = altTable.foreignKeys.all();
+                            for (var k = 0; k < fkeys1.length; k++) {
+                                var fkey1 = fkeys1[k];
+                                if (fkey1.key === this._altSharedKey) {
                                     // found a foreign key matching the base table key
                                     // (2) check it is also alternative table's key
-                                    altTable.keys.get(fkey.colset); // throws exception if not found
-                                    altTable._altForeignKey = fkey;
+                                    altTable.keys.get(fkey1.colset); // throws exception if not found
+                                    altTable._altForeignKey = fkey1;
                                     break;
                                 }
                             }

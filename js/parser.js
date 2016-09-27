@@ -141,6 +141,7 @@ var ERMrest = (function(module) {
         parts = this._compactPath.split('/');
 
         // if has linking, use the last part as the main table
+        var colMapping;
         var linking = parts[parts.length - 1].match(/\((.*)\)=\((.*:.*:.*)\)/);
         if (linking) {
             var leftCols = linking[1].split(",");
@@ -148,9 +149,9 @@ var ERMrest = (function(module) {
             this._schemaName = rightParts[1];
             this._tableName = rightParts[2];
             var rightCols = rightParts[3].split(",");
-            var colMapping = {};
-            for (var i = 0; i < leftCols.length; i++) {
-                colMapping[leftCols[i]] = rightCols[i];
+            colMapping = {};
+            for (var j = 0; j < leftCols.length; j++) {
+                colMapping[leftCols[j]] = rightCols[j];
             }
 
         }
@@ -184,7 +185,7 @@ var ERMrest = (function(module) {
             } else {
                 var filters = [];
                 var type = null;
-                for (i = 0; i < items.length; i++) {
+                for (var i = 0; i < items.length; i++) {
                     // process anything that's inside () first
                     if (items[i].startsWith("(")) {
                         items[i] = items[i].replace("(", "");
@@ -506,7 +507,7 @@ var ERMrest = (function(module) {
     /**
      * given a parsedFilter, replace all the columns with mapping column names
      * @param filter parsedFilter format
-     * @param colMapping in the form of {col_a:col_a1, ...}
+     * @param {Object} colMapping in the form of {col_a:col_a1, ...}
      * @private
      */
     _replaceFilterColumns = function(filter, colMapping) {
