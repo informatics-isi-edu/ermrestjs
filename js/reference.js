@@ -372,7 +372,6 @@ var ERMrest = (function(module) {
                     var uri = self._location.compactUri + '/',
                         keyName;
 
-                    self._shortestKey.push(self._table.columns.get("c_int"));
                     // loop through each returned Row and get the key value
                     for (var j = 0; j < response.data.length; j++) {
                         if (j !== 0)
@@ -411,6 +410,7 @@ var ERMrest = (function(module) {
             }
 
             function getDefaults() {
+                // This is gets the difference between the table's set of columns and the reference's set of columns
                 var defaults = module._columnDiff(self._table.columns._columns, self.columns);
 
                 var columns = self.columns;

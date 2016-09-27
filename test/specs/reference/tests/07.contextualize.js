@@ -34,17 +34,7 @@ exports.execute = function (options) {
             expect(ref._table).toBe(reference._table);
         }
 
-        /** Test case Contexts:
-         *  "compact", "compact/brief", "detailed", "entry", "entry/create",
-         *  "entry/edit", "filter", "row_name", "*"
-         *
-         * Functions implemented:
-         *  "compact", "compactBrief", "detailed", "entry", "entryCreate",
-         *  "entryEdit"
-         *
-         * Functions not implemented:
-         *  "filter", "row_name", "*"
-        **/
+        // Test Cases:
 
         it("contextualize should return a new 'compact' reference object.", function() {
             var compactRef = reference.contextualize.compact;
