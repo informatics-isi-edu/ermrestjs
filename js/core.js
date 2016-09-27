@@ -597,7 +597,6 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._visibleInboundForeignKeys_cached = {}; // Used in _visibleInboundForeignKeys
         this._visibleColumns_cached = {}; // Used in _visibleColumns
 
         /**
@@ -630,13 +629,13 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.ForeignKeys}
          */
-        this.foreignKeys = new ForeignKeys();
+        this.foreignKeys = new ForeignKeys(this);
 
         /**
          * All the FKRs to this table.
          * @type {ERMrest.ForeignKeys}
          */
-        this.referredBy = new ForeignKeys();
+        this.referredBy = new ForeignKeys(this);
 
         /**
          * @desc Documentation for this table
@@ -698,7 +697,7 @@ var ERMrest = (function (module) {
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
-            this.foreignKeys = new ForeignKeys();
+            this.foreignKeys = new ForeignKeys(this);
             for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
                 var jsonFKs = this._jsonTable.foreign_keys[i];
                 var foreignKeyRef = new ForeignKeyRef(this, jsonFKs);
@@ -707,41 +706,6 @@ var ERMrest = (function (module) {
                 // add to referredBy of the key table
                 foreignKeyRef.key.table.referredBy._push(foreignKeyRef);
             }
-        },
-
-        // returns visible inbound foreignkeys.
-        _visibleInboundForeignKeys: function (context) {
-            if(context in this._visibleInboundForeignKeys_cached) {
-                return this._visibleInboundForeignKeys_cached[context];
-            }
-
-            var orders = -1;
-            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                orders = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
-            }
-
-            if (orders == -1) {
-                this._visibleInboundForeignKeys_cached[context] = -1;
-                return -1; // no annoation
-            }
-
-            for (var i = 0, result = [], fk; i < orders.length; i++) {
-                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
-                    continue; // the annotation value is not correct.
-                }
-                try {
-                    fk = this.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && this.referredBy.all().indexOf(fk) != -1) {
-                        // avoid duplicate and if it's a valid inbound fk of this table.
-                        result.push(fk);
-                    }
-                } catch (exception){
-                    // if the constraint name is not valid, this will catch the error
-                }
-            }
-
-            this._visibleInboundForeignKeys_cached[context] = result;
-            return result;
         },
 
         // figure out if Table is pure and binary association table.
@@ -1283,6 +1247,8 @@ var ERMrest = (function (module) {
         this._columns = [];
 
         this._table = table;
+
+        this._contextualize_cached = {};
     }
 
     Columns.prototype = {
@@ -1359,7 +1325,10 @@ var ERMrest = (function (module) {
         },
 
         // Get columns based on the context.
-        _contextualize: function (context) {
+        _contextualize: function (context) { // get from cache
+            if (context in this._contextualize_cached) {
+                return this._contextualize_cached[context];
+            }
 
             // get column orders from annotation
             var orders = -1;
@@ -1385,6 +1354,8 @@ var ERMrest = (function (module) {
                     //do nothing, go to the next column
                 }
             }
+
+            this._contextualize_cached[context] = columns; //cache the value
             return columns;
         }
 
@@ -2073,9 +2044,11 @@ var ERMrest = (function (module) {
      * @memberof ERMrest
      * @constructor
      */
-    function ForeignKeys() {
+    function ForeignKeys(table) {
         this._foreignKeys = []; // array of ForeignKeyRef
         this._mappings = []; // array of Mapping
+        this._contextualize_cached = {};
+        this._table = table;
     }
 
     ForeignKeys.prototype = {
@@ -2147,6 +2120,40 @@ var ERMrest = (function (module) {
             }
 
             throw new module.NotFoundError("", "Foreign Key not found for the colset.");
+        },
+
+        _contextualize: function (context) {
+            if(context in this._contextualize_cached) {
+                return this._contextualize_cached[context];
+            }
+
+            var orders = -1;
+            if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+            }
+
+            if (orders == -1) {
+                this._contextualize_cached[context] = -1;
+                return -1; // no annoation
+            }
+
+            for (var i = 0, result = [], fk; i < orders.length; i++) {
+                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
+                    continue; // the annotation value is not correct.
+                }
+                try {
+                    fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
+                    if (result.indexOf(fk) == -1 && this._table.referredBy.all().indexOf(fk) != -1) {
+                        // avoid duplicate and if it's a valid inbound fk of this table.
+                        result.push(fk);
+                    }
+                } catch (exception){
+                    // if the constraint name is not valid, this will catch the error
+                }
+            }
+
+            this._contextualize_cached[context] = result;
+            return result;
         }
     };
 
@@ -2159,6 +2166,8 @@ var ERMrest = (function (module) {
      * @constructor
      */
     function ForeignKeyRef(table, jsonFKR) {
+
+        this._table = table;
 
         var catalog = table.schema.catalog;
 

@@ -690,7 +690,7 @@ var ERMrest = (function(module) {
             if (this._related === undefined) {
                 this._related = [];
 
-                var visibleFKs = this._table._visibleInboundForeignKeys(this._context),
+                var visibleFKs = this._table.referredBy._contextualize(this._context),
                     notSorted;
                 if (visibleFKs === -1) {
                     notSorted = true;

@@ -15,7 +15,7 @@ exports.execute = function (options) {
         // Helper function to add 'expect' based on test cases and the specified table
         function runTestCases(table, cases, check_order) {
             Object.keys(cases).forEach(function (context) {
-                var fk_names = schema.tables.get(table)._visibleInboundForeignKeys(context).map( function(fk){
+                var fk_names = schema.tables.get(table).referredBy._contextualize(context).map( function(fk){
                     return fk.constraint_names[0][1]; // return the actual constraint_name
                 });
                 expect(fk_names).toHaveSameItems(cases[context], !check_order);
@@ -58,7 +58,7 @@ exports.execute = function (options) {
         });
 
         it('should use the default order when context not matched by a more specific context name and default (`*`) context is not present.', function () {
-            expect(schema.tables.get(tableWithoutAnnotation)._visibleInboundForeignKeys("filter")).toBe(-1);
+            expect(schema.tables.get(tableWithoutAnnotation).referredBy._contextualize("filter")).toBe(-1);
         });
 
 
