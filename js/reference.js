@@ -767,7 +767,7 @@ var ERMrest = (function(module) {
 
                         newRef._columns = otherFK.key.table.columns.all();
 
-                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
+                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         // additional values for sorting related references

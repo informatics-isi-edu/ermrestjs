@@ -6,6 +6,7 @@ exports.execute = function(options) {
             inboudTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
             associationTableWithID = "association_table_with_id",
+            associationTableWithIDDisplayname = "association table displayname",
             AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
             relatedEntityId = 3,
@@ -110,8 +111,8 @@ exports.execute = function(options) {
                   expect(related[2].displayname).toBe("to_name_value");
                 });
 
-                it('should use the name of the table when annotation is not present.', function() {
-                  expect(related[3].displayname).toBe(inboudTableName);
+                it('should use the displayname of assocation table when annotation is not present.', function() {
+                  expect(related[3].displayname).toBe(associationTableWithIDDisplayname);
                 });
             });
 
