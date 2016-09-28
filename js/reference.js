@@ -379,14 +379,14 @@ var ERMrest = (function(module) {
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += keyName + '=' + response.data[j][keyName];
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
                         } else {
                             uri += '(';
                             for (var k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                     uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += keyName + '=' + response.data[j][keyName];
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
                             }
                             uri += ')';
                         }
