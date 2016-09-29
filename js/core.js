@@ -506,7 +506,7 @@ var ERMrest = (function (module) {
             if (context in this._appLinks)
                 return this._appLinks[context];
             else if (module._contexts.DEFAULT in this._appLinks)
-                return this._appLinks[module._context.DEFAULT];
+                return this._appLinks[module._contexts.DEFAULT];
             else
                 return null;
         }
@@ -794,6 +794,19 @@ var ERMrest = (function (module) {
                     var schema = alternatives[context][0];
                     var table = alternatives[context][1];
                     var altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
+                    if (altTable === this) {
+                        // alternative table points to itself, this is a base table
+                        // this is the case for 'update' context
+                        this._alternatives[context] = altTable;
+                        continue;
+                    }
+
+                    // if altTable already has been processed (with a different context)
+                    // no need to check constraints
+                    if (altTable._baseTable === this) {
+                        this._alternatives[context] = altTable;
+                        continue;
+                    }
 
                     // check constraints
 
@@ -812,9 +825,9 @@ var ERMrest = (function (module) {
                     }
 
                     // 3. alt table has exactly one base table
-                    if (altTable._baseTable === altTable) { // does not have a base table yet
-                        altTable._baseTable = this;
-                    } else { // altTable has more than one base table
+                    if (altTable._baseTable !== altTable) {
+                        // base table has previously been set
+                        // more than one base table
                         console.log("Invalid schema: " + altTable.name + " has more than one base table");
                         continue;
                     }
@@ -891,6 +904,7 @@ var ERMrest = (function (module) {
                     }
 
                     // passed all contraints
+                    altTable._baseTable = this;
                     this._alternatives[context] = altTable;
                 }
             }
@@ -942,17 +956,20 @@ var ERMrest = (function (module) {
          * @returns {*}
          */
         getAppLink: function (context) {
-            // use table level or schema level
+
+            // alternative tables should use base's table's app links
+            if (this.isAlternativeTable())
+                return this._baseTable.getAppLink(context);
+
+            // use table level
             if (this._appLinks) {
                 if (context in this._appLinks)
                     return this._appLinks[context];
                 else if (module._contexts.DEFAULT in this._appLinks)
-                    return this._appLinks[module._context.DEFAULT];
-            } else if (this._baseTable !== this) {
-                // this is an alternative table, use base table's app link
-                return this._baseTable.getAppLink(context);
+                    return this._appLinks[module._contexts.DEFAULT];
             }
 
+            // use schema level
             return this.schema.getAppLink(context);
         },
 

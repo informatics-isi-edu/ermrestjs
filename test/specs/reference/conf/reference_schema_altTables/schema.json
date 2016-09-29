@@ -41,10 +41,12 @@
       "annotations": {
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference_schema_altTables", "alt_table_detailed"],
-          "compact": ["reference_schema_altTables", "alt_table_compact"]
+          "compact": ["reference_schema_altTables", "alt_table_compact"],
+          "entry": ["reference_schema_altTables", "base_table"]
         },
         "tag:isrd.isi.edu,2016:app-links": {
-          "detailed": "tag:isrd.isi.edu,2016:chaise:record"
+          "detailed": "tag:isrd.isi.edu,2016:chaise:search",
+          "*": "detailed"
         }
       }
     },
@@ -138,7 +140,7 @@
           "comment": null,
           "annotations": {},
           "unique_columns": [
-            "id"
+            "id", "value"
           ]
         }
       ],
@@ -162,6 +164,7 @@
         },
         {
           "name": "value",
+          "nullok": false,
           "type": {
             "typename": "integer"
           }
@@ -170,7 +173,8 @@
       "annotations": {
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference_schema_altTables", "alt_table_detailed_2"],
-          "compact": ["reference_schema_altTables", "alt_table_compact_2"]
+          "compact": ["reference_schema_altTables", "alt_table_compact_2"],
+          "entry": ["reference_schema_altTables", "base_table_no_app_link"]
         }
       }
     },
@@ -180,7 +184,7 @@
       "table_name": "alt_table_detailed_2",
       "schema_name": "reference_schema_altTables",
       "keys": [{
-        "unique_columns": ["idx"]
+        "unique_columns": ["idx", "valuex"]
       }],
       "foreign_keys": [
         {
@@ -190,11 +194,21 @@
             "table_name": "alt_table_detailed_2",
             "schema_name": "reference_schema_altTables",
             "column_name": "idx"
+          },
+          {
+            "table_name": "alt_table_detailed_2",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "valuex"
           }],
           "referenced_columns": [{
             "table_name": "base_table_no_app_link",
             "schema_name": "reference_schema_altTables",
             "column_name": "id"
+          },
+          {
+            "table_name": "base_table_no_app_link",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "value"
           }],
           "annotations": {}
         }
@@ -205,6 +219,13 @@
           "nullok": false,
           "type": {
             "typename": "text"
+          }
+        },
+        {
+          "name": "valuex",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
           }
         },
         {
@@ -221,7 +242,7 @@
       "table_name": "alt_table_compact_2",
       "schema_name": "reference_schema_altTables",
       "keys": [{
-        "unique_columns": ["idy"]
+        "unique_columns": ["idy", "valuey"]
       }],
       "foreign_keys": [
         {
@@ -231,11 +252,21 @@
             "table_name": "alt_table_compact_2",
             "schema_name": "reference_schema_altTables",
             "column_name": "idy"
+          },
+          {
+            "table_name": "alt_table_compact_2",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "valuey"
           }],
           "referenced_columns": [{
             "table_name": "base_table_no_app_link",
             "schema_name": "reference_schema_altTables",
             "column_name": "id"
+          },
+          {
+            "table_name": "base_table_no_app_link",
+            "schema_name": "reference_schema_altTables",
+            "column_name": "value"
           }],
           "annotations": {}
         }
@@ -246,6 +277,13 @@
           "nullok": false,
           "type": {
             "typename": "text"
+          }
+        },
+        {
+          "name": "valuey",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
           }
         },
         {
@@ -268,7 +306,9 @@
   "comment": null,
   "annotations": {
     "tag:isrd.isi.edu,2016:app-links": {
-      "detailed": "tag:isrd.isi.edu,2016:chaise:record"
+      "detailed": "tag:isrd.isi.edu,2016:chaise:record",
+      "compact": "tag:isrd.isi.edu,2016:chaise:recordset",
+      "entry": "tag:isrd.isi.edu,2016:chaise:viewer"
     }
   }
 }

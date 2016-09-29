@@ -231,7 +231,11 @@ var ERMrest = (function(module) {
             // columns in the filters are on the projection table
             // use the mapped columns to replace column name to the linked table's column names
             if (colMapping) {
-                _replaceFilterColumns(this._filter, colMapping);
+                var res = _replaceFilterColumns(this._filter, colMapping);
+                if (res === -1) {
+                    console.log("WARNING: Unable to convert filter.");
+                    delete this._filter;
+                }
             }
         }
 
@@ -512,11 +516,17 @@ var ERMrest = (function(module) {
      */
     _replaceFilterColumns = function(filter, colMapping) {
         if (filter.type === module.filterTypes.BINARYPREDICATE) {
-            filter.column = colMapping[filter.column];
+            if (colMapping[filter.column])
+                filter.column = colMapping[filter.column];
+            else {
+                return -1;
+            }
         } else {
             if (filter.filters) {
                 for (var i = 0; i < filter.filters.length; i++) {
-                    _replaceFilterColumns(filter.filters[i], colMapping);
+                    var res = _replaceFilterColumns(filter.filters[i], colMapping);
+                    if (res === -1)
+                        return res;
                 }
             }
 
