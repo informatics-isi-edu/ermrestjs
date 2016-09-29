@@ -785,7 +785,36 @@ var ERMrest = (function(module) {
             });
         }
 
-        return module._mustache.render(template, obj);
+        var conditionalRegex = /\{\{(#|\^)(\w+)\}\}/;
+
+        // If no conditional Mustache statements of the form {{#var}}{{/var1}} not found thne do direct null check
+        if (!conditionalRegex.exec(template)) {
+
+            /* 
+             * Code to do template/string replacement using values and set pattern as null if any of the
+             * values turn out to be null or undefined
+             */
+            for (var key in keyValues) {
+                var search = "{{" + key + "}}";
+       
+                // Check for a match for the search string
+                if (template.match(search)) {
+                    if (keyValues[key] === null || keyValues[key] === undefined) {
+                       return null;
+                    } 
+                }
+            }
+        }
+
+        var content;
+
+        try {
+            content = module._mustache.render(template, obj);
+        } catch(e) {
+            content = null;
+        }
+
+        return content;
     };
 
     /**
