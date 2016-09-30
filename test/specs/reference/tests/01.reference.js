@@ -6,7 +6,8 @@ exports.execute = function (options) {
             tableName = "reference_table",
             entityId = 9000,
             lowerLimit = 8999,
-            upperLimit = 9010;
+            upperLimit = 9010,
+            originalTimeout;
 
         var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName;
@@ -15,30 +16,25 @@ exports.execute = function (options) {
 
         var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
-
         // Test Cases:
-        describe('for a single entity,', function () {
-            var reference, page;
+        describe('for a creating an entity/entities,', function () {
 
-            it('create should return a Page object that is defined.', function(done) {
-                var rows = [ {
-                        id: 9999,
-                        name: "Paula",
-                        value: 5
-                    } ];
+            it('a single entity should return a Page object that is defined.', function(done) {
+                var rows = [{ id: 9999, name: "Paula", value: 5 }];
 
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
-                    reference = response;
+                    var reference = response;
 
                     done();
                     return reference.create(rows);
                 }).then(function (response) {
-                    page = response;
+                    var page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
-                    expect(page.data[0].id).toEqual(rows[0].id);
-                    expect(page.data[0].name).toequal(rows[0].name);
-                    expect(page.data[0].value).toEqual(rows[0].value);
+                    expect(page._data.length).toBe(rows.length);
+                    expect(page._data[0].id).toBe((rows[0].id).toString());
+                    expect(page._data[0].name).toBe(rows[0].name);
+                    expect(page._data[0].value).toBe(rows[0].value);
 
                     done();
                 }, function (err) {
@@ -46,7 +42,35 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-        })
+
+            it('multiple entities should return a Page object that is defined.', function(done) {
+                var rows = [{ id: 9800, name: "Greg", value: 8 },
+                        { id: 9801, name: "Steven", value: 12 },
+                        { id: 9802, name: "Garnet", value: 36 }];
+
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
+                    var reference = response;
+
+                    done();
+                    return reference.create(rows);
+                }).then(function (response) {
+                    var page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data.length).toBe(rows.length);
+                    for(var i = 0; i < page.data.length; i++) {
+                        expect(page.data[i].id).toBe((rows[i].id).toString());
+                        expect(page.data[i].name).toBe(rows[i].name);
+                        expect(page.data[i].value).toBe(rows[i].value);
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
 
         describe('for a single entity,', function() {
             var reference, page, tuple;
