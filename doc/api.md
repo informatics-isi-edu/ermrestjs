@@ -62,10 +62,6 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
-            * [.altSharedKey](#ERMrest.Table+altSharedKey) ⇒ <code>[Key](#ERMrest.Key)</code>
-            * [.altForeignKey](#ERMrest.Table+altForeignKey) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-            * [.getAlternativeTable(context)](#ERMrest.Table+getAlternativeTable)
-            * [.getAppLink(context)](#ERMrest.Table+getAppLink) ⇒ <code>\*</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -591,10 +587,6 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
-        * [.altSharedKey](#ERMrest.Table+altSharedKey) ⇒ <code>[Key](#ERMrest.Key)</code>
-        * [.altForeignKey](#ERMrest.Table+altForeignKey) ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-        * [.getAlternativeTable(context)](#ERMrest.Table+getAlternativeTable)
-        * [.getAppLink(context)](#ERMrest.Table+getAppLink) ⇒ <code>\*</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -674,42 +666,6 @@ All the FKRs to this table.
 Documentation for this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-<a name="ERMrest.Table+altSharedKey"></a>
-
-#### table.altSharedKey ⇒ <code>[Key](#ERMrest.Key)</code>
-the key of this base table that is referenced by all of its alternative tables.
-
-**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-**Returns**: <code>[Key](#ERMrest.Key)</code> - undefined if it is not a base table  
-<a name="ERMrest.Table+altForeignKey"></a>
-
-#### table.altForeignKey ⇒ <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-the foreign key of this alternative table that references the key in the base table,
-and is also a key in this alternative table.
-
-**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
-**Returns**: <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code> - undefined if it is not an alternative table  
-<a name="ERMrest.Table+getAlternativeTable"></a>
-
-#### table.getAlternativeTable(context)
-get the table's alternative table of a given context
-If no alternative table found, return itself
-
-**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
-
-| Param | Type |
-| --- | --- |
-| context | <code>ERMrest._annotations</code> | 
-
-<a name="ERMrest.Table+getAppLink"></a>
-
-#### table.getAppLink(context) ⇒ <code>\*</code>
-**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
-
-| Param |
-| --- |
-| context | 
-
 <a name="ERMrest.Table.Entity"></a>
 
 #### Table.Entity

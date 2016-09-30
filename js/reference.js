@@ -827,9 +827,9 @@ var ERMrest = (function(module) {
             return this._related;
         },
 
-        getAppLink: function() {
+        get appLink() {
             if (this._context)
-                return this._table.getAppLink(this._context);
+                return this._table._getAppLink(this._context);
             else
                 return undefined; // no context
         },
@@ -920,7 +920,7 @@ var ERMrest = (function(module) {
 
             // use the base table to get the alternative table of that context.
             // a base table's .tabseTable is itself
-            var newTable = source._table.baseTable.getAlternativeTable(context);
+            var newTable = source._table._baseTable._getAlternativeTable(context);
 
 
             // cases:
@@ -952,7 +952,7 @@ var ERMrest = (function(module) {
                         source._location.projectionTableName === source._location.tableName) { // no join
 
                         // use base table's alt shared key
-                        var sharedKey = source._table.baseTable.altSharedKey;
+                        var sharedKey = source._table._baseTable._altSharedKey;
                         var filter = source._location.filter;
                         var filterString, j;
 
@@ -960,11 +960,11 @@ var ERMrest = (function(module) {
                         if (filter.type === module.filterTypes.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
 
                             // filter using shared key
-                            if ((source._table.isAlternativeTable() && filter.column === source._table.altForeignKey.colset.columns[0].name) ||
-                                (!source._table.isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
+                            if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
+                                (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
-                                if (newTable.isAlternativeTable()) // to alternative table
-                                    filterString = newTable.altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                if (newTable._isAlternativeTable()) // to alternative table
+                                    filterString = newTable._altForeignKey.colset.columns[0].name + "=" + filter.value;
                                 else // to base table
                                     filterString = sharedKey.colset.columns[0].name + "=" + filter.value;
                             }
@@ -977,8 +977,8 @@ var ERMrest = (function(module) {
 
                             // check that filter is shared key
                             var keyColNames;
-                            if (source._table.isAlternativeTable()) {
-                                keyColNames = source._table.altForeignKey.colset.columns.map(function (column) {
+                            if (source._table._isAlternativeTable()) {
+                                keyColNames = source._table._altForeignKey.colset.columns.map(function (column) {
                                     return column.name;
                                 });
                             } else {
@@ -1006,24 +1006,24 @@ var ERMrest = (function(module) {
                                     // find column mapping from source to newRef
                                     var mapping = {};
                                     var newCol;
-                                    if (!source._table.isAlternativeTable() && newTable.isAlternativeTable()) {
+                                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
                                         // base to alternative
                                         sharedKey.colset.columns.forEach(function (column) {
-                                            newCol = newTable.altForeignKey.mapping.getFromColumn(column);
+                                            newCol = newTable._altForeignKey.mapping.getFromColumn(column);
                                             mapping[column.name] = newCol.name;
                                         });
 
-                                    } else if (source._table.isAlternativeTable() && !newTable.isAlternativeTable()) {
+                                    } else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
                                         // alternative to base
-                                        source._table.altForeignKey.colset.columns.forEach(function (column) {
-                                            newCol = source._table.altForeignKey.mapping.get(column);
+                                        source._table._altForeignKey.colset.columns.forEach(function (column) {
+                                            newCol = source._table._altForeignKey.mapping.get(column);
                                             mapping[column.name] = newCol.name;
                                         });
                                     } else {
                                         // alternative to alternative
-                                        source._table.altForeignKey.colset.columns.forEach(function (column) {
-                                            var baseCol = source._table.altForeignKey.mapping.get(column); // alt 1 col -> base col
-                                            newCol = newTable.altForeignKey.mapping.getFromColumn(baseCol); // base col -> alt 2
+                                        source._table._altForeignKey.colset.columns.forEach(function (column) {
+                                            var baseCol = source._table._altForeignKey.mapping.get(column); // alt 1 col -> base col
+                                            newCol = newTable._altForeignKey.mapping.getFromColumn(baseCol); // base col -> alt 2
                                             mapping[column.name] = newCol.name;
                                         });
                                     }
@@ -1049,13 +1049,13 @@ var ERMrest = (function(module) {
                     } else {
                          // all other cases, use join
                         var join;
-                        if (source._table.isAlternativeTable() && newTable.isAlternativeTable()) {
-                            join = source._table.altForeignKey.toString(true) + "/" +
-                                   newTable.altForeignKey.toString();
-                        } else if (!source._table.isAlternativeTable()) { // base to alternative
-                            join = newTable.altForeignKey.toString();
+                        if (source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                            join = source._table._altForeignKey.toString(true) + "/" +
+                                   newTable._altForeignKey.toString();
+                        } else if (!source._table._isAlternativeTable()) { // base to alternative
+                            join = newTable._altForeignKey.toString();
                         } else { // alternative to base
-                            join = source._table.altForeignKey.toString(true);
+                            join = source._table._altForeignKey.toString(true);
                         }
 
                         newRef._location = module._parse(source._location.compactUri + "/" + join);
@@ -1321,13 +1321,13 @@ var ERMrest = (function(module) {
                     this._pageRef._location.api + "/";
 
                 // if this is an alternative table, use base table
-                if (this._pageRef._table.isAlternativeTable()) {
-                    var baseTable = this._pageRef._table.baseTable;
+                if (this._pageRef._table._isAlternativeTable()) {
+                    var baseTable = this._pageRef._table._baseTable;
                     this._ref.setNewTable(baseTable);
                     uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
 
                     // convert filter columns to base table columns using shared key
-                    var fkey = this._pageRef._table.altForeignKey;
+                    var fkey = this._pageRef._table._altForeignKey;
                     var self = this;
                     fkey.mapping.domain().forEach(function(altColumn, index, array) {
                         var baseCol = fkey.mapping.get(altColumn);

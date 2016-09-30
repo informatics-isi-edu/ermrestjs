@@ -504,7 +504,7 @@ var ERMrest = (function (module) {
 
         },
 
-        getAppLink: function (context) {
+        _getAppLink: function (context) {
             if (context in this._appLinks)
                 return this._appLinks[context];
             else if (module._contexts.DEFAULT in this._appLinks)
@@ -693,12 +693,6 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonTable.comment;
 
-        /**
-         * get app links from annotation
-         * in the form {context: app, ...}
-         * @type {{}}
-         * @private
-         */
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinks = {}; // {context:app, ...}
             var payload = this.annotations.get(module._annotations.APP_LINKS).content;
@@ -798,7 +792,16 @@ var ERMrest = (function (module) {
                 for(var context in alternatives) {
                     var schema = alternatives[context][0];
                     var table = alternatives[context][1];
-                    var altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
+                    var altTable;
+
+                    try {
+                        altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
+                    } catch (error) {
+                        // schema or table not found
+                        console.log(error.message);
+                        continue;
+                    }
+
                     if (altTable === this) {
                         // alternative table points to itself, this is a base table
                         // this is the case for 'update' context
@@ -918,10 +921,11 @@ var ERMrest = (function (module) {
         /**
          * get the table's alternative table of a given context
          * If no alternative table found, return itself
-         * @param {ERMrest._annotations} context
+         * @private
+         * @param {String} context
          *
          */
-        getAlternativeTable: function (context) {
+        _getAlternativeTable: function (context) {
             if (context in this._alternatives)
                 return this._alternatives[context];
             else if (module._contexts.DEFAULT in this._alternatives)
@@ -930,41 +934,27 @@ var ERMrest = (function (module) {
                 return this;
         },
 
-        get baseTable() {
-            return this._baseTable;
-        },
-
-        isAlternativeTable: function () {
+        /**
+         * Whether this table is an alternative table
+         * @returns {boolean}
+         * @private
+         */
+        _isAlternativeTable: function () {
             return (this._baseTable !== this);
         },
 
-        /**
-         * the key of this base table that is referenced by all of its alternative tables.
-         * @returns {ERMrest.Key} undefined if it is not a base table
-         */
-        get altSharedKey() {
-            return this._altSharedKey;
-        },
-
-        /**
-         * the foreign key of this alternative table that references the key in the base table,
-         * and is also a key in this alternative table.
-         * @returns {ERMrest.ForeignKeyRef} undefined if it is not an alternative table
-         */
-        get altForeignKey() {
-            return this._altForeignKey;
-        },
 
         /**
          *
          * @param context
-         * @returns {*}
+         * @private
+         * @returns {String}
          */
-        getAppLink: function (context) {
+        _getAppLink: function (context) {
 
             // alternative tables should use base's table's app links
-            if (this.isAlternativeTable())
-                return this._baseTable.getAppLink(context);
+            if (this._isAlternativeTable())
+                return this._baseTable._getAppLink(context);
 
             // use table level
             if (this._appLinks) {
@@ -975,7 +965,7 @@ var ERMrest = (function (module) {
             }
 
             // use schema level
-            return this.schema.getAppLink(context);
+            return this.schema._getAppLink(context);
         },
 
         // returns visible inbound foreignkeys.

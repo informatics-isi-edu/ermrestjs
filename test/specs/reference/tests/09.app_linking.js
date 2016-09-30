@@ -26,7 +26,7 @@ exports.execute = function (options) {
                     reference.session = { attributes: [] };
 
                     // uncontextualized
-                    expect(reference.getAppLink()).toBe(undefined);
+                    expect(reference.appLink).toBe(undefined);
 
                     done();
                 }, function (err) {
@@ -37,17 +37,17 @@ exports.execute = function (options) {
 
             it('1.2 contextualize for detailed should return correct app link, ', function() {
                 reference_d = reference.contextualize.detailed;
-                expect(reference_d.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:search");
+                expect(reference_d.appLink).toBe("tag:isrd.isi.edu,2016:chaise:search");
             });
 
             it('1.3 contextualize for compact should return correct app link, ', function() {
                 reference_c = reference_d.contextualize.compact;
-                expect(reference_c.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:search");
+                expect(reference_c.appLink).toBe("tag:isrd.isi.edu,2016:chaise:search");
             });
 
             it('1.4 contextualize for entry should return correct app link, ', function() {
                 reference_e = reference_c.contextualize.entry;
-                expect(reference_e.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:search");
+                expect(reference_e.appLink).toBe("tag:isrd.isi.edu,2016:chaise:search");
             });
 
         });
@@ -61,7 +61,7 @@ exports.execute = function (options) {
                     reference.session = { attributes: [] };
 
                     // uncontextualized
-                    expect(reference.getAppLink()).toBe(undefined);
+                    expect(reference.appLink).toBe(undefined);
 
                     done();
                 }, function (err) {
@@ -72,17 +72,17 @@ exports.execute = function (options) {
 
             it('2.2 contextualize for detailed should return correct app link, ', function() {
                 reference_d = reference.contextualize.detailed;
-                expect(reference_d.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:record");
+                expect(reference_d.appLink).toBe("tag:isrd.isi.edu,2016:chaise:record");
             });
 
             it('2.3 contextualize for compact should return correct app link, ', function() {
                 reference_c = reference_d.contextualize.compact;
-                expect(reference_c.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:recordset");
+                expect(reference_c.appLink).toBe("tag:isrd.isi.edu,2016:chaise:recordset");
             });
 
             it('2.4 contextualize for entry should return correct app link, ', function() {
                 reference_e = reference_c.contextualize.entry;
-                expect(reference_e.getAppLink()).toBe("tag:isrd.isi.edu,2016:chaise:viewer");
+                expect(reference_e.appLink).toBe("tag:isrd.isi.edu,2016:chaise:viewer");
             });
 
         });

@@ -124,7 +124,7 @@ exports.execute = function (options) {
                 expect(reference._table.name).toBe(baseTable1);
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('1.3. reference should be properly defined', function() {
@@ -339,7 +339,7 @@ exports.execute = function (options) {
                 expect(reference._table.name).toBe(baseTable1);
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('2.3 reference should be properly defined', function() {
@@ -556,7 +556,7 @@ exports.execute = function (options) {
                 expect(reference._table.name).toBe(baseTable2);
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable2);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTable2);
-                expect(reference._table.baseTable.name).toBe(baseTable2);
+                expect(reference._table._baseTable.name).toBe(baseTable2);
             });
 
             it('3.3 reference should be properly defined', function() {
@@ -779,7 +779,7 @@ exports.execute = function (options) {
                 expect(reference._table.name).toBe(baseTable1);
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1);
                 expect(reference._table._alternatives.compact.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('4.3 reference should be properly defined', function() {
@@ -1000,7 +1000,7 @@ exports.execute = function (options) {
 
             it('5.2 alternative detailed table should be properly defined', function() {
                 expect(reference._table.name).toBe(altDetailedTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('5.3. reference should be properly defined', function() {
@@ -1213,7 +1213,7 @@ exports.execute = function (options) {
 
             it('6.2 alternative detail table should be properly defined', function() {
                 expect(reference._table.name).toBe(altDetailedTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('6.3 reference should be properly defined', function() {
@@ -1428,7 +1428,7 @@ exports.execute = function (options) {
 
             it('7.2 alternative detail table should be properly defined', function() {
                 expect(reference._table.name).toBe(altDetailedTable2);
-                expect(reference._table.baseTable.name).toBe(baseTable2);
+                expect(reference._table._baseTable.name).toBe(baseTable2);
             });
 
             it('7.3 reference should be properly defined', function() {
@@ -1649,7 +1649,7 @@ exports.execute = function (options) {
 
             it('8.2 alternative compact table should be properly defined', function() {
                 expect(reference._table.name).toBe(altDetailedTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('8.3 reference should be properly defined', function() {
@@ -1870,7 +1870,7 @@ exports.execute = function (options) {
 
             it('9.2 alternative compact table should be properly defined', function() {
                 expect(reference._table.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('9.3. reference should be properly defined', function() {
@@ -2083,7 +2083,7 @@ exports.execute = function (options) {
 
             it('10.2 alternative compact table should be properly defined', function() {
                 expect(reference._table.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('10.3 reference should be properly defined', function() {
@@ -2298,7 +2298,7 @@ exports.execute = function (options) {
 
             it('11.2 alternative compact table should be properly defined', function() {
                 expect(reference._table.name).toBe(altCompactTable2);
-                expect(reference._table.baseTable.name).toBe(baseTable2);
+                expect(reference._table._baseTable.name).toBe(baseTable2);
             });
 
             it('11.3 reference should be properly defined', function() {
@@ -2519,7 +2519,7 @@ exports.execute = function (options) {
 
             it('12.2 alternative compact table should be properly defined', function() {
                 expect(reference._table.name).toBe(altCompactTable1);
-                expect(reference._table.baseTable.name).toBe(baseTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
             });
 
             it('12.3 reference should be properly defined', function() {
