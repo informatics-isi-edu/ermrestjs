@@ -165,7 +165,7 @@ var ERMrest = (function(module) {
                 this._projectionSchemaName = decodeURIComponent(params[0]);
                 this._projectionTableName = decodeURIComponent(params[1]);
             } else {
-                this._projectionSchemaName = '';
+                this._projectionSchemaName = null;
                 this._projectionTableName = decodeURIComponent(params[0]);
             }
         }
@@ -312,7 +312,7 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @returns {string} The schema name in the projection table
+         * @returns {string} The schema name in the projection table, null if schema is not specified
          */
         get projectionSchemaName() {
             return this._projectionSchemaName;
@@ -328,7 +328,7 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @returns {string} the schema name which the uri referres to
+         * @returns {string} the schema name which the uri referres to, null if schema is not specified
          */
         get schemaName() {
             return (this._schemaName? this._schemaName : this._projectionSchemaName);

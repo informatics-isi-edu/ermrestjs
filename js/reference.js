@@ -69,7 +69,26 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
-                reference._table   = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+                // if schema was not provided in the URI
+                // find the schema
+                var schema;
+                if (!reference._location.schemaName) {
+                    var schemas = catalog.schemas.all();
+                    for (var i = 0; i < schemas.length; i++) {
+                        if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
+                            if (!schema)
+                                schema = schemas[i];
+                            else
+                                throw new module.MalformedURIError("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
+                        }
+                    }
+                    if (!schema)
+                        throw new module.MalformedURIError("Table " + reference._location.tableName + " not found");
+
+                    reference._table = schema.tables.get(reference._location.tableName);
+                } else
+                    reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
@@ -77,6 +96,8 @@ var ERMrest = (function(module) {
 
             }, function (error) {
                 defer.reject(error);
+            }).catch(function(exception) {
+                defer.reject(exception);
             });
 
             return defer.promise;
@@ -379,14 +400,14 @@ var ERMrest = (function(module) {
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += keyName + '=' + response.data[j][keyName];
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
                         } else {
                             uri += '(';
                             for (var k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                     uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += keyName + '=' + response.data[j][keyName];
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
                             }
                             uri += ')';
                         }
@@ -754,7 +775,7 @@ var ERMrest = (function(module) {
 
                         newRef._columns = otherFK.key.table.columns.all();
 
-                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
+                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         // additional values for sorting related references
