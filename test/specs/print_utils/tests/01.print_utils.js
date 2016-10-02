@@ -136,9 +136,10 @@ exports.execute = function (options) {
         it('module._renderTemplate() should function correctly', function() {
             expect(module._renderTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
             expect(module._renderTemplate("My name is {{name}}", { name: null })).toBe(null);
+            expect(module._renderTemplate("My name is {{name}}", {})).toBe(null);
             expect(module._renderTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
             expect(module._renderTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
-             expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
+            expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
         });
 
     });

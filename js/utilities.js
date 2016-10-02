@@ -769,6 +769,8 @@ var ERMrest = (function(module) {
         var obj = {};
         module._clone(obj, keyValues);
 
+        if (typeof template !== 'string') return null;
+
         // Inject the encode function in the keyValues object
         obj.encode = function() {
             return function(text, render) {
@@ -785,25 +787,36 @@ var ERMrest = (function(module) {
             });
         }
 
-        var conditionalRegex = /\{\{(#|\^)(\w+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([\w\d-]+)\}\}/;
 
-        // If no conditional Mustache statements of the form {{#var}}{{/var1}} not found thne do direct null check
+        // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
-            /* 
-             * Code to do template/string replacement using values and set pattern as null if any of the
-             * values turn out to be null or undefined
-             */
-            for (var key in keyValues) {
-                var search = "{{" + key + "}}";
-       
-                // Check for a match for the search string
-                if (template.match(search)) {
+            // Grab all placeholders ({{PROP_NAME}}) in the template 
+            var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
+
+            // If there are any placeholders 
+            if (placeholders && placeholders.length) {
+
+                // Get unique placeholders
+                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
+
+                /* 
+                 * Iterate over all placeholders to set pattern as null if any of the
+                 * values turn out to be null or undefined
+                 */
+
+                for (var i=0; i<placeholders.length;i++) {
+
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key 
+                    var key = placeholders[i].substring(2, placeholders[i].length - 2);
+                    
+                    // If value for the key is null or undefined then return null
                     if (keyValues[key] === null || keyValues[key] === undefined) {
                        return null;
-                    } 
+                    }
                 }
-            }
+            } 
         }
 
         var content;
