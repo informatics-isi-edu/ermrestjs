@@ -1537,7 +1537,9 @@ var ERMrest = (function (module) {
          * @retuns {string} string representation of Column
          */
         toString: function() {
-            return [this.table.schema.name, this.table.name, this.name].join(":");
+            return [module._fixedEncodeURIComponent(this.table.schema.name), 
+                    module._fixedEncodeURIComponent(this.table.name),
+                    module._fixedEncodeURIComponent(this.name)].join(":");
         },
 
         delete: function () {
@@ -1846,7 +1848,7 @@ var ERMrest = (function (module) {
          */
         toString: function(){
             return "(" + this.columns.slice().sort(function(a,b){
-                return a.name.localeCompare(b.name);
+                return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
             }).map(function(col){
                 return col.toString();
             }).join(",") + ")";
@@ -1924,7 +1926,7 @@ var ERMrest = (function (module) {
             return [this._from, this._to].map(function(columns){
                 // create toString for from and to
                 return columns.slice().sort(function(a, b){
-                    return a.name.localeCompare(b.name);
+                    return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
@@ -2180,9 +2182,9 @@ var ERMrest = (function (module) {
 
                 leftString += (reverse ? fromCol.name : toCol.name) + separator;
                 if (reverse) {
-                    rightString += (i === 0 ? toCol.toString() : toCol.name);
+                    rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {
-                    rightString += (i === 0 ? fromCol.toString() : fromCol.name);
+                    rightString += (i === 0 ? fromCol.toString() : module._fixedEncodeURIComponent(fromCol.name));
                 }
                 rightString += separator;
 
