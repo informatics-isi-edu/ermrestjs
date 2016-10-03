@@ -1438,7 +1438,7 @@ var ERMrest = (function (module) {
             }
 
             // If value is null or empty, return value on basis of `show_nulls`
-            if (value === null || value === '') {
+            if (value === null || value.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(options ? options.context : undefined) };
             }
 
