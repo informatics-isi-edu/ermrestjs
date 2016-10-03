@@ -101,7 +101,7 @@
                     "foreign_key_columns": [{
                         "table_name": "inbound_related_reference_table",
                         "schema_name": "reference_schema",
-                        "column_name": "fk_to_reference"
+                        "column_name": "fk_to_reference with space"
                     }],
                     "referenced_columns": [{
                         "table_name": "reference_table",
@@ -131,7 +131,7 @@
                     }
                 },
                 {
-                    "name": "fk_to_reference",
+                    "name": "fk_to_reference with space",
                     "type": {
                         "typename": "text"
                     }
@@ -193,13 +193,13 @@
                 }
             ]
         },
-        "association_table_with_id": {
+        "association table with id": {
             "comment": "has fk to reference_table and inbound_related_reference_table. has an ID column",
             "kind": "table",
-            "table_name": "association_table_with_id",
+            "table_name": "association table with id",
             "schema_name": "reference_schema",
             "keys": [{
-                "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+                "unique_columns": ["id from ref table", "id_from_inbound_related_table"]
             }, {
                 "unique_columns": ["ID"]
             }],
@@ -211,8 +211,8 @@
                     "comment": "fk to reference_table",
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
-                        "table_name": "association_table_with_id",
-                        "column_name": "id_from_ref_table"
+                        "table_name": "association table with id",
+                        "column_name": "id from ref table"
                     }],
                     "referenced_columns": [{
                         "schema_name": "reference_schema",
@@ -224,7 +224,7 @@
                     "comment": "fk to inbound_related_reference_table",
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
-                        "table_name": "association_table_with_id",
+                        "table_name": "association table with id",
                         "column_name": "id_from_inbound_related_table"
                     }],
                     "referenced_columns": [{
@@ -241,7 +241,7 @@
                   "type": {"typename":"serial4"}
                 },
                 {
-                    "name": "id_from_ref_table",
+                    "name": "id from ref table",
                     "type": {"typename":"text"}
                 },
                 {
