@@ -83,7 +83,7 @@ var ERMrest = (function(module) {
         this._service = parts[1];
 
         // catalog id
-        this._catalog = parts[2];
+        this._catalog = decodeURIComponent(parts[2]);
 
         // api
         this._api = parts[3];
@@ -125,8 +125,8 @@ var ERMrest = (function(module) {
         var linking = parts[parts.length - 1].match(/(\(.*\)=\(.*:.*:.*\))/);
         if (linking && linking[1]) {
             var rightParts = linking[1].split("=")[1].match(/\(([^:]*):([^:]*):([^\)]*)\)/);
-            this._schemaName = rightParts[1];
-            this._tableName = rightParts[2];
+            this._schemaName = decodeURIComponent(rightParts[1]);
+            this._tableName = decodeURIComponent(rightParts[2]);
         }
 
         // first schema name and first table name
