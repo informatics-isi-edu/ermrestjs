@@ -147,6 +147,8 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+    * [.InboundForeignKeys](#ERMrest.InboundForeignKeys)
+        * [new InboundForeignKeys(table)](#new_ERMrest.InboundForeignKeys_new)
     * [.ForeignKeys](#ERMrest.ForeignKeys)
         * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
@@ -1410,6 +1412,20 @@ get the mapping column given the from column
 | Param | Type |
 | --- | --- |
 | fromCol | <code>[Column](#ERMrest.Column)</code> | 
+
+<a name="ERMrest.InboundForeignKeys"></a>
+
+### ERMrest.InboundForeignKeys
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.InboundForeignKeys_new"></a>
+
+#### new InboundForeignKeys(table)
+holds inbound foreignkeys of a table.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>[Table](#ERMrest.Table)</code> | the table that this object is for |
 
 <a name="ERMrest.ForeignKeys"></a>
 

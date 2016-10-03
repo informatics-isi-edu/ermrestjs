@@ -640,7 +640,7 @@ var ERMrest = (function (module) {
          * All the FKRs to this table.
          * @type {ERMrest.ForeignKeys}
          */
-        this.referredBy = new ForeignKeys(this);
+        this.referredBy = new InboundForeignKeys(this);
 
         /**
          * @desc Documentation for this table
@@ -1260,10 +1260,10 @@ var ERMrest = (function (module) {
 
         // Get PseudoColumns based on the context.
         _contextualize: function (context, columns) {
-            // // get from cache
-            // if (context in this._contextualize_cached) {
-            //     return this._contextualize_cached[context];
-            // }
+            // get from cache
+            if (columns.length == this.length() && context in this._contextualize_cached) {
+                return this._contextualize_cached[context];
+            }
 
             var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
 
@@ -1649,6 +1649,8 @@ var ERMrest = (function (module) {
         this._isPseudoColumn = true;
         this._foreignKey = foreignKey;
 
+        // make sure PseudoColumn name is unique
+        // since the constraint_names are unique, I just need to check this in column names
         var i = 0;
         while(foreignKey._table.columns.has(foreignKey.constraint_names[0] + (i!==0) ? i: "")) {
             i++;
@@ -1669,8 +1671,7 @@ var ERMrest = (function (module) {
         if (foreignKey.to_name !== "") {
             this.displayname = foreignKey.to_name;
         } else if (foreignKey.simple) {
-            //TODO disambiguate
-            this.displayname = foreignKey.colset.columns[0].displayname;
+            this.displayname = foreignKey.colset.columns[0].displayname + "("  + foreignKey.key.table.displayname + ")";
         } else {
             this.displayname = foreignKey.key.table.displayname;
         }
@@ -2094,6 +2095,69 @@ var ERMrest = (function (module) {
         }
     };
 
+    /**
+     * @desc holds inbound foreignkeys of a table. 
+     * @param {ERMrest.Table} table the table that this object is for
+     * @memberof ERMrest
+     * @constructor
+     */
+    function InboundForeignKeys(table) {
+        this._foreignKeys = [];
+        this._table = table;
+        this._contextualize_cached = {};
+
+    }
+
+    InboundForeignKeys.prototype = {
+        constructor: InboundForeignKeys,
+
+        _push: function (foreignKeyRef) {
+            this._foreignKeys.push(foreignKeyRef);
+        },
+
+        all: function () {
+            return this._foreignKeys;
+        },
+
+        length: function() {
+            return this._foreignKeys.length;
+        },
+
+        _contextualize: function (context) {
+            if(context in this._contextualize_cached) {
+                return this._contextualize_cached[context];
+            }
+
+            var orders = -1;
+            if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+            }
+
+            if (orders == -1) {
+                this._contextualize_cached[context] = -1;
+                return -1; // no annoation
+            }
+
+            for (var i = 0, result = [], fk; i < orders.length; i++) {
+                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
+                    continue; // the annotation value is not correct.
+                }
+                try {
+                    fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
+                    if (result.indexOf(fk) == -1 && this._foreignKeys.indexOf(fk) != -1) {
+                        // avoid duplicate and if it's a valid inbound fk of this table.
+                        result.push(fk);
+                    }
+                } catch (exception){
+                    // if the constraint name is not valid, this will catch the error
+                }
+            }
+
+            this._contextualize_cached[context] = result;
+            return result;
+        }
+    };
+
 
     /**
      *
@@ -2103,7 +2167,6 @@ var ERMrest = (function (module) {
     function ForeignKeys(table) {
         this._foreignKeys = []; // array of ForeignKeyRef
         this._mappings = []; // array of Mapping
-        this._contextualize_cached = {};
         this._table = table;
     }
 
@@ -2176,40 +2239,6 @@ var ERMrest = (function (module) {
             }
 
             throw new module.NotFoundError("", "Foreign Key not found for the colset.");
-        },
-
-        _contextualize: function (context) {
-            if(context in this._contextualize_cached) {
-                return this._contextualize_cached[context];
-            }
-
-            var orders = -1;
-            if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
-            }
-
-            if (orders == -1) {
-                this._contextualize_cached[context] = -1;
-                return -1; // no annoation
-            }
-
-            for (var i = 0, result = [], fk; i < orders.length; i++) {
-                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
-                    continue; // the annotation value is not correct.
-                }
-                try {
-                    fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && this._table.referredBy.all().indexOf(fk) != -1) {
-                        // avoid duplicate and if it's a valid inbound fk of this table.
-                        result.push(fk);
-                    }
-                } catch (exception){
-                    // if the constraint name is not valid, this will catch the error
-                }
-            }
-
-            this._contextualize_cached[context] = result;
-            return result;
         }
     };
 
