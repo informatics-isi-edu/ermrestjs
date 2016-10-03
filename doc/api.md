@@ -109,7 +109,9 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
-        * [new PseudoColumn(column, foreignKeyRef)](#new_ERMrest.PseudoColumn_new)
+        * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+        * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
+        * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -1098,17 +1100,35 @@ returns string representation of Column
 
 ### ERMrest.PseudoColumn
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.PseudoColumn](#ERMrest.PseudoColumn)
+    * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+    * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
+    * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
-#### new PseudoColumn(column, foreignKeyRef)
+#### new PseudoColumn(foreignKeyRef, column)
 Constructor for PseudoColumn
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | the column that this PseudoColumn will be created based on. |
 | foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | the foreignKeyRef that represents this PseudoColumn |
+| column | <code>[Column](#ERMrest.Column)</code> | the column that this PseudoColumn will be created based on. |
 
+<a name="ERMrest.PseudoColumn+name"></a>
+
+#### pseudoColumn.name : <code>string</code>
+name of the PseudoColumn.
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+displayname"></a>
+
+#### pseudoColumn.displayname : <code>string</code>
+Preferred display name for user presentation only.
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations

@@ -213,7 +213,10 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Column[]}
          */
         get columns() {
-             return this._columns;
+            if (this._pseudoColumns === undefined) {
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);    
+            }
+            return this._pseudoColumns;
         },
 
         get location() {
@@ -399,52 +402,6 @@ var ERMrest = (function(module) {
                 var defer = module._q.defer();
 
                 var uri = this._location.compactUri;
- 
-                /*
-                * Change api to attributegroup for retrieving the foreign key data
-                * This will just affect the http request and not this._location
-                *
-                * NOTE: 
-                * This piece of code is dependent on the same assumptions as the current parser, which are:
-                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
-                *   2. Filter comes before the link syntax.
-                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
-                */
-                if (this._table.foreignKeys.length() > 0) {
-                    var compactPath = this._location.compactPath,
-                        parts = compactPath.split('/'),
-                        tableIndex = 0,
-                        fkList = "",
-                        linking,
-                        k;
-
-                    // add M alias to current table
-                    linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
-                    if (linking && linking[1]) { // the same logic as parser for finding the link syntax
-                        tableIndex = compactPath.lastIndexOf("/") + 1;
-                    }
-                    compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
-
-                    // create the uri with attributegroup and alias
-                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
-                    
-                    // add joins for foreign keys
-                    for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
-                        // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
-
-                        // F2:array(F2:*),F1:array(F1:*)
-                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
-                    }
-
-                    // add keys
-                    for (k = this._shortestKey.length - 1; k >= 0; k--) {
-                        // key1,key2,key3;
-                        uri += this._shortestKey[k].name + (k !== 0 ? "," : ";");
-                    }
-
-                    uri += "M:=array(M:*)," + fkList;      
-                }
 
                 var sortObject, col;
 
@@ -482,6 +439,62 @@ var ERMrest = (function(module) {
                         }
                     }
                     this._location.sortObject = sortObject;
+                }
+ 
+                /*
+                * Change api to attributegroup for retrieving the foreign key data
+                * This will just affect the http request and not this._location
+                *
+                * NOTE: 
+                * This piece of code is dependent on the same assumptions as the current parser, which are:
+                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
+                *   2. Filter comes before the link syntax.
+                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
+                */
+                if (this._table.foreignKeys.length() > 0) {
+                    var compactPath = this._location.compactPath,
+                        parts = compactPath.split('/'),
+                        tableIndex = 0,
+                        fkList = "",
+                        linking,
+                        sortColumn,
+                        keys,
+                        k;
+
+                    // add M alias to current table
+                    linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
+                    if (linking && linking[1]) { // the same logic as parser for finding the link syntax
+                        tableIndex = compactPath.lastIndexOf("/") + 1;
+                    }
+                    compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
+
+                    // create the uri with attributegroup and alias
+                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
+                    
+                    // add joins for foreign keys
+                    for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
+                        // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
+                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
+
+                        // F2:array(F2:*),F1:array(F1:*)
+                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
+                    }
+
+
+                    // add keys
+                    keys = this._shortestKey.map(function(col){
+                        return col.name;
+                    });
+
+                    // add sort columns
+                    for(k = 0; k < this._location.sortObject.length; k++) {
+                        sortColumn = this._location.sortObject[k];
+                        if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
+                            keys.push(sortColumn.column);
+                        }
+                    }
+
+                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;      
                 }
 
                 // insert @sort()
@@ -715,6 +728,7 @@ var ERMrest = (function(module) {
                     newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
+                    delete newRef._pseudoColumns;
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -834,16 +848,9 @@ var ERMrest = (function(module) {
             var source = this._reference;
             var newRef = _referenceCopy(source);
             delete newRef._related;
+            delete newRef._pseudoColumns;
 
             newRef._context = context;
-            var columnOrders = source._table.columns._contextualize(context).all();
-            newRef._columns = [];
-            for (var i = 0; i < columnOrders.length; i++) {
-                var column = columnOrders[i];
-                if (source._columns.indexOf(column) != -1) {
-                    newRef._columns.push(column);
-                }
-            }
             return newRef;
         }
     };
@@ -927,7 +934,7 @@ var ERMrest = (function(module) {
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this._data[i]));
+                    this._tuples.push(new Tuple(this._ref, this._data[i], this._linkedData[i]));
                 }
             }
             return this._tuples;
@@ -1090,9 +1097,10 @@ var ERMrest = (function(module) {
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, data) {
+    function Tuple(pageReference, data, linkedData) {
         this._pageRef = pageReference;
         this._data = data;
+        this._linkedData = linkedData;
     }
 
     Tuple.prototype = {

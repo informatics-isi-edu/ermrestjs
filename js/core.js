@@ -744,77 +744,6 @@ var ERMrest = (function (module) {
 
             return nonKeyCols.length === 0; // check for purity
         },
-
-        // return visible PseudoColumns
-        _visiblePseudoColumns: function (context, columns) {
-            // TODO replace FK with PseudoColumn 
-
-            var visibleColumns = [], orders = -1, i, c;
-
-            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
-            }
-       
-            if (orders === -1) { // heuristics
-                var compositeFKs = [], colAdded, j, fk;
-                for (i = 0; i < columns.length; i++) {
-                    c = columns[i];
-                    colAdded = false;
-                    for (j = 0; j < c.memberOfForeignKeys.length; j++) {
-                        fk = c.memberOfForeignKeys[j];
-
-                        if (fk.simple) { // simple FKR
-                            visibleColumns.push(fk);
-
-                        } else { // composite FKR
-                        
-                            // add the column once
-                            if (!colAdded) {
-                                visibleColumns.push(c);
-                                colAdded = true;
-                            }
-
-                            // hold composite FKR and avoid duplicate
-                            if (visibleColumns.indexOf(fk)) {
-                                compositeFKs.push(fk);
-                            }
-                        }
-                    }
-                }
-
-                // append composite FKRs
-                for (i = 0; i < compositeFKs.length; i++) {
-                    visibleColumns.push(compositeFKs[j]);
-                }
-            } else { // get from annotation
-                for (i = 0; i < orders.length; i++) {
-                    try {
-                        if (Array.isArray(orders[i])) {
-                            c = constraintByNamePair(oders[i]);
-                            // check if FK of this table
-                            if (this.foreignkeys.all().indexOf(c) === -1) {
-                                continue;
-                            }
-                        } else {
-                            c = this.columns.get(orders[i]);
-                            // check if in the columns
-                            if (columns.indexOf(c) === -1) {
-                                continue;
-                            }
-                        }
-
-                        // avoid duplicate
-                        if (visibleColumns.indexOf(c) !== -1) {
-                            visibleColumns.push(c);
-                        }
-                    } catch (exception) {}
-                }
-            }
-
-
-            return visibleColumns;
-        },
-
     };
 
 
@@ -1324,12 +1253,116 @@ var ERMrest = (function (module) {
             return this._columns[pos];
         },
 
-        // Get columns based on the context.
-        _contextualize: function (context) { // get from cache
-            if (context in this._contextualize_cached) {
-                return this._contextualize_cached[context];
+        // Get PseudoColumns based on the context.
+        _contextualize: function (context, columns) {
+            // // get from cache
+            // if (context in this._contextualize_cached) {
+            //     return this._contextualize_cached[context];
+            // }
+
+            var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
+
+            // get column orders from annotation
+            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
+            // get from annotation             
+            if (orders !== -1) {
+                var addedFKs = [], fkName, colFound;
+                for (i = 0; i < orders.length; i++) {
+                    try {
+                        if (Array.isArray(orders[i])) {
+                            fk = constraintByNamePair(oders[i]);
+                            
+                            // check if FK of this table
+                            if (this._table.foreignkeys.all().indexOf(fk) === -1) {
+                                continue;
+                            }
+
+                            // avoid duplicate
+                            fkName = fk.constraint_names[0].join(":");
+                            if (addedFKs.indexOf(fkName) !== -1) {
+                                continue;
+                            }
+
+                            addedFKs.push(fkName);
+                            col = new PseudoColumn(fk, fk.colset.columns[0]);
+
+                        } else {
+                            // get from columns
+                            colFound = false;
+                            for (j=0; j < columns.length && !colFound; j++) {
+                                if (columns[j].name == orders[i]) {
+                                    col = columns[j];
+                                    colFound = true;
+                                }
+                            }
+
+                            // check if in columns
+                            if (!colFound) {
+                                continue;
+                            }
+                            
+                            // avoid duplicate
+                            if (visiblePseudoColumns.indexOf(col) !== -1) {
+                                continue;
+                            }    
+                        }
+
+                        visiblePseudoColumns.push(col);
+                        
+                    } catch (exception) {}
+                }
+            }
+            // heuristics
+            else {
+                var compositeFKs = {}, compositeFKKey, colAdded;
+                for (i = 0; i < columns.length; i++) {
+                    col = columns[i];
+                    colAdded = false;
+
+                    if (col.memberOfForeignKeys.length === 0) {
+                        visiblePseudoColumns.push(col);
+                    } else {
+                        for (j = 0; j < col.memberOfForeignKeys.length; j++) {
+                            fk = col.memberOfForeignKeys[j];
+
+                            // multiple simple FKR
+                            if (fk.simple) {
+                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
+                            } 
+                            // multiple composite FKR
+                            else { 
+                                
+                                // add the column first
+                                if (!colAdded) {
+                                    visiblePseudoColumns.push(col);
+                                    colAdded = true;
+                                }
+
+                                // hold composite FKR and avoid duplicate
+                                compositeFKKey = fk.constraint_names[0].join(":");
+                                if (!(compositeFKKey in compositeFKs)) {
+                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // append composite FKRs
+                for (var pc in compositeFKs) {
+                    visiblePseudoColumns.push(pc);
+                }
+
+            }
+
+            // this._contextualize_cached[context] = visiblePseudoColumns; //cache the value
+            return visiblePseudoColumns;
+            // */
+            
+            /*
             // get column orders from annotation
             var orders = -1;
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
@@ -1354,9 +1387,8 @@ var ERMrest = (function (module) {
                     //do nothing, go to the next column
                 }
             }
-
-            this._contextualize_cached[context] = columns; //cache the value
             return columns;
+            */
         }
 
     };
@@ -1374,6 +1406,8 @@ var ERMrest = (function (module) {
      * @param {string} jsonColumn the json column.
      */
     function Column(table, jsonColumn) {
+
+        this._jsonColumn = jsonColumn;
 
         /**
          * The ordinal number or position of this column relative to other
@@ -1597,36 +1631,51 @@ var ERMrest = (function (module) {
     /**
      * @memberOf ERMrest
      * @constructor
-     * @param {ERMrest.Column} column the column that this PseudoColumn will be created based on.
      * @param {ERMrest.ForeginKeyRef} foreignKeyRef the foreignKeyRef that represents this PseudoColumn
+     * @param {ERMrest.Column} column the column that this PseudoColumn will be created based on.
      * @desc
      * Constructor for PseudoColumn
      */
-    function PseudoColumn(column, foreignKey) {
+    function PseudoColumn(foreignKey, column) {
 
-        this.isPseudoColumn = true;
+        // make sure all the properties of column are in PseudoColumn
+        Column.call(this, foreignKey._table, column._jsonColumn);
+
+        this._isPseudoColumn = true;
+        this._foreignKey = foreignKey;
 
         var i = 0;
-        while(column.table.columns.get(foreignKey.constraint_names[0] + (i!==0) ? i: "")) {
+        while(foreignKey._table.columns.has(foreignKey.constraint_names[0] + (i!==0) ? i: "")) {
             i++;
         }
-        this.name = foreignKey.constraint_names[0] + (i); 
+        
+        /**
+         * @type {string}
+         * @desc name of the PseudoColumn.
+         */
+        this.name = foreignKey.constraint_names[0] + ((i!==0) ? i: "");
 
-        this.formatvalue = undefined; // TODO
+        /**
+         * @type {string}
+         * @desc Preferred display name for user presentation only.
+         */
+        this.displayname = "";
+        
+        if (foreignKey.to_name !== "") {
+            this.displayname = foreignKey.to_name;
+        } else if (foreignKey.simple) {
+            //TODO disambiguate
+            this.displayname = foreignKey.colset.columns[0].displayname;
+        } else {
+            this.displayname = foreignKey.key.table.displayname;
+        }
 
-        this.formatPresentation = undefined; // TODO
-
-        this.displayname = foreignKey.to_name !== "" ? foreignKey.to_name : column.displayname;
 
         this.type = new Type("markdown");
 
         this.comment = foreignKey.comment;
 
-        this.annotations = column.annotations;
-
-        this.table = column.table;
-
-        this._nullValue = {}; 
+        this.table = foreignKey._table;
         
     }
 
