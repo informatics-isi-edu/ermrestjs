@@ -604,12 +604,23 @@ var ERMrest = (function(module) {
          * Updates a set of resources.
          * @param {!Array} tbd TBD parameters. Probably an array of pairs of
          * [ (keys+values, allvalues)]+ ] for all entities to be updated.
-         * @returns {Promise} A promise for a TBD result or errors.
+         * @returns {Promise} page A promise for a page result or errors.
          */
-        update: function(tbd) {
+        update: function(rows) {
             try {
-                // TODO
-                notimplemented();
+                console.log(rows);
+                var defer = module._q.defer();
+
+                // module._http.put(this.uri, rows).then(function updateReference(response) {
+                //     var page;
+                //
+                //     defer.resolve(page);
+                // }, function error(response) {
+                //     var error = module._responseToError(response);
+                //     return defer.reject(error);
+                // });
+                //
+                // return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
