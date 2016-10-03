@@ -69,7 +69,26 @@ var ERMrest = (function(module) {
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
-                reference._table   = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+                // if schema was not provided in the URI
+                // find the schema
+                var schema;
+                if (!reference._location.schemaName) {
+                    var schemas = catalog.schemas.all();
+                    for (var i = 0; i < schemas.length; i++) {
+                        if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
+                            if (!schema)
+                                schema = schemas[i];
+                            else
+                                throw new module.MalformedURIError("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
+                        }
+                    }
+                    if (!schema)
+                        throw new module.MalformedURIError("Table " + reference._location.tableName + " not found");
+
+                    reference._table = schema.tables.get(reference._location.tableName);
+                } else
+                    reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
+
                 reference._columns = reference._table.columns.all();
                 reference._shortestKey = reference._table.shortestKey;
 
@@ -77,6 +96,8 @@ var ERMrest = (function(module) {
 
             }, function (error) {
                 defer.reject(error);
+            }).catch(function(exception) {
+                defer.reject(exception);
             });
 
             return defer.promise;
@@ -349,20 +370,81 @@ var ERMrest = (function(module) {
          * or errors (TBD).
          */
         create: function(data) {
+            var self = this;
             try {
-                // TODO
                 //  verify: data is not null, data has non empty tuple set
+                verify(data, "'data' must be specified");
+                verify(data.length > 0, "'data' must have at least one row to create");
+
+                var defer = module._q.defer();
+
                 //  get the defaults list for the referenced relation's table
-                //  get the data
+                var defaults = getDefaults();
+
+                //  get and format the data
+                // var formattedData = formatData(data);
+
+                // construct the uri
+                var uri = this._location.compactUri;
+                for (var i = 0; i < defaults.length; i++) {
+                    uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
+                }
+
                 //  do the 'post' call
-                //  get the results from post (of course in a promise func)
-                //  make a page of tuples of the results (unless error)
-                //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
-                //  resolve the promise, passing back the page
-                notimplemented();
+                module._http.post(uri, data).then(function(response) {
+                    //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
+                    var uri = self._location.compactUri + '/',
+                        keyName;
+
+                    // loop through each returned Row and get the key value
+                    for (var j = 0; j < response.data.length; j++) {
+                        if (j !== 0)
+                            uri += ';';
+                        // shortest key is made up from one column
+                        if (self._shortestKey.length == 1) {
+                            keyName = self._shortestKey[0].name;
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
+                        } else {
+                            uri += '(';
+                            for (var k = 0; k < self._shortestKey.length; k++) {
+                                if (k !== 0)
+                                    uri += '&';
+                                keyName = self._shortestKey[k].name;
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
+                            }
+                            uri += ')';
+                        }
+                    }
+
+                    var ref = new Reference(module._parse(uri));
+                    //  make a page of tuples of the results (unless error)
+                    var page = new Page(ref, response.data, false, false);
+
+                    //  resolve the promise, passing back the page
+                    return defer.resolve(page);
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
+            }
+
+            function getDefaults() {
+                // This is gets the difference between the table's set of columns and the reference's set of columns
+                var defaults = module._columnDiff(self._table.columns._columns, self.columns);
+
+                var columns = self.columns;
+                for (var i = 0; i < columns.length; i++) {
+                    if (columns[i].type.name.indexOf("serial") === 0) {
+                        defaults.push(columns[i].name);
+                    }
+                }
+
+                return defaults;
             }
         },
 
@@ -745,7 +827,7 @@ var ERMrest = (function(module) {
 
                         newRef._columns = otherFK.key.table.columns.all();
 
-                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.key.table.displayname;
+                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         // additional values for sorting related references
@@ -842,6 +924,30 @@ var ERMrest = (function(module) {
          */
         get compactBrief() {
             return this._contextualize(module._contexts.COMPACT_BRIEF);
+        },
+
+        /**
+         * The _entry_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entry() {
+            return this._contextualize(module._contexts.ENTRY);
+        },
+
+        /**
+         * The _entry/create_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entryCreate() {
+            return this._contextualize(module._contexts.CREATE);
+        },
+
+        /**
+         * The _entry/edit_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get entryEdit() {
+            return this._contextualize(module._contexts.EDIT);
         },
 
         _contextualize: function(context) {

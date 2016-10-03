@@ -354,11 +354,13 @@ var ERMrest = (function (module) {
          * @returns {Array} Array of all schemas in the catalog
          */
         all: function () {
-            var array = [];
-            for (var key in this._schemas) {
-                array.push(this._schemas[key]);
+            if (!this._all) {
+                this._all = [];
+                for (var key in this._schemas) {
+                    this._all.push(this._schemas[key]);
+                }
             }
-            return array;
+            return this._all;
         },
 
         /**
@@ -498,11 +500,14 @@ var ERMrest = (function (module) {
          * @returns {Array} array of tables
          */
         all: function () {
-            var array = [];
-            for (var key in this._tables) {
-                array.push(this._tables[key]);
+            if (!this._all) {
+                this._all = [];
+                for (var key in this._tables) {
+                    this._all.push(this._tables[key]);
+                }
             }
-            return array;
+
+            return this._all;
         },
 
         create: function () {
@@ -1704,11 +1709,13 @@ var ERMrest = (function (module) {
          * @returns {ERMrest.Annotation[]} list of all annotations
          */
         all: function () {
-            var array = [];
-            for (var key in this._annotations) {
-                array.push(this._annotations[key]);
+            if (!this._all) {
+                this._all = [];
+                for (var key in this._annotations) {
+                    this._all.push(this._annotations[key]);
+                }
             }
-            return array;
+            return this._all;
         },
 
         create: function () {
