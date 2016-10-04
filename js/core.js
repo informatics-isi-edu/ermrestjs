@@ -481,7 +481,7 @@ var ERMrest = (function (module) {
         /**
          * get app links from annotation
          * in the form {context: app, ...}
-         * @type {{}}
+         * @type {Object}
          * @private
          */
         this._appLinks = {}; // {context:app, ...}
