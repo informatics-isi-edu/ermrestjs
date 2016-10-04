@@ -1165,7 +1165,7 @@ var ERMrest = (function(module) {
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
 
                         // If value is null or empty, return value on basis of `show_nulls`
-                        if (value === null || value === '') {
+                        if (value === null || value.trim() === '') {
                             value = module._getNullValue(this, this._ref.context, [this._ref.table, this._ref.table.schema]);
                         }
 
