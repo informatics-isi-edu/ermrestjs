@@ -14,7 +14,10 @@ exports.execute = function (options) {
             var columns = schema.tables.get(table).columns;
 
             Object.keys(cases).forEach(function (key) {
-                expect(columns._contextualize(key).names()).toEqual(cases[key]);
+                var cols = columns._contextualize(key).map( function (col) {
+                    return col.name;
+                })
+                expect(cols).toEqual(cases[key]);
             });
         }
 
