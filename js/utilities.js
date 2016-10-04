@@ -269,12 +269,17 @@ var ERMrest = (function(module) {
     module._getFormattedKeyValues = function(ref, data) {
         var keyValues = {};
 
-        for (var i = 0; i < ref.columns.length; i++) {
-            var col = ref.columns[i];
-            keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-
+        for (var k in data) {
+            
+            try {
+                var col = ref._table.columns.get(k);
+                keyValues[k] = col.formatvalue(data[k], { context: ref._context });
+            } catch(e) {
+                keyValues[k] = data[k];
+            }
+            
             // Inject raw data in the keyvalues object prefixed with an '_'
-            keyValues["_" + col.name] = data[col.name];
+            keyValues["_" + k] = data[k];
         }
 
         return keyValues;
