@@ -103,6 +103,7 @@ exports.execute = function (options) {
             expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);  
 
             expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
+
         });
 
         it('printGeneSeq() should format gene sequences correctly.', function() {
@@ -130,6 +131,15 @@ exports.execute = function (options) {
                 expect(printGeneSeq(testCase.input, {increment: -34})).toBe(testCase.negativeIncrement);
                 expect(printGeneSeq(testCase.input, {separator: '-', increment: 5})).toBe(testCase.incrementOf5WithDashes);
             }
+        });
+
+        it('module._renderTemplate() should function correctly', function() {
+            expect(module._renderTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
+            expect(module._renderTemplate("My name is {{name}}", { name: null })).toBe(null);
+            expect(module._renderTemplate("My name is {{name}}", {})).toBe(null);
+            expect(module._renderTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
         });
 
     });

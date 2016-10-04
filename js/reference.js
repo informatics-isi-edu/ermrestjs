@@ -1262,7 +1262,7 @@ var ERMrest = (function(module) {
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
 
                         // If value is null or empty, return value on basis of `show_nulls`
-                        if (value === null || value === '') {
+                        if (value === null || value.trim() === '') {
                             value = module._getNullValue(this, this._ref.context, [this._ref.table, this._ref.table.schema]);
                         }
 
@@ -1546,7 +1546,7 @@ var ERMrest = (function(module) {
                     var pattern = module._renderTemplate(template, keyValues);
 
                     // Render markdown content for the pattern
-                    this._displayname = module._formatUtils.printMarkdown(pattern, { inline: true });
+                    this._displayname = (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
                 }
                 // no row_name annotation, use column with title, name, term, label or id:text type
                 // or use the unique key
