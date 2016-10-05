@@ -1,0 +1,15 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "reference_schema_altTables",
+    "createNew": true,
+    "path": "test/specs/reference/conf/reference_schema_altTables/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/reference/conf/reference_schema_altTables/data"
+  }
+}

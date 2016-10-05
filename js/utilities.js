@@ -847,7 +847,9 @@ var ERMrest = (function(module) {
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
     });
 
     /**
@@ -866,6 +868,8 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
     /*
      * @desc List of display type for table-display annotation
      * @private
@@ -875,7 +879,6 @@ var ERMrest = (function(module) {
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-
     return module;
 
 }(ERMrest || {}));
