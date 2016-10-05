@@ -606,21 +606,62 @@ var ERMrest = (function(module) {
          * [ (keys+values, allvalues)]+ ] for all entities to be updated.
          * @returns {Promise} page A promise for a page result or errors.
          */
-        update: function(rows) {
+        update: function(tuples) {
             try {
-                console.log(rows);
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+
                 var defer = module._q.defer();
 
-                // module._http.put(this.uri, rows).then(function updateReference(response) {
-                //     var page;
-                //
-                //     defer.resolve(page);
-                // }, function error(response) {
-                //     var error = module._responseToError(response);
-                //     return defer.reject(error);
-                // });
-                //
-                // return defer.promise;
+                var self = this,
+                    uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
+
+                console.log(this);
+                var columnProjections = [],
+                    submissionData = [],
+                    tuple, oldData, newData;
+
+                tuples.forEach(function(tuple) {
+                    submissionData.push(tuple.data);
+                });
+
+                if (tuples.length == 1) {
+                    newData = tuples[0].data;
+                    oldData = tuples[0]._oldData;
+                    for (var key in oldData) {
+                        // use == to make sure type conversion is used
+                        if (oldData[key] != newData[key]) {
+                            columnProjections.push(key);
+                        }
+                    }
+                } else {
+                    columnProjections = this.columns.map(function (col) {
+                        return col.name;
+                    });
+                }
+
+                for (var j = 0; j < this._shortestKey.length; j++) {
+                    if (j !== 0) uri += ',';
+                    uri += this._shortestKey[j].name;
+                }
+
+                uri += ';';
+
+                for (var k = 0; k < columnProjections.length; k++) {
+                    if (k !== 0) uri += ',';
+                    uri += columnProjections[k];
+                }
+
+                module._http.put(uri, submissionData).then(function updateReference(response) {
+                    var page = new Page(self, response.data, false, false);
+
+                    defer.resolve(page);
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -1169,6 +1210,17 @@ var ERMrest = (function(module) {
                 this._ref._location = module._parse(uri);
             }
             return this._ref;
+        },
+
+        /**
+         *
+         */
+        get data() {
+            if (this._oldData === undefined) {
+                // interesting trick to deep copy an array of data without functions
+                this._oldData = JSON.parse(JSON.stringify(this._data));
+            }
+            return this._data;
         },
 
         /**
