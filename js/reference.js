@@ -17,6 +17,15 @@
 var ERMrest = (function(module) {
 
     /**
+     * set callback function that converts app tag to app URL
+     * @callback appLinkFn
+     * @param {appLinkFn} fn callback function
+     */
+    module.appLinkFn = function(fn) {
+        module._appLinkFn = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -828,10 +837,14 @@ var ERMrest = (function(module) {
         },
 
         get appLink() {
-            if (this._context)
-                return this._table._getAppLink(this._context);
-            else
-                return undefined; // no context
+            if (this._context) {
+                var tag = this._table._getAppLink(this._context);
+                if (tag && module._appLinkFn) {
+                    return module._appLinkFn(tag);
+                }
+            }
+
+            return undefined; // reference has no context or app link not specified by annotation
         },
 
         setNewTable: function(table) {

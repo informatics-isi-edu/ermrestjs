@@ -34,9 +34,27 @@ var ERMrest = (function (module) {
 
     var _servers = {};
 
+    /**
+     * Angular $http service object
+     * @type {Object}
+     * @private
+     */
     module._http = null;
 
+    /**
+     * Angular $q service object
+     * @type {Object}
+     * @private
+     */
     module._q = null;
+
+    /**
+     * function that converts app tag to app URL
+     * @callback appLinkFn
+     * @type {appLinkFn}
+     * @private
+     */
+    module._appLinkFn = null;
 
     /**
      * @memberof ERMrest
