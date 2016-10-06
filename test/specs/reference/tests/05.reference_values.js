@@ -86,9 +86,9 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues, expectedIsHTMLValues) {
 
-            it("should return 12 values for a tuple", function() {
+            it("should return 11 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                expect(values.length).toBe(12);
+                expect(values.length).toBe(11);
             });
             
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);

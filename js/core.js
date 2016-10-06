@@ -1915,14 +1915,19 @@ var ERMrest = (function (module) {
          *  - link: TODO
          */
         this.formatPresentation = function (data, options) {
-            var caption, link, value;
+            var location = options.location, value, caption, ermrestURI;
+
+            // use row name as the caption
             caption = module._generateRowName(this.table, options.context, data);
 
-            // if caption has a link, don't add the link.
-            if (caption.match(/<a/)) {
+            if (caption.match(/<a/)) { // if caption has a link, don't add the link.
                 value = caption;
             } else {  
-                value = "<a href='" + module._getRowURI(data, this.table) +"'>" + caption + "</a>";
+                // create ermrest url
+                ermrestURI = [location.service , "catalog" , location.catalog, "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
+
+                // TODO: change the following link to: module.resolve(ermrestURI).appLink
+                value = "<a href='" + ermrestURI +"'>" + caption + "</a>";
             }
 
             return {isHTML: true, value: value};

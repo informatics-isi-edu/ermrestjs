@@ -218,26 +218,6 @@ var ERMrest = (function(module) {
     };
 
     /**
-     * @param {object} data the row data
-     * @param {ERMrest.Table} table the Table object
-     * @desc returns a uri to the row
-     */
-    module._getRowURI = function (data, table) {
-        var id = "", col;
-        for (var i = 0; i < table.shortestKey.length; i++) {
-            col = table.shortestKey[i].name;
-            id +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
-            if (i != table.shortestKey.length-1) {
-                id +="&";
-            }
-        }
-        var path = "#" + module._fixedEncodeURIComponent(table.schema.catalog.id) +  "/" + module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name) + "/" + id;
-
-        //TODO get the base uri from the app-link
-        return "https://dev.isrd.isi.edu/~ashafaei/chaise/record/" + path;
-    };
-
-    /**
     * @param {object} ref The object that we want the null value for.
     * @param {string} context The context that we want the value of.
     * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
