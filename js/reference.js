@@ -477,11 +477,19 @@ var ERMrest = (function(module) {
          */
         read: function(limit) {
             try {
+
+                var defer = module._q.defer();
+
+                // if this reference came from a tuple, use tuple object's data
+                if (this._tuple) {
+                    var page = new Page(this, this._tuple.data, false, false);
+                    defer.resolve(page);
+                    return defer.promise;
+                }
+
                 verify(limit, "'limit' must be specified");
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
-
-                var defer = module._q.defer();
 
                 var uri = this._location.compactUri;
 
@@ -877,6 +885,20 @@ var ERMrest = (function(module) {
 
             }
             return this._related;
+        },
+
+        get appLink() {
+            if (this._context)
+                return this._table._getAppLink(this._context);
+            else
+                return undefined; // no context
+        },
+
+        setNewTable: function(table) {
+            this._table = table;
+            this._shortestKey = table.shortestKey;
+            this._displayname = table.displayname;
+            this._columns = table.columns.all();
         }
     };
 
@@ -957,6 +979,155 @@ var ERMrest = (function(module) {
             delete newRef._pseudoColumns;
 
             newRef._context = context;
+
+            // use the base table to get the alternative table of that context.
+            // a base table's .tabseTable is itself
+            var newTable = source._table._baseTable._getAlternativeTable(context);
+
+
+            // cases:
+            // 1. same table: do nothing more
+            // 2. no filter: swap table and update location only
+            // 3. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
+            // 4. others: if from an alternative table to an alternative table, join base than join alternative table 2
+
+            // if switched to a new table (could be a base table or alternative table)
+            // need to update reference's table, key, displayname, location
+            if (newTable !== source._table) {
+
+                // swap to new table
+                newRef.setNewTable(newTable);
+
+                // case 2: no filter
+                if (source._location.filter === undefined) {
+                    // case 1: no filter
+                    newRef._location = module._parse(source._location.service + "/catalog/" + source._location.catalog + "/" +
+                            source._location.api + "/" + newTable.schema.name + ":" + newTable.name);
+                } else {
+
+                    var newLocationString;
+
+                    // case 3: single entity key filter (without any join), swap table and switch to mapping key
+                    // filter is single entity if it is binary filters using the shared key of the alternative tables
+                    // or a conjunction of binary predicate that is a key of the alternative tables
+                    if ((!source._location.projectionSchemaName || source._location.projectionSchemaName === source._location.schemaName) &&
+                        source._location.projectionTableName === source._location.tableName) { // no join
+
+                        // use base table's alt shared key
+                        var sharedKey = source._table._baseTable._altSharedKey;
+                        var filter = source._location.filter;
+                        var filterString, j;
+
+                        // binary filters using shared key
+                        if (filter.type === module.filterTypes.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
+
+                            // filter using shared key
+                            if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
+                                (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
+
+                                if (newTable._isAlternativeTable()) // to alternative table
+                                    filterString = newTable._altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                else // to base table
+                                    filterString = sharedKey.colset.columns[0].name + "=" + filter.value;
+                            }
+
+                            newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                                source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                                                filterString;
+
+                        } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
+
+                            // check that filter is shared key
+                            var keyColNames;
+                            if (source._table._isAlternativeTable()) {
+                                keyColNames = source._table._altForeignKey.colset.columns.map(function (column) {
+                                    return column.name;
+                                });
+                            } else {
+                                keyColNames = sharedKey.colset.columns.map(function (column) {
+                                    return column.name;
+                                });
+                            }
+
+                            var filterColNames = filter.filters.map(function (f) {
+                                return f.column;
+                            });
+
+                            // all shared key columns must be used in the filters
+                            if (keyColNames.every(function (keyColName) {
+                                    return (filterColNames.indexOf(keyColName) !== -1);
+                                })
+                            ) {
+                                // every filter is binary predicate of "="
+                                if (filter.filters.every(function (f) {
+                                        return (f.type === module.filterTypes.BINARYPREDICATE &&
+                                                f.operator === "=");
+                                    })
+                                ) {
+
+                                    // find column mapping from source to newRef
+                                    var mapping = {};
+                                    var newCol;
+                                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                                        // base to alternative
+                                        sharedKey.colset.columns.forEach(function (column) {
+                                            newCol = newTable._altForeignKey.mapping.getFromColumn(column);
+                                            mapping[column.name] = newCol.name;
+                                        });
+
+                                    } else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
+                                        // alternative to base
+                                        source._table._altForeignKey.colset.columns.forEach(function (column) {
+                                            newCol = source._table._altForeignKey.mapping.get(column);
+                                            mapping[column.name] = newCol.name;
+                                        });
+                                    } else {
+                                        // alternative to alternative
+                                        source._table._altForeignKey.colset.columns.forEach(function (column) {
+                                            var baseCol = source._table._altForeignKey.mapping.get(column); // alt 1 col -> base col
+                                            newCol = newTable._altForeignKey.mapping.getFromColumn(baseCol); // base col -> alt 2
+                                            mapping[column.name] = newCol.name;
+                                        });
+                                    }
+
+                                    filterString = "";
+
+                                    for (j = 0; j < filter.filters.length; j++) {
+                                        var f = filter.filters[j];
+                                        // map column
+                                        filterString += (j === 0? "" : "&") + mapping[f.column] + "=" + f.value;
+                                    }
+
+                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                        source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                                        filterString;
+                                }
+                            }
+                        }
+                    }
+
+                    if (newLocationString) {
+                        newRef._location = module._parse(newLocationString);
+                    } else {
+                         // all other cases, use join
+                        var join;
+                        if (source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                            join = source._table._altForeignKey.toString(true) + "/" +
+                                   newTable._altForeignKey.toString();
+                        } else if (!source._table._isAlternativeTable()) { // base to alternative
+                            join = newTable._altForeignKey.toString();
+                        } else { // alternative to base
+                            join = source._table._altForeignKey.toString(true);
+                        }
+
+                        newRef._location = module._parse(source._location.compactUri + "/" + join);
+                        // NOTE: if there is a filter that's not the same key used in linking, parser is not able to convert filter
+                        //       not able to convert filter to the join table
+                    }
+
+                }
+            }
+
             return newRef;
         }
     };
@@ -1159,14 +1330,15 @@ var ERMrest = (function(module) {
                     for (var i = 0; i < this._data.length; i++) {
 
                         // Compute formatted value for each column
-                        var keyValues = module._getFormattedKeyValues(this._ref.columns, this._ref._context, this._data[i]);
+                        var keyValues = module._getFormattedKeyValues(this._ref._table.columns, this._ref._context, this._data[i]);
 
                         // Code to do template/string replacement using keyValues
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
 
                         // If value is null or empty, return value on basis of `show_nulls`
                         if (value === null || value.trim() === '') {
-                            value = module._getNullValue(this, this._ref.context, [this._ref.table, this._ref.table.schema]);
+                            // TODO is this correct?
+                            value = module._getNullValue(this, this._ref._context, [this._ref._table, this._ref._table.schema]);
                         }
 
                         // If final value is not null then push it in values array
@@ -1221,19 +1393,45 @@ var ERMrest = (function(module) {
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                // update its location by adding the tuple’s key filter to the URI
-                // don't keep any modifiers
                 var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
-                    this._pageRef._location.api + "/" + this._pageRef._table.schema.name + ":" + this._pageRef._table.name + "/";
-                for (var k = 0; k < this._pageRef._shortestKey.length; k++) {
-                    var col = this._pageRef._shortestKey[k].name;
-                    if (k === 0) {
-                        uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
-                    } else {
-                        uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                    this._pageRef._location.api + "/";
+
+                // if this is an alternative table, use base table
+                if (this._pageRef._table._isAlternativeTable()) {
+                    var baseTable = this._pageRef._table._baseTable;
+                    this._ref.setNewTable(baseTable);
+                    uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
+
+                    // convert filter columns to base table columns using shared key
+                    var fkey = this._pageRef._table._altForeignKey;
+                    var self = this;
+                    fkey.mapping.domain().forEach(function(altColumn, index, array) {
+                        var baseCol = fkey.mapping.get(altColumn);
+                        if (index === 0) {
+                            uri = uri + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                        } else {
+                            uri = uri + "&" + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                        }
+                    });
+                } else {
+                    // update its location by adding the tuple’s key filter to the URI
+                    // don't keep any modifiers
+                    uri = uri + this._ref._table.schema.name + ":" + this._ref._table.name + "/";
+                    for (var k = 0; k < this._ref._shortestKey.length; k++) {
+                        var col = this._pageRef._shortestKey[k].name;
+                        if (k === 0) {
+                            uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                        } else {
+                            uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                        }
                     }
                 }
+
                 this._ref._location = module._parse(uri);
+
+                // add the tuple to reference so that when calling read() we don't need to fetch the data again.
+                this._ref._tuple = this._tuple;
+
             }
             return this._ref;
         },
@@ -1341,7 +1539,7 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues;
+                var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                 /*
                  * use this variable to avoid using computed formatted values in other columns while templating
@@ -1353,11 +1551,10 @@ var ERMrest = (function(module) {
                     var tempCol = this._pageRef.columns[i];
                     if (tempCol._isPseudoColumn) {
                         formattedValues[i] = tempCol.formatPresentation(this._linkedData[tempCol._constraintName], {context: this._pageRef._context});
+                        
                     } else {
-                        //TODO should i filter the PseudoColumns?
-                        keyValues = module._getFormattedKeyValues(this._pageRef.columns, this._pageRef._context, this._data);
                         formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-
+                        
                         if (tempCol.type.name === "gene_sequence") {
                             formattedValues[i].isHTML = true;
                         }
@@ -1412,7 +1609,7 @@ var ERMrest = (function(module) {
          */
         get displayname() {
             if (!this._displayname) {
-                this._displayname = module._getRowName(this._pageRef._table, this._pageRef.columns, this._pageRef._context, this._data);
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
         }

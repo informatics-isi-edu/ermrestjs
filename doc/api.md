@@ -54,6 +54,7 @@ to use for ERMrest JavaScript agents.
             * [.name](#ERMrest.Table+name)
             * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
             * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+            * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
             * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
             * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -137,6 +138,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
+        * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -148,6 +150,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+        * [.getFromColumn(toCol)](#ERMrest.Mapping+getFromColumn) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.InboundForeignKeys](#ERMrest.InboundForeignKeys)
         * [new InboundForeignKeys(table)](#new_ERMrest.InboundForeignKeys_new)
     * [.ForeignKeys](#ERMrest.ForeignKeys)
@@ -583,6 +586,7 @@ get table by table name
         * [.name](#ERMrest.Table+name)
         * [.entity](#ERMrest.Table+entity) : <code>[Entity](#ERMrest.Table.Entity)</code>
         * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
+        * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
@@ -627,6 +631,13 @@ Constructor for Table.
 <a name="ERMrest.Table+ignore"></a>
 
 #### table.ignore : <code>boolean</code>
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+_baseTable"></a>
+
+#### table._baseTable : <code>[Table](#ERMrest.Table)</code>
+this defaults to itself on the first pass of introspection
+then might be changed on the second pass if this is an alternative table
+
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+annotations"></a>
 
@@ -1295,6 +1306,7 @@ get the key by the column set
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
+    * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Key_new"></a>
 
@@ -1333,6 +1345,17 @@ Documentation for this key
 Indicates if the key is simple (not composite)
 
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
+<a name="ERMrest.Key+containsColumn"></a>
+
+#### key.containsColumn(column) ⇒ <code>boolean</code>
+whether key has a column
+
+**Kind**: instance method of <code>[Key](#ERMrest.Key)</code>  
+
+| Param | Type |
+| --- | --- |
+| column | <code>[Column](#ERMrest.Column)</code> | 
+
 <a name="ERMrest.ColSet"></a>
 
 ### ERMrest.ColSet
@@ -1381,6 +1404,7 @@ returns string representation of colset object: (s:t:c1,s:t:c2)
     * [.length()](#ERMrest.Mapping+length) ⇒ <code>Number</code>
     * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
     * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
+    * [.getFromColumn(toCol)](#ERMrest.Mapping+getFromColumn) ⇒ <code>[Column](#ERMrest.Column)</code>
 
 <a name="new_ERMrest.Mapping_new"></a>
 
@@ -1423,6 +1447,22 @@ get the mapping column given the from column
 | Param | Type |
 | --- | --- |
 | fromCol | <code>[Column](#ERMrest.Column)</code> | 
+
+<a name="ERMrest.Mapping+getFromColumn"></a>
+
+#### mapping.getFromColumn(toCol) ⇒ <code>[Column](#ERMrest.Column)</code>
+get the mapping column given the from column
+
+**Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
+**Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
+**Throws**:
+
+- <code>[NotFoundError](#ERMrest.NotFoundError)</code> no mapping column found
+
+
+| Param | Type |
+| --- | --- |
+| toCol | <code>[Column](#ERMrest.Column)</code> | 
 
 <a name="ERMrest.InboundForeignKeys"></a>
 

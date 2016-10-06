@@ -281,7 +281,7 @@ var ERMrest = (function(module) {
     /*
      * @function
      * @private
-     * @param {object} columns The object that we want the formatted values for.
+     * @param {ERMrest.Columns} columns The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @return {object} A formatted keyvalue pair of object
@@ -290,12 +290,17 @@ var ERMrest = (function(module) {
     module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
 
-        for (var i = 0; i < columns.length; i++) {
-            var col = columns[i];
-            keyValues[col.name] = col.formatvalue(data[col.name], { context: context });
-
+        for (var k in data) {
+            
+            try {
+                var col = columns.get(k);
+                keyValues[k] = col.formatvalue(data[k], { context: context });
+            } catch(e) {
+                keyValues[k] = data[k];
+            }
+            
             // Inject raw data in the keyvalues object prefixed with an '_'
-            keyValues["_" + col.name] = data[col.name];
+            keyValues["_" + k] = data[k];
         }
 
         return keyValues;
@@ -304,14 +309,13 @@ var ERMrest = (function(module) {
     /*
      * @function
      * @private
-     * @param {object} table The table that we want the row name for.
-     * @param {object} dataColumns List of column definitions of the table.
+     * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
      * @return {object} The display name for the row.
      * @desc Returns the row name using annotation or heuristics.
      */
-    module._getRowName = function (table, dataColumns, context, data) {
+    module._generateRowName = function (table, context, data) {
         var annotation, col;
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -323,7 +327,7 @@ var ERMrest = (function(module) {
             var template = annotation.row_markdown_pattern;
 
             // Get formatted keyValues for a table for the data
-            var keyValues = module._getFormattedKeyValues(dataColumns, context, data);
+            var keyValues = module._getFormattedKeyValues(table.columns, context, data);
 
             // get templated patten after replacing the values using Mustache
             var pattern = module._renderTemplate(template, keyValues);
@@ -881,7 +885,7 @@ var ERMrest = (function(module) {
         // Inject the encode function in the keyValues object
         obj.encode = function() {
             return function(text, render) {
-                return encodeURIComponent(render(text));
+                return module._fixedEncodeURIComponent(render(text));
             };
         };
 
@@ -949,7 +953,9 @@ var ERMrest = (function(module) {
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
     });
 
     /**
@@ -968,6 +974,8 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
     /*
      * @desc List of display type for table-display annotation
      * @private
@@ -977,7 +985,6 @@ var ERMrest = (function(module) {
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-
     return module;
 
 }(ERMrest || {}));
