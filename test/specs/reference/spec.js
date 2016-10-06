@@ -7,10 +7,13 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/04.paging.js",
         "/reference/tests/05.reference_values.js",
         "/reference/tests/06.permissions.js",
-        "/reference/tests/07.contextualize.js"
+        "/reference/tests/07.contextualize.js",
+        "/reference/tests/08.alternative_tables.js",
+        "/reference/tests/09.app_linking.js"
     ],
     schemaConfigurations: [
         "/reference/conf/reference.conf.json",
-        "/reference/conf/reference_2.conf.json"
+        "/reference/conf/reference_2.conf.json",
+        "/reference/conf/reference_altTables.conf.json"
     ]
 });

@@ -269,12 +269,17 @@ var ERMrest = (function(module) {
     module._getFormattedKeyValues = function(ref, data) {
         var keyValues = {};
 
-        for (var i = 0; i < ref.columns.length; i++) {
-            var col = ref.columns[i];
-            keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-
+        for (var k in data) {
+            
+            try {
+                var col = ref._table.columns.get(k);
+                keyValues[k] = col.formatvalue(data[k], { context: ref._context });
+            } catch(e) {
+                keyValues[k] = data[k];
+            }
+            
             // Inject raw data in the keyvalues object prefixed with an '_'
-            keyValues["_" + col.name] = data[col.name];
+            keyValues["_" + k] = data[k];
         }
 
         return keyValues;
@@ -769,6 +774,8 @@ var ERMrest = (function(module) {
         var obj = {};
         module._clone(obj, keyValues);
 
+        if (typeof template !== 'string') return null;
+
         // Inject the encode function in the keyValues object
         obj.encode = function() {
             return function(text, render) {
@@ -785,7 +792,47 @@ var ERMrest = (function(module) {
             });
         }
 
-        return module._mustache.render(template, obj);
+        var conditionalRegex = /\{\{(#|\^)([\w\d-]+)\}\}/;
+
+        // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
+        if (!conditionalRegex.exec(template)) {
+
+            // Grab all placeholders ({{PROP_NAME}}) in the template 
+            var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
+
+            // If there are any placeholders 
+            if (placeholders && placeholders.length) {
+
+                // Get unique placeholders
+                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
+
+                /* 
+                 * Iterate over all placeholders to set pattern as null if any of the
+                 * values turn out to be null or undefined
+                 */
+
+                for (var i=0; i<placeholders.length;i++) {
+
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key 
+                    var key = placeholders[i].substring(2, placeholders[i].length - 2);
+                    
+                    // If value for the key is null or undefined then return null
+                    if (keyValues[key] === null || keyValues[key] === undefined) {
+                       return null;
+                    }
+                }
+            } 
+        }
+
+        var content;
+
+        try {
+            content = module._mustache.render(template, obj);
+        } catch(e) {
+            content = null;
+        }
+
+        return content;
     };
 
     /**
@@ -800,7 +847,9 @@ var ERMrest = (function(module) {
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
     });
 
     /**
@@ -819,6 +868,8 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
     /*
      * @desc List of display type for table-display annotation
      * @private
@@ -828,7 +879,6 @@ var ERMrest = (function(module) {
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-
     return module;
 
 }(ERMrest || {}));
