@@ -642,13 +642,15 @@ var ERMrest = (function(module) {
                     for (var key in tuple.data) {
                         // if the key is part of the unique key for the entity, the data needs to be aliased
                         // use == to make sure type conversion is used
-                        if (oldData[key] != newData[key] && shortestKeyNames.indexOf(key) !== -1) {
-                            keyWasModified = true;
-                            // only if there's one tuple can we specify what columns were updated
+                        if (oldData[key] != newData[key]) {
+                            // only if there's one tuple can we be specific about what columns were updated
                             if (tuples.length == 1) columnProjections.push(key);
-                            tuple.data["old_" + key] = oldData[key];
-                            tuple.data["new_" + key] = newData[key];
-                            delete tuple.data[key];
+                            if (shortestKeyNames.indexOf(key) !== -1) {
+                                keyWasModified = true;
+                                tuple.data["old_" + key] = oldData[key];
+                                tuple.data["new_" + key] = newData[key];
+                                delete tuple.data[key];
+                            }
                         }
                     }
                 });
