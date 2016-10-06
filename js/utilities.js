@@ -661,9 +661,7 @@ var ERMrest = (function(module) {
                             // If enlarge link is set then add an anchor tag for captionHTML
                             if (enlargeLink) {
                                  if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'                                                            + captionHTML 
-                                         + '  <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>'
-                                            + '</a>';
+                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + '  <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>' + '</a>';
                             }
                             
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
