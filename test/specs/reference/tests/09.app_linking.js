@@ -14,7 +14,7 @@ exports.execute = function (options) {
             + schemaName + ":" + baseTable1;
 
         var base2Uri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable2;
+            + schemaName + ":" + baseTable2 + "/value::gt::15@sort(id)";
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -23,23 +23,33 @@ exports.execute = function (options) {
         var searchURL = chaiseURL + "/search";
         var recordsetURL = chaiseURL + "/recordset";
 
-        var appLinkFn = function(tag) {
+        var appLinkFn = function(tag, location) {
+            var url;
             switch (tag) {
                 case "tag:isrd.isi.edu,2016:chaise:record":
-                    return recordURL;
+                    url = recordURL;
+                    break;
                 case "tag:isrd.isi.edu,2016:chaise:record-two":
-                    return record2URL;
+                    url = record2URL;
+                    break;
                 case "tag:isrd.isi.edu,2016:chaise:viewer":
-                    return viewerURL;
+                    url = viewerURL;
+                    break;
                 case "tag:isrd.isi.edu,2016:chaise:search":
-                    return searchURL;
+                    url =  searchURL;
+                    break;
                 case "tag:isrd.isi.edu,2016:chaise:recordset":
-                    return recordsetURL;
+                    url = recordsetURL;
+                    break;
             }
+
+            url = url + "/" + location.path;
+
+            return url;
         };
 
         describe('1. for app linking with table annotation,', function() {
-            var reference, reference_d, reference_c, reference_e;
+            var reference, reference_d, reference_c, reference_e, result;
 
             it('1.1 uncontextualized reference should have no app link, ', function(done) {
                 options.ermRest.appLinkFn(appLinkFn);
@@ -59,23 +69,26 @@ exports.execute = function (options) {
 
             it('1.2 contextualize for detailed should return correct app link, ', function() {
                 reference_d = reference.contextualize.detailed;
-                expect(reference_d.appLink).toBe(searchURL);
+                result = searchURL + "/" + reference_d.location.path;
+                expect(reference_d.appLink).toBe(result);
             });
 
             it('1.3 contextualize for compact should return correct app link, ', function() {
                 reference_c = reference_d.contextualize.compact;
-                expect(reference_c.appLink).toBe(searchURL);
+                result = searchURL + "/" + reference_c.location.path;
+                expect(reference_c.appLink).toBe(result);
             });
 
             it('1.4 contextualize for entry should return correct app link, ', function() {
                 reference_e = reference_c.contextualize.entry;
-                expect(reference_e.appLink).toBe(searchURL);
+                result = searchURL + "/" + reference_e.location.path;
+                expect(reference_e.appLink).toBe(result);
             });
 
         });
 
         describe('2. for app linking without table annotation,', function() {
-            var reference, reference_d, reference_c, reference_e;
+            var reference, reference_d, reference_c, reference_e, result;
 
             it('2.1 uncontextualized reference should have no app link, ', function(done) {
                 options.ermRest.appLinkFn(appLinkFn);
@@ -95,17 +108,20 @@ exports.execute = function (options) {
 
             it('2.2 contextualize for detailed should return correct app link, ', function() {
                 reference_d = reference.contextualize.detailed;
-                expect(reference_d.appLink).toBe(recordURL);
+                result = recordURL + "/" + reference_d.location.path;
+                expect(reference_d.appLink).toBe(result);
             });
 
             it('2.3 contextualize for compact should return correct app link, ', function() {
                 reference_c = reference_d.contextualize.compact;
-                expect(reference_c.appLink).toBe(recordsetURL);
+                result = recordsetURL + "/" + reference_c.location.path;
+                expect(reference_c.appLink).toBe(result);
             });
 
             it('2.4 contextualize for entry should return correct app link, ', function() {
                 reference_e = reference_c.contextualize.entry;
-                expect(reference_e.appLink).toBe(viewerURL);
+                var result = viewerURL + "/" + reference_e.location.path;
+                expect(reference_e.appLink).toBe(result);
             });
 
         });

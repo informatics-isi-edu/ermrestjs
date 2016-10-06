@@ -840,7 +840,7 @@ var ERMrest = (function(module) {
             if (this._context) {
                 var tag = this._table._getAppLink(this._context);
                 if (tag && module._appLinkFn) {
-                    return module._appLinkFn(tag);
+                    return module._appLinkFn(tag, this._location);
                 }
             }
 
@@ -944,6 +944,7 @@ var ERMrest = (function(module) {
 
             // if switched to a new table (could be a base table or alternative table)
             // need to update reference's table, key, displayname, location
+            // modifiers are not kept because columns are not guarenteed to exist when we switch to another table
             if (newTable !== source._table) {
 
                 // swap to new table
