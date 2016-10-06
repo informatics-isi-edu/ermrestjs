@@ -269,12 +269,17 @@ var ERMrest = (function(module) {
     module._getFormattedKeyValues = function(ref, data) {
         var keyValues = {};
 
-        for (var i = 0; i < ref.columns.length; i++) {
-            var col = ref.columns[i];
-            keyValues[col.name] = col.formatvalue(data[col.name], { context: ref._context });
-
+        for (var k in data) {
+            
+            try {
+                var col = ref._table.columns.get(k);
+                keyValues[k] = col.formatvalue(data[k], { context: ref._context });
+            } catch(e) {
+                keyValues[k] = data[k];
+            }
+            
             // Inject raw data in the keyvalues object prefixed with an '_'
-            keyValues["_" + col.name] = data[col.name];
+            keyValues["_" + k] = data[k];
         }
 
         return keyValues;
@@ -842,7 +847,9 @@ var ERMrest = (function(module) {
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display"
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
     });
 
     /**
@@ -861,6 +868,8 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
+    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
     /*
      * @desc List of display type for table-display annotation
      * @private
@@ -870,7 +879,6 @@ var ERMrest = (function(module) {
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-
     return module;
 
 }(ERMrest || {}));

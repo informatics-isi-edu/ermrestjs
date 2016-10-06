@@ -13,7 +13,7 @@ exports.execute = function (options) {
 
             it('_parse should take a uri with a single filter and return a location object.', function() {
                 var location = options.ermRest._parse(options.url + singleFilterPath);
-                parsedFilter = location._firstFilter;
+                parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
                 expect(location.uri).toBe(options.url + singleFilterPath);
@@ -28,7 +28,7 @@ exports.execute = function (options) {
                 expect(location.pagingObject).toBe(null);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
-                expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
+                expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
             it('parsedFilter should have methods and values properly defined.', function() {
@@ -55,7 +55,7 @@ exports.execute = function (options) {
 
             it('_parse should take a uri with multiple filters and return a location object.', function() {
                 var location = options.ermRest._parse(options.url + multipleFilterPath);
-                parsedFilter = location._firstFilter;
+                parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
                 expect(location.uri).toBe(options.url + multipleFilterPath);
@@ -76,7 +76,7 @@ exports.execute = function (options) {
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
-                expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
+                expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
             it('parsedFilter should have methods and values properly defined.', function() {
@@ -108,7 +108,7 @@ exports.execute = function (options) {
 
             it('_parse should take a uri with multiple filters and return a location object.', function() {
                 var location = options.ermRest._parse(options.url + multipleFilterPath);
-                parsedFilter = location._firstFilter;
+                parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
                 expect(location.uri).toBe(options.url + multipleFilterPath);
@@ -125,7 +125,7 @@ exports.execute = function (options) {
                 expect(location.pagingObject).toBe(null);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
-                expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
+                expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
             it('parsedFilter should have methods and values properly defined.', function() {
@@ -161,7 +161,7 @@ exports.execute = function (options) {
 
             it('_parse should take a uri with multiple filters and return a location object.', function() {
                 var location = options.ermRest._parse(options.url + complexPath);
-                parsedFilter = location._firstFilter;
+                parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
                 expect(location.uri).toBe(options.url + complexPath);
@@ -187,7 +187,7 @@ exports.execute = function (options) {
                 expect(location.projectionTableName).toBe(tableName);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName2);
-                expect(location._firstFilter instanceof options.ermRest.ParsedFilter).toBe(true);
+                expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
             });
 
             it('parsedFilter should have methods and values properly defined.', function() {
@@ -198,13 +198,13 @@ exports.execute = function (options) {
 
                 var filter1 = parsedFilter.filters[0];
                 expect(filter1.type).toBe("BinaryPredicate");
-                expect(filter1.column).toBe("id");
+                expect(filter1.column).toBe("id2");
                 expect(filter1.operator).toBe("::gt::");
                 expect(filter1.value).toBe(lowerLimit.toString());
 
                 var filter2 = parsedFilter.filters[1];
                 expect(filter2.type).toBe("BinaryPredicate");
-                expect(filter2.column).toBe("id");
+                expect(filter2.column).toBe("id2");
                 expect(filter2.operator).toBe("::lt::");
                 expect(filter2.value).toBe(upperLimit.toString());
             });
