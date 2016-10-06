@@ -616,44 +616,98 @@ var ERMrest = (function(module) {
                 var self = this,
                     uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
 
-                console.log(this);
-                var columnProjections = [],
-                    submissionData = [],
-                    tuple, oldData, newData;
+                var submissionData = [],
+                    columnProjections = [],
+                    shortestKeyNames = [],
+                    keyWasModified = false,
+                    tuple, oldData, newData, keyName;
 
-                tuples.forEach(function(tuple) {
-                    submissionData.push(tuple.data);
+
+                shortestKeyNames = this._shortestKey.map(function (column) {
+                    return column.name;
                 });
 
-                if (tuples.length == 1) {
-                    newData = tuples[0].data;
-                    oldData = tuples[0]._oldData;
-                    for (var key in oldData) {
+
+                tuples.forEach(function (tuple) {
+                    newData = tuple.data;
+                    oldData = tuple._oldData;
+                    for (var key in tuple.data) {
+                        // if the key is part of the unique key for the entity, the data needs to be aliased
                         // use == to make sure type conversion is used
-                        if (oldData[key] != newData[key]) {
-                            columnProjections.push(key);
+                        if (oldData[key] != newData[key] && shortestKeyNames.indexOf(key) !== -1) {
+                            keyWasModified = true;
+                            // only if there's one tuple can we specify what columns were updated
+                            if (tuples.length == 1) columnProjections.push(key);
+                            tuple.data["old_" + key] = oldData[key];
+                            tuple.data["new_" + key] = newData[key];
+                            delete tuple.data[key];
                         }
                     }
-                } else {
+                });
+                // if multiple tuples, all columns are added to the projections
+                if (tuples.length > 1) {
                     columnProjections = this.columns.map(function (col) {
                         return col.name;
                     });
                 }
 
-                for (var j = 0; j < this._shortestKey.length; j++) {
+                tuples.forEach(function(tuple) {
+                    submissionData.push(tuple.data);
+                });
+
+
+                for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
-                    uri += this._shortestKey[j].name;
+                    keyName = shortestKeyNames[j];
+                    // shortest key column was modified
+                    if (columnProjections.indexOf(keyName) !== -1) {
+                        // need to alias the key in the uri
+                        uri += "old_" + module._fixedEncodeURIComponent(keyName) + ":=";
+                    }
+
+                    uri += module._fixedEncodeURIComponent(keyName);
                 }
 
+                // separator for denoting where the keyset ends and the update column set beginsß
                 uri += ';';
 
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    uri += columnProjections[k];
+                    // check if this column is part of the shortest key, alias the column name if it is
+                    if (shortestKeyNames.indexOf(columnProjections[k]) !== -1) uri += "new_" + module._fixedEncodeURIComponent(keyName) + ":=";
+
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
                 module._http.put(uri, submissionData).then(function updateReference(response) {
-                    var page = new Page(self, response.data, false, false);
+                    var page;
+
+                    if (keyWasModified) {
+                        var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
+                        // loop through each returned Row and get the key value
+                        for (var j = 0; j < response.data.length; j++) {
+                            if (j !== 0)
+                                uri += ';';
+                            // shortest key is made up from one column
+                            if (self._shortestKey.length == 1) {
+                                keyName = self._shortestKey[0].name;
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                            } else {
+                                uri += '(';
+                                for (var k = 0; k < self._shortestKey.length; k++) {
+                                    if (k !== 0)
+                                        uri += '&';
+                                    keyName = self._shortestKey[k].name;
+                                    uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                                }
+                                uri += ')';
+                            }
+                        }
+                        var ref = new Reference(module._parse(uri));
+                        page = new Page(ref, response.data, false, false);
+                    } else {
+                        page = new Page(self, response.data, false, false);
+                    }
 
                     defer.resolve(page);
                 }, function error(response) {
