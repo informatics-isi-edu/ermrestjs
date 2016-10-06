@@ -634,26 +634,44 @@ var ERMrest = (function(module) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-
+                            var enlargeLink;
+                            
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
                                     iframeHTML += 'src="' + attr[1] + '"';
+                                } else if (attr[0] == "link") {
+                                    enlargeLink = attr[1];
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
                                iframeHTML += " ";
                             });
                             html += iframeHTML + "></iframe>";
+                            
+                            var captionHTML = "";
 
-                            // If there is a caption then add it as a "div" with "caption" class
+                            // If there is a text then add it else get HTML for the token and set it as caption
                             if (attrs[0].children[1].type == "text") {
-                               html = '<div class="embed-caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                               captionHTML = md.renderInline(attrs[0].children[1].content);
+                            } else if (attrs[0].children[1].type !== 'link_close') {
+                               captionHTML = md.renderer.renderToken(attrs[0].children,1,{});
                             }
+                            
+                            // If enlarge link is set then add an anchor tag for captionHTML
+                            if (enlargeLink) {
+                                 if (!captionHTML.trim().length) captionHTML = "Enlarge";
+                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'                                                            + captionHTML 
+                                         + '  <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>'
+                                            + '</a>';
+                            }
+                            
+                            // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
+                            html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
 
-                            // Encapsulate the iframe inside a div
-                            html = '<div class="embed-block">' + html + "</div>";
-                        }
+                            // Encapsulate the iframe inside a figure tag
+                            html = '<figure class="embed-block">' + html + "</figure>";
+                        }  
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
                     if (html === "") {
