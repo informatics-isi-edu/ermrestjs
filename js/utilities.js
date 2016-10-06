@@ -218,6 +218,26 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * @param {object} data the row data
+     * @param {ERMrest.Table} table the Table object
+     * @desc returns a uri to the row
+     */
+    module._getRowURI = function (data, table) {
+        var id = "", col;
+        for (var i = 0; i < table.shortestKey.length; i++) {
+            col = table.shortestKey[i].name;
+            id +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
+            if (i != table.shortestKey.length-1) {
+                id +="&";
+            }
+        }
+        var path = "#" + module._fixedEncodeURIComponent(table.schema.catalog.id) +  "/" + module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name) + "/" + id;
+
+        //TODO get the base uri from the app-link
+        return "https://dev.isrd.isi.edu/~ashafaei/chaise/record/" + path;
+    };
+
+    /**
     * @param {object} ref The object that we want the null value for.
     * @param {string} context The context that we want the value of.
     * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
@@ -879,31 +899,31 @@ var ERMrest = (function(module) {
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
-            // Grab all placeholders ({{PROP_NAME}}) in the template 
+            // Grab all placeholders ({{PROP_NAME}}) in the template
             var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
 
-            // If there are any placeholders 
+            // If there are any placeholders
             if (placeholders && placeholders.length) {
 
                 // Get unique placeholders
                 placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
 
-                /* 
+                /*
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
 
                 for (var i=0; i<placeholders.length;i++) {
 
-                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key 
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
-                    
+
                     // If value for the key is null or undefined then return null
                     if (keyValues[key] === null || keyValues[key] === undefined) {
                        return null;
                     }
                 }
-            } 
+            }
         }
 
         var content;

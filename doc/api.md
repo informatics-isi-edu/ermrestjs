@@ -112,6 +112,7 @@ to use for ERMrest JavaScript agents.
         * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
         * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+        * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -1107,11 +1108,12 @@ returns string representation of Column
     * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
     * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+    * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
 #### new PseudoColumn(foreignKeyRef, column)
-Constructor for PseudoColumn
+Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
 
 
 | Param | Type | Description |
@@ -1131,6 +1133,15 @@ name of the PseudoColumn.
 Preferred display name for user presentation only.
 
 **Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+formatPresentation"></a>
+
+#### pseudoColumn.formatPresentation()
+Formats the presentation value corresponding to this PseudoColumn.
+It will be a url with:
+ - caption: row-name
+ - link: TODO
+
+**Kind**: instance method of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations

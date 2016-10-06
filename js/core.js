@@ -1181,8 +1181,6 @@ var ERMrest = (function (module) {
         this._columns = [];
 
         this._table = table;
-
-        this._contextualize_cached = {};
     }
 
     Columns.prototype = {
@@ -1260,35 +1258,100 @@ var ERMrest = (function (module) {
 
         // Get PseudoColumns based on the context.
         _contextualize: function (context, columns) {            
-            if(typeof columns == "undefined") {
+            if (typeof columns == 'undefined') {
                 columns = this.all();
             }
 
+            var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
+
             // get column orders from annotation
-            var orders = -1;
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
-            // no annotation
-            if (orders == -1) {
-                return columns;
-            }
+            // get from annotation             
+            if (orders !== -1) {
+                var addedFKs = {}, // to avoid duplicate 
+                    fkName, 
+                    colFound;
 
-            // build the columns
-            var result = new Columns(this._table);
-            for (var i = 0; i < orders.length; i++) {
-                try {
-                    var c = this.get(orders[i]);
+                for (i = 0; i < orders.length; i++) {
+                    try {
+                        if (Array.isArray(orders[i])) {
+                            fk = constraintByNamePair(oders[i]);
+                            // check if FK of this table
+                            if (fk._table != this._table) continue;
 
-                    if (!result.has(c.name) && columns.indexOf(c) != -1) { // not already in the columns.
-                        result._push(c);
-                    }
-                } catch (exception) {
-                    //do nothing, go to the next column
+                            // avoid duplicate
+                            fkName = fk.constraint_names[0].join(":");
+                            if (fkName in addedFKs) continue;
+
+                            addedFKs[fkName] = 1;
+                            col = new PseudoColumn(fk, fk.colset.columns[0]);
+                        } else {
+                            colFound = false;
+                            for (j=0; j < columns.length && !colFound; j++) {
+                                if (columns[j].name == orders[i]) {
+                                    col = columns[j];
+                                    colFound = true;
+                                }
+                            }
+                            // check if in columns
+                            if (!colFound) continue;                            
+                            // avoid duplicate
+                            if (visiblePseudoColumns.indexOf(col) !== -1) continue;    
+                        }
+
+                        visiblePseudoColumns.push(col);
+                        
+                    } catch (exception) {}
                 }
             }
-            return result.all();
+            // heuristics
+            else {
+                var compositeFKs = {}, compositeFKKey, colAdded;
+                for (i = 0; i < columns.length; i++) {
+                    col = columns[i];
+                    colAdded = false;
+
+                    if (col.memberOfForeignKeys.length === 0) {
+                        visiblePseudoColumns.push(col);
+                    } else {
+                        for (j = 0; j < col.memberOfForeignKeys.length; j++) {
+                            fk = col.memberOfForeignKeys[j];
+
+                            // multiple simple FKR
+                            if (fk.simple) {
+                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
+                            } 
+                            // multiple composite FKR
+                            else { 
+                                
+                                // add the column first
+                                if (!colAdded) {
+                                    visiblePseudoColumns.push(col);
+                                    colAdded = true;
+                                }
+
+                                // hold composite FKR and avoid duplicate
+                                compositeFKKey = fk.constraint_names[0].join(":");
+                                if (!(compositeFKKey in compositeFKs)) {
+                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // append composite FKRs
+                for (var cfkr in compositeFKs) {
+                    if(compositeFKKey.hasOwnProperty(cfkr)) {
+                        visiblePseudoColumns.push(cfkr);
+                    }
+                }
+            }
+
+            return visiblePseudoColumns;
         }
 
     };
@@ -1534,7 +1597,7 @@ var ERMrest = (function (module) {
      * @param {ERMrest.ForeginKeyRef} foreignKeyRef the foreignKeyRef that represents this PseudoColumn
      * @param {ERMrest.Column} column the column that this PseudoColumn will be created based on.
      * @desc
-     * Constructor for PseudoColumn
+     * Constructor for PseudoColumn. This class extends {@link ERMrest.Column}.
      */
     function PseudoColumn(foreignKey, column) {
 
@@ -1543,11 +1606,13 @@ var ERMrest = (function (module) {
 
         this._isPseudoColumn = true;
         this._foreignKey = foreignKey;
+        this._constraintName = foreignKey.constraint_names[0].join(":");
+        this._column = column;
 
         // make sure PseudoColumn name is unique
         // since the constraint_names are unique, I just need to check this in column names
         var i = 0;
-        while(foreignKey._table.columns.has(foreignKey.constraint_names[0] + (i!==0) ? i: "")) {
+        while(foreignKey._table.columns.has(foreignKey.constraint_names[0].join(":") + (i!==0) ? i: "")) {
             i++;
         }
         
@@ -1555,28 +1620,58 @@ var ERMrest = (function (module) {
          * @type {string}
          * @desc name of the PseudoColumn.
          */
-        this.name = foreignKey.constraint_names[0] + ((i!==0) ? i: "");
+        this.name = foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: "");
 
         /**
          * @type {string}
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = "";
-        
-        if (foreignKey.to_name !== "") {
-            this.displayname = foreignKey.to_name;
-        } else if (foreignKey.simple) {
-            this.displayname = foreignKey.colset.columns[0].displayname + "("  + foreignKey.key.table.displayname + ")";
+
+        if (foreignKey.simple) {
+            if (foreignKey.to_name !== "") {
+                this.displayname = foreignKey.to_name;
+            } else {
+                this.displayname = column.displayname;
+
+                if (column.memberOfForeignKeys.length > 1) { // disambiguate
+                    this.displayname += " ("  + foreignKey.key.table.displayname + ")";
+                }
+            }
         } else {
-            this.displayname = foreignKey.key.table.displayname;
+            if (foreignKey.to_name !== "") {
+                this.displayname = foreignKey.to_name;
+            } else {
+                this.displayname = foreignKey.key.table.displayname;
+            }
         }
 
 
         this.type = new Type("markdown");
 
-        this.comment = foreignKey.comment;
+        this.comment = column.comment;
 
-        this.table = foreignKey._table;
+        this.table = foreignKey.key.table;
+
+        /**
+         * Formats the presentation value corresponding to this PseudoColumn.
+         * It will be a url with:
+         *  - caption: row-name
+         *  - link: TODO
+         */
+        this.formatPresentation = function (data, options) {
+            var caption, link, value;
+            caption = module._getRowName(this.table, this.table.columns.all(), options.context, data);
+
+            // if caption has a link, don't add the link.
+            if (caption.match(/<a/)) {
+                value = caption;
+            } else {  
+                value = "<a href='" + module._getRowURI(data, this.table) +"'>" + caption + "</a>";
+            }
+
+            return {isHTML: true, value: value};
+        };
         
     }
 

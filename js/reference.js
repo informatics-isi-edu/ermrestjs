@@ -1341,7 +1341,7 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues = module._getFormattedKeyValues(this._pageRef.columns, this._pageRef._context, this._data);
+                var keyValues;
 
                 /*
                  * use this variable to avoid using computed formatted values in other columns while templating
@@ -1351,10 +1351,16 @@ var ERMrest = (function(module) {
                 // format values according to column display annotation
                 for (i = 0; i < this._pageRef.columns.length; i++) {
                     var tempCol = this._pageRef.columns[i];
-                    formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                    if (tempCol._isPseudoColumn) {
+                        formattedValues[i] = tempCol.formatPresentation(this._linkedData[tempCol._constraintName], {context: this._pageRef._context});
+                    } else {
+                        //TODO should i filter the PseudoColumns?
+                        keyValues = module._getFormattedKeyValues(this._pageRef.columns, this._pageRef._context, this._data);
+                        formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
 
-                    if (tempCol.type.name === "gene_sequence") {
-                        formattedValues[i].isHTML = true;
+                        if (tempCol.type.name === "gene_sequence") {
+                            formattedValues[i].isHTML = true;
+                        }
                     }
 
                 }
