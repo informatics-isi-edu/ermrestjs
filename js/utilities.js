@@ -651,11 +651,19 @@ var ERMrest = (function(module) {
                             
                             var captionHTML = "";
 
-                            // If there is a text then add it else get HTML for the token and set it as caption
-                            if (attrs[0].children[1].type == "text") {
-                               captionHTML = md.renderInline(attrs[0].children[1].content);
-                            } else if (attrs[0].children[1].type !== 'link_close') {
-                               captionHTML = md.renderer.renderToken(attrs[0].children,1,{});
+                            // If the next attribute is not a closing link then iterate
+                            // over all the children until link_close is encountered rednering their markdown
+                            if (attrs[0].children[1].type != 'link_close') {
+                                for(var i=1; i<attrs[0].children.length; i++) {
+                                    // If there is a caption then add it as a "div" with "caption" class
+                                    if (attrs[0].children[i].type == "text") {
+                                       captionHTML += md.renderInline(attrs[0].children[i].content);
+                                    } else if (attrs[0].children[i].type !== 'link_close'){
+                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
+                                    } else {
+                                        break;
+                                    }
+                                }
                             }
                             
                             // If enlarge link is set then add an anchor tag for captionHTML
@@ -771,6 +779,94 @@ var ERMrest = (function(module) {
                     }
                 }
                 return html;
+            }
+        });
+
+        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        // Injects `image` tag
+        md.use(mdContainer, 'image', {
+            /*
+             * Checks whether string matches format ":::image [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */ 
+            validate: function(params) {
+                return params.trim().match(/image\s+(.*$)/i);
+            },
+
+            render: function (tokens, idx) {
+                
+                // Get token string after regeexp matching to determine actual internal markdown 
+                var m = tokens[idx].info.trim().match(/image\s+(.*)$/i);
+
+                // If this is the opening tag i.e. starts with "::: image " 
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+
+                    // Extract remaining string before closing tag and get its parsed markdown attributes
+                    var attrs = md.parseInline(m[1]), html = "";
+                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+
+                        // Check If the markdown is a link
+                        if (attrs[0].children[0].type == "link_open") {
+                            var iframeHTML = "<img ", openingLink = attrs[0].children[0];
+                            var enlargeLink;
+                            
+                            // Add all attributes to the image
+                            openingLink.attrs.forEach(function(attr) {
+                                if (attr[0] == "href") {
+                                    iframeHTML += 'src="' + attr[1] + '"';
+                                } else if (attr[0] == "link") {
+                                    enlargeLink = attr[1];
+                                } else {
+                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                }
+                               iframeHTML += " ";
+                            });
+                            html += iframeHTML + "></>";
+                            
+                            var captionHTML = "";
+                            
+                            // If the next attribute is not a closing link then iterate
+                            // over all the children until link_close is encountered rednering their markdown
+                            if (attrs[0].children[1].type != 'link_close') {
+                                for(var i=1; i<attrs[0].children.length; i++) {
+                                    // If there is a caption then add it as a "div" with "caption" class
+                                    if (attrs[0].children[i].type == "text") {
+                                       captionHTML += md.renderInline(attrs[0].children[i].content);
+                                    } else if (attrs[0].children[i].type !== 'link_close'){
+                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Add caption html
+                            html = '<figcaption class="embed-caption">' + captionHTML 
+                                                      + "</figcaption>" + html;
+                            
+                            
+                            // If link is specified, then wrap the image and figcaption inside anchor tag
+                            if (enlargeLink) {
+                                html = '<a href="' + enlargeLink + '" target="_blank">' + html + '</a>' ;
+                            }
+                            
+                            // Encapsulate the iframe inside a paragraph tag
+                            html = '<figure class="embed-block" style="display:inline-block;">' 
+                                                  + html + "</figure>";
+                        }  
+                    }
+                    
+                    // if attrs was empty or it didn't find any link simply render the internal markdown
+                    if (html === "") {
+                        html = md.render(m[1]);
+                    }
+
+
+                    return html;
+                } else {
+                  // closing tag 
+                  return '';
+                }
             }
         });
     };
