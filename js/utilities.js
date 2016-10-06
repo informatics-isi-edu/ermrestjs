@@ -779,7 +779,7 @@ var ERMrest = (function(module) {
         // Inject the encode function in the keyValues object
         obj.encode = function() {
             return function(text, render) {
-                return encodeURIComponent(render(text));
+                return module._fixedEncodeURIComponent(render(text));
             };
         };
 
