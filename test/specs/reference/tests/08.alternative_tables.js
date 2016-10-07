@@ -2,13 +2,20 @@ exports.execute = function (options) {
 
     describe("For alternative tables,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema_altTables",
-            baseTable1 = "base_table",
-            altDetailedTable1 = "alt_table_detailed",
-            altCompactTable1 = "alt_table_compact",
-            baseTable2 = "base_table_no_app_link",
-            altDetailedTable2 = "alt_table_detailed_2",
-            altCompactTable2 = "alt_table_compact_2",
+            schemaName = "reference schema altTables",
+            schemaNameEncoded = "reference%20schema%20altTables",
+            baseTable1 = "base table",
+            baseTable1Encoded = "base%20table",
+            altDetailedTable1 = "alt table detailed",
+            altDetailedTable1Encoded = "alt%20table%20detailed",
+            altCompactTable1 = "alt table compact",
+            altCompactTable1Encoded = "alt%20table%20compact",
+            baseTable2 = "base table no app link",
+            baseTable2Encoded = "base%20table%20no%20app%20link",
+            altDetailedTable2 = "alt table detailed 2",
+            altDetailedTable2Encoded = "alt%20table%20detailed%202",
+            altCompactTable2 = "alt table compact 2",
+            altCompactTable2Encoded = "alt%20table%20compact%202",
             entityId = "00001",
             value = "12";
 
@@ -66,40 +73,40 @@ exports.execute = function (options) {
          */
 
         var uri1 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable1;
+            + schemaNameEncoded + ":" + baseTable1Encoded;
 
         var uri2 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable1 + "/id=" + entityId;
+            + schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId;
 
         var uri3 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable2 + "/id=" + entityId + "&value=" + value;
+            + schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value;
 
-        var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + baseTable1 + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
+        var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
+            + baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
 
         var uri5 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altDetailedTable1;
+            + schemaNameEncoded + ":" + altDetailedTable1Encoded;
 
         var uri6 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altDetailedTable1 + "/idx=" + entityId;
+            + schemaNameEncoded + ":" + altDetailedTable1Encoded + "/idx=" + entityId;
 
         var uri7 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altDetailedTable2 + "/idx=" + entityId + "&valuex=" + value;
+            + schemaNameEncoded + ":" + altDetailedTable2Encoded + "/idx=" + entityId + "&valuex=" + value;
 
-        var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + altDetailedTable1 + "/idx=00001;idx=00002;idx=00003;idx=00004;idx=00005;idx=00006";
+        var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
+            + altDetailedTable1Encoded + "/idx=00001;idx=00002;idx=00003;idx=00004;idx=00005;idx=00006";
 
         var uri9 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altCompactTable1;
+            + schemaNameEncoded + ":" + altCompactTable1Encoded;
 
         var uri10 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altCompactTable1 + "/idy=" + entityId;
+            + schemaNameEncoded + ":" + altCompactTable1Encoded + "/idy=" + entityId;
 
         var uri11 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + altCompactTable2 + "/idy=" + entityId + "&valuey=" + value;
+            + schemaNameEncoded + ":" + altCompactTable2Encoded + "/idy=" + entityId + "&valuey=" + value;
 
-        var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + altCompactTable1 + "/idy=00001;idy=00002;idy=00003;idy=00004;idy=00005;idy=00006";
+        var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
+            + altCompactTable1Encoded + "/idy=00001;idy=00002;idy=00003;idy=00004;idy=00005;idy=00006";
 
 
         describe('1. base table with no entity filters,', function() {
@@ -179,7 +186,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('1.A.4 tuple read should return correct data from base table', function(done) {
@@ -238,7 +245,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('1.B.4 tuple read should return correct data from base table', function(done) {
@@ -297,7 +304,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('1.C.4 tuple read should return correct data from base table', function(done) {
@@ -395,7 +402,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('2.A.4 tuple read should return correct data from base table', function(done) {
@@ -454,7 +461,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('2.B.3 tuple read should return correct data from base table', function(done) {
@@ -513,7 +520,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('2.C.4 tuple read should return correct data from base table', function(done) {
@@ -612,7 +619,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable2 + "/id=00001&value=12");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
             it('3.A.4 tuple read should return correct data from base table', function(done) {
@@ -673,8 +680,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -735,8 +742,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -834,7 +841,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('4.A.4 tuple read should return correct data from base table', function(done) {
@@ -893,7 +900,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('4.B.4 tuple read should return correct data from base table', function(done) {
@@ -952,7 +959,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('4.C.4 tuple read should return correct data from base table', function(done) {
@@ -1055,7 +1062,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('5.A.4 tuple read should return correct data from base table', function(done) {
@@ -1114,7 +1121,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('5.B.4 tuple read should return correct data from base table', function(done) {
@@ -1173,7 +1180,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('5.C.4 tuple read should return correct data from base table', function(done) {
@@ -1269,7 +1276,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('6.A.4 tuple read should return correct data from base table', function(done) {
@@ -1328,7 +1335,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('6.B.3 tuple read should return correct data from base table', function(done) {
@@ -1387,7 +1394,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('6.C.4 tuple read should return correct data from base table', function(done) {
@@ -1484,7 +1491,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable2 + "/id=00001&value=12");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
             it('7.A.4 tuple read should return correct data from base table', function(done) {
@@ -1545,8 +1552,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -1607,8 +1614,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -1704,7 +1711,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('8.A.4 tuple read should return correct data from base table', function(done) {
@@ -1763,7 +1770,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('8.B.4 tuple read should return correct data from base table', function(done) {
@@ -1822,7 +1829,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('8.C.4 tuple read should return correct data from base table', function(done) {
@@ -1925,7 +1932,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('9.A.4 tuple read should return correct data from base table', function(done) {
@@ -1984,7 +1991,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('9.B.4 tuple read should return correct data from base table', function(done) {
@@ -2043,7 +2050,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('9.C.4 tuple read should return correct data from base table', function(done) {
@@ -2139,7 +2146,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('10.A.4 tuple read should return correct data from base table', function(done) {
@@ -2198,7 +2205,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('10.B.3 tuple read should return correct data from base table', function(done) {
@@ -2257,7 +2264,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('10.C.4 tuple read should return correct data from base table', function(done) {
@@ -2354,7 +2361,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable2 + "/id=00001&value=12");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
             it('11.A.4 tuple read should return correct data from base table', function(done) {
@@ -2415,8 +2422,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -2477,8 +2484,8 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                var success = (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/id=00001&value=12") ||
-                    (tuple.reference._location.path === schemaName + ":" + baseTable2 + "/value=12&id=00001");
+                var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
+                    (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
             });
 
@@ -2574,7 +2581,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('12.A.4 tuple read should return correct data from base table', function(done) {
@@ -2633,7 +2640,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('12.B.4 tuple read should return correct data from base table', function(done) {
@@ -2692,7 +2699,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._columns[0].name).toBe("id");
                 expect(tuple.reference._columns[1].name).toBe("name");
                 expect(tuple.reference._columns[2].name).toBe("value");
-                expect(tuple.reference._location.path).toBe(schemaName + ":" + baseTable1 + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
             it('12.C.4 tuple read should return correct data from base table', function(done) {

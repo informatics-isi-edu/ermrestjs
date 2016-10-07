@@ -1338,14 +1338,14 @@ var ERMrest = (function(module) {
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
+                var uri = this._pageRef._location.service + "/catalog/" + module._fixedEncodeURIComponent(this._pageRef._location.catalog) + "/" +
                     this._pageRef._location.api + "/";
 
                 // if this is an alternative table, use base table
                 if (this._pageRef._table._isAlternativeTable()) {
                     var baseTable = this._pageRef._table._baseTable;
                     this._ref.setNewTable(baseTable);
-                    uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(baseTable.schema.name) + ":" + module._fixedEncodeURIComponent(baseTable.name) + "/";
 
                     // convert filter columns to base table columns using shared key
                     var fkey = this._pageRef._table._altForeignKey;
@@ -1361,7 +1361,7 @@ var ERMrest = (function(module) {
                 } else {
                     // update its location by adding the tuple’s key filter to the URI
                     // don't keep any modifiers
-                    uri = uri + this._ref._table.schema.name + ":" + this._ref._table.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(this._ref._table.schema.name) + ":" + module._fixedEncodeURIComponent(this._ref._table.name) + "/";
                     for (var k = 0; k < this._ref._shortestKey.length; k++) {
                         var col = this._pageRef._shortestKey[k].name;
                         if (k === 0) {
