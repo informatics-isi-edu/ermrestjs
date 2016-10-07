@@ -930,7 +930,7 @@ var ERMrest = (function(module) {
             newRef._context = context;
 
             // use the base table to get the alternative table of that context.
-            // a base table's .tabseTable is itself
+            // a base table's .baseTable is itself
             var newTable = source._table._baseTable._getAlternativeTable(context);
 
 
@@ -1090,6 +1090,15 @@ var ERMrest = (function(module) {
                 }
             }
 
+            // strip off filters if context is entry/create
+            if (context === module._contexts.CREATE) {
+                var slocation = newRef._location;
+                var newURI = slocation.service + "/catalog/" + module._fixedEncodeURIComponent(slocation.catalog) + "/" +
+                    module._fixedEncodeURIComponent(slocation.api) + "/";
+                newURI = newURI + (slocation.schemaName? module._fixedEncodeURIComponent(slocation.schemaName) + ":" : "");
+                newURI = newURI + module._fixedEncodeURIComponent(slocation.tableName);
+                newRef._location = module._parse(newURI);
+            }
             return newRef;
         }
     };
