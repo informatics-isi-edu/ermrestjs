@@ -51,14 +51,15 @@ exports.execute = function (options) {
         describe('1. for app linking with table annotation,', function() {
             var reference, reference_d, reference_c, reference_e, result;
 
-            it('1.1 uncontextualized reference should have no app link, ', function(done) {
+            it('1.1 uncontextualized reference should use default app link, ', function(done) {
                 options.ermRest.appLinkFn(appLinkFn);
                 options.ermRest.resolve(base1Uri, {cid: "test"}).then(function (response) {
                     reference = response;
                     reference.session = { attributes: [] };
 
                     // uncontextualized
-                    expect(reference.appLink).toBe(undefined);
+                    result = searchURL + "/" + reference.location.path;
+                    expect(reference.appLink).toBe(result);
 
                     done();
                 }, function (err) {
@@ -90,7 +91,7 @@ exports.execute = function (options) {
         describe('2. for app linking without table annotation,', function() {
             var reference, reference_d, reference_c, reference_e, result;
 
-            it('2.1 uncontextualized reference should have no app link, ', function(done) {
+            it('2.1 uncontextualized reference should have default (no app) link, ', function(done) {
                 options.ermRest.appLinkFn(appLinkFn);
                 options.ermRest.resolve(base2Uri, {cid: "test"}).then(function (response) {
                     reference = response;

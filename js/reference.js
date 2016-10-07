@@ -837,14 +837,12 @@ var ERMrest = (function(module) {
         },
 
         get appLink() {
-            if (this._context) {
-                var tag = this._table._getAppLink(this._context);
-                if (tag && module._appLinkFn) {
-                    return module._appLinkFn(tag, this._location);
-                }
-            }
 
-            return undefined; // reference has no context or app link not specified by annotation
+            var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
+            if (tag && module._appLinkFn) {
+                return module._appLinkFn(tag, this._location);
+            } else
+                return undefined; // app link not specified by annotation
         },
 
         setNewTable: function(table) {
