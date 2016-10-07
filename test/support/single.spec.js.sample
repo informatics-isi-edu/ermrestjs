@@ -1,6 +1,6 @@
 require('./../utils/starter.spec.js').runTests({
-    description: 'In print utilities, ',
+    description: 'In reference alternative tables, ',
     testCases: [
-        "/reference/tests/07.contextualize.js"
+        "/print_utils/tests/01.print_utils.js"
     ]
 });

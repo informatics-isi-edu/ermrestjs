@@ -86,9 +86,9 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues, expectedIsHTMLValues) {
 
-            it("should return 10 values for a tuple", function() {
+            it("should return 12 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                expect(values.length).toBe(10);
+                expect(values.length).toBe(12);
             });
             
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
@@ -115,15 +115,16 @@ exports.execute = function (options) {
                           '<div class="embed-block"><div class="embed-caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>date is :</strong></p>\n',
                           '<p><strong>Name is :</strong> Hank\n<strong>date is :</strong></p>\n',
-                          '<code>GATCGATCGC GTATT</code>'];
+                          '<code>GATCGATCGC GTATT</code>',
+                          'NA'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true];
+            var isHTML = [false, true, true, true, true, true, true, true, true, true, false];
 
             testTupleValidity(0, values, isHTML);
         });
 
-        describe('for tuple 1 with row values {"id":4001, "name":"Harold"},', function() {
+        describe('for tuple 1 with row values {"id":4001, "name":"Harold","some_invisible_column": "Junior"},', function() {
 
             var values = ['4001',
                           '<h2>Harold</h2>\n',
@@ -134,10 +135,11 @@ exports.execute = function (options) {
                           '<div class="embed-block"><div class="embed-caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> Harold\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          ''];
+                          '',
+                          '<p><a href="http://example.com/Junior">Junior</a></p>\n'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true];
+            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
 
             testTupleValidity(1, values, isHTML);            
         });
@@ -145,36 +147,38 @@ exports.execute = function (options) {
         describe('for tuple 2 with row values {"id":4002, "url": "https://www.google.com"},', function() {
 
             var values = ['4002',
-                          '<h2></h2>\n',
+                          null,
                           '',
                           '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
                           '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                          '<div class="embed-block"><div class="embed-caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
+                          '',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong><br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          ''];
+                          '',
+                          '',
+                          'NA'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, false, true, true, true, true, true, true, true];
+            var isHTML = [false, false, false, true, true, true, false, true, false, true, false];
 
             testTupleValidity(2, values, isHTML);
         });
 
-        describe('for tuple 3 with row values {"id":4003 },', function() {
+        describe('for tuple 3 with row values {"id":4003 ,"some_invisible_column": "Freshmen"},', function() {
 
             var values = ['4003',
-                          '<h2></h2>\n',
+                          null,
                           '',
                           '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
                           '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
                           '<p><a href="" download="">download link</a></p>\n',
-                          '<div class="embed-block"><div class="embed-caption"> caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
+                          '',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong><br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          ''];
+                          '',
+                          '',
+                          '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n'];
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, false, true, true, true, true, true, true, true];
+            var isHTML = [false, false, false, true, true, true, false, true, false, true, true];
 
             testTupleValidity(3, values, isHTML);
         });
@@ -190,15 +194,16 @@ exports.execute = function (options) {
                           '<div class="embed-block"><div class="embed-caption">weird &amp; HTML &lt;  caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          ''];
+                          '',
+                          'NA'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true];
+            var isHTML = [false, true, true, true, true, true, true, true, true, true, false];
 
             testTupleValidity(4, values, isHTML);
         });
 
-        describe('for tuple 5 with row values {"id":4005, "name": "<a href=\'javascript:alert();\'></a>" },', function() {
+        describe('for tuple 5 with row values {"id":4005, "name": "<a href=\'javascript:alert();\'></a>" , "some_invisible_column": "Senior"},', function() {
 
             var values = ['4005',
                           '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
@@ -209,15 +214,16 @@ exports.execute = function (options) {
                           '<div class="embed-block"><div class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          ''];
+                          '',
+                          '<p><a href="http://example.com/Senior">Senior</a></p>\n'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true];
+            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
 
             testTupleValidity(5, values, isHTML);
         });
 
-        describe('for tuple 6 with row values {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" },', function() {
+        describe('for tuple 6 with row values {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" , "some_invisible_column": "Sophomore"},', function() {
 
             var values = ['4006',
                           '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
@@ -228,10 +234,11 @@ exports.execute = function (options) {
                           '<div class="embed-block"><div class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<code>GATCGATCGC GTATT</code>'];
+                          '<code>GATCGATCGC GTATT</code>',
+                          '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n'];
 
             // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true];
+            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
 
             testTupleValidity(6, values, isHTML);
         });

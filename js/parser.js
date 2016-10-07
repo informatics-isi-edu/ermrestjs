@@ -47,6 +47,25 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * The parse handles URI in this format
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>[/filter][/join][@sort(col...)][@before(...)/@after(...)][?limit=n]
+     *
+     * NOTE ABOUT JOIN AND FILTER:
+     * the parser only parses the projection table (projectionTableName) and the last join (tableName)
+     * all the other join in between are ignored. Therefore, IF FILTER IS USED, uri must be this format
+     *       /s:t/c=123/(c)=(s:t2:c2)    ==> one level linking, filter is converted from t to t2
+     *       where filter is the key used in join, then filter can be converted from t to t2
+     *       Otherwise, filter's non key columns are not converted
+     *
+     *  V    /s:t/(c)=(s:t2:c2)                               ==> ._projectionTableName = t, ._tableName = t2
+     *  V    /s:t/(c)=(s:t2:c2)/(c2)=(s:t3:c3)                ==> ._projectionTableName = t, ._tableName = t3, first join ignored
+     *  V    /s:t/c=123/(c)=(s:t2:c2)                         ==> ._projectionTableName = t, ._tableName = t2
+     *                                                            ._filter is converted for t2 (c2=123), but uri does not change
+     *  X    /s:t/c=123/(c)=(s:t2:c2)/filter/(c2)=(s:t3:c3)   ==> can't handle this right now, result will be wrong, cannot convert nested join and filters
+     *  *    /s:t/ab="xyz"/(c)=(s:t2:c2)                      ==> unable to convert filter from t1 to t2, should use the key used in linking
+     *                                                            this does not affect read(), since filter is only used when contextualizing with
+     *                                                            alternative table. In that case, we do not expect this type of uri.
+     *  *    /s:t/(c)=(s:t2:c2)/c2=123                        ==> Not handled yet TODO
      *
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
@@ -122,11 +141,18 @@ var ERMrest = (function(module) {
         parts = this._compactPath.split('/');
 
         // if has linking, use the last part as the main table
-        var linking = parts[parts.length - 1].match(/(\(.*\)=\(.*:.*:.*\))/);
-        if (linking && linking[1]) {
-            var rightParts = linking[1].split("=")[1].match(/\(([^:]*):([^:]*):([^\)]*)\)/);
+        var colMapping;
+        var linking = parts[parts.length - 1].match(/\((.*)\)=\((.*:.*:.*)\)/);
+        if (linking) {
+            var leftCols = linking[1].split(",");
+            var rightParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
             this._schemaName = decodeURIComponent(rightParts[1]);
             this._tableName = decodeURIComponent(rightParts[2]);
+            var rightCols = rightParts[3].split(",");
+            colMapping = {};
+            for (var j = 0; j < leftCols.length; j++) {
+                colMapping[leftCols[j]] = rightCols[j];
+            }
         }
 
         // first schema name and first table name
@@ -143,16 +169,17 @@ var ERMrest = (function(module) {
             }
         }
 
-        // If there are filters appended to the URL
-        // this is not used right now, but keep it in parsing
-        if (parts[1]) {
+        // If there are filters appended after projection table
+        // modify the columns to the linked table
+
+        if (parts[1] && (!linking || (linking && parts.length > 2))) { // parts[1] could be linking if there's no filter
             // split by ';' and '&'
             var regExp = new RegExp('(;|&|[^;&]+)', 'g');
             var items = parts[1].match(regExp);
 
             // if a single filter
             if (items.length === 1) {
-                this._firstFilter = _processSingleFilterString(items[0]);
+                this._filter = _processSingleFilterString(items[0]);
 
             } else {
                 var filters = [];
@@ -163,7 +190,7 @@ var ERMrest = (function(module) {
                         items[i] = items[i].replace("(", "");
                         // collect all filters until reaches ")"
                         var subfilters = [];
-                        while(true) {
+                        while (true) {
                             if (items[i].endsWith(")")) {
                                 items[i] = items[i].replace(")", "");
                                 subfilters.push(items[i]);
@@ -179,14 +206,14 @@ var ERMrest = (function(module) {
 
                     } else if (type === null && items[i] === "&") {
                         // first level filter type
-                        type = "Conjunction";
+                        type = module.filterTypes.CONJUNCTION;
                     } else if (type === null && items[i] === ";") {
                         // first level filter type
-                        type = "Disjunction";
-                    } else if (type === "Conjunction" && items[i] === ";") {
+                        type = module.filterTypes.DISJUNCTION;
+                    } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                         // using combination of ! and & without ()
                         throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
-                    } else if (type === "Disjunction" && items[i] === "&") {
+                    } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                         // using combination of ! and & without ()
                         throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
                     } else if (items[i] !== "&" && items[i] !== ";") {
@@ -196,8 +223,18 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                this._firstFilter = new ParsedFilter(type);
-                this._firstFilter.setFilters(filters);
+                this._filter = new ParsedFilter(type);
+                this._filter.setFilters(filters);
+            }
+
+            // columns in the filters are on the projection table
+            // use the mapped columns to replace column name to the linked table's column names
+            if (colMapping) {
+                var res = _replaceFilterColumns(this._filter, colMapping);
+                if (res === -1) {
+                    console.log("WARNING: Unable to convert filter.");
+                    delete this._filter;
+                }
             }
         }
 
@@ -302,6 +339,15 @@ var ERMrest = (function(module) {
          */
         get tableName() {
             return (this._tableName? this._tableName : this._projectionTableName);
+        },
+
+
+        /**
+         * filter is converted to the last join table (if uri has join)
+         * @returns {ParsedFilter} undefined if there is no filter
+         */
+        get filter() {
+            return this._filter;
         },
 
         /**
@@ -462,6 +508,31 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * given a parsedFilter, replace all the columns with mapping column names
+     * @param filter parsedFilter format
+     * @param {Object} colMapping in the form of {col_a:col_a1, ...}
+     * @private
+     */
+    _replaceFilterColumns = function(filter, colMapping) {
+        if (filter.type === module.filterTypes.BINARYPREDICATE) {
+            if (colMapping[filter.column])
+                filter.column = colMapping[filter.column];
+            else {
+                return -1;
+            }
+        } else {
+            if (filter.filters) {
+                for (var i = 0; i < filter.filters.length; i++) {
+                    var res = _replaceFilterColumns(filter.filters[i], colMapping);
+                    if (res === -1)
+                        return res;
+                }
+            }
+
+        }
+    };
+
+    /**
      * for testingiven sort object, get the string modifier
      * @param {Object[]} sort [{"column":colname, "descending":boolean}, ...]
      * @return {string} string modifier @sort(...)
@@ -568,7 +639,7 @@ var ERMrest = (function(module) {
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
             if (f[0] && f[1]) {
-                filter = new ParsedFilter("BinaryPredicate");
+                filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
                 return filter;
             } else {
@@ -578,7 +649,7 @@ var ERMrest = (function(module) {
         } else {
             f = filterString.split("::");
             if (f.length === 3) {
-                filter = new ParsedFilter("BinaryPredicate");
+                filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "::"+f[1]+"::", decodeURIComponent(f[2]));
                 return filter;
             } else {
@@ -601,15 +672,15 @@ var ERMrest = (function(module) {
         for (var i = 0; i < filterStrings.length; i++) {
             if (type === null && filterStrings[i] === "&") {
                 // first level filter type
-                type = "Conjunction";
+                type = module.filterTypes.CONJUNCTION;
             } else if (type === null && filterStrings[i] === ";") {
                 // first level filter type
-                type = "Disjunction";
-            } else if (type === "Conjunction" && filterStrings[i] === ";") {
-                // TODO throw invalid filter error (using combination of ! and &)
+                type = module.filterTypes.DISJUNCTION;
+            } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
+                // throw invalid filter error (using combination of ! and &)
                 throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
-            } else if (type === "Disjunction" && filterStrings[i] === "&") {
-                // TODO throw invalid filter error (using combination of ! and &)
+            } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
+                // throw invalid filter error (using combination of ! and &)
                 throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
@@ -621,8 +692,15 @@ var ERMrest = (function(module) {
         var filter = new ParsedFilter(type);
         filter.setFilters(filters);
         return filter;
-        //return {type: type, filters: filters};
     }
+
+    module.filterTypes = Object.freeze({
+        BINARYPREDICATE: "BinaryPredicate",
+        CONJUNCTION: "Conjunction",
+        DISJUNCTION: "Disjunction",
+        UNARYPREDICATE: "UnaryPredicate",
+        NEGATION: "Negation"
+    });
 
     return module;
 
