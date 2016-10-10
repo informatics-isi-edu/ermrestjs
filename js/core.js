@@ -1859,10 +1859,16 @@ var ERMrest = (function (module) {
         // make sure all the properties of column are in PseudoColumn
         Column.call(this, foreignKey._table, column._jsonColumn);
 
-        this._isPseudoColumn = true;
+        
         this._foreignKey = foreignKey;
         this._constraintName = foreignKey.constraint_names[0].join(":");
         this._column = column;
+
+        /**
+         * @type {boolean}
+         * @desc indicator that this is a PseudoColumn rather than a Column.
+         */
+        this.isPseudo = true;
 
         // make sure PseudoColumn name is unique
         // since the constraint_names are unique, I just need to check this in column names
@@ -1909,10 +1915,16 @@ var ERMrest = (function (module) {
         this.table = foreignKey.key.table;
 
         /**
-         * Formats the presentation value corresponding to this PseudoColumn.
+         * @type {ERMrest.Reference}
+         * @desc The reference object that represents this PseudoColumn. This reference is not contextualized.
+         */
+        this.reference = null;
+
+        /**
+         * @desc Formats the presentation value corresponding to this PseudoColumn.
          * It will be a url with:
          *  - caption: row-name
-         *  - link: TODO
+         *  - link: link to detailed view of reference
          */
         this.formatPresentation = function (data, options) {
             var location = options.location, value, caption, ermrestURI;
@@ -1925,9 +1937,8 @@ var ERMrest = (function (module) {
             } else {  
                 // create ermrest url
                 ermrestURI = [location.service , "catalog" , location.catalog, "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
-
-                // TODO: change the following link to: module.resolve(ermrestURI).appLink
-                value = "<a href='" + ermrestURI +"'>" + caption + "</a>";
+                this.reference =  module.resolve(ermrestURI);
+                value = "<a href='" + this.reference.contextualize.detailed.appLink.location.uri +"'>" + caption + "</a>";
             }
 
             return {isHTML: true, value: value};

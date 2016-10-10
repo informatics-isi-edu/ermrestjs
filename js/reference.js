@@ -1549,7 +1549,7 @@ var ERMrest = (function(module) {
                 // format values according to column display annotation
                 for (i = 0; i < this._pageRef.columns.length; i++) {
                     var tempCol = this._pageRef.columns[i];
-                    if (tempCol._isPseudoColumn) {
+                    if (tempCol.isPseudo) {
                         formattedValues[i] = tempCol.formatPresentation(this._linkedData[tempCol._constraintName], {context: this._pageRef._context, location:this._pageRef.location});
                     } else {
                         formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
