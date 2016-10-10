@@ -17,6 +17,15 @@
 var ERMrest = (function(module) {
 
     /**
+     * set callback function that converts app tag to app URL
+     * @callback appLinkFn
+     * @param {appLinkFn} fn callback function
+     */
+    module.appLinkFn = function(fn) {
+        module._appLinkFn = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -936,10 +945,12 @@ var ERMrest = (function(module) {
         },
 
         get appLink() {
-            if (this._context)
-                return this._table._getAppLink(this._context);
-            else
-                return undefined; // no context
+
+            var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
+            if (tag && module._appLinkFn) {
+                return module._appLinkFn(tag, this._location);
+            } else
+                return undefined; // app link not specified by annotation
         },
 
         setNewTable: function(table) {
@@ -1027,7 +1038,7 @@ var ERMrest = (function(module) {
             newRef._context = context;
 
             // use the base table to get the alternative table of that context.
-            // a base table's .tabseTable is itself
+            // a base table's .baseTable is itself
             var newTable = source._table._baseTable._getAlternativeTable(context);
 
 
@@ -1039,6 +1050,7 @@ var ERMrest = (function(module) {
 
             // if switched to a new table (could be a base table or alternative table)
             // need to update reference's table, key, displayname, location
+            // modifiers are not kept because columns are not guarenteed to exist when we switch to another table
             if (newTable !== source._table) {
 
                 // swap to new table
@@ -1186,6 +1198,15 @@ var ERMrest = (function(module) {
                 }
             }
 
+            // strip off filters if context is entry/create
+            if (context === module._contexts.CREATE) {
+                var slocation = newRef._location;
+                var newURI = slocation.service + "/catalog/" + module._fixedEncodeURIComponent(slocation.catalog) + "/" +
+                    module._fixedEncodeURIComponent(slocation.api) + "/";
+                newURI = newURI + (slocation.schemaName? module._fixedEncodeURIComponent(slocation.schemaName) + ":" : "");
+                newURI = newURI + module._fixedEncodeURIComponent(slocation.tableName);
+                newRef._location = module._parse(newURI);
+            }
             return newRef;
         }
     };

@@ -5,11 +5,11 @@ exports.execute = function(options) {
             tableName = "reference_table",
             inboudTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
-            associationTableWithID = "association_table_with_id",
             associationTableWithIDDisplayname = "association table displayname",
             AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
-            relatedEntityId = 3,
+            relatedEntityWithToNameId = 3,
+            relatedEntityId = 1,
             limit = 1;
 
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
@@ -68,15 +68,20 @@ exports.execute = function(options) {
                 });
             });
 
-            it('.uri should be properly defiend based on schema.', function() {
-                expect(related[0].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
-                expect(related[1].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference)");
+            describe('.uri', function() {
+                it('should be properly defiend based on schema.', function() {
+                    expect(related[0].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
+                });
+                
+                it('should be encoded.', function() {
+                    expect(related[1].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)");
+                });
             });
 
             it('.columns should be properly defiend based on schema', function() {
                 checkReferenceColumns([{
                     ref: related[0],
-                    expected: ["id", "fk_to_reference_hidden", "fk_to_reference"]
+                    expected: ["id", "fk_to_reference_hidden", "fk_to_reference with space"]
                 }, {
                     ref: related[1],
                     expected: ["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden"]
@@ -85,6 +90,19 @@ exports.execute = function(options) {
 
             it('.read should return a Page object that is defined.', function(done) {
                 reference.related[0].read(limit).then(function(response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data[0].id).toBe(relatedEntityWithToNameId.toString());
+                    expect(page._data.length).toBe(limit);
+
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+
+                reference.related[1].read(limit).then(function(response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -120,20 +138,25 @@ exports.execute = function(options) {
                 it('should ignore all the foreign keys that create the connection for assocation.', function() {
                     checkReferenceColumns([{
                         ref: related[2],
-                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference with space"]
                     }]);
                 });
                 it('should ignore extra serial key columns in the assocation table', function() {
                     checkReferenceColumns([{
                         ref: related[3],
-                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference"]
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference with space"]
                     }]);
                 });
             });
 
-            it('.uri should be properly defiend based on schema.', function() {
-              expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-              expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_id:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+            describe('.uri ', function () {
+                it('.uri should be properly defiend based on schema.', function() {
+                    expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                });
+
+                it('should be encoded.', function() {
+                    expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                });
             });
 
             it('.read should return a Page object that is defined.', function(done) {

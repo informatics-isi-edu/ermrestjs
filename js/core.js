@@ -34,9 +34,27 @@ var ERMrest = (function (module) {
 
     var _servers = {};
 
+    /**
+     * Angular $http service object
+     * @type {Object}
+     * @private
+     */
     module._http = null;
 
+    /**
+     * Angular $q service object
+     * @type {Object}
+     * @private
+     */
     module._q = null;
+
+    /**
+     * function that converts app tag to app URL
+     * @callback appLinkFn
+     * @type {appLinkFn}
+     * @private
+     */
+    module._appLinkFn = null;
 
     /**
      * @memberof ERMrest
@@ -478,21 +496,8 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonSchema.comment;
 
-        /**
-         * get app links from annotation
-         * in the form {context: app, ...}
-         * @type {Object}
-         * @private
-         */
-        this._appLinks = {}; // {context:app, ...}
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
-            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
-            for(var context in payload) {
-                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
-                    this._appLinks[context] = payload[payload[context]];
-                else
-                    this._appLinks[context] = payload[context];
-            }
+            this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
     }
@@ -505,12 +510,20 @@ var ERMrest = (function (module) {
         },
 
         _getAppLink: function (context) {
-            if (context in this._appLinks)
-                return this._appLinks[context];
-            else if (module._contexts.DEFAULT in this._appLinks)
-                return this._appLinks[module._contexts.DEFAULT];
-            else
+
+            var app = -1;
+            if (this._appLinksAnnotation) {
+                if (!context)
+                    app = module._getRecursiveAnnotationValue(module._contexts.DEFAULT, this._appLinksAnnotation);
+                else
+                    app = module._getRecursiveAnnotationValue(context, this._appLinksAnnotation);
+            }
+
+            // no app link found
+            if (app === -1)
                 return null;
+            else
+                return app;
         }
 
     };
@@ -694,14 +707,7 @@ var ERMrest = (function (module) {
         this.comment = jsonTable.comment;
 
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
-            this._appLinks = {}; // {context:app, ...}
-            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
-            for(var context in payload) {
-                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
-                    this._appLinks[context] = payload[payload[context]];
-                else
-                    this._appLinks[context] = payload[context];
-            }
+            this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
     }
@@ -946,9 +952,9 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param context
+         * @param {Object} context optional
          * @private
-         * @returns {String}
+         * @returns {String} app tag
          */
         _getAppLink: function (context) {
 
@@ -957,15 +963,20 @@ var ERMrest = (function (module) {
                 return this._baseTable._getAppLink(context);
 
             // use table level
-            if (this._appLinks) {
-                if (context in this._appLinks)
-                    return this._appLinks[context];
-                else if (module._contexts.DEFAULT in this._appLinks)
-                    return this._appLinks[module._contexts.DEFAULT];
+            var app = -1;
+            if (this._appLinksAnnotation) {
+                if (!context)
+                    app = module._getRecursiveAnnotationValue(module._contexts.DEFAULT, this._appLinksAnnotation);
+                else
+                    app = module._getRecursiveAnnotationValue(context, this._appLinksAnnotation);
             }
 
             // use schema level
-            return this.schema._getAppLink(context);
+            if (app === -1)
+                return this.schema._getAppLink(context);
+            else
+                return app;
+
         },
 
         // returns visible inbound foreignkeys.
@@ -1792,7 +1803,9 @@ var ERMrest = (function (module) {
          * @retuns {string} string representation of Column
          */
         toString: function() {
-            return [this.table.schema.name, this.table.name, this.name].join(":");
+            return [module._fixedEncodeURIComponent(this.table.schema.name), 
+                    module._fixedEncodeURIComponent(this.table.name),
+                    module._fixedEncodeURIComponent(this.name)].join(":");
         },
 
         delete: function () {
@@ -2110,7 +2123,7 @@ var ERMrest = (function (module) {
          */
         toString: function(){
             return "(" + this.columns.slice().sort(function(a,b){
-                return a.name.localeCompare(b.name);
+                return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
             }).map(function(col){
                 return col.toString();
             }).join(",") + ")";
@@ -2188,7 +2201,7 @@ var ERMrest = (function (module) {
             return [this._from, this._to].map(function(columns){
                 // create toString for from and to
                 return columns.slice().sort(function(a, b){
-                    return a.name.localeCompare(b.name);
+                    return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
@@ -2461,9 +2474,9 @@ var ERMrest = (function (module) {
 
                 leftString += (reverse ? fromCol.name : toCol.name) + separator;
                 if (reverse) {
-                    rightString += (i === 0 ? toCol.toString() : toCol.name);
+                    rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {
-                    rightString += (i === 0 ? fromCol.toString() : fromCol.name);
+                    rightString += (i === 0 ? fromCol.toString() : module._fixedEncodeURIComponent(fromCol.name));
                 }
                 rightString += separator;
 

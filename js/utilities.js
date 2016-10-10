@@ -180,7 +180,7 @@ var ERMrest = (function(module) {
     module._getRecursiveAnnotationValue = function (context, annotation) {
         var contextedAnnot = module._getAnnotationValueByContext(context, annotation);
         if (contextedAnnot !== -1) { // found the context
-            if (typeof contextedAnnot == "object") {
+            if (typeof contextedAnnot == "object" || (module._contextArray.indexOf(contextedAnnot) === -1) ) {
                 return contextedAnnot;
             } else {
                 return module._getRecursiveAnnotationValue(contextedAnnot, annotation); // go to next level

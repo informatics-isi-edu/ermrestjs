@@ -1,3 +1,23 @@
+## Objects
+
+<dl>
+<dt><a href="#ERMrest">ERMrest</a> : <code>object</code></dt>
+<dd><p>The ERMrest module is a JavaScript client library for the ERMrest
+service. Most clients should begin with <a href="#ERMrest.resolve">resolve</a>.</p>
+<p>IMPORTANT NOTE: This module is a work in progress.
+It is likely to change several times before we have an interface we wish
+to use for ERMrest JavaScript agents.</p>
+</dd>
+</dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
+<dd><p>set callback function that converts app tag to app URL</p>
+</dd>
+</dl>
+
 <a name="ERMrest"></a>
 
 ## ERMrest : <code>object</code>
@@ -2784,4 +2804,15 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+
+<a name="appLinkFn"></a>
+
+## appLinkFn : <code>function</code>
+set callback function that converts app tag to app URL
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | <code>[appLinkFn](#appLinkFn)</code> | callback function |
 
