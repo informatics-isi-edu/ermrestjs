@@ -1,0 +1,121 @@
+{
+    "schema_name": "update_schema",
+    "tables": {
+        "update_table": {
+            "comment": "Table to represent a reference object with independednt and compositre keys for updating",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "ind_key1"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "ind_key2"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "comp_key1_col1",
+                        "comp_key1_col2",
+                        "comp_key1_col3"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "comp_key2_col1",
+                        "comp_shared_key_col"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "comp_key3_col1",
+                        "comp_shared_key_col"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "ind_key1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "ind_key2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_key1_col1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_key1_col2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_key1_col3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_key2_col1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_key3_col1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "comp_shared_key_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "non_key_col1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "non_key_col2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "non_key_col3",
+                    "nullok": true,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "update_table"
+    ],
+    "comment": null,
+    "annotations": {}
+}

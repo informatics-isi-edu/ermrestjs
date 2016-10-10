@@ -9,7 +9,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/06.permissions.js",
         "/reference/tests/07.contextualize.js",
         "/reference/tests/08.alternative_tables.js",
-        "/reference/tests/09.app_linking.js"
+        "/reference/tests/09.app_linking.js",
+        "/reference/tests/10.update.js"
     ],
     schemaConfigurations: [
         "/reference/conf/reference.conf.json",

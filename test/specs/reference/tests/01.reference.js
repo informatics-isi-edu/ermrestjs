@@ -1,6 +1,6 @@
 exports.execute = function (options) {
 
-    describe("For determining reference objects and it's child objects,", function () {
+    describe("For determining reference objects and it's child objects, ", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
@@ -17,9 +17,9 @@ exports.execute = function (options) {
         var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
         // Test Cases:
-        describe('for a creating an entity/entities,', function () {
+        describe("for creating an entity/entities,", function () {
 
-            it('a single entity should return a Page object that is defined.', function(done) {
+            it("a single entity should return a Page object that is defined.", function(done) {
                 var rows = [{ id: 9999, name: "Paula", value: 5 }];
 
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
@@ -43,7 +43,7 @@ exports.execute = function (options) {
                 });
             });
 
-            it('multiple entities should return a Page object that is defined.', function(done) {
+            it("multiple entities should return a Page object that is defined.", function(done) {
                 var rows = [{ id: 9800, name: "Greg", value: 8 },
                         { id: 9801, name: "Steven", value: 12 },
                         { id: 9802, name: "Garnet", value: 36 }];
