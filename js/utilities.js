@@ -634,7 +634,7 @@ var ERMrest = (function(module) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink;
+                            var enlargeLink, posTop = true;
                             
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
@@ -642,6 +642,8 @@ var ERMrest = (function(module) {
                                     iframeHTML += 'src="' + attr[1] + '"';
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
+                                } else if (attr[0] == "pos") {
+                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
@@ -673,8 +675,12 @@ var ERMrest = (function(module) {
                             }
                             
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
-                            html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
-
+                            if (posTop) {
+                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
+                            } else {
+                                html += '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
+                            }
+                            
                             // Encapsulate the iframe inside a figure tag
                             html = '<figure class="embed-block">' + html + "</figure>";
                         }  
@@ -808,7 +814,7 @@ var ERMrest = (function(module) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<img ", openingLink = attrs[0].children[0];
-                            var enlargeLink;
+                            var enlargeLink, posTop = true;
                             
                             // Add all attributes to the image
                             openingLink.attrs.forEach(function(attr) {
@@ -816,6 +822,8 @@ var ERMrest = (function(module) {
                                     iframeHTML += 'src="' + attr[1] + '"';
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
+                                } else if (attr[0] == "pos") {
+                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
@@ -841,9 +849,13 @@ var ERMrest = (function(module) {
                             }
                             
                             // Add caption html
-                            html = '<figcaption class="embed-caption">' + captionHTML 
+                            if (posTop) {
+                                html = '<figcaption class="embed-caption">' + captionHTML 
                                                       + "</figcaption>" + html;
-                            
+                            } else {
+                                html = html + '<figcaption class="embed-caption">' + captionHTML 
+                                                      + "</figcaption>";
+                            }
                             
                             // If link is specified, then wrap the image and figcaption inside anchor tag
                             if (enlargeLink) {
