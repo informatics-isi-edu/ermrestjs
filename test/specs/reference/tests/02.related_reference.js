@@ -5,11 +5,11 @@ exports.execute = function(options) {
             tableName = "reference_table",
             inboudTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
-            associationTableWithID = "association_table_with_id",
             associationTableWithIDDisplayname = "association table displayname",
             AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
-            relatedEntityId = 3,
+            relatedEntityWithToNameId = 3,
+            relatedEntityId = 1,
             limit = 1;
 
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
@@ -68,9 +68,14 @@ exports.execute = function(options) {
                 });
             });
 
-            it('.uri should be properly defiend based on schema.', function() {
-                expect(related[0].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
-                expect(related[1].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference)");
+            describe('.uri', function() {
+                it('should be properly defiend based on schema.', function() {
+                    expect(related[0].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
+                });
+                
+                it('should be encoded.', function() {
+                    expect(related[1].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)");
+                });
             });
 
             it('.columns should be properly defiend based on schema', function() {
@@ -91,6 +96,19 @@ exports.execute = function(options) {
 
             it('.read should return a Page object that is defined.', function(done) {
                 reference.related[0].read(limit).then(function(response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data[0].id).toBe(relatedEntityWithToNameId.toString());
+                    expect(page._data.length).toBe(limit);
+
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+
+                reference.related[1].read(limit).then(function(response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -145,9 +163,14 @@ exports.execute = function(options) {
                 });
             });
 
-            it('.uri should be properly defiend based on schema.', function() {
-              expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-              expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_id:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+            describe('.uri ', function () {
+                it('.uri should be properly defiend based on schema.', function() {
+                    expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                });
+
+                it('should be encoded.', function() {
+                    expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                });
             });
 
             it('.read should return a Page object that is defined.', function(done) {
