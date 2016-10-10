@@ -951,8 +951,8 @@ var ERMrest = (function(module) {
                 // case 2: no filter
                 if (source._location.filter === undefined) {
                     // case 1: no filter
-                    newRef._location = module._parse(source._location.service + "/catalog/" + source._location.catalog + "/" +
-                            source._location.api + "/" + newTable.schema.name + ":" + newTable.name);
+                    newRef._location = module._parse(source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name));
                 } else {
 
                     var newLocationString;
@@ -976,13 +976,14 @@ var ERMrest = (function(module) {
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
                                 if (newTable._isAlternativeTable()) // to alternative table
-                                    filterString = newTable._altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
+                                        "=" + filter.value;
                                 else // to base table
-                                    filterString = sharedKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                             }
 
-                            newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                                source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                                 filterString;
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
@@ -1048,8 +1049,8 @@ var ERMrest = (function(module) {
                                         filterString += (j === 0? "" : "&") + mapping[f.column] + "=" + f.value;
                                     }
 
-                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                        source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
                             }
