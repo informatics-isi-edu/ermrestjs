@@ -133,13 +133,50 @@ exports.execute = function (options) {
             }
         });
 
-        it('module._renderTemplate() should function correctly', function() {
+        it('module._renderTemplate() should function correctly for Null and Non-null values', function() {
             expect(module._renderTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
             expect(module._renderTemplate("My name is {{name}}", { name: null })).toBe(null);
             expect(module._renderTemplate("My name is {{name}}", {})).toBe(null);
             expect(module._renderTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
             expect(module._renderTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
             expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
+        });
+
+        var obj = {
+            str: "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **"
+        };
+
+        it('module._renderTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
+            var printMarkdown = formatUtils.printMarkdown;
+
+            // Without encoding for link and escaping for caption
+            var output = "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)";
+            var template = module._renderTemplate("[{{str}}](https://dev.isrd.isi.edu/key={{str}})", obj);
+            expect(template).toBe(output);
+            var html = printMarkdown(template);
+            expect(html).toBe('<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>\n');
+
+            // With encoding for link but Without escaping for caption
+            var output1 = "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)";
+            var template1 = module._renderTemplate("[{{str}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})", obj);
+            expect(template1).toBe(output1);
+            var html1 = printMarkdown(template1);
+            expect(html1).toBe('<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>\n');
+
+            // With escaping for cpation and Without encoding for link
+            var output2 = "[\\*\\*somevalue \\] which is ! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)";
+            var template2 = module._renderTemplate("[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{str}})", obj);
+            expect(template2).toBe(output2);
+            var html2 = printMarkdown(template2);
+            expect(html2).toBe('<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>\n');
+
+            // With escaping and With encoding
+            var output3 = "[\\*\\*somevalue \\] which is ! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)";
+            var template3 = module._renderTemplate("[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})", obj);
+            expect(template3).toBe(output3);
+            var html3 = printMarkdown(template3);
+            expect(html3).toBe('<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>\n');
+            
         });
 
     });

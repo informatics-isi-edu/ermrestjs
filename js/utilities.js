@@ -35,6 +35,13 @@ var ERMrest = (function(module) {
         };
     }
 
+    // Utility function to replace all occurances of a search with its replacement in a string
+    String.prototype.replaceAll = function(search, replacement) {
+        var target = this;
+        return target.split(search).join(replacement);
+    };
+
+
     /**
      * @function
      * @param {Object} copyTo the object to copy values to.
@@ -759,6 +766,118 @@ var ERMrest = (function(module) {
         });
     };
 
+    // Characters to replace Markdown special characters
+    module._escapeReplacementsForMarkdown = [
+      [ /\*/g, '\\*' ],
+      [ /#/g, '\\#' ],
+      [ /\//g, '\\/' ],
+      [ /\(/g, '\\(' ],
+      [ /\)/g, '\\)' ],
+      [ /\[/g, '\\[' ],
+      [ /\]/g, '\\]' ],
+      [ new RegExp("\<","g"), '&lt;' ],
+      [ new RegExp("\>","g"), '&gt;' ],
+      [ /_/g, '\\_' ]];
+
+    /**
+     * @function
+     * @param {String} text The text in which escaping needs to happen.
+     * @desc
+     * This private utility function escapes markdown special characters
+     * It is used with Mustache to escape value of variables that have markdown characters in them
+     * @returns {String} String after escaping
+     */
+    module._escapeMarkdownCharacters = function(text) {
+      return module._escapeReplacementsForMarkdown.reduce(
+        function(text, replacement) {
+          return text.replace(replacement[0], replacement[1]);
+        }, text); 
+    };
+
+    /**
+     * @function
+     * @param {String} text The text in which replacement needs to happen.
+     * @desc
+     * This private utility function replaces strings with this format {{NAME}} to this one {{&NAME}}.
+     * This function is used with Mustache to change escaped variables to non-escaped one in a template
+     * @returns {String} String after replacement
+     */
+    module._addIgnoreEscapingForTemplating = function(text) {
+        var escapedVariables = [], escapedVarRegexp = /\{\{\{([\w\d-]+)\}\}\}/ig;
+        var replaceVariables = {}, replaceVarRegexp = /\{\{([\w\d-]+)\}\}/ig;
+
+        // Look for strings with this format {{{NAME}}} to avoid adding them to be non-escaped as they're already
+        // in the Mustache format of non-escaping
+        var placeholders = text.match(escapedVarRegexp);
+        if (placeholders) {
+            placeholders.forEach(function(p) {
+                escapedVariables.push("{{"  + escapedVarRegexp.exec(p)[1] + "}}");
+            });
+        }
+
+        // Look for strings with this format {{NAME}} to non-escaped them
+        // in the Mustache format {{&NAME}}
+        placeholders = text.match(replaceVarRegexp);
+        if (placeholders) {
+            placeholders.forEach(function(p) {
+                // If it is part of escaped variable then simply ignore it
+                if (escapedVariables.indexOf(p) == -1) {
+
+                    // Grab the actual variable NAME from the string {{NAME}} 
+                    var variable = replaceVarRegexp.exec(p)[1];
+
+                    // If the variable starts with "#", "^" or ends with "/", we ignore them as they're block tags.
+                    // If the variable starts with "&" then we ignore it as it is already in the Mustache format of non-escaping
+                    if (!variable.startsWith("&") && !variable.startsWith("#") && !variable.startsWith("^") && !variable.endsWith("/")) {
+                        replaceVariables["{{" +variable + "}}"] = variable;
+                    } 
+                }
+            });
+        }
+
+        // Replace all the variables {{NAME}} in the text with their non-escaping Mustache format of {{&NAME}}
+        for(var variable in replaceVariables) {
+            text = text.replaceAll(variable,"{{&" + replaceVariables[variable] + "}}");
+        }
+        
+        return text;
+    };
+
+    /**
+     * @function
+     * @desc
+     * A function used by Mustache to encode strings in a template
+     * @return {Function} A function that is called by Mustache when it stumbles across
+     * {{#encode}} string while parsing the template.
+     */
+    module._encodeForTemplate = function() {
+        return function(text, render) {
+
+            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
+            text = module._addIgnoreEscapingForTemplating(text);
+
+            return module._fixedEncodeURIComponent(render(text));
+        };
+    };
+
+    /**
+     * @function
+     * @desc
+     * A function used by Mustache to escape Markdown characters in a string
+     * @return {Function} A function that is called by Mustache when it stumbles across
+     * {{#escape}} string while parsing the template.
+     */
+    module._escapeForTemplate = function() {
+        return function(text, render) {
+
+            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
+            text = module._addIgnoreEscapingForTemplating(text);
+
+
+            return module._escapeMarkdownCharacters(render(text));
+        };
+    };
+
     /*
      * @function
      * @private
@@ -777,11 +896,10 @@ var ERMrest = (function(module) {
         if (typeof template !== 'string') return null;
 
         // Inject the encode function in the keyValues object
-        obj.encode = function() {
-            return function(text, render) {
-                return module._fixedEncodeURIComponent(render(text));
-            };
-        };
+        obj.encode = module._encodeForTemplate;
+
+        // Inject the escape function in the keyValues object
+        obj.escape = module._escapeForTemplate;
 
         // Inject other functions provided in the options.functions array if needed
         if (options.functions && options.functions.length) {
