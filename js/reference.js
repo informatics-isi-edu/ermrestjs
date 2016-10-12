@@ -531,7 +531,7 @@ var ERMrest = (function(module) {
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
-                            sortObject.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort
+                            sortObject.push({"column": col, "descending":false}); // add key to sort
                         }
                     }
                     this._location.sortObject = sortObject;

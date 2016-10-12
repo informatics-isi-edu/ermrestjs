@@ -56,7 +56,7 @@
       "table_name": "alt table detailed",
       "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idx"]
+        "unique_columns": ["id x"]
       }],
       "foreign_keys": [
         {
@@ -65,7 +65,7 @@
           "foreign_key_columns": [{
             "table_name": "alt table detailed",
             "schema_name": "reference schema altTables",
-            "column_name": "idx"
+            "column_name": "id x"
           }],
           "referenced_columns": [{
             "table_name": "base table",
@@ -77,7 +77,7 @@
       ],
       "column_definitions": [
         {
-          "name": "idx",
+          "name": "id x",
           "nullok": false,
           "type": {
             "typename": "text"
@@ -97,7 +97,7 @@
       "table_name": "alt table compact",
       "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idy"]
+        "unique_columns": ["id y"]
       }],
       "foreign_keys": [
         {
@@ -106,7 +106,7 @@
           "foreign_key_columns": [{
             "table_name": "alt table compact",
             "schema_name": "reference schema altTables",
-            "column_name": "idy"
+            "column_name": "id y"
           }],
           "referenced_columns": [{
             "table_name": "base table",
@@ -118,7 +118,7 @@
       ],
       "column_definitions": [
         {
-          "name": "idy",
+          "name": "id y",
           "nullok": false,
           "type": {
             "typename": "text"
@@ -184,7 +184,7 @@
       "table_name": "alt table detailed 2",
       "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idx", "valuex"]
+        "unique_columns": ["id x", "value x"]
       }],
       "foreign_keys": [
         {
@@ -193,12 +193,12 @@
           "foreign_key_columns": [{
             "table_name": "alt table detailed 2",
             "schema_name": "reference schema altTables",
-            "column_name": "idx"
+            "column_name": "id x"
           },
           {
             "table_name": "alt table detailed 2",
             "schema_name": "reference schema altTables",
-            "column_name": "valuex"
+            "column_name": "value x"
           }],
           "referenced_columns": [{
             "table_name": "base table no app link",
@@ -215,14 +215,14 @@
       ],
       "column_definitions": [
         {
-          "name": "idx",
+          "name": "id x",
           "nullok": false,
           "type": {
             "typename": "text"
           }
         },
         {
-          "name": "valuex",
+          "name": "value x",
           "nullok": false,
           "type": {
             "typename": "integer"
@@ -242,7 +242,7 @@
       "table_name": "alt table compact 2",
       "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idy", "valuey"]
+        "unique_columns": ["id y", "value y"]
       }],
       "foreign_keys": [
         {
@@ -251,12 +251,12 @@
           "foreign_key_columns": [{
             "table_name": "alt table compact 2",
             "schema_name": "reference schema altTables",
-            "column_name": "idy"
+            "column_name": "id y"
           },
           {
             "table_name": "alt table compact 2",
             "schema_name": "reference schema altTables",
-            "column_name": "valuey"
+            "column_name": "value y"
           }],
           "referenced_columns": [{
             "table_name": "base table no app link",
@@ -273,14 +273,14 @@
       ],
       "column_definitions": [
         {
-          "name": "idy",
+          "name": "id y",
           "nullok": false,
           "type": {
             "typename": "text"
           }
         },
         {
-          "name": "valuey",
+          "name": "value y",
           "nullok": false,
           "type": {
             "typename": "integer"

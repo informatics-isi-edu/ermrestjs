@@ -88,25 +88,25 @@ exports.execute = function (options) {
             + schemaNameEncoded + ":" + altDetailedTable1Encoded;
 
         var uri6 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altDetailedTable1Encoded + "/idx=" + entityId;
+            + schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
 
         var uri7 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altDetailedTable2Encoded + "/idx=" + entityId + "&valuex=" + value;
+            + schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value;
 
         var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + altDetailedTable1Encoded + "/idx=00001;idx=00002;idx=00003;idx=00004;idx=00005;idx=00006";
+            + altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
 
         var uri9 = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaNameEncoded + ":" + altCompactTable1Encoded;
 
         var uri10 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altCompactTable1Encoded + "/idy=" + entityId;
+            + schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId;
 
         var uri11 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altCompactTable2Encoded + "/idy=" + entityId + "&valuey=" + value;
+            + schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value;
 
         var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + altCompactTable1Encoded + "/idy=00001;idy=00002;idy=00003;idy=00004;idy=00005;idy=00006";
+            + altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
 
 
         describe('1. base table with no entity filters,', function() {
@@ -208,9 +208,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -234,7 +234,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -267,9 +267,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -293,7 +293,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -424,9 +424,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -450,7 +450,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -483,9 +483,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -509,7 +509,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -641,10 +641,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idx");
-                expect(reference2._columns[1].name).toBe("valuex");
+                expect(reference2._columns[0].name).toBe("id x");
+                expect(reference2._columns[1].name).toBe("value x");
                 expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
@@ -668,8 +668,8 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
-                expect(tuple._data.valuex).toBe(12);
+                expect(tuple._data["id x"]).toBe("00001");
+                expect(tuple._data["value x"]).toBe(12);
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -704,10 +704,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idy");
-                expect(reference2._columns[1].name).toBe("valuey");
+                expect(reference2._columns[0].name).toBe("id y");
+                expect(reference2._columns[1].name).toBe("value y");
                 expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
@@ -731,7 +731,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -863,9 +863,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -889,7 +889,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -922,9 +922,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -948,7 +948,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -1084,9 +1084,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -1110,7 +1110,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -1143,9 +1143,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -1169,7 +1169,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -1298,9 +1298,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -1324,7 +1324,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -1357,9 +1357,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -1383,7 +1383,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -1513,10 +1513,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idx");
-                expect(reference2._columns[1].name).toBe("valuex");
+                expect(reference2._columns[0].name).toBe("id x");
+                expect(reference2._columns[1].name).toBe("value x");
                 expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
@@ -1540,8 +1540,8 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
-                expect(tuple._data.valuex).toBe(12);
+                expect(tuple._data["id x"]).toBe("00001");
+                expect(tuple._data["value x"]).toBe(12);
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -1576,10 +1576,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idy");
-                expect(reference2._columns[1].name).toBe("valuey");
+                expect(reference2._columns[0].name).toBe("id y");
+                expect(reference2._columns[1].name).toBe("value y");
                 expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
@@ -1603,7 +1603,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -1733,9 +1733,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -1759,7 +1759,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -1792,9 +1792,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -1818,7 +1818,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -1954,9 +1954,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -1980,7 +1980,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -2013,9 +2013,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -2039,7 +2039,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -2168,9 +2168,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -2194,7 +2194,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -2227,9 +2227,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -2253,7 +2253,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -2383,10 +2383,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idx");
-                expect(reference2._columns[1].name).toBe("valuex");
+                expect(reference2._columns[0].name).toBe("id x");
+                expect(reference2._columns[1].name).toBe("value x");
                 expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
@@ -2410,8 +2410,8 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
-                expect(tuple._data.valuex).toBe(12);
+                expect(tuple._data["id x"]).toBe("00001");
+                expect(tuple._data["value x"]).toBe(12);
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -2446,10 +2446,10 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("idy");
-                expect(reference2._columns[1].name).toBe("valuey");
+                expect(reference2._columns[0].name).toBe("id y");
+                expect(reference2._columns[1].name).toBe("value y");
                 expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
@@ -2473,7 +2473,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
@@ -2603,9 +2603,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idx");
+                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idx");
+                expect(reference2._columns[0].name).toBe("id x");
                 expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
@@ -2629,7 +2629,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idx).toBe("00001");
+                expect(tuple._data["id x"]).toBe("00001");
                 expect(tuple._data.details).toBe("Hank, Male 23");
             });
 
@@ -2662,9 +2662,9 @@ exports.execute = function (options) {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("idy");
+                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("idy");
+                expect(reference2._columns[0].name).toBe("id y");
                 expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
@@ -2688,7 +2688,7 @@ exports.execute = function (options) {
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
-                expect(tuple._data.idy).toBe("00001");
+                expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
 
