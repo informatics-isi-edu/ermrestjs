@@ -1049,7 +1049,7 @@ var ERMrest = (function(module) {
                                     for (j = 0; j < filter.filters.length; j++) {
                                         var f = filter.filters[j];
                                         // map column
-                                        filterString += (j === 0? "" : "&") + mapping[f.column] + "=" + f.value;
+                                        filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
                                     }
 
                                     newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
