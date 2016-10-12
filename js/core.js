@@ -752,7 +752,7 @@ var ERMrest = (function (module) {
                             if (aSerial === bSerial) {
                                 for (var i = 0; i < a.colset.length(); i++) { // both key have same length
                                     var aName = a.colset.columns[i].name;
-                                    var bName = a.colset.columns[i].name;
+                                    var bName = b.colset.columns[i].name;
                                     if (aName < bName)
                                         return -1;
                                     if (aName > bName)
