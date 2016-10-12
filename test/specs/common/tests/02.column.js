@@ -19,6 +19,30 @@ exports.execute = function(options) {
                 expect(column).toBeDefined();
             });
 
+            it('should have a getInputDisabled fn', function() {
+                expect(column.getInputDisabled).toBeDefined();
+            });
+
+            describe('the .getInputDisabled fn, ', function() {
+                it('in a create context, should return an object if the column is generated', function() {
+
+                });
+
+                describe('in an update context', function() {
+                    it('should return true if the column is generated', function() {
+
+                    });
+
+                    it('should return true if the column is immutable', function() {
+
+                    });
+                });
+
+                it('should return false if column is not generated or immutable', function() {
+
+                });
+            });
+
             it('should have a .formatvalue property.', function() {
                 expect(column.formatvalue).toBeDefined();
             });
@@ -228,6 +252,7 @@ exports.execute = function(options) {
                     });
                 });
             });
+
         });
     });
 };

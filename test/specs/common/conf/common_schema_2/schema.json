@@ -91,6 +91,9 @@
         }
     },
     "schema_name": "common_schema_2",
+    "table_names": [
+        "table_1_schema_2"
+    ],
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
             "show_nulls": {

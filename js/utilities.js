@@ -270,14 +270,14 @@ var ERMrest = (function(module) {
         var keyValues = {};
 
         for (var k in data) {
-            
+
             try {
                 var col = ref._table.columns.get(k);
                 keyValues[k] = col.formatvalue(data[k], { context: ref._context });
             } catch(e) {
                 keyValues[k] = data[k];
             }
-            
+
             // Inject raw data in the keyvalues object prefixed with an '_'
             keyValues["_" + k] = data[k];
         }
@@ -797,31 +797,31 @@ var ERMrest = (function(module) {
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
-            // Grab all placeholders ({{PROP_NAME}}) in the template 
+            // Grab all placeholders ({{PROP_NAME}}) in the template
             var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
 
-            // If there are any placeholders 
+            // If there are any placeholders
             if (placeholders && placeholders.length) {
 
                 // Get unique placeholders
                 placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
 
-                /* 
+                /*
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
 
                 for (var i=0; i<placeholders.length;i++) {
 
-                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key 
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
-                    
+
                     // If value for the key is null or undefined then return null
                     if (keyValues[key] === null || keyValues[key] === undefined) {
                        return null;
                     }
                 }
-            } 
+            }
         }
 
         var content;
@@ -849,7 +849,9 @@ var ERMrest = (function(module) {
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
-        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
+        GENERATED: "tag:isrd.isi.edu,2016:generated",
+        IMMUTABLE: "tag:isrd.isi.edu,2016:immutable"
     });
 
     /**
