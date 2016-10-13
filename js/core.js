@@ -1831,7 +1831,7 @@ var ERMrest = (function (module) {
                     };
                 }
             } else if (context == module._contexts.EDIT) {
-                if (this.annotations.contains(module._annotations.GENERATED) || this.annotations.contains(this.annotations.contains(module._annotations.IMMUTABLE)) {
+                if (this.annotations.contains(module._annotations.GENERATED) || this.annotations.contains(module._annotations.IMMUTABLE)) {
                     return true;
                 }
             }
