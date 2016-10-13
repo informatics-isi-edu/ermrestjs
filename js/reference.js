@@ -549,7 +549,7 @@ var ERMrest = (function(module) {
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
-                            sortObject.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort
+                            sortObject.push({"column": col, "descending":false}); // add key to sort
                         }
                     }
                     this._location.sortObject = sortObject;
@@ -916,8 +916,11 @@ var ERMrest = (function(module) {
             var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
             if (tag && module._appLinkFn) {
                 return module._appLinkFn(tag, this._location);
-            } else
-                return undefined; // app link not specified by annotation
+            } else if (!tag && this._context)
+                return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+            else {
+                return undefined;
+            }
         },
 
         setNewTable: function(table) {
@@ -1028,8 +1031,8 @@ var ERMrest = (function(module) {
                 // case 2: no filter
                 if (source._location.filter === undefined) {
                     // case 1: no filter
-                    newRef._location = module._parse(source._location.service + "/catalog/" + source._location.catalog + "/" +
-                            source._location.api + "/" + newTable.schema.name + ":" + newTable.name);
+                    newRef._location = module._parse(source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name));
                 } else {
 
                     var newLocationString;
@@ -1053,13 +1056,14 @@ var ERMrest = (function(module) {
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
                                 if (newTable._isAlternativeTable()) // to alternative table
-                                    filterString = newTable._altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
+                                        "=" + filter.value;
                                 else // to base table
-                                    filterString = sharedKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                             }
 
-                            newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                                source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                                 filterString;
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
@@ -1122,11 +1126,11 @@ var ERMrest = (function(module) {
                                     for (j = 0; j < filter.filters.length; j++) {
                                         var f = filter.filters[j];
                                         // map column
-                                        filterString += (j === 0? "" : "&") + mapping[f.column] + "=" + f.value;
+                                        filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
                                     }
 
-                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                        source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
                             }
@@ -1429,14 +1433,14 @@ var ERMrest = (function(module) {
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
+                var uri = this._pageRef._location.service + "/catalog/" + module._fixedEncodeURIComponent(this._pageRef._location.catalog) + "/" +
                     this._pageRef._location.api + "/";
 
                 // if this is an alternative table, use base table
                 if (this._pageRef._table._isAlternativeTable()) {
                     var baseTable = this._pageRef._table._baseTable;
                     this._ref.setNewTable(baseTable);
-                    uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(baseTable.schema.name) + ":" + module._fixedEncodeURIComponent(baseTable.name) + "/";
 
                     // convert filter columns to base table columns using shared key
                     var fkey = this._pageRef._table._altForeignKey;
@@ -1452,7 +1456,7 @@ var ERMrest = (function(module) {
                 } else {
                     // update its location by adding the tuple’s key filter to the URI
                     // don't keep any modifiers
-                    uri = uri + this._ref._table.schema.name + ":" + this._ref._table.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(this._ref._table.schema.name) + ":" + module._fixedEncodeURIComponent(this._ref._table.name) + "/";
                     for (var k = 0; k < this._ref._shortestKey.length; k++) {
                         var col = this._pageRef._shortestKey[k].name;
                         if (k === 0) {
