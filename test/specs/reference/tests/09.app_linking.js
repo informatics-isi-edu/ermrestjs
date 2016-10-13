@@ -91,7 +91,7 @@ exports.execute = function (options) {
         describe('2. for app linking without table annotation,', function() {
             var reference, reference_d, reference_c, reference_e, result;
 
-            it('2.1 uncontextualized reference should have default (no app) link, ', function(done) {
+            it('2.1 uncontextualized reference should have default link, ', function(done) {
                 options.ermRest.appLinkFn(appLinkFn);
                 options.ermRest.resolve(base2Uri, {cid: "test"}).then(function (response) {
                     reference = response;

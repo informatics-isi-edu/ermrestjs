@@ -748,7 +748,19 @@ var ERMrest = (function (module) {
                                 return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
                             }) ? 1 : 0);
 
-                            return bSerial - aSerial; // will make a before b if negative, b before a if positive
+                            // two keys still equal, compare col name
+                            if (aSerial === bSerial) {
+                                for (var i = 0; i < a.colset.length(); i++) { // both key have same length
+                                    var aName = a.colset.columns[i].name;
+                                    var bName = b.colset.columns[i].name;
+                                    if (aName < bName)
+                                        return -1;
+                                    if (aName > bName)
+                                        return 1;
+                                }
+
+                            } else
+                                return bSerial - aSerial; // will make a before b if negative, b before a if positive
                         } else
                             return val;
                     });
