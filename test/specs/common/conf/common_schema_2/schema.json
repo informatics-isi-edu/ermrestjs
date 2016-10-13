@@ -83,14 +83,14 @@
                     "name": "table_1_generated",
                     "type": { "typename": "text" },
                     "annotations": {
-                        "tag:isrd.isi.edu,2016:generated": null
+                        "tag:isrd.isi.edu,2016:generated": {}
                     }
                 },
                 {
                     "name": "table_1_immutable",
                     "type": { "typename": "text" },
                     "annotations": {
-                        "tag:isrd.isi.edu,2016:immutable": null
+                        "tag:isrd.isi.edu,2016:immutable": {}
                     }
                 }
             ],
