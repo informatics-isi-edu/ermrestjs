@@ -950,6 +950,27 @@ var ERMrest = (function(module) {
             }
         },
 
+        /**
+         * create a new reference with the new search
+         * by copying this reference and clears previous search filters
+         * only allow single term filter now
+         * @param {string} term - search term, undefined to clear search
+         */
+        search: function(term) {
+            // make a Reference copy
+            var newReference = _referenceCopy(this);
+
+            newReference._location = this._location._clone();
+            newReference._location.pagingObject = null;
+
+            if (term && term !== "")
+                newReference._location.searchFilter = "*::ciregexp::" + module._fixedEncodeURIComponent(term);
+            else
+                newReference._location.searchFilter = undefined;
+
+            return newReference;
+        },
+
         setNewTable: function(table) {
             this._table = table;
             this._shortestKey = table.shortestKey;

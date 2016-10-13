@@ -140,9 +140,18 @@ var ERMrest = (function(module) {
         // Expected format: "[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
         parts = this._compactPath.split('/');
 
+        var index = parts.length - 1;
+        // search should be the last part of compact path
+        var match = parts[index].match(/\*::ciregexp::(.+)/);
+        if (match) {
+            this._searchFilter = match[0];
+            this._searchTerm = match[1];
+            index -= 1;
+        }
+
         // if has linking, use the last part as the main table
         var colMapping;
-        var linking = parts[parts.length - 1].match(/\((.*)\)=\((.*:.*:.*)\)/);
+        var linking = parts[index].match(/\((.*)\)=\((.*:.*:.*)\)/);
         if (linking) {
             var leftCols = linking[1].split(",");
             var rightParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
@@ -348,6 +357,48 @@ var ERMrest = (function(module) {
          */
         get filter() {
             return this._filter;
+        },
+
+        /**
+         * string of the search filter in the URI
+         * @returns {string}
+         */
+        get searchFilter() {
+            return this._searchFilter;
+        },
+
+        /**
+         * Apply, replace, clear filter on the location
+         * @param {string} filter - optional, set or clear search
+         */
+        set searchFilter(filter) {
+            if (this._searchFilter && filter) {
+                this._uri = this._uri.replace(this._searchFilter, filter);
+                this._compactUri = this._compactUri.replace(this._searchFilter, filter);
+                this._path = this._path.replace(this._searchFilter, filter);
+                this._compactPath = this._compactPath.replace(this._searchFilter, filter);
+            } else if (this._searchFilter) {
+                this._uri = this._uri.replace("/" + this._searchFilter, "");
+                this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
+                this._path = this._path.replace(this._searchFilter, filter);
+                this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
+            } else if (filter) {
+                this._uri = this._uri + "/" + filter;
+                this._compactUri = this._compactUri + "/" + filter;
+                this._path = this._path + "/" + filter;
+                this._compactPath = this._compactPath + "/" + filter;
+            }
+
+            this._searchFilter = (filter? filter: undefined);
+            this._searchTerm = (this._searchFilter? this._searchFilter.match(/\*::ciregexp::(.+)/)[1]: null);
+        },
+
+        /**
+         * Not saved because new search
+         * @returns {string} the search term
+         */
+        get searchTerm() {
+            return this._searchTerm;
         },
 
         /**
