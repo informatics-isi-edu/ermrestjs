@@ -134,6 +134,9 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
         * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+        * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
+        * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
+        * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
         * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
@@ -225,7 +228,7 @@ to use for ERMrest JavaScript agents.
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(location)](#new_ERMrest.Reference_new)
+        * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
@@ -1142,6 +1145,9 @@ returns string representation of Column
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
     * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+    * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
+    * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
+    * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
     * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
 
@@ -1173,6 +1179,18 @@ name of the PseudoColumn.
 #### pseudoColumn.displayname : <code>string</code>
 Preferred display name for user presentation only.
 
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+type"></a>
+
+#### pseudoColumn.type : <code>[Type](#ERMrest.Type)</code>
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+comment"></a>
+
+#### pseudoColumn.comment : <code>string</code>
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+table"></a>
+
+#### pseudoColumn.table : <code>[Table](#ERMrest.Table)</code>
 **Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.PseudoColumn+reference"></a>
 
@@ -1878,7 +1896,7 @@ Constructor for a ParsedFilter.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(location)](#new_ERMrest.Reference_new)
+    * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
@@ -1899,7 +1917,7 @@ Constructor for a ParsedFilter.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(location)
+#### new Reference(location, catalog)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1916,6 +1934,7 @@ Usage:
 | Param | Type | Description |
 | --- | --- | --- |
 | location | <code>ERMrest.Location</code> | The location object generated from parsing the URI |
+| catalog | <code>[Catalog](#ERMrest.Catalog)</code> | The catalog object. Since location.catalog is just an id, we need the actual catalog object too. |
 
 <a name="ERMrest.Reference+contextualize"></a>
 

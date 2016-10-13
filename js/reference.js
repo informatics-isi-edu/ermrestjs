@@ -70,38 +70,11 @@ var ERMrest = (function(module) {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
 
-            // build reference
             var location = module._parse(uri);
-            var reference = new Reference(location);
 
-            var server = module.ermrestFactory.getServer(reference._location.service, params);
-            server.catalogs.get(reference._location.catalog).then(function (catalog) {
-                reference._meta = catalog.meta;
-
-                // if schema was not provided in the URI
-                // find the schema
-                var schema;
-                if (!reference._location.schemaName) {
-                    var schemas = catalog.schemas.all();
-                    for (var i = 0; i < schemas.length; i++) {
-                        if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
-                            if (!schema)
-                                schema = schemas[i];
-                            else
-                                throw new module.MalformedURIError("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
-                        }
-                    }
-                    if (!schema)
-                        throw new module.MalformedURIError("Table " + reference._location.tableName + " not found");
-
-                    reference._table = schema.tables.get(reference._location.tableName);
-                } else
-                    reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
-
-                reference._columns = reference._table.columns.all();
-                reference._shortestKey = reference._table.shortestKey;
-
-                defer.resolve(reference);
+            var server = module.ermrestFactory.getServer(location.service, params);
+            server.catalogs.get(location.catalog).then(function (catalog) {
+                defer.resolve(new Reference(location, catalog));
 
             }, function (error) {
                 defer.reject(error);
@@ -114,6 +87,19 @@ var ERMrest = (function(module) {
         catch (e) {
             return module._q.reject(e);
         }
+    };
+
+    /**
+     * @function
+     * @private
+     * @memberof ERMrest
+     * @param {ERMrest.Location} location - The location object generated from parsing the URI
+     * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
+     * @desc
+     * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
+     */
+    module._createReference = function (location, catalog) {
+        return new Reference(location, catalog);
     };
 
     /**
@@ -160,10 +146,9 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @class
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
+     * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
-    function Reference(location) {
-        this._location   = location;
-
+    function Reference(location, catalog) {
         /**
          * The members of this object are _contextualized references_.
          *
@@ -181,6 +166,36 @@ var ERMrest = (function(module) {
          * different compared to `reference.columns`.
          */
         this.contextualize = new Contextualize(this);
+
+        this._location = location;
+
+        this._meta = catalog.meta;
+
+        // if schema was not provided in the URI, find the schema
+        var schema;
+        if (!location.schemaName) {
+            var schemas = catalog.schemas.all();
+            for (var i = 0; i < schemas.length; i++) {
+                if (schemas[i].tables.names().indexOf(location.tableName) !== -1) {
+                    if (!schema){
+                        schema = schemas[i];
+                    } else{
+                        throw new module.MalformedURIError("Ambiguous table name " + location.tableName + ". Schema name is required.");
+                    }
+                }
+            }
+            if (!schema) {
+                throw new module.MalformedURIError("Table " + location.tableName + " not found");
+            }
+
+            this._table = schema.tables.get(location.tableName);
+
+        } else{
+            this._table = catalog.schemas.get(location.schemaName).tables.get(location.tableName);
+        }
+
+        this._columns = this._table.columns.all();
+        this._shortestKey = this._table.shortestKey;
     }
 
     Reference.prototype = {

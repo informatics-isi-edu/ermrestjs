@@ -1901,30 +1901,37 @@ var ERMrest = (function (module) {
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = "";
+        
+        if (foreignKey.to_name !== "") {
+            this.displayname = foreignKey.to_name;
+        } else if (foreignKey.simple) {
+            this.displayname = column.displayname;
 
-        if (foreignKey.simple) {
-            if (foreignKey.to_name !== "") {
-                this.displayname = foreignKey.to_name;
-            } else {
-                this.displayname = column.displayname;
-
-                if (column.memberOfForeignKeys.length > 1) { // disambiguate
-                    this.displayname += " ("  + foreignKey.key.table.displayname + ")";
-                }
+            if (column.memberOfForeignKeys.length > 1) { // disambiguate
+                this.displayname += " ("  + foreignKey.key.table.displayname + ")";
             }
         } else {
-            if (foreignKey.to_name !== "") {
-                this.displayname = foreignKey.to_name;
-            } else {
-                this.displayname = foreignKey.key.table.displayname;
-            }
+            this.displayname = foreignKey.key.table.displayname;
+
+            // disambiguate
+            this.displayname += "(" + foreignKey.colset.columns.map(function(col) {
+                return col.displayname;
+            }).join(", ")  + ")"; 
         }
 
-
+        /**
+         * @type {ERMrest.Type}
+         */
         this.type = new Type("markdown");
 
+        /**
+         * @type {string}
+         */
         this.comment = column.comment;
 
+        /**
+         * @type {ERMrest.Table}
+         */
         this.table = foreignKey.key.table;
 
         /**
@@ -1940,18 +1947,25 @@ var ERMrest = (function (module) {
          *  - link: link to detailed view of reference
          */
         this.formatPresentation = function (data, options) {
-            var location = options.location, value, caption, ermrestURI;
+            var location = options.location, value;
 
             // use row name as the caption
-            caption = module._generateRowName(this.table, options.context, data);
+            var caption = module._generateRowName(this.table, options.context, data);
 
-            if (caption.match(/<a/)) { // if caption has a link, don't add the link.
+            // create ermrest url
+            var ermrestURI = [location.service , "catalog" , module._fixedEncodeURIComponent(location.catalog), 
+                              "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
+            
+            // get the reference
+            this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
+
+            // if caption has a link, don't add the link.
+            if (caption.match(/<a/)) {
                 value = caption;
-            } else {  
-                // create ermrest url
-                ermrestURI = [location.service , "catalog" , location.catalog, "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
-                this.reference =  module.resolve(ermrestURI);
-                value = "<a href='" + this.reference.contextualize.detailed.appLink.location.uri +"'>" + caption + "</a>";
+            }
+            // create the link using reference.
+            else { 
+                value = "<a href='" + this.reference.contextualize.detailed.appLink +"'>" + caption + "</a>";
             }
 
             return {isHTML: true, value: value};
