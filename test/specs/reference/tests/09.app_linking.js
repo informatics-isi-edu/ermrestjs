@@ -2,19 +2,26 @@ exports.execute = function (options) {
 
     describe("For alternative tables,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema_altTables",
-            baseTable1 = "base_table",
-            altDetailedTable1 = "alt_table_detailed",
-            altCompactTable1 = "alt_table_compact",
-            baseTable2 = "base_table_no_app_link",
-            altDetailedTable2 = "alt_table_detailed_2",
-            altCompactTable2 = "alt_table_compact_2";
+            schemaName = "reference schema altTables",
+            schemaNameEncoded = "reference%20schema%20altTables",
+            baseTable1 = "base table",
+            baseTable1Encoded = "base%20table",
+            altDetailedTable1 = "alt table detailed",
+            altDetailedTable1Encoded = "alt%20table%20detailed",
+            altCompactTable1 = "alt table compact",
+            altCompactTable1Encoded = "alt%20table%20compact",
+            baseTable2 = "base table no app link",
+            baseTable2Encoded = "base%20table%20no%20app%20link",
+            altDetailedTable2 = "alt table detailed 2",
+            altDetailedTable2Encoded = "alt%20table%20detailed%202",
+            altCompactTable2 = "alt table compact 2",
+            altCompactTable2Encoded = "alt%20table%20compact%202";
 
         var base1Uri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable1;
+            + schemaNameEncoded + ":" + baseTable1Encoded;
 
         var base2Uri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + baseTable2 + "/value::gt::15@sort(id)";
+            + schemaNameEncoded + ":" + baseTable2Encoded + "/value::gt::15@sort(id)";
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";

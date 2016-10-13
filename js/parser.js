@@ -151,7 +151,7 @@ var ERMrest = (function(module) {
             var rightCols = rightParts[3].split(",");
             colMapping = {};
             for (var j = 0; j < leftCols.length; j++) {
-                colMapping[leftCols[j]] = rightCols[j];
+                colMapping[decodeURIComponent(leftCols[j])] = decodeURIComponent(rightCols[j]);
             }
         }
 
