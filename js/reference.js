@@ -644,50 +644,37 @@ var ERMrest = (function(module) {
                     return column.name;
                 });
 
-
                 tuples.forEach(function (tuple) {
                     newData = tuple.data;
                     oldData = tuple._oldData;
-                    for (var key in tuple.data) {
-                        // if the key is part of the unique key for the entity, the data needs to be aliased
-                        // use == to make sure type conversion is used
-                        if (oldData[key] != newData[key]) {
-                            // only if there's one tuple can we be specific about what columns were updated
-                            if (tuples.length == 1) columnProjections.push(key);
-                            if (shortestKeyNames.indexOf(key) !== -1) {
-                                keyWasModified = true;
-                                tuple.data["old_" + key] = oldData[key];
-                                tuple.data["new_" + key] = newData[key];
-                                delete tuple.data[key];
-                            }
+                    for (var key in newData) {
+                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+                        if (shortestKeyNames.indexOf(key) !== -1) {
+                            tuple.data["old_" + key] = oldData[key];
+                            tuple.data["new_" + key] = newData[key];
+                            delete tuple.data[key];
                         }
                     }
                 });
-                // if multiple tuples, all columns are added to the projections
-                if (tuples.length > 1) {
-                    columnProjections = this.columns.map(function (col) {
-                        return col.name;
-                    });
-                }
+
+                columnProjections = this.columns.map(function (col) {
+                    return col.name;
+                });
 
                 tuples.forEach(function(tuple) {
                     submissionData.push(tuple.data);
                 });
 
-
+                // always alias the shortest key in the uri
                 for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     keyName = shortestKeyNames[j];
-                    // shortest key column was modified
-                    if (columnProjections.indexOf(keyName) !== -1) {
-                        // need to alias the key in the uri
-                        uri += "old_" + module._fixedEncodeURIComponent(keyName) + ":=";
-                    }
 
-                    uri += module._fixedEncodeURIComponent(keyName);
+                    // need to alias the key in the uri
+                    uri += "old_" + module._fixedEncodeURIComponent(keyName) + ":=" + module._fixedEncodeURIComponent(keyName);
                 }
 
-                // separator for denoting where the keyset ends and the update column set beginsß
+                // separator for denoting where the keyset ends and the update column set begins
                 uri += ';';
 
                 for (var k = 0; k < columnProjections.length; k++) {

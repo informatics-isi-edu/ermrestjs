@@ -1698,8 +1698,8 @@ var ERMrest = (function (module) {
                 // Get markdown pattern from the annotation value
 
                 var template = annotation.markdown_pattern; // pattern
-                
-                // Code to do template/string replacement using keyValues 
+
+                // Code to do template/string replacement using keyValues
                 value = module._renderTemplate(template, keyValues, options);
             }
 
@@ -1803,7 +1803,7 @@ var ERMrest = (function (module) {
          * @retuns {string} string representation of Column
          */
         toString: function() {
-            return [module._fixedEncodeURIComponent(this.table.schema.name), 
+            return [module._fixedEncodeURIComponent(this.table.schema.name),
                     module._fixedEncodeURIComponent(this.table.name),
                     module._fixedEncodeURIComponent(this.name)].join(":");
         },

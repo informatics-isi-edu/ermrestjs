@@ -15,6 +15,7 @@ require('./../../utils/starter.spec.js').runTests({
     schemaConfigurations: [
         "/reference/conf/reference.conf.json",
         "/reference/conf/reference_2.conf.json",
-        "/reference/conf/reference_altTables.conf.json"
+        "/reference/conf/reference_altTables.conf.json",
+        "/reference/conf/update.conf.json"
     ]
 });

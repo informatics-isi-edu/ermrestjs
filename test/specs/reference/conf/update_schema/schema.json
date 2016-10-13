@@ -2,7 +2,7 @@
     "schema_name": "update_schema",
     "tables": {
         "update_table": {
-            "comment": "Table to represent a reference object with independednt and compositre keys for updating",
+            "comment": "Table to represent a reference object with independent and composite keys for updating",
             "kind": "table",
             "keys": [
                 {
@@ -41,12 +41,15 @@
                     ]
                 }
             ],
+            "foreign_keys": [],
+            "table_name": "update_table",
+            "schema_name": "update_schema",
             "column_definitions": [
                 {
                     "name": "ind_key1",
                     "nullok": false,
                     "type": {
-                        "typename": "text"
+                        "typename": "int"
                     }
                 }, {
                     "name": "ind_key2",
