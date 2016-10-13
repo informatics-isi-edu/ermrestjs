@@ -130,7 +130,7 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
-        * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+        * [new PseudoColumn(foreignKeyRef, column, location)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
         * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
@@ -1141,7 +1141,7 @@ returns string representation of Column
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.PseudoColumn](#ERMrest.PseudoColumn)
-    * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+    * [new PseudoColumn(foreignKeyRef, column, location)](#new_ERMrest.PseudoColumn_new)
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
     * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
@@ -1153,14 +1153,15 @@ returns string representation of Column
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
-#### new PseudoColumn(foreignKeyRef, column)
+#### new PseudoColumn(foreignKeyRef, column, location)
 Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | the foreignKeyRef that represents this PseudoColumn |
-| column | <code>[Column](#ERMrest.Column)</code> | the column that this PseudoColumn will be created based on. |
+| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents this PseudoColumn |
+| column | <code>[Column](#ERMrest.Column)</code> | The column that this PseudoColumn will be created based on. |
+| location | <code>ERMrest.Location</code> | The location that represents the actual Reference which this PseudoColumn is part of. |
 
 <a name="ERMrest.PseudoColumn+isPseudo"></a>
 

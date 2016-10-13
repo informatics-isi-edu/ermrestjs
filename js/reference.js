@@ -259,7 +259,7 @@ var ERMrest = (function(module) {
          */
         get columns() {
             if (this._pseudoColumns === undefined) {
-                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);    
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns, this._location);    
             }
             return this._pseudoColumns;
         },
@@ -440,7 +440,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    var ref = new Reference(module._parse(uri));
+                    var ref = new Reference(module._parse(uri), this._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
                     var page = new Page(ref, response.data, false, false);
 

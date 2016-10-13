@@ -1535,7 +1535,7 @@ var ERMrest = (function (module) {
         },
 
         // Get PseudoColumns based on the context.
-        _contextualize: function (context, columns) {            
+        _contextualize: function (context, columns, location) {            
             if (typeof columns == 'undefined') {
                 columns = this.all();
             }
@@ -1565,7 +1565,7 @@ var ERMrest = (function (module) {
                             if (fkName in addedFKs) continue;
 
                             addedFKs[fkName] = 1;
-                            col = new PseudoColumn(fk, fk.colset.columns[0]);
+                            col = new PseudoColumn(fk, fk.colset.columns[0], location);
                         } else {
                             colFound = false;
                             for (j=0; j < columns.length && !colFound; j++) {
@@ -1600,7 +1600,7 @@ var ERMrest = (function (module) {
 
                             // multiple simple FKR
                             if (fk.simple) {
-                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
+                                visiblePseudoColumns.push(new PseudoColumn(fk, col, location));
                             } 
                             // multiple composite FKR
                             else { 
@@ -1614,7 +1614,7 @@ var ERMrest = (function (module) {
                                 // hold composite FKR and avoid duplicate
                                 compositeFKKey = fk.constraint_names[0].join(":");
                                 if (!(compositeFKKey in compositeFKs)) {
-                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
+                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col, location);
                                 }
                             }
                         }
@@ -1874,12 +1874,13 @@ var ERMrest = (function (module) {
     /**
      * @memberOf ERMrest
      * @constructor
-     * @param {ERMrest.ForeginKeyRef} foreignKeyRef the foreignKeyRef that represents this PseudoColumn
-     * @param {ERMrest.Column} column the column that this PseudoColumn will be created based on.
+     * @param {ERMrest.ForeginKeyRef} foreignKeyRef The foreignKeyRef that represents this PseudoColumn
+     * @param {ERMrest.Column} column The column that this PseudoColumn will be created based on.
+     * @param {ERMrest.Location} location The location that represents the actual Reference which this PseudoColumn is part of.
      * @desc
      * Constructor for PseudoColumn. This class extends {@link ERMrest.Column}.
      */
-    function PseudoColumn(foreignKey, column) {
+    function PseudoColumn(foreignKey, column, location) {
 
         // make sure all the properties of column are in PseudoColumn
         Column.call(this, foreignKey._table, column._jsonColumn);
@@ -1946,11 +1947,16 @@ var ERMrest = (function (module) {
          */
         this.table = foreignKey.key.table;
 
+
+        // create ermrest url using the location
+        var ermrestURI = [location.service , "catalog" , module._fixedEncodeURIComponent(location.catalog), 
+                            "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
+        
         /**
          * @type {ERMrest.Reference}
          * @desc The reference object that represents this PseudoColumn. This reference is not contextualized.
          */
-        this.reference = null;
+        this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
 
         /**
          * @desc Formats the presentation value corresponding to this PseudoColumn.
@@ -1959,17 +1965,10 @@ var ERMrest = (function (module) {
          *  - link: link to detailed view of reference
          */
         this.formatPresentation = function (data, options) {
-            var location = options.location, value;
+            var value;
 
             // use row name as the caption
             var caption = module._generateRowName(this.table, options.context, data);
-
-            // create ermrest url
-            var ermrestURI = [location.service , "catalog" , module._fixedEncodeURIComponent(location.catalog), 
-                              "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
-            
-            // get the reference
-            this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
 
             // if caption has a link, don't add the link.
             if (caption.match(/<a/)) {
