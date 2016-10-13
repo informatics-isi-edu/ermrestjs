@@ -355,7 +355,7 @@
                 }
             }
         },
-        "paging_table_no_sort": {
+        "paging table no sort": {
             "comment": "",
             "kind": "table",
             "keys": [
@@ -363,37 +363,37 @@
                     "comment": null,
                     "annotations": {},
                     "unique_columns": [
-                        "id"
+                        "id x"
                     ]
                 },
                 {
                     "comment": null,
                     "annotations": {},
                     "unique_columns": [
-                        "value"
+                        "value x"
                     ]
                 }
             ],
             "entityCount": 0,
             "foreign_keys": [],
-            "table_name": "paging_table_no_sort",
+            "table_name": "paging table no sort",
             "schema_name": "reference_schema",
             "column_definitions": [
                 {
-                    "name": "id",
+                    "name": "id x",
                     "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
-                    "name": "name",
+                    "name": "name x",
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
-                    "name": "value",
+                    "name": "value x",
                     "nullok": false,
                     "type": {
                         "typename": "integer"
@@ -402,7 +402,7 @@
             ],
             "annotations": {}
         },
-        "paging_table_w_sort": {
+        "paging table w sort": {
             "comment": "",
             "kind": "table",
             "keys": [
@@ -410,30 +410,30 @@
                     "comment": null,
                     "annotations": {},
                     "unique_columns": [
-                        "id"
+                        "id x"
                     ]
                 }
             ],
             "entityCount": 0,
             "foreign_keys": [],
-            "table_name": "paging_table_w_sort",
+            "table_name": "paging table w sort",
             "schema_name": "reference_schema",
             "column_definitions": [
                 {
-                    "name": "id",
+                    "name": "id x",
                     "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
-                    "name": "name",
+                    "name": "name x",
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
-                    "name": "value",
+                    "name": "value x",
                     "type": {
                         "typename": "integer"
                     }
@@ -442,7 +442,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*" : {
-                        "row_order": [{"column":"name", "descending":false}]
+                        "row_order": [{"column":"name x", "descending":false}]
                     }
                 }
             }
