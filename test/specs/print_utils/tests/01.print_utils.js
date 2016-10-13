@@ -143,40 +143,84 @@ exports.execute = function (options) {
         });
 
         var obj = {
-            str: "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **"
+            str: "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
+            "m1": "[a markdown link](http://example.com/foo)",
+            "m2": "[a markdown link](http://example.com/foo/\\(a,b\\))",
+            "u2": "http://example.com/foo/(a,b)",
+            "p": "messy(){}[]<>/;,$=*punctuation",
+            "n": "ǝɯɐu",
+            "ǝɯɐu": "name"
         };
 
+        var templateCases = [{
+              "template": "{{{m1}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo)",
+              "after_render": "<p><a href=\"http://example.com/foo\">a markdown link</a></p>"
+            }, {
+              "template": "{{{m2}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link]({{#escape}}{{u2}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:\\/\\/example\\.com\\/foo\\/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id={{#escape}}({{#encode}}{{{p}}}{{/encode}}){{/escape}})",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, the escape block protects the bare parens for us"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id=\\({{#encode}}{{p}}{{/encode}}\\))",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, I markdown-escape the bare parens myself for the same final output HTML"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{{ǝɯɐu}}}={{{n}}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=ǝɯɐu)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL in this HTML is not actually valid according to RFC 3986!"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{ǝɯɐu}}={{#encode}}{{n}}{{/encode}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{#escape}}{{ǝɯɐu}}={{#encode}}{{n}}{{/encode}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
+              "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
+            }, {
+                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{str}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With no encoding and escaping. Should give malformed HTML"
+            },{
+                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
+            },{
+                "template" : "[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{str}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With escaping but no encoding. Should give malformed HTML"
+            },{
+                "template" : "[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
+            }];
+
         it('module._renderTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
-            var printMarkdown = formatUtils.printMarkdown;
-
-            // Without encoding for link and escaping for caption
-            var output = "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)";
-            var template = module._renderTemplate("[{{str}}](https://dev.isrd.isi.edu/key={{str}})", obj);
-            expect(template).toBe(output);
-            var html = printMarkdown(template);
-            expect(html).toBe('<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>\n');
-
-            // With encoding for link but Without escaping for caption
-            var output1 = "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)";
-            var template1 = module._renderTemplate("[{{str}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})", obj);
-            expect(template1).toBe(output1);
-            var html1 = printMarkdown(template1);
-            expect(html1).toBe('<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>\n');
-
-            // With escaping for cpation and Without encoding for link
-            var output2 = "[\\*\\*somevalue \\] which is ! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)";
-            var template2 = module._renderTemplate("[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{str}})", obj);
-            expect(template2).toBe(output2);
-            var html2 = printMarkdown(template2);
-            expect(html2).toBe('<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>\n');
-
-            // With escaping and With encoding
-            var output3 = "[\\*\\*somevalue \\] which is ! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)";
-            var template3 = module._renderTemplate("[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})", obj);
-            expect(template3).toBe(output3);
-            var html3 = printMarkdown(template3);
-            expect(html3).toBe('<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>\n');
+            var printMarkdown = formatUtils.printMarkdown;  
             
+            templateCases.forEach(function(ex) {
+                var template = module._renderTemplate(ex.template, obj);
+                expect(template).toBe(ex.after_mustache);
+                var html = printMarkdown(template);
+                expect(html).toBe(ex.after_render + '\n');
+            });
         });
 
     });
