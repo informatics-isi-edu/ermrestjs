@@ -1,0 +1,10 @@
+require('./../utils/starter.spec.js').runTests({
+    description: 'In column, ',
+    testCases: [
+        "/common/tests/02.column.js"
+    ],
+    schemaConfigurations: [
+        "/common/conf/common_schema_2.conf.json",
+        "/common/conf/common_schema_1.conf.json"
+    ]
+});
