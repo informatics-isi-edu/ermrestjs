@@ -24,13 +24,13 @@
                         "typename": "int"
                     }
                 }, {
-                    "name": "old_key",
+                    "name": "key_o",
                     "nullok": true,
                     "type": {
                         "typename": "text"
                     }
                 }, {
-                    "name": "new_key",
+                    "name": "key_n",
                     "nullok": true,
                     "type": {
                         "typename": "int"

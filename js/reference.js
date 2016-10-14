@@ -649,17 +649,17 @@ var ERMrest = (function(module) {
                     return column.name;
                 });
 
-                tuples.forEach(function (tuple) {
-                    newData = tuple.data;
-                    oldData = tuple._oldData;
+                for(var i = 0; i < tuples.length; i++) {
+                    newData = tuples[i].data;
+                    oldData = tuples[i]._oldData;
+                    submissionData[i] = {};
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        if (shortestKeyNames.indexOf(key) !== -1) tuple.data[key + "_o"] = oldData[key];
-                        tuple.data[key + "_n"] = newData[key];
-                        delete tuple.data[key];
+                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + "_o"] = oldData[key];
+                        submissionData[i][key + "_n"] = newData[key];
                     }
-                });
+                }
 
                 // The list of column names to use in the uri
                 columnProjections = this.columns.map(function (col) {
@@ -667,9 +667,9 @@ var ERMrest = (function(module) {
                 });
 
                 // copy all of the tuple update data to the submission data array. Need to submit an array of objects instead of an array of Tuples
-                tuples.forEach(function(tuple) {
-                    submissionData.push(tuple.data);
-                });
+                // tuples.forEach(function(tuple) {
+                //     submissionData.push(tuple.data);
+                // });
 
                 // always alias the shortest key in the uri
                 for (var j = 0; j < shortestKeyNames.length; j++) {
