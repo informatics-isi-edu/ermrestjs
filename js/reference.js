@@ -74,7 +74,7 @@ var ERMrest = (function(module) {
             var location = module._parse(uri);
             var reference = new Reference(location);
 
-            var server = module.ermrestFactory.getServer(reference._location.service, params);
+            var server = reference._server = module.ermrestFactory.getServer(reference._location.service, params);
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
@@ -397,7 +397,7 @@ var ERMrest = (function(module) {
                 }
 
                 //  do the 'post' call
-                module._http.post(uri, data).then(function(response) {
+                this._server._http.post(uri, data).then(function(response) {
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -554,7 +554,7 @@ var ERMrest = (function(module) {
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                module._http.get(uri).then(function readReference(response) {
+                this._server._http.get(uri).then(function readReference(response) {
                     ownReference._etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -695,7 +695,7 @@ var ERMrest = (function(module) {
                     }
                 };
 
-                module._http.put(uri, submissionData, config).then(function updateReference(response) {
+                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
                     var page;
 
                     if (keyWasModified) {
