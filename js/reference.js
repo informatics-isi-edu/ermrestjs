@@ -431,6 +431,8 @@ var ERMrest = (function(module) {
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
                 });
 
                 return defer.promise;
@@ -584,6 +586,8 @@ var ERMrest = (function(module) {
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
                 });
 
                 return defer.promise;
@@ -725,6 +729,8 @@ var ERMrest = (function(module) {
                     defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
