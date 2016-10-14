@@ -1,6 +1,44 @@
 {
     "schema_name": "update_schema",
     "tables": {
+        "alias_table": {
+            "comment": "Table to represent changing values in a key that shares a similar name with a non-key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "alias_table",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "old_key",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "new_key",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
         "update_table": {
             "comment": "Table to represent a reference object with independent and composite keys for updating",
             "kind": "table",
@@ -117,6 +155,7 @@
         }
     },
     "table_names": [
+        "alias_table",
         "update_table"
     ],
     "comment": null,

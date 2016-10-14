@@ -654,18 +654,19 @@ var ERMrest = (function(module) {
                     oldData = tuple._oldData;
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
-                        if (shortestKeyNames.indexOf(key) !== -1) {
-                            tuple.data["old_" + key] = oldData[key];
-                            tuple.data["new_" + key] = newData[key];
-                            delete tuple.data[key];
-                        }
+                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
+                        if (shortestKeyNames.indexOf(key) !== -1) tuple.data[key + "_o"] = oldData[key];
+                        tuple.data[key + "_n"] = newData[key];
+                        delete tuple.data[key];
                     }
                 });
 
+                // The list of column names to use in the uri
                 columnProjections = this.columns.map(function (col) {
                     return col.name;
                 });
 
+                // copy all of the tuple update data to the submission data array. Need to submit an array of objects instead of an array of Tuples
                 tuples.forEach(function(tuple) {
                     submissionData.push(tuple.data);
                 });
@@ -676,7 +677,7 @@ var ERMrest = (function(module) {
                     keyName = shortestKeyNames[j];
 
                     // need to alias the key in the uri
-                    uri += "old_" + module._fixedEncodeURIComponent(keyName) + ":=" + module._fixedEncodeURIComponent(keyName);
+                    uri += module._fixedEncodeURIComponent(keyName) + "_o:=" + module._fixedEncodeURIComponent(keyName);
                 }
 
                 // separator for denoting where the keyset ends and the update column set begins
@@ -685,9 +686,7 @@ var ERMrest = (function(module) {
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
                     // check if this column is part of the shortest key, alias the column name if it is
-                    if (shortestKeyNames.indexOf(columnProjections[k]) !== -1) uri += "new_" + module._fixedEncodeURIComponent(keyName) + ":=";
-
-                    uri += module._fixedEncodeURIComponent(columnProjections[k]);
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + "_n:=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
                 // var config = {
@@ -720,6 +719,7 @@ var ERMrest = (function(module) {
                                 uri += ')';
                             }
                         }
+                        console.log(uri);
                         var ref = new Reference(module._parse(uri));
                         page = new Page(ref, response.data, false, false);
                     } else {

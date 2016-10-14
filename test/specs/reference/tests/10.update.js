@@ -2,13 +2,58 @@ exports.execute = function (options) {
 
     describe("updating reference objects, ", function () {
         var catalogId = process.env.DEFAULT_CATALOG,
-            schemaName = "update_schema",
-            tableName = "update_table",
-            originalTimeout;
+            schemaName = "update_schema";
 
-        var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
+        describe("for updating aliased columns, ", function () {
+            var tableName = "alias_table",
+                baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
+
+            it("where a key and non-key share similar names when aliased.", function (done) {
+                var tuple, reference,
+                    uri = baseUri + "/key=1";
+
+                var updateData = {
+                    "key": 6
+                };
+
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    return reference.read(1);
+                }).then(function (response) {
+                    tuple = response.tuples[0];
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    expect(response._data.length).toBe(1);
+
+                    var getUri = baseUri + "/key=6";
+                    return options.ermRest.resolve(getUri, {cid: "test"});
+                }).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0];
+
+                    expect(pageData.key).toBe(updateData.key);
+                    expect(pageData.key).not.toBe(tuple._oldData.key);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
 
         describe("for updating ", function () {
+            var tableName = "update_table",
+                baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
+
             describe("a single entity should return a page object, when ", function () {
                 it("modifying an independent key that IS the shortest key.", function (done) {
                     var tuple, reference,
@@ -36,10 +81,17 @@ exports.execute = function (options) {
 
                         expect(page).toBeDefined();
                         expect(page._data).toBeDefined();
+                        expect(page._data.length).toBe(1);
 
-                        expect(page._data[0].old_ind_key1).toBe(tuple._oldData.ind_key1);
-                        expect(page._data[0].new_ind_key1).toBe(updateData.ind_key1);
-                        expect(page._data[0].new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        var getUri = baseUri + "/ind_key1=777";
+                        return options.ermRest.resolve(getUri, {cid: "test"});
+                    }).then(function (response) {
+                        return response.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
+
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                         done();
                     }).catch(function (error) {
@@ -73,11 +125,17 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        var getUri = baseUri + "/ind_key1=2";
+                        return options.ermRest.resolve(getUri, {cid: "test"});
+                    }).then(function (response) {
+                        return response.read(1);
+                    }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.old_ind_key1).toBe(tuple._oldData.ind_key1);
-                        expect(pageData.new_ind_key1).toBe(updateData.ind_key1);
-                        expect(pageData.new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                         expect(pageData.non_key_col3).toBe(updateData.non_key_col3);
                         expect(pageData.non_key_col3).not.toBe(tuple._oldData.non_key_col3);
@@ -112,11 +170,17 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        var getUri = baseUri + "/ind_key1=777";
+                        return options.ermRest.resolve(getUri, {cid: "test"});
+                    }).then(function (response) {
+                        return response.read(1);
+                    }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.old_ind_key1).toBe(tuple._oldData.ind_key1);
-                        expect(pageData.new_ind_key1).toBe(updateData.ind_key1);
-                        expect(pageData.new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                         expect(pageData.ind_key2).toBe(updateData.ind_key2);
                         expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -151,11 +215,17 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        var getUri = baseUri + "/ind_key1=2";
+                        return options.ermRest.resolve(getUri, {cid: "test"});
+                    }).then(function (response) {
+                        return response.read(1);
+                    }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.old_ind_key1).toBe(tuple._oldData.ind_key1);
-                        expect(pageData.new_ind_key1).toBe(updateData.ind_key1);
-                        expect(pageData.new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                         expect(pageData.comp_shared_key_col).toBe(updateData.comp_shared_key_col);
                         expect(pageData.comp_shared_key_col).not.toBe(tuple._oldData.comp_shared_key_col);
@@ -192,11 +262,17 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            expect(response._data.length).toBe(1);
+
+                            var getUri = baseUri + "/ind_key1=777";
+                            return options.ermRest.resolve(getUri, {cid: "test"});
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
                             var pageData = response._data[0];
 
-                            expect(pageData.old_ind_key1).toBe(tuple._oldData.ind_key1);
-                            expect(pageData.new_ind_key1).toBe(updateData.ind_key1);
-                            expect(pageData.new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                            expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                            expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                             expect(pageData.ind_key2).toBe(updateData.ind_key2);
                             expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -235,11 +311,17 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            expect(response._data.length).toBe(1);
+
+                            var getUri = baseUri + "/ind_key1=2";
+                            return options.ermRest.resolve(getUri, {cid: "test"});
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
                             var pageData = response._data[0];
 
-                            expect(pageData.old_ind_key1).toBe(tuple._oldData.ind_key1);
-                            expect(pageData.new_ind_key1).toBe(updateData.ind_key1);
-                            expect(pageData.new_ind_key1).not.toBe(tuple._oldData.ind_key1);
+                            expect(pageData.ind_key1).toBe(updateData.ind_key1);
+                            expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
 
                             expect(pageData.ind_key2).toBe(updateData.ind_key2);
                             expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -290,12 +372,14 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        return reference.read(1);
+                    }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
-
-                        expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
                         expect(pageData.ind_key2).toBe(updateData.ind_key2);
+                        expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
 
                         done();
                     }).catch(function (error) {
@@ -321,9 +405,11 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        var pageData = response._data[0];
+                        expect(response._data.length).toBe(1);
 
-                        expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                        return reference.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
 
                         expect(pageData.comp_key1_col3).toBe(updateData.comp_key1_col3);
                         expect(pageData.comp_key1_col3).not.toBe(tuple._oldData.comp_key1_col3);
@@ -352,9 +438,11 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        var pageData = response._data[0];
+                        expect(response._data.length).toBe(1);
 
-                        expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                        return reference.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
 
                         expect(pageData.comp_shared_key_col).toBe(updateData.comp_shared_key_col);
                         expect(pageData.comp_shared_key_col).not.toBe(tuple._oldData.comp_shared_key_col);
@@ -383,9 +471,11 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        var pageData = response._data[0];
+                        expect(response._data.length).toBe(1);
 
-                        expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                        return reference.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
 
                         expect(pageData.non_key_col3).toBe(updateData.non_key_col3);
                         expect(pageData.non_key_col3).not.toBe(tuple._oldData.non_key_col3);
@@ -417,9 +507,11 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
-                            var pageData = response._data[0];
+                            expect(response._data.length).toBe(1);
 
-                            expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                            return reference.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0];
 
                             expect(pageData.non_key_col1).toBe(updateData.non_key_col1);
                             expect(pageData.non_key_col1).not.toBe(tuple._oldData.non_key_col1);
@@ -452,9 +544,11 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
-                            var pageData = response._data[0];
+                            expect(response._data.length).toBe(1);
 
-                            expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                            return reference.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0];
 
                             expect(pageData.comp_key1_col2).toBe(updateData.comp_key1_col2);
                             expect(pageData.comp_key1_col2).not.toBe(tuple._oldData.comp_key1_col2);
@@ -487,9 +581,11 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
-                            var pageData = response._data[0];
+                            expect(response._data.length).toBe(1);
 
-                            expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                            return reference.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0];
 
                             expect(pageData.ind_key2).toBe(updateData.ind_key2);
                             expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -524,9 +620,11 @@ exports.execute = function (options) {
 
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
-                                    var pageData = response._data[0];
+                                    expect(response._data.length).toBe(1);
 
-                                    expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                    return reference.read(1);
+                                }).then(function (response) {
+                                    var pageData = response._data[0];
 
                                     expect(pageData.comp_key2_col1).toBe(updateData.comp_key2_col1);
                                     expect(pageData.comp_key2_col1).not.toBe(tuple._oldData.comp_key2_col1);
@@ -559,9 +657,11 @@ exports.execute = function (options) {
 
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
-                                    var pageData = response._data[0];
+                                    expect(response._data.length).toBe(1);
 
-                                    expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                    return reference.read(1);
+                                }).then(function (response) {
+                                    var pageData = response._data[0];
 
                                     expect(pageData.comp_key1_col1).toBe(updateData.comp_key1_col1);
                                     expect(pageData.comp_key1_col1).not.toBe(tuple._oldData.comp_key1_col1);
@@ -595,9 +695,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.comp_key2_col1).toBe(updateData.comp_key2_col1);
                                 expect(pageData.comp_key2_col1).not.toBe(tuple._oldData.comp_key2_col1);
@@ -630,9 +732,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.ind_key2).toBe(updateData.ind_key2);
                                 expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -668,9 +772,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.comp_key1_col1).toBe(updateData.comp_key1_col1);
                                 expect(pageData.comp_key1_col1).not.toBe(tuple._oldData.comp_key1_col1);
@@ -707,9 +813,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.ind_key2).toBe(updateData.ind_key2);
                                 expect(pageData.ind_key2).not.toBe(tuple._oldData.ind_key2);
@@ -748,9 +856,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.non_key_col2).toBe(updateData.non_key_col2);
                                 expect(pageData.non_key_col2).not.toBe(tuple._oldData.non_key_col2);
@@ -787,9 +897,11 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
-                                var pageData = response._data[0];
+                                expect(response._data.length).toBe(1);
 
-                                expect(pageData.new_ind_key1).toBe(tuple._oldData.ind_key1);
+                                return reference.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0];
 
                                 expect(pageData.non_key_col3).toBe(updateData.non_key_col3);
                                 expect(pageData.non_key_col3).not.toBe(tuple._oldData.non_key_col3);
