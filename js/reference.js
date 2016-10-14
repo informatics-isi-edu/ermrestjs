@@ -555,7 +555,7 @@ var ERMrest = (function(module) {
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
                 module._http.get(uri).then(function readReference(response) {
-                    // ownReference._etag = response.headers().etag;
+                    ownReference._etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -689,13 +689,13 @@ var ERMrest = (function(module) {
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + "_n:=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                // var config = {
-                //     headers: {
-                //         "If-Match": this._etag
-                //     }
-                // };
+                var config = {
+                    headers: {
+                        "If-Match": this._etag
+                    }
+                };
 
-                module._http.put(uri, submissionData).then(function updateReference(response) {
+                module._http.put(uri, submissionData, config).then(function updateReference(response) {
                     var page;
 
                     if (keyWasModified) {
@@ -719,7 +719,6 @@ var ERMrest = (function(module) {
                                 uri += ')';
                             }
                         }
-                        console.log(uri);
                         var ref = new Reference(module._parse(uri));
                         page = new Page(ref, response.data, false, false);
                     } else {
