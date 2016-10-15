@@ -38,6 +38,8 @@ var ERMrest = (function (module) {
      * Angular $http service object
      * @type {Object}
      * @private
+     * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
+     * When making requests using http, use server._http
      */
     module._http = null;
 
