@@ -741,8 +741,26 @@ var ERMrest = (function(module) {
          */
         delete: function() {
             try {
-                // TODO
-                notimplemented();
+                var defer = module._q.defer();
+
+                var config = {
+                    headers: {
+                        "If-Match": this._etag
+                    }
+                };
+
+                this._server._http.delete(this.uri, config).then(function deleteReference(response) {
+                    console.log(response);
+
+                    defer.resolve();
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);

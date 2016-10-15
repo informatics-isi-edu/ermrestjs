@@ -1,0 +1,48 @@
+{
+    "schema_name": "delete_schema",
+    "tables": {
+        "delete_table": {
+            "comment": "Table to represent deleting entities",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key_col"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "delete_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "key_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "text_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "int_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "delete_table"
+    ],
+    "comment": null,
+    "annotations": {}
+}
