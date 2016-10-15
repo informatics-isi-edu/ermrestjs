@@ -666,11 +666,6 @@ var ERMrest = (function(module) {
                     return col.name;
                 });
 
-                // copy all of the tuple update data to the submission data array. Need to submit an array of objects instead of an array of Tuples
-                // tuples.forEach(function(tuple) {
-                //     submissionData.push(tuple.data);
-                // });
-
                 // always alias the shortest key in the uri
                 for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
