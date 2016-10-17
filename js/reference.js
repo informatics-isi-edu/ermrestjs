@@ -290,7 +290,7 @@ var ERMrest = (function(module) {
          */
         get canCreate() {
             if (this._canCreate === undefined) {
-                this._canCreate = this._checkPermissions('content_write_user');
+                this._canCreate = this._checkPermissions("content_write_user");
             }
             return this._canCreate;
         },
@@ -302,6 +302,9 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canRead() {
+            if (this._canRead === undefined) {
+                this._canRead = this._checkPermissions("content_read_user");
+            }
             return undefined;
         },
 
@@ -313,7 +316,7 @@ var ERMrest = (function(module) {
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                this._canUpdate = this._checkPermissions('content_write_user');
+                this._canUpdate = this._checkPermissions("content_write_user");
             }
             return this._canUpdate;
         },
@@ -325,7 +328,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canDelete() {
-            return undefined;
+            if (this._canDelete === undefined) {
+                this._canDelete = this._checkPermissions("content_write_user");
+            }
+            return this._canUpdate;
         },
 
         /**
