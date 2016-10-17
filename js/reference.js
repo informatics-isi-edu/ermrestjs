@@ -750,7 +750,6 @@ var ERMrest = (function(module) {
                 };
 
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-                    console.log(response);
 
                     defer.resolve();
                 }, function error(response) {
