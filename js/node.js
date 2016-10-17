@@ -29,7 +29,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Inject _markdownIt module in ERMrest
      * Make markdownit use Sub, Sup and Attrs plugin
      */
-    ERMrest._markdownIt = require('markdown-it')({ typographer : true })
+    ERMrest._markdownIt = require('markdown-it')({ typographer : true, breaks: true })
                             .use(require('markdown-it-sub')) // add subscript support
                             .use(require('markdown-it-sup')) // add superscript support;
                             .use(require('markdown-it-attrs')); // add attrs support
@@ -111,7 +111,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
              * Inject _markdownIt module in ERMrest
              * Make markdownit use Sub, Sup and Attrs plugin
              */
-            ERMrest._markdownIt = window.markdownit({ typographer : true })
+            ERMrest._markdownIt = window.markdownit({ typographer : true, breaks: true })
                     .use(window.markdownitSub)
                     .use(window.markdownitSup)
                     .use(window.markdownItAttrs);
