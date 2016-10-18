@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "update_schema",
+        "createNew": true,
+        "path": "test/specs/reference/conf/update_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/reference/conf/update_schema/data"
+    }
+}

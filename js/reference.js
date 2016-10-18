@@ -74,7 +74,7 @@ var ERMrest = (function(module) {
             var location = module._parse(uri);
             var reference = new Reference(location);
 
-            var server = module.ermrestFactory.getServer(reference._location.service, params);
+            var server = reference._server = module.ermrestFactory.getServer(reference._location.service, params);
             server.catalogs.get(reference._location.catalog).then(function (catalog) {
                 reference._meta = catalog.meta;
 
@@ -397,7 +397,7 @@ var ERMrest = (function(module) {
                 }
 
                 //  do the 'post' call
-                module._http.post(uri, data).then(function(response) {
+                this._server._http.post(uri, data).then(function(response) {
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -430,6 +430,8 @@ var ERMrest = (function(module) {
                     return defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
@@ -531,7 +533,7 @@ var ERMrest = (function(module) {
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
-                            sortObject.push({"column":module._fixedEncodeURIComponent(col), "descending":false}); // add key to sort
+                            sortObject.push({"column": col, "descending":false}); // add key to sort
                         }
                     }
                     this._location.sortObject = sortObject;
@@ -552,7 +554,8 @@ var ERMrest = (function(module) {
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                module._http.get(uri).then(function readReference(response) {
+                this._server._http.get(uri).then(function readReference(response) {
+                    ownReference._etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -582,6 +585,8 @@ var ERMrest = (function(module) {
 
                 }, function error(response) {
                     var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
@@ -621,12 +626,109 @@ var ERMrest = (function(module) {
          * Updates a set of resources.
          * @param {!Array} tbd TBD parameters. Probably an array of pairs of
          * [ (keys+values, allvalues)]+ ] for all entities to be updated.
-         * @returns {Promise} A promise for a TBD result or errors.
+         * @returns {Promise} page A promise for a page result or errors.
          */
-        update: function(tbd) {
+        update: function(tuples) {
             try {
-                // TODO
-                notimplemented();
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+
+                var defer = module._q.defer();
+
+                var self = this,
+                    uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
+
+                var submissionData = [],
+                    columnProjections = [],
+                    shortestKeyNames = [],
+                    keyWasModified = false,
+                    tuple, oldData, newData, keyName;
+
+
+                shortestKeyNames = this._shortestKey.map(function (column) {
+                    return column.name;
+                });
+
+                for(var i = 0; i < tuples.length; i++) {
+                    newData = tuples[i].data;
+                    oldData = tuples[i]._oldData;
+                    submissionData[i] = {};
+                    for (var key in newData) {
+                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
+                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + "_o"] = oldData[key];
+                        submissionData[i][key + "_n"] = newData[key];
+                    }
+                }
+
+                // The list of column names to use in the uri
+                columnProjections = this.columns.map(function (col) {
+                    return col.name;
+                });
+
+                // always alias the shortest key in the uri
+                for (var j = 0; j < shortestKeyNames.length; j++) {
+                    if (j !== 0) uri += ',';
+                    keyName = shortestKeyNames[j];
+
+                    // need to alias the key in the uri
+                    uri += module._fixedEncodeURIComponent(keyName) + "_o:=" + module._fixedEncodeURIComponent(keyName);
+                }
+
+                // separator for denoting where the keyset ends and the update column set begins
+                uri += ';';
+
+                for (var k = 0; k < columnProjections.length; k++) {
+                    if (k !== 0) uri += ',';
+                    // check if this column is part of the shortest key, alias the column name if it is
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + "_n:=" + module._fixedEncodeURIComponent(columnProjections[k]);
+                }
+
+                var config = {
+                    headers: {
+                        "If-Match": this._etag
+                    }
+                };
+
+                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                    var page;
+
+                    if (keyWasModified) {
+                        var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
+                        // loop through each returned Row and get the key value
+                        for (var j = 0; j < response.data.length; j++) {
+                            if (j !== 0)
+                                uri += ';';
+                            // shortest key is made up from one column
+                            if (self._shortestKey.length == 1) {
+                                keyName = self._shortestKey[0].name;
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                            } else {
+                                uri += '(';
+                                for (var k = 0; k < self._shortestKey.length; k++) {
+                                    if (k !== 0)
+                                        uri += '&';
+                                    keyName = self._shortestKey[k].name;
+                                    uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                                }
+                                uri += ')';
+                            }
+                        }
+                        var ref = new Reference(module._parse(uri));
+                        page = new Page(ref, response.data, false, false);
+                    } else {
+                        page = new Page(self, response.data, false, false);
+                    }
+
+                    defer.resolve(page);
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -841,8 +943,11 @@ var ERMrest = (function(module) {
             var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
             if (tag && module._appLinkFn) {
                 return module._appLinkFn(tag, this._location);
-            } else
-                return undefined; // app link not specified by annotation
+            } else if (!tag && this._context)
+                return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+            else {
+                return undefined;
+            }
         },
 
         setNewTable: function(table) {
@@ -951,8 +1056,8 @@ var ERMrest = (function(module) {
                 // case 2: no filter
                 if (source._location.filter === undefined) {
                     // case 1: no filter
-                    newRef._location = module._parse(source._location.service + "/catalog/" + source._location.catalog + "/" +
-                            source._location.api + "/" + newTable.schema.name + ":" + newTable.name);
+                    newRef._location = module._parse(source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name));
                 } else {
 
                     var newLocationString;
@@ -976,13 +1081,14 @@ var ERMrest = (function(module) {
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
                                 if (newTable._isAlternativeTable()) // to alternative table
-                                    filterString = newTable._altForeignKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
+                                        "=" + filter.value;
                                 else // to base table
-                                    filterString = sharedKey.colset.columns[0].name + "=" + filter.value;
+                                    filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                             }
 
-                            newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                                source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                                 filterString;
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
@@ -1045,11 +1151,11 @@ var ERMrest = (function(module) {
                                     for (j = 0; j < filter.filters.length; j++) {
                                         var f = filter.filters[j];
                                         // map column
-                                        filterString += (j === 0? "" : "&") + mapping[f.column] + "=" + f.value;
+                                        filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
                                     }
 
-                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
-                                        source._location.api + "/" + newTable.schema.name + ":" + newTable.name + "/" +
+                                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
                             }
@@ -1338,14 +1444,14 @@ var ERMrest = (function(module) {
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
+                var uri = this._pageRef._location.service + "/catalog/" + module._fixedEncodeURIComponent(this._pageRef._location.catalog) + "/" +
                     this._pageRef._location.api + "/";
 
                 // if this is an alternative table, use base table
                 if (this._pageRef._table._isAlternativeTable()) {
                     var baseTable = this._pageRef._table._baseTable;
                     this._ref.setNewTable(baseTable);
-                    uri = uri + baseTable.schema.name + ":" + baseTable.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(baseTable.schema.name) + ":" + module._fixedEncodeURIComponent(baseTable.name) + "/";
 
                     // convert filter columns to base table columns using shared key
                     var fkey = this._pageRef._table._altForeignKey;
@@ -1361,7 +1467,7 @@ var ERMrest = (function(module) {
                 } else {
                     // update its location by adding the tuple’s key filter to the URI
                     // don't keep any modifiers
-                    uri = uri + this._ref._table.schema.name + ":" + this._ref._table.name + "/";
+                    uri = uri + module._fixedEncodeURIComponent(this._ref._table.schema.name) + ":" + module._fixedEncodeURIComponent(this._ref._table.name) + "/";
                     for (var k = 0; k < this._ref._shortestKey.length; k++) {
                         var col = this._pageRef._shortestKey[k].name;
                         if (k === 0) {
@@ -1379,6 +1485,17 @@ var ERMrest = (function(module) {
 
             }
             return this._ref;
+        },
+
+        /**
+         *
+         */
+        get data() {
+            if (this._oldData === undefined) {
+                // interesting trick to deep copy an array of data without functions
+                this._oldData = JSON.parse(JSON.stringify(this._data));
+            }
+            return this._data;
         },
 
         /**

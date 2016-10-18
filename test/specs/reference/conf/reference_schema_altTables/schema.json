@@ -1,7 +1,7 @@
 {
-  "schema_name": "reference_schema_altTables",
+  "schema_name": "reference schema altTables",
   "tables": {
-    "base_table": {
+    "base table": {
       "comment": "base table",
       "kind": "table",
       "keys": [
@@ -15,8 +15,8 @@
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "base_table",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "base table",
+      "schema_name": "reference schema altTables",
       "column_definitions": [
         {
           "name": "id",
@@ -40,9 +40,9 @@
       ],
       "annotations": {
         "tag:isrd.isi.edu,2016:table-alternatives": {
-          "detailed": ["reference_schema_altTables", "alt_table_detailed"],
-          "compact": ["reference_schema_altTables", "alt_table_compact"],
-          "entry": ["reference_schema_altTables", "base_table"]
+          "detailed": ["reference schema altTables", "alt table detailed"],
+          "compact": ["reference schema altTables", "alt table compact"],
+          "entry": ["reference schema altTables", "base table"]
         },
         "tag:isrd.isi.edu,2016:app-links": {
           "detailed": "tag:isrd.isi.edu,2016:chaise:search",
@@ -50,26 +50,26 @@
         }
       }
     },
-    "alt_table_detailed": {
+    "alt table detailed": {
       "comment": "alternative table for detailed context",
       "kind": "table",
-      "table_name": "alt_table_detailed",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "alt table detailed",
+      "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idx"]
+        "unique_columns": ["id x"]
       }],
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "names": [["reference schema altTables", "base table fk"]],
           "foreign_key_columns": [{
-            "table_name": "alt_table_detailed",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "idx"
+            "table_name": "alt table detailed",
+            "schema_name": "reference schema altTables",
+            "column_name": "id x"
           }],
           "referenced_columns": [{
-            "table_name": "base_table",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table",
+            "schema_name": "reference schema altTables",
             "column_name": "id"
           }],
           "annotations": {}
@@ -77,7 +77,7 @@
       ],
       "column_definitions": [
         {
-          "name": "idx",
+          "name": "id x",
           "nullok": false,
           "type": {
             "typename": "text"
@@ -91,26 +91,26 @@
         }
       ]
     },
-    "alt_table_compact": {
+    "alt table compact": {
       "comment": "alternative table for compact context",
       "kind": "table",
-      "table_name": "alt_table_compact",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "alt table compact",
+      "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idy"]
+        "unique_columns": ["id y"]
       }],
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "names": [["reference schema altTables", "base table fk"]],
           "foreign_key_columns": [{
-            "table_name": "alt_table_compact",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "idy"
+            "table_name": "alt table compact",
+            "schema_name": "reference schema altTables",
+            "column_name": "id y"
           }],
           "referenced_columns": [{
-            "table_name": "base_table",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table",
+            "schema_name": "reference schema altTables",
             "column_name": "id"
           }],
           "annotations": {}
@@ -118,7 +118,7 @@
       ],
       "column_definitions": [
         {
-          "name": "idy",
+          "name": "id y",
           "nullok": false,
           "type": {
             "typename": "text"
@@ -132,7 +132,7 @@
         }
       ]
     },
-    "base_table_no_app_link": {
+    "base table no app link": {
       "comment": "base table without app link annotation",
       "kind": "table",
       "keys": [
@@ -146,8 +146,8 @@
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "base_table_no_app_link",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "base table no app link",
+      "schema_name": "reference schema altTables",
       "column_definitions": [
         {
           "name": "id",
@@ -172,42 +172,42 @@
       ],
       "annotations": {
         "tag:isrd.isi.edu,2016:table-alternatives": {
-          "detailed": ["reference_schema_altTables", "alt_table_detailed_2"],
-          "compact": ["reference_schema_altTables", "alt_table_compact_2"],
-          "entry": ["reference_schema_altTables", "base_table_no_app_link"]
+          "detailed": ["reference schema altTables", "alt table detailed 2"],
+          "compact": ["reference schema altTables", "alt table compact 2"],
+          "entry": ["reference schema altTables", "base table no app link"]
         }
       }
     },
-    "alt_table_detailed_2": {
+    "alt table detailed 2": {
       "comment": "alternative table for detailed context",
       "kind": "table",
-      "table_name": "alt_table_detailed_2",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "alt table detailed 2",
+      "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idx", "valuex"]
+        "unique_columns": ["id x", "value x"]
       }],
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "names": [["reference schema altTables", "base table fk"]],
           "foreign_key_columns": [{
-            "table_name": "alt_table_detailed_2",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "idx"
+            "table_name": "alt table detailed 2",
+            "schema_name": "reference schema altTables",
+            "column_name": "id x"
           },
           {
-            "table_name": "alt_table_detailed_2",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "valuex"
+            "table_name": "alt table detailed 2",
+            "schema_name": "reference schema altTables",
+            "column_name": "value x"
           }],
           "referenced_columns": [{
-            "table_name": "base_table_no_app_link",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table no app link",
+            "schema_name": "reference schema altTables",
             "column_name": "id"
           },
           {
-            "table_name": "base_table_no_app_link",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table no app link",
+            "schema_name": "reference schema altTables",
             "column_name": "value"
           }],
           "annotations": {}
@@ -215,14 +215,14 @@
       ],
       "column_definitions": [
         {
-          "name": "idx",
+          "name": "id x",
           "nullok": false,
           "type": {
             "typename": "text"
           }
         },
         {
-          "name": "valuex",
+          "name": "value x",
           "nullok": false,
           "type": {
             "typename": "integer"
@@ -236,36 +236,36 @@
         }
       ]
     },
-    "alt_table_compact_2": {
+    "alt table compact 2": {
       "comment": "alternative table for compact context",
       "kind": "table",
-      "table_name": "alt_table_compact_2",
-      "schema_name": "reference_schema_altTables",
+      "table_name": "alt table compact 2",
+      "schema_name": "reference schema altTables",
       "keys": [{
-        "unique_columns": ["idy", "valuey"]
+        "unique_columns": ["id y", "value y"]
       }],
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference_schema_altTables", "base_table_fk"]],
+          "names": [["reference schema altTables", "base table fk_"]],
           "foreign_key_columns": [{
-            "table_name": "alt_table_compact_2",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "idy"
+            "table_name": "alt table compact 2",
+            "schema_name": "reference schema altTables",
+            "column_name": "id y"
           },
           {
-            "table_name": "alt_table_compact_2",
-            "schema_name": "reference_schema_altTables",
-            "column_name": "valuey"
+            "table_name": "alt table compact 2",
+            "schema_name": "reference schema altTables",
+            "column_name": "value y"
           }],
           "referenced_columns": [{
-            "table_name": "base_table_no_app_link",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table no app link",
+            "schema_name": "reference schema altTables",
             "column_name": "id"
           },
           {
-            "table_name": "base_table_no_app_link",
-            "schema_name": "reference_schema_altTables",
+            "table_name": "base table no app link",
+            "schema_name": "reference schema altTables",
             "column_name": "value"
           }],
           "annotations": {}
@@ -273,14 +273,14 @@
       ],
       "column_definitions": [
         {
-          "name": "idy",
+          "name": "id y",
           "nullok": false,
           "type": {
             "typename": "text"
           }
         },
         {
-          "name": "valuey",
+          "name": "value y",
           "nullok": false,
           "type": {
             "typename": "integer"
@@ -296,12 +296,12 @@
     }
   },
   "table_names": [
-    "base_table",
-    "alt_table_detailed",
-    "alt_table_compact",
-    "base_table_no_app_link",
-    "alt_table_detailed_2",
-    "alt_table_compact_2"
+    "base table",
+    "alt table detailed",
+    "alt table compact",
+    "base table no app link",
+    "alt table detailed 2",
+    "alt table compact 2"
   ],
   "comment": null,
   "annotations": {

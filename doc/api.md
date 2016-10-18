@@ -246,6 +246,7 @@ to use for ERMrest JavaScript agents.
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+        * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2078,7 +2079,7 @@ Return a new Reference with the new sorting
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+**Returns**: <code>Promise</code> - page A promise for a page result or errors.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2216,6 +2217,7 @@ if (content) {
 * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+    * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2247,6 +2249,10 @@ This is the reference of the Tuple
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
+<a name="ERMrest.Tuple+data"></a>
+
+#### tuple.data
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+canUpdate"></a>
 
 #### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
