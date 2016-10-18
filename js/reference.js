@@ -305,7 +305,7 @@ var ERMrest = (function(module) {
             if (this._canRead === undefined) {
                 this._canRead = this._checkPermissions("content_read_user");
             }
-            return undefined;
+            return this._canRead;
         },
 
         /**
