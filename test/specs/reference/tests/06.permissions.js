@@ -112,6 +112,10 @@ exports.execute = function (options) {
                     expect(reference.canDelete).toBeFalsy();
                 });
             });
+
+            it("should return true for canRead.", function () {
+                expect(reference.canRead).toBeTruthy();
+            });
         });
 
         afterEach(function () {
