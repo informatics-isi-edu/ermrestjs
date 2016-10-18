@@ -1556,7 +1556,7 @@ var ERMrest = (function (module) {
                 for (i = 0; i < orders.length; i++) {
                     try {
                         if (Array.isArray(orders[i])) {
-                            fk = constraintByNamePair(oders[i]);
+                            fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
                             // check if FK of this table
                             if (fk._table != this._table) continue;
 
@@ -1595,8 +1595,13 @@ var ERMrest = (function (module) {
                     if (col.memberOfForeignKeys.length === 0) {
                         visiblePseudoColumns.push(col);
                     } else {
-                        for (j = 0; j < col.memberOfForeignKeys.length; j++) {
-                            fk = col.memberOfForeignKeys[j];
+                        // sort based on FK name
+                        var colFKs = col.memberOfForeignKeys.sort(function (a, b) {
+                            return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
+                        });
+
+                        for (j = 0; j < colFKs.length; j++) {
+                            fk = colFKs[j];
 
                             // multiple simple FKR
                             if (fk.simple) {
@@ -1623,9 +1628,7 @@ var ERMrest = (function (module) {
 
                 // append composite FKRs
                 for (var cfkr in compositeFKs) {
-                    if(compositeFKKey.hasOwnProperty(cfkr)) {
-                        visiblePseudoColumns.push(cfkr);
-                    }
+                    visiblePseudoColumns.push(compositeFKs[cfkr]);
                 }
             }
 
@@ -1899,7 +1902,7 @@ var ERMrest = (function (module) {
         // make sure PseudoColumn name is unique
         // since the constraint_names are unique, I just need to check this in column names
         var i = 0;
-        while(foreignKey._table.columns.has(foreignKey.constraint_names[0].join(":") + (i!==0) ? i: "")) {
+        while(foreignKey._table.columns.has(foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
             i++;
         }
         
@@ -1927,9 +1930,17 @@ var ERMrest = (function (module) {
             this.displayname = foreignKey.key.table.displayname;
 
             // disambiguate
-            this.displayname += "(" + foreignKey.colset.columns.map(function(col) {
-                return col.displayname;
-            }).join(", ")  + ")"; 
+            var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
+                return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
+            }).length;
+
+            if (tableCount > 1) {
+                this.displayname += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                    return a.name.localeCompare(b.name);
+                }).map(function(col) {
+                    return col.displayname;
+                }).join(", ")  + ")"; 
+            }
         }
 
         /**
@@ -1968,7 +1979,7 @@ var ERMrest = (function (module) {
             var value;
 
             // use row name as the caption
-            var caption = module._generateRowName(this.table, options.context, data);
+            var caption = module._generateRowName(this.table, options ? options.context : undefined, data);
 
             // if caption has a link, don't add the link.
             if (caption.match(/<a/)) {
@@ -1976,7 +1987,7 @@ var ERMrest = (function (module) {
             }
             // create the link using reference.
             else { 
-                value = "<a href='" + this.reference.contextualize.detailed.appLink +"'>" + caption + "</a>";
+                value = '<a href="' + this.reference.contextualize.detailed.appLink +'">' + caption + '</a>';
             }
 
             return {isHTML: true, value: value};
@@ -2272,6 +2283,11 @@ var ERMrest = (function (module) {
          * @type {Array}
          */
         this.columns = columns;
+
+        // sorting the column based on their name
+        columns.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
 
     }
 

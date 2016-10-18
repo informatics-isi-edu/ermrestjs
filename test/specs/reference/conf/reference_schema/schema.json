@@ -604,6 +604,394 @@
                   "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column"]
                 }
             }
+        },
+        "table_w_composite_key": {
+            "comment": "Table with composite key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_composite_key",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{id_1}} , {{id_2}}"
+                    }
+                }
+            }
+        },
+        "table_w_composite_key_2": {
+            "comment": "Table with composite key, has ro_name pattern that represents a link",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_composite_key_2",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "[{{id}}](https://dev.isrd.isi.edu/chaise/search)"
+                    }
+                }
+            }
+        },
+        "reference_table_outbound_fks" : {
+            "comment": "reference table with multiple outboud FKRs",
+            "kind": "table",
+            "table_name": "reference_table_outbound_fks",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
+            "foreign_keys": [
+                {
+                    "comment": "simple fk col_1 to reference with to_name",
+                    "names": [["reference_schema", "outbound_fk_1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table_outbound_fks",
+                            "column_name": "col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "to_name": "to_name_value"
+                        }
+                    }
+                },
+                {
+                    "comment": "simple fk col_2 to reference without to_name",
+                    "names": [["reference_schema", "outbound_fk_2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table_outbound_fks",
+                            "column_name": "col_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "simple fk col_3 to reference without to_name",
+                    "names": [["reference_schema", "outbound_fk_3"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table_outbound_fks",
+                            "column_name": "col_3"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "simple fk col_3 to reference_values without to_name",
+                    "names": [["reference_schema", "outbound_fk_4"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table_outbound_fks",
+                            "column_name": "col_3"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_values",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "composite fk to table_w_composite_key with to_name",
+                    "names": [["reference_schema", "outbound_fk_5"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_3"
+                      },
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_4"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "to_name": "to_name_value"
+                        }
+                    }
+                },
+                {
+                    "comment": "composite fk to table_w_composite_key_2 without to_name",
+                    "names": [["reference_schema", "outbound_fk_6"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_3"
+                      },
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_6"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key_2",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key_2",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "composite fk to table_w_composite_key without to_name",
+                    "names": [["reference_schema", "outbound_fk_7"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_4"
+                      },
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_5"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "composite fk to reference without to_name",
+                    "names": [["reference_schema", "outbound_fk_8"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_3"
+                      },
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_5"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type" :{
+                        "typename": "text"
+                    },
+                    "comment": "not part of any FKRs."
+                },
+                {
+                    "name": "col_1",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "simple fk to reference"
+                },
+                {
+                    "name": "col_2",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "simple fk to reference",
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                        "name": "Column 2 Name"
+                        }
+                    }
+                },
+                {
+                    "name": "col_3",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "is in multiple FKRs",
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                        "name": "Column 3 Name"
+                        }
+                    }
+                },
+                {
+                    "name": "col_4",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "is in multiple composite FKRs"
+                },
+                {
+                    "name": "col_5",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "is in multiple composite FKRs"
+                },
+                {
+                    "name": "col_6",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "is in multiple composite FKRs"
+                },
+                {
+                    "name": "reference_schema:outbound_fk_7",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "not part of any FKRs."
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "compact": ["id", "id", ["reference_schema","outbound_fk_1"], "id", ["reference_schema","outbound_fk_1"]],
+                    "entry/create": [["reference_schema","outbound_fk_1"], "asdasdasdad", ["reference_schema", "id_fk_association_related_to_reference"], "id"],
+                    "entry/edit": ["id", ["reference_schema","outbound_fk_1"]]
+                }
+            }
         }
     },
     "table_names": [

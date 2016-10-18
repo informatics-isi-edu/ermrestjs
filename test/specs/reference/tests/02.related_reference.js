@@ -232,29 +232,14 @@ exports.execute = function(options) {
             });
 
             it('should be sorted by order of key columns when displayname is the same.', function (){
-                checkReferenceColumns([{
-                    ref: related2[1],
-                    expected: [
-                        ["reference_schema_2","related_reference_no_order_id_fkey1"].join(":"),
-                         "col_from_ref_no_order_3", 
-                         "col_from_ref_no_order_4", 
-                         "col_from_ref_no_order_5",
-                          "col_from_ref_no_order_6"
-                    ]
-                }]);
+                //NOTE: using the compactPath for checking the equality of reference
+                var expected = "reference_schema_2:reference_table_no_order/(id_1,id_2)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_1,col_from_ref_no_order_2)";
+                expect(related2[1].location.compactPath).toEqual(expected);
             });
 
             it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
-                checkReferenceColumns([{
-                    ref: related2[2],
-                    expected:[
-                        ["reference_schema_2","related_reference_no_order_id_fkey1"].join(":"), 
-                        "col_from_ref_no_order_1", 
-                        "col_from_ref_no_order_2", 
-                        "col_from_ref_no_order_5", 
-                        "col_from_ref_no_order_6"
-                    ]
-                }]);
+                var expected = "reference_schema_2:reference_table_no_order/(id_2,id_3)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_3,col_from_ref_no_order_4)";
+                expect(related2[2].location.compactPath).toEqual(expected);
             });
         });
 
