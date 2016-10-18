@@ -34,9 +34,29 @@ var ERMrest = (function (module) {
 
     var _servers = {};
 
+    /**
+     * Angular $http service object
+     * @type {Object}
+     * @private
+     * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
+     * When making requests using http, use server._http
+     */
     module._http = null;
 
+    /**
+     * Angular $q service object
+     * @type {Object}
+     * @private
+     */
     module._q = null;
+
+    /**
+     * function that converts app tag to app URL
+     * @callback appLinkFn
+     * @type {appLinkFn}
+     * @private
+     */
+    module._appLinkFn = null;
 
     /**
      * @memberof ERMrest
@@ -478,21 +498,8 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonSchema.comment;
 
-        /**
-         * get app links from annotation
-         * in the form {context: app, ...}
-         * @type {Object}
-         * @private
-         */
-        this._appLinks = {}; // {context:app, ...}
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
-            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
-            for(var context in payload) {
-                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
-                    this._appLinks[context] = payload[payload[context]];
-                else
-                    this._appLinks[context] = payload[context];
-            }
+            this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
     }
@@ -505,12 +512,20 @@ var ERMrest = (function (module) {
         },
 
         _getAppLink: function (context) {
-            if (context in this._appLinks)
-                return this._appLinks[context];
-            else if (module._contexts.DEFAULT in this._appLinks)
-                return this._appLinks[module._contexts.DEFAULT];
-            else
+
+            var app = -1;
+            if (this._appLinksAnnotation) {
+                if (!context)
+                    app = module._getRecursiveAnnotationValue(module._contexts.DEFAULT, this._appLinksAnnotation);
+                else
+                    app = module._getRecursiveAnnotationValue(context, this._appLinksAnnotation);
+            }
+
+            // no app link found
+            if (app === -1)
                 return null;
+            else
+                return app;
         }
 
     };
@@ -694,14 +709,7 @@ var ERMrest = (function (module) {
         this.comment = jsonTable.comment;
 
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
-            this._appLinks = {}; // {context:app, ...}
-            var payload = this.annotations.get(module._annotations.APP_LINKS).content;
-            for(var context in payload) {
-                if (module._contextArray.indexOf(payload[context]) !== -1) // if pointing to another context
-                    this._appLinks[context] = payload[payload[context]];
-                else
-                    this._appLinks[context] = payload[context];
-            }
+            this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
     }
@@ -742,7 +750,19 @@ var ERMrest = (function (module) {
                                 return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
                             }) ? 1 : 0);
 
-                            return bSerial - aSerial; // will make a before b if negative, b before a if positive
+                            // two keys still equal, compare col name
+                            if (aSerial === bSerial) {
+                                for (var i = 0; i < a.colset.length(); i++) { // both key have same length
+                                    var aName = a.colset.columns[i].name;
+                                    var bName = b.colset.columns[i].name;
+                                    if (aName < bName)
+                                        return -1;
+                                    if (aName > bName)
+                                        return 1;
+                                }
+
+                            } else
+                                return bSerial - aSerial; // will make a before b if negative, b before a if positive
                         } else
                             return val;
                     });
@@ -946,9 +966,9 @@ var ERMrest = (function (module) {
 
         /**
          *
-         * @param context
+         * @param {Object} context optional
          * @private
-         * @returns {String}
+         * @returns {String} app tag
          */
         _getAppLink: function (context) {
 
@@ -957,15 +977,20 @@ var ERMrest = (function (module) {
                 return this._baseTable._getAppLink(context);
 
             // use table level
-            if (this._appLinks) {
-                if (context in this._appLinks)
-                    return this._appLinks[context];
-                else if (module._contexts.DEFAULT in this._appLinks)
-                    return this._appLinks[module._contexts.DEFAULT];
+            var app = -1;
+            if (this._appLinksAnnotation) {
+                if (!context)
+                    app = module._getRecursiveAnnotationValue(module._contexts.DEFAULT, this._appLinksAnnotation);
+                else
+                    app = module._getRecursiveAnnotationValue(context, this._appLinksAnnotation);
             }
 
             // use schema level
-            return this.schema._getAppLink(context);
+            if (app === -1)
+                return this.schema._getAppLink(context);
+            else
+                return app;
+
         },
 
         // returns visible inbound foreignkeys.
@@ -1667,15 +1692,18 @@ var ERMrest = (function (module) {
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            // If template is of type string
+            // If template is of type string and has column-display annotation
             if (annotation && (typeof annotation.markdown_pattern === 'string')) {
                 isMarkdownPattern = true;
             }
 
+            // If column is of type markdown
             if (this.type.name === 'markdown') {
                 isMarkdownType = true;
             }
 
+            // If column doesn't has column-display annotation and is not of type markdown
+            // then return data as it is
             if (!isMarkdownPattern && !isMarkdownType) {
                 return { isHTML: false, value: data };
             }
@@ -1687,8 +1715,8 @@ var ERMrest = (function (module) {
                 // Get markdown pattern from the annotation value
 
                 var template = annotation.markdown_pattern; // pattern
-                
-                // Code to do template/string replacement using keyValues 
+
+                // Code to do template/string replacement using keyValues
                 value = module._renderTemplate(template, keyValues, options);
             }
 
@@ -1792,7 +1820,9 @@ var ERMrest = (function (module) {
          * @retuns {string} string representation of Column
          */
         toString: function() {
-            return [this.table.schema.name, this.table.name, this.name].join(":");
+            return [module._fixedEncodeURIComponent(this.table.schema.name),
+                    module._fixedEncodeURIComponent(this.table.name),
+                    module._fixedEncodeURIComponent(this.name)].join(":");
         },
 
         delete: function () {
@@ -1808,8 +1838,22 @@ var ERMrest = (function (module) {
         // find the null value for the column based on context and annotation
         _getNullValue: function (context) {
             return module._getNullValue(this, context, [this, this.table, this.table.schema]);
-        }
+        },
 
+        getInputDisabled: function(context) {
+            if (context == module._contexts.CREATE) {
+                if (this.annotations.contains(module._annotations.GENERATED)) {
+                    return {
+                        message: "Automatically generated by the server"
+                    };
+                }
+            } else if (context == module._contexts.EDIT) {
+                if (this.annotations.contains(module._annotations.GENERATED) || this.annotations.contains(module._annotations.IMMUTABLE)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     };
 
 
@@ -2110,7 +2154,7 @@ var ERMrest = (function (module) {
          */
         toString: function(){
             return "(" + this.columns.slice().sort(function(a,b){
-                return a.name.localeCompare(b.name);
+                return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
             }).map(function(col){
                 return col.toString();
             }).join(",") + ")";
@@ -2188,7 +2232,7 @@ var ERMrest = (function (module) {
             return [this._from, this._to].map(function(columns){
                 // create toString for from and to
                 return columns.slice().sort(function(a, b){
-                    return a.name.localeCompare(b.name);
+                    return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
                 }).map(function(col){
                     return col.toString();
                 }).join(",");
@@ -2461,9 +2505,9 @@ var ERMrest = (function (module) {
 
                 leftString += (reverse ? fromCol.name : toCol.name) + separator;
                 if (reverse) {
-                    rightString += (i === 0 ? toCol.toString() : toCol.name);
+                    rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {
-                    rightString += (i === 0 ? fromCol.toString() : fromCol.name);
+                    rightString += (i === 0 ? fromCol.toString() : module._fixedEncodeURIComponent(fromCol.name));
                 }
                 rightString += separator;
 

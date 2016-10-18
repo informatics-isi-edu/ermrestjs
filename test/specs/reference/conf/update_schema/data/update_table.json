@@ -1,0 +1,21 @@
+[{
+    "ind_key1": 1, "ind_key2": "a",
+    "comp_key1_col1": "Ralph", "comp_key1_col2": "Steven", "comp_key1_col3": "Watson",
+    "comp_key2_col1": "auto", "comp_key3_col1": "home", "comp_shared_key_col": "salesman",
+    "non_key_col1": "sales text", "non_key_col2": "other sales text", "non_key_col3": 12
+}, {
+    "ind_key1": 2, "ind_key2": "b",
+    "comp_key1_col1": "Lori", "comp_key1_col2": "Anne", "comp_key1_col3": "Watson",
+    "comp_key2_col1": "auto", "comp_key3_col1": "boat", "comp_shared_key_col": "insurer",
+    "non_key_col1": "insured text", "non_key_col2": "other insurer text", "non_key_col3": 17
+}, {
+    "ind_key1": 3, "ind_key2": "c",
+    "comp_key1_col1": "Dori", "comp_key1_col2": "Ann", "comp_key1_col3": "Spencer",
+    "comp_key2_col1": "nails", "comp_key3_col1": "hair", "comp_shared_key_col": "stylist",
+    "non_key_col1": "stylist text", "non_key_col2": "other stylist text", "non_key_col3": 8
+}, {
+    "ind_key1": 4, "ind_key2": "d",
+    "comp_key1_col1": "Mark", "comp_key1_col2": "Anthony", "comp_key1_col3": "Jones",
+    "comp_key2_col1": "auto", "comp_key3_col1": "boat", "comp_shared_key_col": "owner",
+    "non_key_col1": "owner text", "non_key_col2": "other owner text", "non_key_col3": 82
+}]

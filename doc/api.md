@@ -1,3 +1,23 @@
+## Objects
+
+<dl>
+<dt><a href="#ERMrest">ERMrest</a> : <code>object</code></dt>
+<dd><p>The ERMrest module is a JavaScript client library for the ERMrest
+service. Most clients should begin with <a href="#ERMrest.resolve">resolve</a>.</p>
+<p>IMPORTANT NOTE: This module is a work in progress.
+It is likely to change several times before we have an interface we wish
+to use for ERMrest JavaScript agents.</p>
+</dd>
+</dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
+<dd><p>set callback function that converts app tag to app URL</p>
+</dd>
+</dl>
+
 <a name="ERMrest"></a>
 
 ## ERMrest : <code>object</code>
@@ -226,6 +246,7 @@ to use for ERMrest JavaScript agents.
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+        * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2058,7 +2079,7 @@ Return a new Reference with the new sorting
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+**Returns**: <code>Promise</code> - page A promise for a page result or errors.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2196,6 +2217,7 @@ if (content) {
 * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+    * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2227,6 +2249,10 @@ This is the reference of the Tuple
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
+<a name="ERMrest.Tuple+data"></a>
+
+#### tuple.data
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+canUpdate"></a>
 
 #### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
@@ -2778,4 +2804,15 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+
+<a name="appLinkFn"></a>
+
+## appLinkFn : <code>function</code>
+set callback function that converts app tag to app URL
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | <code>[appLinkFn](#appLinkFn)</code> | callback function |
 
