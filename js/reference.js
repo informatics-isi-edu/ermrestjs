@@ -953,20 +953,23 @@ var ERMrest = (function(module) {
         /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
-         * only allow single term filter now
+         * search term can be:
+         * a) A string with no space: single term or regular expression
+         * b) A single term with space using ""
+         * c) use space for conjunction of terms
          * @param {string} term - search term, undefined to clear search
          */
         search: function(term) {
+
+            if (term)
+                term = term.trim();
+
             // make a Reference copy
             var newReference = _referenceCopy(this);
 
             newReference._location = this._location._clone();
             newReference._location.pagingObject = null;
-
-            if (term && term !== "")
-                newReference._location.searchFilter = "*::ciregexp::" + module._fixedEncodeURIComponent(term);
-            else
-                newReference._location.searchFilter = undefined;
+            newReference._location.search(term);
 
             return newReference;
         },

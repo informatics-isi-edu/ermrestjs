@@ -142,10 +142,19 @@ var ERMrest = (function(module) {
 
         var index = parts.length - 1;
         // search should be the last part of compact path
-        var match = parts[index].match(/\*::ciregexp::(.+)/);
-        if (match) {
-            this._searchFilter = match[0];
-            this._searchTerm = match[1];
+        var match = parts[index].match(/\*::ciregexp::[^&]+/g);
+        var that = this;
+        if (match) { // this is a search filter
+            this._searchFilter = parts[index];
+            match.forEach(function(f, idx, array) {
+                var term = decodeURIComponent(f.match(/\*::ciregexp::(.+)/)[1]);
+                if (term.indexOf(" ") !== -1) {
+                    // term has white spaces, add quotation
+                    term = "\"" + term + "\"";
+                }
+                that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
+            });
+
             index -= 1;
         }
 
@@ -368,29 +377,55 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * Apply, replace, clear filter on the location
-         * @param {string} filter - optional, set or clear search
+         * Apply, replace, clear filter term on the location
+         * @param {string} term - optional, set or clear search
          */
-        set searchFilter(filter) {
-            if (this._searchFilter && filter) {
-                this._uri = this._uri.replace(this._searchFilter, filter);
-                this._compactUri = this._compactUri.replace(this._searchFilter, filter);
-                this._path = this._path.replace(this._searchFilter, filter);
-                this._compactPath = this._compactPath.replace(this._searchFilter, filter);
-            } else if (this._searchFilter) {
-                this._uri = this._uri.replace("/" + this._searchFilter, "");
-                this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
-                this._path = this._path.replace(this._searchFilter, filter);
-                this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
-            } else if (filter) {
-                this._uri = this._uri + "/" + filter;
-                this._compactUri = this._compactUri + "/" + filter;
-                this._path = this._path + "/" + filter;
-                this._compactPath = this._compactPath + "/" + filter;
+        search: function(term) {
+
+            var filterString = "";
+
+            if (term && term !== "") {
+                this._searchTerm = term;
+
+                // convert term to filter
+
+                // 1) parse terms in quotation
+                // 2) split the rest by space
+                var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
+                if (!terms) terms = [];
+                for (var i = 0; i < terms.length; i++) {
+                    term = term.replace(terms[i], ""); // remove from term
+                    terms[i] = terms[i].replace(/"/g, ""); //remove quotes
+                }
+
+                terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+
+                terms.forEach(function(t, index, array) {
+                    filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(t);
+                });
+
+            } else {
+                this._searchTerm = null;
             }
 
-            this._searchFilter = (filter? filter: undefined);
-            this._searchTerm = (this._searchFilter? this._searchFilter.match(/\*::ciregexp::(.+)/)[1]: null);
+            if (this._searchFilter && term) { // replace search filter
+                this._uri = this._uri.replace(this._searchFilter, filterString);
+                this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
+                this._path = this._path.replace(this._searchFilter, filterString);
+                this._compactPath = this._compactPath.replace(this._searchFilter, filterString);
+            } else if (this._searchFilter) { // remove search filter
+                this._uri = this._uri.replace("/" + this._searchFilter, "");
+                this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
+                this._path = this._path.replace(this._searchFilter, "");
+                this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
+            } else if (filterString) { // add search filter
+                this._uri = this._uri + "/" + filterString;
+                this._compactUri = this._compactUri + "/" + filterString;
+                this._path = this._path + "/" + filterString;
+                this._compactPath = this._compactPath + "/" + filterString;
+            }
+
+            this._searchFilter = (filterString? filterString: undefined);
         },
 
         /**
