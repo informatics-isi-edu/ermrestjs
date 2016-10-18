@@ -78,6 +78,20 @@
                 {
                     "name": "table_1_gene_sequence",
                     "type": { "typename": "gene_sequence" }
+                },
+                {
+                    "name": "table_1_generated",
+                    "type": { "typename": "text" },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:generated": {}
+                    }
+                },
+                {
+                    "name": "table_1_immutable",
+                    "type": { "typename": "text" },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:immutable": {}
+                    }
                 }
             ],
             "foreign_keys": [],
@@ -161,6 +175,9 @@
         }
     },
     "schema_name": "common_schema_2",
+    "table_names": [
+        "table_1_schema_2"
+    ],
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
             "show_nulls": {

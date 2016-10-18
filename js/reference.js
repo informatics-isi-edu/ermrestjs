@@ -415,7 +415,7 @@ var ERMrest = (function(module) {
                 }
 
                 //  do the 'post' call
-                module._http.post(uri, data).then(function(response) {
+                this._server._http.post(uri, data).then(function(response) {
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -448,6 +448,8 @@ var ERMrest = (function(module) {
                     return defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
@@ -626,7 +628,8 @@ var ERMrest = (function(module) {
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                module._http.get(uri).then(function readReference(response) {
+                this._server._http.get(uri).then(function readReference(response) {
+                    ownReference._etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -656,6 +659,8 @@ var ERMrest = (function(module) {
 
                 }, function error(response) {
                     var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
@@ -695,12 +700,109 @@ var ERMrest = (function(module) {
          * Updates a set of resources.
          * @param {!Array} tbd TBD parameters. Probably an array of pairs of
          * [ (keys+values, allvalues)]+ ] for all entities to be updated.
-         * @returns {Promise} A promise for a TBD result or errors.
+         * @returns {Promise} page A promise for a page result or errors.
          */
-        update: function(tbd) {
+        update: function(tuples) {
             try {
-                // TODO
-                notimplemented();
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+
+                var defer = module._q.defer();
+
+                var self = this,
+                    uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
+
+                var submissionData = [],
+                    columnProjections = [],
+                    shortestKeyNames = [],
+                    keyWasModified = false,
+                    tuple, oldData, newData, keyName;
+
+
+                shortestKeyNames = this._shortestKey.map(function (column) {
+                    return column.name;
+                });
+
+                for(var i = 0; i < tuples.length; i++) {
+                    newData = tuples[i].data;
+                    oldData = tuples[i]._oldData;
+                    submissionData[i] = {};
+                    for (var key in newData) {
+                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
+                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + "_o"] = oldData[key];
+                        submissionData[i][key + "_n"] = newData[key];
+                    }
+                }
+
+                // The list of column names to use in the uri
+                columnProjections = this.columns.map(function (col) {
+                    return col.name;
+                });
+
+                // always alias the shortest key in the uri
+                for (var j = 0; j < shortestKeyNames.length; j++) {
+                    if (j !== 0) uri += ',';
+                    keyName = shortestKeyNames[j];
+
+                    // need to alias the key in the uri
+                    uri += module._fixedEncodeURIComponent(keyName) + "_o:=" + module._fixedEncodeURIComponent(keyName);
+                }
+
+                // separator for denoting where the keyset ends and the update column set begins
+                uri += ';';
+
+                for (var k = 0; k < columnProjections.length; k++) {
+                    if (k !== 0) uri += ',';
+                    // check if this column is part of the shortest key, alias the column name if it is
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + "_n:=" + module._fixedEncodeURIComponent(columnProjections[k]);
+                }
+
+                var config = {
+                    headers: {
+                        "If-Match": this._etag
+                    }
+                };
+
+                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                    var page;
+
+                    if (keyWasModified) {
+                        var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
+                        // loop through each returned Row and get the key value
+                        for (var j = 0; j < response.data.length; j++) {
+                            if (j !== 0)
+                                uri += ';';
+                            // shortest key is made up from one column
+                            if (self._shortestKey.length == 1) {
+                                keyName = self._shortestKey[0].name;
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                            } else {
+                                uri += '(';
+                                for (var k = 0; k < self._shortestKey.length; k++) {
+                                    if (k !== 0)
+                                        uri += '&';
+                                    keyName = self._shortestKey[k].name;
+                                    uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
+                                }
+                                uri += ')';
+                            }
+                        }
+                        var ref = new Reference(module._parse(uri));
+                        page = new Page(ref, response.data, false, false);
+                    } else {
+                        page = new Page(self, response.data, false, false);
+                    }
+
+                    defer.resolve(page);
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -1474,6 +1576,17 @@ var ERMrest = (function(module) {
 
             }
             return this._ref;
+        },
+
+        /**
+         *
+         */
+        get data() {
+            if (this._oldData === undefined) {
+                // interesting trick to deep copy an array of data without functions
+                this._oldData = JSON.parse(JSON.stringify(this._data));
+            }
+            return this._data;
         },
 
         /**

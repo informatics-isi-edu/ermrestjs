@@ -108,5 +108,9 @@
             }]
         }
     },
+    "table_names": [
+        "table_1_schema_1",
+        "table_2_schema_1"
+    ],
     "schema_name": "common_schema_1"
 }

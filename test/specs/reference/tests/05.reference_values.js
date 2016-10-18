@@ -114,7 +114,7 @@ exports.execute = function (options) {
                           '<p><a href="https://www.google.com" download="">download link</a></p>\n',
                           '<div class="embed-block"><div class="embed-caption">Hank caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>date is :</strong></p>\n',
-                          '<p><strong>Name is :</strong> Hank\n<strong>date is :</strong></p>\n',
+                          '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
                           '<code>GATCGATCGC GTATT</code>',
                           'NA'];
 
@@ -134,7 +134,7 @@ exports.execute = function (options) {
                           '<p><a href="" download="">download link</a></p>\n',
                           '<div class="embed-block"><div class="embed-caption">Harold caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> Harold\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                          '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '',
                           '<p><a href="http://example.com/Junior">Junior</a></p>\n'];
 
@@ -213,7 +213,7 @@ exports.execute = function (options) {
                           '<p><a href="" download="">download link</a></p>\n',
                           '<div class="embed-block"><div class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                          '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '',
                           '<p><a href="http://example.com/Senior">Senior</a></p>\n'];
 
@@ -233,7 +233,7 @@ exports.execute = function (options) {
                           '<p><a href="" download="">download link</a></p>\n',
                           '<div class="embed-block"><div class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</div><iframe src="http://example.com/iframe" width="300" ></iframe></div>',
                           '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                          '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                           '<code>GATCGATCGC GTATT</code>',
                           '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n'];
 

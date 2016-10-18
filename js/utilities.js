@@ -271,14 +271,14 @@ var ERMrest = (function(module) {
         var keyValues = {};
 
         for (var k in data) {
-            
+
             try {
                 var col = columns.get(k);
                 keyValues[k] = col.formatvalue(data[k], { context: context });
             } catch(e) {
                 keyValues[k] = data[k];
             }
-            
+
             // Inject raw data in the keyvalues object prefixed with an '_'
             keyValues["_" + k] = data[k];
         }
@@ -935,7 +935,9 @@ var ERMrest = (function(module) {
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
-        APP_LINKS: "tag:isrd.isi.edu,2016:app-links"
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
+        GENERATED: "tag:isrd.isi.edu,2016:generated",
+        IMMUTABLE: "tag:isrd.isi.edu,2016:immutable"
     });
 
     /**

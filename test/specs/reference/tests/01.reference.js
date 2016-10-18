@@ -1,6 +1,6 @@
 exports.execute = function (options) {
 
-    describe("For determining reference objects and it's child objects,", function () {
+    describe("For determining reference objects and it's child objects, ", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
@@ -17,17 +17,24 @@ exports.execute = function (options) {
         var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
         // Test Cases:
-        describe('for a creating an entity/entities,', function () {
+        describe("for creating an entity/entities,", function () {
+            var reference;
 
-            it('a single entity should return a Page object that is defined.', function(done) {
-                var rows = [{ id: 9999, name: "Paula", value: 5 }];
-
+            beforeAll(function (done) {
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
-                    var reference = response;
+                    reference = response;
 
                     done();
-                    return reference.create(rows);
-                }).then(function (response) {
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("a single entity should return a Page object that is defined.", function(done) {
+                var rows = [{ id: 9999, name: "Paula", value: 5 }];
+
+                reference.create(rows).then(function (response) {
                     var page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -37,36 +44,31 @@ exports.execute = function (options) {
                     expect(page._data[0].value).toBe(rows[0].value);
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
 
-            it('multiple entities should return a Page object that is defined.', function(done) {
+            it("multiple entities should return a Page object that is defined.", function(done) {
                 var rows = [{ id: 9800, name: "Greg", value: 8 },
-                        { id: 9801, name: "Steven", value: 12 },
-                        { id: 9802, name: "Garnet", value: 36 }];
+                            { id: 9801, name: "Steven", value: 12 },
+                            { id: 9802, name: "Garnet", value: 36 }];
 
-                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
-                    var reference = response;
-
-                    done();
-                    return reference.create(rows);
-                }).then(function (response) {
+                reference.create(rows).then(function (response) {
                     var page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page._data.length).toBe(rows.length);
-                    for(var i = 0; i < page.data.length; i++) {
-                        expect(page.data[i].id).toBe((rows[i].id).toString());
-                        expect(page.data[i].name).toBe(rows[i].name);
-                        expect(page.data[i].value).toBe(rows[i].value);
+                    for(var i = 0; i < page._data.length; i++) {
+                        expect(page._data[i].id).toBe((rows[i].id).toString());
+                        expect(page._data[i].name).toBe(rows[i].name);
+                        expect(page._data[i].value).toBe(rows[i].value);
                     }
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -84,8 +86,8 @@ exports.execute = function (options) {
                     expect(reference).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -173,8 +175,8 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -220,8 +222,8 @@ exports.execute = function (options) {
                     expect(reference).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -233,8 +235,8 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -280,8 +282,8 @@ exports.execute = function (options) {
                     expect(reference).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
@@ -293,8 +295,8 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     done();
-                }, function (err) {
-                    console.dir(err);
+                }).catch(function (error) {
+                    console.dir(error);
                     done.fail();
                 });
             });
