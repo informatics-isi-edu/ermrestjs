@@ -678,7 +678,7 @@ var ERMrest = (function(module) {
                             // If enlarge link is set then add an anchor tag for captionHTML
                             if (enlargeLink) {
                                  if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + '  <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>' + '</a>';
+                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
                             }
                             
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
@@ -820,23 +820,24 @@ var ERMrest = (function(module) {
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<img ", openingLink = attrs[0].children[0];
+                            var imageHTML = "<img ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true;
                             
                             // Add all attributes to the image
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
-                                    iframeHTML += 'src="' + attr[1] + '"';
+                                    imageHTML += 'src="' + attr[1] + '"';
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
                                 } else if (attr[0] == "pos") {
                                     posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
                                 } else {
-                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                    imageHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
-                               iframeHTML += " ";
+                               imageHTML += " ";
                             });
-                            html += iframeHTML + "></>";
+
+                            html += imageHTML + "/>";
                             
                             var captionHTML = "";
                             
@@ -857,11 +858,9 @@ var ERMrest = (function(module) {
                             
                             // Add caption html
                             if (posTop) {
-                                html = '<figcaption class="embed-caption">' + captionHTML 
-                                                      + "</figcaption>" + html;
+                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
                             } else {
-                                html = html + '<figcaption class="embed-caption">' + captionHTML 
-                                                      + "</figcaption>";
+                                html = html + '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
                             }
                             
                             // If link is specified, then wrap the image and figcaption inside anchor tag
@@ -870,8 +869,7 @@ var ERMrest = (function(module) {
                             }
                             
                             // Encapsulate the iframe inside a paragraph tag
-                            html = '<figure class="embed-block" style="display:inline-block;">' 
-                                                  + html + "</figure>";
+                            html = '<figure class="embed-block" style="display:inline-block;">' + html + "</figure>";
                         }  
                     }
                     

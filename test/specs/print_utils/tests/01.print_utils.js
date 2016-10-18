@@ -76,9 +76,9 @@ exports.execute = function (options) {
             expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n');
             expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n');
             
-            // Check for iframe 
+            // Check for iframe ith height and width
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<div class="embed-block"><div class="embed-caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></div>');
+                .toBe('<figure class="embed-block"><figcaption class="embed-caption">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
             
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
@@ -92,9 +92,17 @@ exports.execute = function (options) {
             expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
                 .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
             
-            // Check for iframe tag
-            var iframeMarkdown = ':::iframe  [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::';
-            var iframeHTML = '<div class="embed-block"><div class="embed-caption">CAPTION</div><iframe src="https://dev.isrd.isi.edu/chaise/search" ></iframe></div>';
+            // Check for thumbnail with link to original image
+            expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
+                .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n');
+
+            // Check for thumbnail with link to original image and a caption
+            expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
+                .toBe('<figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
+
+            // Check for iframe tag with a link and caption
+            var iframeMarkdown = ':::iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
+            var iframeHTML = '<figure class="embed-block"><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
             expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
             // Check for dropdown tag
