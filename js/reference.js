@@ -74,7 +74,7 @@ var ERMrest = (function(module) {
 
             var server = module.ermrestFactory.getServer(location.service, params);
             server.catalogs.get(location.catalog).then(function (catalog) {
-                defer.resolve(new Reference(location, catalog));
+                defer.resolve(new Reference(location, catalog, params));
 
             }, function (error) {
                 defer.reject(error);
@@ -99,6 +99,7 @@ var ERMrest = (function(module) {
      * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
      */
     module._createReference = function (location, catalog) {
+        //TODO params is null
         return new Reference(location, catalog);
     };
 
@@ -148,7 +149,7 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
      * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
-    function Reference(location, catalog) {
+    function Reference(location, catalog, params) {
         /**
          * The members of this object are _contextualized references_.
          *
@@ -170,6 +171,8 @@ var ERMrest = (function(module) {
         this._location = location;
 
         this._meta = catalog.meta;
+
+        this._server = module.ermrestFactory.getServer(location.service, params);
 
         // if schema was not provided in the URI, find the schema
         var schema;
@@ -440,7 +443,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    var ref = new Reference(module._parse(uri), this._table.schema.catalog);
+                    var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
                     var page = new Page(ref, response.data, false, false);
 
