@@ -130,7 +130,7 @@ var ERMrest = (function (module) {
                             count += 1;
                             setTimeout(asyncfn, delay);
                             delay *= 2;
-                        } else if (count && method == 'delete' && response.status == _http_status_codes.not_found) {
+                        } else if (method == 'delete' && response.status == _http_status_codes.not_found) {
                             /* SPECIAL CASE: "retried delete"
                              * This indicates that a 'delete' was attempted, but
                              * failed due to a transient error. It was retried
@@ -140,13 +140,13 @@ var ERMrest = (function (module) {
                              * Both of the currently supported delete operations
                              * (entity/ and attribute/) return 204 No Content.
                              */
-                            response.status = _http_status_codes.no_content;
-                            
+                            response.status = response.statusCode = _http_status_codes.no_content;
+
                             module._onload().then(function() {
                                 deferred.resolve(response);
                             });
                         } else {
-                            
+
                             module._onload().then(function() {
                                 deferred.reject(response);
                             });
