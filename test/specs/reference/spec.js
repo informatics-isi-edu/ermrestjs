@@ -11,12 +11,14 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/08.alternative_tables.js",
         "/reference/tests/09.app_linking.js",
         "/reference/tests/10.update.js",
+        "/reference/tests/11.delete.js",
         "/reference/tests/12.search.js"
     ],
     schemaConfigurations: [
         "/reference/conf/reference.conf.json",
         "/reference/conf/reference_2.conf.json",
         "/reference/conf/reference_altTables.conf.json",
-        "/reference/conf/update.conf.json"
+        "/reference/conf/update.conf.json",
+        "/reference/conf/delete.conf.json"
     ]
 });

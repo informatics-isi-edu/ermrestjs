@@ -76,9 +76,9 @@ exports.execute = function (options) {
             expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n');
             expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n');
             
-            // Check for iframe 
+            // Check for iframe ith height and width
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<div class="embed-block"><div class="embed-caption">Chaise</div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></div>');
+                .toBe('<figure class="embed-block"><figcaption class="embed-caption">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
             
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
@@ -92,9 +92,17 @@ exports.execute = function (options) {
             expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
                 .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
             
-            // Check for iframe tag
-            var iframeMarkdown = ':::iframe  [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::';
-            var iframeHTML = '<div class="embed-block"><div class="embed-caption">CAPTION</div><iframe src="https://dev.isrd.isi.edu/chaise/search" ></iframe></div>';
+            // Check for thumbnail with link to original image
+            expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
+                .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n');
+
+            // Check for thumbnail with link to original image and a caption
+            expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
+                .toBe('<figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
+
+            // Check for iframe tag with a link and caption
+            var iframeMarkdown = ':::iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
+            var iframeHTML = '<figure class="embed-block"><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
             expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
             // Check for dropdown tag
@@ -133,13 +141,94 @@ exports.execute = function (options) {
             }
         });
 
-        it('module._renderTemplate() should function correctly', function() {
+        it('module._renderTemplate() should function correctly for Null and Non-null values', function() {
             expect(module._renderTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
             expect(module._renderTemplate("My name is {{name}}", { name: null })).toBe(null);
             expect(module._renderTemplate("My name is {{name}}", {})).toBe(null);
             expect(module._renderTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
             expect(module._renderTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
             expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
+        });
+
+        var obj = {
+            str: "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
+            "m1": "[a markdown link](http://example.com/foo)",
+            "m2": "[a markdown link](http://example.com/foo/\\(a,b\\))",
+            "u2": "http://example.com/foo/(a,b)",
+            "p": "messy(){}[]<>/;,$=*punctuation",
+            "n": "ǝɯɐu",
+            "ǝɯɐu": "name"
+        };
+
+        var templateCases = [{
+              "template": "{{{m1}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo)",
+              "after_render": "<p><a href=\"http://example.com/foo\">a markdown link</a></p>"
+            }, {
+              "template": "{{{m2}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link]({{#escape}}{{u2}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:\\/\\/example\\.com\\/foo\\/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id={{#escape}}({{#encode}}{{{p}}}{{/encode}}){{/escape}})",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, the escape block protects the bare parens for us"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id=\\({{#encode}}{{p}}{{/encode}}\\))",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, I markdown-escape the bare parens myself for the same final output HTML"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{{ǝɯɐu}}}={{{n}}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=ǝɯɐu)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL in this HTML is not actually valid according to RFC 3986!"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{ǝɯɐu}}={{#encode}}{{n}}{{/encode}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{#escape}}{{ǝɯɐu}}={{#encode}}{{n}}{{/encode}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
+              "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
+            }, {
+                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{str}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With no encoding and escaping. Should give malformed HTML"
+            },{
+                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
+            },{
+                "template" : "[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{str}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With escaping but no encoding. Should give malformed HTML"
+            },{
+                "template" : "[{{#escape}}{{str}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{str}}{{/encode}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
+            }];
+
+        it('module._renderTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
+            var printMarkdown = formatUtils.printMarkdown;  
+            
+            templateCases.forEach(function(ex) {
+                var template = module._renderTemplate(ex.template, obj);
+                expect(template).toBe(ex.after_mustache);
+                var html = printMarkdown(template);
+                expect(html).toBe(ex.after_render + '\n');
+            });
         });
 
     });

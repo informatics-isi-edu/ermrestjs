@@ -46,9 +46,22 @@ exports.execute = function (options) {
                 });
             });
 
-            it("should return true for canUpdate and canCreate.", function () {
-                expect(reference.canUpdate).toBeTruthy();
-                expect(reference.canCreate).toBeTruthy();
+            describe("should return true for ", function () {
+                it("canCreate.", function () {
+                    expect(reference.canCreate).toBeTruthy();
+                });
+
+                it("canRead.", function () {
+                    expect(reference.canRead).toBeTruthy();
+                });
+
+                it("canUpdate.", function () {
+                    expect(reference.canUpdate).toBeTruthy();
+                });
+
+                it("canDelete.", function () {
+                    expect(reference.canDelete).toBeTruthy();
+                });
             });
         });
 
@@ -86,9 +99,22 @@ exports.execute = function (options) {
                 });
             });
 
-            it("should return false for canUpdate and canCreate.", function () {
-                expect(reference.canUpdate).toBeFalsy();
-                expect(reference.canCreate).toBeFalsy();
+            describe("should return false for ", function () {
+                it("canCreate.", function () {
+                    expect(reference.canCreate).toBeFalsy();
+                });
+
+                it("canUpdate.", function () {
+                    expect(reference.canUpdate).toBeFalsy();
+                });
+
+                it("canDelete.", function () {
+                    expect(reference.canDelete).toBeFalsy();
+                });
+            });
+
+            it("should return true for canRead.", function () {
+                expect(reference.canRead).toBeTruthy();
             });
         });
 
