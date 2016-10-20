@@ -114,6 +114,7 @@ to use for ERMrest JavaScript agents.
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+        * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -1013,6 +1014,7 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
     * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -1044,6 +1046,12 @@ a Column _may not_ be a part of a Table.
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
 
+<a name="ERMrest.Column+isPseudo"></a>
+
+#### column.isPseudo : <code>boolean</code>
+indicator that this is a Column rather than a PseudoColumn.
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+position"></a>
 
 #### column.position : <code>number</code>

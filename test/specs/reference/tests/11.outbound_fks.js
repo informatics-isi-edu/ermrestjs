@@ -180,12 +180,10 @@ exports.execute = function (options) {
             describe('when visible-columns annotation is not present for the context', function () {
 
                 it ('should include columns that are not part of any FKRs', function () {
-                    //id
-                    expect(detailedColumns[0].isPseudo).toBeUndefined();
+                    expect(detailedColumns[0].isPseudo).toBe(false);
                     expect(detailedColumns[0].name).toBe("id");
 
-
-                    expect(detailedColumns[9].isPseudo).toBeUndefined();
+                    expect(detailedColumns[9].isPseudo).toBe(false);
                     expect(detailedColumns[9].name).toBe("reference_schema:outbound_fk_7");
                 });
                         
@@ -208,16 +206,16 @@ exports.execute = function (options) {
                 describe('for columns that are part of composite FKR', function () {
 
                     it ('should include the columns and avoid duplicate.', function () {
-                        expect(detailedColumns[5].isPseudo).toBeUndefined();
+                        expect(detailedColumns[5].isPseudo).toBe(false);
                         expect(detailedColumns[5].name).toBe("col_3");
 
-                        expect(detailedColumns[6].isPseudo).toBeUndefined();
+                        expect(detailedColumns[6].isPseudo).toBe(false);
                         expect(detailedColumns[6].name).toBe("col_4");
 
-                        expect(detailedColumns[7].isPseudo).toBeUndefined();
+                        expect(detailedColumns[7].isPseudo).toBe(false);
                         expect(detailedColumns[7].name).toBe("col_5");
 
-                        expect(detailedColumns[8].isPseudo).toBeUndefined();
+                        expect(detailedColumns[8].isPseudo).toBe(false);
                         expect(detailedColumns[8].name).toBe("col_6");
                     });
 

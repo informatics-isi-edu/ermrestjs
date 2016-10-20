@@ -1558,38 +1558,36 @@ var ERMrest = (function (module) {
 
                 for (i = 0; i < orders.length; i++) {
                     addCol = true;
-                    try {
-                        if (Array.isArray(orders[i])) {
-                            fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                            // check if FK of this table and avoid duplicate
-                            fkName = fk.constraint_names[0].join(":");
-                            if (fk._table != this._table || (fkName in addedFKs)) {
-                                addCol = false;
-                            } else {
-                                addedFKs[fkName] = 1;
-                                col = new PseudoColumn(fk, fk.colset.columns[0]);
-                            }
-
+                    if (Array.isArray(orders[i])) {
+                        fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
+                        // check if FK of this table and avoid duplicate
+                        fkName = fk.constraint_names[0].join(":");
+                        if (fk._table != this._table || (fkName in addedFKs)) {
+                            addCol = false;
                         } else {
-                            colFound = false;
-                            for (j=0; j < columns.length && !colFound; j++) {
-                                if (columns[j].name == orders[i]) {
-                                    col = columns[j];
-                                    colFound = true;
-                                }
+                            addedFKs[fkName] = 1;
+                            col = new PseudoColumn(fk, fk.colset.columns[0]);
+                        }
+
+                    } else {
+                        colFound = false;
+                        for (j=0; j < columns.length && !colFound; j++) {
+                            if (columns[j].name == orders[i]) {
+                                col = columns[j];
+                                colFound = true;
                             }
-
-                            // check if it is in columns and avoid duplicate
-                            if (!colFound || (visiblePseudoColumns.indexOf(col) !== -1)) {
-                                addCol = false;
-                            }    
                         }
 
-                        if (addCol) {
-                            visiblePseudoColumns.push(col);
-                        }
+                        // check if it is in columns and avoid duplicate
+                        if (!colFound || (visiblePseudoColumns.indexOf(col) !== -1)) {
+                            addCol = false;
+                        }    
+                    }
+
+                    if (addCol) {
+                        visiblePseudoColumns.push(col);
+                    }
                         
-                    } catch (exception) {}
                 }
             }
             // heuristics
@@ -1664,6 +1662,12 @@ var ERMrest = (function (module) {
     function Column(table, jsonColumn) {
 
         this._jsonColumn = jsonColumn;
+
+        /**
+         * @type {boolean}
+         * @desc indicator that this is a Column rather than a PseudoColumn.
+         */
+        this.isPseudo = false;
 
         /**
          * The ordinal number or position of this column relative to other
