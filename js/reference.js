@@ -1599,9 +1599,9 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The array of formatted values of this tuple. The ordering of the
-         * values in the array matches the ordering of the columns in the
-         * reference (see {@link ERMrest.Reference#columns}).
+         * The array of formatted/raw values of this tuple on basis of context "edit". 
+         * The ordering of the values in the array matches the ordering of the columns
+         * in the reference (see {@link ERMrest.Reference#columns}).
          *
          * Usage (iterating over all values in the tuple):
          * ```
@@ -1624,30 +1624,43 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
+                // If context is entry/edit
+                if (this._pageRef._context === module._contexts.EDIT) {
 
-                /*
-                 * use this variable to avoid using computed formatted values in other columns while templating
-                 */
-                var formattedValues = [];
-
-                // format values according to column display annotation
-                for (i = 0; i < this._pageRef.columns.length; i++) {
-                    var tempCol = this._pageRef.columns[i];
-                    formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-
-                    if (tempCol.type.name === "gene_sequence") {
-                        formattedValues[i].isHTML = true;
+                    // Return raw values according to the visibility and sequence of columns
+                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                        var column = this._pageRef.columns[i];
+                        this._values[i] = this._data[column.name];
+                        this._isHTML[i] = false;
                     }
 
+                } else {
+                    
+                    var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
+
+                    /*
+                     * use this variable to avoid using computed formatted values in other columns while templating
+                     */
+                    var formattedValues = [];
+
+                    // format values according to column display annotation
+                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                        var tempCol = this._pageRef.columns[i];
+                        formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+
+                        if (tempCol.type.name === "gene_sequence") {
+                            formattedValues[i].isHTML = true;
+                        }
+
+                    }
+
+                    var self = this;
+
+                    formattedValues.forEach(function(fv) {
+                        self._values.push(fv.value);
+                        self._isHTML.push(fv.isHTML);
+                    });
                 }
-
-                var self = this;
-
-                formattedValues.forEach(function(fv) {
-                    self._values.push(fv.value);
-                    self._isHTML.push(fv.isHTML);
-                });
 
             }
             return this._values;
