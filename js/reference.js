@@ -1055,6 +1055,8 @@ var ERMrest = (function(module) {
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
             this._columns = table.columns.all();
+            delete this._pseudoColumns;
+            delete this._related;
         }
     };
 
