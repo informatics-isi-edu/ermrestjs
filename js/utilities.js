@@ -35,6 +35,13 @@ var ERMrest = (function(module) {
         };
     }
 
+    // Utility function to replace all occurances of a search with its replacement in a string
+    String.prototype.replaceAll = function(search, replacement) {
+        var target = this;
+        return target.split(search).join(replacement);
+    };
+
+
     /**
      * @function
      * @param {Object} copyTo the object to copy values to.
@@ -634,26 +641,56 @@ var ERMrest = (function(module) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-
+                            var enlargeLink, posTop = true;
+                            
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
                                     iframeHTML += 'src="' + attr[1] + '"';
+                                } else if (attr[0] == "link") {
+                                    enlargeLink = attr[1];
+                                } else if (attr[0] == "pos") {
+                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
                                iframeHTML += " ";
                             });
                             html += iframeHTML + "></iframe>";
+                            
+                            var captionHTML = "";
 
-                            // If there is a caption then add it as a "div" with "caption" class
-                            if (attrs[0].children[1].type == "text") {
-                               html = '<div class="embed-caption">' + md.renderInline(attrs[0].children[1].content)  + "</div>" + html;
+                            // If the next attribute is not a closing link then iterate
+                            // over all the children until link_close is encountered rednering their markdown
+                            if (attrs[0].children[1].type != 'link_close') {
+                                for(var i=1; i<attrs[0].children.length; i++) {
+                                    // If there is a caption then add it as a "div" with "caption" class
+                                    if (attrs[0].children[i].type == "text") {
+                                       captionHTML += md.renderInline(attrs[0].children[i].content);
+                                    } else if (attrs[0].children[i].type !== 'link_close'){
+                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
+                                    } else {
+                                        break;
+                                    }
+                                }
                             }
-
-                            // Encapsulate the iframe inside a div
-                            html = '<div class="embed-block">' + html + "</div>";
-                        }
+                            
+                            // If enlarge link is set then add an anchor tag for captionHTML
+                            if (enlargeLink) {
+                                 if (!captionHTML.trim().length) captionHTML = "Enlarge";
+                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
+                            }
+                            
+                            // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
+                            if (posTop) {
+                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
+                            } else {
+                                html += '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
+                            }
+                            
+                            // Encapsulate the iframe inside a figure tag
+                            html = '<figure class="embed-block">' + html + "</figure>";
+                        }  
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
                     if (html === "") {
@@ -757,6 +794,217 @@ var ERMrest = (function(module) {
                 return html;
             }
         });
+
+        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+        // Injects `image` tag
+        md.use(mdContainer, 'image', {
+            /*
+             * Checks whether string matches format ":::image [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */ 
+            validate: function(params) {
+                return params.trim().match(/image\s+(.*$)/i);
+            },
+
+            render: function (tokens, idx) {
+                
+                // Get token string after regeexp matching to determine actual internal markdown 
+                var m = tokens[idx].info.trim().match(/image\s+(.*)$/i);
+
+                // If this is the opening tag i.e. starts with "::: image " 
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+
+                    // Extract remaining string before closing tag and get its parsed markdown attributes
+                    var attrs = md.parseInline(m[1]), html = "";
+                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+
+                        // Check If the markdown is a link
+                        if (attrs[0].children[0].type == "link_open") {
+                            var imageHTML = "<img ", openingLink = attrs[0].children[0];
+                            var enlargeLink, posTop = true;
+                            
+                            // Add all attributes to the image
+                            openingLink.attrs.forEach(function(attr) {
+                                if (attr[0] == "href") {
+                                    imageHTML += 'src="' + attr[1] + '"';
+                                } else if (attr[0] == "link") {
+                                    enlargeLink = attr[1];
+                                } else if (attr[0] == "pos") {
+                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                } else {
+                                    imageHTML +=  attr[0] + '="' + attr[1] + '"';
+                                }
+                               imageHTML += " ";
+                            });
+
+                            html += imageHTML + "/>";
+                            
+                            var captionHTML = "";
+                            
+                            // If the next attribute is not a closing link then iterate
+                            // over all the children until link_close is encountered rednering their markdown
+                            if (attrs[0].children[1].type != 'link_close') {
+                                for(var i=1; i<attrs[0].children.length; i++) {
+                                    // If there is a caption then add it as a "div" with "caption" class
+                                    if (attrs[0].children[i].type == "text") {
+                                       captionHTML += md.renderInline(attrs[0].children[i].content);
+                                    } else if (attrs[0].children[i].type !== 'link_close'){
+                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Add caption html
+                            if (posTop) {
+                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
+                            } else {
+                                html = html + '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
+                            }
+                            
+                            // If link is specified, then wrap the image and figcaption inside anchor tag
+                            if (enlargeLink) {
+                                html = '<a href="' + enlargeLink + '" target="_blank">' + html + '</a>' ;
+                            }
+                            
+                            // Encapsulate the iframe inside a paragraph tag
+                            html = '<figure class="embed-block" style="display:inline-block;">' + html + "</figure>";
+                        }  
+                    }
+                    
+                    // if attrs was empty or it didn't find any link simply render the internal markdown
+                    if (html === "") {
+                        html = md.render(m[1]);
+                    }
+
+
+                    return html;
+                } else {
+                  // closing tag 
+                  return '';
+                }
+            }
+        });
+    };
+
+    // Characters to replace Markdown special characters
+    module._escapeReplacementsForMarkdown = [
+      [ /\*/g, '\\*' ],
+      [ /#/g, '\\#' ],
+      [ /\//g, '\\/' ],
+      [ /\(/g, '\\(' ],
+      [ /\)/g, '\\)' ],
+      [ /\[/g, '\\[' ],
+      [ /\]/g, '\\]' ],
+      [ /\{/g, '\\{' ],
+      [ /\}/g, '\\}' ],
+      [ new RegExp("\<","g"), '&lt;' ],
+      [ new RegExp("\>","g"), '&gt;' ],
+      [ /_/g, '\\_'  ],
+      [ /\!/g, '\\!' ],
+      [ /\./g, '\\.' ],
+      [ /\+/g, '\\+' ],
+      [ /\-/g, '\\-' ],
+      [ /\`/g, '\\`' ]];
+
+    /**
+     * @function
+     * @param {String} text The text in which escaping needs to happen.
+     * @desc
+     * This private utility function escapes markdown special characters
+     * It is used with Mustache to escape value of variables that have markdown characters in them
+     * @returns {String} String after escaping
+     */
+    module._escapeMarkdownCharacters = function(text) {
+      return module._escapeReplacementsForMarkdown.reduce(
+        function(text, replacement) {
+          return text.replace(replacement[0], replacement[1]);
+        }, text); 
+    };
+
+    /**
+     * @function
+     * @param {String} text The text in which replacement needs to happen.
+     * @desc
+     * This private utility function replaces strings with this format {{NAME}} to this one {{&NAME}}.
+     * This function is used with Mustache to change escaped variables to non-escaped one in a template
+     * @returns {String} String after replacement
+     */
+    module._addIgnoreEscapingForTemplating = function(text) {
+        var escapedVariables = [], escapedVarRegexp = /\{\{\{([\w\d-]+)\}\}\}/ig;
+        var replaceVariables = {}, replaceVarRegexp = /\{\{([\w\d-]+)\}\}/ig;
+
+        // Look for strings with this format {{{NAME}}} to avoid adding them to be non-escaped as they're already
+        // in the Mustache format of non-escaping
+        var placeholders = text.match(escapedVarRegexp);
+        if (placeholders) {
+            placeholders.forEach(function(p) {
+                escapedVariables.push("{{"  + escapedVarRegexp.exec(p)[1] + "}}");
+            });
+        }
+
+        // Look for strings with this format {{NAME}} to non-escaped them
+        // in the Mustache format {{&NAME}}
+        placeholders = text.match(replaceVarRegexp);
+        if (placeholders) {
+            placeholders.forEach(function(p) {
+                // If it is part of escaped variable then simply ignore it
+                if (escapedVariables.indexOf(p) == -1) {
+
+                    // Grab the actual variable NAME from the string {{NAME}} 
+                    var variable = replaceVarRegexp.exec(p)[1];
+
+                    // If the variable starts with "#", "^" or ends with "/", we ignore them as they're block tags.
+                    // If the variable starts with "&" then we ignore it as it is already in the Mustache format of non-escaping
+                    if (!variable.startsWith("&") && !variable.startsWith("#") && !variable.startsWith("^") && !variable.endsWith("/")) {
+                        replaceVariables["{{" +variable + "}}"] = variable;
+                    } 
+                }
+            });
+        }
+
+        // Replace all the variables {{NAME}} in the text with their non-escaping Mustache format of {{&NAME}}
+        for(var variable in replaceVariables) {
+            text = text.replaceAll(variable,"{{&" + replaceVariables[variable] + "}}");
+        }
+        
+        return text;
+    };
+
+    /**
+     * @function
+     * @desc
+     * A function used by Mustache to encode strings in a template
+     * @return {Function} A function that is called by Mustache when it stumbles across
+     * {{#encode}} string while parsing the template.
+     */
+    module._encodeForTemplate = function() {
+        return function(text, render) {
+
+            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
+            text = module._addIgnoreEscapingForTemplating(text);
+
+            return module._fixedEncodeURIComponent(render(text));
+        };
+    };
+
+    /**
+     * @function
+     * @desc
+     * A function used by Mustache to escape Markdown characters in a string
+     * @return {Function} A function that is called by Mustache when it stumbles across
+     * {{#escape}} string while parsing the template.
+     */
+    module._escapeForTemplate = function() {
+        return function(text, render) {
+
+            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
+            text = module._addIgnoreEscapingForTemplating(text);
+
+
+            return module._escapeMarkdownCharacters(render(text));
+        };
     };
 
     /*
@@ -777,11 +1025,10 @@ var ERMrest = (function(module) {
         if (typeof template !== 'string') return null;
 
         // Inject the encode function in the keyValues object
-        obj.encode = function() {
-            return function(text, render) {
-                return module._fixedEncodeURIComponent(render(text));
-            };
-        };
+        obj.encode = module._encodeForTemplate;
+
+        // Inject the escape function in the keyValues object
+        obj.escape = module._escapeForTemplate;
 
         // Inject other functions provided in the options.functions array if needed
         if (options.functions && options.functions.length) {

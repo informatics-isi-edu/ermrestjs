@@ -1692,15 +1692,18 @@ var ERMrest = (function (module) {
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            // If template is of type string
+            // If template is of type string and has column-display annotation
             if (annotation && (typeof annotation.markdown_pattern === 'string')) {
                 isMarkdownPattern = true;
             }
 
+            // If column is of type markdown
             if (this.type.name === 'markdown') {
                 isMarkdownType = true;
             }
 
+            // If column doesn't has column-display annotation and is not of type markdown
+            // then return data as it is
             if (!isMarkdownPattern && !isMarkdownType) {
                 return { isHTML: false, value: data };
             }
