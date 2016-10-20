@@ -310,7 +310,7 @@ var ERMrest = (function(module) {
          */
         get canCreate() {
             if (this._canCreate === undefined) {
-                this._canCreate = this._checkPermissions('content_write_user');
+                this._canCreate = this._checkPermissions("content_write_user");
             }
             return this._canCreate;
         },
@@ -322,7 +322,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canRead() {
-            return undefined;
+            if (this._canRead === undefined) {
+                this._canRead = this._checkPermissions("content_read_user");
+            }
+            return this._canRead;
         },
 
         /**
@@ -333,7 +336,7 @@ var ERMrest = (function(module) {
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                this._canUpdate = this._checkPermissions('content_write_user');
+                this._canUpdate = this._checkPermissions("content_write_user");
             }
             return this._canUpdate;
         },
@@ -345,7 +348,10 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canDelete() {
-            return undefined;
+            if (this._canDelete === undefined) {
+                this._canDelete = this._checkPermissions("content_write_user");
+            }
+            return this._canUpdate;
         },
 
         /**
@@ -817,8 +823,25 @@ var ERMrest = (function(module) {
          */
         delete: function() {
             try {
-                // TODO
-                notimplemented();
+                var defer = module._q.defer();
+
+                var config = {
+                    headers: {
+                        "If-Match": this._etag
+                    }
+                };
+
+                this._server._http.delete(this.uri, config).then(function deleteReference(response) {
+
+                    defer.resolve();
+                }, function error(response) {
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
+                }).catch(function (error) {
+                    return defer.reject(error);
+                });
+
+                return defer.promise;
             }
             catch (e) {
                 return module._q.reject(e);
@@ -1669,9 +1692,9 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The array of formatted values of this tuple. The ordering of the
-         * values in the array matches the ordering of the columns in the
-         * reference (see {@link ERMrest.Reference#columns}).
+         * The array of formatted/raw values of this tuple on basis of context "edit". 
+         * The ordering of the values in the array matches the ordering of the columns
+         * in the reference (see {@link ERMrest.Reference#columns}).
          *
          * Usage (iterating over all values in the tuple):
          * ```
@@ -1694,34 +1717,52 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
+                
+                var column;
 
-                /*
-                 * use this variable to avoid using computed formatted values in other columns while templating
-                 */
-                var formattedValues = [];
+                // If context is entry/edit
+                if (this._pageRef._context === module._contexts.EDIT) {
 
-                // format values according to column display annotation
-                for (i = 0; i < this._pageRef.columns.length; i++) {
-                    var tempCol = this._pageRef.columns[i];
-                    if (tempCol.isPseudo) {
-                        formattedValues[i] = tempCol.formatPresentation(this._linkedData[tempCol._constraintName], {context: this._pageRef._context, location:this._pageRef.location});
-                    } else {
-                        formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-                        
-                        if (tempCol.type.name === "gene_sequence") {
-                            formattedValues[i].isHTML = true;
+                    // Return raw values according to the visibility and sequence of columns
+                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                        column = this._pageRef.columns[i];
+                        if (column.isPseudo) {
+                            this._values[i] = module._generateRowName(column.table, this._pageRef._context, this._linkedData[column._constraintName]);
+                        } else {
+                            this._values[i] = this._data[column.name];
+                        }
+                        this._isHTML[i] = false;
+                    }
+                } else {
+                    
+                    var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
+
+                    /*
+                     * use this variable to avoid using computed formatted values in other columns while templating
+                     */
+                    var formattedValues = [];
+
+                    // format values according to column display annotation
+                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                        column = this._pageRef.columns[i];
+                        if (column.isPseudo) {
+                            formattedValues[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                        } else {
+                            formattedValues[i] = column.formatPresentation(keyValues[column.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                            
+                            if (column.type.name === "gene_sequence") {
+                                formattedValues[i].isHTML = true;
+                            }
                         }
                     }
 
+                    var self = this;
+
+                    formattedValues.forEach(function(fv) {
+                        self._values.push(fv.value);
+                        self._isHTML.push(fv.isHTML);
+                    });
                 }
-
-                var self = this;
-
-                formattedValues.forEach(function(fv) {
-                    self._values.push(fv.value);
-                    self._isHTML.push(fv.isHTML);
-                });
 
             }
             return this._values;

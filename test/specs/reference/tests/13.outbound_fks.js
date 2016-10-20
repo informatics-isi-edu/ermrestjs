@@ -46,7 +46,7 @@ exports.execute = function (options) {
 
         var data = {"id": "1", "id_1": "2", "id_2": "3"};
 
-        var expectedValue = [
+        var detailedRefExpectedValue = [
            '1', 
            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>', 
            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001">Harold</a>', 
@@ -62,6 +62,24 @@ exports.execute = function (options) {
            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2">4000 , 4002</a>', 
            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4">4001 , 4002</a>'
         ];
+
+        var entryEditRefExpectedValue = [
+            '1', 
+            'Hank', 
+            'Harold', 
+            'John', 
+            'Hank', 
+            '4000', 
+            '4001', 
+            '4002', 
+            '4003', 
+            '12', 
+            '4000 , 4001', 
+            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>', 
+            '4000 , 4002', 
+            '4001 , 4002'
+        ];
+        
         
         var reference, detailedRef, compactRef, entryCreateRef, entryEditRef, detailedColumns;
 
@@ -72,10 +90,12 @@ exports.execute = function (options) {
             }).then(function(response) {
                 reference = response;
                 detailedRef = response.contextualize.detailed; // visible-columns is not defined in this context
-                detailedColumns = detailedRef.columns;
+                entryEditRef = response.contextualize.entryEdit; // visible-columns is not defined in this context
                 compactRef = response.contextualize.compact; // visible-columns with duplicate values
                 entryCreateRef = response.contextualize.entryCreate; // visible-columns with invalid names
-                entryEditRef = response.contextualize.entryEdit; // visible-columns with correct values
+                compactBriefRef = response.contextualize.compactBrief; // visible-columns with correct values
+
+                detailedColumns = detailedRef.columns;
                 done();
             }, function(err) {
                 console.dir(err);
@@ -167,7 +187,7 @@ exports.execute = function (options) {
 
                 it ('should just include the column/FKRs mentioned in the annotations.', function () {
                     checkReferenceColumns([{
-                        ref: entryEditRef,
+                        ref: compactBriefRef,
                         expected: [
                             "id",
                             ["reference_schema","outbound_fk_1"].join(":")
@@ -323,6 +343,7 @@ exports.execute = function (options) {
                         val = detailedColumns[11].formatPresentation(data).value;
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">'+data.id+'</a>');
                     });
+
                 });
 
 
@@ -334,7 +355,18 @@ exports.execute = function (options) {
             it ('should return a link for PseudoColumns and value for Columns.', function (done) {
                 detailedRef.read(limit).then(function(page) {
                     var tuples = page.tuples;
-                    expect(tuples[0].values).toEqual(expectedValue);
+                    expect(tuples[0].values).toEqual(detailedRefExpectedValue);
+                    done();
+                }, function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should not return a link for PseudoColumns and just return row name in entry/edit context.', function (done) {
+                entryEditRef.read(limit).then(function(page) {
+                    var tuples = page.tuples;
+                    expect(tuples[0].values).toEqual(entryEditRefExpectedValue);
                     done();
                 }, function(err) {
                     console.dir(err);

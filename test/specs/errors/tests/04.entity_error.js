@@ -4,7 +4,7 @@ var httpError = require('../helpers/http_error.js');
 exports.execute = function (options) {
 
     describe('For determining Entity Errors, ', function () {
-        var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true}, 
+        var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true},
         			catalog, schema, table, column, catalogId = 1, entityId = "8000";
 
 		httpError.setup(options);
@@ -16,7 +16,7 @@ exports.execute = function (options) {
             catalogId = options.catalogId;
 
             server._http.max_retries = 0;
-            
+
             table.keys.all().forEach(function(k) {
                 k.colset.columns.forEach(function(c) {
                     if (c.name == 'id') column = c;
@@ -115,7 +115,7 @@ exports.execute = function (options) {
 
         describe("Entity DELETE exceptions", function() {
 
-            httpError.testForErrors("DELETE", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("DELETE", ["400", "401", "403", "409", "500", "503"], function(error, done) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 table.entity.delete(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();

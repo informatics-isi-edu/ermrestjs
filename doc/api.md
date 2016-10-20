@@ -2394,9 +2394,9 @@ See [canUpdate](#ERMrest.Tuple+canUpdate) for a usage example.
 <a name="ERMrest.Tuple+values"></a>
 
 #### tuple.values : <code>Array.&lt;string&gt;</code>
-The array of formatted values of this tuple. The ordering of the
-values in the array matches the ordering of the columns in the
-reference (see [columns](#ERMrest.Reference+columns)).
+The array of formatted/raw values of this tuple on basis of context "edit". 
+The ordering of the values in the array matches the ordering of the columns
+in the reference (see [columns](#ERMrest.Reference+columns)).
 
 Usage (iterating over all values in the tuple):
 ```

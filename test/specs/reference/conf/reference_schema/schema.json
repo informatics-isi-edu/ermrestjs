@@ -989,7 +989,7 @@
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "compact": ["id", "id", ["reference_schema","outbound_fk_1"], "id", ["reference_schema","outbound_fk_1"]],
                     "entry/create": [["reference_schema","outbound_fk_1"], "asdasdasdad", ["reference_schema", "id_fk_association_related_to_reference"], "id"],
-                    "entry/edit": ["id", ["reference_schema","outbound_fk_1"]]
+                    "compact/brief": ["id", ["reference_schema","outbound_fk_1"]]
                 }
             }
         }
