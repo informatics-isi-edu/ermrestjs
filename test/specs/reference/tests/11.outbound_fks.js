@@ -48,19 +48,19 @@ exports.execute = function (options) {
 
         var expectedValue = [
            '1', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_1)=(reference_schema:reference_table:id)">Hank</a>',
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_2)=(reference_schema:reference_table:id)">Harold</a>',
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_3)=(reference_schema:reference_table:id)">John</a>',
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_3)=(reference_schema:reference_values:id)">Hank</a>',
-           '4000',
-           '4001',
-           '4002',
-           '4003',
-           '12',
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_3,col_4)=(reference_schema:table_w_composite_key:id_1,id_2)">4000 , 4001</a>',
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>', 
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001">Harold</a>', 
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">John</a>', 
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">Hank</a>', 
+           '4000', 
+           '4001', 
+           '4002', 
+           '4003', 
+           '12', 
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">4000 , 4001</a>', 
            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_3,col_5)=(reference_schema:table_w_composite_key:id_1,id_2)">4000 , 4002</a>',
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_4,col_5)=(reference_schema:table_w_composite_key:id_1,id_2)">4001 , 4002</a>'
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2">4000 , 4002</a>', 
+           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4">4001 , 4002</a>'
         ];
         
         var reference, detailedRef, compactRef, entryCreateRef, entryEditRef, detailedColumns;
@@ -318,10 +318,7 @@ exports.execute = function (options) {
                     it('should return the correct link.', function () {
                         val = detailedColumns[13].formatPresentation(data).value;
 
-                        expect(val).toBeAnyOf([
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_4,col_5)=(reference_schema:table_w_composite_key:id_1,id_2)">'+data.id_1+" , "+data.id_2+"</a>",
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1/(col_5,col_4)=(reference_schema:table_w_composite_key:id_2,id_1)">'+data.id_1+" , "+data.id_2+"</a>",
-                        ]);
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">' + data.id_1+' , '+data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
@@ -339,7 +336,7 @@ exports.execute = function (options) {
             it ('should return a link for PseudoColumns and value for Columns.', function (done) {
                 detailedRef.read(limit).then(function(page) {
                     var tuples = page.tuples;
-                    expect(tuples[0].values).toHaveSameItems(expectedValue);
+                    expect(tuples[0].values).toEqual(expectedValue);
                     done();
                 }, function(err) {
                     console.dir(err);

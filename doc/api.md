@@ -130,7 +130,7 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
-        * [new PseudoColumn(foreignKeyRef, column, location)](#new_ERMrest.PseudoColumn_new)
+        * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
         * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
@@ -1142,7 +1142,7 @@ returns string representation of Column
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.PseudoColumn](#ERMrest.PseudoColumn)
-    * [new PseudoColumn(foreignKeyRef, column, location)](#new_ERMrest.PseudoColumn_new)
+    * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
     * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
@@ -1154,7 +1154,7 @@ returns string representation of Column
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
-#### new PseudoColumn(foreignKeyRef, column, location)
+#### new PseudoColumn(foreignKeyRef, column)
 Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
 
 
@@ -1162,7 +1162,6 @@ Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
 | --- | --- | --- |
 | foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents this PseudoColumn |
 | column | <code>[Column](#ERMrest.Column)</code> | The column that this PseudoColumn will be created based on. |
-| location | <code>ERMrest.Location</code> | The location that represents the actual Reference which this PseudoColumn is part of. |
 
 <a name="ERMrest.PseudoColumn+isPseudo"></a>
 
@@ -1197,7 +1196,7 @@ Preferred display name for user presentation only.
 <a name="ERMrest.PseudoColumn+reference"></a>
 
 #### pseudoColumn.reference : <code>[Reference](#ERMrest.Reference)</code>
-The reference object that represents this PseudoColumn. This reference is not contextualized.
+The reference object that represents the table of this PseudoColumn
 
 **Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>

@@ -74,7 +74,7 @@ var ERMrest = (function(module) {
 
             var server = module.ermrestFactory.getServer(location.service, params);
             server.catalogs.get(location.catalog).then(function (catalog) {
-                defer.resolve(new Reference(location, catalog, params));
+                defer.resolve(new Reference(location, catalog));
 
             }, function (error) {
                 defer.reject(error);
@@ -99,7 +99,6 @@ var ERMrest = (function(module) {
      * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
      */
     module._createReference = function (location, catalog) {
-        //TODO params is null
         return new Reference(location, catalog);
     };
 
@@ -149,7 +148,7 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
      * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
-    function Reference(location, catalog, params) {
+    function Reference(location, catalog) {
         /**
          * The members of this object are _contextualized references_.
          *
@@ -172,7 +171,7 @@ var ERMrest = (function(module) {
 
         this._meta = catalog.meta;
 
-        this._server = module.ermrestFactory.getServer(location.service, params);
+        this._server = catalog.server;
 
         // if schema was not provided in the URI, find the schema
         var schema;
@@ -262,7 +261,7 @@ var ERMrest = (function(module) {
          */
         get columns() {
             if (this._pseudoColumns === undefined) {
-                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns, this._location);    
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);    
             }
             return this._pseudoColumns;
         },
@@ -791,7 +790,7 @@ var ERMrest = (function(module) {
                                 uri += ')';
                             }
                         }
-                        var ref = new Reference(module._parse(uri));
+                        var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                         page = new Page(ref, response.data, false, false);
                     } else {
                         page = new Page(self, response.data, false, false);

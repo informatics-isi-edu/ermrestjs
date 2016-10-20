@@ -1537,7 +1537,7 @@ var ERMrest = (function (module) {
         },
 
         // Get PseudoColumns based on the context.
-        _contextualize: function (context, columns, location) {            
+        _contextualize: function (context, columns) {            
             if (typeof columns == 'undefined') {
                 columns = this.all();
             }
@@ -1553,21 +1553,23 @@ var ERMrest = (function (module) {
             if (orders !== -1) {
                 var addedFKs = {}, // to avoid duplicate 
                     fkName, 
-                    colFound;
+                    colFound,
+                    addCol;
 
                 for (i = 0; i < orders.length; i++) {
+                    addCol = true;
                     try {
                         if (Array.isArray(orders[i])) {
                             fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                            // check if FK of this table
-                            if (fk._table != this._table) continue;
-
-                            // avoid duplicate
+                            // check if FK of this table and avoid duplicate
                             fkName = fk.constraint_names[0].join(":");
-                            if (fkName in addedFKs) continue;
+                            if (fk._table != this._table || (fkName in addedFKs)) {
+                                addCol = false;
+                            } else {
+                                addedFKs[fkName] = 1;
+                                col = new PseudoColumn(fk, fk.colset.columns[0]);
+                            }
 
-                            addedFKs[fkName] = 1;
-                            col = new PseudoColumn(fk, fk.colset.columns[0], location);
                         } else {
                             colFound = false;
                             for (j=0; j < columns.length && !colFound; j++) {
@@ -1576,13 +1578,16 @@ var ERMrest = (function (module) {
                                     colFound = true;
                                 }
                             }
-                            // check if in columns
-                            if (!colFound) continue;                            
-                            // avoid duplicate
-                            if (visiblePseudoColumns.indexOf(col) !== -1) continue;    
+
+                            // check if it is in columns and avoid duplicate
+                            if (!colFound || (visiblePseudoColumns.indexOf(col) !== -1)) {
+                                addCol = false;
+                            }    
                         }
 
-                        visiblePseudoColumns.push(col);
+                        if (addCol) {
+                            visiblePseudoColumns.push(col);
+                        }
                         
                     } catch (exception) {}
                 }
@@ -1597,17 +1602,22 @@ var ERMrest = (function (module) {
                     if (col.memberOfForeignKeys.length === 0) {
                         visiblePseudoColumns.push(col);
                     } else {
-                        // sort based on FK name
-                        var colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                            return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
-                        });
+                        var colFKs;
+                        // sort foreign keys of a column
+                        if (col.memberOfForeignKeys.length > 1) {
+                            colFKs = col.memberOfForeignKeys.sort(function (a, b) {
+                                return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
+                            });
+                        } else {
+                            colFKs = col.memberOfForeignKeys;
+                        }
 
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
 
                             // multiple simple FKR
                             if (fk.simple) {
-                                visiblePseudoColumns.push(new PseudoColumn(fk, col, location));
+                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
                             } 
                             // multiple composite FKR
                             else { 
@@ -1621,7 +1631,7 @@ var ERMrest = (function (module) {
                                 // hold composite FKR and avoid duplicate
                                 compositeFKKey = fk.constraint_names[0].join(":");
                                 if (!(compositeFKKey in compositeFKs)) {
-                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col, location);
+                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
                                 }
                             }
                         }
@@ -1895,11 +1905,10 @@ var ERMrest = (function (module) {
      * @constructor
      * @param {ERMrest.ForeginKeyRef} foreignKeyRef The foreignKeyRef that represents this PseudoColumn
      * @param {ERMrest.Column} column The column that this PseudoColumn will be created based on.
-     * @param {ERMrest.Location} location The location that represents the actual Reference which this PseudoColumn is part of.
      * @desc
      * Constructor for PseudoColumn. This class extends {@link ERMrest.Column}.
      */
-    function PseudoColumn(foreignKey, column, location) {
+    function PseudoColumn(foreignKey, column) {
 
         // make sure all the properties of column are in PseudoColumn
         Column.call(this, foreignKey._table, column._jsonColumn);
@@ -1976,12 +1985,17 @@ var ERMrest = (function (module) {
 
 
         // create ermrest url using the location
-        var ermrestURI = [location.service , "catalog" , module._fixedEncodeURIComponent(location.catalog), 
-                            "entity", location.compactPath, this._foreignKey.toString(true)].join("/");
+        var ermrestURI = [
+                            this.table.schema.catalog.server.uri , 
+                            "catalog" ,
+                            module._fixedEncodeURIComponent(this.table.schema.catalog.id), 
+                            "entity", 
+                            [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":")
+                         ].join("/");
         
         /**
          * @type {ERMrest.Reference}
-         * @desc The reference object that represents this PseudoColumn. This reference is not contextualized.
+         * @desc The reference object that represents the table of this PseudoColumn
          */
         this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
 
@@ -2003,7 +2017,22 @@ var ERMrest = (function (module) {
             }
             // create the link using reference.
             else { 
-                value = '<a href="' + this.reference.contextualize.detailed.appLink +'">' + caption + '</a>';
+
+                // create a reference to just this PseudoColumn to use for url
+                var keyPair = "", key = this.table.shortestKey, col;
+                for (var i = 0; i < key.length; i++) {
+                    col = key[i].name;
+                    keyPair +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
+                    if (i != key.length - 1) {
+                        keyPair +="&";
+                    }
+                }
+                var url = [this.reference.location.compactUri, keyPair].join("/");
+
+                var ref = module._createReference(module._parse(url), this.table.schema.catalog);
+
+
+                value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
             }
 
             return {isHTML: true, value: value};
