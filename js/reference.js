@@ -973,6 +973,35 @@ var ERMrest = (function(module) {
             }
         },
 
+        /**
+         * create a new reference with the new search
+         * by copying this reference and clears previous search filters
+         * search term can be:
+         * a) A string with no space: single term or regular expression
+         * b) A single term with space using ""
+         * c) use space for conjunction of terms
+         * @param {string} term - search term, undefined to clear search
+         */
+        search: function(term) {
+
+            if (term) {
+                if (typeof term === "string")
+                    term = term.trim();
+                else
+                    throw new module.InvalidInputError("Invalid input. Seach expects a string.");
+            }
+
+
+            // make a Reference copy
+            var newReference = _referenceCopy(this);
+
+            newReference._location = this._location._clone();
+            newReference._location.pagingObject = null;
+            newReference._location.search(term);
+
+            return newReference;
+        },
+
         setNewTable: function(table) {
             this._table = table;
             this._shortestKey = table.shortestKey;
