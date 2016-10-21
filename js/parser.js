@@ -140,9 +140,27 @@ var ERMrest = (function(module) {
         // Expected format: "[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
         parts = this._compactPath.split('/');
 
+        var index = parts.length - 1;
+        // search should be the last part of compact path
+        var match = parts[index].match(/\*::ciregexp::[^&]+/g);
+        var that = this;
+        if (match) { // this is a search filter
+            this._searchFilter = parts[index];
+            match.forEach(function(f, idx, array) {
+                var term = decodeURIComponent(f.match(/\*::ciregexp::(.+)/)[1]);
+                if (term.indexOf(" ") !== -1) {
+                    // term has white spaces, add quotation
+                    term = "\"" + term + "\"";
+                }
+                that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
+            });
+
+            index -= 1;
+        }
+
         // if has linking, use the last part as the main table
         var colMapping;
-        var linking = parts[parts.length - 1].match(/\((.*)\)=\((.*:.*:.*)\)/);
+        var linking = parts[index].match(/\((.*)\)=\((.*:.*:.*)\)/);
         if (linking) {
             var leftCols = linking[1].split(",");
             var rightParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
@@ -348,6 +366,76 @@ var ERMrest = (function(module) {
          */
         get filter() {
             return this._filter;
+        },
+
+        /**
+         * string of the search filter in the URI
+         * @returns {string}
+         */
+        get searchFilter() {
+            return this._searchFilter;
+        },
+
+        /**
+         * Apply, replace, clear filter term on the location
+         * @param {string} term - optional, set or clear search
+         */
+        search: function(term) {
+
+            var filterString = "";
+
+            if (term && term !== "") {
+                this._searchTerm = term;
+
+                // convert term to filter
+
+                // 1) parse terms in quotation
+                // 2) split the rest by space
+                var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
+                if (!terms) terms = [];
+                for (var i = 0; i < terms.length; i++) {
+                    term = term.replace(terms[i], ""); // remove from term
+                    terms[i] = terms[i].replace(/"/g, ""); //remove quotes
+                }
+
+                terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+
+                terms.forEach(function(t, index, array) {
+                    filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(t);
+                });
+
+            } else {
+                this._searchTerm = null;
+            }
+
+            if (this._searchFilter) {
+                if (term) { // replace search filter
+                    this._uri = this._uri.replace(this._searchFilter, filterString);
+                    this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
+                    this._path = this._path.replace(this._searchFilter, filterString);
+                    this._compactPath = this._compactPath.replace(this._searchFilter, filterString);
+                } else { // remove search filter
+                    this._uri = this._uri.replace("/" + this._searchFilter, "");
+                    this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
+                    this._path = this._path.replace(this._searchFilter, "");
+                    this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
+                }
+            } else if (term) { // add search filter
+                this._uri = this._uri + "/" + filterString;
+                this._compactUri = this._compactUri + "/" + filterString;
+                this._path = this._path + "/" + filterString;
+                this._compactPath = this._compactPath + "/" + filterString;
+            }
+
+            this._searchFilter = (filterString? filterString: undefined);
+        },
+
+        /**
+         * Not saved because new search
+         * @returns {string} the search term
+         */
+        get searchTerm() {
+            return this._searchTerm;
         },
 
         /**

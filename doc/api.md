@@ -247,6 +247,7 @@ to use for ERMrest JavaScript agents.
         * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.search(term)](#ERMrest.Reference+search)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
@@ -1923,6 +1924,7 @@ Constructor for a ParsedFilter.
     * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.search(term)](#ERMrest.Reference+search)
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -2199,6 +2201,22 @@ Deletes the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+<a name="ERMrest.Reference+search"></a>
+
+#### reference.search(term)
+create a new reference with the new search
+by copying this reference and clears previous search filters
+search term can be:
+a) A string with no space: single term or regular expression
+b) A single term with space using ""
+c) use space for conjunction of terms
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| term | <code>string</code> | search term, undefined to clear search |
+
 <a name="ERMrest.Page"></a>
 
 ### ERMrest.Page
