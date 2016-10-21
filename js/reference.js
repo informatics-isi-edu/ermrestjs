@@ -984,8 +984,13 @@ var ERMrest = (function(module) {
          */
         search: function(term) {
 
-            if (term)
-                term = term.trim();
+            if (term) {
+                if (typeof term === "string")
+                    term = term.trim();
+                else
+                    throw new module.InvalidInputError("Invalid input. Seach expects a string.");
+            }
+
 
             // make a Reference copy
             var newReference = _referenceCopy(this);

@@ -408,17 +408,19 @@ var ERMrest = (function(module) {
                 this._searchTerm = null;
             }
 
-            if (this._searchFilter && term) { // replace search filter
-                this._uri = this._uri.replace(this._searchFilter, filterString);
-                this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
-                this._path = this._path.replace(this._searchFilter, filterString);
-                this._compactPath = this._compactPath.replace(this._searchFilter, filterString);
-            } else if (this._searchFilter) { // remove search filter
-                this._uri = this._uri.replace("/" + this._searchFilter, "");
-                this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
-                this._path = this._path.replace(this._searchFilter, "");
-                this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
-            } else if (filterString) { // add search filter
+            if (this._searchFilter) {
+                if (term) { // replace search filter
+                    this._uri = this._uri.replace(this._searchFilter, filterString);
+                    this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
+                    this._path = this._path.replace(this._searchFilter, filterString);
+                    this._compactPath = this._compactPath.replace(this._searchFilter, filterString);
+                } else { // remove search filter
+                    this._uri = this._uri.replace("/" + this._searchFilter, "");
+                    this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
+                    this._path = this._path.replace(this._searchFilter, "");
+                    this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
+                }
+            } else if (term) { // add search filter
                 this._uri = this._uri + "/" + filterString;
                 this._compactUri = this._compactUri + "/" + filterString;
                 this._path = this._path + "/" + filterString;
