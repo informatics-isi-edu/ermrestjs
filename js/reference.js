@@ -70,38 +70,11 @@ var ERMrest = (function(module) {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
 
-            // build reference
             var location = module._parse(uri);
-            var reference = new Reference(location);
 
-            var server = reference._server = module.ermrestFactory.getServer(reference._location.service, params);
-            server.catalogs.get(reference._location.catalog).then(function (catalog) {
-                reference._meta = catalog.meta;
-
-                // if schema was not provided in the URI
-                // find the schema
-                var schema;
-                if (!reference._location.schemaName) {
-                    var schemas = catalog.schemas.all();
-                    for (var i = 0; i < schemas.length; i++) {
-                        if (schemas[i].tables.names().indexOf(reference._location.tableName) !== -1) {
-                            if (!schema)
-                                schema = schemas[i];
-                            else
-                                throw new module.MalformedURIError("Ambiguous table name " + reference._location.tableName + ". Schema name is required.");
-                        }
-                    }
-                    if (!schema)
-                        throw new module.MalformedURIError("Table " + reference._location.tableName + " not found");
-
-                    reference._table = schema.tables.get(reference._location.tableName);
-                } else
-                    reference._table = catalog.schemas.get(reference._location.schemaName).tables.get(reference._location.tableName);
-
-                reference._columns = reference._table.columns.all();
-                reference._shortestKey = reference._table.shortestKey;
-
-                defer.resolve(reference);
+            var server = module.ermrestFactory.getServer(location.service, params);
+            server.catalogs.get(location.catalog).then(function (catalog) {
+                defer.resolve(new Reference(location, catalog));
 
             }, function (error) {
                 defer.reject(error);
@@ -114,6 +87,19 @@ var ERMrest = (function(module) {
         catch (e) {
             return module._q.reject(e);
         }
+    };
+
+    /**
+     * @function
+     * @private
+     * @memberof ERMrest
+     * @param {ERMrest.Location} location - The location object generated from parsing the URI
+     * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
+     * @desc
+     * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
+     */
+    module._createReference = function (location, catalog) {
+        return new Reference(location, catalog);
     };
 
     /**
@@ -160,10 +146,9 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @class
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
+     * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
-    function Reference(location) {
-        this._location   = location;
-
+    function Reference(location, catalog) {
         /**
          * The members of this object are _contextualized references_.
          *
@@ -181,6 +166,38 @@ var ERMrest = (function(module) {
          * different compared to `reference.columns`.
          */
         this.contextualize = new Contextualize(this);
+
+        this._location = location;
+
+        this._meta = catalog.meta;
+
+        this._server = catalog.server;
+
+        // if schema was not provided in the URI, find the schema
+        var schema;
+        if (!location.schemaName) {
+            var schemas = catalog.schemas.all();
+            for (var i = 0; i < schemas.length; i++) {
+                if (schemas[i].tables.names().indexOf(location.tableName) !== -1) {
+                    if (!schema){
+                        schema = schemas[i];
+                    } else{
+                        throw new module.MalformedURIError("Ambiguous table name " + location.tableName + ". Schema name is required.");
+                    }
+                }
+            }
+            if (!schema) {
+                throw new module.MalformedURIError("Table " + location.tableName + " not found");
+            }
+
+            this._table = schema.tables.get(location.tableName);
+
+        } else{
+            this._table = catalog.schemas.get(location.schemaName).tables.get(location.tableName);
+        }
+
+        this._columns = this._table.columns.all();
+        this._shortestKey = this._table.shortestKey;
     }
 
     Reference.prototype = {
@@ -243,7 +260,10 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Column[]}
          */
         get columns() {
-             return this._columns;
+            if (this._pseudoColumns === undefined) {
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);    
+            }
+            return this._pseudoColumns;
         },
 
         get location() {
@@ -428,7 +448,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    var ref = new Reference(module._parse(uri));
+                    var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
                     var page = new Page(ref, response.data, false, false);
 
@@ -543,6 +563,62 @@ var ERMrest = (function(module) {
                         }
                     }
                     this._location.sortObject = sortObject;
+                }
+ 
+                /*
+                * Change api to attributegroup for retrieving the foreign key data
+                * This will just affect the http request and not this._location
+                *
+                * NOTE: 
+                * This piece of code is dependent on the same assumptions as the current parser, which are:
+                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
+                *   2. Filter comes before the link syntax.
+                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
+                */
+                if (this._table.foreignKeys.length() > 0) {
+                    var compactPath = this._location.compactPath,
+                        parts = compactPath.split('/'),
+                        tableIndex = 0,
+                        fkList = "",
+                        linking,
+                        sortColumn,
+                        keys,
+                        k;
+
+                    // add M alias to current table
+                    linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
+                    if (linking && linking[1]) { // the same logic as parser for finding the link syntax
+                        tableIndex = compactPath.lastIndexOf("/") + 1;
+                    }
+                    compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
+
+                    // create the uri with attributegroup and alias
+                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
+                    
+                    // add joins for foreign keys
+                    for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
+                        // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
+                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
+
+                        // F2:array(F2:*),F1:array(F1:*)
+                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
+                    }
+
+
+                    // add keys
+                    keys = this._shortestKey.map(function(col){
+                        return col.name;
+                    });
+
+                    // add sort columns
+                    for(k = 0; k < this._location.sortObject.length; k++) {
+                        sortColumn = this._location.sortObject[k];
+                        if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
+                            keys.push(sortColumn.column);
+                        }
+                    }
+
+                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;      
                 }
 
                 // insert @sort()
@@ -720,7 +796,7 @@ var ERMrest = (function(module) {
                                 uri += ')';
                             }
                         }
-                        var ref = new Reference(module._parse(uri));
+                        var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                         page = new Page(ref, response.data, false, false);
                     } else {
                         page = new Page(self, response.data, false, false);
@@ -879,7 +955,7 @@ var ERMrest = (function(module) {
             if (this._related === undefined) {
                 this._related = [];
 
-                var visibleFKs = this._table._visibleInboundForeignKeys(this._context),
+                var visibleFKs = this._table.referredBy._contextualize(this._context),
                     notSorted;
                 if (visibleFKs === -1) {
                     notSorted = true;
@@ -893,6 +969,7 @@ var ERMrest = (function(module) {
                     newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
+                    delete newRef._pseudoColumns;
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -1007,6 +1084,8 @@ var ERMrest = (function(module) {
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
             this._columns = table.columns.all();
+            delete this._pseudoColumns;
+            delete this._related;
         }
     };
 
@@ -1084,6 +1163,8 @@ var ERMrest = (function(module) {
             var source = this._reference;
             var newRef = _referenceCopy(source);
             delete newRef._related;
+            delete newRef._pseudoColumns;
+
             newRef._context = context;
 
             // use the base table to get the alternative table of that context.
@@ -1234,18 +1315,6 @@ var ERMrest = (function(module) {
                     }
 
                 }
-
-                newRef._columns = newTable.columns._contextualize(context).all();
-
-            } else {
-                var columnOrders = source._table.columns._contextualize(context).all();
-                newRef._columns = [];
-                for (var i = 0; i < columnOrders.length; i++) {
-                    var column = columnOrders[i];
-                    if (source._columns.indexOf(column) != -1) {
-                        newRef._columns.push(column);
-                    }
-                }
             }
 
             // strip off filters if context is entry/create
@@ -1283,7 +1352,31 @@ var ERMrest = (function(module) {
      */
     function Page(reference, data, hasPrevious, hasNext) {
         this._ref = reference;
-        this._data = data;
+
+        /*
+         * This is the structure of this._linkedData
+         * this._linkedData[i] = {`s:constraintName`: data}
+         * That is for retrieving data for a foreign key, you should do the following:
+         * 
+         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join(":")];
+         */
+        this._linkedData = [];
+
+        if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
+            this._data = [];            
+            var i, j, fks = reference._table.foreignKeys.all();
+            for (i = 0; i < data.length; i++) {
+                this._data.push(data[i].M[0]); 
+
+                this._linkedData.push({});
+                for (j = fks.length - 1; j >= 0 ; j--) {
+                    this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                }
+            }
+        } else { // entity output
+            this._data = data;
+        }
+
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
     }
@@ -1316,7 +1409,7 @@ var ERMrest = (function(module) {
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this._data[i]));
+                    this._tuples.push(new Tuple(this._ref, this._data[i], this._linkedData[i]));
                 }
             }
             return this._tuples;
@@ -1435,14 +1528,15 @@ var ERMrest = (function(module) {
                     for (var i = 0; i < this._data.length; i++) {
 
                         // Compute formatted value for each column
-                        var keyValues = module._getFormattedKeyValues(this._ref, this._data[i]);
+                        var keyValues = module._getFormattedKeyValues(this._ref._table.columns, this._ref._context, this._data[i]);
 
                         // Code to do template/string replacement using keyValues
                         var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
 
                         // If value is null or empty, return value on basis of `show_nulls`
                         if (value === null || value.trim() === '') {
-                            value = module._getNullValue(this, this._ref.context, [this._ref.table, this._ref.table.schema]);
+                            // TODO is this correct?
+                            value = module._getNullValue(this, this._ref._context, [this._ref._table, this._ref._table.schema]);
                         }
 
                         // If final value is not null then push it in values array
@@ -1479,9 +1573,10 @@ var ERMrest = (function(module) {
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, data) {
+    function Tuple(pageReference, data, linkedData) {
         this._pageRef = pageReference;
         this._data = data;
+        this._linkedData = linkedData;
     }
 
     Tuple.prototype = {
@@ -1653,19 +1748,25 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
+                
+                var column;
+
                 // If context is entry/edit
                 if (this._pageRef._context === module._contexts.EDIT) {
 
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
-                        var column = this._pageRef.columns[i];
-                        this._values[i] = this._data[column.name];
+                        column = this._pageRef.columns[i];
+                        if (column.isPseudo) {
+                            this._values[i] = module._generateRowName(column.table, this._pageRef._context, this._linkedData[column._constraintName]);
+                        } else {
+                            this._values[i] = this._data[column.name];
+                        }
                         this._isHTML[i] = false;
                     }
-
                 } else {
                     
-                    var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
+                    var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                     /*
                      * use this variable to avoid using computed formatted values in other columns while templating
@@ -1674,13 +1775,16 @@ var ERMrest = (function(module) {
 
                     // format values according to column display annotation
                     for (i = 0; i < this._pageRef.columns.length; i++) {
-                        var tempCol = this._pageRef.columns[i];
-                        formattedValues[i] = tempCol.formatPresentation(keyValues[tempCol.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-
-                        if (tempCol.type.name === "gene_sequence") {
-                            formattedValues[i].isHTML = true;
+                        column = this._pageRef.columns[i];
+                        if (column.isPseudo) {
+                            formattedValues[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                        } else {
+                            formattedValues[i] = column.formatPresentation(keyValues[column.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                            
+                            if (column.type.name === "gene_sequence") {
+                                formattedValues[i].isHTML = true;
+                            }
                         }
-
                     }
 
                     var self = this;
@@ -1730,83 +1834,9 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            var self = this, table = this._pageRef._table, col;
             if (!this._displayname) {
-                var annotation;
-                // If table has table-display annotation then set it in annotation variable
-                if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-                    annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
-                }
-
-                // if annotation is populated and annotation has display.rowName property
-                if (annotation && typeof annotation.row_markdown_pattern === 'string') {
-                    var template = annotation.row_markdown_pattern;
-
-                    // Get formatted keyValues for a table for the data
-                    var keyValues = module._getFormattedKeyValues(this._pageRef, this._data);
-
-                    // get templated patten after replacing the values using Mustache
-                    var pattern = module._renderTemplate(template, keyValues);
-
-                    // Render markdown content for the pattern
-                    this._displayname = (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
-                }
-                // no row_name annotation, use column with title, name, term, label or id:text type
-                // or use the unique key
-                else {
-
-                    var setDisplaynameForACol = function(name) {
-                        if (typeof self._data[name] === 'string') {
-                            col = table.columns.get(name);
-                            self._displayname = col.formatvalue(self._data[name], { context: self._pageRef.context });
-                            return true;
-                        }
-                        return false;
-                    };
-
-                    var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
-
-                    for (var i = 0; i < columns.length; i++) {
-                        if (setDisplaynameForACol(columns[i])) {
-                            return this._displayname;
-                        }
-                    }
-
-                    // Check for id column whose type should not be integer or serial
-                    var idCol = table.columns.all().filter(function (c) {
-                        return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
-                    });
-
-                    // If id column exists
-                    if (idCol.length && typeof this._data[idCol[0].name] === 'string') {
-                        this._displayname = idCol[0].formatvalue(this._data[idCol[0].name], { context: self._pageRef.context });
-                    } else {
-                        // Get the columns for shortestKey
-                        var keyColumns = table.shortestKey;
-
-                        if (keyColumns.length >= table.columns.length) {
-                            this._displayname = null;
-                        } else {
-
-                            var values = [];
-
-                            // Iterate over the keycolumns to get their formatted values for `row_name` context
-                            keyColumns.forEach(function(c) {
-                                var value = c.formatvalue(self._data[c.name], { context: self._pageRef.context });
-                                values.push(value);
-                            });
-
-                            /*
-                             * join all values by ':' to get the display_name
-                             * Eg: displayName for values=["12", "DNA results for human specimen"] would be
-                             * "12:DNA results for human specimen"
-                             */
-                            this._displayname = values.join(':');
-                        }
-                    }
-                }
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
-
             return this._displayname;
         }
 

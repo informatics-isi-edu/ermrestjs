@@ -268,19 +268,20 @@ var ERMrest = (function(module) {
     /*
      * @function
      * @private
-     * @param {object} ref The object that we want the formatted values for.
+     * @param {ERMrest.Columns} columns The object that we want the formatted values for.
+     * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @return {object} A formatted keyvalue pair of object
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
      */
-    module._getFormattedKeyValues = function(ref, data) {
+    module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
 
         for (var k in data) {
 
             try {
-                var col = ref._table.columns.get(k);
-                keyValues[k] = col.formatvalue(data[k], { context: ref._context });
+                var col = columns.get(k);
+                keyValues[k] = col.formatvalue(data[k], { context: context });
             } catch(e) {
                 keyValues[k] = data[k];
             }
@@ -290,6 +291,91 @@ var ERMrest = (function(module) {
         }
 
         return keyValues;
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {ERMrest.Table} table The table that we want the row name for.
+     * @param {String} context Current context.
+     * @param {object} data The object which contains key value pairs of data.
+     * @return {object} The display name for the row.
+     * @desc Returns the row name using annotation or heuristics.
+     */
+    module._generateRowName = function (table, context, data) {
+        var annotation, col;
+        // If table has table-display annotation then set it in annotation variable
+        if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+            annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+        }
+
+        // if annotation is populated and annotation has display.rowName property
+        if (annotation && typeof annotation.row_markdown_pattern === 'string') {
+            var template = annotation.row_markdown_pattern;
+
+            // Get formatted keyValues for a table for the data
+            var keyValues = module._getFormattedKeyValues(table.columns, context, data);
+
+            // get templated patten after replacing the values using Mustache
+            var pattern = module._renderTemplate(template, keyValues);
+
+            // Render markdown content for the pattern
+            return (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
+        }
+
+        // no row_name annotation, use column with title, name, term
+        var result;
+        var setDisplaynameForACol = function(name) {
+            if (typeof data[name] === 'string') {
+                col = table.columns.get(name);
+                result = col.formatvalue(data[name], { context: context });
+                return true;
+            }
+            return false;
+        };
+
+        var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
+
+        for (var i = 0; i < columns.length; i++) {
+            if (setDisplaynameForACol(columns[i])) {
+                return result;
+            }
+        }
+
+        // no title, name, term, label column: use id:text type
+        // Check for id column whose type should not be integer or serial
+        var idCol = table.columns.all().filter(function (c) {
+            return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
+        });
+
+
+        // no id:text, use the unique key
+        // If id column exists
+        if (idCol.length && typeof data[idCol[0].name] === 'string') {
+            return idCol[0].formatvalue(data[idCol[0].name], { context: context });
+        }
+
+        // Get the columns for shortestKey
+        var keyColumns = table.shortestKey;
+
+        if (keyColumns.length >= table.columns.length) {
+            return null;
+        }
+
+        var values = [];
+
+        // Iterate over the keycolumns to get their formatted values for `row_name` context
+        keyColumns.forEach(function(c) {
+            var value = c.formatvalue(data[c.name], { context: context });
+            values.push(value);
+        });
+
+        /*
+        * join all values by ':' to get the display_name
+        * Eg: displayName for values=["12", "DNA results for human specimen"] would be
+        * "12:DNA results for human specimen"
+        */
+        return values.join(':');
     };
 
     /**
