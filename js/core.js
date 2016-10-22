@@ -662,7 +662,7 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._visibleColumns_cached = {}; // Used in _visibleColumns
+        this._visibleInboundForeignKeys_cached = {}; // Used in _visibleInboundForeignKeys
 
         /**
          * @type {string}
@@ -694,13 +694,13 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.ForeignKeys}
          */
-        this.foreignKeys = new ForeignKeys(this);
+        this.foreignKeys = new ForeignKeys();
 
         /**
          * All the FKRs to this table.
          * @type {ERMrest.ForeignKeys}
          */
-        this.referredBy = new InboundForeignKeys(this);
+        this.referredBy = new ForeignKeys();
 
         /**
          * @desc Documentation for this table
@@ -778,7 +778,7 @@ var ERMrest = (function (module) {
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
             // so we already have all the keys and columns for all tables
-            this.foreignKeys = new ForeignKeys(this);
+            this.foreignKeys = new ForeignKeys();
             for (var i = 0; i < this._jsonTable.foreign_keys.length; i++) {
                 var jsonFKs = this._jsonTable.foreign_keys[i];
                 var foreignKeyRef = new ForeignKeyRef(this, jsonFKs);
@@ -993,6 +993,41 @@ var ERMrest = (function (module) {
 
         },
 
+        // returns visible inbound foreignkeys.
+        _visibleInboundForeignKeys: function (context) {
+            if(context in this._visibleInboundForeignKeys_cached) {
+                return this._visibleInboundForeignKeys_cached[context];
+            }
+
+            var orders = -1;
+            if (this.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                orders = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
+            }
+
+            if (orders == -1) {
+                this._visibleInboundForeignKeys_cached[context] = -1;
+                return -1; // no annoation
+            }
+
+            for (var i = 0, result = [], fk; i < orders.length; i++) {
+                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
+                    continue; // the annotation value is not correct.
+                }
+                try {
+                    fk = this.schema.catalog.constraintByNamePair(orders[i]);
+                    if (result.indexOf(fk) == -1 && this.referredBy.all().indexOf(fk) != -1) {
+                        // avoid duplicate and if it's a valid inbound fk of this table.
+                        result.push(fk);
+                    }
+                } catch (exception){
+                    // if the constraint name is not valid, this will catch the error
+                }
+            }
+
+            this._visibleInboundForeignKeys_cached[context] = result;
+            return result;
+        },
+
         // figure out if Table is pure and binary association table.
         // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
         // pure: There is no extra column that is not part of any keys.
@@ -1029,6 +1064,7 @@ var ERMrest = (function (module) {
 
             return nonKeyCols.length === 0; // check for purity
         }
+
     };
 
 
@@ -1536,113 +1572,34 @@ var ERMrest = (function (module) {
             return this._columns[pos];
         },
 
-        // Get PseudoColumns based on the context.
-        _contextualize: function (context, columns) {            
-            if (typeof columns == 'undefined') {
-                columns = this.all();
-            }
-
-            var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
+        // Get columns based on the context.
+        _contextualize: function (context) {
 
             // get column orders from annotation
+            var orders = -1;
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
-            // get from annotation             
-            if (orders !== -1) {
-                var addedFKs = {}, // to avoid duplicate 
-                    fkName, 
-                    colFound,
-                    addCol;
-
-                for (i = 0; i < orders.length; i++) {
-                    addCol = true;
-                    if (Array.isArray(orders[i])) {
-                        fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                        // check if FK of this table and avoid duplicate
-                        fkName = fk.constraint_names[0].join(":");
-                        if (fk._table != this._table || (fkName in addedFKs)) {
-                            addCol = false;
-                        } else {
-                            addedFKs[fkName] = 1;
-                            col = new PseudoColumn(fk, fk.colset.columns[0]);
-                        }
-
-                    } else {
-                        colFound = false;
-                        for (j=0; j < columns.length && !colFound; j++) {
-                            if (columns[j].name == orders[i]) {
-                                col = columns[j];
-                                colFound = true;
-                            }
-                        }
-
-                        // check if it is in columns and avoid duplicate
-                        if (!colFound || (visiblePseudoColumns.indexOf(col) !== -1)) {
-                            addCol = false;
-                        }    
-                    }
-
-                    if (addCol) {
-                        visiblePseudoColumns.push(col);
-                    }
-                        
-                }
-            }
-            // heuristics
-            else {
-                var compositeFKs = {}, compositeFKKey, colAdded;
-                for (i = 0; i < columns.length; i++) {
-                    col = columns[i];
-                    colAdded = false;
-
-                    if (col.memberOfForeignKeys.length === 0) {
-                        visiblePseudoColumns.push(col);
-                    } else {
-                        var colFKs;
-                        // sort foreign keys of a column
-                        if (col.memberOfForeignKeys.length > 1) {
-                            colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
-                            });
-                        } else {
-                            colFKs = col.memberOfForeignKeys;
-                        }
-
-                        for (j = 0; j < colFKs.length; j++) {
-                            fk = colFKs[j];
-
-                            // multiple simple FKR
-                            if (fk.simple) {
-                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
-                            } 
-                            // multiple composite FKR
-                            else { 
-                                
-                                // add the column first
-                                if (!colAdded) {
-                                    visiblePseudoColumns.push(col);
-                                    colAdded = true;
-                                }
-
-                                // hold composite FKR and avoid duplicate
-                                compositeFKKey = fk.constraint_names[0].join(":");
-                                if (!(compositeFKKey in compositeFKs)) {
-                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // append composite FKRs
-                for (var cfkr in compositeFKs) {
-                    visiblePseudoColumns.push(compositeFKs[cfkr]);
-                }
+            // no annotation
+            if (orders == -1) {
+                return this;
             }
 
-            return visiblePseudoColumns;
+            // build the columns
+            var columns = new Columns(this._table);
+            for (var i = 0; i < orders.length; i++) {
+                try {
+                    var c = this.get(orders[i]);
+
+                    if (!columns.has(c.name)) { // not already in the columns.
+                        columns._push(c);
+                    }
+                } catch (exception) {
+                    //do nothing, go to the next column
+                }
+            }
+            return columns;
         }
 
     };
@@ -1660,14 +1617,6 @@ var ERMrest = (function (module) {
      * @param {string} jsonColumn the json column.
      */
     function Column(table, jsonColumn) {
-
-        this._jsonColumn = jsonColumn;
-
-        /**
-         * @type {boolean}
-         * @desc indicator that this is a Column rather than a PseudoColumn.
-         */
-        this.isPseudo = false;
 
         /**
          * The ordinal number or position of this column relative to other
@@ -1907,148 +1856,6 @@ var ERMrest = (function (module) {
         }
     };
 
-    /**
-     * @memberOf ERMrest
-     * @constructor
-     * @param {ERMrest.ForeginKeyRef} foreignKeyRef The foreignKeyRef that represents this PseudoColumn
-     * @param {ERMrest.Column} column The column that this PseudoColumn will be created based on.
-     * @desc
-     * Constructor for PseudoColumn. This class extends {@link ERMrest.Column}.
-     */
-    function PseudoColumn(foreignKey, column) {
-
-        // make sure all the properties of column are in PseudoColumn
-        Column.call(this, foreignKey._table, column._jsonColumn);
-
-        
-        this._foreignKey = foreignKey;
-        this._constraintName = foreignKey.constraint_names[0].join(":");
-        this._column = column;
-
-        /**
-         * @type {boolean}
-         * @desc indicator that this is a PseudoColumn rather than a Column.
-         */
-        this.isPseudo = true;
-
-        // make sure PseudoColumn name is unique
-        // since the constraint_names are unique, I just need to check this in column names
-        var i = 0;
-        while(foreignKey._table.columns.has(foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
-            i++;
-        }
-        
-        /**
-         * @type {string}
-         * @desc name of the PseudoColumn.
-         */
-        this.name = foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: "");
-
-        /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
-         */
-        this.displayname = "";
-        
-        if (foreignKey.to_name !== "") {
-            this.displayname = foreignKey.to_name;
-        } else if (foreignKey.simple) {
-            this.displayname = column.displayname;
-
-            if (column.memberOfForeignKeys.length > 1) { // disambiguate
-                this.displayname += " ("  + foreignKey.key.table.displayname + ")";
-            }
-        } else {
-            this.displayname = foreignKey.key.table.displayname;
-
-            // disambiguate
-            var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
-                return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
-            }).length;
-
-            if (tableCount > 1) {
-                this.displayname += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
-                    return a.name.localeCompare(b.name);
-                }).map(function(col) {
-                    return col.displayname;
-                }).join(", ")  + ")"; 
-            }
-        }
-
-        /**
-         * @type {ERMrest.Type}
-         */
-        this.type = new Type("markdown");
-
-        /**
-         * @type {string}
-         */
-        this.comment = column.comment;
-
-        /**
-         * @type {ERMrest.Table}
-         */
-        this.table = foreignKey.key.table;
-
-
-        // create ermrest url using the location
-        var ermrestURI = [
-                            this.table.schema.catalog.server.uri , 
-                            "catalog" ,
-                            module._fixedEncodeURIComponent(this.table.schema.catalog.id), 
-                            "entity", 
-                            [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":")
-                         ].join("/");
-        
-        /**
-         * @type {ERMrest.Reference}
-         * @desc The reference object that represents the table of this PseudoColumn
-         */
-        this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
-
-        /**
-         * @desc Formats the presentation value corresponding to this PseudoColumn.
-         * It will be a url with:
-         *  - caption: row-name
-         *  - link: link to detailed view of reference
-         */
-        this.formatPresentation = function (data, options) {
-            var value;
-
-            // use row name as the caption
-            var caption = module._generateRowName(this.table, options ? options.context : undefined, data);
-
-            // if caption has a link, don't add the link.
-            if (caption.match(/<a/)) {
-                value = caption;
-            }
-            // create the link using reference.
-            else { 
-
-                // create a reference to just this PseudoColumn to use for url
-                var keyPair = "", key = this.table.shortestKey, col;
-                for (var i = 0; i < key.length; i++) {
-                    col = key[i].name;
-                    keyPair +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
-                    if (i != key.length - 1) {
-                        keyPair +="&";
-                    }
-                }
-                var url = [this.reference.location.compactUri, keyPair].join("/");
-
-                var ref = module._createReference(module._parse(url), this.table.schema.catalog);
-
-
-                value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
-            }
-
-            return {isHTML: true, value: value};
-        };
-        
-    }
-
-    PseudoColumn.prototype = Object.create(Column.prototype);
-    PseudoColumn.prototype.constructor = PseudoColumn;
 
     /**
      * @memberof ERMrest
@@ -2336,11 +2143,6 @@ var ERMrest = (function (module) {
          */
         this.columns = columns;
 
-        // sorting the column based on their name
-        columns.sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        });
-
     }
 
     ColSet.prototype = {
@@ -2488,79 +2290,15 @@ var ERMrest = (function (module) {
         }
     };
 
-    /**
-     * @desc holds inbound foreignkeys of a table. 
-     * @param {ERMrest.Table} table the table that this object is for
-     * @memberof ERMrest
-     * @constructor
-     */
-    function InboundForeignKeys(table) {
-        this._foreignKeys = [];
-        this._table = table;
-        this._contextualize_cached = {};
-
-    }
-
-    InboundForeignKeys.prototype = {
-        constructor: InboundForeignKeys,
-
-        _push: function (foreignKeyRef) {
-            this._foreignKeys.push(foreignKeyRef);
-        },
-
-        all: function () {
-            return this._foreignKeys;
-        },
-
-        length: function() {
-            return this._foreignKeys.length;
-        },
-
-        _contextualize: function (context) {
-            if(context in this._contextualize_cached) {
-                return this._contextualize_cached[context];
-            }
-
-            var orders = -1;
-            if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
-            }
-
-            if (orders == -1) {
-                this._contextualize_cached[context] = -1;
-                return -1; // no annoation
-            }
-
-            for (var i = 0, result = [], fk; i < orders.length; i++) {
-                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
-                    continue; // the annotation value is not correct.
-                }
-                try {
-                    fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && this._foreignKeys.indexOf(fk) != -1) {
-                        // avoid duplicate and if it's a valid inbound fk of this table.
-                        result.push(fk);
-                    }
-                } catch (exception){
-                    // if the constraint name is not valid, this will catch the error
-                }
-            }
-
-            this._contextualize_cached[context] = result;
-            return result;
-        }
-    };
-
 
     /**
      *
      * @memberof ERMrest
      * @constructor
      */
-    function ForeignKeys(table) {
+    function ForeignKeys() {
         this._foreignKeys = []; // array of ForeignKeyRef
         this._mappings = []; // array of Mapping
-        this._table = table;
     }
 
     ForeignKeys.prototype = {
@@ -2644,8 +2382,6 @@ var ERMrest = (function (module) {
      * @constructor
      */
     function ForeignKeyRef(table, jsonFKR) {
-
-        this._table = table;
 
         var catalog = table.schema.catalog;
 

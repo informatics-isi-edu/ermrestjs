@@ -1,7 +1,6 @@
 exports.execute = function (options) {
 
-    // other cases are covered in reference since they need location
-    describe('For determining order of visible columns in tables without any foreign keys, ', function () {
+    describe('For determining order of visible columns, ', function () {
         var schemaName = "visible_columns_schema", schema;
 
         beforeAll(function (done) {
@@ -15,10 +14,7 @@ exports.execute = function (options) {
             var columns = schema.tables.get(table).columns;
 
             Object.keys(cases).forEach(function (key) {
-                var cols = columns._contextualize(key).map( function (col) {
-                    return col.name;
-                })
-                expect(cols).toEqual(cases[key]);
+                expect(columns._contextualize(key).names()).toEqual(cases[key]);
             });
         }
 
@@ -72,6 +68,7 @@ exports.execute = function (options) {
                 "compact": ["column_2", "column_1"]
             });
         });
+
 
     });
 };

@@ -81,17 +81,11 @@ exports.execute = function(options) {
             it('.columns should be properly defiend based on schema', function() {
                 checkReferenceColumns([{
                     ref: related[0],
-                    expected: [
-                        "id", 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema","fk_inbound_related_to_reference"].join(":")
-                ]}, {
+                    expected: ["id", "fk_to_reference_hidden", "fk_to_reference with space"]
+                }, {
                     ref: related[1],
-                    expected: [
-                        "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":")
-                ]}]);
+                    expected: ["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden"]
+                }]);
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -144,22 +138,14 @@ exports.execute = function(options) {
                 it('should ignore all the foreign keys that create the connection for assocation.', function() {
                     checkReferenceColumns([{
                         ref: related[2],
-                        expected:[
-                            "id", 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
-                    ]}]);
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference with space"]
+                    }]);
                 });
                 it('should ignore extra serial key columns in the assocation table', function() {
                     checkReferenceColumns([{
                         ref: related[3],
-                        expected:[
-                            "id", 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
-                    ]}]);
+                        expected:["id", "fk_to_reference_with_fromname", "fk_to_reference_hidden", "fk_to_reference with space"]
+                    }]);
                 });
             });
 
@@ -232,14 +218,21 @@ exports.execute = function(options) {
             });
 
             it('should be sorted by order of key columns when displayname is the same.', function (){
-                //NOTE: using the compactPath for checking the equality of reference
-                var expected = "reference_schema_2:reference_table_no_order/(id_1,id_2)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_1,col_from_ref_no_order_2)";
-                expect(related2[1].location.compactPath).toEqual(expected);
+                checkReferenceColumns([{
+                    ref: related2[1],
+                    expected: [
+                        "id", "col_from_ref_no_order_3", "col_from_ref_no_order_4", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
             });
 
             it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
-                var expected = "reference_schema_2:reference_table_no_order/(id_2,id_3)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_3,col_from_ref_no_order_4)";
-                expect(related2[2].location.compactPath).toEqual(expected);
+                checkReferenceColumns([{
+                    ref: related2[2],
+                    expected:[
+                        "id", "col_from_ref_no_order_1", "col_from_ref_no_order_2", "col_from_ref_no_order_5", "col_from_ref_no_order_6"
+                    ]
+                }]);
             });
         });
 
