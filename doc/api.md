@@ -114,6 +114,7 @@ to use for ERMrest JavaScript agents.
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+        * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -129,6 +130,16 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
+    * [.PseudoColumn](#ERMrest.PseudoColumn)
+        * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+        * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+        * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
+        * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+        * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
+        * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
+        * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
+        * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -166,6 +177,8 @@ to use for ERMrest JavaScript agents.
         * [.domain()](#ERMrest.Mapping+domain) ⇒ <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [.get(fromCol)](#ERMrest.Mapping+get) ⇒ <code>[Column](#ERMrest.Column)</code>
         * [.getFromColumn(toCol)](#ERMrest.Mapping+getFromColumn) ⇒ <code>[Column](#ERMrest.Column)</code>
+    * [.InboundForeignKeys](#ERMrest.InboundForeignKeys)
+        * [new InboundForeignKeys(table)](#new_ERMrest.InboundForeignKeys_new)
     * [.ForeignKeys](#ERMrest.ForeignKeys)
         * [.all()](#ERMrest.ForeignKeys+all) ⇒ <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.colsets()](#ERMrest.ForeignKeys+colsets) ⇒ <code>[Array.&lt;ColSet&gt;](#ERMrest.ColSet)</code>
@@ -216,7 +229,7 @@ to use for ERMrest JavaScript agents.
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
         * [.setBinaryPredicate(colname, operator, value)](#ERMrest.ParsedFilter+setBinaryPredicate)
     * [.Reference](#ERMrest.Reference)
-        * [new Reference(location)](#new_ERMrest.Reference_new)
+        * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
@@ -1002,6 +1015,7 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
     * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -1033,6 +1047,12 @@ a Column _may not_ be a part of a Table.
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
 
+<a name="ERMrest.Column+isPseudo"></a>
+
+#### column.isPseudo : <code>boolean</code>
+indicator that this is a Column rather than a PseudoColumn.
+
+**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+position"></a>
 
 #### column.position : <code>number</code>
@@ -1125,6 +1145,78 @@ returns string representation of Column
 
 **Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
 **Retuns**: <code>string</code> string representation of Column  
+<a name="ERMrest.PseudoColumn"></a>
+
+### ERMrest.PseudoColumn
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.PseudoColumn](#ERMrest.PseudoColumn)
+    * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
+    * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+    * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
+    * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
+    * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
+    * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
+    * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
+    * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
+
+<a name="new_ERMrest.PseudoColumn_new"></a>
+
+#### new PseudoColumn(foreignKeyRef, column)
+Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents this PseudoColumn |
+| column | <code>[Column](#ERMrest.Column)</code> | The column that this PseudoColumn will be created based on. |
+
+<a name="ERMrest.PseudoColumn+isPseudo"></a>
+
+#### pseudoColumn.isPseudo : <code>boolean</code>
+indicator that this is a PseudoColumn rather than a Column.
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+name"></a>
+
+#### pseudoColumn.name : <code>string</code>
+name of the PseudoColumn.
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+displayname"></a>
+
+#### pseudoColumn.displayname : <code>string</code>
+Preferred display name for user presentation only.
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+type"></a>
+
+#### pseudoColumn.type : <code>[Type](#ERMrest.Type)</code>
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+comment"></a>
+
+#### pseudoColumn.comment : <code>string</code>
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+table"></a>
+
+#### pseudoColumn.table : <code>[Table](#ERMrest.Table)</code>
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+reference"></a>
+
+#### pseudoColumn.reference : <code>[Reference](#ERMrest.Reference)</code>
+The reference object that represents the table of this PseudoColumn
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+formatPresentation"></a>
+
+#### pseudoColumn.formatPresentation()
+Formats the presentation value corresponding to this PseudoColumn.
+It will be a url with:
+ - caption: row-name
+ - link: link to detailed view of reference
+
+**Kind**: instance method of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
@@ -1435,6 +1527,20 @@ get the mapping column given the from column
 | Param | Type |
 | --- | --- |
 | toCol | <code>[Column](#ERMrest.Column)</code> | 
+
+<a name="ERMrest.InboundForeignKeys"></a>
+
+### ERMrest.InboundForeignKeys
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.InboundForeignKeys_new"></a>
+
+#### new InboundForeignKeys(table)
+holds inbound foreignkeys of a table.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>[Table](#ERMrest.Table)</code> | the table that this object is for |
 
 <a name="ERMrest.ForeignKeys"></a>
 
@@ -1800,7 +1906,7 @@ Constructor for a ParsedFilter.
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Reference](#ERMrest.Reference)
-    * [new Reference(location)](#new_ERMrest.Reference_new)
+    * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
@@ -1822,7 +1928,7 @@ Constructor for a ParsedFilter.
 
 <a name="new_ERMrest.Reference_new"></a>
 
-#### new Reference(location)
+#### new Reference(location, catalog)
 Constructs a Reference object.
 
 For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -1839,6 +1945,7 @@ Usage:
 | Param | Type | Description |
 | --- | --- | --- |
 | location | <code>ERMrest.Location</code> | The location object generated from parsing the URI |
+| catalog | <code>[Catalog](#ERMrest.Catalog)</code> | The catalog object. Since location.catalog is just an id, we need the actual catalog object too. |
 
 <a name="ERMrest.Reference+contextualize"></a>
 
@@ -2305,9 +2412,9 @@ See [canUpdate](#ERMrest.Tuple+canUpdate) for a usage example.
 <a name="ERMrest.Tuple+values"></a>
 
 #### tuple.values : <code>Array.&lt;string&gt;</code>
-The array of formatted values of this tuple. The ordering of the
-values in the array matches the ordering of the columns in the
-reference (see [columns](#ERMrest.Reference+columns)).
+The array of formatted/raw values of this tuple on basis of context "edit". 
+The ordering of the values in the array matches the ordering of the columns
+in the reference (see [columns](#ERMrest.Reference+columns)).
 
 Usage (iterating over all values in the tuple):
 ```

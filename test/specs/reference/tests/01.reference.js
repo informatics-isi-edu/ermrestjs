@@ -105,7 +105,7 @@ exports.execute = function (options) {
             // Methods that are currently implemented
             it('reference should have methods properly defined.', function() {
                 expect(reference.uri).toBe(reference._location.uri);
-                expect(reference.columns).toBe(reference._columns);
+                expect(reference.columns).toBe(reference._pseudoColumns);
                 expect(reference.displayname).toBe(reference._table.name);
                 expect(reference.canCreate).toBeDefined();
                 expect(reference.canUpdate).toBeDefined();

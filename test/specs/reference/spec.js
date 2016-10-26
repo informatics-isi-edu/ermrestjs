@@ -13,7 +13,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/10.update.js",
         "/reference/tests/11.delete.js",
         "/reference/tests/12.reference_values_edit.js",
-        "/reference/tests/13.search.js"
+        "/reference/tests/13.search.js",
+        "/reference/tests/14.outbound_fks.js"        
     ],
     schemaConfigurations: [
         "/reference/conf/reference.conf.json",
