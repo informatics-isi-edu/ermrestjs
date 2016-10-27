@@ -408,6 +408,19 @@ var ERMrest = (function(module) {
         }
     };
 
+    module._stringToDate = function(_date, _format, _delimiter) {
+        var formatLowerCase=_format.toLowerCase();
+        var formatItems=formatLowerCase.split(_delimiter);
+        var dateItems=_date.split(_delimiter);
+        var monthIndex=formatItems.indexOf("mm");
+        var dayIndex=formatItems.indexOf("dd");
+        var yearIndex=formatItems.indexOf("yyyy");
+        var month=parseInt(dateItems[monthIndex]);
+        month-=1;
+        var formatedDate = new Date(dateItems[yearIndex],month,dateItems[dayIndex].split(" ")[0]);
+        return formatedDate;
+    };
+
     /**
      * @desc An object of pretty print utility functions
      * @private
@@ -505,7 +518,7 @@ var ERMrest = (function(module) {
             var year, month, date;
             try {
                 value = value.toString();
-                value = new Date(value);
+                value = module._stringToDate(value, "yyyy-mm-dd", "-");
                 year = value.getFullYear();
                 month = value.getMonth() + 1; // 1-12, not 0-11
                 date = value.getDate();
