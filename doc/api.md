@@ -139,6 +139,7 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
         * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
         * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -1159,6 +1160,7 @@ returns string representation of Column
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
     * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
     * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
@@ -1206,6 +1208,12 @@ Preferred display name for user presentation only.
 
 #### pseudoColumn.reference : <code>[Reference](#ERMrest.Reference)</code>
 The reference object that represents the table of this PseudoColumn
+
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+foreignKey"></a>
+
+#### pseudoColumn.foreignKey : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+The Foreign key object that this PseudoColumn is created based on
 
 **Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>
