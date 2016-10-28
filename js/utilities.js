@@ -358,9 +358,10 @@ var ERMrest = (function(module) {
         // Get the columns for shortestKey
         var keyColumns = table.shortestKey;
 
-        if (keyColumns.length >= table.columns.length) {
-            return null;
-        }
+        // TODO this check needs to change. it is supposed to check if the table has a key or not
+        // if (keyColumns.length >= table.columns.length) {
+        //     return null;
+        // }
 
         var values = [];
 
