@@ -1082,7 +1082,7 @@ var ERMrest = (function(module) {
         return function(text, render) {
 
             // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
-            text = module._addIgnoreEscapingForTemplating(text);
+            //text = module._addIgnoreEscapingForTemplating(text);
 
             return module._fixedEncodeURIComponent(render(text));
         };
@@ -1099,7 +1099,7 @@ var ERMrest = (function(module) {
         return function(text, render) {
 
             // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
-            text = module._addIgnoreEscapingForTemplating(text);
+            // text = module._addIgnoreEscapingForTemplating(text);
 
 
             return module._escapeMarkdownCharacters(render(text));
