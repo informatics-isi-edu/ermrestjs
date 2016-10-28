@@ -915,6 +915,35 @@
                         }
                     ],
                     "annotations": {}
+                },
+                {
+                    "comment": "composite fk to reference, one value is null",
+                    "names": [["reference_schema", "outbound_fk_9"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_7"
+                      },
+                      {
+                          "schema_name": "reference_schema",
+                          "table_name": "reference_table_outbound_fks",
+                          "column_name": "col_5"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {}
                 }
             ],
             "column_definitions": [
@@ -972,6 +1001,13 @@
                 },
                 {
                     "name": "col_6",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "is in multiple composite FKRs"
+                },
+                {
+                    "name": "col_7",
                     "type": {
                         "typename": "text"
                     },

@@ -1379,15 +1379,20 @@ var ERMrest = (function(module) {
         this._linkedData = [];
 
         if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
-            this._data = [];            
-            var i, j, fks = reference._table.foreignKeys.all();
-            for (i = 0; i < data.length; i++) {
-                this._data.push(data[i].M[0]); 
+            try {
+                this._data = [];            
+                var i, j, fks = reference._table.foreignKeys.all();
+                for (i = 0; i < data.length; i++) {
+                    this._data.push(data[i].M[0]); 
 
-                this._linkedData.push({});
-                for (j = fks.length - 1; j >= 0 ; j--) {
-                    this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                    this._linkedData.push({});
+                    for (j = fks.length - 1; j >= 0 ; j--) {
+                        this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                    }
                 }
+            } catch(exception) { // could not find the expected aliases
+                this._linkedData = [];
+                this._data = data;
             }
         } else { // entity output
             this._data = data;
@@ -1591,7 +1596,7 @@ var ERMrest = (function(module) {
     function Tuple(pageReference, data, linkedData) {
         this._pageRef = pageReference;
         this._data = data;
-        this._linkedData = linkedData;
+        this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
 
     Tuple.prototype = {
@@ -1772,12 +1777,17 @@ var ERMrest = (function(module) {
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
+                        this._isHTML[i] = false;
                         if (column.isPseudo) {
-                            this._values[i] = module._generateRowName(column.table, this._pageRef._context, this._linkedData[column._constraintName]);
+                            if (!this._linkedData || !this._linkedData[column._constraintName] || Object.keys(this._linkedData[column._constraintName]).length === 0) {
+                                this._values[i] = column._getNullValue(this._pageRef._context);
+                            } else {
+                                this._values[i] = module._generateRowName(column.table, this._pageRef._context, this._linkedData[column._constraintName]);
+                                this._isHTML[i] = true;
+                            }
                         } else {
                             this._values[i] = this._data[column.name];
                         }
-                        this._isHTML[i] = false;
                     }
                 } else {
                     

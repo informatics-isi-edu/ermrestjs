@@ -1596,6 +1596,7 @@ var ERMrest = (function (module) {
             // heuristics
             else {
                 var compositeFKs = {}, compositeFKKey, colAdded;
+                var editContexts = [module._contexts.CREATE, module._contexts.EDIT];
                 for (i = 0; i < columns.length; i++) {
                     col = columns[i];
                     colAdded = false;
@@ -1623,8 +1624,8 @@ var ERMrest = (function (module) {
                             // multiple composite FKR
                             else { 
                                 
-                                // add the column first
-                                if (!colAdded) {
+                                // add the column if context is not create or edit
+                                if (!colAdded && editContexts.indexOf(context) === -1) {
                                     visiblePseudoColumns.push(col);
                                     colAdded = true;
                                 }
@@ -1924,7 +1925,6 @@ var ERMrest = (function (module) {
         Column.call(this, foreignKey._table, column._jsonColumn);
 
         
-        this._foreignKey = foreignKey;
         this._constraintName = foreignKey.constraint_names[0].join(":");
         this._column = column;
 
@@ -2010,16 +2010,27 @@ var ERMrest = (function (module) {
         this.reference =  module._createReference(module._parse(ermrestURI), this.table.schema.catalog);
 
         /**
+         * @type {ERMrest.ForeignKeyRef}
+         * @desc The Foreign key object that this PseudoColumn is created based on
+         */
+        this.foreignKey = foreignKey;
+
+        /**
          * @desc Formats the presentation value corresponding to this PseudoColumn.
          * It will be a url with:
          *  - caption: row-name
          *  - link: link to detailed view of reference
          */
         this.formatPresentation = function (data, options) {
-            var value;
+            var value, caption;
+
+            // if data is empty
+            if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+                return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
+            }
 
             // use row name as the caption
-            var caption = module._generateRowName(this.table, options ? options.context : undefined, data);
+            caption = module._generateRowName(this.table, options ? options.context : undefined, data);
 
             // if caption has a link, don't add the link.
             if (caption.match(/<a/)) {
@@ -2046,6 +2057,10 @@ var ERMrest = (function (module) {
             }
 
             return {isHTML: true, value: value};
+        };
+
+        this._getNullValue =  function(context) {
+            return this._column._getNullValue(context);
         };
         
     }
