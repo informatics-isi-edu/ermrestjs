@@ -62,6 +62,37 @@
         }
       ]
     },
+    "table_w_accession_id_wo_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_accession_id_wo_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "Accession ID",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ]
+    },
     "table_w_composite_key_wo_annotation": {
       "kind": "table",
       "keys": [
