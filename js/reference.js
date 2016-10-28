@@ -1535,8 +1535,7 @@ var ERMrest = (function(module) {
 
                         // If value is null or empty, return value on basis of `show_nulls`
                         if (value === null || value.trim() === '') {
-                            // TODO is this correct?
-                            value = module._getNullValue(this, this._ref._context, [this._ref._table, this._ref._table.schema]);
+                            value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
                         }
 
                         // If final value is not null then push it in values array
