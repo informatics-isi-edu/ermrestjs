@@ -110,6 +110,33 @@ var ERMrest = (function(module) {
 
     /**
      * @function
+     * @private
+     * @param {Object} obj the object
+     * @param {String} key the key that we want from the object
+     * @desc
+     * matches the keys by removing `.`, `-`, `_`, and space.
+     */
+    module._getClosest = function(obj, key) {
+        if (key in obj) { // return the exact
+            return {"data": obj[key], "key": key};
+        }
+
+        var removeExtra = function (str) { // remove `.`, `-`, `_`, and space
+            return str.replace(/[\.\s\_-]+/g, "").toLocaleLowerCase();
+        };
+
+        var newKey = removeExtra(key);
+        for (var objKey in obj) { // find the closest
+            if (obj.hasOwnProperty(objKey) && removeExtra(objKey) == newKey) {
+                return {"data": obj[objKey], "key": objKey};
+            }
+        }
+        return undefined;
+    };
+
+
+    /**
+     * @function
      * @param {String} str string to be encoded.
      * @desc
      * converts a string to an URI encoded string
@@ -324,17 +351,18 @@ var ERMrest = (function(module) {
         }
 
         // no row_name annotation, use column with title, name, term
-        var result;
+        var result, closest;
         var setDisplaynameForACol = function(name) {
-            if (typeof data[name] === 'string') {
-                col = table.columns.get(name);
-                result = col.formatvalue(data[name], { context: context });
+            closest = module._getClosest(data, name);
+            if (closest !== undefined && (typeof closest.data === 'string')) {
+                col = table.columns.get(closest.key);
+                result = col.formatvalue(closest.data, { context: context });
                 return true;
             }
             return false;
         };
 
-        var columns = ['title', 'Title', 'TITLE', 'name', 'Name', 'NAME', 'term', 'Term', 'TERM', 'label', 'Label', 'LABEL'];
+        var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_name'];
 
         for (var i = 0; i < columns.length; i++) {
             if (setDisplaynameForACol(columns[i])) {
