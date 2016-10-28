@@ -331,13 +331,13 @@ var ERMrest = (function (module) {
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
          * @throws {ERMrest.NotFoundError} constraint not found
-         * @returns {Object} the constrant object
+         * @returns {Object|null} the constrant object, if it's null that means this constraint_name doesn't exists
          */
         constraintByNamePair: function (pair) {
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
                 return this._constraintNames[pair[0]][pair[1]];
             }
-            throw new module.NotFoundError("", "constraint [ " + pair.join(" ,") + " ] not found.");
+            return null;
         },
 
         // used in ForeignKeyRef to add the defined constraintNames.
@@ -1563,15 +1563,18 @@ var ERMrest = (function (module) {
                     addCol = true;
                     if (Array.isArray(orders[i])) {
                         fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                        // check if FK of this table and avoid duplicate
-                        fkName = fk.constraint_names[0].join(":");
-                        if (fk._table != this._table || (fkName in addedFKs)) {
-                            addCol = false;
+                        if (fk !== null) {
+                            // check if FK of this table and avoid duplicate
+                            fkName = fk.constraint_names[0].join(":");
+                            if (fk._table != this._table || (fkName in addedFKs)) {
+                                addCol = false;
+                            } else {
+                                addedFKs[fkName] = 1;
+                                col = new PseudoColumn(fk, fk.colset.columns[0]);
+                            }
                         } else {
-                            addedFKs[fkName] = 1;
-                            col = new PseudoColumn(fk, fk.colset.columns[0]);
+                            addCol = false;
                         }
-
                     } else {
                         colFound = false;
                         for (j=0; j < columns.length && !colFound; j++) {
@@ -2553,14 +2556,10 @@ var ERMrest = (function (module) {
                 if(!Array.isArray(orders[i]) || orders[i].length != 2) {
                     continue; // the annotation value is not correct.
                 }
-                try {
-                    fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                    if (result.indexOf(fk) == -1 && this._foreignKeys.indexOf(fk) != -1) {
-                        // avoid duplicate and if it's a valid inbound fk of this table.
-                        result.push(fk);
-                    }
-                } catch (exception){
-                    // if the constraint name is not valid, this will catch the error
+                fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
+                if (fk !== null && result.indexOf(fk) == -1 && this._foreignKeys.indexOf(fk) != -1) {
+                    // avoid duplicate and if it's a valid inbound fk of this table.
+                    result.push(fk);
                 }
             }
 
