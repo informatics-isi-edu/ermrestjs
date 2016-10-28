@@ -623,6 +623,9 @@ var ERMrest = (function (module) {
         this.name = jsonTable.table_name;
         this._jsonTable = jsonTable;
 
+
+        this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
+        
         //this.uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
         /**

@@ -51,6 +51,13 @@ exports.execute = function(options) {
             expect(related[4]._table.name).toBe(AssociationTableWithExtra);
         });
 
+        it('.origFKR should have the correct value', function() {
+            expect(related[0].origFKR.toString()).toBe("(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
+            expect(related[1].origFKR.toString()).toBe('(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)');
+            expect(related[2].origFKR.toString()).toBe('(id)=(reference_schema:association_table_with_toname:id_from_ref_table)');
+            expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
+        });
+
         describe('for inbound foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function() {
                 expect(related[0]._location.catalog).toBe(catalog_id.toString());
@@ -92,6 +99,11 @@ exports.execute = function(options) {
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":")
                 ]}]);
+            });
+
+            it('._derivedAssociationRef should be undefined', function() {
+                expect(related[0]._derivedAssociationRef).toBeUndefined();
+                expect(related[1]._derivedAssociationRef).toBeUndefined();
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -173,6 +185,19 @@ exports.execute = function(options) {
                 });
             });
 
+            it('._derivedAssociationRef should be defined.', function() {
+                expect(related[2]._derivedAssociationRef._table.name).toBe("association_table_with_toname");
+                expect(related[3]._derivedAssociationRef._table.name).toBe("association table with id");
+            });
+
+            it('.contextualize.entryEdit should be created based on the assocation table rather than the reference it is referring to.', function(){
+                var ref;
+                ref = related[2].contextualize.entryEdit;
+                expect(ref._table.name).toBe("association_table_with_toname");
+                ref = related[3].contextualize.entryEdit;
+                expect(ref._table.name).toBe("association table with id");
+            });
+
             it('.read should return a Page object that is defined.', function(done) {
                 related[2].read(limit).then(function(response) {
                     page = response;
@@ -200,6 +225,7 @@ exports.execute = function(options) {
                     done.fail();
                 });
             });
+
 
         });
 
