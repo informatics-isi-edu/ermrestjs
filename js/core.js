@@ -331,7 +331,7 @@ var ERMrest = (function (module) {
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
          * @throws {ERMrest.NotFoundError} constraint not found
-         * @returns {Object|null} the constrant object, if it's null that means this constraint_name doesn't exists
+         * @returns {Object|null} the constrant object. Null means the constraint name is not valid.
          */
         constraintByNamePair: function (pair) {
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
