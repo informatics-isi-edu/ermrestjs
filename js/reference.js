@@ -970,6 +970,9 @@ var ERMrest = (function(module) {
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
                     delete newRef._pseudoColumns;
+                    delete newRef._derivedAssociationRef;
+
+                    newRef.origFKR = fkr; // it will be used to trace back the reference
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -992,6 +995,9 @@ var ERMrest = (function(module) {
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
+
+                        // will be used in edit contextualize
+                        newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -1086,6 +1092,8 @@ var ERMrest = (function(module) {
             this._columns = table.columns.all();
             delete this._pseudoColumns;
             delete this._related;
+            delete this._derivedAssociationRef;
+            delete this.origFKR;
         }
     };
 
@@ -1160,12 +1168,20 @@ var ERMrest = (function(module) {
         },
 
         _contextualize: function(context) {
-            var source = this._reference;
+            var source;
+            // if this is a related association table and context is edit, contextualize based on the association table.
+            if (this._reference._derivedAssociationRef && context == module._contexts.EDIT) {
+                source = this._reference._derivedAssociationRef;
+            } else {
+                source = this._reference;
+            }
+
             var newRef = _referenceCopy(source);
             delete newRef._related;
             delete newRef._pseudoColumns;
+            delete newRef._derivedAssociationRef;
 
-            newRef._context = context;
+            newRef._context = context;            
 
             // use the base table to get the alternative table of that context.
             // a base table's .baseTable is itself
