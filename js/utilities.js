@@ -362,7 +362,7 @@ var ERMrest = (function(module) {
             return false;
         };
 
-        var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_name'];
+        var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
 
         for (var i = 0; i < columns.length; i++) {
             if (setDisplaynameForACol(columns[i])) {
