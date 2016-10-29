@@ -61,32 +61,6 @@ var ERMrest = (function(module) {
 
     /**
      * @function
-     * @param {Array} minuend an array of Column Objects
-     * @param {Array} subtrahend an array of Column Objects
-     * @desc
-     * This gets the difference between the two column sets. This is not the _symmetric_ difference.
-     * If minuend is [1,2,3,4,5]
-     * and subtrahend is [4,5,6]
-     * the difference is [1,2,3]
-     * The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
-     * @returns {Array} difference an array of Column Objects
-     */
-    module._columnDiff = function (minuend, subtrahend) {
-        var difference = [];
-
-        difference = minuend.filter(function(col) {
-            return subtrahend.indexOf(col) == -1;
-        });
-
-        difference = difference.map(function(col) {
-            return col.name;
-        });
-
-        return difference;
-    };
-
-    /**
-     * @function
      * @param {String} str string to be converted.
      * @desc
      * Converts a string to title case (separators are space, hyphen, and underscore)
@@ -742,7 +716,7 @@ var ERMrest = (function(module) {
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true;
-                            
+
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
@@ -757,7 +731,7 @@ var ERMrest = (function(module) {
                                iframeHTML += " ";
                             });
                             html += iframeHTML + "></iframe>";
-                            
+
                             var captionHTML = "";
 
                             // If the next attribute is not a closing link then iterate
@@ -774,23 +748,23 @@ var ERMrest = (function(module) {
                                     }
                                 }
                             }
-                            
+
                             // If enlarge link is set then add an anchor tag for captionHTML
                             if (enlargeLink) {
                                  if (!captionHTML.trim().length) captionHTML = "Enlarge";
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
                             }
-                            
+
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
                                 html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
                             } else {
                                 html += '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
                             }
-                            
+
                             // Encapsulate the iframe inside a figure tag
                             html = '<figure class="embed-block">' + html + "</figure>";
-                        }  
+                        }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
                     if (html === "") {
@@ -901,28 +875,28 @@ var ERMrest = (function(module) {
             /*
              * Checks whether string matches format ":::image [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
              * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */ 
+             */
             validate: function(params) {
                 return params.trim().match(/image\s+(.*$)/i);
             },
 
             render: function (tokens, idx) {
-                
-                // Get token string after regeexp matching to determine actual internal markdown 
+
+                // Get token string after regeexp matching to determine actual internal markdown
                 var m = tokens[idx].info.trim().match(/image\s+(.*)$/i);
 
-                // If this is the opening tag i.e. starts with "::: image " 
+                // If this is the opening tag i.e. starts with "::: image "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
 
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
-                    if (attrs && attrs.length == 1 && attrs[0].children) { 
+                    if (attrs && attrs.length == 1 && attrs[0].children) {
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var imageHTML = "<img ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true;
-                            
+
                             // Add all attributes to the image
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
@@ -938,9 +912,9 @@ var ERMrest = (function(module) {
                             });
 
                             html += imageHTML + "/>";
-                            
+
                             var captionHTML = "";
-                            
+
                             // If the next attribute is not a closing link then iterate
                             // over all the children until link_close is encountered rednering their markdown
                             if (attrs[0].children[1].type != 'link_close') {
@@ -955,24 +929,24 @@ var ERMrest = (function(module) {
                                     }
                                 }
                             }
-                            
+
                             // Add caption html
                             if (posTop) {
                                 html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
                             } else {
                                 html = html + '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
                             }
-                            
+
                             // If link is specified, then wrap the image and figcaption inside anchor tag
                             if (enlargeLink) {
                                 html = '<a href="' + enlargeLink + '" target="_blank">' + html + '</a>' ;
                             }
-                            
+
                             // Encapsulate the iframe inside a paragraph tag
                             html = '<figure class="embed-block" style="display:inline-block;">' + html + "</figure>";
-                        }  
+                        }
                     }
-                    
+
                     // if attrs was empty or it didn't find any link simply render the internal markdown
                     if (html === "") {
                         html = md.render(m[1]);
@@ -981,7 +955,7 @@ var ERMrest = (function(module) {
 
                     return html;
                 } else {
-                  // closing tag 
+                  // closing tag
                   return '';
                 }
             }
@@ -1020,7 +994,7 @@ var ERMrest = (function(module) {
       return module._escapeReplacementsForMarkdown.reduce(
         function(text, replacement) {
           return text.replace(replacement[0], replacement[1]);
-        }, text); 
+        }, text);
     };
 
     /**
@@ -1052,14 +1026,14 @@ var ERMrest = (function(module) {
                 // If it is part of escaped variable then simply ignore it
                 if (escapedVariables.indexOf(p) == -1) {
 
-                    // Grab the actual variable NAME from the string {{NAME}} 
+                    // Grab the actual variable NAME from the string {{NAME}}
                     var variable = replaceVarRegexp.exec(p)[1];
 
                     // If the variable starts with "#", "^" or ends with "/", we ignore them as they're block tags.
                     // If the variable starts with "&" then we ignore it as it is already in the Mustache format of non-escaping
                     if (!variable.startsWith("&") && !variable.startsWith("#") && !variable.startsWith("^") && !variable.endsWith("/")) {
                         replaceVariables["{{" +variable + "}}"] = variable;
-                    } 
+                    }
                 }
             });
         }
@@ -1068,7 +1042,7 @@ var ERMrest = (function(module) {
         for(var variable in replaceVariables) {
             text = text.replaceAll(variable,"{{&" + replaceVariables[variable] + "}}");
         }
-        
+
         return text;
     };
 
