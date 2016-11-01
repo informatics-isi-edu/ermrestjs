@@ -5,25 +5,29 @@ exports.execute = function (options) {
             schemaName = "schema_table_display",
             tableName1 = "table_wo_title_wo_annotation",
             tableName2 = "table_w_title_wo_annotation",
-            tableName3 = "table_w_composite_key_wo_annotation",
-            tableName4 = "table_w_table_display_annotation",
-            tableName5 = "table_w_table_display_annotation_w_markdown_pattern";
+            tableName3 = "table_w_accession_id_wo_annotation"
+            tableName4 = "table_w_composite_key_wo_annotation",
+            tableName5 = "table_w_table_display_annotation",
+            tableName6 = "table_w_table_display_annotation_w_markdown_pattern";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName1;
 
         var table2EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName2;
-
+        
         var table3EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName3;
 
-    
         var table4EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName4;
 
+    
         var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName5;
+
+        var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableName6;
 
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
             var reference, page, tuple;
@@ -71,8 +75,8 @@ exports.execute = function (options) {
             });
         });
 
-        describe('table entities with name/title without table-display:row_name annotation, ', function() {
-            var reference, page, tuple;
+        describe('table entities with name/title/accession_id without table-display:row_name annotation, ', function() {
+            var reference, reference2, page, page2, tuple;
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
@@ -81,7 +85,16 @@ exports.execute = function (options) {
 
                     expect(reference).toEqual(jasmine.any(Object));
 
-                    done();
+                    options.ermRest.resolve(table3EntityUri, {cid: "test"}).then(function (response) {
+                        reference2 = response;
+
+                        expect(reference2).toEqual(jasmine.any(Object));
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
                 }, function (err) {
                     console.dir(err);
                     done.fail();
@@ -100,15 +113,34 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
 
-                    done();
+                    reference2.read(limit).then(function (response) {
+                        page2 = response;
+
+                        expect(page2).toEqual(jasmine.any(Object));
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
+
             });
 
             it('tuple displayname should return title column.', function() {
                 var tuples = page.tuples;
+                for(var i = 0; i < limit; i++) {
+                    var tuple = tuples[i];
+                    var displayname = tuple.displayname;
+                    expect(displayname).toBe(tuple.values[1]);
+                }
+            });
+
+            it('tuple displayname should be able to match columns case insensitively and ignore space, underlines, and hyphens.', function () {
+                var tuples = page2.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
@@ -122,7 +154,7 @@ exports.execute = function (options) {
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table3EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table4EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
@@ -168,7 +200,7 @@ exports.execute = function (options) {
             var limit = 5;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table4EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table5EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
@@ -215,7 +247,7 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table5EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table6EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));

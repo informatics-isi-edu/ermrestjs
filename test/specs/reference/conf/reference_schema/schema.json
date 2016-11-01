@@ -1024,7 +1024,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "compact": ["id", "id", ["reference_schema","outbound_fk_1"], "id", ["reference_schema","outbound_fk_1"]],
-                    "entry/create": [["reference_schema","outbound_fk_1"], "asdasdasdad", ["reference_schema", "id_fk_association_related_to_reference"], "id"],
+                    "entry/create": [["reference_schema","outbound_fk_1"], "asdasdasdad", ["reference_schema", "id_fk_association_related_to_reference"], "id", ["reference_schema", "i dont exist"], ["no schema", "id_fk_association_related_to_reference"]],
                     "compact/brief": ["id", ["reference_schema","outbound_fk_1"]]
                 }
             }
