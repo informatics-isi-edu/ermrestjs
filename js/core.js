@@ -1540,18 +1540,16 @@ var ERMrest = (function (module) {
         },
 
         // Get PseudoColumns based on the context.
-        _contextualize: function (context, columns) {            
-            if (typeof columns == 'undefined') {
-                columns = this.all();
-            }
+        _contextualize: function (context, origFKR) {            
 
-            var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
+            var columns = this.all(), 
+                visiblePseudoColumns = [], 
+                orders = -1, 
+                col, fk, i, j;
 
-            // should not incldue fkrs that don't have visible columns.
+            // should hide the origFKR in case of inbound foreignKey
             var hideFKR = function (fkr) {
-                return fkr.colset.columns.some(function(col) {
-                    return columns.indexOf(col) === -1;
-                });
+                return typeof origFKR != "undefined" && origFKR !== null && !origFKR._table._isPureBinaryAssociation() && fkr == origFKR;
             };
 
             // get column orders from annotation
@@ -1626,6 +1624,8 @@ var ERMrest = (function (module) {
 
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
+
+                            if(hideFKR(fk)) continue;
 
                             // multiple simple FKR
                             if (fk.simple) {

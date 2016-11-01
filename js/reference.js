@@ -261,7 +261,7 @@ var ERMrest = (function(module) {
          */
         get columns() {
             if (this._pseudoColumns === undefined) {
-                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this.origFKR);
             }
             return this._pseudoColumns;
         },
@@ -1121,7 +1121,6 @@ var ERMrest = (function(module) {
             delete this._pseudoColumns;
             delete this._related;
             delete this._derivedAssociationRef;
-            delete this.origFKR;
         }
     };
 
