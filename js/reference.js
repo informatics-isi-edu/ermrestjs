@@ -481,9 +481,12 @@ var ERMrest = (function(module) {
                      * If not set in any row, add it to defaults.
                      * If 1 row has it set and none of the others, it cannot be part of defaults
                     **/
-                    data.forEach(function (row) {
-                        if (row[columnName]) notSet = false;
-                    });
+                    for (var m = 0; m < data.length; m++) {
+                        if (data[m][columnName]) {
+                            notSet = false;
+                            break;
+                        }
+                    }
 
                     if (notSet) defaults.push(columnName);
                 });
