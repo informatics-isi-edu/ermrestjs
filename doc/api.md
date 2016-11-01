@@ -244,6 +244,7 @@ to use for ERMrest JavaScript agents.
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+            * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -1928,6 +1929,7 @@ Constructor for a ParsedFilter.
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -2148,6 +2150,16 @@ or errors (TBD).
 | --- | --- | --- |
 | data | <code>Array</code> | The array of data to be created as new tuples. |
 
+<a name="ERMrest.Reference+create..columnDiff"></a>
+
+##### create~columnDiff()
+This gets the difference between the two column sets. This is not the _symmetric_ difference.
+If minuend is [1,2,3,4,5]
+and subtrahend is [4,5,6]
+the difference is [1,2,3]
+The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
+
+**Kind**: inner method of <code>[create](#ERMrest.Reference+create)</code>  
 <a name="ERMrest.Reference+read"></a>
 
 #### reference.read(limit) ⇒ <code>Promise</code>
@@ -2420,7 +2432,7 @@ See [canUpdate](#ERMrest.Tuple+canUpdate) for a usage example.
 <a name="ERMrest.Tuple+values"></a>
 
 #### tuple.values : <code>Array.&lt;string&gt;</code>
-The array of formatted/raw values of this tuple on basis of context "edit". 
+The array of formatted/raw values of this tuple on basis of context "edit".
 The ordering of the values in the array matches the ordering of the columns
 in the reference (see [columns](#ERMrest.Reference+columns)).
 
