@@ -261,7 +261,7 @@ var ERMrest = (function(module) {
          */
         get columns() {
             if (this._pseudoColumns === undefined) {
-                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);    
+                this._pseudoColumns = this._table.columns._contextualize(this._context, this._columns);
             }
             return this._pseudoColumns;
         },
@@ -413,9 +413,6 @@ var ERMrest = (function(module) {
                 //  get the defaults list for the referenced relation's table
                 var defaults = getDefaults();
 
-                //  get and format the data
-                // var formattedData = formatData(data);
-
                 // construct the uri
                 var uri = this._location.compactUri;
                 for (var i = 0; i < defaults.length; i++) {
@@ -468,17 +465,50 @@ var ERMrest = (function(module) {
             }
 
             function getDefaults() {
+                // any row in data is sufficient. data should include the full set of visible columns
+                var visibleColumnsNames = Object.keys(data[0]);
+                var tableColumnsNames = self._table.columns._columns.map(function (col) {
+                    return col.name;
+                });
                 // This is gets the difference between the table's set of columns and the reference's set of columns
-                var defaults = module._columnDiff(self._table.columns._columns, self.columns);
+                var defaults = columnDiff(tableColumnsNames, visibleColumnsNames);
 
-                var columns = self.columns;
-                for (var i = 0; i < columns.length; i++) {
-                    if (columns[i].type.name.indexOf("serial") === 0) {
-                        defaults.push(columns[i].name);
+                // loop through the data and add any columns not set to the defaults
+                visibleColumnsNames.forEach(function (columnName) {
+                    var notSet = true;
+                    /**
+                     * Loop through the rows and make sure the current column is not set in any of the rows.
+                     * If not set in any row, add it to defaults.
+                     * If 1 row has it set and none of the others, it cannot be part of defaults
+                    **/
+                    for (var m = 0; m < data.length; m++) {
+                        if (data[m][columnName]) {
+                            notSet = false;
+                            break;
+                        }
                     }
-                }
+
+                    if (notSet) defaults.push(columnName);
+                });
 
                 return defaults;
+            }
+
+            /**
+             * This gets the difference between the two column sets. This is not the _symmetric_ difference.
+             * If minuend is [1,2,3,4,5]
+             * and subtrahend is [4,5,6]
+             * the difference is [1,2,3]
+             * The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
+             */
+            function columnDiff(minuend, subtrahend) {
+                var difference = [];
+
+                difference = minuend.filter(function(col) {
+                    return subtrahend.indexOf(col) == -1;
+                });
+
+                return difference;
             }
         },
 
@@ -564,12 +594,12 @@ var ERMrest = (function(module) {
                     }
                     this._location.sortObject = sortObject;
                 }
- 
+
                 /*
                 * Change api to attributegroup for retrieving the foreign key data
                 * This will just affect the http request and not this._location
                 *
-                * NOTE: 
+                * NOTE:
                 * This piece of code is dependent on the same assumptions as the current parser, which are:
                 *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
                 *   2. Filter comes before the link syntax.
@@ -594,7 +624,7 @@ var ERMrest = (function(module) {
 
                     // create the uri with attributegroup and alias
                     uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
-                    
+
                     // add joins for foreign keys
                     for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
                         // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
@@ -618,7 +648,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;      
+                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;
                 }
 
                 // insert @sort()
@@ -744,9 +774,7 @@ var ERMrest = (function(module) {
                 }
 
                 // The list of column names to use in the uri
-                columnProjections = this.columns.map(function (col) {
-                    return col.name;
-                });
+                columnProjections = Object.keys(tuples[0].data);
 
                 // always alias the shortest key in the uri
                 for (var j = 0; j < shortestKeyNames.length; j++) {
@@ -1181,7 +1209,7 @@ var ERMrest = (function(module) {
             delete newRef._pseudoColumns;
             delete newRef._derivedAssociationRef;
 
-            newRef._context = context;            
+            newRef._context = context;
 
             // use the base table to get the alternative table of that context.
             // a base table's .baseTable is itself
@@ -1373,17 +1401,17 @@ var ERMrest = (function(module) {
          * This is the structure of this._linkedData
          * this._linkedData[i] = {`s:constraintName`: data}
          * That is for retrieving data for a foreign key, you should do the following:
-         * 
+         *
          * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join(":")];
          */
         this._linkedData = [];
 
         if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
             try {
-                this._data = [];            
+                this._data = [];
                 var i, j, fks = reference._table.foreignKeys.all();
                 for (i = 0; i < data.length; i++) {
-                    this._data.push(data[i].M[0]); 
+                    this._data.push(data[i].M[0]);
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
@@ -1743,7 +1771,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * The array of formatted/raw values of this tuple on basis of context "edit". 
+         * The array of formatted/raw values of this tuple on basis of context "edit".
          * The ordering of the values in the array matches the ordering of the columns
          * in the reference (see {@link ERMrest.Reference#columns}).
          *
@@ -1768,7 +1796,7 @@ var ERMrest = (function(module) {
 
                 this._values = [];
                 this._isHTML = [];
-                
+
                 var column;
 
                 // If context is entry/edit
@@ -1790,7 +1818,7 @@ var ERMrest = (function(module) {
                         }
                     }
                 } else {
-                    
+
                     var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                     /*
@@ -1805,7 +1833,7 @@ var ERMrest = (function(module) {
                             formattedValues[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
                         } else {
                             formattedValues[i] = column.formatPresentation(keyValues[column.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
-                            
+
                             if (column.type.name === "gene_sequence") {
                                 formattedValues[i].isHTML = true;
                             }
