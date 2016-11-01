@@ -128,10 +128,10 @@ exports.execute = function (options) {
          *  id -> single key, not part of any fk
          *  col_1
          *  col_2 -> has displayname (value is null)
-         *  col_3 -> has displayname
+         *  col_3 -> has displayname (nullok is false)
          *  col_4
          *  col_5
-         *  col_6
+         *  col_6 -> nullok false
          *  col_7 -> value is null
          *  reference_schema:outbound_fk_7 -> not part of any fk
          * 
@@ -148,9 +148,9 @@ exports.execute = function (options) {
          * 
          * expected output for ref.columns:
          * 0:   id
-         * 1:   outbound_fk_1 (check to_name)
+         * 1:   outbound_fk_1 (check to_name) (check nullok)
          * 2:   outbound_fk_2  -> is null
-         * 3:   outbound_fk_3 (check disambiguation)
+         * 3:   outbound_fk_3 (check disambiguation) (check nullok)
          * 4:   outbound_fk_4 (check disambiguation)
          * 5:   col_3
          * 6:   col_4
@@ -158,10 +158,10 @@ exports.execute = function (options) {
          * 8:   col_6
          * 9:   col_7
          * 10:  reference_schema:outbound_fk_7
-         * 11:  outbound_fk_5 (check to_name)
-         * 12:  outbound_fk_6 
+         * 11:  outbound_fk_5 (check to_name) (check nullok)
+         * 12:  outbound_fk_6 (check nullok)
          * 13:  outbound_fk_8 (check disambiguation)
-         * 14:  outbound_fk_7 (check disambiguation)
+         * 14:  outbound_fk_7 (check disambiguation) (check nullok)
          * 15:  outbound_fk_9
          * 
          * expected output for ref.columns in edit or create context:
@@ -395,6 +395,26 @@ exports.execute = function (options) {
                         expect(val).toBe(null);
                         val = entryEditRef.columns[10].formatPresentation({}).value;
                         expect(val).toBe("");
+                    });
+                });
+
+
+                describe('.nullok, ', function() {
+                    it('should set to false if any of its columns have nullok=false; otherwise true.', function () {
+                        // simple fk, false
+                        expect(detailedColumns[3].nullok).toBe(false);
+
+                        // simple fk, true
+                        expect(detailedColumns[1].nullok).toBe(true);
+
+                        // composite fk, one if false
+                        expect(detailedColumns[11].nullok).toBe(false);
+
+                        // composite fk, all false
+                        expect(detailedColumns[12].nullok).toBe(false);
+
+                        // composite fk, all true
+                        expect(detailedColumns[14].nullok).toBe(true);
                     });
                 });
 

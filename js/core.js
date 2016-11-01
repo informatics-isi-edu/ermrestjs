@@ -2062,6 +2062,13 @@ var ERMrest = (function (module) {
             return {isHTML: true, value: value};
         };
 
+        /**
+         * @type {Boolean}
+         */
+        this.nullok = !this.foreignKey.colset.columns.some(function (col) {
+            return !col.nullok;
+        });
+
         this._getNullValue =  function(context) {
             return this._column._getNullValue(context);
         };

@@ -975,6 +975,7 @@
                 },
                 {
                     "name": "col_3",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     },
@@ -1001,6 +1002,7 @@
                 },
                 {
                     "name": "col_6",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     },

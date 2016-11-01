@@ -140,6 +140,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
         * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+        * [.nullok](#ERMrest.PseudoColumn+nullok) : <code>Boolean</code>
         * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
@@ -427,7 +428,7 @@ The catalog identifier.
 returns the constraint object for the pair.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-**Returns**: <code>Object</code> &#124; <code>null</code> - the constrant object, if it's null that means this constraint_name doesn't exists  
+**Returns**: <code>Object</code> &#124; <code>null</code> - the constrant object. Null means the constraint name is not valid.  
 **Throws**:
 
 - <code>[NotFoundError](#ERMrest.NotFoundError)</code> constraint not found
@@ -1162,6 +1163,7 @@ returns string representation of Column
     * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
     * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+    * [.nullok](#ERMrest.PseudoColumn+nullok) : <code>Boolean</code>
     * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
@@ -1216,6 +1218,10 @@ The reference object that represents the table of this PseudoColumn
 #### pseudoColumn.foreignKey : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 The Foreign key object that this PseudoColumn is created based on
 
+**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
+<a name="ERMrest.PseudoColumn+nullok"></a>
+
+#### pseudoColumn.nullok : <code>Boolean</code>
 **Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>
 
