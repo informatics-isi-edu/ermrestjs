@@ -1547,6 +1547,13 @@ var ERMrest = (function (module) {
 
             var visiblePseudoColumns = [], orders = -1, col, fk, i, j;
 
+            // should not incldue fkrs that don't have visible columns.
+            var hideFKR = function (fkr) {
+                return fkr.colset.columns.some(function(col) {
+                    return columns.indexOf(col) === -1;
+                });
+            };
+
             // get column orders from annotation
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
@@ -1566,7 +1573,7 @@ var ERMrest = (function (module) {
                         if (fk !== null) {
                             // check if FK of this table and avoid duplicate
                             fkName = fk.constraint_names[0].join(":");
-                            if (fk._table != this._table || (fkName in addedFKs)) {
+                            if (fk._table != this._table || (fkName in addedFKs) || hideFKR(fk)) {
                                 addCol = false;
                             } else {
                                 addedFKs[fkName] = 1;

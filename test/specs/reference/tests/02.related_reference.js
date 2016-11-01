@@ -85,7 +85,7 @@ exports.execute = function(options) {
                 });
             });
 
-            it('.columns should be properly defiend based on schema', function() {
+            it('.columns should be properly defiend based on schema and not include foreign key columns.', function() {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
@@ -93,7 +93,7 @@ exports.execute = function(options) {
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"), 
                         ["reference_schema","fk_inbound_related_to_reference"].join(":")
                 ]}, {
-                    ref: related[1],
+                    ref: related[1].contextualize.compactBrief,
                     expected: [
                         "id", 
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 

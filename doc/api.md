@@ -426,7 +426,7 @@ The catalog identifier.
 returns the constraint object for the pair.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-**Returns**: <code>Object</code> &#124; <code>null</code> - the constrant object, if it's null that means this constraint_name doesn't exists  
+**Returns**: <code>Object</code> &#124; <code>null</code> - the constrant object. Null means the constraint name is not valid.  
 **Throws**:
 
 - <code>[NotFoundError](#ERMrest.NotFoundError)</code> constraint not found
