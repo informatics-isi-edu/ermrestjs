@@ -1210,6 +1210,7 @@ var ERMrest = (function(module) {
     module._contexts = Object.freeze({
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
+        COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
         EDIT: 'entry/edit',
@@ -1219,7 +1220,7 @@ var ERMrest = (function(module) {
         ROWNAME :'row_name'
     });
 
-    module._contextArray = ["compact", "compact/brief", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
 
     /*
      * @desc List of display type for table-display annotation
