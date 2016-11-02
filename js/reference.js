@@ -1171,6 +1171,14 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * The _compact/select_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelect() {
+            return this._contextualize(module._contexts.COMPACT_SELECT);
+        },
+
+        /**
          * The _entry_ context of this reference.
          * @type {ERMrest.Reference}
          */
