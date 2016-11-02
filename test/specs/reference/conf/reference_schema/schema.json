@@ -136,7 +136,17 @@
                         "typename": "text"
                     }
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "compact/brief": [
+                        "id",
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"],
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"],
+                        ["reference_schema","fk_inbound_related_to_reference"]
+                    ]
+                }
+            }
         },
         "association_table_with_toname": {
             "comment": "has fk to reference_table and inbound_related_reference_table. the fk to inbound_related_reference_table has to_name annotation",
