@@ -803,32 +803,28 @@ var ERMrest = (function(module) {
                 this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
                     var page;
 
-                    if (keyWasModified) {
-                        var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
-                        // loop through each returned Row and get the key value
-                        for (var j = 0; j < response.data.length; j++) {
-                            if (j !== 0)
-                                uri += ';';
-                            // shortest key is made up from one column
-                            if (self._shortestKey.length == 1) {
-                                keyName = self._shortestKey[0].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
-                            } else {
-                                uri += '(';
-                                for (var k = 0; k < self._shortestKey.length; k++) {
-                                    if (k !== 0)
-                                        uri += '&';
-                                    keyName = self._shortestKey[k].name;
-                                    uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j]["new_"+keyName]);
-                                }
-                                uri += ')';
+                    var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
+                    // loop through each returned Row and get the key value
+                    for (var j = 0; j < response.data.length; j++) {
+                        if (j !== 0)
+                        uri += ';';
+                        // shortest key is made up from one column
+                        if (self._shortestKey.length == 1) {
+                            keyName = self._shortestKey[0].name;
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName+"_n"]);
+                        } else {
+                            uri += '(';
+                            for (var k = 0; k < self._shortestKey.length; k++) {
+                                if (k !== 0)
+                                uri += '&';
+                                keyName = self._shortestKey[k].name;
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName+"_n"]);
                             }
+                            uri += ')';
                         }
-                        var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                        page = new Page(ref, response.data, false, false);
-                    } else {
-                        page = new Page(self, response.data, false, false);
                     }
+                    var ref = new Reference(module._parse(uri), self._table.schema.catalog);
+                    page = new Page(ref, response.data, false, false);
 
                     defer.resolve(page);
                 }, function error(response) {
