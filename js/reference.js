@@ -607,7 +607,7 @@ var ERMrest = (function(module) {
                 */
                 if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.compactPath,
-                        parts = compactPath.split('/'),
+                        parts,
                         tableIndex = 0,
                         fkList = "",
                         linking,
@@ -616,11 +616,20 @@ var ERMrest = (function(module) {
                         k;
 
                     // add M alias to current table
+                    if (this._location.searchFilter) { // remove search filter
+                        compactPath = compactPath.replace("/" + this._location.searchFilter, "");
+                    }
+                    parts = compactPath.split('/');
                     linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
                     if (linking && linking[1]) { // the same logic as parser for finding the link syntax
                         tableIndex = compactPath.lastIndexOf("/") + 1;
                     }
                     compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
+
+                    // add search filter back
+                    if (this._location.searchFilter) {
+                        compactPath = compactPath + "/" + this._location.searchFilter;
+                    }
 
                     // create the uri with attributegroup and alias
                     uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
