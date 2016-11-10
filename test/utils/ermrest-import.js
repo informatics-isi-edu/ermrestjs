@@ -1,7 +1,7 @@
 var q = require('q');
 var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
-var ermrestUtils = require('ermrest-data-utils');
+var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
 var importSchemas = function(configFilePaths, defer, catalogId) {
 
