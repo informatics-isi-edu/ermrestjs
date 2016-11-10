@@ -34,6 +34,23 @@ need `make` to build the non-minified package and run the install command.
 
 Developers using Mac OS X should see this limitation [issue 207](https://github.com/informatics-isi-edu/ermrestjs/issues/207).
 
+In addition ermrestjs is also dependent on another gituhub repo [ErmrestDataUtils](https://github.com/informatics-isi-edu/ErmrestDataUtils). You will need to pull that repo first in the same directory where you plan to pull ermrestjs
+
+```sh
+
+# Clone the ErmrestDatautils repo
+$ git clone https://github.com/informatics-isi-edu/ErmrestDataUtils.git
+
+# Change directory to ErmrestDataUtils
+$ cd ErmrestDataUtils
+
+# Install npm dependencies
+$ npm install
+
+# Change directory to parent
+$ cd ..
+```
+
 ## How to get ermrestjs
 
 Clone the repo from GitHub.
