@@ -1050,8 +1050,10 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "compact": ["id", "id", ["reference_schema","outbound_fk_1"], "id", ["reference_schema","outbound_fk_1"]],
+                    "compact/brief": ["id", ["reference_schema","outbound_fk_1"]],
+                    "compact/select": ["id", ["reference_schema","outbound_fk_1"], ["reference_schema","outbound_fk_1"], "col_1", "col_2", "col_3", "col_4", "col_5", ["reference_schema","outbound_fk_3"],  "col_6", "col_7", ["reference_schema","outbound_fk_5"],  "reference_schema:outbound_fk_7", ["reference_schema","outbound_fk_7"]],
                     "entry/create": [["reference_schema","outbound_fk_1"], "asdasdasdad", ["reference_schema", "id_fk_association_related_to_reference"], "id", ["reference_schema", "i dont exist"], ["no schema", "id_fk_association_related_to_reference"]],
-                    "compact/brief": ["id", ["reference_schema","outbound_fk_1"]]
+                    "entry/edit": ["id", "col_1", ["reference_schema","outbound_fk_1"], ["reference_schema","outbound_fk_2"], "col_2", "col_3", "col_4", "col_5", "col_6", "col_7",  "reference_schema:outbound_fk_7", ["reference_schema","outbound_fk_5"], ["reference_schema","outbound_fk_6"]]
                 }
             }
         }
