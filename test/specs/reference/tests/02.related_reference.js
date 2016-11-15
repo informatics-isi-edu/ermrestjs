@@ -190,12 +190,16 @@ exports.execute = function(options) {
                 expect(related[3]._derivedAssociationRef._table.name).toBe("association table with id");
             });
 
-            it('.contextualize.entryEdit should be created based on the assocation table rather than the reference it is referring to.', function(){
-                var ref;
-                ref = related[2].contextualize.entryEdit;
-                expect(ref._table.name).toBe("association_table_with_toname");
-                ref = related[3].contextualize.entryEdit;
-                expect(ref._table.name).toBe("association table with id");
+            it('.contextualize.entryEdit/.entryCreate/.entry should be created based on the assocation table rather than the reference it is referring to.', function(){
+                var refs;
+                refs = [ related[2].contextualize.entryEdit, related[2].contextualize.entryCreate, related[2].contextualize.entry];
+                refs.forEach(function (ref) {
+                    expect(ref._table.name).toBe("association_table_with_toname");
+                });
+                refs = [related[3].contextualize.entryEdit, related[3].contextualize.entryCreate, related[3].contextualize.entry];
+                refs.forEach(function (ref) {
+                    expect(ref._table.name).toBe("association table with id");
+                });
             });
 
             it('.read should return a Page object that is defined.', function(done) {
