@@ -474,6 +474,13 @@ var ERMrest = (function (module) {
             }
         }
 
+        /**
+         * whether schema is generated
+         * @type {boolean}
+         * @private
+         */
+        this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
+
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
@@ -663,6 +670,14 @@ var ERMrest = (function (module) {
                 this.ignore = true;
             }
         }
+
+        /**
+         * whether table is generated
+         * inherits from schema
+         * @type {boolean}
+         * @private
+         */
+        this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._visibleColumns_cached = {}; // Used in _visibleColumns
