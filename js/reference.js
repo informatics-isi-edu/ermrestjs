@@ -1029,8 +1029,9 @@ var ERMrest = (function(module) {
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
-                        // will be used in edit contextualize
+                        // will be used in entry contexts
                         newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef._derivedAssociationRef.origFKR = newRef.origFKR;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -1209,8 +1210,9 @@ var ERMrest = (function(module) {
 
         _contextualize: function(context) {
             var source;
+            var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
             // if this is a related association table and context is edit, contextualize based on the association table.
-            if (this._reference._derivedAssociationRef && context == module._contexts.EDIT) {
+            if (this._reference._derivedAssociationRef && entryContexts.indexOf(context) != -1) {
                 source = this._reference._derivedAssociationRef;
             } else {
                 source = this._reference;
@@ -1219,7 +1221,6 @@ var ERMrest = (function(module) {
             var newRef = _referenceCopy(source);
             delete newRef._related;
             delete newRef._pseudoColumns;
-            delete newRef._derivedAssociationRef;
 
             newRef._context = context;
 
