@@ -1632,12 +1632,9 @@ var ERMrest = (function (module) {
                     // (annotation: column name)
                     if (typeof col == "string" && !(col in consideredColumns)) {
                         // find the corresponding column
-                        for (j = 0; j < this.length(); j++) {
-                            if (this.getByPosition(j).name == col) {
-                                col = this.getByPosition(j);
-                                break;
-                            }
-                        }
+                        try {
+                            col = this.get(col);
+                        } catch (exception) {}
                     }
 
                     // if column is not defined, processed before, or should be hidden
