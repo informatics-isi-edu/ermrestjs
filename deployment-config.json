@@ -1,0 +1,10 @@
+{
+    "type": "sftp",
+    "host": "dev.isrd.isi.edu",
+    "username": "jessie",
+    "port": "22",
+    "remotePath": "/home/jessie/public_html/ermrestjs",
+    "sshKeyFile": "~/.ssh/id_rsa",
+    "passphrase": "jessiew",
+    "uploadOnSave": true
+}
