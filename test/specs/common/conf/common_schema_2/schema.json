@@ -92,6 +92,10 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:immutable": {}
                     }
+                },
+                {
+                    "name": "table_1_serial4",
+                    "type": { "typename": "serial4" }
                 }
             ],
             "foreign_keys": [],
