@@ -9,8 +9,8 @@ exports.execute = function (options) {
             editContext = "entry/edit",
             detailedContext = "detailed";
 
-        var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + tableName + "/id=" + entityId;
+        var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableName + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -19,7 +19,7 @@ exports.execute = function (options) {
         var searchURL = chaiseURL + "/search";
         var recordsetURL = chaiseURL + "/recordset";
 
-        var appLinkFn = function(tag, location) {
+        var appLinkFn = function (tag, location) {
             var url;
             switch (tag) {
                 case "tag:isrd.isi.edu,2016:chaise:record":
@@ -32,7 +32,7 @@ exports.execute = function (options) {
                     url = viewerURL;
                     break;
                 case "tag:isrd.isi.edu,2016:chaise:search":
-                    url =  searchURL;
+                    url = searchURL;
                     break;
                 case "tag:isrd.isi.edu,2016:chaise:recordset":
                     url = recordsetURL;
@@ -47,82 +47,44 @@ exports.execute = function (options) {
             return url;
         };
 
-        var data = {"id": "1", "id_1": "2", "id_2": "3"};
+        var data = {
+            "id": "1",
+            "id_1": "2",
+            "id_2": "3"
+        };
 
         var detailedRefExpectedValue = [
-           '1', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>', 
-           null, 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">John</a>', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">Hank</a>', 
-           '4000', 
-           '4001', 
-           '4002', 
-           '4003', 
-           null,
-           '12', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">4000 , 4001</a>', 
-           '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2">4000 , 4002</a>', 
-           '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4">4001 , 4002</a>',
-           null
+            '1',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>',
+            null,
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">John</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">Hank</a>',
+            '4000',
+            '4001',
+            '4002',
+            '4003',
+            null,
+            '12',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">4000 , 4001</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2">4000 , 4002</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4">4001 , 4002</a>',
+            null
         ];
 
         var entryEditRefExpectedValue = [
-            '1', 
-            'Hank', 
-            '', 
-            'John', 
+            '1',
             'Hank',
-            '12', 
-            '4000 , 4001', 
-            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>', 
-            '4000 , 4002', 
+            '',
+            'John',
+            'Hank',
+            '12',
+            '4000 , 4001',
+            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
+            '4000 , 4002',
             '4001 , 4002',
             ''
         ];
-        
-        
-        var reference, detailedRef, compactRef, entryCreateRef, entryEditRef, detailedColumns;
-
-        beforeAll(function(done) {
-            options.ermRest.appLinkFn(appLinkFn);
-            options.ermRest.resolve(singleEnitityUri, {
-                cid: "test"
-            }).then(function(response) {
-                reference = response;
-                detailedRef = response.contextualize.detailed; // visible-columns is not defined in this context
-                entryEditRef = response.contextualize.entryEdit; // visible-columns is not defined in this context
-                compactRef = response.contextualize.compact; // visible-columns with duplicate values
-                entryCreateRef = response.contextualize.entryCreate; // visible-columns with invalid names
-                compactBriefRef = response.contextualize.compactBrief; // visible-columns with correct values
-
-                detailedColumns = detailedRef.columns;
-                done();
-            }, function(err) {
-                console.dir(err);
-                done.fail();
-            });
-        });
-
-         function checkReferenceColumns(tesCases) {
-            tesCases.forEach(function(test){
-                expect(test.ref.columns.map(function(col){
-                    return col.name;
-                })).toEqual(test.expected);
-            });
-        }
-
-        function haveSameProperties(source, dest) {
-            for (var pr in dest) {
-                if (dest.hasOwnProperty(pr)) {
-                    if (!source.hasOwnProperty(pr)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
 
         /**
          * This is the structure of the used table:
@@ -149,7 +111,7 @@ exports.execute = function (options) {
          *  outbound_fk_8: col_3, col_5 -> table_w_composite_key
          *  outbound_fk_9: col_5, col_7 -> table_w_composite_key -> col_7 is null
          * 
-         * expected output for ref.columns:
+         * expected output for ref.columns in detailed and compact/select context:
          * 0:   id
          * 1:   outbound_fk_1 (check to_name) (check nullok)
          * 2:   outbound_fk_2  -> is null
@@ -179,146 +141,106 @@ exports.execute = function (options) {
          * 8:   outbound_fk_8
          * 9:   outbound_fk_7
          * 10:  outbound_fk_9
+         * 
+         * contexts that are used:
+         *  
+         *  compact: has visible-columns with duplicate values
+         *  compact/brief: has visible-columns with correct values 
+         *  compact/select: has all of the columns in visible-columns + has some foreign keys too
+         *  detailed: doesn't have visible-columns
+         *  entry: doesn't have visible-columns
+         *  entry/create: has visible-columns with invalid names
+         *  entry/edit: has all of the columns in visible-column + has some foreign keys too
+         * 
          */
 
-        describe('.columns, ', function() {
+        var reference, compactRef, compactBriefRef, compactSelectRef, detailedRef, entryRef, entryCreateRef, entryEditRef, detailedColumns, compactSelectColumns;
 
-            describe('when visible-columns annotation is present for the context', function () {
-                it ('should not include duplicate columns and FKRs.', function () {
+        beforeAll(function (done) {
+            options.ermRest.appLinkFn(appLinkFn);
+            options.ermRest.resolve(singleEnitityUri, {
+                cid: "test"
+            }).then(function (response) {
+                reference = response;
+
+                compactRef = response.contextualize.compact;
+                compactBriefRef = response.contextualize.compactBrief;
+                compactSelectRef = response.contextualize.compactSelect;
+
+                detailedRef = response.contextualize.detailed;
+
+                entryRef = response.contextualize.entry;
+                entryCreateRef = response.contextualize.entryCreate;
+                entryEditRef = response.contextualize.entryEdit;
+
+                detailedColumns = detailedRef.columns;
+                compactSelectColumns = compactSelectRef.columns;
+
+                done();
+            }, function (err) {
+                console.dir(err);
+                done.fail();
+            });
+        });
+
+        describe('.columns, ', function () {
+
+            describe('when visible-columns annotation is present for the context, ', function () {
+                it('should not include duplicate columns and FKRs.', function () {
                     checkReferenceColumns([{
                         ref: compactRef,
                         expected: [
-                            "id",
-                            ["reference_schema","outbound_fk_1"].join(":")
+                            "id", ["reference_schema", "outbound_fk_1"].join(":")
                         ]
                     }]);
                 });
 
-                it ('should just include columns and FKRs that are valid.', function () {
+                it('should just include columns and FKRs that are valid.', function () {
                     checkReferenceColumns([{
                         ref: entryCreateRef,
                         expected: [
-                            ["reference_schema","outbound_fk_1"].join(":"),
+                            ["reference_schema", "outbound_fk_1"].join(":"),
                             "id"
                         ]
                     }]);
                 });
 
-                it ('should just include the column/FKRs mentioned in the annotations.', function () {
+                it('should just include the column/FKRs mentioned in the annotations.', function () {
                     checkReferenceColumns([{
                         ref: compactBriefRef,
                         expected: [
-                            "id",
-                            ["reference_schema","outbound_fk_1"].join(":")
+                            "id", ["reference_schema", "outbound_fk_1"].join(":")
                         ]
                     }]);
                 });
-            });
 
-
-            describe('when visible-columns annotation is not present for the context', function () {
-
-                it ('should include columns that are not part of any FKRs', function () {
-                    expect(detailedColumns[0].isPseudo).toBe(false);
-                    expect(detailedColumns[0].name).toBe("id");
-
-                    expect(detailedColumns[10].isPseudo).toBe(false);
-                    expect(detailedColumns[10].name).toBe("reference_schema:outbound_fk_7");
-                });
-                        
-                describe('for columns that are part of a simple FKR, ', function () {
-                    it('should replace them with PseudoColumn.', function () {
-                        expect(detailedColumns[1].isPseudo).toBe(true);
-                        expect(detailedColumns[1].name).toBe(["reference_schema", "outbound_fk_1"].join(":"));
-
-                        expect(detailedColumns[2].isPseudo).toBe(true);
-                        expect(detailedColumns[2].name).toBe(["reference_schema", "outbound_fk_2"].join(":"));
-
-                        expect(detailedColumns[3].isPseudo).toBe(true);
-                        expect(detailedColumns[3].name).toBe(["reference_schema", "outbound_fk_3"].join(":"));
-
-                        expect(detailedColumns[4].isPseudo).toBe(true);
-                        expect(detailedColumns[4].name).toBe(["reference_schema", "outbound_fk_4"].join(":"));
-                    });
-                });
-
-                describe('for columns that are part of composite FKR', function () {
-
-                    it ('should include the columns and avoid duplicate.', function () {
-                        expect(detailedColumns[5].isPseudo).toBe(false);
-                        expect(detailedColumns[5].name).toBe("col_3");
-
-                        expect(detailedColumns[6].isPseudo).toBe(false);
-                        expect(detailedColumns[6].name).toBe("col_4");
-
-                        expect(detailedColumns[7].isPseudo).toBe(false);
-                        expect(detailedColumns[7].name).toBe("col_5");
-
-                        expect(detailedColumns[8].isPseudo).toBe(false);
-                        expect(detailedColumns[8].name).toBe("col_6");
-
-                        expect(detailedColumns[9].isPseudo).toBe(false);
-                        expect(detailedColumns[9].name).toBe("col_7");
-                    });
-
-
-                    it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function() {
-                        var expectedCols = [
-                            "id",
-                            ["reference_schema", "outbound_fk_1"].join(":"),
-                            ["reference_schema", "outbound_fk_2"].join(":"),
-                            ["reference_schema", "outbound_fk_3"].join(":"),
-                            ["reference_schema", "outbound_fk_4"].join(":"),
-                            "reference_schema:outbound_fk_7",
-                            ["reference_schema", "outbound_fk_5"].join(":"),
-                            ["reference_schema", "outbound_fk_6"].join(":"),
-                            ["reference_schema", "outbound_fk_8"].join(":"),
-                            ["reference_schema", "outbound_fk_7"].join(":")+"1",
-                            ["reference_schema", "outbound_fk_9"].join(":")
-                        ];
-
-                        checkReferenceColumns([{
-                            ref: entryEditRef,
-                            expected: expectedCols
-                        }]);
-                    });
-
-                    it('should create just one PseudoColumn for the FKR.', function () {
-                        expect(detailedColumns[11].isPseudo).toBe(true);
-                        expect(detailedColumns[11].name).toBe(["reference_schema", "outbound_fk_5"].join(":"));
-                        
-                        expect(detailedColumns[12].isPseudo).toBe(true);
-                        expect(detailedColumns[12].name).toBe(["reference_schema", "outbound_fk_6"].join(":"));
-
-                        expect(detailedColumns[13].isPseudo).toBe(true);
-                        expect(detailedColumns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
-
-                        expect(detailedColumns[14].isPseudo).toBe(true);
-                        expect(detailedColumns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":")+"1");
-
-                        expect(detailedColumns[15].isPseudo).toBe(true);
-                        expect(detailedColumns[15].name).toBe(["reference_schema", "outbound_fk_9"].join(":"));
-                    });
+                describe('if some columns are part of any foreign keys, ', function () {
+                    checkAllPseudoColumns(true);
                 });
             });
 
-            
+
+            describe('when visible-columns annotation is not present for the context, ', function () {
+                checkAllPseudoColumns(false);
+            });
+
+
             describe('PseudoColumn, ', function () {
 
                 it('should have the same functions as Column.', function () {
                     for (var i = 1; i < 5; i++) {
                         expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
                     }
-                    for(var i = 11; i < 16; i++) {
+                    for (var i = 11; i < 16; i++) {
                         expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
                     }
                 });
-                
+
                 it('should have the correct type.', function () {
                     for (var i = 1; i < 5; i++) {
                         expect(detailedColumns[i].type.name).toBe("markdown");
                     }
-                    for(var i = 11; i < 16; i++) {
+                    for (var i = 11; i < 16; i++) {
                         expect(detailedColumns[i].type.name).toBe("markdown");
                     }
                 });
@@ -335,7 +257,7 @@ exports.execute = function (options) {
                     expect(detailedColumns[15].table.name).toBe("table_w_composite_key");
                 });
 
-              
+
                 it('should have the correct reference.', function () {
                     for (var i = 1; i < 4; i++) {
                         expect(detailedColumns[i].reference._table.name).toBe("reference_table");
@@ -349,29 +271,29 @@ exports.execute = function (options) {
                 });
 
                 describe('.displayname, ', function () {
-                    it('should use the foreignKey\' s to_name.', function() {
+                    it('should use the foreignKey\' s to_name.', function () {
                         expect(detailedColumns[1].displayname).toBe("to_name_value");
-                        expect(detailedColumns[11].displayname).toBe("to_name_value"); 
+                        expect(detailedColumns[11].displayname).toBe("to_name_value");
                     });
 
                     describe('when foreignKey\' s to_name is not defined, ', function () {
-                        describe('for simple foreign keys, ', function() {
+                        describe('for simple foreign keys, ', function () {
                             it('should use column\'s displayname in the absence of to_name in foreignKey.', function () {
                                 expect(detailedColumns[2].displayname).toBe("Column 2 Name");
                             });
 
-                            it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function() {
+                            it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function () {
                                 expect(detailedColumns[3].displayname).toBe("Column 3 Name (reference_table)");
                                 expect(detailedColumns[4].displayname).toBe("Column 3 Name (reference_values)");
                             });
                         });
 
-                        describe('for composite foreign keys, ', function() {
+                        describe('for composite foreign keys, ', function () {
                             it('should use referenced table\'s displayname in the absence of to_name in foreignKey.', function () {
                                 expect(detailedColumns[12].displayname).toBe("table_w_composite_key_2");
                             });
 
-                            it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function() {
+                            it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
                                 expect(detailedColumns[13].displayname).toBe("table_w_composite_key (Column 3 Name, col_5)");
                                 expect(detailedColumns[14].displayname).toBe("table_w_composite_key (col_4, col_5)");
                             });
@@ -385,24 +307,26 @@ exports.execute = function (options) {
                     it('should return the correct link.', function () {
                         val = detailedColumns[14].formatPresentation(data).value;
 
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">' + data.id_1+' , '+data.id_2 + '</a>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
                         val = detailedColumns[12].formatPresentation(data).value;
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">'+data.id+'</a>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">' + data.id + '</a>');
                     });
 
-                    it('should use the show-nulls annotation, when the data is null', function() {
-                        val = detailedColumns[14].formatPresentation({}, {context:"detailed"}).value;
+                    it('should use the show-nulls annotation, when the data is null.', function () {
+                        val = detailedColumns[14].formatPresentation({}, {
+                            context: "detailed"
+                        }).value;
                         expect(val).toBe(null);
-                        val = entryEditRef.columns[10].formatPresentation({}).value;
+                        val = entryRef.columns[10].formatPresentation({}).value;
                         expect(val).toBe("");
                     });
                 });
 
 
-                describe('.nullok, ', function() {
+                describe('.nullok, ', function () {
                     it('should set to false if any of its columns have nullok=false; otherwise true.', function () {
                         // simple fk, false
                         expect(detailedColumns[3].nullok).toBe(false);
@@ -422,9 +346,11 @@ exports.execute = function (options) {
                 });
 
                 describe('.getInputDisabled(), ', function () {
-                    it ('for simple foreignkeys, should return column\`s result.', function () {
+                    it('for simple foreignkeys, should return column\`s result.', function () {
                         // has generated in create
-                        expect(detailedColumns[1].getInputDisabled(createContext)).toEqual({message: "Automatically generated by the server"});
+                        expect(detailedColumns[1].getInputDisabled(createContext)).toEqual({
+                            message: "Automatically generated by the server"
+                        });
 
                         // has immutable in edit
                         expect(detailedColumns[2].getInputDisabled(editContext)).toBe(true);
@@ -435,29 +361,31 @@ exports.execute = function (options) {
 
                     describe('for composite foreignkeys, ', function () {
                         describe('in create context, ', function () {
-                            it ('if all columns are generated, should return generated message.', function () {
-                                expect(detailedColumns[15].getInputDisabled(createContext)).toEqual({message: "Automatically generated by the server"});
+                            it('if all columns are generated, should return generated message.', function () {
+                                expect(detailedColumns[15].getInputDisabled(createContext)).toEqual({
+                                    message: "Automatically generated by the server"
+                                });
                             });
 
-                            it ('if at least one of the columns is not generated, should return false.', function () {
+                            it('if at least one of the columns is not generated, should return false.', function () {
                                 expect(detailedColumns[13].getInputDisabled(createContext)).toBe(false);
                             });
                         });
 
                         describe('in edit context, ', function () {
-                            it ('if one of the columns is immutable, should return true.', function () {
+                            it('if one of the columns is immutable, should return true.', function () {
                                 expect(detailedColumns[15].getInputDisabled(editContext)).toBe(true);
                             });
 
-                            it ('if none of the columns are immutable and all of them are generated, should return true.', function () {
+                            it('if none of the columns are immutable and all of them are generated, should return true.', function () {
                                 expect(detailedColumns[14].getInputDisabled(editContext)).toBe(true);
                             });
 
-                            it ('if none of the columns are immutable and at least one of the columns is not generated, should return false.', function () {
+                            it('if none of the columns are immutable and at least one of the columns is not generated, should return false.', function () {
                                 expect(detailedColumns[13].getInputDisabled(editContext)).toBe(false);
                             });
                         });
-                        
+
                         it('in other contexts should return true.', function () {
                             expect(detailedColumns[13].getInputDisabled(detailedContext)).toBe(true);
                             expect(detailedColumns[15].getInputDisabled(detailedContext)).toBe(true);
@@ -470,30 +398,143 @@ exports.execute = function (options) {
 
         });
 
-        describe('.values', function () {
-            it ('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
-                detailedRef.read(limit).then(function(page) {
+        describe('.values, ', function () {
+            it('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
+                detailedRef.read(limit).then(function (page) {
                     var tuples = page.tuples;
                     expect(tuples[0].values).toEqual(detailedRefExpectedValue);
                     done();
-                }, function(err) {
+                }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
             });
 
             it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function (done) {
-                entryEditRef.read(limit).then(function(page) {
+                entryEditRef.read(limit).then(function (page) {
                     var tuples = page.tuples;
                     expect(tuples[0].values).toEqual(entryEditRefExpectedValue);
                     done();
-                }, function(err) {
+                }, function (err) {
                     console.dir(err);
                     done.fail();
-                });
+                });;
             });
         });
 
+
+        /************** HELPER FUNCTIONS ************* */
+        function checkAllPseudoColumns(hasAnnotation) {
+            var columns, currEntryRef;
+
+            beforeAll(function () {
+                if (hasAnnotation) {
+                    currEntryRef = entryEditRef;
+                    columns = compactSelectColumns;
+                } else {
+                    currEntryRef = entryRef;
+                    columns = detailedColumns;
+                }
+            });
+
+            it('should not include duplicate Columns or PseudoColumns.', function() {
+                expect(columns.length).toBe(16);
+                expect(currEntryRef.columns.length).toBe(11);
+            });
+
+            it('should include columns that are not part of any FKRs.', function () {
+                expect(columns[0].isPseudo).toBe(false);
+                expect(columns[0].name).toBe("id");
+
+                expect(columns[10].isPseudo).toBe(false);
+                expect(columns[10].name).toBe("reference_schema:outbound_fk_7");
+            });
+
+            describe('for columns that are part of a simple FKR, ', function () {
+                it('should replace them with PseudoColumn.', function () {
+                    expect(columns[1].isPseudo).toBe(true);
+                    expect(columns[1].name).toBe(["reference_schema", "outbound_fk_1"].join(":"));
+
+                    expect(columns[2].isPseudo).toBe(true);
+                    expect(columns[2].name).toBe(["reference_schema", "outbound_fk_2"].join(":"));
+
+                    expect(columns[3].isPseudo).toBe(true);
+                    expect(columns[3].name).toBe(["reference_schema", "outbound_fk_3"].join(":"));
+
+                    expect(columns[4].isPseudo).toBe(true);
+                    expect(columns[4].name).toBe(["reference_schema", "outbound_fk_4"].join(":"));
+                });
+            });
+
+            describe('for columns that are part of composite FKR, ', function () {
+
+                it('should include the columns and avoid duplicate.', function () {
+                    expect(columns[5].isPseudo).toBe(false);
+                    expect(columns[5].name).toBe("col_3");
+
+                    expect(columns[6].isPseudo).toBe(false);
+                    expect(columns[6].name).toBe("col_4");
+
+                    expect(columns[7].isPseudo).toBe(false);
+                    expect(columns[7].name).toBe("col_5");
+
+                    expect(columns[8].isPseudo).toBe(false);
+                    expect(columns[8].name).toBe("col_6");
+
+                    expect(columns[9].isPseudo).toBe(false);
+                    expect(columns[9].name).toBe("col_7");
+                });
+
+
+                it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
+                    var expectedCols = [
+                        "id", ["reference_schema", "outbound_fk_1"].join(":"), ["reference_schema", "outbound_fk_2"].join(":"), ["reference_schema", "outbound_fk_3"].join(":"), ["reference_schema", "outbound_fk_4"].join(":"),
+                        "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_5"].join(":"), ["reference_schema", "outbound_fk_6"].join(":"), ["reference_schema", "outbound_fk_8"].join(":"), ["reference_schema", "outbound_fk_7"].join(":") + "1", ["reference_schema", "outbound_fk_9"].join(":")
+                    ];
+
+                    checkReferenceColumns([{
+                        ref: currEntryRef,
+                        expected: expectedCols
+                    }]);
+                });
+
+                it('should create just one PseudoColumn for the FKR.', function () {
+                    expect(columns[11].isPseudo).toBe(true);
+                    expect(columns[11].name).toBe(["reference_schema", "outbound_fk_5"].join(":"));
+
+                    expect(columns[12].isPseudo).toBe(true);
+                    expect(columns[12].name).toBe(["reference_schema", "outbound_fk_6"].join(":"));
+
+                    expect(columns[13].isPseudo).toBe(true);
+                    expect(columns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
+
+                    expect(columns[14].isPseudo).toBe(true);
+                    expect(columns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":") + "1");
+
+                    expect(columns[15].isPseudo).toBe(true);
+                    expect(columns[15].name).toBe(["reference_schema", "outbound_fk_9"].join(":"));
+                });
+            });
+        }
+
+        function checkReferenceColumns(tesCases) {
+            tesCases.forEach(function (test) {
+                expect(test.ref.columns.map(function (col) {
+                    return col.name;
+                })).toEqual(test.expected);
+            });
+        }
+
+        function haveSameProperties(source, dest) {
+            for (var pr in dest) {
+                if (dest.hasOwnProperty(pr)) {
+                    if (!source.hasOwnProperty(pr)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     });
 
 }

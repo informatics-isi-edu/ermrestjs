@@ -1,0 +1,21 @@
+{
+  "catalog": {
+    "acls": [
+      { "name": "content_write_user", "user": "write-tester" },
+      { "name": "content_read_user", "user": "write-tester" },
+      { "name": "content_read_user", "user": "read-tester" }
+    ]
+  },
+  "schema": {
+    "name": "generated_schema",
+    "createNew": true,
+    "path": "test/specs/reference/conf/generated_schema/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/reference/conf/generated_schema/data"
+  }
+}

@@ -14,7 +14,7 @@ exports.init = function (options) {
 	var server = ermRest.ermrestFactory.getServer(url);
 
 	return {
-		ermrestUtils: require("ermrest-data-utils"),
+		ermrestUtils: require(process.env.PWD + "/../ErmrestDataUtils/import.js"),
 		ermRest: ermRest,
 		server: server,
 		url: url,

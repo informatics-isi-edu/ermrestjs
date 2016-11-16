@@ -474,6 +474,13 @@ var ERMrest = (function (module) {
             }
         }
 
+        /**
+         * whether schema is generated
+         * @type {boolean}
+         * @private
+         */
+        this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
+
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
@@ -663,6 +670,14 @@ var ERMrest = (function (module) {
                 this.ignore = true;
             }
         }
+
+        /**
+         * whether table is generated
+         * inherits from schema
+         * @type {boolean}
+         * @private
+         */
+        this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._visibleColumns_cached = {}; // Used in _visibleColumns
@@ -1464,6 +1479,8 @@ var ERMrest = (function (module) {
         this._columns = [];
 
         this._table = table;
+
+        this._contextualize_cached = {}; // cache the result for the cases that origFKR is null
     }
 
     Columns.prototype = {
@@ -1539,80 +1556,112 @@ var ERMrest = (function (module) {
             return this._columns[pos];
         },
 
-        // Get PseudoColumns based on the context.
+        /**
+         * Get PseudoColumns based on the context. The logic is as follows:
+         *
+         * 1. check if visible-column annotation is present for this context.
+         *  1.1 if it is, use that list as the baseline.
+         *  1.2 if not, use the list of all the columns as the baseline.
+         *
+         * 2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
+         *  2.1 if it's an array,
+         *      2.1.1 find the corresponding foreign key
+         *      2.1.2 check if it's part of this table.
+         *      2.1.3 avoid duplicate foreign keys.
+         *      2.1.4 make sure it is not hidden(+).
+         *  2.2 otherwise,
+         *      2.2.1 if it's a string: find the corresponding column object if exists.
+         *      2.2.2 check if column has not been processed before.
+         *      2.2.3 if it's not part of any foreign keys add the column.
+         *      2.2.4 go through all of the foreign keys that this column is part of.
+         *          2.2.4.1 make sure it is not hidden(+).
+         *          2.2.4.2 if it's simple fk, just create PseudoColumn
+         *          2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+         *
+         * NOTE:
+         *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
+         *
+         * @private
+         * @param {string} context the context string
+         * @param {ERMrest.ForeignKeyRef} origFKR the foreignkey that should be hidden
+         * */
         _contextualize: function (context, origFKR) {
 
-            var columns = this.all(),
-                visiblePseudoColumns = [],
-                orders = -1,
+            // check if we should hide some columns or not.
+            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
+            var hasOrigFKR = typeof origFKR != "undefined" && origFKR !== null && !origFKR._table._isPureBinaryAssociation();
+
+            // use cache if we're not hiding anything.
+            if (!hasOrigFKR && context in this._contextualize_cached) {
+                return this._contextualize_cached[context];
+            }
+
+            var visiblePseudoColumns = [], // result
+                columns = -1,
+                addedFKs = {}, // to avoid duplicate foreign keys
+                compositeFKs = [], // to add composite keys at the end of the lsit
+                consideredColumns = {},  // to avoid unnecessary process and duplicate columns
+                colAdded,
+                fkName,
+                colFks,
                 col, fk, i, j;
+
+            var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
 
             // should hide the origFKR in case of inbound foreignKey
             var hideFKR = function (fkr) {
-                return typeof origFKR != "undefined" && origFKR !== null && !origFKR._table._isPureBinaryAssociation() && fkr == origFKR;
+                return hasOrigFKR && fkr == origFKR;
+            };
+
+            // should hide the columns that are part of origFKR
+            var hideColumn = function (col) {
+                return hasOrigFKR && origFKR.colset.columns.indexOf(col) != -1;
             };
 
             // get column orders from annotation
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+                columns = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
-            // get from annotation
-            if (orders !== -1) {
-                var addedFKs = {}, // to avoid duplicate
-                    fkName,
-                    colFound,
-                    addCol;
-
-                for (i = 0; i < orders.length; i++) {
-                    addCol = true;
-                    if (Array.isArray(orders[i])) {
-                        fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                        if (fk !== null) {
-                            // check if FK of this table and avoid duplicate
-                            fkName = fk.constraint_names[0].join(":");
-                            if (fk._table != this._table || (fkName in addedFKs) || hideFKR(fk)) {
-                                addCol = false;
-                            } else {
-                                addedFKs[fkName] = 1;
-                                col = new PseudoColumn(fk, fk.colset.columns[0]);
-                            }
-                        } else {
-                            addCol = false;
-                        }
-                    } else {
-                        colFound = false;
-                        for (j=0; j < columns.length && !colFound; j++) {
-                            if (columns[j].name == orders[i]) {
-                                col = columns[j];
-                                colFound = true;
-                            }
-                        }
-
-                        // check if it is in columns and avoid duplicate
-                        if (!colFound || (visiblePseudoColumns.indexOf(col) !== -1)) {
-                            addCol = false;
-                        }
-                    }
-
-                    if (addCol) {
-                        visiblePseudoColumns.push(col);
-                    }
-
-                }
+            // use columns as the base if annotation was not present
+            if (columns === -1) {
+                columns = this.all();
             }
-            // heuristics
-            else {
-                var compositeFKs = {}, compositeFKKey, colAdded;
-                var editContexts = [module._contexts.CREATE, module._contexts.EDIT];
-                for (i = 0; i < columns.length; i++) {
-                    col = columns[i];
-                    colAdded = false;
 
+            // columns is a list of string (column name), array (fk constraint name) or objects (column)
+            for (i = 0; i < columns.length; i++) {
+                col = columns[i];
+                if (Array.isArray(col)) { // foreign keys
+                    fk = this._table.schema.catalog.constraintByNamePair(col);
+                    if (fk !== null) {
+                        fkName = fk.constraint_names[0].join(":");
+
+                        // fk is in this table, avoid duplicate and it's not hidden.
+                        if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
+                            addedFKs[fkName] = 1;
+                            visiblePseudoColumns.push(new PseudoColumn(fk, fk.colset.columns[0]));
+                        }
+                    }
+                } else { // columns
+
+                    // (annotation: column name)
+                    if (typeof col == "string" && !(col in consideredColumns)) {
+                        // find the corresponding column
+                        try {
+                            col = this.get(col);
+                        } catch (exception) {}
+                    }
+
+                    // if column is not defined, processed before, or should be hidden
+                    if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
+                        continue;
+                    }
+                    consideredColumns[col.name] = 1;
+
+                    // add the column if it's not part of any foreign keys
                     if (col.memberOfForeignKeys.length === 0) {
                         visiblePseudoColumns.push(col);
                     } else {
-                        var colFKs;
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
@@ -1622,41 +1671,46 @@ var ERMrest = (function (module) {
                             colFKs = col.memberOfForeignKeys;
                         }
 
+                        colAdded = false;
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
-
+                            fkName = fk.constraint_names[0].join(":");
+                            // hide the origFKR
                             if(hideFKR(fk)) continue;
 
-                            // multiple simple FKR
-                            if (fk.simple) {
-                                visiblePseudoColumns.push(new PseudoColumn(fk, col));
-                            }
-                            // multiple composite FKR
-                            else {
-
-                                // add the column if context is not create or edit
-                                if (!colAdded && editContexts.indexOf(context) === -1) {
-                                    visiblePseudoColumns.push(col);
-                                    colAdded = true;
+                            if (fk.simple) { // simple FKR
+                                if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
+                                    addedFKs[fkName] = 1;
+                                    visiblePseudoColumns.push(new PseudoColumn(fk, col));
                                 }
-
-                                // hold composite FKR and avoid duplicate
-                                compositeFKKey = fk.constraint_names[0].join(":");
-                                if (!(compositeFKKey in compositeFKs)) {
-                                    compositeFKs[compositeFKKey] = new PseudoColumn(fk, col);
+                            } else { // composite FKR
+                                // add the column if context is not entry and avoid duplicate
+                                if (!colAdded && entryContexts.indexOf(context) === -1) {
+                                    colAdded = true;
+                                    visiblePseudoColumns.push(col);
+                                }
+                                // hold composite FKR
+                                if (!(fkName in addedFKs)) {
+                                    addedFKs[fkName] = 1;
+                                    compositeFKs.push(new PseudoColumn(fk, col));
                                 }
                             }
                         }
                     }
                 }
-
-                // append composite FKRs
-                for (var cfkr in compositeFKs) {
-                    visiblePseudoColumns.push(compositeFKs[cfkr]);
-                }
             }
 
+            // append composite FKRs
+            for (i = 0; i < compositeFKs.length; i++) {
+                visiblePseudoColumns.push(compositeFKs[i]);
+            }
+
+            // cache the result if we didn't hide any columns/foreign keys
+            if (!hasOrigFKR) {
+                this._contextualize_cached[context] = visiblePseudoColumns;
+            }
             return visiblePseudoColumns;
+
         }
 
     };

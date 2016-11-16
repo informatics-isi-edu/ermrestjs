@@ -17,6 +17,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/14.outbound_fks.js"        
     ],
     schemaConfigurations: [
+        "/reference/conf/generated.conf.json",
+        "/reference/conf/generated_table.conf.json",
         "/reference/conf/reference.conf.json",
         "/reference/conf/reference_2.conf.json",
         "/reference/conf/reference_altTables.conf.json",
