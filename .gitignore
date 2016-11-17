@@ -44,6 +44,9 @@ jsdoc
 .idea
 .idea/
 
+# Atom SFTP deployment plugin file
+deployment-config.json
+
 *~
 #*
 *.swp

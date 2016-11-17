@@ -632,7 +632,7 @@ var ERMrest = (function (module) {
 
 
         this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
-        
+
         //this.uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
         /**
@@ -1558,11 +1558,11 @@ var ERMrest = (function (module) {
 
         /**
          * Get PseudoColumns based on the context. The logic is as follows:
-         * 
+         *
          * 1. check if visible-column annotation is present for this context.
          *  1.1 if it is, use that list as the baseline.
          *  1.2 if not, use the list of all the columns as the baseline.
-         * 
+         *
          * 2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
          *  2.1 if it's an array,
          *      2.1.1 find the corresponding foreign key
@@ -1570,21 +1570,21 @@ var ERMrest = (function (module) {
          *      2.1.3 avoid duplicate foreign keys.
          *      2.1.4 make sure it is not hidden(+).
          *  2.2 otherwise,
-         *      2.2.1 if it's a string: find the corresponding column object if exists. 
+         *      2.2.1 if it's a string: find the corresponding column object if exists.
          *      2.2.2 check if column has not been processed before.
          *      2.2.3 if it's not part of any foreign keys add the column.
          *      2.2.4 go through all of the foreign keys that this column is part of.
          *          2.2.4.1 make sure it is not hidden(+).
          *          2.2.4.2 if it's simple fk, just create PseudoColumn
-         *          2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate) 
-         * 
-         * NOTE: 
+         *          2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+         *
+         * NOTE:
          *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
-         * 
+         *
          * @private
          * @param {string} context the context string
          * @param {ERMrest.ForeignKeyRef} origFKR the foreignkey that should be hidden
-         * */ 
+         * */
         _contextualize: function (context, origFKR) {
 
             // check if we should hide some columns or not.
@@ -1603,7 +1603,7 @@ var ERMrest = (function (module) {
                 consideredColumns = {},  // to avoid unnecessary process and duplicate columns
                 colAdded,
                 fkName,
-                colFks, 
+                colFks,
                 col, fk, i, j;
 
             var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
@@ -1660,7 +1660,7 @@ var ERMrest = (function (module) {
 
                     // add the column if it's not part of any foreign keys
                     if (col.memberOfForeignKeys.length === 0) {
-                        visiblePseudoColumns.push(col);                
+                        visiblePseudoColumns.push(col);
                     } else {
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
@@ -1683,14 +1683,14 @@ var ERMrest = (function (module) {
                                     addedFKs[fkName] = 1;
                                     visiblePseudoColumns.push(new PseudoColumn(fk, col));
                                 }
-                            } else { // composite FKR 
+                            } else { // composite FKR
                                 // add the column if context is not entry and avoid duplicate
                                 if (!colAdded && entryContexts.indexOf(context) === -1) {
                                     colAdded = true;
                                     visiblePseudoColumns.push(col);
                                 }
                                 // hold composite FKR
-                                if (!(fkName in addedFKs)) { 
+                                if (!(fkName in addedFKs)) {
                                     addedFKs[fkName] = 1;
                                     compositeFKs.push(new PseudoColumn(fk, col));
                                 }
@@ -1960,18 +1960,22 @@ var ERMrest = (function (module) {
         },
 
         getInputDisabled: function(context) {
+            var isGenerated = this.annotations.contains(module._annotations.GENERATED);
+            var isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+            var isSerial = (this.type.name.indexOf('serial') === 0);
+
             if (context == module._contexts.CREATE) {
-                if (this.annotations.contains(module._annotations.GENERATED)) {
+                if (isGenerated || isSerial) {
                     return {
                         message: "Automatically generated by the server"
                     };
                 }
             } else if (context == module._contexts.EDIT) {
-                if (this.annotations.contains(module._annotations.GENERATED) || this.annotations.contains(module._annotations.IMMUTABLE)) {
+                if (isGenerated || isImmutable || isSerial) {
                     return true;
                 }
             } else {
-                // other contexts are not in edit mode.
+                // other contexts are not in entry/create/edit modes, which means any "input" is disabled anyway
                 return true;
             }
             return false;
@@ -1991,7 +1995,7 @@ var ERMrest = (function (module) {
         // make sure all the properties of column are in PseudoColumn
         Column.call(this, foreignKey._table, column._jsonColumn);
 
-        
+
         this._constraintName = foreignKey.constraint_names[0].join(":");
         this._column = column;
 
@@ -2007,7 +2011,7 @@ var ERMrest = (function (module) {
         while(foreignKey._table.columns.has(foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
             i++;
         }
-        
+
         /**
          * @type {string}
          * @desc name of the PseudoColumn.
@@ -2019,7 +2023,7 @@ var ERMrest = (function (module) {
          * @desc Preferred display name for user presentation only.
          */
         this.displayname = "";
-        
+
         if (foreignKey.to_name !== "") {
             this.displayname = foreignKey.to_name;
         } else if (foreignKey.simple) {
@@ -2041,7 +2045,7 @@ var ERMrest = (function (module) {
                     return a.name.localeCompare(b.name);
                 }).map(function(col) {
                     return col.displayname;
-                }).join(", ")  + ")"; 
+                }).join(", ")  + ")";
             }
         }
 
@@ -2063,13 +2067,13 @@ var ERMrest = (function (module) {
 
         // create ermrest url using the location
         var ermrestURI = [
-                            this.table.schema.catalog.server.uri , 
+                            this.table.schema.catalog.server.uri ,
                             "catalog" ,
-                            module._fixedEncodeURIComponent(this.table.schema.catalog.id), 
-                            "entity", 
+                            module._fixedEncodeURIComponent(this.table.schema.catalog.id),
+                            "entity",
                             [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":")
                          ].join("/");
-        
+
         /**
          * @type {ERMrest.Reference}
          * @desc The reference object that represents the table of this PseudoColumn
@@ -2104,7 +2108,7 @@ var ERMrest = (function (module) {
                 value = caption;
             }
             // create the link using reference.
-            else { 
+            else {
 
                 // create a reference to just this PseudoColumn to use for url
                 var keyPair = "", key = this.table.shortestKey, col;
@@ -2162,7 +2166,7 @@ var ERMrest = (function (module) {
                         // if one is not GENERATED
                         if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
                             return false;
-                        }   
+                        }
                     }
 
                     // if all GENERATED
@@ -2177,7 +2181,7 @@ var ERMrest = (function (module) {
         this._getNullValue =  function(context) {
             return this._column._getNullValue(context);
         };
-        
+
     }
 
     PseudoColumn.prototype = Object.create(Column.prototype);
@@ -2622,7 +2626,7 @@ var ERMrest = (function (module) {
     };
 
     /**
-     * @desc holds inbound foreignkeys of a table. 
+     * @desc holds inbound foreignkeys of a table.
      * @param {ERMrest.Table} table the table that this object is for
      * @memberof ERMrest
      * @constructor
