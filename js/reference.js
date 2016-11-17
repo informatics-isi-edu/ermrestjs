@@ -196,7 +196,6 @@ var ERMrest = (function(module) {
             this._table = catalog.schemas.get(location.schemaName).tables.get(location.tableName);
         }
 
-        this._columns = this._table.columns.all();
         this._shortestKey = this._table.shortestKey;
     }
 
@@ -1020,8 +1019,6 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._columns = otherFK.key.table.columns.all();
-
                         newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
@@ -1036,15 +1033,6 @@ var ERMrest = (function(module) {
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
                         newRef._shortestKey = newRef._table.shortestKey;
-
-                        newRef._columns = [];
-                        for (j = 0; j < newRef._table.columns.all().length; j++) {
-                            // remove the columns that are involved in the FKR
-                            col = newRef._table.columns.getByPosition(j);
-                            if (fkr.colset.columns.indexOf(col) == -1) {
-                                newRef._columns.push(col);
-                            }
-                        }
 
                         newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
@@ -1123,7 +1111,6 @@ var ERMrest = (function(module) {
             this._table = table;
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
-            this._columns = table.columns.all();
             delete this._pseudoColumns;
             delete this._related;
             delete this._derivedAssociationRef;
