@@ -475,7 +475,8 @@ var ERMrest = (function (module) {
         }
 
         /**
-         * whether schema is generated
+         * whether schema is generated.
+         * This should be done before initializing tables because tables require this field.
          * @type {boolean}
          * @private
          */
@@ -680,7 +681,6 @@ var ERMrest = (function (module) {
         this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._visibleColumns_cached = {}; // Used in _visibleColumns
 
         /**
          * @type {string}
