@@ -381,7 +381,7 @@ var ERMrest = (function(module) {
                 }
             }
 
-            template = "{{name}}";
+            template = "{{{name}}}";
             keyValues = {"name": result};
         }
 
