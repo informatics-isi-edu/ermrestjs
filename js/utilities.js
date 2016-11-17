@@ -300,11 +300,11 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
-     * @return {object} The display name for the row in HTML.
-     * @desc Returns the row name (html) using annotation or heuristics.
+     * @return {object} The display name for the row.
+     * @desc Returns the row name using annotation or heuristics.
      */
     module._generateRowName = function (table, context, data) {
-        var annotation, col, template, keyValues;
+        var annotation, col;
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
@@ -312,85 +312,73 @@ var ERMrest = (function(module) {
 
         // if annotation is populated and annotation has display.rowName property
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
-            template = annotation.row_markdown_pattern;
+            var template = annotation.row_markdown_pattern;
 
             // Get formatted keyValues for a table for the data
-            keyValues = module._getFormattedKeyValues(table.columns, context, data);
+            var keyValues = module._getFormattedKeyValues(table.columns, context, data);
 
-        } else {
+            // get templated patten after replacing the values using Mustache
+            var pattern = module._renderTemplate(template, keyValues);
 
-            // no row_name annotation, use column with title, name, term
-            var result, closest;
-            var setDisplaynameForACol = function (name) {
-                closest = module._getClosest(data, name);
-                if (closest !== undefined && (typeof closest.data === 'string')) {
-                    col = table.columns.get(closest.key);
-                    result = col.formatvalue(closest.data, {context: context});
-                    return true;
-                }
-                return false;
-            };
-
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
-
-            for (var i = 0; i < columns.length; i++) {
-                if (setDisplaynameForACol(columns[i])) {
-                    break;
-                }
-            }
-
-            if (!result) {
-
-                // no title, name, term, label column: use id:text type
-                // Check for id column whose type should not be integer or serial
-                var idCol = table.columns.all().filter(function (c) {
-                    return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
-                });
-
-
-                // no id:text, use the unique key
-                // If id column exists
-                if (idCol.length && typeof data[idCol[0].name] === 'string') {
-
-                    result = idCol[0].formatvalue(data[idCol[0].name], {context: context});
-
-                } else {
-
-                    // Get the columns for shortestKey
-                    var keyColumns = table.shortestKey;
-
-                    // TODO this check needs to change. it is supposed to check if the table has a key or not
-                    // if (keyColumns.length >= table.columns.length) {
-                    //     return null;
-                    // }
-
-                    var values = [];
-
-                    // Iterate over the keycolumns to get their formatted values for `row_name` context
-                    keyColumns.forEach(function (c) {
-                        var value = c.formatvalue(data[c.name], {context: context});
-                        values.push(value);
-                    });
-
-                    /*
-                     * join all values by ':' to get the display_name
-                     * Eg: displayName for values=["12", "DNA results for human specimen"] would be
-                     * "12:DNA results for human specimen"
-                     */
-                    result = values.join(':');
-                }
-            }
-
-            template = "{{name}}";
-            keyValues = {"name": result};
+            // Render markdown content for the pattern
+            return (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
         }
 
-        // get templated patten after replacing the values using Mustache
-        var pattern = module._renderTemplate(template, keyValues);
+        // no row_name annotation, use column with title, name, term
+        var result, closest;
+        var setDisplaynameForACol = function(name) {
+            closest = module._getClosest(data, name);
+            if (closest !== undefined && (typeof closest.data === 'string')) {
+                col = table.columns.get(closest.key);
+                result = col.formatvalue(closest.data, { context: context });
+                return true;
+            }
+            return false;
+        };
 
-        // Render markdown content for the pattern
-        return (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
+        var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
 
+        for (var i = 0; i < columns.length; i++) {
+            if (setDisplaynameForACol(columns[i])) {
+                return result;
+            }
+        }
+
+        // no title, name, term, label column: use id:text type
+        // Check for id column whose type should not be integer or serial
+        var idCol = table.columns.all().filter(function (c) {
+            return ((c.name.toLowerCase() === "id") && (c.type.name.indexOf('serial') === -1) && (c.type.name.indexOf('int') === -1));
+        });
+
+
+        // no id:text, use the unique key
+        // If id column exists
+        if (idCol.length && typeof data[idCol[0].name] === 'string') {
+            return idCol[0].formatvalue(data[idCol[0].name], { context: context });
+        }
+
+        // Get the columns for shortestKey
+        var keyColumns = table.shortestKey;
+
+        // TODO this check needs to change. it is supposed to check if the table has a key or not
+        // if (keyColumns.length >= table.columns.length) {
+        //     return null;
+        // }
+
+        var values = [];
+
+        // Iterate over the keycolumns to get their formatted values for `row_name` context
+        keyColumns.forEach(function(c) {
+            var value = c.formatvalue(data[c.name], { context: context });
+            values.push(value);
+        });
+
+        /*
+        * join all values by ':' to get the display_name
+        * Eg: displayName for values=["12", "DNA results for human specimen"] would be
+        * "12:DNA results for human specimen"
+        */
+        return values.join(':');
     };
 
     /**
