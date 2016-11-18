@@ -482,6 +482,14 @@ var ERMrest = (function (module) {
          */
         this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
 
+        /**
+         * whether schema is immutable.
+         * This should be done before initializing tables because tables require this field.
+         * @type {boolean}
+         * @private
+         */
+        this._isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
@@ -679,6 +687,14 @@ var ERMrest = (function (module) {
          * @private
          */
         this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
+
+        /**
+         * whether table is immutable
+         * inherits from schema
+         * @type {boolean}
+         * @private
+         */
+        this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 

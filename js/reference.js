@@ -351,9 +351,10 @@ var ERMrest = (function(module) {
             // can update if all are true
             // 1) user has write permission
             // 2) table is not generated
-            // 3) not all visible columns in the table are generated/immutable
+            // 3) table is not immutable
+            // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
-                this._canUpdate = !this._table._isGenerated && this._checkPermissions("content_write_user");
+                this._canUpdate = !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = this.columns.every(function (col) {
@@ -376,9 +377,10 @@ var ERMrest = (function(module) {
             // can update if all are true
             // 1) user has write permission
             // 2) table is not generated
-            // 3) not all visible columns in the table are generated/immutable
+            // 3) table is not immutable
+            // 4) not all visible columns in the table are generated/immutable
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isGenerated && this._checkPermissions("content_write_user");
+                this._canDelete = !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
 
                 if (this._canDelete) {
                     var allColumnsDisabled = this.columns.every(function (col) {
@@ -387,7 +389,7 @@ var ERMrest = (function(module) {
                     this._canDelete = !allColumnsDisabled;
                 }
             }
-            return this._canUpdate;
+            return this._canDelete;
         },
 
         /**
