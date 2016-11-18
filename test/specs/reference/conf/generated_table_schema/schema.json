@@ -124,12 +124,139 @@
         }
       ],
       "annotations": {}
+    },
+    "immutable_table": {
+      "comment": "An immutable table",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "immutable_table",
+      "schema_name": "generated_table_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:immutable": {}
+      }
+    },
+    "immutable_columns_table": {
+      "comment": "Table whose columns are all immutable",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "immutable_columns_table",
+      "schema_name": "generated_table_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:immutable": {}
+          }
+        },
+        {
+          "name": "serial",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:immutable": {}
+          }
+        },
+        {
+          "name": "serial2",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:immutable": {}
+          }
+        }
+      ],
+      "annotations": {}
+    },
+    "immutable_columns_table_2": {
+      "comment": "Table with some immutable columns",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "immutable_columns_table_2",
+      "schema_name": "generated_table_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {}
+        },
+        {
+          "name": "serial",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:immutable": {}
+          }
+        },
+        {
+          "name": "serial2",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:immutable": {}
+          }
+        }
+      ],
+      "annotations": {}
     }
   },
   "table_names": [
     "generated_table",
     "generated_columns_table",
-    "generated_columns_table_2"
+    "generated_columns_table_2",
+    "immutable_table",
+    "immutable_columns_table",
+    "immutable_columns_table_2"
   ],
   "comment": null,
   "annotations": {}
