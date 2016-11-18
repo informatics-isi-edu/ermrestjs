@@ -287,7 +287,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("generated table should return true only for read, false for all", function () {
+            describe("generated columns should return true only for read, false for all", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(false);
@@ -344,7 +344,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("generated table should return true only for read, false for all", function () {
+            describe("some generated columns should return true for all", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(true);
