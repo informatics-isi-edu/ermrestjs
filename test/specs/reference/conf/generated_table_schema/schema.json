@@ -248,6 +248,35 @@
         }
       ],
       "annotations": {}
+    },
+    "non_deletable_table": {
+      "comment": "Table with non-deletable annotation",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "non_deletable_table",
+      "schema_name": "generated_table_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:non-deletable": {}
+      }
     }
   },
   "table_names": [
@@ -256,7 +285,8 @@
     "generated_columns_table_2",
     "immutable_table",
     "immutable_columns_table",
-    "immutable_columns_table_2"
+    "immutable_columns_table_2",
+    "non_deletable_table"
   ],
   "comment": null,
   "annotations": {}
