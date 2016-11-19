@@ -755,6 +755,15 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         * whether table is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        get _isNonDeletable() {
+            return (this.annotations.contains(module._annotations.NON_DELETABLE));
+        },
+
         get shortestKey() {
             if (!this._shortestKey) {
 

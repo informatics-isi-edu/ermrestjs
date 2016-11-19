@@ -374,13 +374,14 @@ var ERMrest = (function(module) {
          */
         get canDelete() {
 
-            // can update if all are true
-            // 1) user has write permission
-            // 2) table is not generated
-            // 3) table is not immutable
-            // 4) not all visible columns in the table are generated/immutable
+            // can delete if all are true
+            // 1) table is not non-deletable
+            // 2) user has write permission
+            // 3) table is not generated
+            // 4) table is not immutable
+            // 5) not all visible columns in the table are generated/immutable
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
+                this._canDelete = !this._table._isNonDeletable && !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
 
                 if (this._canDelete) {
                     var allColumnsDisabled = this.columns.every(function (col) {
