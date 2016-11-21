@@ -527,6 +527,15 @@ var ERMrest = (function (module) {
 
         },
 
+        /**
+         * whether schema is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        get _isNonDeletable() {
+            return (this.annotations.contains(module._annotations.NON_DELETABLE));
+        },
+
         _getAppLink: function (context) {
 
             var app = -1;
@@ -761,7 +770,7 @@ var ERMrest = (function (module) {
          * @private
          */
         get _isNonDeletable() {
-            return (this.annotations.contains(module._annotations.NON_DELETABLE));
+            return (this.annotations.contains(module._annotations.NON_DELETABLE) || this.schema._isNonDeletable);
         },
 
         get shortestKey() {

@@ -19,6 +19,8 @@ exports.execute = function (options) {
             tableName5_2 = "immutable_columns_table",  // table whose columns are all immutable
             tableName5_3 = "immutable_columns_table_2",// table with some immutable columns
             tableName5_4 = "non_deletable_table",      // table with non-deletable annotation
+            schemaName6 = "nondeletable_schema",
+            tableName6 = "table_1",                    // table from non-deletable schema
             entityId = 9000;
 
         var singleEnitityUri = options.url + "/catalog/" + catalogId + "/entity/"
@@ -50,6 +52,9 @@ exports.execute = function (options) {
 
         var nonDeletableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName5 + ':' + tableName5_4 + "/id=" + entityId;
+
+        var nonDeletableSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName6 + ':' + tableName6 + "/id=" + entityId;
 
         describe("for a user with permission to write to ERMrest,", function () {
             var session, reference;
@@ -638,6 +643,63 @@ exports.execute = function (options) {
                     session = response.data;
 
                     return options.ermRest.resolve(nonDeletableUri, {cid: "test"})
+                }).then(function (response) {
+                    reference = response;
+                    reference.session = mockSessionObject;
+
+                    expect(reference._session).toEqual(mockSessionObject);
+                    expect(reference._table._isNonDeletable).toBe(true);
+
+                    done();
+                }, function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            describe("Table that is non-deletable should return false for delete, true for all", function () {
+
+                it("canCreate.", function () {
+                    expect(reference.canCreate).toBe(true);
+                });
+
+                it("canRead.", function () {
+                    expect(reference.canRead).toBe(true);
+                });
+
+                it("canUpdate.", function () {
+                    expect(reference.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", function () {
+                    expect(reference.canDelete).toBe(false);
+                });
+
+            });
+        });
+
+        describe("check permissions when schema is non-deletable,", function () {
+            var session, reference;
+            var mockSessionObject = {
+                attributes: [
+                    {id: "write-tester"},
+                    {id: "read-tester"}
+                ]
+            };
+
+            beforeAll(function () {
+                nock.disableNetConnect();
+            });
+
+            it("should mock the session and set the session on the reference.", function (done) {
+
+                nock(options.url).get("/authn/session").reply(200, mockSessionObject);
+
+                options.ermRest._http.get(options.url + "/authn/session").then(function (response) {
+                    expect(response.data).toEqual(mockSessionObject);
+                    session = response.data;
+
+                    return options.ermRest.resolve(nonDeletableSchemaTableUri, {cid: "test"})
                 }).then(function (response) {
                     reference = response;
                     reference.session = mockSessionObject;
