@@ -19,6 +19,8 @@ require('./../../utils/starter.spec.js').runTests({
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",
         "/reference/conf/generated_table.conf.json",
+        "/reference/conf/immutable.conf.json",
+        "/reference/conf/nondeletable.conf.json",
         "/reference/conf/reference.conf.json",
         "/reference/conf/reference_2.conf.json",
         "/reference/conf/reference_altTables.conf.json",
