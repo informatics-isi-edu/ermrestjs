@@ -259,10 +259,151 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Column[]}
          */
         get columns() {
-            if (this._pseudoColumns === undefined) {
-                this._pseudoColumns = this._table.columns._contextualize(this._context, this.origFKR);
+            if (this._referenceColumns === undefined) {
+                /**
+                 * Get ReferenceColumns based on the context. The logic is as follows:
+                 *
+                 * 1. check if visible-column annotation is present for this context.
+                 *  1.1 if it is, use that list as the baseline.
+                 *  1.2 if not, use the list of all the columns as the baseline.
+                 *
+                 * 2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
+                 *  2.1 if it's an array,
+                 *      2.1.1 find the corresponding foreign key
+                 *      2.1.2 check if it's part of this table.
+                 *      2.1.3 avoid duplicate foreign keys.
+                 *      2.1.4 make sure it is not hidden(+).
+                 *  2.2 otherwise,
+                 *      2.2.1 if it's a string: find the corresponding column object if exists.
+                 *      2.2.2 check if column has not been processed before.
+                 *      2.2.3 if it's not part of any foreign keys add the column.
+                 *      2.2.4 go through all of the foreign keys that this column is part of.
+                 *          2.2.4.1 make sure it is not hidden(+).
+                 *          2.2.4.2 if it's simple fk, just create PseudoColumn
+                 *          2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+                 *
+                 * NOTE:
+                 *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
+                 * */
+
+                this._referenceColumns = [];
+                
+                // check if we should hide some columns or not.
+                // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
+                var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table._isPureBinaryAssociation();
+
+                var columns = -1,
+                    addedFKs = {}, // to avoid duplicate foreign keys
+                    compositeFKs = [], // to add composite keys at the end of the lsit
+                    consideredColumns = {},  // to avoid unnecessary process and duplicate columns
+                    hiddenFKR = this.origFKR,
+                    colAdded,
+                    fkName,
+                    colFks,
+                    col, fk, i, j;
+
+                var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
+
+                // should hide the origFKR in case of inbound foreignKey
+                var hideFKR = function (fkr) {
+                    return hasOrigFKR && fkr == hiddenFKR;
+                };
+
+                // should hide the columns that are part of origFKR
+                var hideColumn = function (col) {
+                    return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                };
+
+                // get column orders from annotation
+                if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                    columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+                }
+
+                // use columns as the base if annotation was not present
+                if (columns === -1) {
+                    columns = this._table.columns.all();
+                }
+
+                // columns is a list of string (column name), array (fk constraint name) or objects (column)
+                for (i = 0; i < columns.length; i++) {
+                    col = columns[i];
+
+                    if (Array.isArray(col)) { // foreign keys
+                        fk = this._table.schema.catalog.constraintByNamePair(col);
+                        if (fk !== null) {
+                            fkName = fk.constraint_names[0].join(":");
+
+                            // fk is in this table, avoid duplicate and it's not hidden.
+                            if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
+                                addedFKs[fkName] = 1;
+                                this._referenceColumns.push(new ReferenceColumn(this, fk.colset.columns[0], fk));
+                            }
+                        }
+                    } else { // columns
+
+                        // (annotation: column name)
+                        if (typeof col == "string" && !(col in consideredColumns)) {
+                            // find the corresponding column
+                            try {
+                                col = this._table.columns.get(col);
+                            } catch (exception) {}
+                        }
+
+                        // if column is not defined, processed before, or should be hidden
+                        if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
+                            continue;
+                        }
+                        consideredColumns[col.name] = 1;
+
+                        // add the column if it's not part of any foreign keys
+                        if (col.memberOfForeignKeys.length === 0) {
+                            this._referenceColumns.push(new ReferenceColumn(this, col));
+                        } else {
+                            // sort foreign keys of a column
+                            if (col.memberOfForeignKeys.length > 1) {
+                                colFKs = col.memberOfForeignKeys.sort(function (a, b) {
+                                    return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
+                                });
+                            } else {
+                                colFKs = col.memberOfForeignKeys;
+                            }
+
+                            colAdded = false;
+                            for (j = 0; j < colFKs.length; j++) {
+                                fk = colFKs[j];
+                                fkName = fk.constraint_names[0].join(":");
+                                // hide the origFKR
+                                if(hideFKR(fk)) continue;
+
+                                if (fk.simple) { // simple FKR
+                                    if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
+                                        addedFKs[fkName] = 1;
+                                        this._referenceColumns.push(new ReferenceColumn(this, col, fk));
+                                    }
+                                } else { // composite FKR
+                                    // add the column if context is not entry and avoid duplicate
+                                    if (!colAdded && entryContexts.indexOf(this._context) === -1) {
+                                        colAdded = true;
+                                        this._referenceColumns.push(new ReferenceColumn(this, col));
+                                    }
+                                    // hold composite FKR
+                                    if (!(fkName in addedFKs)) {
+                                        addedFKs[fkName] = 1;
+                                        compositeFKs.push(new ReferenceColumn(this, col, fk));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // append composite FKRs
+                for (i = 0; i < compositeFKs.length; i++) {
+                    this._referenceColumns.push(compositeFKs[i]);
+                }
+
             }
-            return this._pseudoColumns;
+            return this._referenceColumns;
         },
 
         get location() {
@@ -1001,7 +1142,7 @@ var ERMrest = (function(module) {
                     newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
-                    delete newRef._pseudoColumns;
+                    delete newRef._referenceColumns;
                     delete newRef._derivedAssociationRef;
 
                     newRef.origFKR = fkr; // it will be used to trace back the reference
@@ -1111,7 +1252,7 @@ var ERMrest = (function(module) {
             this._table = table;
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
-            delete this._pseudoColumns;
+            delete this._referenceColumns;
             delete this._related;
             delete this._derivedAssociationRef;
         }
@@ -1207,7 +1348,7 @@ var ERMrest = (function(module) {
 
             var newRef = _referenceCopy(source);
             delete newRef._related;
-            delete newRef._pseudoColumns;
+            delete newRef._referenceColumns;
 
             newRef._context = context;
 
@@ -1895,6 +2036,238 @@ var ERMrest = (function(module) {
 
     };
 
+    function ReferenceColumn(reference, column, foreignKey) {
+
+        this._baseReference = reference; //TODO might need to change it
+
+        this._base = column;
+
+        /**
+         * @type {boolean}
+         * @desc indicates this represents is a PseudoColumn or a Column.
+         */
+        this.isPseudo = false;
+        
+        if (typeof foreignKey != 'undefined') {
+            this.isPseudo = true;
+
+            // create ermrest url using the location
+            var table = foreignKey.key.table;
+
+            var ermrestURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
+            ].join("/");
+
+            this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+
+            this.foreignKey = foreignKey;
+
+            this._constraintName = foreignKey.constraint_names[0].join(":");
+        }
+    }
+    ReferenceColumn.prototype = {
+        get table () {
+            return this.isPseudo ? this.foreignKey.key.table : this._base.table;
+        },
+
+        /**
+         * @type {string}
+         * @desc name of the column.
+         */
+        get name () {
+            if (this._name === undefined) {
+                if (!this.isPseudo) {
+                    this._name = this._base.name;
+                } else {
+                    // make sure that this name is unique.
+                    var i = 0;
+                    while(this.foreignKey._table.columns.has(this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
+                        i++;
+                    }
+                    this._name = this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: "");
+                }
+            }
+            return this._name;
+        },
+
+        /**
+         * @type {string}
+         * @desc Preferred display name for user presentation only.
+         */
+        get displayname() {
+            if (this._displayname === undefined) {
+                if (!this.isPseudo) {
+                    this._displayname = this._base.displayname;
+                } else {
+                    var foreignKey = this.foreignKey;
+
+                    if (foreignKey.to_name !== "") {
+                        this._displayname = foreignKey.to_name;
+
+                    } else if (foreignKey.simple) {
+                        this._displayname = this._base.displayname;
+
+                        if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
+                            this._displayname += " ("  + foreignKey.key.table.displayname + ")";
+                        }
+
+                    } else {
+                        this._displayname = foreignKey.key.table.displayname;
+
+                        // disambiguate
+                        var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
+                            return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
+                        }).length;
+
+                        if (tableCount > 1) {
+                            this._displayname += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                                return a.name.localeCompare(b.name);
+                            }).map(function(col) {
+                                return col.displayname;
+                            }).join(", ")  + ")";
+                        }
+
+                    }
+                }
+            }
+            return this._displayname;
+        },
+        
+        get type() {
+            if (this._type === undefined) {
+                this._type = this.isPseudo ? module._createType("markdown") : this._base.type;
+            }
+            return this._type;
+        },
+
+        get nullok() {
+            if (this._nullok === undefined) {
+                if (!this.isPseudo) {
+                    this._nullok = this._base.nullok;
+                } else {
+                    this._nullok = !this.foreignKey.colset.columns.some(function (col) {
+                        return !col.nullok;
+                    });
+                }
+            }
+            return this._nullok;
+        },
+
+        get comment() {
+            return this._base.comment;
+        },
+
+        // can change the options (context)
+        formatvalue: function(data, options) {
+            return this._base.formatvalue(data, options);
+        },
+        
+        // TODO can change the options (context)
+        formatPresentation: function(data, options) {
+            if (!this.isPseudo) {
+                return this._base.formatPresentation(data, options);
+            }
+
+            var value, caption;
+
+            // if data is empty
+            if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+                return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
+            }
+
+            // use row name as the caption
+            caption = module._generateRowName(this.table, options ? options.context : undefined, data);
+
+            // if caption has a link, don't add the link.
+            if (caption.match(/<a/)) {
+                value = caption;
+            }
+            // create the link using reference.
+            else {
+
+                // create a reference to just this PseudoColumn to use for url
+                var keyPair = "", key = this.table.shortestKey, col;
+                for (var i = 0; i < key.length; i++) {
+                    col = key[i].name;
+                    keyPair +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
+                    if (i != key.length - 1) {
+                        keyPair +="&";
+                    }
+                }
+                var url = [this.reference.location.compactUri, keyPair].join("/");
+
+                var ref = module._createReference(module._parse(url), this.table.schema.catalog);
+
+
+                value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+            }
+
+            return {isHTML: true, value: value};            
+        },
+
+        // TODO should be removed.
+        getInputDisabled: function () {
+            return this.inputDisabled;
+        },
+
+        get inputDisabled() {
+            if (this._inputDisabled === undefined) {
+                this._inputDisabled = this._determineInputDisabled(this._baseReference._context);
+            }
+            return this._inputDisabled;
+        },
+
+        _determineInputDisabled: function(context) {
+            if (this.isPseudo && !this.foreignKey.simple) {
+                var cols = this.foreignKey.colset.columns,
+                    generated, i;
+
+                if (context == module._contexts.CREATE) {
+                    // if one is not generated
+                    for (i = 0; i < cols.length; i++) {
+                        if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
+                            return false;
+                        }
+                    }
+
+                    // if all GENERATED
+                    return {
+                        message: "Automatically generated by the server"
+                    };
+
+                } else if (context == module._contexts.EDIT) {
+                    for (i = 0; i < cols.length; i++) {
+
+                        // if one is IMMUTABLE
+                        if (cols[i].annotations.contains(module._annotations.IMMUTABLE)) {
+                            return true;
+                        }
+
+                        // if one is not GENERATED
+                        if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
+                            return false;
+                        }
+                    }
+
+                    // if all GENERATED
+                    return true;
+                }
+
+                return true;
+            }
+
+            // use column's
+            return this._base.getInputDisabled(context);
+        },
+
+        // TODO can change the function (context)
+        _getNullValue: function (context) {
+            return this._base._getNullValue(context);
+        },
+        
+    };
 
     return module;
 

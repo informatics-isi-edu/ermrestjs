@@ -1,7 +1,7 @@
 exports.execute = function (options) {
 
     // other cases are covered in reference since they need location
-    describe('For determining order of visible columns in tables without any foreign keys, ', function () {
+    xdescribe('For determining order of visible columns in tables without any foreign keys, ', function () {
         var schemaName = "visible_columns_schema", schema;
 
         beforeAll(function (done) {

@@ -114,7 +114,6 @@ to use for ERMrest JavaScript agents.
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ <code>[Column](#ERMrest.Column)</code>
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-        * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -130,18 +129,6 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
-    * [.PseudoColumn](#ERMrest.PseudoColumn)
-        * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
-        * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
-        * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
-        * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
-        * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
-        * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
-        * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
-        * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-        * [.nullok](#ERMrest.PseudoColumn+nullok) : <code>Boolean</code>
-        * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -237,6 +224,7 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+            * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1018,7 +1006,6 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-    * [.isPseudo](#ERMrest.Column+isPseudo) : <code>boolean</code>
     * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
@@ -1050,12 +1037,6 @@ a Column _may not_ be a part of a Table.
 | table | <code>[Table](#ERMrest.Table)</code> | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
 
-<a name="ERMrest.Column+isPseudo"></a>
-
-#### column.isPseudo : <code>boolean</code>
-indicator that this is a Column rather than a PseudoColumn.
-
-**Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+position"></a>
 
 #### column.position : <code>number</code>
@@ -1148,90 +1129,6 @@ returns string representation of Column
 
 **Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
 **Retuns**: <code>string</code> string representation of Column  
-<a name="ERMrest.PseudoColumn"></a>
-
-### ERMrest.PseudoColumn
-**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
-
-* [.PseudoColumn](#ERMrest.PseudoColumn)
-    * [new PseudoColumn(foreignKeyRef, column)](#new_ERMrest.PseudoColumn_new)
-    * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
-    * [.name](#ERMrest.PseudoColumn+name) : <code>string</code>
-    * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>string</code>
-    * [.type](#ERMrest.PseudoColumn+type) : <code>[Type](#ERMrest.Type)</code>
-    * [.comment](#ERMrest.PseudoColumn+comment) : <code>string</code>
-    * [.table](#ERMrest.PseudoColumn+table) : <code>[Table](#ERMrest.Table)</code>
-    * [.reference](#ERMrest.PseudoColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.foreignKey](#ERMrest.PseudoColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-    * [.nullok](#ERMrest.PseudoColumn+nullok) : <code>Boolean</code>
-    * [.formatPresentation()](#ERMrest.PseudoColumn+formatPresentation)
-
-<a name="new_ERMrest.PseudoColumn_new"></a>
-
-#### new PseudoColumn(foreignKeyRef, column)
-Constructor for PseudoColumn. This class extends [Column](#ERMrest.Column).
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents this PseudoColumn |
-| column | <code>[Column](#ERMrest.Column)</code> | The column that this PseudoColumn will be created based on. |
-
-<a name="ERMrest.PseudoColumn+isPseudo"></a>
-
-#### pseudoColumn.isPseudo : <code>boolean</code>
-indicator that this is a PseudoColumn rather than a Column.
-
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+name"></a>
-
-#### pseudoColumn.name : <code>string</code>
-name of the PseudoColumn.
-
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+displayname"></a>
-
-#### pseudoColumn.displayname : <code>string</code>
-Preferred display name for user presentation only.
-
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+type"></a>
-
-#### pseudoColumn.type : <code>[Type](#ERMrest.Type)</code>
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+comment"></a>
-
-#### pseudoColumn.comment : <code>string</code>
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+table"></a>
-
-#### pseudoColumn.table : <code>[Table](#ERMrest.Table)</code>
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+reference"></a>
-
-#### pseudoColumn.reference : <code>[Reference](#ERMrest.Reference)</code>
-The reference object that represents the table of this PseudoColumn
-
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+foreignKey"></a>
-
-#### pseudoColumn.foreignKey : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
-The Foreign key object that this PseudoColumn is created based on
-
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+nullok"></a>
-
-#### pseudoColumn.nullok : <code>Boolean</code>
-**Kind**: instance property of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
-<a name="ERMrest.PseudoColumn+formatPresentation"></a>
-
-#### pseudoColumn.formatPresentation()
-Formats the presentation value corresponding to this PseudoColumn.
-It will be a url with:
- - caption: row-name
- - link: link to detailed view of reference
-
-**Kind**: instance method of <code>[PseudoColumn](#ERMrest.PseudoColumn)</code>  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
@@ -1927,6 +1824,7 @@ Constructor for a ParsedFilter.
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
+        * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
@@ -2026,6 +1924,34 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 ```
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+columns+_referenceColumns"></a>
+
+##### columns._referenceColumns
+Get ReferenceColumns based on the context. The logic is as follows:
+
+1. check if visible-column annotation is present for this context.
+ 1.1 if it is, use that list as the baseline.
+ 1.2 if not, use the list of all the columns as the baseline.
+
+2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
+ 2.1 if it's an array,
+     2.1.1 find the corresponding foreign key
+     2.1.2 check if it's part of this table.
+     2.1.3 avoid duplicate foreign keys.
+     2.1.4 make sure it is not hidden(+).
+ 2.2 otherwise,
+     2.2.1 if it's a string: find the corresponding column object if exists.
+     2.2.2 check if column has not been processed before.
+     2.2.3 if it's not part of any foreign keys add the column.
+     2.2.4 go through all of the foreign keys that this column is part of.
+         2.2.4.1 make sure it is not hidden(+).
+         2.2.4.2 if it's simple fk, just create PseudoColumn
+         2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+
+NOTE:
+ + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
+
+**Kind**: instance property of <code>[columns](#ERMrest.Reference+columns)</code>  
 <a name="ERMrest.Reference+isUnique"></a>
 
 #### reference.isUnique : <code>boolean</code>
