@@ -475,11 +475,20 @@ var ERMrest = (function (module) {
         }
 
         /**
-         * whether schema is generated
+         * whether schema is generated.
+         * This should be done before initializing tables because tables require this field.
          * @type {boolean}
          * @private
          */
         this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
+
+        /**
+         * whether schema is immutable.
+         * This should be done before initializing tables because tables require this field.
+         * @type {boolean}
+         * @private
+         */
+        this._isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
@@ -516,6 +525,15 @@ var ERMrest = (function (module) {
 
         delete: function () {
 
+        },
+
+        /**
+         * whether schema is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        get _isNonDeletable() {
+            return (this.annotations.contains(module._annotations.NON_DELETABLE));
         },
 
         _getAppLink: function (context) {
@@ -679,8 +697,15 @@ var ERMrest = (function (module) {
          */
         this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
 
+        /**
+         * whether table is immutable
+         * inherits from schema
+         * @type {boolean}
+         * @private
+         */
+        this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
+
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._visibleColumns_cached = {}; // Used in _visibleColumns
 
         /**
          * @type {string}
@@ -737,6 +762,15 @@ var ERMrest = (function (module) {
 
         delete: function () {
 
+        },
+
+        /**
+         * whether table is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        get _isNonDeletable() {
+            return (this.annotations.contains(module._annotations.NON_DELETABLE) || this.schema._isNonDeletable);
         },
 
         get shortestKey() {
