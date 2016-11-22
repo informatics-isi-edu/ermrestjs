@@ -259,6 +259,21 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
+    * [.ReferenceColumn](#ERMrest.ReferenceColumn)
+        * [new ReferenceColumn(reference, column, foreignKeyRef)](#new_ERMrest.ReferenceColumn_new)
+        * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
+        * [.reference](#ERMrest.ReferenceColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+        * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
+        * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+        * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
+        * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
+        * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+        * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+        * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+        * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -1927,7 +1942,7 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 <a name="ERMrest.Reference+columns+_referenceColumns"></a>
 
 ##### columns._referenceColumns
-Get ReferenceColumns based on the context. The logic is as follows:
+The logic is as follows:
 
 1. check if visible-column annotation is present for this context.
  1.1 if it is, use that list as the baseline.
@@ -2429,6 +2444,130 @@ and therefore an asynchronous operation that returns a promise.
 
 **Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
 **Returns**: <code>Promise</code> - a promise (TBD the result object)  
+<a name="ERMrest.ReferenceColumn"></a>
+
+### ERMrest.ReferenceColumn
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.ReferenceColumn](#ERMrest.ReferenceColumn)
+    * [new ReferenceColumn(reference, column, foreignKeyRef)](#new_ERMrest.ReferenceColumn_new)
+    * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
+    * [.reference](#ERMrest.ReferenceColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+    * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
+    * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+    * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
+    * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
+    * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+    * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+    * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+    * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
+
+<a name="new_ERMrest.ReferenceColumn_new"></a>
+
+#### new ReferenceColumn(reference, column, foreignKeyRef)
+Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.Column).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | <code>[Reference](#ERMrest.Reference)</code> | column's reference |
+| column | <code>[Column](#ERMrest.Column)</code> | The column that this reference-column will be created based on. |
+| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents the PseudoColumn (null if it's not a PseudoColumn) |
+
+<a name="ERMrest.ReferenceColumn+isPseudo"></a>
+
+#### referenceColumn.isPseudo : <code>boolean</code>
+indicates this represents is a PseudoColumn or a Column.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+reference"></a>
+
+#### referenceColumn.reference : <code>[Reference](#ERMrest.Reference)</code>
+The reference object that represents the table of this PseudoColumn
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+foreignKey"></a>
+
+#### referenceColumn.foreignKey : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+table"></a>
+
+#### referenceColumn.table : <code>[Table](#ERMrest.Table)</code>
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+name"></a>
+
+#### referenceColumn.name : <code>string</code>
+name of the column.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+displayname"></a>
+
+#### referenceColumn.displayname : <code>string</code>
+Preferred display name for user presentation only.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+type"></a>
+
+#### referenceColumn.type : <code>[Type](#ERMrest.Type)</code>
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+nullok"></a>
+
+#### referenceColumn.nullok : <code>Boolean</code>
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+comment"></a>
+
+#### referenceColumn.comment : <code>string</code>
+Documentation for this reference-column
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+inputDisabled"></a>
+
+#### referenceColumn.inputDisabled : <code>boolean</code> &#124; <code>object</code>
+Indicates if the input should be disabled
+true: input must be disabled
+false:  input can be enabled
+object: input msut be disabled (show .message to user)
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+formatvalue"></a>
+
+#### referenceColumn.formatvalue(data) ⇒ <code>string</code>
+Formats a value corresponding to this reference-column definition.
+
+**Kind**: instance method of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+**Returns**: <code>string</code> - The formatted value.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | The 'raw' data value. |
+
+<a name="ERMrest.ReferenceColumn+formatPresentation"></a>
+
+#### referenceColumn.formatPresentation(data, options) ⇒ <code>Object</code>
+Formats the presentation value corresponding to this reference-column definition.
+
+**Kind**: instance method of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>String</code> | The 'formatted' data value. |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+
+<a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
+
+#### referenceColumn.getInputDisabled() : <code>boolean</code> &#124; <code>object</code>
+Indicates if the input should be disabled, in different contexts 
+true: input must be disabled
+false:  input can be enabled
+object: input msut be disabled (show .message to user)
+
+**Kind**: instance method of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.Datapath"></a>
 
 ### ERMrest.Datapath : <code>object</code>

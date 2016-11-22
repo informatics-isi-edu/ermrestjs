@@ -969,7 +969,7 @@
                     "type": {
                         "typename": "text"
                     },
-                    "comment": "simple fk to reference",
+                    "comment": "simple fk to reference, col_1",
                     "annotations": {
                         "tag:isrd.isi.edu,2016:generated": {}
                     }

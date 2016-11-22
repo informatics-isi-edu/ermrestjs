@@ -303,6 +303,16 @@ exports.execute = function (options) {
 
                     });
                 });
+
+                describe('.comment', function () {
+                    it ('when foreign key is simple should use column\'s comment.', function () {
+                        expect(detailedColumns[1].comment).toBe("simple fk to reference, col_1");
+                    });
+
+                    it('otherwise should use foreignkey\'s comment.', function () {
+                        expect(detailedColumns[11].comment).toBe("composite fk to table_w_composite_key with to_name");
+                    });
+                })
                 
                 describe('.formatpresentation, ', function () {
                     var val;

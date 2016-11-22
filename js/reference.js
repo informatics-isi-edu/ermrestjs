@@ -261,7 +261,7 @@ var ERMrest = (function(module) {
         get columns() {
             if (this._referenceColumns === undefined) {
                 /**
-                 * Get ReferenceColumns based on the context. The logic is as follows:
+                 * The logic is as follows:
                  *
                  * 1. check if visible-column annotation is present for this context.
                  *  1.1 if it is, use that list as the baseline.
@@ -2075,6 +2075,15 @@ var ERMrest = (function(module) {
 
     };
 
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {ERMrest.Reference} reference column's reference
+     * @param {ERMrest.Column} column The column that this reference-column will be created based on.
+     * @param {ERMrest.ForeginKeyRef} foreignKeyRef The foreignKeyRef that represents the PseudoColumn (null if it's not a PseudoColumn)
+     * @desc
+     * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
+     */
     function ReferenceColumn(reference, column, foreignKey) {
 
         this._baseReference = reference; //TODO might need to change it
@@ -2092,21 +2101,32 @@ var ERMrest = (function(module) {
 
             // create ermrest url using the location
             var table = foreignKey.key.table;
-
             var ermrestURI = [
                 table.schema.catalog.server.uri ,"catalog" ,
                 module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
             ].join("/");
 
+            /**
+             * @type {ERMrest.Reference}
+             * @desc The reference object that represents the table of this PseudoColumn
+             */
             this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
 
+            /**
+             * @type {ERMrest.ForeignKeyRef}
+             * @desc The Foreign key object that this PseudoColumn is created based on
+             */
             this.foreignKey = foreignKey;
 
             this._constraintName = foreignKey.constraint_names[0].join(":");
         }
     }
     ReferenceColumn.prototype = {
+
+        /**
+         * @type {ERMrest.Table}
+         */
         get table () {
             return this.isPseudo ? this.foreignKey.key.table : this._base.table;
         },
@@ -2173,7 +2193,11 @@ var ERMrest = (function(module) {
             }
             return this._displayname;
         },
-        
+
+        /**
+         *
+         * @type {ERMrest.Type}
+         */
         get type() {
             if (this._type === undefined) {
                 this._type = this.isPseudo ? module._createType("markdown") : this._base.type;
@@ -2181,6 +2205,9 @@ var ERMrest = (function(module) {
             return this._type;
         },
 
+        /**
+         * @type {Boolean}
+         */
         get nullok() {
             if (this._nullok === undefined) {
                 if (!this.isPseudo) {
@@ -2194,16 +2221,44 @@ var ERMrest = (function(module) {
             return this._nullok;
         },
 
+        /**
+         * @desc Documentation for this reference-column
+         * @type {string}
+         */
         get comment() {
-            return this._base.comment;
+            return (this.isPseudo && !this.foreignKey.simple) ? this.foreignKey.comment : this._base.comment;
         },
 
-        // can change the options (context)
+        /**
+         * @desc Indicates if the input should be disabled
+         * true: input must be disabled
+         * false:  input can be enabled
+         * object: input msut be disabled (show .message to user)
+         * 
+         * @type {boolean|object}
+         */
+        get inputDisabled() {
+            if (this._inputDisabled === undefined) {
+                this._inputDisabled = this._determineInputDisabled(this._baseReference._context);
+            }
+            return this._inputDisabled;
+        },
+
+        /**
+         * Formats a value corresponding to this reference-column definition.
+         * @param {Object} data The 'raw' data value.
+         * @returns {string} The formatted value.
+         */
         formatvalue: function(data, options) {
             return this._base.formatvalue(data, options);
         },
         
-        // TODO can change the options (context)
+        /**
+         * Formats the presentation value corresponding to this reference-column definition.
+         * @param {String} data The 'formatted' data value.
+         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         */
         formatPresentation: function(data, options) {
             if (!this.isPseudo) {
                 return this._base.formatPresentation(data, options);
@@ -2246,16 +2301,16 @@ var ERMrest = (function(module) {
             return {isHTML: true, value: value};            
         },
 
-        // TODO should be removed.
-        getInputDisabled: function () {
-            return this.inputDisabled;
-        },
-
-        get inputDisabled() {
-            if (this._inputDisabled === undefined) {
-                this._inputDisabled = this._determineInputDisabled(this._baseReference._context);
-            }
-            return this._inputDisabled;
+        /**
+         * @desc Indicates if the input should be disabled, in different contexts 
+         * true: input must be disabled
+         * false:  input can be enabled
+         * object: input msut be disabled (show .message to user)
+         * 
+         * @type {boolean|object}
+         */
+        getInputDisabled: function (context) {
+            return this._determineInputDisabled(context);
         },
 
         _determineInputDisabled: function(context) {
