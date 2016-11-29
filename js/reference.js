@@ -738,6 +738,9 @@ var ERMrest = (function(module) {
 
                 var sortObject, col;
 
+
+                // check the sort object (has the correct columns and map the columns as needed)
+
                 // if no sorting provided, use schema defined sort if that's present
                 // If neither one present, use shortestkey
                 var addkey = true;
@@ -2086,7 +2089,9 @@ var ERMrest = (function(module) {
      */
     function ReferenceColumn(reference, column, foreignKey) {
 
-        this._baseReference = reference; //TODO might need to change it
+        this._baseRef = reference; //TODO might need to change it
+
+        this._context = this._baseRef._context;
 
         this._base = column;
 
@@ -2239,9 +2244,30 @@ var ERMrest = (function(module) {
          */
         get inputDisabled() {
             if (this._inputDisabled === undefined) {
-                this._inputDisabled = this._determineInputDisabled(this._baseReference._context);
+                this._inputDisabled = this._determineInputDisabled(this._context);
             }
             return this._inputDisabled;
+        },
+
+         get sortable() {
+            if (this._sortable === undefined) {
+                this._determieSortable();
+            }   
+            return this._sortable; 
+        },
+
+        get _sortObject() {
+            if (this._sortObject_cached) {
+                this._determieSortable();
+            }
+            return this._sortObject_cached;
+        },
+
+        get _display() {
+            if (this._display_cached === undefined) {
+                this._display_cached = isPseudo ? this.foreignKey._getDisplay(this._context) : this._base._getDisplay(this._context);
+            }
+            return this._display_cached;
         },
 
         /**
@@ -2359,6 +2385,34 @@ var ERMrest = (function(module) {
         // TODO can change the function (context)
         _getNullValue: function (context) {
             return this._base._getNullValue(context);
+        },
+        
+        _determieSortable: function () {
+            // TODO should check the columnnames in _getDisplay of col and fk
+            this._sortObject = [];
+            this._sortable = false;
+            
+            if (this.isPseudo) {
+                if (this._display.columnOrder !== undefined) {
+                    this._sortObject = this._display.columnOrder;
+                    this._sortable = true;
+                } else if (this.reference.display._rowOrder !== undefined) {
+                    var rowOrder = this.reference.display._rowOrder;
+                    for (var i = 0; i < rowOrder.length; i++) {
+                        this._sortObject.push(rowOrder[i].column);
+                    }
+                    this._sortObject = rowOrder;
+                    this._sortable = true;
+                }
+            } else {
+                if (this._display.columnOrder !== undefined) {
+                    this._sortObject = this._display.columnOrder;
+                    this._sortable = true;
+                } else if (!this._display.isMarkdownPattern && !this._display.isMarkdown) {
+                    this._sortObject.push(this._base.name);
+                    this._sortable = true;
+                }
+            }
         },
         
     };
