@@ -184,7 +184,6 @@ exports.execute = function (options) {
         });
 
         describe('.columns, ', function () {
-
             describe('when visible-columns annotation is present for the context, ', function () {
                 it('should not include duplicate columns and FKRs.', function () {
                     checkReferenceColumns([{
@@ -194,12 +193,15 @@ exports.execute = function (options) {
                         ]
                     }]);
                 });
-
+                
+                
                 it('should just include columns and FKRs that are valid.', function () {
                     checkReferenceColumns([{
                         ref: entryCreateRef,
                         expected: [
                             ["reference_schema", "outbound_fk_1"].join(":"),
+                            ["reference_schema", "outbound_fk_9"].join(":"),
+                            ["reference_schema", "outbound_fk_8"].join(":"),
                             "id"
                         ]
                     }]);
@@ -209,24 +211,23 @@ exports.execute = function (options) {
                     checkReferenceColumns([{
                         ref: compactBriefRef,
                         expected: [
-                            "id", ["reference_schema", "outbound_fk_1"].join(":")
+                            "id", "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_1"].join(":")
                         ]
                     }]);
                 });
-
+                
                 describe('if some columns are part of any foreign keys, ', function () {
                     checkAllPseudoColumns(true);
                 });
+                
             });
 
 
             describe('when visible-columns annotation is not present for the context, ', function () {
                 checkAllPseudoColumns(false);
             });
-
-
+            
             describe('PseudoColumn, ', function () {
-
                 it('should have the same functions as Column.', function () {
                     for (var i = 1; i < 5; i++) {
                         expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
@@ -235,7 +236,7 @@ exports.execute = function (options) {
                         expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
                     }
                 });
-
+                
                 it('should have the correct type.', function () {
                     for (var i = 1; i < 5; i++) {
                         expect(detailedColumns[i].type.name).toBe("markdown");
@@ -244,7 +245,7 @@ exports.execute = function (options) {
                         expect(detailedColumns[i].type.name).toBe("markdown");
                     }
                 });
-
+                
                 it('should have the correct table.', function () {
                     for (var i = 1; i < 4; i++) {
                         expect(detailedColumns[i].table.name).toBe("reference_table");
@@ -257,7 +258,7 @@ exports.execute = function (options) {
                     expect(detailedColumns[15].table.name).toBe("table_w_composite_key");
                 });
 
-
+                
                 it('should have the correct reference.', function () {
                     for (var i = 1; i < 4; i++) {
                         expect(detailedColumns[i].reference._table.name).toBe("reference_table");
@@ -270,6 +271,7 @@ exports.execute = function (options) {
                     expect(detailedColumns[15].reference._table.name).toBe("table_w_composite_key");
                 });
 
+                
                 describe('.displayname, ', function () {
                     it('should use the foreignKey\' s to_name.', function () {
                         expect(detailedColumns[1].displayname).toBe("to_name_value");
@@ -302,6 +304,16 @@ exports.execute = function (options) {
                     });
                 });
 
+                describe('.comment', function () {
+                    it ('when foreign key is simple should use column\'s comment.', function () {
+                        expect(detailedColumns[1].comment).toBe("simple fk to reference, col_1");
+                    });
+
+                    it('otherwise should use foreignkey\'s comment.', function () {
+                        expect(detailedColumns[11].comment).toBe("composite fk to table_w_composite_key with to_name");
+                    });
+                })
+                
                 describe('.formatpresentation, ', function () {
                     var val;
                     it('should return the correct link.', function () {
@@ -325,7 +337,7 @@ exports.execute = function (options) {
                     });
                 });
 
-
+                
                 describe('.nullok, ', function () {
                     it('should set to false if any of its columns have nullok=false; otherwise true.', function () {
                         // simple fk, false
@@ -345,57 +357,58 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe('.getInputDisabled(), ', function () {
+                describe('.getInputDisabled, ', function () {
                     it('for simple foreignkeys, should return column\`s result.', function () {
                         // has generated in create
-                        expect(detailedColumns[1].getInputDisabled(createContext)).toEqual({
+                        expect(entryCreateRef.columns[0].inputDisabled).toEqual({
                             message: "Automatically generated by the server"
                         });
-
+                        
                         // has immutable in edit
-                        expect(detailedColumns[2].getInputDisabled(editContext)).toBe(true);
+                        expect(entryEditRef.columns[2].inputDisabled).toBe(true);
 
                         // does not have immutable nor generated
-                        expect(detailedColumns[0].getInputDisabled(createContext)).toBe(false);
+                        expect(entryEditRef.columns[6].inputDisabled).toBe(false);
                     });
-
+                    
                     describe('for composite foreignkeys, ', function () {
                         describe('in create context, ', function () {
                             it('if all columns are generated, should return generated message.', function () {
-                                expect(detailedColumns[15].getInputDisabled(createContext)).toEqual({
+                                expect(entryCreateRef.columns[1].inputDisabled).toEqual({
                                     message: "Automatically generated by the server"
                                 });
                             });
 
                             it('if at least one of the columns is not generated, should return false.', function () {
-                                expect(detailedColumns[13].getInputDisabled(createContext)).toBe(false);
+                                expect(entryCreateRef.columns[2].inputDisabled).toBe(false);
                             });
                         });
-
+                        
                         describe('in edit context, ', function () {
                             it('if one of the columns is immutable, should return true.', function () {
-                                expect(detailedColumns[15].getInputDisabled(editContext)).toBe(true);
+                                expect(entryEditRef.columns[10].inputDisabled).toBe(true);
                             });
 
                             it('if none of the columns are immutable and all of them are generated, should return true.', function () {
-                                expect(detailedColumns[14].getInputDisabled(editContext)).toBe(true);
+                                expect(entryEditRef.columns[9].inputDisabled).toBe(true);
                             });
 
                             it('if none of the columns are immutable and at least one of the columns is not generated, should return false.', function () {
-                                expect(detailedColumns[13].getInputDisabled(editContext)).toBe(false);
+                                expect(entryEditRef.columns[8].inputDisabled).toBe(false);
                             });
                         });
 
                         it('in other contexts should return true.', function () {
-                            expect(detailedColumns[13].getInputDisabled(detailedContext)).toBe(true);
-                            expect(detailedColumns[15].getInputDisabled(detailedContext)).toBe(true);
+                            expect(compactSelectRef.columns[5].inputDisabled).toBe(true);
+                            expect(compactBriefRef.columns[1].inputDisabled).toBe(true);
                         });
                     });
+                    
                 });
-
+                
 
             });
-
+            
         });
 
         describe('.values, ', function () {

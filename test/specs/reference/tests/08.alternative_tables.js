@@ -148,10 +148,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -183,9 +179,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -209,9 +202,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -242,9 +232,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -268,9 +255,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -301,9 +285,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -364,10 +345,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -399,9 +376,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -425,9 +399,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -458,9 +429,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -484,9 +452,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -517,9 +482,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -581,10 +543,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable2);
             });
 
@@ -616,9 +574,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -642,10 +597,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("value x");
-                expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
 
@@ -677,9 +628,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -705,10 +653,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("value y");
-                expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
 
@@ -739,9 +683,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -803,10 +744,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -838,9 +775,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -864,9 +798,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -897,9 +828,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -923,9 +851,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -956,9 +881,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1024,10 +946,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -1059,9 +977,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1085,9 +1000,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -1118,9 +1030,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1144,9 +1053,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -1177,9 +1083,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1238,10 +1141,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -1273,9 +1172,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1299,9 +1195,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -1332,9 +1225,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1358,9 +1248,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -1391,9 +1278,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1453,10 +1337,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable2);
             });
 
@@ -1488,9 +1368,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -1514,10 +1391,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("value x");
-                expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
 
@@ -1549,9 +1422,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -1577,10 +1447,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("value y");
-                expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
 
@@ -1611,9 +1477,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -1673,10 +1536,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -1708,9 +1567,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1734,9 +1590,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -1767,9 +1620,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1793,9 +1643,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -1826,9 +1673,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1894,10 +1738,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -1929,9 +1769,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1955,9 +1792,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -1988,9 +1822,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2014,9 +1845,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -2047,9 +1875,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2108,10 +1933,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -2143,9 +1964,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2169,9 +1987,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -2202,9 +2017,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2228,9 +2040,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -2261,9 +2070,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2323,10 +2129,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable2);
             });
 
@@ -2358,9 +2160,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -2384,10 +2183,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("value x");
-                expect(reference2._columns[2].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable2);
             });
 
@@ -2419,9 +2214,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -2447,10 +2239,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("value y");
-                expect(reference2._columns[2].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable2);
             });
 
@@ -2481,9 +2269,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname).toBe(baseTable2);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -2543,10 +2328,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2._columns.length).toBe(3);
-                expect(reference2._columns[0].name).toBe("id");
-                expect(reference2._columns[1].name).toBe("name");
-                expect(reference2._columns[2].name).toBe("value");
                 expect(reference2.displayname).toBe(baseTable1);
             });
 
@@ -2578,9 +2359,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2604,9 +2382,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id x");
-                expect(reference2._columns[1].name).toBe("details");
                 expect(reference2.displayname).toBe(altDetailedTable1);
             });
 
@@ -2637,9 +2412,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2663,9 +2435,6 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2._columns.length).toBe(2);
-                expect(reference2._columns[0].name).toBe("id y");
-                expect(reference2._columns[1].name).toBe("summary");
                 expect(reference2.displayname).toBe(altCompactTable1);
             });
 
@@ -2696,9 +2465,6 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname).toBe(baseTable1);
-                expect(tuple.reference._columns[0].name).toBe("id");
-                expect(tuple.reference._columns[1].name).toBe("name");
-                expect(tuple.reference._columns[2].name).toBe("value");
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
