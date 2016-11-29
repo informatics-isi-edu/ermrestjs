@@ -90,14 +90,14 @@ exports.execute = function(options) {
                     ref: related[0],
                     expected: [
                         "id", 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema","fk_inbound_related_to_reference"].join(":")
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema","fk_inbound_related_to_reference"].join("_")
                 ]}, {
                     ref: related[1].contextualize.compactBrief,
                     expected: [
                         "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":")
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                 ]}]);
             });
 
@@ -158,9 +158,9 @@ exports.execute = function(options) {
                         ref: related[2],
                         expected:[
                             "id", 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
+                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                     ]}]);
                 });
                 it('should ignore extra serial key columns in the assocation table', function() {
@@ -168,9 +168,9 @@ exports.execute = function(options) {
                         ref: related[3],
                         expected:[
                             "id", 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
+                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                     ]}]);
                 });
             });

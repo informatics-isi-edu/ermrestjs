@@ -98,7 +98,7 @@ exports.execute = function (options) {
          *  col_5 -> has generated annotation
          *  col_6 -> nullok false
          *  col_7 -> value is null | has generated and immutable annotation
-         *  reference_schema:outbound_fk_7 -> not part of any fk
+         *  reference_schema_outbound_fk_7 -> not part of any fk
          * 
          * FKRs:
          *  outbound_fk_1: col_1 -> ref_table (to_name)
@@ -122,7 +122,7 @@ exports.execute = function (options) {
          * 7:   col_5
          * 8:   col_6
          * 9:   col_7
-         * 10:  reference_schema:outbound_fk_7
+         * 10:  reference_schema_outbound_fk_7
          * 11:  outbound_fk_5 (check to_name) (check nullok)
          * 12:  outbound_fk_6 (check nullok)
          * 13:  outbound_fk_8 (check disambiguation)
@@ -135,7 +135,7 @@ exports.execute = function (options) {
          * 2:   outbound_fk_2
          * 3:   outbound_fk_3
          * 4:   outbound_fk_4
-         * 5:   reference_schema:outbound_fk_7
+         * 5:   reference_schema_outbound_fk_7
          * 6:   outbound_fk_5
          * 7:   outbound_fk_6 
          * 8:   outbound_fk_8
@@ -189,7 +189,7 @@ exports.execute = function (options) {
                     checkReferenceColumns([{
                         ref: compactRef,
                         expected: [
-                            "id", ["reference_schema", "outbound_fk_1"].join(":")
+                            "id", ["reference_schema", "outbound_fk_1"].join("_")
                         ]
                     }]);
                 });
@@ -199,9 +199,9 @@ exports.execute = function (options) {
                     checkReferenceColumns([{
                         ref: entryCreateRef,
                         expected: [
-                            ["reference_schema", "outbound_fk_1"].join(":"),
-                            ["reference_schema", "outbound_fk_9"].join(":"),
-                            ["reference_schema", "outbound_fk_8"].join(":"),
+                            ["reference_schema", "outbound_fk_1"].join("_"),
+                            ["reference_schema", "outbound_fk_9"].join("_"),
+                            ["reference_schema", "outbound_fk_8"].join("_"),
                             "id"
                         ]
                     }]);
@@ -211,7 +211,7 @@ exports.execute = function (options) {
                     checkReferenceColumns([{
                         ref: compactBriefRef,
                         expected: [
-                            "id", "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_1"].join(":")
+                            "id", "reference_schema_outbound_fk_7", ["reference_schema", "outbound_fk_1"].join("_")
                         ]
                     }]);
                 });
@@ -460,22 +460,22 @@ exports.execute = function (options) {
                 expect(columns[0].name).toBe("id");
 
                 expect(columns[10].isPseudo).toBe(false);
-                expect(columns[10].name).toBe("reference_schema:outbound_fk_7");
+                expect(columns[10].name).toBe("reference_schema_outbound_fk_7");
             });
 
             describe('for columns that are part of a simple FKR, ', function () {
                 it('should replace them with PseudoColumn.', function () {
                     expect(columns[1].isPseudo).toBe(true);
-                    expect(columns[1].name).toBe(["reference_schema", "outbound_fk_1"].join(":"));
+                    expect(columns[1].name).toBe(["reference_schema", "outbound_fk_1"].join("_"));
 
                     expect(columns[2].isPseudo).toBe(true);
-                    expect(columns[2].name).toBe(["reference_schema", "outbound_fk_2"].join(":"));
+                    expect(columns[2].name).toBe(["reference_schema", "outbound_fk_2"].join("_"));
 
                     expect(columns[3].isPseudo).toBe(true);
-                    expect(columns[3].name).toBe(["reference_schema", "outbound_fk_3"].join(":"));
+                    expect(columns[3].name).toBe(["reference_schema", "outbound_fk_3"].join("_"));
 
                     expect(columns[4].isPseudo).toBe(true);
-                    expect(columns[4].name).toBe(["reference_schema", "outbound_fk_4"].join(":"));
+                    expect(columns[4].name).toBe(["reference_schema", "outbound_fk_4"].join("_"));
                 });
             });
 
@@ -501,8 +501,8 @@ exports.execute = function (options) {
 
                 it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
                     var expectedCols = [
-                        "id", ["reference_schema", "outbound_fk_1"].join(":"), ["reference_schema", "outbound_fk_2"].join(":"), ["reference_schema", "outbound_fk_3"].join(":"), ["reference_schema", "outbound_fk_4"].join(":"),
-                        "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_5"].join(":"), ["reference_schema", "outbound_fk_6"].join(":"), ["reference_schema", "outbound_fk_8"].join(":"), ["reference_schema", "outbound_fk_7"].join(":") + "1", ["reference_schema", "outbound_fk_9"].join(":")
+                        "id", ["reference_schema", "outbound_fk_1"].join("_"), ["reference_schema", "outbound_fk_2"].join("_"), ["reference_schema", "outbound_fk_3"].join("_"), ["reference_schema", "outbound_fk_4"].join("_"),
+                        "reference_schema_outbound_fk_7", ["reference_schema", "outbound_fk_5"].join("_"), ["reference_schema", "outbound_fk_6"].join("_"), ["reference_schema", "outbound_fk_8"].join("_"), ["reference_schema", "outbound_fk_7"].join("_") + "1", ["reference_schema", "outbound_fk_9"].join("_")
                     ];
 
                     checkReferenceColumns([{
@@ -513,19 +513,19 @@ exports.execute = function (options) {
 
                 it('should create just one PseudoColumn for the FKR.', function () {
                     expect(columns[11].isPseudo).toBe(true);
-                    expect(columns[11].name).toBe(["reference_schema", "outbound_fk_5"].join(":"));
+                    expect(columns[11].name).toBe(["reference_schema", "outbound_fk_5"].join("_"));
 
                     expect(columns[12].isPseudo).toBe(true);
-                    expect(columns[12].name).toBe(["reference_schema", "outbound_fk_6"].join(":"));
+                    expect(columns[12].name).toBe(["reference_schema", "outbound_fk_6"].join("_"));
 
                     expect(columns[13].isPseudo).toBe(true);
-                    expect(columns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
+                    expect(columns[13].name).toBe(["reference_schema", "outbound_fk_8"].join("_"));
 
                     expect(columns[14].isPseudo).toBe(true);
-                    expect(columns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":") + "1");
+                    expect(columns[14].name).toBe(["reference_schema", "outbound_fk_7"].join("_") + "1");
 
                     expect(columns[15].isPseudo).toBe(true);
-                    expect(columns[15].name).toBe(["reference_schema", "outbound_fk_9"].join(":"));
+                    expect(columns[15].name).toBe(["reference_schema", "outbound_fk_9"].join("_"));
                 });
             });
         }

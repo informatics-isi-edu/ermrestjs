@@ -331,7 +331,7 @@ var ERMrest = (function(module) {
                     if (Array.isArray(col)) { // foreign keys
                         fk = this._table.schema.catalog.constraintByNamePair(col);
                         if (fk !== null) {
-                            fkName = fk.constraint_names[0].join(":");
+                            fkName = fk.constraint_names[0].join("_");
 
                             // fk is in this table, avoid duplicate and it's not hidden.
                             if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
@@ -362,7 +362,7 @@ var ERMrest = (function(module) {
                             // sort foreign keys of a column
                             if (col.memberOfForeignKeys.length > 1) {
                                 colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                    return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
+                                    return a.constraint_names[0].join("_").localeCompare(b.constraint_names[0].join("_"));
                                 });
                             } else {
                                 colFKs = col.memberOfForeignKeys;
@@ -371,7 +371,7 @@ var ERMrest = (function(module) {
                             colAdded = false;
                             for (j = 0; j < colFKs.length; j++) {
                                 fk = colFKs[j];
-                                fkName = fk.constraint_names[0].join(":");
+                                fkName = fk.constraint_names[0].join("_");
                                 // hide the origFKR
                                 if(hideFKR(fk)) continue;
 
@@ -1585,7 +1585,7 @@ var ERMrest = (function(module) {
          * this._linkedData[i] = {`s:constraintName`: data}
          * That is for retrieving data for a foreign key, you should do the following:
          *
-         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join(":")];
+         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join("_")];
          */
         this._linkedData = [];
 
@@ -1598,7 +1598,7 @@ var ERMrest = (function(module) {
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                        this._linkedData[i][fks[j].constraint_names[0].join("_")] = data[i]["F"+(j+1)][0];
                     }
                 }
             } catch(exception) { // could not find the expected aliases
@@ -2124,7 +2124,7 @@ var ERMrest = (function(module) {
              */
             this.foreignKey = foreignKey;
 
-            this._constraintName = foreignKey.constraint_names[0].join(":");
+            this._constraintName = foreignKey.constraint_names[0].join("_");
         }
     }
     ReferenceColumn.prototype = {
@@ -2147,10 +2147,10 @@ var ERMrest = (function(module) {
                 } else {
                     // make sure that this name is unique.
                     var i = 0;
-                    while(this.foreignKey._table.columns.has(this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
+                    while(this.foreignKey._table.columns.has(this.foreignKey.constraint_names[0].join("_") + ((i!==0) ? i: ""))) {
                         i++;
                     }
-                    this._name = this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: "");
+                    this._name = this.foreignKey.constraint_names[0].join("_") + ((i!==0) ? i: "");
                 }
             }
             return this._name;
