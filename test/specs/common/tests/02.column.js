@@ -208,7 +208,7 @@ exports.execute = function(options) {
                         var col = table1_schema2.columns.get('table_1_float4');
                         formattedValue = col.formatvalue(11.1);
                         expect(spy).toHaveBeenCalledWith(11.1, undefined);
-                        expect(formattedValue).toBe('11.10');
+                        expect(formattedValue).toBe('11.1000');
                     });
 
                     it('float8 columns correctly.', function() {

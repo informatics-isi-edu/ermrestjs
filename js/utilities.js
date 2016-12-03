@@ -575,7 +575,7 @@ var ERMrest = (function(module) {
             if (options.numDecDigits) {
                 value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
             } else {
-                value = value.toFixed(2);
+                value = value.toFixed(4);
             }
 
             // Remove leading zeroes
