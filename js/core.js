@@ -1841,15 +1841,25 @@ var ERMrest = (function (module) {
 
         _getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1;
+                var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
+                
+                if (Array.isArray(annotation.column_order)) {
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // TODO column-order is just a list of columns
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                }
+
                 this._display[context] = {
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdown": this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
-                    "columnOrder": Array.isArray(annotation.column_order) ? annotation.column_order : undefined
+                    "columnOrder": columnOrder
                 };
             }
             return this._display[context];
@@ -2611,14 +2621,23 @@ var ERMrest = (function (module) {
 
         _getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1;
+                var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).get("display"));
                     
                 }
 
+                if (Array.isArray(annotation.column_order)) {
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // TODO column-order is just a list of columns
+                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                }
+
                 this._display[context] = {
-                    "columnOrder": Array.isArray(annotation.column_order) ? annotation.column_order : undefined,
+                    "columnOrder": columnOrder,
                 };
             }
 

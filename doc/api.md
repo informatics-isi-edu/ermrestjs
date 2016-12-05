@@ -266,11 +266,13 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
         * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+            * [~i](#ERMrest.ReferenceColumn+name..i)
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+        * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -2456,11 +2458,13 @@ and therefore an asynchronous operation that returns a promise.
     * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
     * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+        * [~i](#ERMrest.ReferenceColumn+name..i)
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+    * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -2505,6 +2509,14 @@ The Foreign key object that this PseudoColumn is created based on
 name of the column.
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+name..i"></a>
+
+##### name~i
+make sure that this name is unique:
+1. table doesn't have any columns with that name.
+2. there's no foreign key with that name.
+
+**Kind**: inner property of <code>[name](#ERMrest.ReferenceColumn+name)</code>  
 <a name="ERMrest.ReferenceColumn+displayname"></a>
 
 #### referenceColumn.displayname : <code>string</code>
@@ -2533,6 +2545,10 @@ true: input must be disabled
 false:  input can be enabled
 object: input msut be disabled (show .message to user)
 
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+sortable"></a>
+
+#### referenceColumn.sortable : <code>boolean</code>
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 

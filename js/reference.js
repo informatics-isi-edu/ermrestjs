@@ -734,17 +734,51 @@ var ERMrest = (function(module) {
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-                var uri = this._location.compactUri;
 
-                var sortObject, col;
+                var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
+                    uri = this._location.compactUri,
+                    sortMap = {}, 
+                    sortObject, 
+                    col, i, j;
 
 
                 // check the sort object (has the correct columns and map the columns as needed)
+                if (hasSort) {
+                    var newSorObject = [], colName;
+                    sortObject = this._location.sortObject;
+
+                    for (i = 0; i < sortObject.length; i++) {
+                        for (j = 0; j < this.columns.length; j++) { //TODO better performance
+                            if (this.columns[j].name == sortObject[i].column) {
+                                col = this.columns[j];
+                                break;
+                            }
+                        }
+
+                        if (col === undefined || !col.sortable) continue;
+
+                        for (j = 0; j < col._sortColumns.length; j++) {
+                            if (col.isPseudo) {
+                                //TODO better aliasName
+                                colName = [col.name, col._sortColumns[j].name].join("_");
+                                sortMap[colName] = col._sortColumns[j].toString();
+                            } else {
+                                colName = col._sortColumns[j].name;
+                            }
+
+                            newSorObject.push({
+                                "column": colName,
+                                "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
+                            });
+                         }
+                    }
+                    this._location.sortObject = newSorObject;
+                }
 
                 // if no sorting provided, use schema defined sort if that's present
                 // If neither one present, use shortestkey
                 var addkey = true;
-                if (!this._location.sortObject || (this._location.sortObject.length === 0)) {
+                if (!hasSort) {
                     if (this.display._rowOrder) {
                         this._location.sortObject = this.display._rowOrder;
                         addkey = true;
@@ -767,7 +801,7 @@ var ERMrest = (function(module) {
                     var sortCols = this._location.sortObject.map(function(sort) {
                         return sort.column;});
                     sortObject = this._location.sortObject;
-                    for (var i = 0; i < this._shortestKey.length; i++) { // all the key columns
+                    for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
                         if (!sortCols.includes(col)) {
@@ -835,7 +869,11 @@ var ERMrest = (function(module) {
                     for(k = 0; k < this._location.sortObject.length; k++) {
                         sortColumn = this._location.sortObject[k];
                         if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
-                            keys.push(sortColumn.column);
+                            if (sortColumn.column in sortMap) {
+                                keys.push(sortColumn.column + ":=" + sortMap[sortColumn.column]);
+                            } else {
+                                keys.push(sortColumn.column);
+                            }
                         }
                     }
 
@@ -2145,12 +2183,18 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._name = this._base.name;
                 } else {
-                    // make sure that this name is unique.
-                    var i = 0;
-                    while(this.foreignKey._table.columns.has(this.foreignKey.constraint_names[0].join("_") + ((i!==0) ? i: ""))) {
-                        i++;
+                    /**
+                     * make sure that this name is unique:
+                     * 1. table doesn't have any columns with that name.
+                     * 2. there's no foreign key with that name.
+                     **/ 
+                    var i = 0,
+                        table = this.foreignKey._table, 
+                        name = this.foreignKey.constraint_names[0].join("_");
+                    while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
+                        name += ++i;
                     }
-                    this._name = this.foreignKey.constraint_names[0].join("_") + ((i!==0) ? i: "");
+                    this._name = name;
                 }
             }
             return this._name;
@@ -2249,6 +2293,9 @@ var ERMrest = (function(module) {
             return this._inputDisabled;
         },
 
+        /**
+         * @type {boolean}
+         */
          get sortable() {
             if (this._sortable === undefined) {
                 this._determieSortable();
@@ -2256,16 +2303,17 @@ var ERMrest = (function(module) {
             return this._sortable; 
         },
 
-        get _sortObject() {
-            if (this._sortObject_cached) {
+        // returns a list of columns
+        get _sortColumns() {
+            if (this._sortColumns_cached) {
                 this._determieSortable();
             }
-            return this._sortObject_cached;
+            return this._sortColumns_cached;
         },
 
         get _display() {
             if (this._display_cached === undefined) {
-                this._display_cached = isPseudo ? this.foreignKey._getDisplay(this._context) : this._base._getDisplay(this._context);
+                this._display_cached = this.isPseudo ? this.foreignKey._getDisplay(this._context) : this._base._getDisplay(this._context);
             }
             return this._display_cached;
         },
@@ -2389,27 +2437,28 @@ var ERMrest = (function(module) {
         
         _determieSortable: function () {
             // TODO should check the columnnames in _getDisplay of col and fk
-            this._sortObject = [];
+            this._sortColumns_cached = [];
             this._sortable = false;
             
             if (this.isPseudo) {
-                if (this._display.columnOrder !== undefined) {
-                    this._sortObject = this._display.columnOrder;
+                if (this._display.columnOrder.length !== 0) {
+                    this._sortColumns_cached = this._display.columnOrder;
                     this._sortable = true;
                 } else if (this.reference.display._rowOrder !== undefined) {
                     var rowOrder = this.reference.display._rowOrder;
                     for (var i = 0; i < rowOrder.length; i++) {
-                        this._sortObject.push(rowOrder[i].column);
+                        try{
+                            this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
+                        } catch(exception) {}
                     }
-                    this._sortObject = rowOrder;
                     this._sortable = true;
                 }
             } else {
-                if (this._display.columnOrder !== undefined) {
-                    this._sortObject = this._display.columnOrder;
+                if (this._display.columnOrder.length !== 0) {
+                    this._sortColumns_cached = this._display.columnOrder;
                     this._sortable = true;
                 } else if (!this._display.isMarkdownPattern && !this._display.isMarkdown) {
-                    this._sortObject.push(this._base.name);
+                    this._sortColumns_cached.push(this._base);
                     this._sortable = true;
                 }
             }
