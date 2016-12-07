@@ -102,6 +102,11 @@ var ERMrest = (function(module) {
         return new Reference(location, catalog);
     };
 
+    // NOTE: This function is only being used in unit tests.
+    module._createPage = function (reference, data, hasPrevious, hasNext) {
+        return new Page(reference, data, hasPrevious, hasNext);
+    };
+
     /**
      * Throws a 'not implemented' error.
      *
@@ -1586,10 +1591,14 @@ var ERMrest = (function(module) {
          */
         this._linkedData = [];
 
-        if (this._ref._table.foreignKeys.length() > 0) { // attributegroup output
+        // linkedData will include foreign key data
+        if (this._ref._table.foreignKeys.length() > 0) {
+
+            var fks = reference._table.foreignKeys.all(), i, j;
+
             try {
+                // the attributegroup output
                 this._data = [];
-                var i, j, fks = reference._table.foreignKeys.all();
                 for (i = 0; i < data.length; i++) {
                     this._data.push(data[i].M[0]);
 
@@ -1598,11 +1607,32 @@ var ERMrest = (function(module) {
                         this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
                     }
                 }
-            } catch(exception) { // could not find the expected aliases
-                this._linkedData = [];
-                this._data = data;
             }
-        } else { // entity output
+            // could not find the expected aliases
+            catch(exception) {
+                var fkName, col, tempData, k;
+
+                this._data = data;
+
+                // add the main table data to linkedData
+                this._linkedData = [];
+                for (i = 0; i < data.length; i++) {
+                    tempData = {};
+                    for (j = 0; j < fks.length; j++) {
+                        fkName = fks[j].constraint_names[0].join(":");
+                        tempData[fkName] = {};
+
+                        for (k = 0; k < fks[j].colset.columns.length; k++) {
+                            col = fks[j].colset.columns[k];
+                            tempData[fkName][fks[j].mapping.get(col).name] = data[i][col.name];
+                        }
+                    }
+                    this._linkedData.push(tempData);
+                }
+            }
+        } 
+        // entity output (linkedData is empty)
+        else {
             this._data = data;
         }
 
@@ -1977,7 +2007,7 @@ var ERMrest = (function(module) {
                 this._values = [];
                 this._isHTML = [];
 
-                var column;
+                var column, presenation;
 
                 // If context is entry/edit
                 if (this._pageRef._context === module._contexts.EDIT) {
@@ -1985,16 +2015,13 @@ var ERMrest = (function(module) {
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
-                        this._isHTML[i] = false;
                         if (column.isPseudo) {
-                            if (!this._linkedData || !this._linkedData[column._constraintName] || Object.keys(this._linkedData[column._constraintName]).length === 0) {
-                                this._values[i] = column._getNullValue(this._pageRef._context);
-                            } else {
-                                this._values[i] = module._generateRowName(column.table, this._pageRef._context, this._linkedData[column._constraintName]);
-                                this._isHTML[i] = true;
-                            }
+                            presenation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            this._values[i] = presenation.value;
+                            this._isHTML[i] = presenation.isHTML;
                         } else {
                             this._values[i] = this._data[column.name];
+                            this._isHTML[i] = false;
                         }
                     }
                 } else {
@@ -2264,26 +2291,56 @@ var ERMrest = (function(module) {
                 return this._base.formatPresentation(data, options);
             }
 
-            var value, caption;
-
             // if data is empty
             if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
                 return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
             }
 
+            var shortestKey = this.table.shortestKey, // the shortest key of the table
+                fkKey = this.foreignKey.key.colset.columns, // the key that creates this PseudoColumn
+                key, // the key that is going to be used in href
+                caption, value, i; 
+
+            // check if we have data for the given columns
+            var hasData = function (cols) {
+                for (var i = 0; i < cols.length; i++) {
+                    if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            // if any of fk key columns don't have data, this link is not valid.
+            if (!hasData(fkKey)) {
+                return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
+            }
+
+            // use the shortest key if it has data (for shorter url).
+            key = hasData(shortestKey) ? shortestKey: fkKey;
+
             // use row name as the caption
             caption = module._generateRowName(this.table, options ? options.context : undefined, data);
 
-            // if caption has a link, don't add the link.
-            if (caption.match(/<a/)) {
+            // use fk key for displayname: "col_1:col_2:col_3" 
+            if (caption.trim() === '') {
+
+                var keyValues = [];
+                for (i = 0; i < fkKey.length; i++) {
+                    keyValues.push(fkKey[i].formatvalue(data[fkKey[i].name], {context: options ? options.context : undefined}));
+                }
+                caption = keyValues.join(":");
+            }
+
+            // if caption has a link, or context is EDIT: don't add the link.
+            if (caption.match(/<a/) || (options && options.context === module._contexts.EDIT)) {
                 value = caption;
             }
             // create the link using reference.
             else {
-
-                // create a reference to just this PseudoColumn to use for url
-                var keyPair = "", key = this.table.shortestKey, col;
-                for (var i = 0; i < key.length; i++) {
+                // create a url that points to the current ReferenceColumn
+                var keyPair = "", col;
+                for (i = 0; i < key.length; i++) {
                     col = key[i].name;
                     keyPair +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
                     if (i != key.length - 1) {
@@ -2292,8 +2349,8 @@ var ERMrest = (function(module) {
                 }
                 var url = [this.reference.location.compactUri, keyPair].join("/");
 
-                var ref = module._createReference(module._parse(url), this.table.schema.catalog);
-
+                // create a reference to just this PseudoColumn to use for url
+                var ref = new Reference(module._parse(url), this.table.schema.catalog);
 
                 value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
             }
@@ -2328,7 +2385,7 @@ var ERMrest = (function(module) {
 
                     // if all GENERATED
                     return {
-                        message: "Automatically generated by the server"
+                        message: "Automatically generated"
                     };
 
                 } else if (context == module._contexts.EDIT) {
