@@ -53,7 +53,51 @@ exports.execute = function (options) {
             "id_2": "3"
         };
 
-        var detailedRefExpectedValue = [
+        var referenceRawData = [   
+            {
+                "id": "1",
+                "col_1": "9000",
+                "col_2": null,
+                "col_3": "4000",
+                "col_4": "4001",
+                "col_5": "4002",
+                "col_6": "4003",
+                "col_7": null,
+                "reference_schema:outbound_fk_7": "12"
+            },
+            {
+                "id": "2",
+                "col_1": "9001",
+                "col_2": null,
+                "col_3": "4000",
+                "col_4": "4002",
+                "col_5": "4003",
+                "col_6": "4004",
+                "col_7": null,
+                "reference_schema:outbound_fk_7": "13"
+            }
+        ];
+
+        var detailedRefExpectedPartialValue = [ 
+            '1', 
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">9000</a>', 
+            null, 
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">4000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">4000</a>', 
+            '4000', 
+            '4001', 
+            '4002', 
+            '4003',
+             null, 
+             '12', 
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>', 
+             null
+        ];
+
+        var detailedRefExpectedLinkedValue = [
             '1',
             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>',
             null,
@@ -72,7 +116,21 @@ exports.execute = function (options) {
             null
         ];
 
-        var entryEditRefExpectedValue = [
+        var entryEditRefExpectedPartialValue = [
+            '1', 
+            '9000', 
+            '', 
+            '4000', 
+            '4000', 
+            '12', 
+            '4000 , 4001', 
+            '4000:4003', 
+            '4000 , 4002', 
+            '4001 , 4002', 
+            '' // 
+        ];
+
+        var entryEditRefExpectedLinkedValue = [
             '1',
             'Hank',
             '',
@@ -327,6 +385,16 @@ exports.execute = function (options) {
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">' + data.id + '</a>');
                     });
 
+                    it('should use the key when only the main table entries are available in data.', function () {
+                        var partialData = {
+                            "id_1": "col_3_data", "id_2": "col_6_data"
+                        };
+                        var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/' +
+                                            'id_1=' + partialData["id_1"]+ '&id_2='  +partialData["id_2"] + '">' + partialData["id_1"] + ":" + partialData["id_2"] + '</a>';
+                        val = detailedColumns[12].formatPresentation(partialData).value;
+                        expect(val).toEqual(expectetValue);
+                    });
+
                     it('should use the show-nulls annotation, when the data is null.', function () {
                         val = detailedColumns[14].formatPresentation({}, {
                             context: "detailed"
@@ -411,27 +479,42 @@ exports.execute = function (options) {
             
         });
 
-        describe('.values, ', function () {
-            it('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
-                detailedRef.read(limit).then(function (page) {
-                    var tuples = page.tuples;
-                    expect(tuples[0].values).toEqual(detailedRefExpectedValue);
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
+        describe('tuple.values, ', function () {
+            describe('when linked data is available, ', function () {
+                it('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
+                    detailedRef.read(limit).then(function (page) {
+                        var tuples = page.tuples;
+                        expect(tuples[0].values).toEqual(detailedRefExpectedLinkedValue);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+                
+                it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function (done) {
+                    entryEditRef.read(limit).then(function (page) {
+                        var tuples = page.tuples;
+                        expect(tuples[0].values).toEqual(entryEditRefExpectedLinkedValue);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });;
                 });
             });
 
-            it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function (done) {
-                entryEditRef.read(limit).then(function (page) {
-                    var tuples = page.tuples;
-                    expect(tuples[0].values).toEqual(entryEditRefExpectedValue);
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
-                });;
+            describe('in absence of linked data, ', function () {
+                var page;
+                it('should return a link for PseudoColumns and value for Columns; and respect null values.', function () {
+                    page = options.ermRest._createPage(detailedRef, referenceRawData, false, false);
+                    expect(page.tuples[0].values).toEqual(detailedRefExpectedPartialValue);
+                });
+                
+                it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function () {
+                    page = options.ermRest._createPage(entryEditRef, referenceRawData, false, false);
+                    expect(page.tuples[0].values).toEqual(entryEditRefExpectedPartialValue);
+                }); 
             });
         });
 
