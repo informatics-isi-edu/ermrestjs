@@ -307,8 +307,6 @@ var ERMrest = (function(module) {
                     colFks,
                     col, fk, i, j;
 
-                var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
-
                 // should hide the origFKR in case of inbound foreignKey
                 var hideFKR = function (fkr) {
                     return hasOrigFKR && fkr == hiddenFKR;
@@ -387,7 +385,7 @@ var ERMrest = (function(module) {
                                     }
                                 } else { // composite FKR
                                     // add the column if context is not entry and avoid duplicate
-                                    if (!colAdded && entryContexts.indexOf(this._context) === -1) {
+                                    if (!colAdded && !module._isEntryContext(this._context)) {
                                         colAdded = true;
                                         this._referenceColumns.push(new ReferenceColumn(this, col));
                                     }
@@ -1382,9 +1380,9 @@ var ERMrest = (function(module) {
 
         _contextualize: function(context) {
             var source;
-            var entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
+            
             // if this is a related association table and context is edit, contextualize based on the association table.
-            if (this._reference._derivedAssociationRef && entryContexts.indexOf(context) != -1) {
+            if (this._reference._derivedAssociationRef && module._isEntryContext(context)) {
                 source = this._reference._derivedAssociationRef;
             } else {
                 source = this._reference;
@@ -2009,8 +2007,8 @@ var ERMrest = (function(module) {
 
                 var column, presenation;
 
-                // If context is entry/edit
-                if (this._pageRef._context === module._contexts.EDIT) {
+                // If context is entry
+                if (module._isEntryContext(his._pageRef._context)) {
 
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
