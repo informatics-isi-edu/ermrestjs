@@ -2251,6 +2251,15 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc Returns the default value (or function) for this column
+         */
+         get default() {
+            if (typeof foreignKey === 'undefined' || !foreignKey.simple) {
+                return this._base.default;
+            }
+         },
+
+        /**
          * @desc Documentation for this reference-column
          * @type {string}
          */

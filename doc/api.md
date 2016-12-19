@@ -269,6 +269,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+        * [.default](#ERMrest.ReferenceColumn+default)
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
@@ -2459,6 +2460,7 @@ and therefore an asynchronous operation that returns a promise.
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+    * [.default](#ERMrest.ReferenceColumn+default)
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
@@ -2518,6 +2520,12 @@ Preferred display name for user presentation only.
 <a name="ERMrest.ReferenceColumn+nullok"></a>
 
 #### referenceColumn.nullok : <code>Boolean</code>
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+default"></a>
+
+#### referenceColumn.default
+Returns the default value (or function) for this column
+
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+comment"></a>
 
