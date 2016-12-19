@@ -8,8 +8,8 @@ exports.execute = function (options) {
             var options = {numDecDigits: 4};
             expect(printFloat(null)).toBe('');
             expect(printFloat(1234.0, options)).toBe('1,234.0000');
-            expect(printFloat(23.0)).toBe('23.00');
-            expect(printFloat(.000)).toBe('0.00');
+            expect(printFloat(23.0)).toBe('23.0000');
+            expect(printFloat(.000)).toBe('0.0000');
         });
 
         it('printBoolean() should format booleans correctly.', function () {
@@ -75,23 +75,23 @@ exports.execute = function (options) {
                 .toBe('<p><img src="random_image.com" alt="a random image"></p>\n');
             expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n');
             expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n');
-            
+
             // Check for iframe ith height and width
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
                 .toBe('<figure class="embed-block"><figcaption class="embed-caption">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
-            
+
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
                 .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
-        
+
             // Check for link tag with download attribute
             expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
                 .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n');
-            
+
             // Check for image tag with size
             expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
                 .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
-            
+
             // Check for thumbnail with link to original image
             expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
                 .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n');
@@ -108,7 +108,7 @@ exports.execute = function (options) {
             // Check for dropdown tag
             var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
             var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
-            expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);  
+            expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
 
             expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
 
@@ -221,8 +221,8 @@ exports.execute = function (options) {
             }];
 
         it('module._renderTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
-            var printMarkdown = formatUtils.printMarkdown;  
-            
+            var printMarkdown = formatUtils.printMarkdown;
+
             templateCases.forEach(function(ex) {
                 var template = module._renderTemplate(ex.template, obj);
                 expect(template).toBe(ex.after_mustache);

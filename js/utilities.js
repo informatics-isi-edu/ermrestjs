@@ -575,7 +575,7 @@ var ERMrest = (function(module) {
             if (options.numDecDigits) {
                 value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
             } else {
-                value = value.toFixed(2);
+                value = value.toFixed(4);
             }
 
             // Remove leading zeroes
@@ -1195,6 +1195,10 @@ var ERMrest = (function(module) {
 
         return content;
     };
+    
+    module._isEntryContext = function(context) {
+        return module._entryContexts.indexOf(context) !== -1;
+    };
 
     /**
      * @desc List of annotations that ermrestjs supports.
@@ -1234,6 +1238,8 @@ var ERMrest = (function(module) {
     });
 
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+
+    module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
 
     /*
      * @desc List of display type for table-display annotation
