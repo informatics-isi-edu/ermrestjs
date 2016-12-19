@@ -5,6 +5,7 @@ exports.execute = function (options) {
             tableName = "reference_table_outbound_fks",
             entityId = 1,
             limit = 1,
+            entryContext = "entry",
             createContext = "entry/create",
             editContext = "entry/edit",
             detailedContext = "detailed";
@@ -144,6 +145,14 @@ exports.execute = function (options) {
             ''
         ];
 
+        var entryCreateRefExpectedLinkedValue = [ 
+            'Hank', '', '4000 , 4002', '1' 
+        ];
+        
+        var entryCreateRefExpectedPartialValue = [
+            '9000', '', '4000 , 4002', '1'
+        ];
+
         /**
          * This is the structure of the used table:
          * reference_table_outbound_fks:
@@ -207,9 +216,9 @@ exports.execute = function (options) {
          *  compact/select: has all of the columns in visible-columns + has some foreign keys too
          *  detailed: doesn't have visible-columns
          *  entry: doesn't have visible-columns
-         *  entry/create: has visible-columns with invalid names
+         *  entry: has visible-columns with invalid names
          *  entry/edit: has all of the columns in visible-column + has some foreign keys too
-         * 
+         *  entry/create: has all of the columns in visible-column + has some foreign keys too
          */
 
         var reference, compactRef, compactBriefRef, compactSelectRef, detailedRef, entryRef, entryCreateRef, entryEditRef, detailedColumns, compactSelectColumns;
@@ -492,15 +501,24 @@ exports.execute = function (options) {
                     });
                 });
                 
-                it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function (done) {
+                it('should not return a link for PseudoColumns and just return row name in entry contexts; and respect null values.', function (done) {
                     entryEditRef.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(entryEditRefExpectedLinkedValue);
-                        done();
+                        
+                        entryCreateRef.read(limit).then(function (page) {
+                            var tuples = page.tuples;
+                            expect(tuples[0].values).toEqual(entryCreateRefExpectedLinkedValue);
+                            done();
+                        }, function (err) {
+                            console.dir(err);
+                            done.fail();
+                        });
+
                     }, function (err) {
                         console.dir(err);
                         done.fail();
-                    });;
+                    });
                 });
             });
 
@@ -511,9 +529,12 @@ exports.execute = function (options) {
                     expect(page.tuples[0].values).toEqual(detailedRefExpectedPartialValue);
                 });
                 
-                it('should not return a link for PseudoColumns and just return row name in entry/edit context; and respect null values.', function () {
+                it('should not return a link for PseudoColumns and just return row name in entry contexts; and respect null values.', function () {
                     page = options.ermRest._createPage(entryEditRef, referenceRawData, false, false);
                     expect(page.tuples[0].values).toEqual(entryEditRefExpectedPartialValue);
+
+                    page = options.ermRest._createPage(entryCreateRef, referenceRawData, false, false);
+                    expect(page.tuples[0].values).toEqual(entryCreateRefExpectedPartialValue);
                 }); 
             });
         });

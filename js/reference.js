@@ -2331,7 +2331,7 @@ var ERMrest = (function(module) {
             }
 
             // if caption has a link, or context is EDIT: don't add the link.
-            if (caption.match(/<a/) || (options && options.context === module._contexts.EDIT)) {
+            if (caption.match(/<a/) || (options && module._isEntryContext(options.context)) ) {
                 value = caption;
             }
             // create the link using reference.
