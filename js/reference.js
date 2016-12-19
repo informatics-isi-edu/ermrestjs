@@ -2008,7 +2008,7 @@ var ERMrest = (function(module) {
                 var column, presenation;
 
                 // If context is entry
-                if (module._isEntryContext(his._pageRef._context)) {
+                if (module._isEntryContext(this._pageRef._context)) {
 
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
