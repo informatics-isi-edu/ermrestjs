@@ -2117,8 +2117,6 @@ var ERMrest = (function(module) {
 
         this._base = column;
 
-        this.default = column.default;
-
         /**
          * @type {boolean}
          * @desc indicates this represents is a PseudoColumn or a Column.
@@ -2254,8 +2252,10 @@ var ERMrest = (function(module) {
          * @desc Returns the default value (or function) for this column
          */
          get default() {
-            if (typeof foreignKey === 'undefined' || !foreignKey.simple) {
+            if (!this.isPseudo) {
                 return this._base.default;
+            } else {
+                // TODO handle the case for pseudo columns (foreign keys)
             }
          },
 
