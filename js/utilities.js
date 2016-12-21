@@ -1134,7 +1134,17 @@ var ERMrest = (function(module) {
         options = options || {};
 
         var obj = {};
-        module._clone(obj, keyValues);
+
+        if (keyValues) {
+            for (var k in keyValues) {
+                // Replace "." with "_" to avoid problems with templating
+                var newKey = k.replace(/\./g,"_");
+
+                obj[newKey] = keyValues[k];
+            }
+
+        }
+
 
         if (typeof template !== 'string') return null;
 
@@ -1178,7 +1188,7 @@ var ERMrest = (function(module) {
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     // If value for the key is null or undefined then return null
-                    if (keyValues[key] === null || keyValues[key] === undefined) {
+                    if (obj[key] === null || obj[key] === undefined) {
                        return null;
                     }
                 }

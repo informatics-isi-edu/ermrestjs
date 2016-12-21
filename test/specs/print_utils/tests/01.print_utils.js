@@ -151,7 +151,7 @@ exports.execute = function (options) {
         });
 
         var obj = {
-            str: "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
+            "str.witha.": "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
             "m1": "[a markdown link](http://example.com/foo)",
             "m2": "[a markdown link](http://example.com/foo/\\(a,b\\))",
             "u2": "http://example.com/foo/(a,b)",
@@ -199,22 +199,22 @@ exports.execute = function (options) {
               "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
               "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
             }, {
-                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{str}})",
+                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
                 "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
                 "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                 "note": "With no encoding and escaping. Should give malformed HTML"
             },{
-                "template" : "[{{str}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str}}}{{/encode}})",
+                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str_witha_}}}{{/encode}})",
                 "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
                 "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                 "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
             },{
-                "template" : "[{{#escape}}{{{str}}}{{/escape}}](https://dev.isrd.isi.edu/key={{str}})",
+                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
                 "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
                 "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                 "note": "With escaping but no encoding. Should give malformed HTML"
             },{
-                "template" : "[{{#escape}}{{{str}}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str}}}{{/encode}})",
+                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str_witha_}}}{{/encode}})",
                 "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
                 "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                 "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
