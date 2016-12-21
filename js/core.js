@@ -1679,7 +1679,7 @@ var ERMrest = (function (module) {
 
             // If column doesn't has column-display annotation and is not of type markdown
             // then return data as it is
-            if (!display.isMarkdownPattern && !display.isMarkdown) {
+            if (!display.isMarkdownPattern && this.type.name != 'markdown') {
                 return { isHTML: false, value: data };
             }
 
@@ -1839,6 +1839,7 @@ var ERMrest = (function (module) {
             return false;
         },
 
+        // get the display object
         _getDisplay: function (context) {
             if (!(context in this._display)) {
                 var annotation = -1, columnOrder = [];
@@ -1849,21 +1850,36 @@ var ERMrest = (function (module) {
                 if (Array.isArray(annotation.column_order)) {
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
-                            // TODO column-order is just a list of columns
                             columnOrder.push(this.table.columns.get(annotation.column_order[i]));
                         } catch(exception) {}
                     }
+                } else {
+                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
-                    "isMarkdown": this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
                     "columnOrder": columnOrder
                 };
             }
             return this._display[context];
         },
+        
+        // get the sort columns using the context
+        _getSortColumns: function (context) {
+            var display = this._getDisplay(context);
+
+            if (display.columnOrder === false) {
+                return undefined;
+            }
+
+            if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                return display.columnOrder;
+            }
+
+            return [this];
+        }
 
     };
 
@@ -2628,12 +2644,15 @@ var ERMrest = (function (module) {
                 }
 
                 if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             // TODO column-order is just a list of columns
                             columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
                         } catch(exception) {}
                     }
+                } else {
+                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {

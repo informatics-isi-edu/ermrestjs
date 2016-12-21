@@ -2549,6 +2549,21 @@ object: input msut be disabled (show .message to user)
 <a name="ERMrest.ReferenceColumn+sortable"></a>
 
 #### referenceColumn.sortable : <code>boolean</code>
+Heuristics are as follows:
+
+(first applicable rule from top to bottom)
+
+- column_order = false -> disable sort.
+
+- PseudoColumn
+     - column_order defined -> use it.
+     - table has row_order -> use it.
+     - simple fk -> use the column's
+     - disable it
+- Column:
+     - column_order defined -> use it.
+     - use column actual value.
+
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 

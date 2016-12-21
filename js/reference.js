@@ -737,103 +737,120 @@ var ERMrest = (function(module) {
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-
                 var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
-                    uri = this._location.compactUri,
-                    sortMap = {}, 
-                    sortObject, 
-                    col, i, j;
+                    _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
+                    sortMap = {}, // maps an alias to PseudoColumn, used for sorting
+                    sortObject,  // the sort that will be accessible by this._location.sortObject
+                    sortCols,
+                    col, i, j, k;
 
-
-                // check the sort object (has the correct columns and map the columns as needed)
+                /** Check the sort object. Does not change the `this._location` object.
+                 *   - Throws an error if the column doesn't exist or is not sortable.
+                 *   - maps the sorting to its sort columns.
+                 *       - for columns it's straighforward and uses the actual column name.
+                 *       - for PseudoColumns we need
+                 *           - A new alias: F# where the # is a positive integer.
+                 *           - The sort column name must be the "foreignkey_alias:column_name". 
+                 *
+                 * Assumption: there is no column/alias with `F#` name where # is a positive integer.
+                 * */
                 if (hasSort) {
-                    var newSorObject = [], colName;
                     sortObject = this._location.sortObject;
 
-                    for (i = 0; i < sortObject.length; i++) {
-                        for (j = 0; j < this.columns.length; j++) { //TODO better performance
+                    var foreignKeys = this._table.foreignKeys,
+                        colName,
+                        fkIndex;
+
+                    for (i = 0, k = 1; i < sortObject.length; i++) {
+                        
+                        // find the column in ReferenceColumns
+                        for (j = 0; j < this.columns.length; j++) { //TODO better performance 
                             if (this.columns[j].name == sortObject[i].column) {
                                 col = this.columns[j];
                                 break;
                             }
                         }
 
-                        if (col === undefined || !col.sortable) continue;
+                        // column is either invalid or not in visible columns
+                        if (col === undefined ) {
+                            col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
+                            sortCols = col._getSortColumns(this._context);
+                        } 
+                        // column is in visible columns and sortable
+                        else if (col.sortable) {
+                            sortCols = col._sortColumns;
+                        }
 
-                        for (j = 0; j < col._sortColumns.length; j++) {
+                        // column is not sortable
+                        if (typeof sortCols === 'undefined') {
+                            throw new module.BadRequestError("", "Column '" + sortObject[i].column + "' is not sortable.");    
+                        }
+
+                        // use the sort columns instead of the actual column.
+                        for (j = 0; j < sortCols.length; j++) {
                             if (col.isPseudo) {
-                                //TODO better aliasName
-                                colName = [col.name, col._sortColumns[j].name].join("_");
-                                sortMap[colName] = col._sortColumns[j].toString();
+                                fkIndex = foreignKeys.all().indexOf(col.foreignKey);
+                                colName = "F" + (foreignKeys.length() + k++);
+                                sortMap[colName] = ["F" + (fkIndex+1) ,sortCols[j].name].join(":");
                             } else {
-                                colName = col._sortColumns[j].name;
+                                colName = sortCols[j].name;
                             }
 
-                            newSorObject.push({
+                            _modifiedSortObject.push({
                                 "column": colName,
                                 "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
                             });
                          }
                     }
-                    this._location.sortObject = newSorObject;
                 }
-
-                // if no sorting provided, use schema defined sort if that's present
-                // If neither one present, use shortestkey
-                var addkey = true;
-                if (!hasSort) {
-                    if (this.display._rowOrder) {
-                        this._location.sortObject = this.display._rowOrder;
-                        addkey = true;
-                    } else {
-                        // use shortest key as sort
-                        sortObject = [];
-                        for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                            col = this._shortestKey[sk].name;
-                            sortObject.push({"column":col, "descending":false});
-                        }
-                        this._location.sortObject = sortObject; // this will update location.sort and all the uri and path
-                        addkey = false;
-                    }
-
+                // use row-order if sort was not provided
+                else if (this.display._rowOrder){
+                    sortObject = this.display._rowOrder;
                 }
-
-                // ermrest requires key columns to be in sort param
-                // add them if they are missing
-                if (addkey) {
-                    var sortCols = this._location.sortObject.map(function(sort) {
-                        return sort.column;});
-                    sortObject = this._location.sortObject;
+               
+                // ermrest requires key columns to be in sort param for paging
+                if (typeof sortObject !== 'undefined') {
+                    sortCols = sortObject.map( function(sort) {return sort.column;});
                     for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
-                        if (!sortCols.includes(col)) {
+                        if (sortCols.indexOf(col) === -1) {
                             sortObject.push({"column": col, "descending":false}); // add key to sort
+                            _modifiedSortObject.push({"column": col, "descending":false});
                         }
                     }
-                    this._location.sortObject = sortObject;
+                } else { // no sort provieded: use shortest key for sort
+                    sortObject = [];
+                    for (var sk = 0; sk < this._shortestKey.length; sk++) {
+                        col = this._shortestKey[sk].name;
+                        sortObject.push({"column":col, "descending":false});
+                    }
                 }
 
-                /*
-                * Change api to attributegroup for retrieving the foreign key data
-                * This will just affect the http request and not this._location
-                *
-                * NOTE:
-                * This piece of code is dependent on the same assumptions as the current parser, which are:
-                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
-                *   2. Filter comes before the link syntax.
-                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
-                */
+                // this will update location.sort and all the uri and path
+                this._location.sortObject = sortObject;
+
+                var uri = this._location.compactUri; // used for the http request
+
+                /** Change api to attributegroup for retrieving the foreign key data
+                 * This will just affect the http request and not this._location
+                 *
+                 * NOTE:
+                 * This piece of code is dependent on the same assumptions as the current parser, which are:
+                 *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
+                 *   2. There is no column with `M` and `F#` (where # is a positive integer) name.
+                 *   3. Filter comes before the link syntax.
+                 *   4. There is no trailing `/` in uri (as it will break the ermrest too).
+                 * */
                 if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.compactPath,
-                        parts,
                         tableIndex = 0,
                         fkList = "",
-                        linking,
                         sortColumn,
-                        keys,
-                        k;
-
+                        addedCols,
+                        linking,
+                        parts;
+                        
                     // add M alias to current table
                     if (this._location.searchFilter) { // remove search filter
                         compactPath = compactPath.replace("/" + this._location.searchFilter, "");
@@ -861,36 +878,43 @@ var ERMrest = (function(module) {
                         // F2:array(F2:*),F1:array(F1:*)
                         fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
                     }
+                    
+                    // add sort columns (it will include the key)
+                    if (hasSort) {
+                        sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
+                    } else {
+                        sortCols = sortObject.map(function(sort) {return sort.column;});
+                    }
 
-
-                    // add keys
-                    keys = this._shortestKey.map(function(col){
-                        return col.name;
-                    });
-
-                    // add sort columns
-                    for(k = 0; k < this._location.sortObject.length; k++) {
-                        sortColumn = this._location.sortObject[k];
-                        if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
-                            if (sortColumn.column in sortMap) {
-                                keys.push(sortColumn.column + ":=" + sortMap[sortColumn.column]);
-                            } else {
-                                keys.push(sortColumn.column);
-                            }
+                    addedCols = [];
+                    for(k = 0; k < sortCols.length; k++) {
+                        sortColumn = sortCols[k];
+                        if (sortColumn in sortMap) {
+                            // sort column has been created via PseudoColumn, so we should use a new alias
+                            addedCols.push(module._fixedEncodeURIComponent(sortColumn) + ":=" + module._fixedEncodeURIComponent(sortMap[sortColumn]));
+                        } else {
+                            addedCols.push(module._fixedEncodeURIComponent(sortColumn));
                         }
                     }
 
-                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;
+                    uri += addedCols.join(",") + ";M:=array(M:*)," + fkList;
                 }
 
                 // insert @sort()
-                if (this._location.sort)
+                if (hasSort) { //TODO better implementation
+                    // if sort is modified, we should use the modified sort Object for uri,
+                    // and the actual sort object for this._location.sortObject
+                    this._location.sortObject = _modifiedSortObject;
                     uri = uri + this._location.sort;
-
+                    this._location.sortObject = sortObject;
+                } else if (this._location.sort) {
+                    uri = uri + this._location.sort;
+                }
+                
                 // insert paging
-                if (this._location.paging)
+                if (this._location.paging) {
                     uri = uri + this._location.paging;
-
+                }
 
                 // add limit
                 uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
@@ -1658,7 +1682,7 @@ var ERMrest = (function(module) {
                 for (i = 0; i < data.length; i++) {
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j].constraint_names[0].join(":");
+                        fkName = fks[j].constraint_names[0].join("_");
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -2319,6 +2343,21 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Heuristics are as follows:
+         * 
+         * (first applicable rule from top to bottom)
+         * 
+         * - column_order = false -> disable sort.
+         * 
+         * - PseudoColumn
+         *      - column_order defined -> use it.
+         *      - table has row_order -> use it.
+         *      - simple fk -> use the column's
+         *      - disable it
+         * - Column:
+         *      - column_order defined -> use it.
+         *      - use column actual value.
+         * 
          * @type {boolean}
          */
          get sortable() {
@@ -2328,14 +2367,30 @@ var ERMrest = (function(module) {
             return this._sortable; 
         },
 
-        // returns a list of columns
+        /**
+         * @private
+         * @desc A list of columns that will be used for sorting
+         * @type {Array}
+         */
         get _sortColumns() {
-            if (this._sortColumns_cached) {
+            if (this._sortColumns_cached === undefined) {
                 this._determieSortable();
             }
             return this._sortColumns_cached;
         },
 
+        /**
+         * @private
+         * @desc
+         * An object which contains column display properties
+         * The properties are:
+         * 
+         *  - `columnOrder`: list of columns that this column should be sorted based on
+         *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
+         *  - `markdownPattern`: string|undefined
+         * 
+         * @type {Object}
+         */
         get _display() {
             if (this._display_cached === undefined) {
                 this._display_cached = this.isPseudo ? this.foreignKey._getDisplay(this._context) : this._base._getDisplay(this._context);
@@ -2485,21 +2540,30 @@ var ERMrest = (function(module) {
             return this._base.getInputDisabled(context);
         },
 
-        // TODO can change the function (context)
         _getNullValue: function (context) {
             return this._base._getNullValue(context);
         },
         
         _determieSortable: function () {
-            // TODO should check the columnnames in _getDisplay of col and fk
+            var display = this._display,
+                useColumn = !this.isPseudo,
+                baseCol = this._base;
+
             this._sortColumns_cached = [];
             this._sortable = false;
+
+            // disable the sort
+            if (display.columnOrder === false) return;
             
             if (this.isPseudo) {
-                if (this._display.columnOrder.length !== 0) {
-                    this._sortColumns_cached = this._display.columnOrder;
+                // use the foreignKey column_order
+                if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                    this._sortColumns_cached = display.columnOrder;
                     this._sortable = true;
-                } else if (this.reference.display._rowOrder !== undefined) {
+                    return;
+                }
+                
+                if (this.reference.display._rowOrder !== undefined) {
                     var rowOrder = this.reference.display._rowOrder;
                     for (var i = 0; i < rowOrder.length; i++) {
                         try{
@@ -2507,13 +2571,20 @@ var ERMrest = (function(module) {
                         } catch(exception) {}
                     }
                     this._sortable = true;
+                } else if (this.foreignKey.simple) {
+                    baseCol = this.foreignKey.mapping.get(this._base);
+                    useColumn = true;
                 }
-            } else {
-                if (this._display.columnOrder.length !== 0) {
-                    this._sortColumns_cached = this._display.columnOrder;
-                    this._sortable = true;
-                } else if (!this._display.isMarkdownPattern && !this._display.isMarkdown) {
-                    this._sortColumns_cached.push(this._base);
+            }
+
+            // its an actual column or a simple foreign key
+            if (useColumn) {
+                // use the column column_order
+                this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined
+
+                if (typeof this._sortColumns_cached === 'undefined') {
+                    this._sortColumns_cached = [];
+                } else {
                     this._sortable = true;
                 }
             }

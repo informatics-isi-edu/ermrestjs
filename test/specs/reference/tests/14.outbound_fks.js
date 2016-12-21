@@ -64,7 +64,7 @@ exports.execute = function (options) {
                 "col_5": "4002",
                 "col_6": "4003",
                 "col_7": null,
-                "reference_schema:outbound_fk_7": "12"
+                "reference_schema_outbound_fk_7": "12"
             },
             {
                 "id": "2",
@@ -75,7 +75,7 @@ exports.execute = function (options) {
                 "col_5": "4003",
                 "col_6": "4004",
                 "col_7": null,
-                "reference_schema:outbound_fk_7": "13"
+                "reference_schema_outbound_fk_7": "13"
             }
         ];
 
