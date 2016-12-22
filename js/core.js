@@ -2639,7 +2639,7 @@ var ERMrest = (function (module) {
             if (!(context in this._display)) {
                 var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
-                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).get("display"));
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
                     
                 }
 

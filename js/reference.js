@@ -783,7 +783,7 @@ var ERMrest = (function(module) {
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.BadRequestError("", "Column '" + sortObject[i].column + "' is not sortable.");    
+                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");    
                         }
 
                         // use the sort columns instead of the actual column.
@@ -2360,7 +2360,7 @@ var ERMrest = (function(module) {
          * 
          * @type {boolean}
          */
-         get sortable() {
+        get sortable() {
             if (this._sortable === undefined) {
                 this._determieSortable();
             }   
