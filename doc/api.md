@@ -2133,9 +2133,14 @@ reference.read(10).then(
 ```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid, or
-other errors TBD (TODO document other errors here).  
+**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results.  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid.
+- [BadRequestError](#ERMrest.BadRequestError) if asks for sorting based on columns that are not sortable.
+- [NotFoundError](#ERMrest.NotFoundError) if asks for sorting based on columns that are not valid.
+other errors TBD (TODO document other errors here).
+
 
 | Param | Type | Description |
 | --- | --- | --- |

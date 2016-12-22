@@ -2647,7 +2647,7 @@ var ERMrest = (function (module) {
                     columnOrder = [];
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
-                            // TODO column-order is just a list of columns
+                            // column-order is just a list of column names
                             columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
                         } catch(exception) {}
                     }

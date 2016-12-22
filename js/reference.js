@@ -717,8 +717,11 @@ var ERMrest = (function(module) {
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          *
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or {@link ERMrest.InvalidInputError} if `limit` is invalid, or
+         * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
+         * 
+         * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
+         * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
+         * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
          * other errors TBD (TODO document other errors here).
          */
         read: function(limit) {
@@ -764,7 +767,8 @@ var ERMrest = (function(module) {
                     for (i = 0, k = 1; i < sortObject.length; i++) {
                         
                         // find the column in ReferenceColumns
-                        for (j = 0; j < this.columns.length; j++) { //TODO better performance 
+                        col = -1;
+                        for (j = 0; j < this.columns.length; j++) {
                             if (this.columns[j].name == sortObject[i].column) {
                                 col = this.columns[j];
                                 break;
@@ -772,7 +776,7 @@ var ERMrest = (function(module) {
                         }
 
                         // column is either invalid or not in visible columns
-                        if (col === undefined ) {
+                        if (col === -1 ) {
                             col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
                             sortCols = col._getSortColumns(this._context);
                         } 
@@ -886,25 +890,29 @@ var ERMrest = (function(module) {
                         sortCols = sortObject.map(function(sort) {return sort.column;});
                     }
 
-                    addedCols = [];
+                    addedCols = {};
                     for(k = 0; k < sortCols.length; k++) {
-                        sortColumn = sortCols[k];
-                        if (sortColumn in sortMap) {
+                        if (sortCols[k] in sortMap) {
                             // sort column has been created via PseudoColumn, so we should use a new alias
-                            addedCols.push(module._fixedEncodeURIComponent(sortColumn) + ":=" + sortMap[sortColumn]);
+                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]) + ":=" + sortMap[sortCols[k]];
                         } else {
-                            addedCols.push(module._fixedEncodeURIComponent(sortColumn));
+                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
+                        }
+
+                        // don't add duplicate columns
+                        if (!(sortColumn in addedCols)) {
+                            addedCols[sortColumn] = 1;
                         }
                     }
 
-                    uri += addedCols.join(",") + ";M:=array(M:*)," + fkList;
+                    uri += Object.keys(addedCols).join(",") + ";M:=array(M:*)," + fkList;
                 }
 
                 // insert @sort()
-                if (hasSort) { //TODO better implementation
+                if (hasSort) {
                     // if sort is modified, we should use the modified sort Object for uri,
                     // and the actual sort object for this._location.sortObject
-                    this._location.sortObject = _modifiedSortObject;
+                    this._location.sortObject = _modifiedSortObject; // this will change the this._location.sort
                     uri = uri + this._location.sort;
                     this._location.sortObject = sortObject;
                 } else if (this._location.sort) {
@@ -1763,13 +1771,34 @@ var ERMrest = (function(module) {
             if (this._hasPrevious) {
                 var newReference = _referenceCopy(this._ref);
 
+                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
+
                 // update paging by creating a new location
                 var paging = {};
                 paging.before = true;
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var col = newReference._location.sortObject[i].column;
-                    paging.row.push(this._data[0][col]); // first row
+                    var colName = newReference._location.sortObject[i].column;
+                    
+                    // first row
+                    var data = this._data[0][colName];
+                    if (typeof data !== 'undefined') { 
+                        // normal column
+                        paging.row.push(data); 
+                    } else {
+                        // pseudo column
+                        var pseudoCol, j;
+                        for (j = 0; j < this._ref.columns.length; j++) {
+                            if (this._ref.columns[j].name == colName) {
+                                pseudoCol = this._ref.columns[j];
+                                break;
+                            }
+                        }
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
+                            paging.row.push(data);
+                        }
+                    }
                 }
 
                 newReference._location = this._ref._location._clone();
@@ -1805,13 +1834,35 @@ var ERMrest = (function(module) {
             if (this._hasNext) {
                 var newReference = _referenceCopy(this._ref);
 
+                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
+
                 // update paging by creating a new location
                 var paging = {};
                 paging.before = false;
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var col = newReference._location.sortObject[i].column;
-                    paging.row.push(this._data[this._data.length-1][col]); // last row
+                    var colName = newReference._location.sortObject[i].column;
+
+                    // last row
+                    var data = this._data[this._data.length-1][colName];
+                    if (typeof data !== 'undefined') { 
+                        // normal column
+                        paging.row.push(data); 
+                    } else {
+                        // pseudo column
+                        var pseudoCol, j;
+                        for (j = 0; j < this._ref.columns.length; j++) {
+                            if (this._ref.columns[j].name == colName) {
+                                pseudoCol = this._ref.columns[j];
+                                break;
+                            }
+                        }
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
+                            paging.row.push(data);
+                        }
+                    }
+
                 }
 
                 newReference._location = this._ref._location._clone();
@@ -2176,7 +2227,7 @@ var ERMrest = (function(module) {
      */
     function ReferenceColumn(reference, column, foreignKey) {
 
-        this._baseRef = reference; //TODO might need to change it
+        this._baseRef = reference;
 
         this._context = this._baseRef._context;
 
