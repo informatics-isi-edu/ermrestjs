@@ -1212,6 +1212,7 @@ var ERMrest = (function(module) {
                         // will be used in entry contexts
                         newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
                         newRef._derivedAssociationRef.origFKR = newRef.origFKR;
+                        newRef._derivedAssociationRef._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -2096,7 +2097,74 @@ var ERMrest = (function(module) {
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
-        }
+        },
+
+        unlinkAssociation: function() {
+            //TODO should be refactored
+            //TODO the uri manipulation should be via parser
+            try {
+                var defer = module._q.defer();
+                if (this._pageRef._derivedAssociationRef) {                
+                    
+                    var associationRef = this._pageRef._derivedAssociationRef;
+                    var keyCols = associationRef._secondFKR.key.colset.columns;
+
+                    // filter based on the second key
+                    var newFilter = "";
+                    for (var i = 0; i < keyCols.length; i++) {
+                        newFilter += module._fixedEncodeURIComponent(keyCols[i].name) + "=" + module._fixedEncodeURIComponent(this._data[keyCols[i].name]);
+                        if (i != keyCols.length - 1) newFilter += "&";
+                    }
+
+                    // manipluate the uri and add the filter
+                    var newPath;
+                    var compactPath = associationRef._location.compactPath;
+
+                    if (associationRef._location.searchFilter) { // remove search filter
+                        compactPath = compactPath.replace("/" + associationRef._location.searchFilter, "");
+                    }
+
+                    var parts = compactPath.split('/');
+                    var linking = parts[parts.length-1].match(/\((.*)\)=\((.*:.*:.*)\)/);
+
+                    if (parts[1]) {
+                        if (!linking || (linking && parts.length > 2)) { //parts[1] is fitler
+                            parts[1] += "&" + newFilter;
+                            newPath = parts.join("/");
+                        } else { //parts[1] is linkage
+                            newPath = [parts[0], newFilter, parts[1]].join("/");
+                        }
+                    } else { //there is no filter on linkage, just append
+                        newPath += "/" + newFilter;
+                    }
+                    
+                    if (this._location.searchFilter) { // add search filter back
+                        newPath = newPath + "/" + this._location.searchFilter;
+                    }
+
+                    newUrl = [associationRef._location.service, "catalog", associationRef._location.catalog, "entity", newPath].join("/");
+
+                    var ref = new Reference(module._parse(newUrl), this._pageRef._table.schema.catalog);
+
+                    ref.delete().then(function deleteReference(response) {
+                        defer.resolve();
+                    }, function error(response) {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }).catch(function (error) {
+                        return defer.reject(error);
+                    });
+                } else {
+                    defer.reject("This function is not applicable to this tuple.");
+                }
+
+                return defer.promise;
+            }
+            catch (e) {
+                return module._q.reject(e);
+            }
+        }            
+        
 
     };
 
