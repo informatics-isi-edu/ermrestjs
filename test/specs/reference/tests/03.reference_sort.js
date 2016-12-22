@@ -1,14 +1,50 @@
 exports.execute = function (options) {
 
-    describe("For determining reference objects and it's child objects,", function () {
+    describe("For determining sort,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
-            tableName = "sorted_table";
+            tableName = "sorted_table",
+            outboundTableName = "reference_table_outbound_fks";
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
 
-        var reference1, reference2;
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+        
+        var reference1, reference2, outboundRef;
 
         beforeAll(function(done) {
            options.ermRest.resolve(multipleEntityUri, {cid:"test"}).then(function(response) {
@@ -131,5 +167,85 @@ exports.execute = function (options) {
             });
 
         });
+
+        describe('sorting based on different columns, ', function () {
+            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ outboundTableName,
+                colName;
+
+            beforeAll(function(done) {
+                options.ermRest.appLinkFn(appLinkFn);
+                options.ermRest.resolve(uri, {cid:"test"}).then(function(response) {
+                    outboundRef = response;
+                    done();
+                },function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('should return an error if the sort column is invalid', function (done) {
+                colName = "invalid column";
+                checkError([{"column":colName, "descending": false}], "Column " + colName + " not found in table.", done);
+            });
+
+            it('should return an error if the sort column is not sortable', function (done) {
+                colName = "col_3";
+                checkError([{"column":colName, "descending": false}], "Column " + colName + " is not sortable.", done);
+            });
+            
+            describe('when sorting based on a PseudoColumn, ', function () {
+
+                it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
+                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=2 will be the first.
+                    checkSort([{"column": "reference_schema_outbound_fk_9", "descending": true}], "2", done);
+                });
+                
+                it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
+                    checkSort([{"column": "reference_schema_outbound_fk_6", "descending": true}], "3", done);
+                });
+
+                it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
+                    checkSort([{"column": "reference_schema_outbound_fk_2", "descending": true}], "4", done);
+                });
+                
+            });
+
+            describe('when sorting based on a column, ', function () {
+                
+                it("if column has a `column_order` other than false, should sort based on that.", function (done) {
+                    checkSort([{"column": "col_4", "descending": true}], "5", done);
+                });
+                
+                it("if column doesn't have `column_order`, should sort based on column value.", function (done) {
+                    checkSort([{"column":"id", "descending": true}], "6", done);
+                });
+                
+            });
+            
+        });
+
+        /**
+         * to make the testing easier, I just test id of the first tuple.
+         * All the tuples have distinct ids and in each scenario based on the data, one of them must be on top.
+         */
+        function checkSort(sortColumns, ExpectedFirstId, done) {
+            outboundRef.sort(sortColumns).read(1).then(function (response) {
+                expect(response.tuples[0].values[0]).toEqual(ExpectedFirstId);
+                done();
+            }, function (err) {
+                console.dir(err);
+                done.fail();
+            });          
+        }
+
+        function checkError(sortColumns, error, done) {
+            outboundRef.sort(sortColumns).read(1).then(function(response) {
+                done.fail();
+            }).catch(function (err) {
+                expect(err.toString()).toEqual("Error: " + error);
+                done();
+            });
+        }
+
     });
 };

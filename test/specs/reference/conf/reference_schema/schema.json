@@ -713,6 +713,9 @@
                 "tag:isrd.isi.edu,2016:table-display": {
                     "row_name": {
                         "row_markdown_pattern": "[{{id}}](https://dev.isrd.isi.edu/chaise/search)"
+                    },
+                    "*" : {
+                        "row_order": [{"column":"id_2", "descending":true}]
                     }
                 }
             }
@@ -745,7 +748,12 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "to_name": "to_name_value"
+                            "to_name": "to_name_value",
+                            "display": {
+                                "*":  {
+                                    "column_order": false
+                                }
+                            }
                         }
                     }
                 },
@@ -804,7 +812,15 @@
                             "column_name": "id"
                         }
                     ],
-                    "annotations": {}
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "*":  {
+                                    "column_order": ["name"]
+                                }
+                            }
+                        }
+                    }
                 },
                 {
                     "comment": "composite fk to table_w_composite_key with to_name",
@@ -933,12 +949,12 @@
                       {
                           "schema_name": "reference_schema",
                           "table_name": "reference_table_outbound_fks",
-                          "column_name": "col_7"
+                          "column_name": "col_5"
                       },
                       {
                           "schema_name": "reference_schema",
                           "table_name": "reference_table_outbound_fks",
-                          "column_name": "col_5"
+                          "column_name": "col_7"
                       }
                     ],
                     "referenced_columns": [
@@ -953,7 +969,15 @@
                             "column_name": "id_2"
                         }
                     ],
-                    "annotations": {}
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "*":  {
+                                    "column_order": ["id"]
+                                }
+                            }
+                        }
+                    }
                 }
             ],
             "column_definitions": [
@@ -982,7 +1006,7 @@
                     "comment": "simple fk to reference",
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
-                        "name": "Column 2 Name"
+                            "name": "Column 2 Name"
                         },
                         "tag:isrd.isi.edu,2016:immutable": {}
                     }
@@ -996,7 +1020,12 @@
                     "comment": "is in multiple FKRs",
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
-                        "name": "Column 3 Name"
+                            "name": "Column 3 Name"
+                        },
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": false
+                            }
                         }
                     }
                 },
@@ -1007,7 +1036,12 @@
                     },
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
-                        "tag:isrd.isi.edu,2016:generated": {}
+                        "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["reference_schema_outbound_fk_7"]
+                            }
+                        }
                     }
                 },
                 {
@@ -1044,7 +1078,10 @@
                     "type": {
                         "typename": "text"
                     },
-                    "comment": "not part of any FKRs."
+                    "comment": "not part of any FKRs.",
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:immutable": {}
+                    }
                 }
             ],
             "annotations": {

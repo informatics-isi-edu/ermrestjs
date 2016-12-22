@@ -270,6 +270,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+        * [.default](#ERMrest.ReferenceColumn+default)
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -2462,6 +2463,7 @@ and therefore an asynchronous operation that returns a promise.
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
+    * [.default](#ERMrest.ReferenceColumn+default)
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -2531,6 +2533,12 @@ Preferred display name for user presentation only.
 
 #### referenceColumn.nullok : <code>Boolean</code>
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+default"></a>
+
+#### referenceColumn.default
+Returns the default value (or function) for this column
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+comment"></a>
 
 #### referenceColumn.comment : <code>string</code>
@@ -2593,7 +2601,7 @@ Formats the presentation value corresponding to this reference-column definition
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 
 #### referenceColumn.getInputDisabled() : <code>boolean</code> &#124; <code>object</code>
-Indicates if the input should be disabled, in different contexts 
+Indicates if the input should be disabled, in different contexts
 true: input must be disabled
 false:  input can be enabled
 object: input msut be disabled (show .message to user)

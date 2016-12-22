@@ -159,24 +159,24 @@ exports.execute = function (options) {
          * columns:
          *  id -> single key, not part of any fk
          *  col_1 -> has generated annotation
-         *  col_2 -> has displayname (value is null) | has immutable annotation
-         *  col_3 -> has displayname (nullok is false)
-         *  col_4 -> has generated annotation
+         *  col_2 -> has displayname (value is null) | has immutable annotation | (colum_order: [id, col_1])
+         *  col_3 -> has displayname (nullok is false) | (column_order: false)
+         *  col_4 -> has generated annotation | (column_order: [col_2, col_3])
          *  col_5 -> has generated annotation
          *  col_6 -> nullok false
          *  col_7 -> value is null | has generated and immutable annotation
-         *  reference_schema_outbound_fk_7 -> not part of any fk
+         *  reference_schema_outbound_fk_7 -> not part of any fk | has immutable
          * 
          * FKRs:
-         *  outbound_fk_1: col_1 -> ref_table (to_name)
+         *  outbound_fk_1: col_1 -> ref_table (to_name) (column_order: false)
          *  outbound_fk_2: col_2 -> ref_table
          *  outbound_fk_3: col_3 -> ref_table 
-         *  outbound_fk_4: col_3 -> reference_values
-         *  outbound_fk_5: col_3, col_4 -> table_w_composite_key (to_name)
+         *  outbound_fk_4: col_3 -> reference_values | (column_order: [name])
+         *  outbound_fk_5: col_3, col_4 -> table_w_composite_key (to_name) | (column_order: [id])
          *  outbound_fk_6: col_3, col_6 -> table_w_composite_key_2
          *  outbound_fk_7: col_4, col_5 -> table_w_composite_key
          *  outbound_fk_8: col_3, col_5 -> table_w_composite_key
-         *  outbound_fk_9: col_5, col_7 -> table_w_composite_key -> col_7 is null
+         *  outbound_fk_9: col_7, col_5 -> table_w_composite_key -> col_7 is null
          * 
          * expected output for ref.columns in detailed and compact/select context:
          * 0:   id
@@ -292,198 +292,6 @@ exports.execute = function (options) {
 
             describe('when visible-columns annotation is not present for the context, ', function () {
                 checkAllPseudoColumns(false);
-            });
-            
-            describe('PseudoColumn, ', function () {
-                it('should have the same functions as Column.', function () {
-                    for (var i = 1; i < 5; i++) {
-                        expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
-                    }
-                    for (var i = 11; i < 16; i++) {
-                        expect(haveSameProperties(detailedColumns[i], detailedColumns[0])).toBe(true);
-                    }
-                });
-                
-                it('should have the correct type.', function () {
-                    for (var i = 1; i < 5; i++) {
-                        expect(detailedColumns[i].type.name).toBe("markdown");
-                    }
-                    for (var i = 11; i < 16; i++) {
-                        expect(detailedColumns[i].type.name).toBe("markdown");
-                    }
-                });
-                
-                it('should have the correct table.', function () {
-                    for (var i = 1; i < 4; i++) {
-                        expect(detailedColumns[i].table.name).toBe("reference_table");
-                    }
-                    expect(detailedColumns[4].table.name).toBe("reference_values");
-                    expect(detailedColumns[11].table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[12].table.name).toBe("table_w_composite_key_2");
-                    expect(detailedColumns[13].table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[14].table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[15].table.name).toBe("table_w_composite_key");
-                });
-
-                
-                it('should have the correct reference.', function () {
-                    for (var i = 1; i < 4; i++) {
-                        expect(detailedColumns[i].reference._table.name).toBe("reference_table");
-                    }
-                    expect(detailedColumns[4].reference._table.name).toBe("reference_values");
-                    expect(detailedColumns[11].reference._table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[12].reference._table.name).toBe("table_w_composite_key_2");
-                    expect(detailedColumns[13].reference._table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[14].reference._table.name).toBe("table_w_composite_key");
-                    expect(detailedColumns[15].reference._table.name).toBe("table_w_composite_key");
-                });
-
-                
-                describe('.displayname, ', function () {
-                    it('should use the foreignKey\' s to_name.', function () {
-                        expect(detailedColumns[1].displayname).toBe("to_name_value");
-                        expect(detailedColumns[11].displayname).toBe("to_name_value");
-                    });
-
-                    describe('when foreignKey\' s to_name is not defined, ', function () {
-                        describe('for simple foreign keys, ', function () {
-                            it('should use column\'s displayname in the absence of to_name in foreignKey.', function () {
-                                expect(detailedColumns[2].displayname).toBe("Column 2 Name");
-                            });
-
-                            it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function () {
-                                expect(detailedColumns[3].displayname).toBe("Column 3 Name (reference_table)");
-                                expect(detailedColumns[4].displayname).toBe("Column 3 Name (reference_values)");
-                            });
-                        });
-
-                        describe('for composite foreign keys, ', function () {
-                            it('should use referenced table\'s displayname in the absence of to_name in foreignKey.', function () {
-                                expect(detailedColumns[12].displayname).toBe("table_w_composite_key_2");
-                            });
-
-                            it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                                expect(detailedColumns[13].displayname).toBe("table_w_composite_key (Column 3 Name, col_5)");
-                                expect(detailedColumns[14].displayname).toBe("table_w_composite_key (col_4, col_5)");
-                            });
-                        })
-
-                    });
-                });
-
-                describe('.comment', function () {
-                    it ('when foreign key is simple should use column\'s comment.', function () {
-                        expect(detailedColumns[1].comment).toBe("simple fk to reference, col_1");
-                    });
-
-                    it('otherwise should use foreignkey\'s comment.', function () {
-                        expect(detailedColumns[11].comment).toBe("composite fk to table_w_composite_key with to_name");
-                    });
-                })
-                
-                describe('.formatpresentation, ', function () {
-                    var val;
-                    it('should return the correct link.', function () {
-                        val = detailedColumns[14].formatPresentation(data).value;
-
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
-                    });
-
-                    it('should not add a link when the caption has a link.', function () {
-                        val = detailedColumns[12].formatPresentation(data).value;
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">' + data.id + '</a>');
-                    });
-
-                    it('should use the key when only the main table entries are available in data.', function () {
-                        var partialData = {
-                            "id_1": "col_3_data", "id_2": "col_6_data"
-                        };
-                        var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/' +
-                                            'id_1=' + partialData["id_1"]+ '&id_2='  +partialData["id_2"] + '">' + partialData["id_1"] + ":" + partialData["id_2"] + '</a>';
-                        val = detailedColumns[12].formatPresentation(partialData).value;
-                        expect(val).toEqual(expectetValue);
-                    });
-
-                    it('should use the show-nulls annotation, when the data is null.', function () {
-                        val = detailedColumns[14].formatPresentation({}, {
-                            context: "detailed"
-                        }).value;
-                        expect(val).toBe(null);
-                        val = entryRef.columns[10].formatPresentation({}).value;
-                        expect(val).toBe("");
-                    });
-                });
-
-                
-                describe('.nullok, ', function () {
-                    it('should set to false if any of its columns have nullok=false; otherwise true.', function () {
-                        // simple fk, false
-                        expect(detailedColumns[3].nullok).toBe(false);
-
-                        // simple fk, true
-                        expect(detailedColumns[1].nullok).toBe(true);
-
-                        // composite fk, one if false
-                        expect(detailedColumns[11].nullok).toBe(false);
-
-                        // composite fk, all false
-                        expect(detailedColumns[12].nullok).toBe(false);
-
-                        // composite fk, all true
-                        expect(detailedColumns[14].nullok).toBe(true);
-                    });
-                });
-
-                describe('.getInputDisabled, ', function () {
-                    it('for simple foreignkeys, should return column\`s result.', function () {
-                        // has generated in create
-                        expect(entryCreateRef.columns[0].inputDisabled).toEqual({
-                            message: "Automatically generated"
-                        });
-                        
-                        // has immutable in edit
-                        expect(entryEditRef.columns[2].inputDisabled).toBe(true);
-
-                        // does not have immutable nor generated
-                        expect(entryEditRef.columns[6].inputDisabled).toBe(false);
-                    });
-                    
-                    describe('for composite foreignkeys, ', function () {
-                        describe('in create context, ', function () {
-                            it('if all columns are generated, should return generated message.', function () {
-                                expect(entryCreateRef.columns[1].inputDisabled).toEqual({
-                                    message: "Automatically generated"
-                                });
-                            });
-
-                            it('if at least one of the columns is not generated, should return false.', function () {
-                                expect(entryCreateRef.columns[2].inputDisabled).toBe(false);
-                            });
-                        });
-                        
-                        describe('in edit context, ', function () {
-                            it('if one of the columns is immutable, should return true.', function () {
-                                expect(entryEditRef.columns[10].inputDisabled).toBe(true);
-                            });
-
-                            it('if none of the columns are immutable and all of them are generated, should return true.', function () {
-                                expect(entryEditRef.columns[9].inputDisabled).toBe(true);
-                            });
-
-                            it('if none of the columns are immutable and at least one of the columns is not generated, should return false.', function () {
-                                expect(entryEditRef.columns[8].inputDisabled).toBe(false);
-                            });
-                        });
-
-                        it('in other contexts should return true.', function () {
-                            expect(compactSelectRef.columns[5].inputDisabled).toBe(true);
-                            expect(compactBriefRef.columns[1].inputDisabled).toBe(true);
-                        });
-                    });
-                    
-                });
-                
-
             });
             
         });

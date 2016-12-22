@@ -292,7 +292,7 @@ var ERMrest = (function(module) {
                  * */
 
                 this._referenceColumns = [];
-                
+
                 // check if we should hide some columns or not.
                 // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
                 var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table._isPureBinaryAssociation();
@@ -791,7 +791,7 @@ var ERMrest = (function(module) {
                             if (col.isPseudo) {
                                 fkIndex = foreignKeys.all().indexOf(col.foreignKey);
                                 colName = "F" + (foreignKeys.length() + k++);
-                                sortMap[colName] = ["F" + (fkIndex+1) ,sortCols[j].name].join(":");
+                                sortMap[colName] = ["F" + (fkIndex+1) , module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
                             } else {
                                 colName = sortCols[j].name;
                             }
@@ -891,7 +891,7 @@ var ERMrest = (function(module) {
                         sortColumn = sortCols[k];
                         if (sortColumn in sortMap) {
                             // sort column has been created via PseudoColumn, so we should use a new alias
-                            addedCols.push(module._fixedEncodeURIComponent(sortColumn) + ":=" + module._fixedEncodeURIComponent(sortMap[sortColumn]));
+                            addedCols.push(module._fixedEncodeURIComponent(sortColumn) + ":=" + sortMap[sortColumn]);
                         } else {
                             addedCols.push(module._fixedEncodeURIComponent(sortColumn));
                         }
@@ -1693,7 +1693,7 @@ var ERMrest = (function(module) {
                     this._linkedData.push(tempData);
                 }
             }
-        } 
+        }
         // entity output (linkedData is empty)
         else {
             this._data = data;
@@ -2187,7 +2187,7 @@ var ERMrest = (function(module) {
          * @desc indicates this represents is a PseudoColumn or a Column.
          */
         this.isPseudo = false;
-        
+
         if (typeof foreignKey != 'undefined') {
             this.isPseudo = true;
 
@@ -2320,6 +2320,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc Returns the default value (or function) for this column
+         */
+         get default() {
+            if (!this.isPseudo) {
+                return this._base.default;
+            } else {
+                // TODO handle the case for pseudo columns (foreign keys)
+            }
+         },
+
+        /**
          * @desc Documentation for this reference-column
          * @type {string}
          */
@@ -2332,7 +2343,7 @@ var ERMrest = (function(module) {
          * true: input must be disabled
          * false:  input can be enabled
          * object: input msut be disabled (show .message to user)
-         * 
+         *
          * @type {boolean|object}
          */
         get inputDisabled() {
@@ -2406,7 +2417,7 @@ var ERMrest = (function(module) {
         formatvalue: function(data, options) {
             return this._base.formatvalue(data, options);
         },
-        
+
         /**
          * Formats the presentation value corresponding to this reference-column definition.
          * @param {String} data The 'formatted' data value.
@@ -2426,7 +2437,7 @@ var ERMrest = (function(module) {
             var shortestKey = this.table.shortestKey, // the shortest key of the table
                 fkKey = this.foreignKey.key.colset.columns, // the key that creates this PseudoColumn
                 key, // the key that is going to be used in href
-                caption, value, i; 
+                caption, value, i;
 
             // check if we have data for the given columns
             var hasData = function (cols) {
@@ -2449,7 +2460,7 @@ var ERMrest = (function(module) {
             // use row name as the caption
             caption = module._generateRowName(this.table, options ? options.context : undefined, data);
 
-            // use fk key for displayname: "col_1:col_2:col_3" 
+            // use fk key for displayname: "col_1:col_2:col_3"
             if (caption.trim() === '') {
 
                 var keyValues = [];
@@ -2482,15 +2493,15 @@ var ERMrest = (function(module) {
                 value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
             }
 
-            return {isHTML: true, value: value};            
+            return {isHTML: true, value: value};
         },
 
         /**
-         * @desc Indicates if the input should be disabled, in different contexts 
+         * @desc Indicates if the input should be disabled, in different contexts
          * true: input must be disabled
          * false:  input can be enabled
          * object: input msut be disabled (show .message to user)
-         * 
+         *
          * @type {boolean|object}
          */
         getInputDisabled: function (context) {
@@ -2589,7 +2600,7 @@ var ERMrest = (function(module) {
                 }
             }
         },
-        
+
     };
 
     return module;
