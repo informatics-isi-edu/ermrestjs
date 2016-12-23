@@ -2247,13 +2247,38 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @desc Returns the default value (or function) for this column
+         * @desc Returns the default value
+         * @type {string}
          */
          get default() {
             if (!this.isPseudo) {
                 return this._base.default;
             } else {
-                // TODO handle the case for pseudo columns (foreign keys)
+                var columns = this.foreignKey.colset.columns,
+                    data = {},
+                    caption,
+                    i;
+            
+                for (i = 0; i < columns.length; i++) {
+                    if (columns[i].default === null || columns[i].default === undefined) {
+                        return null; //return null if one of them is null;
+                    }
+                    data[columns[i].name] = columns[i].default;
+                }
+
+                // use row name as the caption
+                caption = module._generateRowName(this.table, options ? options.context : undefined, data);
+
+                // use "col_1:col_2:col_3"
+                if (caption.trim() === '') {
+                    var keyValues = [];
+                    for (i = 0; i < columns.length; i++) {
+                        keyValues.push(columns[i].formatvalue(data[columns[i].name], {context: options ? options.context : undefined}));
+                    }
+                    caption = keyValues.join(":");
+                }
+
+                return caption.trim() !== '' ? caption : null;
             }
          },
 
