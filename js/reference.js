@@ -2099,20 +2099,19 @@ var ERMrest = (function(module) {
             return this._displayname;
         },
 
-        unlinkAssociation: function() {
-            //TODO should be refactored
-            //TODO the uri manipulation should be via parser
-            try {
-                var defer = module._q.defer();
-                if (this._pageRef._derivedAssociationRef) {                
-                    
+        get associationReference(){
+            if (this._associationReference === undefined) {
+                //TODO should be refactored
+                //TODO the uri manipulation should be via parser
+                if (this._pageRef._derivedAssociationRef) {          
                     var associationRef = this._pageRef._derivedAssociationRef;
-                    var keyCols = associationRef._secondFKR.key.colset.columns;
+                    var keyCols = associationRef._secondFKR.colset.columns;
+                    var mapping = associationRef._secondFKR.mapping;
 
                     // filter based on the second key
                     var newFilter = "";
                     for (var i = 0; i < keyCols.length; i++) {
-                        newFilter += module._fixedEncodeURIComponent(keyCols[i].name) + "=" + module._fixedEncodeURIComponent(this._data[keyCols[i].name]);
+                        newFilter += module._fixedEncodeURIComponent(keyCols[i].name) + "=" + module._fixedEncodeURIComponent(this._data[mapping.get(keyCols[i]).name]);
                         if (i != keyCols.length - 1) newFilter += "&";
                     }
 
@@ -2138,31 +2137,17 @@ var ERMrest = (function(module) {
                         newPath += "/" + newFilter;
                     }
                     
-                    if (this._location.searchFilter) { // add search filter back
-                        newPath = newPath + "/" + this._location.searchFilter;
+                    if (associationRef._location.searchFilter) { // add search filter back
+                        newPath = newPath + "/" + associationRef._location.searchFilter;
                     }
 
-                    newUrl = [associationRef._location.service, "catalog", associationRef._location.catalog, "entity", newPath].join("/");
+                    var newUrl = [associationRef._location.service, "catalog", associationRef._location.catalog, "entity", newPath].join("/");
 
-                    var ref = new Reference(module._parse(newUrl), this._pageRef._table.schema.catalog);
-
-                    ref.delete().then(function deleteReference(response) {
-                        defer.resolve();
-                    }, function error(response) {
-                        var error = module._responseToError(response);
-                        return defer.reject(error);
-                    }).catch(function (error) {
-                        return defer.reject(error);
-                    });
-                } else {
-                    defer.reject("This function is not applicable to this tuple.");
+                    this._associationReference = new Reference(module._parse(newUrl), this._pageRef._table.schema.catalog);
                 }
-
-                return defer.promise;
+                this.__associationReference = null;
             }
-            catch (e) {
-                return module._q.reject(e);
-            }
+            return this._associationReference;
         }            
         
 
