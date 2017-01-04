@@ -485,18 +485,16 @@ exports.execute = function (options) {
                 
                 describe('.default', function () {
                     it ('should return null if any of the constituent column default values is null.', function () {
-                        // oubtound_fk_1
                         expect(detailedColumns[1].default).toBe(null);
+                        expect(detailedColumns[15].default).toBe(null);
                     });
 
                     it ('should return a rowname if it is possible to generate one with default values.', function () {
-                        // outbound_fk_7
-                        expect(detailedColumns[14].default).toEqual("");
+                        expect(detailedColumns[14].default).toEqual('col 4 default , col 5 default');
                     });
 
-                    it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string', function () {
-                        // outbound_fk_6
-                        expect(detailedColumns[12].default).toEqual("");
+                    it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {
+                        expect(detailedColumns[12].default).toEqual('col 3 default:col 6 default');
                     });
                 });
             });
