@@ -537,36 +537,6 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * Indicates whether the client has the permission to _unlink_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * 
-         * unlink: deleting the association table.
-         * Reference can be unlinked, if it's derived from an association table,
-         * and the association table _canDelete_ is true.
-         * @type {(boolean|undefined)}
-         */
-        get canUnlink() {
-            if (this._canUnlink === undefined) {
-                if (this._derivedAssociationRef) {
-                    var ref = this._derivedAssociationRef;
-                    ref.session = this._session;
-                    this._canUnlink = !ref._table._isNonDeletable && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
-
-                    if (this._canUnlink) {
-                        var allColumnsDisabled = ref.columns.every(function (col) {
-                            return (col.getInputDisabled(module._contexts.EDIT) !== false);
-                        });
-                        this._canUnlink = !allColumnsDisabled;
-                    }
-                } else {
-                    this._canUnlink = false;
-                }
-            }
-            return this._canUnlink;
-        },
-
-        /**
 
         /**
          * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
@@ -1222,7 +1192,6 @@ var ERMrest = (function(module) {
                     delete newRef._canRead;
                     delete newRef._canUpdate;
                     delete newRef._canDelete;
-                    delete newRef._canUnlink;
 
                     newRef.origFKR = fkr; // it will be used to trace back the reference
 
@@ -1339,7 +1308,6 @@ var ERMrest = (function(module) {
             delete this._canRead;
             delete this._canUpdate;
             delete this._canDelete;
-            delete this._canUnlink;
         }
     };
 

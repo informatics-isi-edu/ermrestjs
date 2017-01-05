@@ -230,7 +230,6 @@ to use for ERMrest JavaScript agents.
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-        * [.canUnlink](#ERMrest.Reference+canUnlink) : <code>boolean</code> &#124; <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -1848,7 +1847,6 @@ Constructor for a ParsedFilter.
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
-    * [.canUnlink](#ERMrest.Reference+canUnlink) : <code>boolean</code> &#124; <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2028,18 +2026,6 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _delete_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
-
-**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+canUnlink"></a>
-
-#### reference.canUnlink : <code>boolean</code> &#124; <code>undefined</code>
-Indicates whether the client has the permission to _unlink_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
-
-unlink: deleting the association table.
-Reference can be unlinked, if it's derived from an association table,
-and the association table _canDelete_ is true.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+display"></a>
