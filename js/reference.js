@@ -1018,7 +1018,7 @@ var ERMrest = (function(module) {
                             uri += ')';
                         }
 
-                        // reform the data
+                        // unalias the keys for the page data
                         pageData[j] = {};
                         var responseColumns = Object.keys(response.data[j]);
 
