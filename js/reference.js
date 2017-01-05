@@ -2251,14 +2251,50 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @desc Returns the default value (or function) for this column
+         * @desc Returns the default value
+         * @type {string}
          */
          get default() {
-            if (!this.isPseudo) {
-                return this._base.default;
-            } else {
-                // TODO handle the case for pseudo columns (foreign keys)
-            }
+             if (this._default === undefined) {
+                if (!this.isPseudo) {
+                    this._default = this._base.default;
+                } else {
+                    var fkColumns = this.foreignKey.colset.columns,
+                        keyColumns = this.foreignKey.key.colset.columns,
+                        mapping = this.foreignKey.mapping,
+                        data = {},
+                        caption,
+                        isNull = false,
+                        i;
+                
+                    for (i = 0; i < fkColumns.length; i++) {
+                        if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+                            isNull = true; //return null if one of them is null;
+                            break;
+                        }
+                        data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+                    }
+
+                    if (isNull) {
+                        this._default = null;
+                    } else {
+                        // use row name as the caption
+                        caption = module._generateRowName(this.table, this._context, data);
+
+                        // use "col_1:col_2:col_3"
+                        if (caption.trim() === '') {
+                            var keyValues = [];
+                            for (i = 0; i < keyColumns.length; i++) {
+                                keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], {context: this._context}));
+                            }
+                            caption = keyValues.join(":");
+                        }
+
+                        this._default = caption.trim() !== '' ? caption : null;
+                    }
+                }
+             }
+             return this._default;
          },
 
         /**
