@@ -2155,25 +2155,36 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._associationReference === undefined) {
-                if (this._pageRef._derivedAssociationRef) {          
-                    var associationRef = this._pageRef._derivedAssociationRef,
-                        encoder = module._fixedEncodeURIComponent,
-                        newFilter = [];
+            if (this._pageRef._derivedAssociationRef) {          
+                var associationRef = this._pageRef._derivedAssociationRef,
+                    encoder = module._fixedEncodeURIComponent,
+                    newFilter = [],
+                    missingData = false;
 
-                    var addFilter = function(fkr, data) {
-                        var keyCols = fkr.colset.columns,
-                            mapping = fkr.mapping, i;
+                var addFilter = function(fkr, data) {
+                    var keyCols = fkr.colset.columns,
+                        mapping = fkr.mapping, d, i;
 
-                        for (i = 0; i < keyCols.length; i++) {
-                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(data[mapping.get(keyCols[i]).name]));
+                    for (i = 0; i < keyCols.length; i++) {
+                        try {
+                            d = data[mapping.get(keyCols[i]).name];
+                            if (d === undefined || d === null) return false;
+
+                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
+                        } catch(exception) {
+                            return false;
                         }
-                    };
-                    // filter based on the first key
-                    addFilter(associationRef.origFKR, origTableData);
-                    //filter based on the second key
-                    addFilter(associationRef._secondFKR, this._data);
-                    
+                    }
+                    return true;
+                };
+                // filter based on the first key
+                missingData = !addFilter(associationRef.origFKR, origTableData);
+                //filter based on the second key
+                missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+
+                if (missingData) {
+                    return null;    
+                } else {
                     var loc = associationRef._location;
                     var uri = [
                         loc.service, "catalog", encoder(loc.catalog), loc.api,
@@ -2181,12 +2192,13 @@ var ERMrest = (function(module) {
                         newFilter.join("&")
                     ].join("/");
 
-                    this._associationReference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
-                } else {
-                    this._associationReference = null;
+                    return new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
                 }
+                
+            } else {
+                return null;
             }
-            return this._associationReference;
+            
         }            
         
 

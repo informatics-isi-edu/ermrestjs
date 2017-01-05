@@ -239,16 +239,22 @@ exports.execute = function(options) {
                 
             });
 
+            
             it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
-                var url = options.url + "/catalog/" + catalog_id + "/entity/";
+                var url = options.url + "/catalog/" + catalog_id + "/entity/", ref;
 
-                var ref = pageWithID.tuples[0].getAssociationRef({"id":9003});
+                ref = pageWithID.tuples[0].getAssociationRef({"id":9003});
                 expect(ref).not.toBe(null);
                 expect(ref.uri).toEqual(url+"reference_schema:association%20table%20with%20id/id%20from%20ref%20table=9003&id_from_inbound_related_table=2");
 
                 ref = pageWithToName.tuples[0].getAssociationRef({"id":9003});
                 expect(ref).not.toBe(null);
                 expect(ref.uri).toEqual(url + "reference_schema:association_table_with_toname/id_from_ref_table=9003&id_from_inbound_related_table=1");
+            });
+
+            it('Tuple.getAssociationRef should return null, if the given data is incomplete.', function() {
+                var ref = pageWithToName.tuples[0].getAssociationRef({"not the id":9003});
+                expect(ref).toBe(null);
             });
         });
 
