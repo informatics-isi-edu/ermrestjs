@@ -2212,7 +2212,7 @@ var ERMrest = (function(module) {
              * @desc The reference object that represents the table of this PseudoColumn
              */
             this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
-            this.reference = reference._session;
+            this.reference.session = reference._session;
 
             /**
              * @type {ERMrest.ForeignKeyRef}
