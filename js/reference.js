@@ -2163,6 +2163,7 @@ var ERMrest = (function(module) {
 
                     var reference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
                     reference.session = associationRef._session;
+                    return reference;
                 }
                 
             } else {
