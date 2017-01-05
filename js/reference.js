@@ -1217,6 +1217,7 @@ var ERMrest = (function(module) {
 
                         // will be used in entry contexts
                         newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef._derivedAssociationRef.session = this._session;
                         newRef._derivedAssociationRef.origFKR = newRef.origFKR;
                         newRef._derivedAssociationRef._secondFKR = otherFK;
 
@@ -2160,7 +2161,8 @@ var ERMrest = (function(module) {
                         newFilter.join("&")
                     ].join("/");
 
-                    return new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                    var reference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                    reference.session = associationRef._session;
                 }
                 
             } else {
@@ -2209,6 +2211,7 @@ var ERMrest = (function(module) {
              * @desc The reference object that represents the table of this PseudoColumn
              */
             this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+            this.reference = reference._session;
 
             /**
              * @type {ERMrest.ForeignKeyRef}
