@@ -735,6 +735,57 @@ exports.execute = function (options) {
             });
         });
 
+        describe("check unlink permission,", function () {
+            var session, reference;
+            var mockSessionObject = {
+                attributes: [
+                    {id: "write-tester"}
+                ]
+            };
+
+            beforeAll(function () {
+                nock.disableNetConnect();
+            });
+
+            it("should mock the session and set the session on the reference.", function (done) {
+
+                nock(options.url).get("/authn/session").reply(200, mockSessionObject);
+
+                options.ermRest._http.get(options.url + "/authn/session").then(function (response) {
+                    expect(response.data).toEqual(mockSessionObject);
+                    session = response.data;
+
+                    return options.ermRest.resolve(singleEnitityUri, {cid: "test"})
+                }).then(function (response) {
+                    reference = response.contextualize.detailed;
+                    reference.session = mockSessionObject;
+
+                    expect(reference._session).toEqual(mockSessionObject);
+
+                    done();
+                }, function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it('when reference is not a related association table, canUnlink should return false.', function () {
+                expect(reference.canUnlink).toBe(false);
+            });
+
+            it("when association table is none-deletable, generated, or immutable, canUnlink should return false.", function () {
+                //association table with id
+                var ref = reference.related[3];
+                expect(ref.canUnlink).toBe(false);
+            });
+
+            it("otherwise, canUnlink should return true.", function () {
+                //association_table_with_toname
+                var ref = reference.related[2];
+                expect(ref.canUnlink).toBeTruthy();
+            });
+        });
+
         afterEach(function () {
             nock.cleanAll();
         });

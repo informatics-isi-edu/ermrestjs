@@ -537,6 +537,36 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Indicates whether the client has the permission to _unlink_
+         * the referenced resource(s). In some cases, this permission cannot
+         * be determined and the value will be `undefined`.
+         * 
+         * unlink: deleting the association table.
+         * Reference can be unlinked, if it's derived from an association table,
+         * and the association table _canDelete_ is true.
+         * @type {(boolean|undefined)}
+         */
+        get canUnlink() {
+            if (this._canUnlink === undefined) {
+                if (this._derivedAssociationRef) {
+                    var ref = this._derivedAssociationRef;
+                    ref.session = this._session;
+                    this._canUnlink = !ref._table._isNonDeletable && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
+
+                    if (this._canUnlink) {
+                        var allColumnsDisabled = ref.columns.every(function (col) {
+                            return (col.getInputDisabled(module._contexts.EDIT) !== false);
+                        });
+                        this._canUnlink = !allColumnsDisabled;
+                    }
+                } else {
+                    this._canUnlink = false;
+                }
+            }
+            return this._canUnlink;
+        },
+
+        /**
 
         /**
          * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
@@ -1187,6 +1217,13 @@ var ERMrest = (function(module) {
                     delete newRef._referenceColumns;
                     delete newRef._derivedAssociationRef;
 
+                    // delete permissions
+                    delete newRef._canCreate;
+                    delete newRef._canRead;
+                    delete newRef._canUpdate;
+                    delete newRef._canDelete;
+                    delete newRef._canUnlink;
+
                     newRef.origFKR = fkr; // it will be used to trace back the reference
 
                     var fkrTable = fkr.colset.columns[0].table;
@@ -1298,6 +1335,11 @@ var ERMrest = (function(module) {
             delete this._referenceColumns;
             delete this._related;
             delete this._derivedAssociationRef;
+            delete this._canCreate;
+            delete this._canRead;
+            delete this._canUpdate;
+            delete this._canDelete;
+            delete this._canUnlink;
         }
     };
 
@@ -2099,53 +2141,50 @@ var ERMrest = (function(module) {
             return this._displayname;
         },
 
-        get associationReference(){
+        /**
+         * If the Tuple is derived from an association related table,
+         * this function will return a reference to the corresponding
+         * entity of this tuple's association table. 
+         * 
+         * For example, assume
+         * Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
+         * and current tuple is from Table2 with k2 = "2". 
+         * With origFKRData = {"k1": "1"} this function will return a reference
+         * to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
+         * 
+         * @type {ERMrest.Reference}
+         */
+        getAssociationRef: function(origTableData){
             if (this._associationReference === undefined) {
-                //TODO should be refactored
-                //TODO the uri manipulation should be via parser
                 if (this._pageRef._derivedAssociationRef) {          
-                    var associationRef = this._pageRef._derivedAssociationRef;
-                    var keyCols = associationRef._secondFKR.colset.columns;
-                    var mapping = associationRef._secondFKR.mapping;
+                    var associationRef = this._pageRef._derivedAssociationRef,
+                        encoder = module._fixedEncodeURIComponent,
+                        newFilter = [];
 
-                    // filter based on the second key
-                    var newFilter = "";
-                    for (var i = 0; i < keyCols.length; i++) {
-                        newFilter += module._fixedEncodeURIComponent(keyCols[i].name) + "=" + module._fixedEncodeURIComponent(this._data[mapping.get(keyCols[i]).name]);
-                        if (i != keyCols.length - 1) newFilter += "&";
-                    }
+                    var addFilter = function(fkr, data) {
+                        var keyCols = fkr.colset.columns,
+                            mapping = fkr.mapping, i;
 
-                    // manipluate the uri and add the filter
-                    var newPath;
-                    var compactPath = associationRef._location.compactPath;
-
-                    if (associationRef._location.searchFilter) { // remove search filter
-                        compactPath = compactPath.replace("/" + associationRef._location.searchFilter, "");
-                    }
-
-                    var parts = compactPath.split('/');
-                    var linking = parts[parts.length-1].match(/\((.*)\)=\((.*:.*:.*)\)/);
-
-                    if (parts[1]) {
-                        if (!linking || (linking && parts.length > 2)) { //parts[1] is fitler
-                            parts[1] += "&" + newFilter;
-                            newPath = parts.join("/");
-                        } else { //parts[1] is linkage
-                            newPath = [parts[0], newFilter, parts[1]].join("/");
+                        for (i = 0; i < keyCols.length; i++) {
+                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(data[mapping.get(keyCols[i]).name]));
                         }
-                    } else { //there is no filter on linkage, just append
-                        newPath += "/" + newFilter;
-                    }
+                    };
+                    // filter based on the first key
+                    addFilter(associationRef.origFKR, origTableData);
+                    //filter based on the second key
+                    addFilter(associationRef._secondFKR, this._data);
                     
-                    if (associationRef._location.searchFilter) { // add search filter back
-                        newPath = newPath + "/" + associationRef._location.searchFilter;
-                    }
+                    var loc = associationRef._location;
+                    var uri = [
+                        loc.service, "catalog", encoder(loc.catalog), loc.api,
+                        encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
+                        newFilter.join("&")
+                    ].join("/");
 
-                    var newUrl = [associationRef._location.service, "catalog", associationRef._location.catalog, "entity", newPath].join("/");
-
-                    this._associationReference = new Reference(module._parse(newUrl), this._pageRef._table.schema.catalog);
+                    this._associationReference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                } else {
+                    this._associationReference = null;
                 }
-                this.__associationReference = null;
             }
             return this._associationReference;
         }            

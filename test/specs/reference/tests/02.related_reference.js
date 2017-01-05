@@ -15,7 +15,7 @@ exports.execute = function(options) {
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName + "/id=" + entityId;
 
-        var reference, related;
+        var reference, related, page;
 
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
@@ -134,9 +134,16 @@ exports.execute = function(options) {
                 });
             });
 
+            it('Tuple.getAssociationRef should return null.', function() {
+                var a = page.tuples[0].getAssociationRef({});
+                expect(a).toBe(null);
+            });
+
         });
 
         describe('for pure and binray association foreign keys, ', function() {
+            var pageWithToName, pageWithID;
+
             it('should have the correct catalog, schema, and table.', function (){
                 expect(related[2]._location.catalog).toBe(catalog_id.toString());
                 expect(related[2]._table.name).toBe(inboudTableName);
@@ -204,33 +211,45 @@ exports.execute = function(options) {
 
             it('.read should return a Page object that is defined.', function(done) {
                 related[2].read(limit).then(function(response) {
-                    page = response;
+                    pageWithToName = response;
 
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page._data[0].id).toBe("1");
-                    expect(page._data.length).toBe(limit);
+                    expect(pageWithToName).toEqual(jasmine.any(Object));
+                    expect(pageWithToName._data[0].id).toBe("1");
+                    expect(pageWithToName._data.length).toBe(limit);
 
-                    done();
+
+                    related[3].read(limit).then(function(response) {
+                        pageWithID = response;
+
+                        expect(pageWithID).toEqual(jasmine.any(Object));
+                        expect(pageWithID._data[0].id).toBe("2");
+                        expect(pageWithID._data.length).toBe(limit);
+
+                        done();
+                    }, function(err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+
                 }, function(err) {
                     console.dir(err);
                     done.fail();
                 });
 
-                related[3].read(limit).then(function(response) {
-                    page = response;
-
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page._data[0].id).toBe("2");
-                    expect(page._data.length).toBe(limit);
-
-                    done();
-                }, function(err) {
-                    console.dir(err);
-                    done.fail();
-                });
+                
             });
 
+            it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
+                var url = options.url + "/catalog/" + catalog_id + "/entity/";
 
+                var ref = pageWithID.tuples[0].getAssociationRef({"id":9003});
+                expect(ref).not.toBe(null);
+                expect(ref.uri).toEqual(url+"reference_schema:association%20table%20with%20id/id%20from%20ref%20table=9003&id_from_inbound_related_table=2");
+
+                ref = pageWithToName.tuples[0].getAssociationRef({"id":9003});
+                expect(ref).not.toBe(null);
+                expect(ref.uri).toEqual(url + "reference_schema:association_table_with_toname/id_from_ref_table=9003&id_from_inbound_related_table=1");
+            });
         });
 
         describe('when visible foreign keys are not defined, ', function() {

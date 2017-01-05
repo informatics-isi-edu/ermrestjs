@@ -230,6 +230,7 @@ to use for ERMrest JavaScript agents.
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+        * [.canUnlink](#ERMrest.Reference+canUnlink) : <code>boolean</code> &#124; <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -259,6 +260,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
+        * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : <code>[Reference](#ERMrest.Reference)</code>
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
         * [new ReferenceColumn(reference, column, foreignKeyRef)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
@@ -1846,6 +1848,7 @@ Constructor for a ParsedFilter.
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
+    * [.canUnlink](#ERMrest.Reference+canUnlink) : <code>boolean</code> &#124; <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2025,6 +2028,18 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _delete_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+canUnlink"></a>
+
+#### reference.canUnlink : <code>boolean</code> &#124; <code>undefined</code>
+Indicates whether the client has the permission to _unlink_
+the referenced resource(s). In some cases, this permission cannot
+be determined and the value will be `undefined`.
+
+unlink: deleting the association table.
+Reference can be unlinked, if it's derived from an association table,
+and the association table _canDelete_ is true.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+display"></a>
@@ -2318,6 +2333,7 @@ if (content) {
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
+    * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : <code>[Reference](#ERMrest.Reference)</code>
 
 <a name="new_ERMrest.Tuple_new"></a>
 
@@ -2445,6 +2461,20 @@ and therefore an asynchronous operation that returns a promise.
 
 **Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
 **Returns**: <code>Promise</code> - a promise (TBD the result object)  
+<a name="ERMrest.Tuple+getAssociationRef"></a>
+
+#### tuple.getAssociationRef() : <code>[Reference](#ERMrest.Reference)</code>
+If the Tuple is derived from an association related table,
+this function will return a reference to the corresponding
+entity of this tuple's association table. 
+
+For example, assume
+Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
+and current tuple is from Table2 with k2 = "2". 
+With origFKRData = {"k1": "1"} this function will return a reference
+to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
+
+**Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.ReferenceColumn"></a>
 
 ### ERMrest.ReferenceColumn
