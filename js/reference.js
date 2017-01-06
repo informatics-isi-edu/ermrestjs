@@ -1025,7 +1025,8 @@ var ERMrest = (function(module) {
                         for (var m = 0; m < responseColumns.length; m++) {
                             var columnAlias = responseColumns[m];
                             if (columnAlias.endsWith(newAlias)) {
-                                var columnName = columnAlias.slice(0, (columnAlias.indexOf(newAlias)));
+                                // alias is always at end and length 2
+                                var columnName = columnAlias.slice(0, columnAlias.length-newAlias.length);
                                 pageData[j][columnName] = response.data[j][columnAlias];
                             }
                         }

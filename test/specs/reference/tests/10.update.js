@@ -1,15 +1,41 @@
 exports.execute = function (options) {
 
+    /*
+     * @param pageData - data retruned from update request
+     * @param tuples - tuples sent to
+     * verifies that the returned data is the same as the submitted data
+     */
+    function checkPageValues(pageData, tuples, sortBy) {
+        pageData.sort(function(a, b) {
+            return a[sortBy] - b[sortBy];
+        });
+
+        tuples.sort(function(a, b) {
+            return a._data[sortBy] - b._data[sortBy];
+        });
+
+        for (var i = 0; i < pageData.length; i++) {
+            var tupleData = tuples[i]._data;
+            var columns = Object.keys(tupleData);
+            var responseData = pageData[i];
+            for (var j = 0; j < columns.length; j++) {
+                var columnName = columns[j];
+                expect(responseData[columnName]).toBe(tupleData[columnName]);
+            }
+        }
+    }
+
     describe("updating reference objects, ", function () {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "update_schema";
 
         describe("for updating aliased columns, ", function () {
             var tableName = "alias_table",
+                sortBy = "key", // column used to sort the data
                 baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
 
             it("where a key and non-key share similar names when aliased.", function (done) {
-                var tuple, reference,
+                var tuples, tuple, reference,
                     uri = baseUri + "/key=1";
 
                 var updateData = {
@@ -21,7 +47,8 @@ exports.execute = function (options) {
 
                     return reference.read(1);
                 }).then(function (response) {
-                    tuple = response.tuples[0];
+                    tuples = response.tuples;
+                    tuple = tuples[0];
                     var data = tuple.data;
 
                     for (var key in updateData) {
@@ -31,6 +58,8 @@ exports.execute = function (options) {
                     return reference.update(response.tuples);
                 }).then(function (response) {
                     expect(response._data.length).toBe(1);
+
+                    checkPageValues(response._data, tuples, sortBy);
 
                     var getUri = baseUri + "/key=6";
                     return options.ermRest.resolve(getUri, {cid: "test"});
@@ -52,11 +81,12 @@ exports.execute = function (options) {
 
         describe("for updating ", function () {
             var tableName = "update_table",
+                sortBy = "ind_key1", // column used to sort the data
                 baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
 
             describe("a single entity should return a page object, when ", function () {
                 it("modifying an independent key that IS the shortest key.", function (done) {
-                    var tuple, reference,
+                    var tuples, tuple, reference,
                         uri = baseUri + "/ind_key1=2";
 
                     var updateData = {
@@ -68,7 +98,8 @@ exports.execute = function (options) {
 
                         return reference.read(1);
                     }).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -77,11 +108,9 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        var page = response;
+                        expect(response._data.length).toBe(1);
 
-                        expect(page).toBeDefined();
-                        expect(page._data).toBeDefined();
-                        expect(page._data.length).toBe(1);
+                        checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=777";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -103,7 +132,7 @@ exports.execute = function (options) {
 
             describe("a single entity should return a Page object, when multiple columns are modified. ", function () {
                 it("One column is a non-key value and one is an independent key that IS the shortest key.", function (done) {
-                    var tuple, reference,
+                    var tuples, tuple, reference,
                         uri = baseUri + "/ind_key1=777";
 
                     var updateData = {
@@ -116,7 +145,8 @@ exports.execute = function (options) {
 
                         return reference.read(1);
                     }).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -126,6 +156,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=2";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -148,7 +180,7 @@ exports.execute = function (options) {
                 });
 
                 it("2 key columns modified, both independent keys.", function (done) {
-                    var tuple, reference,
+                    var tuples, tuple, reference,
                         uri = baseUri + "/ind_key1=2";
 
                     var updateData = {
@@ -161,7 +193,8 @@ exports.execute = function (options) {
 
                         return reference.read(1);
                     }).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -171,6 +204,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=777";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -193,7 +228,7 @@ exports.execute = function (options) {
                 });
 
                 it("2 key columns modified, one independent key, that is the shortest key, and one part of a composite key.", function (done) {
-                    var tuple, reference,
+                    var tuples, tuple, reference,
                         uri = baseUri + "/ind_key1=777";
 
                     var updateData = {
@@ -206,7 +241,8 @@ exports.execute = function (options) {
 
                         return reference.read(1);
                     }).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -216,6 +252,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=2";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -239,7 +277,7 @@ exports.execute = function (options) {
 
                 describe("3 key columns modified, two independent keys, ", function () {
                     it("and one part of a composite key.", function (done) {
-                        var tuple, reference,
+                        var tuples, tuple, reference,
                             uri = baseUri + "/ind_key1=2";
 
                         var updateData = {
@@ -253,7 +291,8 @@ exports.execute = function (options) {
 
                             return reference.read(1);
                         }).then(function (response) {
-                            tuple = response.tuples[0];
+                            tuples = response.tuples;
+                            tuple = tuples[0];
                             var data = tuple.data;
 
                             for (var key in updateData) {
@@ -263,6 +302,8 @@ exports.execute = function (options) {
                             return reference.update(response.tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             var getUri = baseUri + "/ind_key1=777";
                             return options.ermRest.resolve(getUri, {cid: "test"});
@@ -288,7 +329,7 @@ exports.execute = function (options) {
                     });
 
                     it("and one non-key value.", function (done) {
-                        var tuple, reference,
+                        var tuples, tuple, reference,
                             uri = baseUri + "/ind_key1=777";
 
                         var updateData = {
@@ -302,7 +343,8 @@ exports.execute = function (options) {
 
                             return reference.read(1);
                         }).then(function (response) {
-                            tuple = response.tuples[0];
+                            tuples = response.tuples;
+                            tuple = tuples[0];
                             var data = tuple.data;
 
                             for (var key in updateData) {
@@ -312,6 +354,8 @@ exports.execute = function (options) {
                             return reference.update(response.tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             var getUri = baseUri + "/ind_key1=2";
                             return options.ermRest.resolve(getUri, {cid: "test"});
@@ -356,14 +400,15 @@ exports.execute = function (options) {
 
                 /* A single column is modified */
                 it("modifying an independent key that is NOT the shortest key.", function (done) {
-                    var tuple;
+                    var tuples, tuple;
 
                     var updateData = {
                         "ind_key2": "bbbbbbbbbb"
                     }
 
                     reference.read(1).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -373,6 +418,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -389,14 +436,15 @@ exports.execute = function (options) {
                 });
 
                 it("modifying a column that's part of 1 composite key.", function (done) {
-                    var tuple;
+                    var tuples, tuple;
 
                     var updateData = {
                         "comp_key1_col3": "Watson-Smith"
                     }
 
                     reference.read(1).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -406,6 +454,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -422,14 +472,15 @@ exports.execute = function (options) {
                 });
 
                 it("modifying a column that's part of 2 separate composite keys.", function (done) {
-                    var tuple;
+                    var tuples, tuple;
 
                     var updateData = {
                         "comp_shared_key_col": "businessman"
                     }
 
                     reference.read(1).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -439,6 +490,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -455,14 +508,15 @@ exports.execute = function (options) {
                 });
 
                 it("modifying a non-key value.", function (done) {
-                    var tuple;
+                    var tuples, tuple;
 
                     var updateData = {
                         "non_key_col3": 117
                     }
 
                     reference.read(1).then(function (response) {
-                        tuple = response.tuples[0];
+                        tuples = response.tuples;
+                        tuple = tuples[0];
                         var data = tuple.data;
 
                         for (var key in updateData) {
@@ -472,6 +526,8 @@ exports.execute = function (options) {
                         return reference.update(response.tuples);
                     }).then(function (response) {
                         expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -490,7 +546,7 @@ exports.execute = function (options) {
                 /* Multiple columns modified */
                 describe("multiple columns are modified. ", function () {
                     it("Columns are non-key values.", function (done) {
-                        var tuple;
+                        var tuples, tuple;
 
                         var updateData = {
                             "non_key_col1": "modified sales text",
@@ -498,7 +554,8 @@ exports.execute = function (options) {
                         }
 
                         reference.read(1).then(function (response) {
-                            tuple = response.tuples[0];
+                            tuples = response.tuples;
+                            tuple = tuples[0];
                             var data = tuple.data;
 
                             for (var key in updateData) {
@@ -508,6 +565,8 @@ exports.execute = function (options) {
                             return reference.update(response.tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -527,7 +586,7 @@ exports.execute = function (options) {
                     });
 
                     it("One column is a non-key value and one is part of a composite key.", function (done) {
-                        var tuple;
+                        var tuples, tuple;
 
                         var updateData = {
                             "comp_key1_col2": "Stephen",
@@ -535,7 +594,8 @@ exports.execute = function (options) {
                         }
 
                         reference.read(1).then(function (response) {
-                            tuple = response.tuples[0];
+                            tuples = response.tuples;
+                            tuple = tuples[0];
                             var data = tuple.data;
 
                             for (var key in updateData) {
@@ -545,6 +605,8 @@ exports.execute = function (options) {
                             return reference.update(response.tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -564,7 +626,7 @@ exports.execute = function (options) {
                     });
 
                     it("One column is a non-key value and one is an independent key that is NOT the shortest key.", function (done) {
-                        var tuple;
+                        var tuples, tuple;
 
                         var updateData = {
                             "ind_key2": "aabbccdd",
@@ -572,7 +634,8 @@ exports.execute = function (options) {
                         }
 
                         reference.read(1).then(function (response) {
-                            tuple = response.tuples[0];
+                            tuples = response.tuples;
+                            tuple = tuples[0];
                             var data = tuple.data;
 
                             for (var key in updateData) {
@@ -582,6 +645,8 @@ exports.execute = function (options) {
                             return reference.update(response.tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -603,7 +668,7 @@ exports.execute = function (options) {
                     describe("2 key columns modified, ", function () {
                         describe("both part of the same composite key.", function () {
                             it("One column is part of another key as well.", function (done) {
-                                var tuple;
+                                var tuples, tuple;
 
                                 var updateData = {
                                     "comp_key2_col1": "automobile",
@@ -611,7 +676,8 @@ exports.execute = function (options) {
                                 }
 
                                 reference.read(1).then(function (response) {
-                                    tuple = response.tuples[0];
+                                    tuples = response.tuples;
+                                    tuple = tuples[0];
                                     var data = tuple.data;
 
                                     for (var key in updateData) {
@@ -621,6 +687,8 @@ exports.execute = function (options) {
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
                                     expect(response._data.length).toBe(1);
+
+                                    checkPageValues(response._data, tuples, sortBy);
 
                                     return reference.read(1);
                                 }).then(function (response) {
@@ -640,7 +708,7 @@ exports.execute = function (options) {
                             });
 
                             it("Both columns are part of a distinct composite key.", function (done) {
-                                var tuple;
+                                var tuples, tuple;
 
                                 var updateData = {
                                     "comp_key1_col1": "Stuart",
@@ -648,7 +716,8 @@ exports.execute = function (options) {
                                 }
 
                                 reference.read(1).then(function (response) {
-                                    tuple = response.tuples[0];
+                                    tuples = response.tuples;
+                                    tuple = tuples[0];
                                     var data = tuple.data;
 
                                     for (var key in updateData) {
@@ -658,6 +727,8 @@ exports.execute = function (options) {
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
                                     expect(response._data.length).toBe(1);
+
+                                    checkPageValues(response._data, tuples, sortBy);
 
                                     return reference.read(1);
                                 }).then(function (response) {
@@ -678,7 +749,7 @@ exports.execute = function (options) {
                         });
 
                         it("both part of separate composite keys.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "comp_key2_col1": "motorcycle",
@@ -686,7 +757,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -696,6 +768,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -715,7 +789,7 @@ exports.execute = function (options) {
                         });
 
                         it("one independent key, that isn't the shortest key, and one part of a composite key.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "ind_key2": "asdfjkl",
@@ -723,7 +797,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -733,6 +808,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -754,7 +831,7 @@ exports.execute = function (options) {
 
                     describe("3 key columns modified, ", function () {
                         it("all part of composite keys.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "comp_key1_col1": "Winona",
@@ -763,7 +840,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -773,6 +851,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -795,7 +875,7 @@ exports.execute = function (options) {
                         });
 
                         it("one independent key and two part of composite keys.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "ind_key2": "qwerty",
@@ -804,7 +884,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -814,6 +895,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -838,7 +921,7 @@ exports.execute = function (options) {
 
                     describe("3 columns modified, one non-key value", function () {
                         it(" and two part of composite keys.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "non_key_col2": "remove this please",
@@ -847,7 +930,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -857,6 +941,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -879,7 +965,7 @@ exports.execute = function (options) {
                         });
 
                         it(", one part of a composite key, and one independent key.", function (done) {
-                            var tuple;
+                            var tuples, tuple;
 
                             var updateData = {
                                 "non_key_col3": 3003,
@@ -888,7 +974,8 @@ exports.execute = function (options) {
                             }
 
                             reference.read(1).then(function (response) {
-                                tuple = response.tuples[0];
+                                tuples = response.tuples;
+                                tuple = tuples[0];
                                 var data = tuple.data;
 
                                 for (var key in updateData) {
@@ -898,6 +985,8 @@ exports.execute = function (options) {
                                 return reference.update(response.tuples);
                             }).then(function (response) {
                                 expect(response._data.length).toBe(1);
+
+                                checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -951,6 +1040,8 @@ exports.execute = function (options) {
                             return reference.update(tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(updateData.length);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1039,6 +1130,8 @@ exports.execute = function (options) {
                         }).then(function (response) {
                             expect(response._data.length).toBe(updateData.length);
 
+                            checkPageValues(response._data, tuples, sortBy);
+
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
                             var getFirstUri = baseUri + "/ind_key1=3";
@@ -1103,6 +1196,8 @@ exports.execute = function (options) {
                             return reference.update(tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(updateData.length);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1172,6 +1267,8 @@ exports.execute = function (options) {
                             return reference.update(tuples);
                         }).then(function (response) {
                             expect(response._data.length).toBe(updateData.length);
+
+                            checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
