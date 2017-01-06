@@ -1942,6 +1942,14 @@ var ERMrest = (function(module) {
         },
 
         /**
+         *
+         * @param {Object} data - the data to be updated
+         */
+        set data(data) {
+            // TODO needs to be implemented rather than modifying the values directly from UI
+        },
+
+        /**
          * Indicates whether the client can update this tuple. Because
          * some policies may be undecidable until query execution, this
          * property may also be `undefined`.

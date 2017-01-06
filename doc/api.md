@@ -252,6 +252,7 @@ to use for ERMrest JavaScript agents.
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
+        * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2312,6 +2313,7 @@ if (content) {
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
+    * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2358,6 +2360,15 @@ and both the old and new value for the modified key are submitted together
 for proper updating.
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+<a name="ERMrest.Tuple+data"></a>
+
+#### tuple.data
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | the data to be updated |
+
 <a name="ERMrest.Tuple+canUpdate"></a>
 
 #### tuple.canUpdate : <code>boolean</code> &#124; <code>undefined</code>
