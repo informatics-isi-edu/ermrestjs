@@ -927,8 +927,9 @@ var ERMrest = (function(module) {
 
         /**
          * Updates a set of resources.
-         * @param {!Array} tbd TBD parameters. Probably an array of pairs of
-         * [ (keys+values, allvalues)]+ ] for all entities to be updated.
+         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
+         * tuple.data has the new data
+         * tuple._oldData has the data before changes were made
          * @returns {Promise} page A promise for a page result or errors.
          */
         update: function(tuples) {
@@ -1920,7 +1921,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Used for getting the current set of data for the reference.
+         * This stores the original data in the _oldData object to preserve
+         * it before any changes are made and those values can be properly
+         * used in update requests.
          *
+         * Notably, if a key value is changed, the old value needs to be kept
+         * track of so that the column projections for the uri can be properly created
+         * and both the old and new value for the modified key are submitted together
+         * for proper updating.
+         *
+         * @type {(json Object)}
          */
         get data() {
             if (this._oldData === undefined) {
@@ -2130,18 +2141,18 @@ var ERMrest = (function(module) {
         /**
          * If the Tuple is derived from an association related table,
          * this function will return a reference to the corresponding
-         * entity of this tuple's association table. 
-         * 
+         * entity of this tuple's association table.
+         *
          * For example, assume
          * Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
-         * and current tuple is from Table2 with k2 = "2". 
+         * and current tuple is from Table2 with k2 = "2".
          * With origFKRData = {"k1": "1"} this function will return a reference
          * to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
-         * 
+         *
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef._derivedAssociationRef) {          
+            if (this._pageRef._derivedAssociationRef) {
                 var associationRef = this._pageRef._derivedAssociationRef,
                     encoder = module._fixedEncodeURIComponent,
                     newFilter = [],
@@ -2169,7 +2180,7 @@ var ERMrest = (function(module) {
                 missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
 
                 if (missingData) {
-                    return null;    
+                    return null;
                 } else {
                     var loc = associationRef._location;
                     var uri = [
@@ -2182,13 +2193,13 @@ var ERMrest = (function(module) {
                     reference.session = associationRef._session;
                     return reference;
                 }
-                
+
             } else {
                 return null;
             }
-            
-        }            
-        
+
+        }
+
 
     };
 
@@ -2355,7 +2366,7 @@ var ERMrest = (function(module) {
                         caption,
                         isNull = false,
                         i;
-                
+
                     for (i = 0; i < fkColumns.length; i++) {
                         if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
                             isNull = true; //return null if one of them is null;
