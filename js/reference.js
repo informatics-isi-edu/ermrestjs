@@ -1931,7 +1931,7 @@ var ERMrest = (function(module) {
          * and both the old and new value for the modified key are submitted together
          * for proper updating.
          *
-         * @type {(json Object)}
+         * @type {Object}
          */
         get data() {
             if (this._oldData === undefined) {

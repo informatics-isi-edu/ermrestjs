@@ -236,7 +236,7 @@ to use for ERMrest JavaScript agents.
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort)
-        * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+        * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.search(term)](#ERMrest.Reference+search)
     * [.Page](#ERMrest.Page)
@@ -251,7 +251,7 @@ to use for ERMrest JavaScript agents.
     * [.Tuple](#ERMrest.Tuple)
         * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
-        * [.data](#ERMrest.Tuple+data)
+        * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -1853,7 +1853,7 @@ Constructor for a ParsedFilter.
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort)
-    * [.update(tbd)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+    * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.search(term)](#ERMrest.Reference+search)
 
@@ -2153,7 +2153,7 @@ Return a new Reference with the new sorting
 
 <a name="ERMrest.Reference+update"></a>
 
-#### reference.update(tbd) ⇒ <code>Promise</code>
+#### reference.update(tuples) ⇒ <code>Promise</code>
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
@@ -2161,7 +2161,7 @@ Updates a set of resources.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tbd | <code>Array</code> | TBD parameters. Probably an array of pairs of [ (keys+values, allvalues)]+ ] for all entities to be updated. |
+| tuples | <code>Array</code> | array of tuple objects so that the new data nd old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
 
 <a name="ERMrest.Reference+delete"></a>
 
@@ -2311,7 +2311,7 @@ if (content) {
 * [.Tuple](#ERMrest.Tuple)
     * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
-    * [.data](#ERMrest.Tuple+data)
+    * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
@@ -2346,7 +2346,17 @@ This is the reference of the Tuple
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
 <a name="ERMrest.Tuple+data"></a>
 
-#### tuple.data
+#### tuple.data : <code>Object</code>
+Used for getting the current set of data for the reference.
+This stores the original data in the _oldData object to preserve
+it before any changes are made and those values can be properly
+used in update requests.
+
+Notably, if a key value is changed, the old value needs to be kept
+track of so that the column projections for the uri can be properly created
+and both the old and new value for the modified key are submitted together
+for proper updating.
+
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 <a name="ERMrest.Tuple+canUpdate"></a>
 
@@ -2452,11 +2462,11 @@ and therefore an asynchronous operation that returns a promise.
 #### tuple.getAssociationRef() : <code>[Reference](#ERMrest.Reference)</code>
 If the Tuple is derived from an association related table,
 this function will return a reference to the corresponding
-entity of this tuple's association table. 
+entity of this tuple's association table.
 
 For example, assume
 Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
-and current tuple is from Table2 with k2 = "2". 
+and current tuple is from Table2 with k2 = "2".
 With origFKRData = {"k1": "1"} this function will return a reference
 to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
 
