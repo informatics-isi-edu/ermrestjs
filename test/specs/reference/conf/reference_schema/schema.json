@@ -262,7 +262,8 @@
             "annotations": {
                 "tag:misd.isi.edu,2015:display": {
                     "name": "association table displayname"
-                }
+                },
+                "tag:isrd.isi.edu,2016:non-deletable": {}
             }
         },
         "association_table_with_extra": {
@@ -966,6 +967,7 @@
                 },
                 {
                     "name": "col_1",
+                    "default": null,
                     "type": {
                         "typename": "text"
                     },
@@ -989,6 +991,7 @@
                 },
                 {
                     "name": "col_3",
+                    "default" : "col 3 default",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -1002,6 +1005,7 @@
                 },
                 {
                     "name": "col_4",
+                    "default": "col 4 default",
                     "type": {
                         "typename": "text"
                     },
@@ -1012,6 +1016,7 @@
                 },
                 {
                     "name": "col_5",
+                    "default" : "col 5 default",
                     "type": {
                         "typename": "text"
                     },
@@ -1022,6 +1027,7 @@
                 },
                 {
                     "name": "col_6",
+                    "default" : "col 6 default",
                     "nullok": false,
                     "type": {
                         "typename": "text"

@@ -1204,6 +1204,12 @@ var ERMrest = (function(module) {
                     delete newRef._referenceColumns;
                     delete newRef._derivedAssociationRef;
 
+                    // delete permissions
+                    delete newRef._canCreate;
+                    delete newRef._canRead;
+                    delete newRef._canUpdate;
+                    delete newRef._canDelete;
+
                     newRef.origFKR = fkr; // it will be used to trace back the reference
 
                     var fkrTable = fkr.colset.columns[0].table;
@@ -1228,7 +1234,9 @@ var ERMrest = (function(module) {
 
                         // will be used in entry contexts
                         newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef._derivedAssociationRef.session = this._session;
                         newRef._derivedAssociationRef.origFKR = newRef.origFKR;
+                        newRef._derivedAssociationRef._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -1314,6 +1322,10 @@ var ERMrest = (function(module) {
             delete this._referenceColumns;
             delete this._related;
             delete this._derivedAssociationRef;
+            delete this._canCreate;
+            delete this._canRead;
+            delete this._canUpdate;
+            delete this._canDelete;
         }
     };
 
@@ -2113,7 +2125,70 @@ var ERMrest = (function(module) {
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
-        }
+        },
+
+        /**
+         * If the Tuple is derived from an association related table,
+         * this function will return a reference to the corresponding
+         * entity of this tuple's association table. 
+         * 
+         * For example, assume
+         * Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
+         * and current tuple is from Table2 with k2 = "2". 
+         * With origFKRData = {"k1": "1"} this function will return a reference
+         * to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
+         * 
+         * @type {ERMrest.Reference}
+         */
+        getAssociationRef: function(origTableData){
+            if (this._pageRef._derivedAssociationRef) {          
+                var associationRef = this._pageRef._derivedAssociationRef,
+                    encoder = module._fixedEncodeURIComponent,
+                    newFilter = [],
+                    missingData = false;
+
+                var addFilter = function(fkr, data) {
+                    var keyCols = fkr.colset.columns,
+                        mapping = fkr.mapping, d, i;
+
+                    for (i = 0; i < keyCols.length; i++) {
+                        try {
+                            d = data[mapping.get(keyCols[i]).name];
+                            if (d === undefined || d === null) return false;
+
+                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
+                        } catch(exception) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+                // filter based on the first key
+                missingData = !addFilter(associationRef.origFKR, origTableData);
+                //filter based on the second key
+                missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+
+                if (missingData) {
+                    return null;    
+                } else {
+                    var loc = associationRef._location;
+                    var uri = [
+                        loc.service, "catalog", encoder(loc.catalog), loc.api,
+                        encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
+                        newFilter.join("&")
+                    ].join("/");
+
+                    var reference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                    reference.session = associationRef._session;
+                    return reference;
+                }
+                
+            } else {
+                return null;
+            }
+            
+        }            
+        
 
     };
 
@@ -2154,6 +2229,7 @@ var ERMrest = (function(module) {
              * @desc The reference object that represents the table of this PseudoColumn
              */
             this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+            this.reference.session = reference._session;
 
             /**
              * @type {ERMrest.ForeignKeyRef}
@@ -2264,14 +2340,50 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @desc Returns the default value (or function) for this column
+         * @desc Returns the default value
+         * @type {string}
          */
          get default() {
-            if (!this.isPseudo) {
-                return this._base.default;
-            } else {
-                // TODO handle the case for pseudo columns (foreign keys)
-            }
+             if (this._default === undefined) {
+                if (!this.isPseudo) {
+                    this._default = this._base.default;
+                } else {
+                    var fkColumns = this.foreignKey.colset.columns,
+                        keyColumns = this.foreignKey.key.colset.columns,
+                        mapping = this.foreignKey.mapping,
+                        data = {},
+                        caption,
+                        isNull = false,
+                        i;
+                
+                    for (i = 0; i < fkColumns.length; i++) {
+                        if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+                            isNull = true; //return null if one of them is null;
+                            break;
+                        }
+                        data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+                    }
+
+                    if (isNull) {
+                        this._default = null;
+                    } else {
+                        // use row name as the caption
+                        caption = module._generateRowName(this.table, this._context, data);
+
+                        // use "col_1:col_2:col_3"
+                        if (caption.trim() === '') {
+                            var keyValues = [];
+                            for (i = 0; i < keyColumns.length; i++) {
+                                keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], {context: this._context}));
+                            }
+                            caption = keyValues.join(":");
+                        }
+
+                        this._default = caption.trim() !== '' ? caption : null;
+                    }
+                }
+             }
+             return this._default;
          },
 
         /**
