@@ -56,6 +56,7 @@ all: $(BUILD) $(DOC)
 
 # Build rule
 $(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
+	@touch $(BUILD)
 
 # Rule to build the library (non-minified)
 .PHONY: package
