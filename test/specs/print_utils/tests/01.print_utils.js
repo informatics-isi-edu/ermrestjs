@@ -64,6 +64,8 @@ exports.execute = function (options) {
             var printText = formatUtils.printText;
             expect(printText(null)).toBe('');
             expect(printText("<b>Some text! &amp;</b>")).toBe('<b>Some text! &amp;</b>');
+            expect(printText({key:123})).toBe('{"key":123}');
+            expect(printText({key:123,subkey:{subsubkey:456}})).toBe('{"key":123,"subkey":{"subsubkey":456}}');
         });
 
         it('printMarkdown() should process Markdown into HTML.', function() {
