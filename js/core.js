@@ -2050,6 +2050,7 @@ var ERMrest = (function (module) {
     function Key(table, jsonKey) {
 
         /*
+         * @deprecated
          * TODO
          * I added `this.table` below and we should remove `this._table`. But
          * I'm leaving it in for now because I am not sure what I might break.
@@ -2097,6 +2098,22 @@ var ERMrest = (function (module) {
          * @type {string}
          */
         this.comment = jsonKey.comment;
+
+        /**
+         * The exact `names` array in key definition
+         * @type {Array}
+         */
+        this.constraint_names = Array.isArray(jsonKey.names) ? jsonKey.names : [];
+
+        // add constraint names to catalog
+        for (var k = 0, constraint; k < this.constraint_names.length; k++) {
+            constraint = this.constraint_names[k];
+            try {
+                if (Array.isArray(constraint) && constraint.length == 2){
+                    table.schema.catalog._addConstraintName(constraint, this);
+                }
+            } catch (exception){}
+        }
     }
 
     Key.prototype = {
