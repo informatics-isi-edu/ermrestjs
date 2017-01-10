@@ -599,6 +599,9 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
+            if (typeof value === 'object') {
+                return JSON.stringify(value);
+            }
             return value.toString();
         },
 

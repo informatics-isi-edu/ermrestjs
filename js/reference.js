@@ -931,8 +931,9 @@ var ERMrest = (function(module) {
 
         /**
          * Updates a set of resources.
-         * @param {!Array} tbd TBD parameters. Probably an array of pairs of
-         * [ (keys+values, allvalues)]+ ] for all entities to be updated.
+         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
+         * tuple.data has the new data
+         * tuple._oldData has the data before changes were made
          * @returns {Promise} page A promise for a page result or errors.
          */
         update: function(tuples) {
@@ -943,6 +944,8 @@ var ERMrest = (function(module) {
                 var defer = module._q.defer();
 
                 var self = this,
+                    oldAlias = "_o",
+                    newAlias = "_n",
                     uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
 
                 var submissionData = [],
@@ -963,8 +966,8 @@ var ERMrest = (function(module) {
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + "_o"] = oldData[key];
-                        submissionData[i][key + "_n"] = newData[key];
+                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + oldAlias] = oldData[key];
+                        submissionData[i][key + newAlias] = newData[key];
                     }
                 }
 
@@ -977,7 +980,7 @@ var ERMrest = (function(module) {
                     keyName = shortestKeyNames[j];
 
                     // need to alias the key in the uri
-                    uri += module._fixedEncodeURIComponent(keyName) + "_o:=" + module._fixedEncodeURIComponent(keyName);
+                    uri += module._fixedEncodeURIComponent(keyName) + oldAlias + ":=" + module._fixedEncodeURIComponent(keyName);
                 }
 
                 // separator for denoting where the keyset ends and the update column set begins
@@ -986,7 +989,7 @@ var ERMrest = (function(module) {
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
                     // check if this column is part of the shortest key, alias the column name if it is
-                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + "_n:=" + module._fixedEncodeURIComponent(columnProjections[k]);
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
                 var config = {
@@ -996,30 +999,45 @@ var ERMrest = (function(module) {
                 };
 
                 this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
-                    var page;
+                    var pageData = [],
+                        page;
 
                     var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
                     // loop through each returned Row and get the key value
                     for (var j = 0; j < response.data.length; j++) {
+                        // build the uri
                         if (j !== 0)
                         uri += ';';
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName+"_n"]);
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
                         } else {
                             uri += '(';
                             for (var k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                 uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName+"_n"]);
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
                             }
                             uri += ')';
                         }
+
+                        // unalias the keys for the page data
+                        pageData[j] = {};
+                        var responseColumns = Object.keys(response.data[j]);
+
+                        for (var m = 0; m < responseColumns.length; m++) {
+                            var columnAlias = responseColumns[m];
+                            if (columnAlias.endsWith(newAlias)) {
+                                // alias is always at end and length 2
+                                var columnName = columnAlias.slice(0, columnAlias.length-newAlias.length);
+                                pageData[j][columnName] = response.data[j][columnAlias];
+                            }
+                        }
                     }
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                    page = new Page(ref, response.data, false, false);
+                    page = new Page(ref, pageData, false, false);
 
                     defer.resolve(page);
                 }, function error(response) {
@@ -1191,6 +1209,12 @@ var ERMrest = (function(module) {
                     delete newRef._referenceColumns;
                     delete newRef._derivedAssociationRef;
 
+                    // delete permissions
+                    delete newRef._canCreate;
+                    delete newRef._canRead;
+                    delete newRef._canUpdate;
+                    delete newRef._canDelete;
+
                     newRef.origFKR = fkr; // it will be used to trace back the reference
 
                     var fkrTable = fkr.colset.columns[0].table;
@@ -1215,7 +1239,9 @@ var ERMrest = (function(module) {
 
                         // will be used in entry contexts
                         newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef._derivedAssociationRef.session = this._session;
                         newRef._derivedAssociationRef.origFKR = newRef.origFKR;
+                        newRef._derivedAssociationRef._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -1301,6 +1327,10 @@ var ERMrest = (function(module) {
             delete this._referenceColumns;
             delete this._related;
             delete this._derivedAssociationRef;
+            delete this._canCreate;
+            delete this._canRead;
+            delete this._canUpdate;
+            delete this._canDelete;
         }
     };
 
@@ -1384,7 +1414,7 @@ var ERMrest = (function(module) {
 
         _contextualize: function(context) {
             var source;
-            
+
             // if this is a related association table and context is edit, contextualize based on the association table.
             if (this._reference._derivedAssociationRef && module._isEntryContext(context)) {
                 source = this._reference._derivedAssociationRef;
@@ -1895,7 +1925,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Used for getting the current set of data for the reference.
+         * This stores the original data in the _oldData object to preserve
+         * it before any changes are made and those values can be properly
+         * used in update requests.
          *
+         * Notably, if a key value is changed, the old value needs to be kept
+         * track of so that the column projections for the uri can be properly created
+         * and both the old and new value for the modified key are submitted together
+         * for proper updating.
+         *
+         * @type {Object}
          */
         get data() {
             if (this._oldData === undefined) {
@@ -1903,6 +1943,14 @@ var ERMrest = (function(module) {
                 this._oldData = JSON.parse(JSON.stringify(this._data));
             }
             return this._data;
+        },
+
+        /**
+         *
+         * @param {Object} data - the data to be updated
+         */
+        set data(data) {
+            // TODO needs to be implemented rather than modifying the values directly from UI
         },
 
         /**
@@ -2100,7 +2148,70 @@ var ERMrest = (function(module) {
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
+        },
+
+        /**
+         * If the Tuple is derived from an association related table,
+         * this function will return a reference to the corresponding
+         * entity of this tuple's association table.
+         *
+         * For example, assume
+         * Table1(K1,C1) <- AssocitaitonTable(FK1, FK2) -> Table2(K2,C2)
+         * and current tuple is from Table2 with k2 = "2".
+         * With origFKRData = {"k1": "1"} this function will return a reference
+         * to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
+         *
+         * @type {ERMrest.Reference}
+         */
+        getAssociationRef: function(origTableData){
+            if (this._pageRef._derivedAssociationRef) {
+                var associationRef = this._pageRef._derivedAssociationRef,
+                    encoder = module._fixedEncodeURIComponent,
+                    newFilter = [],
+                    missingData = false;
+
+                var addFilter = function(fkr, data) {
+                    var keyCols = fkr.colset.columns,
+                        mapping = fkr.mapping, d, i;
+
+                    for (i = 0; i < keyCols.length; i++) {
+                        try {
+                            d = data[mapping.get(keyCols[i]).name];
+                            if (d === undefined || d === null) return false;
+
+                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
+                        } catch(exception) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+                // filter based on the first key
+                missingData = !addFilter(associationRef.origFKR, origTableData);
+                //filter based on the second key
+                missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+
+                if (missingData) {
+                    return null;
+                } else {
+                    var loc = associationRef._location;
+                    var uri = [
+                        loc.service, "catalog", encoder(loc.catalog), loc.api,
+                        encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
+                        newFilter.join("&")
+                    ].join("/");
+
+                    var reference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                    reference.session = associationRef._session;
+                    return reference;
+                }
+
+            } else {
+                return null;
+            }
+
         }
+
 
     };
 
@@ -2141,6 +2252,7 @@ var ERMrest = (function(module) {
              * @desc The reference object that represents the table of this PseudoColumn
              */
             this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+            this.reference.session = reference._session;
 
             /**
              * @type {ERMrest.ForeignKeyRef}
@@ -2266,7 +2378,7 @@ var ERMrest = (function(module) {
                         caption,
                         isNull = false,
                         i;
-                
+
                     for (i = 0; i < fkColumns.length; i++) {
                         if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
                             isNull = true; //return null if one of them is null;

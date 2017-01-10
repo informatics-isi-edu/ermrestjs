@@ -734,7 +734,7 @@ exports.execute = function (options) {
 
             });
         });
-
+        
         afterEach(function () {
             nock.cleanAll();
         });
