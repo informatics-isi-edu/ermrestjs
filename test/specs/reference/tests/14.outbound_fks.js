@@ -178,7 +178,7 @@ exports.execute = function (options) {
          *  outbound_fk_8: col_3, col_5 -> table_w_composite_key
          *  outbound_fk_9: col_5, col_7 -> table_w_composite_key -> col_7 is null
          * 
-         * expected output for ref.columns in detailed and compact/select context:
+         * expected output for ref.columns in detailed, compact/select, and entry/edit contexts:
          * 0:   id
          * 1:   outbound_fk_1 (check to_name) (check nullok)
          * 2:   outbound_fk_2  -> is null
@@ -196,7 +196,7 @@ exports.execute = function (options) {
          * 14:  outbound_fk_7 (check disambiguation) (check nullok)
          * 15:  outbound_fk_9
          * 
-         * expected output for ref.columns in edit or create context:
+         * expected output for ref.columns in create context:
          * 0:   id
          * 1:   outbound_fk_1
          * 2:   outbound_fk_2
@@ -217,7 +217,7 @@ exports.execute = function (options) {
          *  detailed: doesn't have visible-columns
          *  entry: doesn't have visible-columns
          *  entry: has visible-columns with invalid names
-         *  entry/edit: has all of the columns in visible-column + has some foreign keys too
+         *  entry/edit: doesn't have visible-columns
          *  entry/create: has all of the columns in visible-column + has some foreign keys too
          */
 
@@ -282,16 +282,102 @@ exports.execute = function (options) {
                         ]
                     }]);
                 });
-                
-                describe('if some columns are part of any foreign keys, ', function () {
-                    checkAllPseudoColumns(true);
+
+                it('should not apply heuristics and just return given list.', function() {
+                    expect(compactSelectColumns.length).toBe(13);
+                    checkReferenceColumns([{
+                        ref: compactSelectRef,
+                        expected: [
+                            "id", ["reference_schema", "outbound_fk_1"].join(":"),
+                            "col_1", "col_2", "col_3", "col_4","col_5", ["reference_schema","outbound_fk_3"].join(":"), 
+                            "col_6", "col_7", ["reference_schema","outbound_fk_5"].join(":"), 
+                            "reference_schema:outbound_fk_7", ["reference_schema","outbound_fk_7"].join(":") + "1"
+                        ]
+                    }]);
                 });
                 
             });
 
 
             describe('when visible-columns annotation is not present for the context, ', function () {
-                checkAllPseudoColumns(false);
+                it('should not include duplicate Columns or PseudoColumns.', function() {
+                    expect(detailedColumns.length).toBe(16);
+                    expect(entryRef.columns.length).toBe(11);
+                });
+
+                it('should include columns that are not part of any FKRs.', function () {
+                    expect(detailedColumns[0].isPseudo).toBe(false);
+                    expect(detailedColumns[0].name).toBe("id");
+
+                    expect(detailedColumns[10].isPseudo).toBe(false);
+                    expect(detailedColumns[10].name).toBe("reference_schema:outbound_fk_7");
+                });
+
+                describe('for columns that are part of a simple FKR, ', function () {
+                    it('should replace them with PseudoColumn.', function () {
+                        expect(detailedColumns[1].isPseudo).toBe(true);
+                        expect(detailedColumns[1].name).toBe(["reference_schema", "outbound_fk_1"].join(":"));
+
+                        expect(detailedColumns[2].isPseudo).toBe(true);
+                        expect(detailedColumns[2].name).toBe(["reference_schema", "outbound_fk_2"].join(":"));
+
+                        expect(detailedColumns[3].isPseudo).toBe(true);
+                        expect(detailedColumns[3].name).toBe(["reference_schema", "outbound_fk_3"].join(":"));
+
+                        expect(detailedColumns[4].isPseudo).toBe(true);
+                        expect(detailedColumns[4].name).toBe(["reference_schema", "outbound_fk_4"].join(":"));
+                    });
+                });
+
+                describe('for columns that are part of composite FKR, ', function () {
+
+                    it('should include the columns and avoid duplicate.', function () {
+                        expect(detailedColumns[5].isPseudo).toBe(false);
+                        expect(detailedColumns[5].name).toBe("col_3");
+
+                        expect(detailedColumns[6].isPseudo).toBe(false);
+                        expect(detailedColumns[6].name).toBe("col_4");
+
+                        expect(detailedColumns[7].isPseudo).toBe(false);
+                        expect(detailedColumns[7].name).toBe("col_5");
+
+                        expect(detailedColumns[8].isPseudo).toBe(false);
+                        expect(detailedColumns[8].name).toBe("col_6");
+
+                        expect(detailedColumns[9].isPseudo).toBe(false);
+                        expect(detailedColumns[9].name).toBe("col_7");
+                    });
+
+
+                    it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
+                        var expectedCols = [
+                            "id", ["reference_schema", "outbound_fk_1"].join(":"), ["reference_schema", "outbound_fk_2"].join(":"), ["reference_schema", "outbound_fk_3"].join(":"), ["reference_schema", "outbound_fk_4"].join(":"),
+                            "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_5"].join(":"), ["reference_schema", "outbound_fk_6"].join(":"), ["reference_schema", "outbound_fk_8"].join(":"), ["reference_schema", "outbound_fk_7"].join(":") + "1", ["reference_schema", "outbound_fk_9"].join(":")
+                        ];
+
+                        checkReferenceColumns([{
+                            ref: entryRef,
+                            expected: expectedCols
+                        }]);
+                    });
+
+                    it('should create just one PseudoColumn for the FKR.', function () {
+                        expect(detailedColumns[11].isPseudo).toBe(true);
+                        expect(detailedColumns[11].name).toBe(["reference_schema", "outbound_fk_5"].join(":"));
+
+                        expect(detailedColumns[12].isPseudo).toBe(true);
+                        expect(detailedColumns[12].name).toBe(["reference_schema", "outbound_fk_6"].join(":"));
+
+                        expect(detailedColumns[13].isPseudo).toBe(true);
+                        expect(detailedColumns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
+
+                        expect(detailedColumns[14].isPseudo).toBe(true);
+                        expect(detailedColumns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":") + "1");
+
+                        expect(detailedColumns[15].isPseudo).toBe(true);
+                        expect(detailedColumns[15].name).toBe(["reference_schema", "outbound_fk_9"].join(":"));
+                    });
+                });
             });
             
             describe('PseudoColumn, ', function () {
@@ -437,6 +523,7 @@ exports.execute = function (options) {
                 describe('.getInputDisabled, ', function () {
                     it('for simple foreignkeys, should return column\`s result.', function () {
                         // has generated in create
+                        expect(entryCreateRef.columns[0].name).toBe("reference_schema:outbound_fk_1")
                         expect(entryCreateRef.columns[0].inputDisabled).toEqual({
                             message: "Automatically generated"
                         });
@@ -554,99 +641,6 @@ exports.execute = function (options) {
 
 
         /************** HELPER FUNCTIONS ************* */
-        function checkAllPseudoColumns(hasAnnotation) {
-            var columns, currEntryRef;
-
-            beforeAll(function () {
-                if (hasAnnotation) {
-                    currEntryRef = entryEditRef;
-                    columns = compactSelectColumns;
-                } else {
-                    currEntryRef = entryRef;
-                    columns = detailedColumns;
-                }
-            });
-
-            it('should not include duplicate Columns or PseudoColumns.', function() {
-                expect(columns.length).toBe(16);
-                expect(currEntryRef.columns.length).toBe(11);
-            });
-
-            it('should include columns that are not part of any FKRs.', function () {
-                expect(columns[0].isPseudo).toBe(false);
-                expect(columns[0].name).toBe("id");
-
-                expect(columns[10].isPseudo).toBe(false);
-                expect(columns[10].name).toBe("reference_schema:outbound_fk_7");
-            });
-
-            describe('for columns that are part of a simple FKR, ', function () {
-                it('should replace them with PseudoColumn.', function () {
-                    expect(columns[1].isPseudo).toBe(true);
-                    expect(columns[1].name).toBe(["reference_schema", "outbound_fk_1"].join(":"));
-
-                    expect(columns[2].isPseudo).toBe(true);
-                    expect(columns[2].name).toBe(["reference_schema", "outbound_fk_2"].join(":"));
-
-                    expect(columns[3].isPseudo).toBe(true);
-                    expect(columns[3].name).toBe(["reference_schema", "outbound_fk_3"].join(":"));
-
-                    expect(columns[4].isPseudo).toBe(true);
-                    expect(columns[4].name).toBe(["reference_schema", "outbound_fk_4"].join(":"));
-                });
-            });
-
-            describe('for columns that are part of composite FKR, ', function () {
-
-                it('should include the columns and avoid duplicate.', function () {
-                    expect(columns[5].isPseudo).toBe(false);
-                    expect(columns[5].name).toBe("col_3");
-
-                    expect(columns[6].isPseudo).toBe(false);
-                    expect(columns[6].name).toBe("col_4");
-
-                    expect(columns[7].isPseudo).toBe(false);
-                    expect(columns[7].name).toBe("col_5");
-
-                    expect(columns[8].isPseudo).toBe(false);
-                    expect(columns[8].name).toBe("col_6");
-
-                    expect(columns[9].isPseudo).toBe(false);
-                    expect(columns[9].name).toBe("col_7");
-                });
-
-
-                it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
-                    var expectedCols = [
-                        "id", ["reference_schema", "outbound_fk_1"].join(":"), ["reference_schema", "outbound_fk_2"].join(":"), ["reference_schema", "outbound_fk_3"].join(":"), ["reference_schema", "outbound_fk_4"].join(":"),
-                        "reference_schema:outbound_fk_7", ["reference_schema", "outbound_fk_5"].join(":"), ["reference_schema", "outbound_fk_6"].join(":"), ["reference_schema", "outbound_fk_8"].join(":"), ["reference_schema", "outbound_fk_7"].join(":") + "1", ["reference_schema", "outbound_fk_9"].join(":")
-                    ];
-
-                    checkReferenceColumns([{
-                        ref: currEntryRef,
-                        expected: expectedCols
-                    }]);
-                });
-
-                it('should create just one PseudoColumn for the FKR.', function () {
-                    expect(columns[11].isPseudo).toBe(true);
-                    expect(columns[11].name).toBe(["reference_schema", "outbound_fk_5"].join(":"));
-
-                    expect(columns[12].isPseudo).toBe(true);
-                    expect(columns[12].name).toBe(["reference_schema", "outbound_fk_6"].join(":"));
-
-                    expect(columns[13].isPseudo).toBe(true);
-                    expect(columns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
-
-                    expect(columns[14].isPseudo).toBe(true);
-                    expect(columns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":") + "1");
-
-                    expect(columns[15].isPseudo).toBe(true);
-                    expect(columns[15].name).toBe(["reference_schema", "outbound_fk_9"].join(":"));
-                });
-            });
-        }
-
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function (test) {
                 expect(test.ref.columns.map(function (col) {

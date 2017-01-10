@@ -268,24 +268,21 @@ var ERMrest = (function(module) {
                 /**
                  * The logic is as follows:
                  *
-                 * 1. check if visible-column annotation is present for this context.
-                 *  1.1 if it is, use that list as the baseline.
-                 *  1.2 if not, use the list of all the columns as the baseline.
-                 *
-                 * 2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
-                 *  2.1 if it's an array,
-                 *      2.1.1 find the corresponding foreign key
-                 *      2.1.2 check if it's part of this table.
-                 *      2.1.3 avoid duplicate foreign keys.
-                 *      2.1.4 make sure it is not hidden(+).
-                 *  2.2 otherwise,
-                 *      2.2.1 if it's a string: find the corresponding column object if exists.
-                 *      2.2.2 check if column has not been processed before.
-                 *      2.2.3 if it's not part of any foreign keys add the column.
-                 *      2.2.4 go through all of the foreign keys that this column is part of.
-                 *          2.2.4.1 make sure it is not hidden(+).
-                 *          2.2.4.2 if it's simple fk, just create PseudoColumn
-                 *          2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+                 * 1. check if visible-column annotation is present for this context, go through the list,
+                 *      1.1 if it's an array,
+                 *          1.1.1 find the corresponding foreign key
+                 *          1.1.2 check if it's part of this table.
+                 *          1.1.3 avoid duplicate foreign keys.
+                 *          1.1.4 make sure it is not hidden(+).
+                 *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+                 * 
+                 * 2.otherwise go through list of table columns
+                 *      2.1 check if column has not been processed before.
+                 *      2.2 if it's not part of any foreign keys add the column.
+                 *      2.3 go through all of the foreign keys that this column is part of.
+                 *          2.3.1 make sure it is not hidden(+).
+                 *          2.3.2 if it's simple fk, just create PseudoColumn
+                 *          2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
                  * NOTE:
                  *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
@@ -322,41 +319,49 @@ var ERMrest = (function(module) {
                     columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
                 }
 
-                // use columns as the base if annotation was not present
-                if (columns === -1) {
-                    columns = this._table.columns.all();
-                }
-
-                // columns is a list of string (column name), array (fk constraint name) or objects (column)
-                for (i = 0; i < columns.length; i++) {
-                    col = columns[i];
-
-                    if (Array.isArray(col)) { // foreign keys
-                        fk = this._table.schema.catalog.constraintByNamePair(col);
-                        if (fk !== null) {
-                            fkName = fk.constraint_names[0].join(":");
-
-                            // fk is in this table, avoid duplicate and it's not hidden.
-                            if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
-                                addedFKs[fkName] = 1;
-                                this._referenceColumns.push(new ReferenceColumn(this, fk.colset.columns[0], fk));
+                // annotation
+                if (columns !== -1) { 
+                    for (i = 0; i < columns.length; i++) {
+                        col = columns[i];
+                        // foreignKey
+                        if (Array.isArray(col)) { 
+                            fk = this._table.schema.catalog.constraintByNamePair(col);
+                            if (fk !== null) {
+                                fkName = fk.constraint_names[0].join(":");
+                                
+                                // fk is in this table, avoid duplicate and it's not hidden.
+                                if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
+                                    addedFKs[fkName] = true;
+                                    this._referenceColumns.push(new ReferenceColumn(this, fk.colset.columns[0], fk));
+                                }
                             }
                         }
-                    } else { // columns
-
-                        // (annotation: column name)
-                        if (typeof col == "string" && !(col in consideredColumns)) {
-                            // find the corresponding column
+                        // column
+                        else {
                             try {
                                 col = this._table.columns.get(col);
                             } catch (exception) {}
+                            
+                            // if column is not defined, processed before, or should be hidden
+                            if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
+                                    continue;
+                            }
+                            consideredColumns[col.name] = true;
+                            this._referenceColumns.push(new ReferenceColumn(this, col));
                         }
+                    }    
+                }
+                // heuristics
+                else {
+                    columns = this._table.columns.all();
+                    for (i = 0; i < columns.length; i++) {
+                        col = columns[i];
 
-                        // if column is not defined, processed before, or should be hidden
-                        if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
+                        // avoid duplicate, or should be hidden
+                        if (col.name in consideredColumns  || hideColumn(col)) {
                             continue;
-                        }
-                        consideredColumns[col.name] = 1;
+                        }          
+                        consideredColumns[col.name] = true;
 
                         // add the column if it's not part of any foreign keys
                         if (col.memberOfForeignKeys.length === 0) {
@@ -380,7 +385,7 @@ var ERMrest = (function(module) {
 
                                 if (fk.simple) { // simple FKR
                                     if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
-                                        addedFKs[fkName] = 1;
+                                        addedFKs[fkName] = true;
                                         this._referenceColumns.push(new ReferenceColumn(this, col, fk));
                                     }
                                 } else { // composite FKR
@@ -391,20 +396,19 @@ var ERMrest = (function(module) {
                                     }
                                     // hold composite FKR
                                     if (!(fkName in addedFKs)) {
-                                        addedFKs[fkName] = 1;
+                                        addedFKs[fkName] = true;
                                         compositeFKs.push(new ReferenceColumn(this, col, fk));
                                     }
                                 }
                             }
-                        }
+                        }       
+                    }
+
+                    // append composite FKRs
+                    for (i = 0; i < compositeFKs.length; i++) {
+                        this._referenceColumns.push(compositeFKs[i]);
                     }
                 }
-
-                // append composite FKRs
-                for (i = 0; i < compositeFKs.length; i++) {
-                    this._referenceColumns.push(compositeFKs[i]);
-                }
-
             }
             return this._referenceColumns;
         },

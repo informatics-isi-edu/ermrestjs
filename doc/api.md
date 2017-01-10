@@ -1947,24 +1947,21 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 ##### columns._referenceColumns
 The logic is as follows:
 
-1. check if visible-column annotation is present for this context.
- 1.1 if it is, use that list as the baseline.
- 1.2 if not, use the list of all the columns as the baseline.
+1. check if visible-column annotation is present for this context, go through the list,
+     1.1 if it's an array,
+         1.1.1 find the corresponding foreign key
+         1.1.2 check if it's part of this table.
+         1.1.3 avoid duplicate foreign keys.
+         1.1.4 make sure it is not hidden(+).
+     1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
 
-2. go through the list of columns (this list can contain string (column name), array (constraint name), or object(column object) ).
- 2.1 if it's an array,
-     2.1.1 find the corresponding foreign key
-     2.1.2 check if it's part of this table.
-     2.1.3 avoid duplicate foreign keys.
-     2.1.4 make sure it is not hidden(+).
- 2.2 otherwise,
-     2.2.1 if it's a string: find the corresponding column object if exists.
-     2.2.2 check if column has not been processed before.
-     2.2.3 if it's not part of any foreign keys add the column.
-     2.2.4 go through all of the foreign keys that this column is part of.
-         2.2.4.1 make sure it is not hidden(+).
-         2.2.4.2 if it's simple fk, just create PseudoColumn
-         2.2.4.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+2.otherwise go through list of table columns
+     2.1 check if column has not been processed before.
+     2.2 if it's not part of any foreign keys add the column.
+     2.3 go through all of the foreign keys that this column is part of.
+         2.3.1 make sure it is not hidden(+).
+         2.3.2 if it's simple fk, just create PseudoColumn
+         2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
 
 NOTE:
  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
