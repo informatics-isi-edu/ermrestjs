@@ -389,6 +389,11 @@ var ERMrest = (function(module) {
 
                 // convert term to filter
 
+                // add a quote to the end if string has an odd amount
+                if ( (term.split('"').length-1)%2 === 1 ) {
+                    term = term + '"';
+                }
+
                 // 1) parse terms in quotation
                 // 2) split the rest by space
                 var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
@@ -398,11 +403,14 @@ var ERMrest = (function(module) {
                     terms[i] = terms[i].replace(/"/g, ""); //remove quotes
                 }
 
+                console.log(terms);
                 terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+                console.log(terms);
 
                 terms.forEach(function(t, index, array) {
                     filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(t);
                 });
+                console.log(filterString);
 
             } else {
                 this._searchTerm = null;
