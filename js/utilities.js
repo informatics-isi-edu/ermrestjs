@@ -1208,6 +1208,11 @@ var ERMrest = (function(module) {
 
         return content;
     };
+
+    module._constraintTypes = Object.freeze({
+        KEY: "k",
+        FOREIGN_KEY: "fk"
+    });
     
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;

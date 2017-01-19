@@ -29,6 +29,45 @@ exports.execute = function (options) {
         var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName6;
 
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
+        beforeAll(function() {
+            options.ermRest.appLinkFn(appLinkFn);
+        });
+
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
             var reference, page, tuple;
             var limit = 10;
@@ -67,10 +106,13 @@ exports.execute = function (options) {
 
             it('tuple displayname should return formatted value of id as it is the unique key.', function() {
                 var tuples = page.tuples;
+                var expected = [
+                    "20,001", "20,002", "20,003", "20,004", "20,005", "20,006", "20,007", "20,008", "20,009", "20,010"
+                ];
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var displayname = tuple.displayname;
-                    expect(displayname).toBe(tuple.values[0]);
+                    expect(displayname).toBe(expected[i]);
                 }
             });
         });
