@@ -11,7 +11,7 @@ if (process.env.TRAVIS) {
 	var exec = require('child_process').exec;
 	exec("hostname", function (error, stdout, stderr) {
     	
-    	process.env.ERMREST_URL = "https://" + stdout + "/ermrest";
+    	process.env.ERMREST_URL = "https://" + stdout.trim() + "/ermrest";
     	
     	console.log(process.env.ERMREST_URL);
 
