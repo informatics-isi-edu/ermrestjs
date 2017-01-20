@@ -7,7 +7,7 @@ var runSpecs = function() {
 };
 
 if (process.env.TRAVIS) {
-	process.env.ERMREST_URL = "http://localhost/ermrest";
+	process.env.ERMREST_URL = "https://localhost/ermrest";
 	require('request')({
 	  url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 	  method: 'POST',
@@ -26,7 +26,7 @@ if (process.env.TRAVIS) {
 	    if (process.env.AUTH_COOKIE) {
 	    	var exec = require('child_process').exec;
 			exec('curl -X POST --cookie "' + process.env.AUTH_COOKIE + '" ' + process.env.ERMREST_URL + '/catalog', function (error, stdout, stderr) {
-      			console.log(stdout);
+      			//console.log(stdout);
       			console.log(stderr);
       			console.log(error);
       			runSpecs();
