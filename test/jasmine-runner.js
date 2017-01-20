@@ -10,7 +10,11 @@ if (process.env.TRAVIS) {
 
 	var exec = require('child_process').exec;
 	exec("hostname", function (error, stdout, stderr) {
+    	
     	process.env.ERMREST_URL = "https://" + stdout + "/ermrest";
+    	
+    	console.log(process.env.ERMREST_URL);
+
 		require('request')({
 		  url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 		  method: 'POST',
