@@ -82,7 +82,7 @@ exports.run = function(config) {
 	createCatalog().then(function() {
 		jrunner.execute();
 	}, function(err) {
-		console.log(err ? err.message || "Some Catalog error");
+		console.log(err ? err.message : "Some Catalog error");
 		console.log("Unable to create default catalog");
 		process.exit(1);
 	}).catch(function(err) {
