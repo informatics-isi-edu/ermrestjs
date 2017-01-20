@@ -15,12 +15,13 @@ if (process.env.TRAVIS) {
 	}, function(error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    var cookies = require('set-cookie-parser').parse(response);
-	    
-	    cookies.forEach(function(c) {
-	      if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
-	    });
 
-	    console.log("Cookie found in TRAVIS " + c.name + "=" + c.value + ";");
+	    cookies.forEach(function(c) {
+	      if (c.name == "webauthn") {
+	        process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
+    	    console.log("Cookie found in TRAVIS " + c.name + "=" + c.value + ";");
+	   	  }
+	    });
 
 	    if (process.env.AUTH_COOKIE) runSpecs();
 	    else {
