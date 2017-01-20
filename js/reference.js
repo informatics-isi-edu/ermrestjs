@@ -245,6 +245,14 @@ var ERMrest = (function(module) {
         /* jshint ignore:end */
 
         /**
+         * The table object for this reference
+         * @type {ERMrest.Table}
+         */
+         get table() {
+            return this._table;
+         },
+
+        /**
          * The array of column definitions which represent the model of
          * the resources accessible via this reference.
          *

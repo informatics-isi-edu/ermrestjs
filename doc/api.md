@@ -223,6 +223,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
+        * [.table](#ERMrest.Reference+table) : <code>[Table](#ERMrest.Table)</code>
         * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
             * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -1841,6 +1842,7 @@ Constructor for a ParsedFilter.
     * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
+    * [.table](#ERMrest.Reference+table) : <code>[Table](#ERMrest.Table)</code>
     * [.columns](#ERMrest.Reference+columns) : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
         * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -1921,6 +1923,12 @@ The session object from the server
 | --- | --- | --- |
 | session | <code>Object</code> | the session object |
 
+<a name="ERMrest.Reference+table"></a>
+
+#### reference.table : <code>[Table](#ERMrest.Table)</code>
+The table object for this reference
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+columns"></a>
 
 #### reference.columns : <code>[Array.&lt;Column&gt;](#ERMrest.Column)</code>
