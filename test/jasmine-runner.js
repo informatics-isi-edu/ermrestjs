@@ -27,6 +27,8 @@ if (process.env.TRAVIS) {
 	    	var exec = require('child_process').exec;
 			exec('curl -X POST --cookie "' + process.env.AUTH_COOKIE + '" ' + process.env.ERMREST_URL + '/catalog', function (error, stdout, stderr) {
       			console.log(stdout);
+      			console.log(stderr);
+      			console.log(error);
       			runSpecs();
    			});
 	    } 
