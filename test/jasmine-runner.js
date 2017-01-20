@@ -23,7 +23,13 @@ if (process.env.TRAVIS) {
 	   	  }
 	    });
 
-	    if (process.env.AUTH_COOKIE) runSpecs();
+	    if (process.env.AUTH_COOKIE) {
+	    	var exec = require('child_process').exec;
+			exec('curl -v --cookie "' + process.env.AUTH_COOKIE + '" ' + process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session', function (error, stdout, stderr) {
+      			console.log(stdout);
+      			runSpecs();
+   			});
+	    } 
 	    else {
 	      throw new Error("Unable to retreive authcookie : " + error.message);
 		}
