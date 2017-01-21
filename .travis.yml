@@ -47,6 +47,7 @@ before_install:
   - cd ermrest
   - sudo make install PLATFORM=ubuntu1204
   - sudo make deploy PLATFORM=ubuntu1204
+  - sudo service apache2 restart
   - cd ..
   - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   - sudo apt-get install -y nodejs
@@ -59,7 +60,6 @@ before_install:
 
 install:
   - sudo make build
-  - sudo service apache2 restart
 
 before_script:
   - sudo -H -u webauthn webauthn2-manage adduser test1
