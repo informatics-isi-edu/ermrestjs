@@ -245,6 +245,14 @@ var ERMrest = (function(module) {
         /* jshint ignore:end */
 
         /**
+         * The table object for this reference
+         * @type {ERMrest.Table}
+         */
+         get table() {
+            return this._table;
+         },
+
+        /**
          * The array of column definitions which represent the model of
          * the resources accessible via this reference.
          *
@@ -275,7 +283,7 @@ var ERMrest = (function(module) {
                  *          1.1.3 avoid duplicate foreign keys.
                  *          1.1.4 make sure it is not hidden(+).
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
-                 * 
+                 *
                  * 2.otherwise go through list of table columns
                  *      2.1 check if column has not been processed before.
                  *      2.2 if it's not part of any foreign keys add the column.
@@ -320,15 +328,15 @@ var ERMrest = (function(module) {
                 }
 
                 // annotation
-                if (columns !== -1) { 
+                if (columns !== -1) {
                     for (i = 0; i < columns.length; i++) {
                         col = columns[i];
                         // foreignKey
-                        if (Array.isArray(col)) { 
+                        if (Array.isArray(col)) {
                             fk = this._table.schema.catalog.constraintByNamePair(col);
                             if (fk !== null) {
                                 fkName = fk.constraint_names[0].join(":");
-                                
+
                                 // fk is in this table, avoid duplicate and it's not hidden.
                                 if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
                                     addedFKs[fkName] = true;
@@ -341,7 +349,7 @@ var ERMrest = (function(module) {
                             try {
                                 col = this._table.columns.get(col);
                             } catch (exception) {}
-                            
+
                             // if column is not defined, processed before, or should be hidden
                             if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
                                     continue;
@@ -349,7 +357,7 @@ var ERMrest = (function(module) {
                             consideredColumns[col.name] = true;
                             this._referenceColumns.push(new ReferenceColumn(this, col));
                         }
-                    }    
+                    }
                 }
                 // heuristics
                 else {
@@ -360,7 +368,7 @@ var ERMrest = (function(module) {
                         // avoid duplicate, or should be hidden
                         if (col.name in consideredColumns  || hideColumn(col)) {
                             continue;
-                        }          
+                        }
                         consideredColumns[col.name] = true;
 
                         // add the column if it's not part of any foreign keys
@@ -401,7 +409,7 @@ var ERMrest = (function(module) {
                                     }
                                 }
                             }
-                        }       
+                        }
                     }
 
                     // append composite FKRs
@@ -1578,15 +1586,6 @@ var ERMrest = (function(module) {
                 }
             }
 
-            // strip off filters if context is entry/create
-            if (context === module._contexts.CREATE) {
-                var slocation = newRef._location;
-                var newURI = slocation.service + "/catalog/" + module._fixedEncodeURIComponent(slocation.catalog) + "/" +
-                    module._fixedEncodeURIComponent(slocation.api) + "/";
-                newURI = newURI + (slocation.schemaName? module._fixedEncodeURIComponent(slocation.schemaName) + ":" : "");
-                newURI = newURI + module._fixedEncodeURIComponent(slocation.tableName);
-                newRef._location = module._parse(newURI);
-            }
             return newRef;
         }
     };
