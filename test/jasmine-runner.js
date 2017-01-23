@@ -7,25 +7,48 @@ var runSpecs = function() {
 };
 
 if (process.env.TRAVIS) {
-	process.env.ERMREST_URL = "http://localhost/ermrest";
-	require('request')({
-	  url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
-	  method: 'POST',
-	  body: 'username=test1&password=dummypassword'
-	}, function(error, response, body) {
-	  if (!error && response.statusCode == 200) {
-	    var cookies = require('set-cookie-parser').parse(response);
-	    cookies.forEach(function(c) {
-	      if (c.name == "webauthn") process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
-	    });
-	    if (process.env.AUTH_COOKIE) runSpecs();
-	    else {
-	      throw new Error("Unable to retreive authcookie : " + error.message);
-		}
-	  } else {
-	  	throw new Error("Unable to retreive authcookie ");
-	  }
-	});
+
+	var exec = require('child_process').exec;
+	exec("hostname", function (error, stdout, stderr) {
+    	
+    	process.env.ERMREST_URL = "http://" + stdout.trim() + "/ermrest";
+    	
+    	console.log(process.env.ERMREST_URL);
+
+		require('request')({
+		  url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
+		  method: 'POST',
+		  body: 'username=test1&password=dummypassword'
+		}, function(error, response, body) {
+		  if (!error && response.statusCode == 200) {
+		    var cookies = require('set-cookie-parser').parse(response);
+
+		    cookies.forEach(function(c) {
+		      if (c.name == "webauthn") {
+		        process.env['AUTH_COOKIE'] = c.name + "=" + c.value + ";";
+	    	    console.log("Cookie found in TRAVIS " + c.name + "=" + c.value + ";");
+		   	  }
+		    });
+
+		    if (process.env.AUTH_COOKIE) {
+		    	var exec = require('child_process').exec;
+				exec('curl -X POST --cookie "' + process.env.AUTH_COOKIE + '" ' + process.env.ERMREST_URL + '/catalog', function (error, stdout, stderr) {
+	      			//console.log(stdout);
+	      			console.log(stderr);
+	      			console.log(error);
+	      			runSpecs();
+	   			});
+		    } 
+		    else {
+		      throw new Error("Unable to retreive authcookie : " + error.message);
+			}
+		  } else {
+		  	throw new Error("Unable to retreive authcookie ");
+		  }
+		});
+    });
+
+	
 } else {
     runSpecs();
 }
