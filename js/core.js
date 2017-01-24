@@ -330,24 +330,30 @@ var ERMrest = (function (module) {
         /**
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
+         * @param {?string} subject the retuned must have the same object, otherwise return null.
          * @throws {ERMrest.NotFoundError} constraint not found
-         * @returns {Object|null} the constrant object. Null means the constraint name is not valid.
+         * @returns {Object|null} the constraint object. Null means the constraint name is not valid.
          */
-        constraintByNamePair: function (pair) {
+        constraintByNamePair: function (pair, subject) {
+            var result = null;
             if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
-                return this._constraintNames[pair[0]][pair[1]];
+                result = this._constraintNames[pair[0]][pair[1]];
             }
-            return null;
+            return (result === null || (subject !== undefined && result.subject !== subject)) ? null : result;
         },
 
         // used in ForeignKeyRef to add the defined constraintNames.
-        _addConstraintName: function (pair, obj){
-            if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
-                if (!(pair[0] in this._constraintNames)) {
-                    this._constraintNames[pair[0]] = {};
-                }
-                this._constraintNames[pair[0]][pair[1]] = obj;
+        // subject can be one of module._constraintTypes
+        _addConstraintName: function (pair, obj, subject) {
+            // if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
+            if (!(pair[0] in this._constraintNames)) {
+                this._constraintNames[pair[0]] = {};
             }
+            this._constraintNames[pair[0]][pair[1]] = {
+                "subject": subject,
+                "object": obj
+            };
+            // }
         }
     };
 
@@ -706,6 +712,7 @@ var ERMrest = (function (module) {
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+        this._displayKeys = {}; // Used for display key
 
         /**
          * @type {string}
@@ -824,6 +831,57 @@ var ERMrest = (function (module) {
             }
 
             return this._shortestKey;
+        },
+
+        /**
+         * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
+         * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
+         * @desc 
+         * returns the key that can be used for display purposes.
+         */
+        _getDisplayKey: function (context) {            
+            if (!(context in this._displayKeys)) {
+                var key;
+                if (this.keys.length() !== 0) {
+                    var candidateKeys = [], i;
+                    // select keys that none of their columns isHTMl and nullok.
+                    for (i = 0; i < this.keys.length(); i++) {
+                        if (this.keys.all()[i]._isWellFormed(context)) {
+                            candidateKeys.push(this.keys.all()[i]);
+                        }
+                    }
+
+                    // sort the keys and pick the first one.
+                    if (candidateKeys.length !== 0) {
+                        var countTextColumns = function(key) {
+                            for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                                if (key.colset.columns[i].type.name == "text") res++;
+                            }
+                            return res;
+                        };
+
+                        key = candidateKeys.sort(function (keyA, keyB) {
+
+                            // shortet
+                            if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                                return keyA.colset.columns.length > keyB.colset.columns.length;
+                            }
+                            
+                            // has more text
+                            var aTextCount = countTextColumns(keyA);
+                            var bTextCount = countTextColumns(keyB);
+                            if (aTextCount != bTextCount) {
+                                return aTextCount < bTextCount;
+                            }
+                            
+                            // the one that has lower column position
+                            return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                        })[0];
+                    }
+                }
+                this._displayKeys[context] = key; // might be undefined
+            }
+            return this._displayKeys[context];
         },
 
         get reference() {
@@ -1679,37 +1737,25 @@ var ERMrest = (function (module) {
             var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
             var isMarkdownPattern = false, isMarkdownType = false, annotation;
 
-            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
-                annotation = module._getRecursiveAnnotationValue(options ? options.context : undefined, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
-            }
+            var display = this.getDisplay(options ? options.context : undefined);
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
 
-            // If template is of type string and has column-display annotation
-            if (annotation && (typeof annotation.markdown_pattern === 'string')) {
-                isMarkdownPattern = true;
-            }
-
-            // If column is of type markdown
-            if (this.type.name === 'markdown') {
-                isMarkdownType = true;
-            }
-
             // If column doesn't has column-display annotation and is not of type markdown
             // then return data as it is
-            if (!isMarkdownPattern && !isMarkdownType) {
+            if (!display.isHTML) {
                 return { isHTML: false, value: data };
             }
 
             var value = data;
 
             // If there is any markdown pattern then evaluate it
-            if (isMarkdownPattern) {
+            if (display.isMarkdownPattern) {
                 // Get markdown pattern from the annotation value
 
-                var template = annotation.markdown_pattern; // pattern
+                var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
                 value = module._renderTemplate(template, keyValues, options);
@@ -1784,7 +1830,8 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
+        this._nullValue = {}; // Used to avoid recomputation of null value for different contexts.
+        this._display = {};  // Used for column.display annotation.
 
         /**
          * @type {string}
@@ -1805,6 +1852,7 @@ var ERMrest = (function (module) {
          * @desc foreign key that this column is a member of
          */
         this.memberOfForeignKeys = [];
+        
     }
 
     Column.prototype = {
@@ -1855,7 +1903,29 @@ var ERMrest = (function (module) {
                 return true;
             }
             return false;
-        }
+        },
+
+        /**
+         * @param {String} context the context that we want the display for.
+         * @desc
+         * display object for the column
+         */
+        getDisplay: function (context) {
+            if (!(context in this._display)) {
+                var annotation = -1;
+                if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
+                    annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+                }
+
+                this._display[context] = {
+                    "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
+                    "isMarkdownType" : this.type.name === 'markdown',
+                    "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
+                    "markdownPattern": annotation.markdown_pattern,
+                };
+            }
+            return this._display[context];
+        },
     };
 
     /**
@@ -2058,6 +2128,7 @@ var ERMrest = (function (module) {
     function Key(table, jsonKey) {
 
         /*
+         * @deprecated
          * TODO
          * I added `this.table` below and we should remove `this._table`. But
          * I'm leaving it in for now because I am not sure what I might break.
@@ -2105,6 +2176,24 @@ var ERMrest = (function (module) {
          * @type {string}
          */
         this.comment = jsonKey.comment;
+
+        /**
+         * The exact `names` array in key definition
+         * @type {Array}
+         */
+        this.constraint_names = Array.isArray(jsonKey.names) ? jsonKey.names : [];
+
+        // add constraint names to catalog
+        for (var k = 0, constraint; k < this.constraint_names.length; k++) {
+            constraint = this.constraint_names[k];
+            try {
+                if (Array.isArray(constraint) && constraint.length == 2){
+                    table.schema.catalog._addConstraintName(constraint, this, module._constraintTypes.KEY);
+                }
+            } catch (exception){}
+        }
+
+        this._wellFormed = {};
     }
 
     Key.prototype = {
@@ -2125,6 +2214,21 @@ var ERMrest = (function (module) {
          */
         containsColumn: function (column) {
             return (this.colset.columns.indexOf(column) !== -1);
+        },
+
+        // will return true if all the columns are not null and not html.
+        _isWellFormed: function(context) {
+            if (!(context in this._wellFormed)) {
+                var cols = this.colset.columns, result = true;
+                for (var c = 0; c < cols.length; c++) {
+                    if (cols[c].nullok || cols[c].getDisplay(context).isHTML) {
+                        result = false;
+                        break;
+                    }
+                }
+                this._wellFormed[context] = result;
+            }
+            return this._wellFormed[context];
         }
     };
 
@@ -2343,10 +2447,10 @@ var ERMrest = (function (module) {
                 if(!Array.isArray(orders[i]) || orders[i].length != 2) {
                     continue; // the annotation value is not correct.
                 }
-                fk = this._table.schema.catalog.constraintByNamePair(orders[i]);
-                if (fk !== null && result.indexOf(fk) == -1 && this._foreignKeys.indexOf(fk) != -1) {
+                fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
+                if (fk !== null && result.indexOf(fk.object) == -1 && this._foreignKeys.indexOf(fk.object) != -1) {
                     // avoid duplicate and if it's a valid inbound fk of this table.
-                    result.push(fk);
+                    result.push(fk.object);
                 }
             }
 
@@ -2501,7 +2605,7 @@ var ERMrest = (function (module) {
             constraint = this.constraint_names[k];
             try {
                 if (Array.isArray(constraint) && constraint.length == 2){
-                    catalog._addConstraintName(constraint, this);
+                    catalog._addConstraintName(constraint, this, module._constraintTypes.FOREIGN_KEY);
                 }
             } catch (exception){}
         }

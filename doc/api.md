@@ -44,7 +44,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
-        * [.constraintByNamePair(pair)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> &#124; <code>null</code>
+        * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> &#124; <code>null</code>
     * [.Schemas](#ERMrest.Schemas)
         * [new Schemas()](#new_ERMrest.Schemas_new)
         * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
@@ -82,6 +82,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -129,6 +130,7 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString)
+        * [.getDisplay(context)](#ERMrest.Column+getDisplay)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ <code>[Array.&lt;Annotation&gt;](#ERMrest.Annotation)</code>
@@ -152,6 +154,7 @@ to use for ERMrest JavaScript agents.
         * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
         * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
+        * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
         * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
     * [.ColSet](#ERMrest.ColSet)
@@ -263,10 +266,11 @@ to use for ERMrest JavaScript agents.
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : <code>[Reference](#ERMrest.Reference)</code>
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
-        * [new ReferenceColumn(reference, column, foreignKeyRef)](#new_ERMrest.ReferenceColumn_new)
+        * [new ReferenceColumn(reference, base, kwargs)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.reference](#ERMrest.ReferenceColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
         * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+        * [.key](#ERMrest.ReferenceColumn+key) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
         * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
@@ -406,7 +410,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : <code>[Schemas](#ERMrest.Schemas)</code>
-    * [.constraintByNamePair(pair)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> &#124; <code>null</code>
+    * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> &#124; <code>null</code>
 
 <a name="new_ERMrest.Catalog_new"></a>
 
@@ -431,11 +435,11 @@ The catalog identifier.
 **Kind**: instance property of <code>[Catalog](#ERMrest.Catalog)</code>  
 <a name="ERMrest.Catalog+constraintByNamePair"></a>
 
-#### catalog.constraintByNamePair(pair) ⇒ <code>Object</code> &#124; <code>null</code>
+#### catalog.constraintByNamePair(pair, subject) ⇒ <code>Object</code> &#124; <code>null</code>
 returns the constraint object for the pair.
 
 **Kind**: instance method of <code>[Catalog](#ERMrest.Catalog)</code>  
-**Returns**: <code>Object</code> &#124; <code>null</code> - the constrant object. Null means the constraint name is not valid.  
+**Returns**: <code>Object</code> &#124; <code>null</code> - the constraint object. Null means the constraint name is not valid.  
 **Throws**:
 
 - <code>[NotFoundError](#ERMrest.NotFoundError)</code> constraint not found
@@ -444,6 +448,7 @@ returns the constraint object for the pair.
 | Param | Type | Description |
 | --- | --- | --- |
 | pair | <code>Array.&lt;string&gt;</code> | constraint name array. Its length must be two. |
+| subject | <code>string</code> | the retuned must have the same object, otherwise return null. |
 
 <a name="ERMrest.Schemas"></a>
 
@@ -632,6 +637,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -711,6 +717,18 @@ All the FKRs to this table.
 Documentation for this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+_getDisplayKey"></a>
+
+#### table._getDisplayKey(context)
+returns the key that can be used for display purposes.
+
+**Kind**: instance method of <code>[Table](#ERMrest.Table)</code>  
+**Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| context | <code>string</code> | used to figure out if the column has markdown_pattern annoation or not. |
+
 <a name="ERMrest.Table.Entity"></a>
 
 #### Table.Entity
@@ -1040,6 +1058,7 @@ Constructor for Columns.
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString)
+    * [.getDisplay(context)](#ERMrest.Column+getDisplay)
 
 <a name="new_ERMrest.Column_new"></a>
 
@@ -1148,6 +1167,17 @@ returns string representation of Column
 
 **Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
 **Retuns**: <code>string</code> string representation of Column  
+<a name="ERMrest.Column+getDisplay"></a>
+
+#### column.getDisplay(context)
+display object for the column
+
+**Kind**: instance method of <code>[Column](#ERMrest.Column)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| context | <code>String</code> | the context that we want the display for. |
+
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations
@@ -1300,6 +1330,7 @@ get the key by the column set
     * [.colset](#ERMrest.Key+colset) : <code>[ColSet](#ERMrest.ColSet)</code>
     * [.annotations](#ERMrest.Key+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
+    * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
     * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
 
@@ -1332,6 +1363,12 @@ Reference to the table that this Key belongs to.
 
 #### key.comment : <code>string</code>
 Documentation for this key
+
+**Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
+<a name="ERMrest.Key+constraint_names"></a>
+
+#### key.constraint_names : <code>Array</code>
+The exact `names` array in key definition
 
 **Kind**: instance property of <code>[Key](#ERMrest.Key)</code>  
 <a name="ERMrest.Key+simple"></a>
@@ -2493,10 +2530,11 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.ReferenceColumn](#ERMrest.ReferenceColumn)
-    * [new ReferenceColumn(reference, column, foreignKeyRef)](#new_ERMrest.ReferenceColumn_new)
+    * [new ReferenceColumn(reference, base, kwargs)](#new_ERMrest.ReferenceColumn_new)
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.reference](#ERMrest.ReferenceColumn+reference) : <code>[Reference](#ERMrest.Reference)</code>
     * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+    * [.key](#ERMrest.ReferenceColumn+key) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
     * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
@@ -2511,15 +2549,15 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
 
-#### new ReferenceColumn(reference, column, foreignKeyRef)
+#### new ReferenceColumn(reference, base, kwargs)
 Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.Column).
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | reference | <code>[Reference](#ERMrest.Reference)</code> | column's reference |
-| column | <code>[Column](#ERMrest.Column)</code> | The column that this reference-column will be created based on. |
-| foreignKeyRef | <code>ERMrest.ForeginKeyRef</code> | The foreignKeyRef that represents the PseudoColumn (null if it's not a PseudoColumn) |
+| base | <code>[Column](#ERMrest.Column)</code> | The column that this reference-column will be created based on. |
+| kwargs | <code>Object</code> | if it's not empty then the column is being created based on foreignkey or key. |
 
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
 
@@ -2536,6 +2574,12 @@ The reference object that represents the table of this PseudoColumn
 <a name="ERMrest.ReferenceColumn+foreignKey"></a>
 
 #### referenceColumn.foreignKey : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
+The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+key"></a>
+
+#### referenceColumn.key : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
 The Foreign key object that this PseudoColumn is created based on
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
