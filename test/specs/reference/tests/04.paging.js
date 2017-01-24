@@ -9,7 +9,7 @@ exports.execute = function (options) {
     //   2. Next with no more data
     //   3. Previous with more data
     //   4. Previous with no more data
-    
+
     describe("For paging with previous and next,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
@@ -221,7 +221,7 @@ exports.execute = function (options) {
 
                 it('tuples should be sorted by name. ', function() {
                     tuples = page2.tuples;
-                    expect(tuples.length).toBe(6);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
