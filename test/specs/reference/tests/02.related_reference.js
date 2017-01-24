@@ -89,9 +89,9 @@ exports.execute = function(options) {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
-                        "id", 
+                        ["reference_schema", "inbound_related_reference_key"].join(":"), 
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema","fk_inbound_related_to_reference"].join(":")
+                        ["reference_schema", "fk_inbound_related_to_reference"].join(":")
                 ]}, {
                     ref: related[1].contextualize.compactBrief,
                     expected: [
@@ -164,7 +164,7 @@ exports.execute = function(options) {
                     checkReferenceColumns([{
                         ref: related[2],
                         expected:[
-                            "id", 
+                            ["reference_schema", "inbound_related_reference_key"].join(":"), 
                             ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"),
                             ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
                             ["reference_schema", "fk_inbound_related_to_reference"].join(":")
@@ -174,7 +174,7 @@ exports.execute = function(options) {
                     checkReferenceColumns([{
                         ref: related[3],
                         expected:[
-                            "id", 
+                            ["reference_schema", "inbound_related_reference_key"].join(":"), 
                             ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
                             ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
                             ["reference_schema", "fk_inbound_related_to_reference"].join(":")
