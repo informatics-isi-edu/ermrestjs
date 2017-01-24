@@ -657,7 +657,7 @@ var ERMrest = (function (module) {
 
         this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
 
-        //this.uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
+        this._uri = schema.catalog._uri + "/entity/" + module._fixedEncodeURIComponent(schema.name) + ":" + module._fixedEncodeURIComponent(jsonTable.table_name);
 
         /**
          *
@@ -882,6 +882,14 @@ var ERMrest = (function (module) {
                 this._displayKeys[context] = key; // might be undefined
             }
             return this._displayKeys[context];
+        },
+
+        get reference() {
+            if (!this._reference) {
+                this._reference = module._createReference(module._parse(this._uri), this.schema.catalog);
+            }
+
+            return this._reference;
         },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
