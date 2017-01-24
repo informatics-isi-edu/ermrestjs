@@ -403,7 +403,7 @@ var ERMrest = (function(module) {
                     terms[i] = terms[i].replace(/"/g, ""); //remove quotes
                 }
 
-                terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+                if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
                 terms.forEach(function(t, index, array) {
                     filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(t);
@@ -414,7 +414,7 @@ var ERMrest = (function(module) {
             }
 
             if (this._searchFilter) {
-                if (term) { // replace search filter
+                if (this._searchTerm) { // replace search filter
                     this._uri = this._uri.replace(this._searchFilter, filterString);
                     this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
                     this._path = this._path.replace(this._searchFilter, filterString);
@@ -425,7 +425,7 @@ var ERMrest = (function(module) {
                     this._path = this._path.replace(this._searchFilter, "");
                     this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
                 }
-            } else if (term) { // add search filter
+            } else if (this._searchTerm) { // add search filter
                 this._uri = this._uri + "/" + filterString;
                 this._compactUri = this._compactUri + "/" + filterString;
                 this._path = this._path + "/" + filterString;
