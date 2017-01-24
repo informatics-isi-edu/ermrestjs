@@ -2098,7 +2098,7 @@ var ERMrest = (function(module) {
                 this._values = [];
                 this._isHTML = [];
 
-                var column, presenation;
+                var column, presentation;
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {
@@ -2112,8 +2112,8 @@ var ERMrest = (function(module) {
                             } else {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
                             }
-                            this._values[i] = presenation.value;
-                            this._isHTML[i] = presenation.isHTML;
+                            this._values[i] = presentation.value;
+                            this._isHTML[i] = presentation.isHTML;
                         } else {
                             this._values[i] = this._data[column.name];
                             this._isHTML[i] = false;
