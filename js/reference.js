@@ -394,7 +394,7 @@ var ERMrest = (function(module) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
-                            
+
                             // make sure key columns won't be added
                             columns = key.colset.columns;
                             for (i = 0; i < columns.length; i++) {
@@ -2289,7 +2289,7 @@ var ERMrest = (function(module) {
 
         if (typeof kwargs != 'undefined') {
             if (kwargs.foreignKey !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 // create ermrest url using the location
@@ -2322,7 +2322,7 @@ var ERMrest = (function(module) {
                  */
                 this._isForeignKey = true;
             } else if (kwargs.key !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 /**
@@ -2518,7 +2518,7 @@ var ERMrest = (function(module) {
                 }
             }
             return this._comment;
-            
+
         },
 
         /**
@@ -2587,10 +2587,10 @@ var ERMrest = (function(module) {
                     return nullValue;
                 }
 
-                var cols = this.key.colset.columns, 
+                var cols = this.key.colset.columns,
                     table = this.key.table,
                     values = [];
-                
+
                 // crete the caption
                 for (i = 0; i < cols.length; i++) {
                     if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
@@ -2598,13 +2598,13 @@ var ERMrest = (function(module) {
                     }
                     values.push(cols[i].formatvalue(data[cols[i].name], {context: options ? options.context : undefined}));
                 }
-                caption = values.join(" "); 
+                caption = values.join(" ");
 
                 // if the caption is empty we cannot add any link to that.
                 if (caption.trim() === '') {
                     return nullValue;
                 }
-                
+
                 var refURI = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
@@ -2725,7 +2725,7 @@ var ERMrest = (function(module) {
                 // if all GENERATED
                 return true;
             }
-            
+
             // other contexts
             return true;
         },
