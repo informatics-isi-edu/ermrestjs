@@ -394,7 +394,7 @@ var ERMrest = (function(module) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
-                            
+
                             // make sure key columns won't be added
                             columns = key.colset.columns;
                             for (i = 0; i < columns.length; i++) {
@@ -1117,13 +1117,36 @@ var ERMrest = (function(module) {
                         "If-Match": this._etag
                     }
                 };
-
+                var ownReference = this;
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-
+                    console.log('first try success');
                     defer.resolve();
                 }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                    var status = response.status || response.statusCode;
+                    // If 412 Precondition Failed means that etags don't match
+                    if (status == 412) {
+                        console.log('in 412 callback');
+                        // Check if the record still exists. If it does, delete it. Else, send the error to Chaise
+                        ownReference._server._http.get(ownReference.uri).then(function getReference(response) {
+                            // The record exists; delete it with the new etag.
+                            ownReference._etag = response.headers().etag;
+                            var config = {headers: {"If-Match": ownReference._etag}};
+                            ownReference._server._http.delete(ownReference.uri, config).then(function() {
+                                defer.resolve();
+                            }, function error (response) {
+                                var error = module._responseToError(response);
+                                return defer.reject(error);
+                            });
+                        }, function error(reason) {
+                            // Couldn't get the record (already deleted?), just send it along to _responseToError
+                            // Chaise should ask user to refresh the page.
+                            var error = module._responseToError(response);
+                            return defer.reject(error);
+                        });
+                    } else {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }
                 }).catch(function (error) {
                     return defer.reject(error);
                 });
@@ -2289,7 +2312,7 @@ var ERMrest = (function(module) {
 
         if (typeof kwargs != 'undefined') {
             if (kwargs.foreignKey !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 // create ermrest url using the location
@@ -2322,7 +2345,7 @@ var ERMrest = (function(module) {
                  */
                 this._isForeignKey = true;
             } else if (kwargs.key !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 /**
@@ -2518,7 +2541,7 @@ var ERMrest = (function(module) {
                 }
             }
             return this._comment;
-            
+
         },
 
         /**
@@ -2587,10 +2610,10 @@ var ERMrest = (function(module) {
                     return nullValue;
                 }
 
-                var cols = this.key.colset.columns, 
+                var cols = this.key.colset.columns,
                     table = this.key.table,
                     values = [];
-                
+
                 // crete the caption
                 for (i = 0; i < cols.length; i++) {
                     if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
@@ -2598,13 +2621,13 @@ var ERMrest = (function(module) {
                     }
                     values.push(cols[i].formatvalue(data[cols[i].name], {context: options ? options.context : undefined}));
                 }
-                caption = values.join(" "); 
+                caption = values.join(" ");
 
                 // if the caption is empty we cannot add any link to that.
                 if (caption.trim() === '') {
                     return nullValue;
                 }
-                
+
                 var refURI = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
@@ -2725,7 +2748,7 @@ var ERMrest = (function(module) {
                 // if all GENERATED
                 return true;
             }
-            
+
             // other contexts
             return true;
         },
@@ -2740,7 +2763,6 @@ var ERMrest = (function(module) {
         get _hasBase() {
             return this._base !== null && this._base !== undefined;
         }
-
     };
 
     return module;

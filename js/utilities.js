@@ -414,6 +414,8 @@ var ERMrest = (function(module) {
                 return new module.NotFoundError(response.statusText, response.data);
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
+            case 412:
+                return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
             case 503:
@@ -1213,7 +1215,7 @@ var ERMrest = (function(module) {
         KEY: "k",
         FOREIGN_KEY: "fk"
     });
-    
+
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;
     };
