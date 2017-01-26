@@ -229,8 +229,10 @@ exports.execute = function (options) {
          * All the tuples have distinct ids and in each scenario based on the data, one of them must be on top.
          */
         function checkSort(sortColumns, ExpectedFirstId, done) {
+            var val;
             outboundRef.sort(sortColumns).read(1).then(function (response) {
-                expect(response.tuples[0].values[0]).toEqual(ExpectedFirstId);
+                val = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
+                expect(response.tuples[0].values[0]).toEqual(val);
                 done();
             }, function (err) {
                 console.dir(err);

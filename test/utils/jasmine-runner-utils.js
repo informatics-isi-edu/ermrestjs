@@ -68,7 +68,7 @@ exports.run = function(config) {
 	jrunner.addReporter(new SpecReporter());   
 
 	// Set timeout to a large value 
-	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
+	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
 	jrunner.onComplete(function(passed) {
 		console.log("Test suite " + (passed ? "passed" : "failed"));
@@ -82,6 +82,7 @@ exports.run = function(config) {
 	createCatalog().then(function() {
 		jrunner.execute();
 	}, function(err) {
+		console.log(err ? err.message : "Some Catalog error");
 		console.log("Unable to create default catalog");
 		process.exit(1);
 	}).catch(function(err) {

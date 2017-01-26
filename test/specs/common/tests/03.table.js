@@ -15,6 +15,11 @@ exports.execute = function(options) {
                 expect(multi_key_table.shortestKey.length).toBe(1);
                 expect(multi_key_table.shortestKey[0].name).toBe("id");
             });
+
+            it("Reference", function() {
+                expect(multi_key_table.reference.uri).toBe(multi_key_table._uri);
+                expect(multi_key_table.reference._table).toBe(multi_key_table);
+            });
         });
     });
 };

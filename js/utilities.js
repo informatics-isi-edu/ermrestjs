@@ -599,6 +599,9 @@ var ERMrest = (function(module) {
             if (value === null) {
                 return '';
             }
+            if (typeof value === 'object') {
+                return JSON.stringify(value);
+            }
             return value.toString();
         },
 
@@ -1205,6 +1208,11 @@ var ERMrest = (function(module) {
 
         return content;
     };
+
+    module._constraintTypes = Object.freeze({
+        KEY: "k",
+        FOREIGN_KEY: "fk"
+    });
     
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;
