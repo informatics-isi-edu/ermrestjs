@@ -1235,7 +1235,8 @@ var ERMrest = (function(module) {
         APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
-        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable"
+        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
+        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display"
     });
 
     /**

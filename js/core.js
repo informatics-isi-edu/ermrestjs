@@ -2258,6 +2258,35 @@ var ERMrest = (function (module) {
                 this._wellFormed[context] = result;
             }
             return this._wellFormed[context];
+        },
+        
+        getDisplay: function(context) {
+            if (!(context in this._display)) {
+                var annotation = -1, columnOrder = [];
+                if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).get("display"));
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // column-order is just a list of column names
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
+                }
+
+                this._display[context] = {
+                    "columnOrder": columnOrder,
+                    "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
+                    "markdownPattern": annotation.markdown_pattern
+                };
+            }
+
+            return this._display[context];
         }
     };
 

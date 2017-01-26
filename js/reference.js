@@ -2712,6 +2712,8 @@ var ERMrest = (function(module) {
                     this._display_cached = this._base.getDisplay(this._context);
                 } else if (this._isForeignKey) {
                     this._display_cached = this.foreignKey.getDisplay(this._context);
+                } else if (this._isKey) {
+                    this._display_cached = this.key.getDisplay(this._context);
                 }
             }
             return this._display_cached;
@@ -2927,37 +2929,35 @@ var ERMrest = (function(module) {
             this._sortColumns_cached = [];
             this._sortable = false;
 
-            if (this._isKey) {
-                if (this.key.simple) {
-                    baseCol = this.key.colset.columns[0];
-                    useColumn = true;
-                } else {
-                    return;
-                }
-            }
-
             // disable the sort
             if (display !== undefined && display.columnOrder === false) return;
             
-            if (this.isPseudo && this._isForeignKey) {
-                // use the foreignKey column_order
-                if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+            if (this.isPseudo) {
+                // use the column_order
+                if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                     this._sortColumns_cached = display.columnOrder;
                     this._sortable = true;
                     return;
                 }
                 
-                if (this.reference.display._rowOrder !== undefined) {
-                    var rowOrder = this.reference.display._rowOrder;
-                    for (var i = 0; i < rowOrder.length; i++) {
-                        try{
-                            this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-                        } catch(exception) {}
+                if (this._isForeignKey) {
+                    if (this.reference.display._rowOrder !== undefined) {
+                        var rowOrder = this.reference.display._rowOrder;
+                        for (var i = 0; i < rowOrder.length; i++) {
+                            try{
+                                this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
+                            } catch(exception) {}
+                        }
+                        this._sortable = true;
+                    } else if (this.foreignKey.simple) {
+                        baseCol = this.foreignKey.mapping.get(this._base);
+                        useColumn = true;
                     }
-                    this._sortable = true;
-                } else if (this.foreignKey.simple) {
-                    baseCol = this.foreignKey.mapping.get(this._base);
-                    useColumn = true;
+                } else if (this._isKey) {
+                    if (this.key.simple) {
+                        baseCol = this.key.colset.columns[0];
+                        useColumn = true;
+                    }
                 }
             }
 
