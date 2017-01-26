@@ -1119,13 +1119,11 @@ var ERMrest = (function(module) {
                 };
                 var ownReference = this;
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-                    console.log('first try success');
                     defer.resolve();
                 }, function error(response) {
                     var status = response.status || response.statusCode;
-                    // If 412 Precondition Failed means that etags don't match
+                    // If 412 Precondition Failed it means that etags don't match
                     if (status == 412) {
-                        console.log('in 412 callback');
                         // Check if the record still exists. If it does, delete it. Else, send the error to Chaise
                         ownReference._server._http.get(ownReference.uri).then(function getReference(response) {
                             // The record exists; delete it with the new etag.
