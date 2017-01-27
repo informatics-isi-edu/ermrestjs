@@ -1257,7 +1257,7 @@ var ERMrest = (function(module) {
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
                     delete newRef._referenceColumns;
-                    delete newRef._derivedAssociationRef;
+                    delete newRef.derivedAssociationReference;
 
                     // delete permissions
                     delete newRef._canCreate;
@@ -1287,11 +1287,11 @@ var ERMrest = (function(module) {
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
-                        // will be used in entry contexts
-                        newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
-                        newRef._derivedAssociationRef.session = this._session;
-                        newRef._derivedAssociationRef.origFKR = newRef.origFKR;
-                        newRef._derivedAssociationRef._secondFKR = otherFK;
+                        // will be used to determine whether this related reference is derived from association relation or not
+                        newRef.derivedAssociationReference = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef.derivedAssociationReference.session = this._session;
+                        newRef.derivedAssociationReference.origFKR = newRef.origFKR;
+                        newRef.derivedAssociationReference._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
@@ -1376,7 +1376,7 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this._derivedAssociationRef;
+            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1463,14 +1463,7 @@ var ERMrest = (function(module) {
         },
 
         _contextualize: function(context) {
-            var source;
-
-            // if this is a related association table and context is edit, contextualize based on the association table.
-            if (this._reference._derivedAssociationRef && module._isEntryContext(context)) {
-                source = this._reference._derivedAssociationRef;
-            } else {
-                source = this._reference;
-            }
+            var source = this._reference;
 
             var newRef = _referenceCopy(source);
             delete newRef._related;
@@ -2213,8 +2206,8 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef._derivedAssociationRef) {
-                var associationRef = this._pageRef._derivedAssociationRef,
+            if (this._pageRef.derivedAssociationReference) {
+                var associationRef = this._pageRef.derivedAssociationReference,
                     encoder = module._fixedEncodeURIComponent,
                     newFilter = [],
                     missingData = false;
