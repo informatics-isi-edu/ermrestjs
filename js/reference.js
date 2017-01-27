@@ -351,8 +351,8 @@ var ERMrest = (function(module) {
                                         // key is in this table, and avoid duplicate
                                         if (!(fkName in addedKeys) && fk.table == this._table) {
                                             addedKeys[fkName] = true;
-                                            // if key is not well formed (has notnull or isHTML), or we're in edit context: add its constituent columns
-                                            if (module._isEntryContext(this._context) || !fk._isWellFormed(this._context)) {
+                                            // if in edit context: add its constituent columns
+                                            if (module._isEntryContext(this._context)) {
                                                 cols = fk.colset.columns;
                                                 for (j = 0; j < cols.length; j++) {
                                                     col = cols[j];
@@ -2099,6 +2099,7 @@ var ERMrest = (function(module) {
                 this._isHTML = [];
 
                 var column, presentation;
+                var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {
@@ -2108,7 +2109,7 @@ var ERMrest = (function(module) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column._isKey) {
-                                presentation = column.formatPresentation(this._data, {context: this._pageRef._context});
+                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             } else {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
                             }
@@ -2120,35 +2121,32 @@ var ERMrest = (function(module) {
                         }
                     }
                 } else {
-
-                    var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
-
                     /*
                      * use this variable to avoid using computed formatted values in other columns while templating
                      */
-                    var formattedValues = [];
+                    var values = [];
 
                     // format values according to column display annotation
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column._isKey) {
-                                formattedValues[i] = column.formatPresentation(this._data, {context: this._pageRef._context});
+                                values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             } else {
-                                formattedValues[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                                values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
                             }
                         } else {
-                            formattedValues[i] = column.formatPresentation(keyValues[column.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                            values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
 
                             if (column.type.name === "gene_sequence") {
-                                formattedValues[i].isHTML = true;
+                                values[i].isHTML = true;
                             }
                         }
                     }
 
                     var self = this;
 
-                    formattedValues.forEach(function(fv) {
+                    values.forEach(function(fv) {
                         self._values.push(fv.value);
                         self._isHTML.push(fv.isHTML);
                     });
@@ -2550,16 +2548,17 @@ var ERMrest = (function(module) {
 
         /**
          * Formats the presentation value corresponding to this reference-column definition.
-         * @param {String} data The 'formatted' data value.
-         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {Object} options includes `context` and `formattedValues`
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         formatPresentation: function(data, options) {
             if (!this.isPseudo) {
                 return this._base.formatPresentation(data, options);
             }
-
-            var nullValue = {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
+            
+            var context = options ? options.context : undefined;
+            var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
             // if data is empty
             if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -2579,47 +2578,6 @@ var ERMrest = (function(module) {
                 return keyPair;
             };
 
-            var caption, i;
-
-            if (this._isKey) {
-                if (!this.key._isWellFormed(this._context)) {
-                    // this should not happen
-                    return nullValue;
-                }
-
-                var cols = this.key.colset.columns,
-                    table = this.key.table,
-                    values = [];
-
-                // crete the caption
-                for (i = 0; i < cols.length; i++) {
-                    if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
-                        return nullValue;
-                    }
-                    values.push(cols[i].formatvalue(data[cols[i].name], {context: options ? options.context : undefined}));
-                }
-                caption = values.join(" ");
-
-                // if the caption is empty we cannot add any link to that.
-                if (caption.trim() === '') {
-                    return nullValue;
-                }
-
-                var refURI = [
-                    table.schema.catalog.server.uri ,"catalog" ,
-                    module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
-                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-                    createKeyPair(cols)
-                ].join("/");
-                var keyRef = new Reference(module._parse(refURI), this.table.schema.catalog);
-
-                return {isHTML: true, value: '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>'};
-            }
-
-            // find value for foreign key:
-
-            var fKey = this.foreignKey.key; // the key that creates this PseudoColumn
-
             // check if we have data for the given columns
             var hasData = function (kCols) {
                 for (var i = 0; i < kCols.length; i++) {
@@ -2630,44 +2588,111 @@ var ERMrest = (function(module) {
                 return true;
             };
 
-            // if any of key columns don't have data, this link is not valid.
-            if (!hasData(fKey.colset.columns)) {
-                return nullValue;
-            }
+            var value, caption, i;
 
-            // use row name as the caption
-            caption = module._generateRowName(this.table, options ? options.context : undefined, data);
+            // TODO
+            if (this._isKey) {
+                var addLink = true;
 
-            // use key for displayname: "col_1:col_2:col_3"
-            if (caption.trim() === '') {
-                var keyValues = [];
-                for (i = 0; i < fKey.colset.columns.length; i++) {
-                    keyValues.push(fKey.colset.columns[i].formatvalue(data[fKey.colset.columns[i].name], {context: options ? options.context : undefined}));
+                // if any of key columns don't have data, this link is not valid.
+                if (!hasData(this.key.colset.columns)) {
+                    return nullValue;
                 }
-                caption = keyValues.join(":");
+
+                // use the markdown_pattern that is defiend in key-display annotation
+                var display = this.key.getDisplay(context);
+                if (display.isMarkdownPattern) {
+                    caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
+                    addLink = false;
+                } else {
+                    var cols = this.key.colset.columns,
+                        values = [];
+
+                    // crete the caption
+                    var presentation;
+                    for (i = 0; i < cols.length; i++) {
+                        try {
+                            presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                            values.push(presentation.value);
+                            // if one of the values isHTMl, should not add link
+                            addLink = addLink ? !values.isHTML : false;
+                        } catch (exception) {
+                            // the value doesn't exist 
+                            return nullValue;
+                        }
+                    }
+                    caption = values.join(" ");
+
+                    // if the caption is empty we cannot add any link to that.
+                    if (caption.trim() === '') {
+                        return nullValue;
+                    }
+                }
+
+                if (addLink) {
+                    var table = this.key.table;
+                    var refURI = [
+                        table.schema.catalog.server.uri ,"catalog" ,
+                        module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                        [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                        createKeyPair(cols)
+                    ].join("/");
+                    var keyRef = new Reference(module._parse(refURI), table.schema.catalog);
+                    value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+                } else {
+                    value = caption;
+                }
+
+                return {isHTML: true, value: value};
             }
+            // find value for foreign key:
+            else if (this._isForeignKey) {
+                var fKey = this.foreignKey.key; // the key that creates this PseudoColumn
 
-            var value;
+                // if any of key columns don't have data, this link is not valid.
+                if (!hasData(fKey.colset.columns)) {
+                    return nullValue;
+                }
 
-            // if caption has a link, or context is EDIT: don't add the link.
-            if (caption.match(/<a/) || (options && module._isEntryContext(options.context)) ) {
-                value = caption;
+                // use row name as the caption
+                caption = module._generateRowName(this.table, context);
+
+                // use key for displayname: "col_1:col_2:col_3"
+                if (caption.trim() === '') {
+                    var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
+                        keyCols,
+                        col;
+                    
+                    for (i = 0; i < fKey.colset.columns.length; i++) {
+                        col = fkey.colset.columns[i];
+                        keyValues.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
+                    }
+                    caption = keyValues.join(":");
+
+                    if (caption.trim() === '') {
+                        return nullValue;
+                    }
+                }
+
+                // if caption has a link, or context is EDIT: don't add the link.
+                if (caption.match(/<a/) || module._isEntryContext(context) ) {
+                    value = caption;
+                }
+                // create the link using reference.
+                else {
+
+                    // use the shortest key if it has data (for shorter url).
+                    var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fKey.colset.columns;
+
+                    // create a url that points to the current ReferenceColumn
+                    var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
+
+                    // create a reference to just this PseudoColumn to use for url
+                    var ref = new Reference(module._parse(uri), this.table.schema.catalog);
+
+                    value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+                }
             }
-            // create the link using reference.
-            else {
-
-                // use the shortest key if it has data (for shorter url).
-                var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fKey.colset.columns;
-
-                // create a url that points to the current ReferenceColumn
-                var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
-
-                // create a reference to just this PseudoColumn to use for url
-                var ref = new Reference(module._parse(uri), this.table.schema.catalog);
-
-                value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
-            }
-
             return {isHTML: true, value: value};
         },
 
