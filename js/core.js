@@ -499,8 +499,11 @@ var ERMrest = (function (module) {
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
         this.displayname = module._determineDisplayName(this, null);
 
@@ -715,8 +718,11 @@ var ERMrest = (function (module) {
         this._displayKeys = {}; // Used for display key
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
         this.displayname = module._determineDisplayName(this, this.schema);
 
@@ -1834,8 +1840,11 @@ var ERMrest = (function (module) {
         this._display = {};  // Used for column.display annotation.
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
         this.displayname = module._determineDisplayName(this, this.table);
 
