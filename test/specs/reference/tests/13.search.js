@@ -60,7 +60,7 @@ exports.execute = function (options) {
             it('tuples should have correct row values. ', function() {
                 tuples = page.tuples;
                 expect(tuples.length).toBe(2);
-                for(var i = 0; i < tuples.length - 1; i++) {
+                for(var i = 0; i < tuples.length; i++) {
                     expect(tuples[i]._data["name x"]).toMatch("Hank");
                 }
             });
@@ -86,7 +86,7 @@ exports.execute = function (options) {
 
             it('tuples should return all rows. ', function() {
                 tuples = page.tuples;
-                expect(tuples.length).toBe(16);
+                expect(tuples.length).toBe(20);
             });
 
             it('search() using conjunction of words. ', function() {
@@ -111,15 +111,192 @@ exports.execute = function (options) {
             it('tuples should have correct row values. ', function() {
                 tuples = page.tuples;
                 expect(tuples.length).toBe(1);
-                for(var i = 0; i < tuples.length - 1; i++) {
+                for(var i = 0; i < tuples.length; i++) {
                     expect(tuples[i]._data["name x"]).toMatch("Hank");
                     expect(tuples[i]._data["id x"]).toMatch("11");
                 }
             });
-
         });
 
+        describe("search() using quotation marks", function() {
+            var page, tuples,
+                limit = 20;
 
+            it("with a full set of quotation marks.", function(done) {
+                var quotedFilter = "*::ciregexp::harold";
+
+                reference2 = reference1.search("\"harold\"");
+                expect(reference2.location.searchTerm).toBe("\"harold\"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(2);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Harold");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("with quoted whitespace around the search term.", function(done) {
+                var quotedFilter = "*::ciregexp::%20william%20";
+
+                reference2 = reference1.search("\" william \"");
+                expect(reference2.location.searchTerm).toBe("\" william \"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(1);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("William");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("with two words in 1 quoted term.", function(done) {
+                var quotedFilter = "*::ciregexp::wallace%20II";
+
+                reference2 = reference1.search("\"wallace II\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace II\"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(1);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Wallace II");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("with multiple quoted terms split by a space.", function(done) {
+                var quotedFilter = "*::ciregexp::wallace&*::ciregexp::II";
+
+                reference2 = reference1.search("\"wallace\" \"II\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace\" \"II\"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(1);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Wallace");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("with multiple quoted terms split by a space across multiple columns.", function(done) {
+                var quotedFilter = "*::ciregexp::william&*::ciregexp::17";
+
+                reference2 = reference1.search("\"william\" \"17\"");
+                expect(reference2.location.searchTerm).toBe("\"william\" \"17\"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(1);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("William");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("with multiple quoted terms split by a '|'.", function(done) {
+                var quotedFilter = "*::ciregexp::wallace%7CII";
+
+                reference2 = reference1.search("\"wallace|II\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace|II\"");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(2);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Wallace|II");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("without an ending quote.", function(done) {
+                var quotedFilter = "*::ciregexp::harold";
+
+                reference2 = reference1.search("\"harold");
+                expect(reference2.location.searchTerm).toBe("\"harold");
+                expect(reference2.location.searchFilter).toBe(quotedFilter);
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(2);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Harold");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
 
         describe('Start reference uri with search filters, ', function() {
             var page, tuples;
@@ -146,7 +323,7 @@ exports.execute = function (options) {
             it('tuples should have correct row values. ', function() {
                 tuples = page.tuples;
                 expect(tuples.length).toBe(1);
-                for(var i = 0; i < tuples.length - 1; i++) {
+                for(var i = 0; i < tuples.length; i++) {
                     expect(tuples[i]._data["name x"]).toMatch("Hank");
                     expect(tuples[i]._data["id x"]).toMatch("11");
                 }
@@ -173,7 +350,7 @@ exports.execute = function (options) {
 
             it('tuples should return all rows. ', function() {
                 tuples = page.tuples;
-                expect(tuples.length).toBe(16);
+                expect(tuples.length).toBe(20);
             });
 
         });

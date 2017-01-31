@@ -35,6 +35,27 @@ var ERMrest = (function(module) {
         };
     }
 
+    // Polyfill for string.endswith
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(searchString, position) {
+            var subjectString = this.toString();
+            if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                position = subjectString.length;
+            }
+            position -= searchString.length;
+            var lastIndex = subjectString.indexOf(searchString, position);
+            return lastIndex !== -1 && lastIndex === position;
+        };
+    }
+
+    // Polyfill for string.startswith
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(searchString, position){
+            position = position || 0;
+            return this.substr(position, searchString.length) === searchString;
+        };
+    }
+
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
         var target = this;
@@ -133,15 +154,22 @@ var ERMrest = (function(module) {
      * column elements of a model.
      */
     module._determineDisplayName = function (element, parentElement) {
-        var displayname = element.name;
-        var hasDisplayName = false;
+        var value = element.name,
+            hasDisplayName = false,
+            isHTML = false;
         try {
             var display_annotation = element.annotations.get(module._annotations.DISPLAY);
             if (display_annotation && display_annotation.content) {
 
+                //get the markdown display name
+                if(display_annotation.content.markdown_name) {
+                    value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
+                    isHTML = true;
+                    hasDisplayName = true;
+                }
                 //get the specified display name
-                if(display_annotation.content.name){
-                    displayname = display_annotation.content.name;
+                else if (display_annotation.content.name){
+                    value = display_annotation.content.name;
                     hasDisplayName = true;
                 }
 
@@ -155,7 +183,7 @@ var ERMrest = (function(module) {
         }
 
         // if name styles are undefined, get them from the parent element
-        // NOTE: underline_space and title_case might be null.
+        // NOTE: underline_space, title_case, markdown might be null.
         if(parentElement){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
@@ -163,19 +191,27 @@ var ERMrest = (function(module) {
             if(!("title_case" in element._nameStyle)){
                 element._nameStyle.title_case = parentElement._nameStyle.title_case;
             }
+            if(!("markdown" in element._nameStyle)){
+                element._nameStyle.markdown = parentElement._nameStyle.markdown;
+            }
         }
 
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(!hasDisplayName && element._nameStyle){
-            if(element._nameStyle.underline_space){
-                displayname = module._underlineToSpace(displayname);
-            }
-            if(element._nameStyle.title_case){
-                displayname = module._toTitleCase(displayname);
+            if(element._nameStyle.markdown){
+                value = module._formatUtils.printMarkdown(element.name, { inline: true });
+                isHTML = true;
+            } else {
+                if(element._nameStyle.underline_space){
+                    value = module._underlineToSpace(value);
+                }
+                if(element._nameStyle.title_case){
+                    value = module._toTitleCase(value);
+                }
             }
         }
 
-        return displayname;
+        return {"isHTML": isHTML, "value": value};
     };
 
     /**
@@ -1213,7 +1249,7 @@ var ERMrest = (function(module) {
         KEY: "k",
         FOREIGN_KEY: "fk"
     });
-    
+
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;
     };

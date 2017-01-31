@@ -209,7 +209,10 @@ var ERMrest = (function(module) {
 
         /**
          * The display name for this reference.
-         * @type {string}
+         * displayname.isHTML will return true/false
+         * displayname.value has the value
+         * 
+         * @type {object}
          */
         get displayname () {
             /* Note that displayname is context dependent. For instance,
@@ -394,7 +397,7 @@ var ERMrest = (function(module) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
-                            
+
                             // make sure key columns won't be added
                             columns = key.colset.columns;
                             for (i = 0; i < columns.length; i++) {
@@ -1330,7 +1333,7 @@ var ERMrest = (function(module) {
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
                     delete newRef._referenceColumns;
-                    delete newRef._derivedAssociationRef;
+                    delete newRef.derivedAssociationReference;
 
                     // delete permissions
                     delete newRef._canCreate;
@@ -1353,24 +1356,33 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
+                        if (otherFK.to_name) {
+                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name};
+                        } else {
+                            newRef._displayname = otherFK.colset.columns[0].table.displayname;
+                        }
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
-                        // will be used in entry contexts
-                        newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
-                        newRef._derivedAssociationRef.session = this._session;
-                        newRef._derivedAssociationRef.origFKR = newRef.origFKR;
-                        newRef._derivedAssociationRef._secondFKR = otherFK;
+                        // will be used to determine whether this related reference is derived from association relation or not
+                        newRef.derivedAssociationReference = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef.derivedAssociationReference.session = this._session;
+                        newRef.derivedAssociationReference.origFKR = newRef.origFKR;
+                        newRef.derivedAssociationReference._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
+                        if (fkr.from_name) {
+                            newRef._displayname = {"isHTML": false, "value": fkr.from_name};
+                        } else {
+                            newRef._displayname = newRef._table.displayname;
+                        }
+
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
 
                         // additional values for sorting related references
@@ -1384,8 +1396,8 @@ var ERMrest = (function(module) {
                 if (notSorted && this._related.length !== 0) {
                     return this._related.sort(function (a, b) {
                         // displayname
-                        if (a._displayname != b._displayname) {
-                            return a._displayname.localeCompare(b._displayname);
+                        if (a._displayname.value != b._displayname.value) {
+                            return a._displayname.value.localeCompare(b._displayname.value);
                         }
 
                         // columns
@@ -1449,7 +1461,7 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this._derivedAssociationRef;
+            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1536,14 +1548,7 @@ var ERMrest = (function(module) {
         },
 
         _contextualize: function(context) {
-            var source;
-
-            // if this is a related association table and context is edit, contextualize based on the association table.
-            if (this._reference._derivedAssociationRef && module._isEntryContext(context)) {
-                source = this._reference._derivedAssociationRef;
-            } else {
-                source = this._reference;
-            }
+            var source = this._reference;
 
             var newRef = _referenceCopy(source);
             delete newRef._related;
@@ -1869,8 +1874,13 @@ var ERMrest = (function(module) {
                                 break;
                             }
                         }
+                        
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
+                            if (pseudoCol._isForeignKey) {
+                                data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = this._data[0][pseudoCol._sortColumns[j].name];
+                            }
                             paging.row.push(data);
                         }
                     }
@@ -1933,7 +1943,11 @@ var ERMrest = (function(module) {
                             }
                         }
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
+                            if (pseudoCol._isForeignKey) {
+                                data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
+                            }
                             paging.row.push(data);
                         }
                     }
@@ -2329,8 +2343,8 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef._derivedAssociationRef) {
-                var associationRef = this._pageRef._derivedAssociationRef,
+            if (this._pageRef.derivedAssociationReference) {
+                var associationRef = this._pageRef.derivedAssociationReference,
                     encoder = module._fixedEncodeURIComponent,
                     newFilter = [],
                     missingData = false;
@@ -2405,7 +2419,7 @@ var ERMrest = (function(module) {
 
         if (typeof kwargs != 'undefined') {
             if (kwargs.foreignKey !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 // create ermrest url using the location
@@ -2438,7 +2452,7 @@ var ERMrest = (function(module) {
                  */
                 this._isForeignKey = true;
             } else if (kwargs.key !== undefined) {
-                
+
                 this.isPseudo = true;
 
                 /**
@@ -2511,20 +2525,24 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._displayname = this._base.displayname;
                 } else if (this._isForeignKey){
-                    var foreignKey = this.foreignKey;
-
+                    var foreignKey = this.foreignKey, value, isHTML;
                     if (foreignKey.to_name !== "") {
-                        this._displayname = foreignKey.to_name;
-
+                        value = foreignKey.to_name;
+                        isHTML = false;
                     } else if (foreignKey.simple) {
-                        this._displayname = this._base.displayname;
+                        value = this._base.displayname.value;
+                        isHTML = this._base.displayname.isHTML;
 
                         if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
-                            this._displayname += " ("  + foreignKey.key.table.displayname + ")";
+                            value += " ("  + foreignKey.key.table.displayname.value + ")";
+                            if (!isHTML) {
+                                isHTML = foreignKey.key.table.displayname.isHTML;
+                            }
                         }
 
                     } else {
-                        this._displayname = foreignKey.key.table.displayname;
+                        value = foreignKey.key.table.displayname.value;
+                        isHTML = foreignKey.key.table.displayname.isHTML;
 
                         // disambiguate
                         var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
@@ -2532,18 +2550,30 @@ var ERMrest = (function(module) {
                         }).length;
 
                         if (tableCount > 1) {
-                            this._displayname += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                             value += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
                                 return a.name.localeCompare(b.name);
                             }).map(function(col) {
-                                return col.displayname;
+                                return col.displayname.value;
                             }).join(", ")  + ")";
-                        }
 
+                            if (!isHTML) {
+                                isHTML = foreignKey.colset.columns.some(function (col) {
+                                    return col.displayname.isHTML;
+                                });
+                            }
+                        }
                     }
+                    this._displayname = {"value": value, "isHTML": isHTML};
+
                 } else if (this._isKey) {
-                    this._displayname =  this.key.colset.columns.reduce(function(prev, curr, index) {
-                        return prev + (index>0 ? " " : "") + curr.displayname;
-                    }, "");
+                    this._displayname = {
+                        "value": this.key.colset.columns.reduce(function(prev, curr, index) {
+                            return prev + (index>0 ? " " : "") + curr.displayname.value;
+                        }, ""),
+                        "isHTML": this.key.colset.columns.some(function (col) {
+                            return col.displayname.isHTML;
+                        })
+                    };
                 }
             }
             return this._displayname;
@@ -2639,7 +2669,7 @@ var ERMrest = (function(module) {
                 }
             }
             return this._comment;
-            
+
         },
 
         /**
@@ -2666,8 +2696,11 @@ var ERMrest = (function(module) {
          * 
          * - PseudoColumn
          *      - column_order defined -> use it.
-         *      - table has row_order -> use it.
-         *      - simple fk -> use the column's
+         *      - Foreign key:
+         *          - table has row_order -> use it.
+         *          - simple fk -> use the column's
+         *      - Key:
+         *          - simple key -> use the column's 
          *      - disable it
          * - Column:
          *      - column_order defined -> use it.
@@ -2770,10 +2803,10 @@ var ERMrest = (function(module) {
                     return nullValue;
                 }
 
-                var cols = this.key.colset.columns, 
+                var cols = this.key.colset.columns,
                     table = this.key.table,
                     values = [];
-                
+
                 // crete the caption
                 for (i = 0; i < cols.length; i++) {
                     if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
@@ -2781,13 +2814,13 @@ var ERMrest = (function(module) {
                     }
                     values.push(cols[i].formatvalue(data[cols[i].name], {context: options ? options.context : undefined}));
                 }
-                caption = values.join(" "); 
+                caption = values.join(" ");
 
                 // if the caption is empty we cannot add any link to that.
                 if (caption.trim() === '') {
                     return nullValue;
                 }
-                
+
                 var refURI = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
@@ -2908,7 +2941,7 @@ var ERMrest = (function(module) {
                 // if all GENERATED
                 return true;
             }
-            
+
             // other contexts
             return true;
         },
@@ -2961,7 +2994,7 @@ var ERMrest = (function(module) {
                 }
             }
 
-            // its an actual column or a simple foreign key
+            // its an actual column or a simple key/foreign key
             if (useColumn) {
                 // use the column column_order
                 this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined

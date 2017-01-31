@@ -67,11 +67,11 @@ exports.execute = function(options) {
 
             describe('.displayname, ', function() {
                 it('should use from_name when annotation is present.', function() {
-                    expect(related[0].displayname).toBe("from_name_value");
+                    expect(related[0].displayname.value).toBe("from_name_value");
                 });
 
                 it('should use the name of the table when annotation is not present.', function() {
-                    expect(related[1].displayname).toBe("inbound_related_reference_table");
+                    expect(related[1].displayname.value).toBe("inbound_related_reference_table");
                 });
             });
 
@@ -101,9 +101,9 @@ exports.execute = function(options) {
                 ]}]);
             });
 
-            it('._derivedAssociationRef should be undefined', function() {
-                expect(related[0]._derivedAssociationRef).toBeUndefined();
-                expect(related[1]._derivedAssociationRef).toBeUndefined();
+            it('.derivedAssociationReference should be undefined', function() {
+                expect(related[0].derivedAssociationReference).toBeUndefined();
+                expect(related[1].derivedAssociationReference).toBeUndefined();
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -151,11 +151,11 @@ exports.execute = function(options) {
 
             describe('.displayname, ', function (){
                 it('should use to_name when annotation is present.', function() {
-                  expect(related[2].displayname).toBe("to_name_value");
+                  expect(related[2].displayname.value).toBe("to_name_value");
                 });
 
                 it('should use the displayname of assocation table when annotation is not present.', function() {
-                  expect(related[3].displayname).toBe(associationTableWithIDDisplayname);
+                  expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
                 });
             });
 
@@ -192,21 +192,9 @@ exports.execute = function(options) {
                 });
             });
 
-            it('._derivedAssociationRef should be defined.', function() {
-                expect(related[2]._derivedAssociationRef._table.name).toBe("association_table_with_toname");
-                expect(related[3]._derivedAssociationRef._table.name).toBe("association table with id");
-            });
-
-            it('.contextualize.entryEdit/.entryCreate/.entry should be created based on the assocation table rather than the reference it is referring to.', function(){
-                var refs;
-                refs = [ related[2].contextualize.entryEdit, related[2].contextualize.entryCreate, related[2].contextualize.entry];
-                refs.forEach(function (ref) {
-                    expect(ref._table.name).toBe("association_table_with_toname");
-                });
-                refs = [related[3].contextualize.entryEdit, related[3].contextualize.entryCreate, related[3].contextualize.entry];
-                refs.forEach(function (ref) {
-                    expect(ref._table.name).toBe("association table with id");
-                });
+            it('.derivedAssociationReference should be defined.', function() {
+                expect(related[2].derivedAssociationReference._table.name).toBe("association_table_with_toname");
+                expect(related[3].derivedAssociationReference._table.name).toBe("association table with id");
             });
 
             it('.read should return a Page object that is defined.', function(done) {
@@ -283,7 +271,7 @@ exports.execute = function(options) {
             });
 
             it('should be sorted by displayname.', function() {
-                expect(related2[0].displayname).toBe("first_related");
+                expect(related2[0].displayname.value).toBe("first_related");
             });
 
             it('should be sorted by order of key columns when displayname is the same.', function (){
