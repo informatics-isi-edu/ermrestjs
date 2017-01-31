@@ -1120,13 +1120,34 @@ var ERMrest = (function(module) {
                         "If-Match": this._etag
                     }
                 };
-
+                var ownReference = this;
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-
                     defer.resolve();
                 }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                    var status = response.status || response.statusCode;
+                    // If 412 Precondition Failed it means that etags don't match
+                    if (status == 412) {
+                        // Check if the record still exists. If it does, delete it. Else, send the error to Chaise
+                        ownReference._server._http.get(ownReference.uri).then(function getReference(response) {
+                            // The record exists; delete it with the new etag.
+                            ownReference._etag = response.headers().etag;
+                            var config = {headers: {"If-Match": ownReference._etag}};
+                            ownReference._server._http.delete(ownReference.uri, config).then(function() {
+                                defer.resolve();
+                            }, function error (response) {
+                                var error = module._responseToError(response);
+                                return defer.reject(error);
+                            });
+                        }, function error(reason) {
+                            // Couldn't get the record (already deleted?), just send it along to _responseToError
+                            // Chaise should ask user to refresh the page.
+                            var error = module._responseToError(response);
+                            return defer.reject(error);
+                        });
+                    } else {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }
                 }).catch(function (error) {
                     return defer.reject(error);
                 });
@@ -2761,7 +2782,6 @@ var ERMrest = (function(module) {
         get _hasBase() {
             return this._base !== null && this._base !== undefined;
         }
-
     };
 
     return module;

@@ -450,6 +450,8 @@ var ERMrest = (function(module) {
                 return new module.NotFoundError(response.statusText, response.data);
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
+            case 412:
+                return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
             case 503:

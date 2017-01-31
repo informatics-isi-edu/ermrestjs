@@ -22,6 +22,7 @@ var ERMrest = (function(module) {
     module.ForbiddenError = ForbiddenError;
     module.NotFoundError = NotFoundError;
     module.ConflictError = ConflictError;
+    module.PreconditionFailedError = PreconditionFailedError;
     module.InternalServerError = InternalServerError;
     module.ServiceUnavailableError = ServiceUnavailableError;
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
@@ -122,6 +123,22 @@ var ERMrest = (function(module) {
 
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
+
+
+    /**
+     * @memberof ERMrest
+     * @param {string} status the network error code
+     * @param {string} message error message
+     * @constructor
+     */
+    function PreconditionFailedError(status, message) {
+        this.code = 412;
+        this.status = status;
+        this.message = message;
+    }
+
+    PreconditionFailedError.prototype = Object.create(Error.prototype);
+    PreconditionFailedError.prototype.constructor = PreconditionFailedError;
 
 
     /**
