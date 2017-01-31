@@ -2641,7 +2641,7 @@ var ERMrest = (function(module) {
                             presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
                             values.push(presentation.value);
                             // if one of the values isHTMl, should not add link
-                            addLink = addLink ? !values.isHTML : false;
+                            addLink = addLink ? !presentation.isHTML : false;
                         } catch (exception) {
                             // the value doesn't exist 
                             return nullValue;
