@@ -157,6 +157,7 @@ to use for ERMrest JavaScript agents.
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
         * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
+        * [.getDisplay(context)](#ERMrest.Key+getDisplay)
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -1164,7 +1165,7 @@ Formats the presentation value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -1339,6 +1340,7 @@ get the key by the column set
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
     * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
+    * [.getDisplay(context)](#ERMrest.Key+getDisplay)
 
 <a name="new_ERMrest.Key_new"></a>
 
@@ -1393,6 +1395,17 @@ whether key has a column
 | Param | Type |
 | --- | --- |
 | column | <code>[Column](#ERMrest.Column)</code> | 
+
+<a name="ERMrest.Key+getDisplay"></a>
+
+#### key.getDisplay(context)
+display object for the column
+
+**Kind**: instance method of <code>[Key](#ERMrest.Key)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| context | <code>String</code> | the context that we want the display for. |
 
 <a name="ERMrest.ColSet"></a>
 
@@ -2658,8 +2671,8 @@ Formats the presentation value corresponding to this reference-column definition
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| options | <code>Object</code> | includes `context` and `formattedValues` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 

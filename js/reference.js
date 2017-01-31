@@ -2434,14 +2434,19 @@ var ERMrest = (function(module) {
                     this._displayname = {"value": value, "isHTML": isHTML};
 
                 } else if (this._isKey) {
-                    this._displayname = {
-                        "value": this.key.colset.columns.reduce(function(prev, curr, index) {
-                            return prev + (index>0 ? " " : "") + curr.displayname.value;
-                        }, ""),
-                        "isHTML": this.key.colset.columns.some(function (col) {
-                            return col.displayname.isHTML;
-                        })
-                    };
+                    this._displayname = module._determineDisplayName(this.key, false);
+
+                    if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
+                        this._displayname = {
+                            "value": this.key.colset.columns.reduce(function(prev, curr, index) {
+                                return prev + (index>0 ? " " : "") + curr.displayname.value;
+                            }, ""),
+                            "isHTML": this.key.colset.columns.some(function (col) {
+                                return col.displayname.isHTML;
+                            })
+                        };
+                    }
+
                 }
             }
             return this._displayname;
@@ -2613,10 +2618,11 @@ var ERMrest = (function(module) {
 
             // TODO
             if (this._isKey) {
-                var addLink = true;
+                var cols = this.key.colset.columns,
+                    addLink = true;
 
                 // if any of key columns don't have data, this link is not valid.
-                if (!hasData(this.key.colset.columns)) {
+                if (!hasData(cols)) {
                     return nullValue;
                 }
 
@@ -2626,10 +2632,9 @@ var ERMrest = (function(module) {
                     caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
                     addLink = false;
                 } else {
-                    var cols = this.key.colset.columns,
-                        values = [];
+                    var values = [];
 
-                    // crete the caption
+                    // create the caption
                     var presentation;
                     for (i = 0; i < cols.length; i++) {
                         try {
@@ -2668,27 +2673,27 @@ var ERMrest = (function(module) {
             }
             // find value for foreign key:
             else if (this._isForeignKey) {
-                var fKey = this.foreignKey.key; // the key that creates this PseudoColumn
+                var fkey = this.foreignKey.key; // the key that creates this PseudoColumn
 
                 // if any of key columns don't have data, this link is not valid.
-                if (!hasData(fKey.colset.columns)) {
+                if (!hasData(fkey.colset.columns)) {
                     return nullValue;
                 }
 
                 // use row name as the caption
-                caption = module._generateRowName(this.table, context);
+                caption = module._generateRowName(this.table, context, data);
 
                 // use key for displayname: "col_1:col_2:col_3"
                 if (caption.trim() === '') {
                     var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
-                        keyCols,
+                        keyCols = [],
                         col;
                     
-                    for (i = 0; i < fKey.colset.columns.length; i++) {
+                    for (i = 0; i < fkey.colset.columns.length; i++) {
                         col = fkey.colset.columns[i];
-                        keyValues.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
+                        keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
                     }
-                    caption = keyValues.join(":");
+                    caption = keyCols.join(":");
 
                     if (caption.trim() === '') {
                         return nullValue;
@@ -2703,7 +2708,7 @@ var ERMrest = (function(module) {
                 else {
 
                     // use the shortest key if it has data (for shorter url).
-                    var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fKey.colset.columns;
+                    var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fkey.colset.columns;
 
                     // create a url that points to the current ReferenceColumn
                     var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");

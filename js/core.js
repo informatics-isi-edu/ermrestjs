@@ -505,7 +505,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, null);
+        this.displayname = module._determineDisplayName(this, true);
 
         /**
          *
@@ -724,7 +724,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.schema);
+        this.displayname = module._determineDisplayName(this, true, this.schema);
 
         /**
          *
@@ -1846,7 +1846,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.table);
+        this.displayname = module._determineDisplayName(this, true, this.table);
 
         /**
          * Member of Keys
@@ -2203,6 +2203,7 @@ var ERMrest = (function (module) {
         }
 
         this._wellFormed = {};
+        this._display = {};
     }
 
     Key.prototype = {
