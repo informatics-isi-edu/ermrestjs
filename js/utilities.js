@@ -35,6 +35,27 @@ var ERMrest = (function(module) {
         };
     }
 
+    // Polyfill for string.endswith
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(searchString, position) {
+            var subjectString = this.toString();
+            if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                position = subjectString.length;
+            }
+            position -= searchString.length;
+            var lastIndex = subjectString.indexOf(searchString, position);
+            return lastIndex !== -1 && lastIndex === position;
+        };
+    }
+
+    // Polyfill for string.startswith
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(searchString, position){
+            position = position || 0;
+            return this.substr(position, searchString.length) === searchString;
+        };
+    }
+
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
         var target = this;
@@ -145,7 +166,7 @@ var ERMrest = (function(module) {
                     value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
                     isHTML = true;
                     hasDisplayName = true;
-                } 
+                }
                 //get the specified display name
                 else if (display_annotation.content.name){
                     value = display_annotation.content.name;
@@ -1228,7 +1249,7 @@ var ERMrest = (function(module) {
         KEY: "k",
         FOREIGN_KEY: "fk"
     });
-    
+
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;
     };
