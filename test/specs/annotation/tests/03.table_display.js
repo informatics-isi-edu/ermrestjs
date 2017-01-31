@@ -111,7 +111,7 @@ exports.execute = function (options) {
                 ];
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname;
+                    var displayname = tuple.displayname.value;
                     expect(displayname).toBe(expected[i]);
                 }
             });
@@ -176,7 +176,7 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname;
+                    var displayname = tuple.displayname.value;
                     expect(displayname).toBe(tuple.values[1]);
                 }
             });
@@ -185,7 +185,7 @@ exports.execute = function (options) {
                 var tuples = page2.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname;
+                    var displayname = tuple.displayname.value;
                     expect(displayname).toBe(tuple.values[1]);
                 }
             });
@@ -231,7 +231,7 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname;
+                    var displayname = tuple.displayname.value;
                     expect(displayname).toBe(tuple.values[1] + ":" + tuple.values[0]);
                 }
             });
@@ -277,7 +277,7 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname;
+                    var displayname = tuple.displayname.value;
                     expect(displayname).toBe(tuple.values[1] + " " + tuple.values[2]);
                 }
             });
