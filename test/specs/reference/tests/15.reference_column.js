@@ -170,29 +170,30 @@ exports.execute = function (options) {
         describe('.displayname, ', function () {
             describe('for pseudoColumns that are foreign key, ', function () {
                 it('should use the foreignKey\'s to_name.', function () {
-                    checkDisplayname(detailedColumns[1].displayname, "to_name_value", false);
+                    expect(detailedColumns[1].displayname).toBe("to_name_value");
+                    expect(detailedColumns[11].displayname).toBe("to_name_value");
                 });
 
                 describe('when foreignKey\'s to_name is not defined, ', function () {
                     describe('for simple foreign keys, ', function () {
                         it('should use column\'s displayname in the absence of to_name in foreignKey.', function () {
-                            checkDisplayname(detailedColumns[2].displayname, "Column 2 Name", false);
+                            expect(detailedColumns[2].displayname).toBe("Column 2 Name");
                         });
 
                         it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function () {
-                            checkDisplayname(detailedColumns[3].displayname, "Column 3 Name (reference_table)", false);
-                            checkDisplayname(detailedColumns[4].displayname, "Column 3 Name (reference_values)", false);
+                            expect(detailedColumns[3].displayname).toBe("Column 3 Name (reference_table)");
+                            expect(detailedColumns[4].displayname).toBe("Column 3 Name (reference_values)");
                         });
                     });
 
                     describe('for composite foreign keys, ', function () {
                         it('should use referenced table\'s displayname in the absence of to_name in foreignKey.', function () {
-                            checkDisplayname(detailedColumns[12].displayname, "table_w_composite_key_2", false);
+                            expect(detailedColumns[12].displayname).toBe("table_w_composite_key_2");
                         });
 
                         it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (Column 3 Name, col_5)", false);
-                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col_4, col_5)", false);
+                            expect(detailedColumns[13].displayname).toBe("table_w_composite_key (Column 3 Name, col_5)");
+                            expect(detailedColumns[14].displayname).toBe("table_w_composite_key (col_4, col_5)");
                         });
                     })
 
@@ -201,12 +202,12 @@ exports.execute = function (options) {
 
             it('for pseudoColumns that are key, should return the consitutent column displaynames seperated by space.', function() {
                 // simple
-                checkDisplayname(detailedColumns[0].displayname, "id", false);
-                checkDisplayname(compactBriefRef.columns[0].displayname, "Column 3 Name col_6", false);
+                expect(detailedColumns[0].displayname).toBe("id");
+                expect(compactBriefRef.columns[0].displayname).toBe("Column 3 Name col_6");
             });         
 
             it('for other columns, should return the base column\'s displayname.', function () {
-                checkDisplayname(detailedColumns[5].displayname, "Column 3 Name", false);
+                expect(detailedColumns[5].displayname).toBe("Column 3 Name");
             });
         });
 
@@ -402,9 +403,4 @@ exports.execute = function (options) {
             });
         });
     });
-
-    function checkDisplayname(displayname, expectedVal, expectedHTML) {
-        expect(displayname.value).toBe(expectedVal);
-        expect(displayname.isHTML).toBe(expectedHTML);
-    }
 }

@@ -67,11 +67,11 @@ exports.execute = function(options) {
 
             describe('.displayname, ', function() {
                 it('should use from_name when annotation is present.', function() {
-                    expect(related[0].displayname.value).toBe("from_name_value");
+                    expect(related[0].displayname).toBe("from_name_value");
                 });
 
                 it('should use the name of the table when annotation is not present.', function() {
-                    expect(related[1].displayname.value).toBe("inbound_related_reference_table");
+                    expect(related[1].displayname).toBe("inbound_related_reference_table");
                 });
             });
 
@@ -151,11 +151,11 @@ exports.execute = function(options) {
 
             describe('.displayname, ', function (){
                 it('should use to_name when annotation is present.', function() {
-                  expect(related[2].displayname.value).toBe("to_name_value");
+                  expect(related[2].displayname).toBe("to_name_value");
                 });
 
                 it('should use the displayname of assocation table when annotation is not present.', function() {
-                  expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
+                  expect(related[3].displayname).toBe(associationTableWithIDDisplayname);
                 });
             });
 
@@ -271,7 +271,7 @@ exports.execute = function(options) {
             });
 
             it('should be sorted by displayname.', function() {
-                expect(related2[0].displayname.value).toBe("first_related");
+                expect(related2[0].displayname).toBe("first_related");
             });
 
             it('should be sorted by order of key columns when displayname is the same.', function (){

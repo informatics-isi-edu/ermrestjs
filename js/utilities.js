@@ -154,22 +154,20 @@ var ERMrest = (function(module) {
      * column elements of a model.
      */
     module._determineDisplayName = function (element, parentElement) {
-        var value = element.name,
-            hasDisplayName = false,
-            isHTML = false;
+        var displayname = element.name;
+        var hasDisplayName = false;
         try {
             var display_annotation = element.annotations.get(module._annotations.DISPLAY);
             if (display_annotation && display_annotation.content) {
 
                 //get the markdown display name
                 if(display_annotation.content.markdown_name) {
-                    value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
-                    isHTML = true;
+                    displayname = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
                     hasDisplayName = true;
                 }
                 //get the specified display name
                 else if (display_annotation.content.name){
-                    value = display_annotation.content.name;
+                    displayname = display_annotation.content.name;
                     hasDisplayName = true;
                 }
 
@@ -199,19 +197,18 @@ var ERMrest = (function(module) {
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(!hasDisplayName && element._nameStyle){
             if(element._nameStyle.markdown){
-                value = module._formatUtils.printMarkdown(element.name, { inline: true });
-                isHTML = true;
+                displayname = module._formatUtils.printMarkdown(element.name, { inline: true });
             } else {
                 if(element._nameStyle.underline_space){
-                    value = module._underlineToSpace(value);
+                    displayname = module._underlineToSpace(displayname);
                 }
                 if(element._nameStyle.title_case){
-                    value = module._toTitleCase(value);
+                    displayname = module._toTitleCase(displayname);
                 }
             }
         }
 
-        return {"isHTML": isHTML, "value": value};
+        return displayname;
     };
 
     /**
