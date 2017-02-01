@@ -200,14 +200,12 @@ exports.execute = function (options) {
             });
 
             describe('for pseudoColumns that are key, ', function() {
-                //TODO should be added after ermrest is fixed
-                xit('should use `markdown_name` that is defined on display annotation.', function () {
-                    checkDisplayname(compactBriefRef.columns[1].displayname, "third key", true);
+                it('should use `markdown_name` that is defined on display annotation.', function () {
+                    checkDisplayname(compactBriefRef.columns[2].displayname, "<strong>fourth key</strong>", true);
                 });
 
-                //TODO should be added after ermrest is fixed
-                xit('should use `name` that is defined on display annotation.', function () {
-                    checkDisplayname(compactBriefRef.columns[2].displayname, "fourth key", false);
+                it('should use `name` that is defined on display annotation.', function () {
+                    checkDisplayname(compactBriefRef.columns[1].displayname, "third key", false);
                 });
 
                 it('otherwise, should return the consitutent column displaynames seperated by space.', function() {
@@ -394,10 +392,9 @@ exports.execute = function (options) {
                         expect(val).toBe('');
                     });
                     
-                    //TODO should be added after ermrest is fixed
-                    xit('should use `markdown_pattern` from key display annotation.', function () {
+                    it('should use `markdown_pattern` from key display annotation.', function () {
                         val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, {context: "compact/brief", "formattedValues": {"col_4":"value"}}).value;
-                        expect(val).toEqual('<p>value</p>\n');
+                        expect(val).toEqual('<strong>value</strong>');
                     });
 
                     describe('otherwise, ', function () {

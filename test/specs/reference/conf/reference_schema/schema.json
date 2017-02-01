@@ -809,7 +809,7 @@
                     },
                     "tag:isrd.isi.edu,2017:key-display": {
                         "*": {
-                            "markdown_pattern": "{{col_4}}"
+                            "markdown_pattern": "**{{col_4}}**"
                         }
                     }
                 }

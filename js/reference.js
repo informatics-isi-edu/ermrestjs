@@ -2630,6 +2630,7 @@ var ERMrest = (function(module) {
                 var display = this.key.getDisplay(context);
                 if (display.isMarkdownPattern) {
                     caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
+                    caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
                     addLink = false;
                 } else {
                     var values = [];
