@@ -131,10 +131,11 @@ var ERMrest = (function(module) {
      * @param {string} message error message
      * @constructor
      */
-    function PreconditionFailedError(status, message) {
+    function PreconditionFailedError(status, message, data) {
         this.code = 412;
         this.status = status;
         this.message = message;
+        this.data = data;
     }
 
     PreconditionFailedError.prototype = Object.create(Error.prototype);

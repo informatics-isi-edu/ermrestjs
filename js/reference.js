@@ -1002,7 +1002,7 @@ var ERMrest = (function(module) {
                     columnProjections = [],
                     shortestKeyNames = [],
                     keyWasModified = false,
-                    tuple, oldData, newData, keyName;
+                    tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
@@ -1012,6 +1012,11 @@ var ERMrest = (function(module) {
                 for(var i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
+
+                    // Collect all old and new data from all tuples to use in the event of a 412 error later
+                    allOldData.push(oldData);
+                    allNewData.push(newData);
+
                     submissionData[i] = {};
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
@@ -1091,8 +1096,58 @@ var ERMrest = (function(module) {
 
                     defer.resolve(page);
                 }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                    var status = response.status || response.statusCode;
+                    // If 412 Precondition Failed error, get current data
+                    if (status == 412) {
+                        self.read(tuples.length).then(function getPage(page) {
+                            // Compare current data with old data. If match, perform the update with new ETag. Otherwise, throw an error.
+                            var currentData = [], mismatchFound = false;
+
+                            for (var t = 0, len = page.tuples.length; t < len; t++) {
+                                currentData.push(page.tuples[t]._data);
+                            }
+
+                            if (currentData.length !== allOldData.length) {
+                                mismatchFound = true;
+                            }
+
+                            if (!mismatchFound) {
+                                for (var p = 0, len = allOldData.length; p < len; p++) {
+                                    var oldTuple = allOldData[p], currentTuple = currentData[p];
+                                    mismatchFound = Object.keys(oldTuple).some(function(key) {
+                                        // If the following statement returns true, this
+                                        // loop breaks and the loop returns true.
+                                        return oldTuple[key] !== currentTuple[key];
+                                    });
+                                    if (mismatchFound) {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!mismatchFound) {
+                                return self.update(tuples).then(function success(page) {
+                                    console.log('no mismatch found... reinitiating update');
+                                    return defer.resolve(page);
+                                }, function error(response) {
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                });
+                            } else {
+                                console.log('a mismatch was indeed found')
+                                // Old data and current data aren't the same; throw the original 412 error.
+                                var additionalData = {'oldData': allOldData, 'currentData': currentData, 'newData': allNewData};
+                                var error = module._responseToError(response, additionalData);
+                                return defer.reject(error);
+                            }
+                        }, function error(response) {
+                            var error = module._responseToError(response);
+                            return defer.reject(error);
+                        });
+                    } else {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }
                 }).catch(function (error) {
                     return defer.reject(error);
                 });
@@ -1125,13 +1180,12 @@ var ERMrest = (function(module) {
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
                     defer.resolve();
                 }, function error(response) {
-                    var status = response.status || response.statusCode, statusText = response.statusText;
+                    var status = response.status || response.statusCode;
                     // If 412 Precondition Failed it means that ETags don't match
                     if (status == 412) {
                         // Check if the record still exists. If it does, compare the data. Else, send the error to Chaise
                         ownReference.read(tuples.length).then(function getPage(page) {
-                            var currentETag = ownReference._etag;
-                            var oldData = tuples, currentData = page.tuples, mismatchFound;
+                            var oldData = tuples, currentData = page.tuples, mismatchFound = false;
                             if (currentData.length !== oldData.length) {
                                 mismatchFound = true;
                             }
