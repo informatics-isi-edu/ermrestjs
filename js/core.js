@@ -842,10 +842,10 @@ var ERMrest = (function (module) {
         /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
-         * @desc 
+         * @desc
          * returns the key that can be used for display purposes.
          */
-        _getDisplayKey: function (context) {            
+        _getDisplayKey: function (context) {
             if (!(context in this._displayKeys)) {
                 var key;
                 if (this.keys.length() !== 0) {
@@ -872,14 +872,14 @@ var ERMrest = (function (module) {
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
                                 return keyA.colset.columns.length > keyB.colset.columns.length;
                             }
-                            
+
                             // has more text
                             var aTextCount = countTextColumns(keyA);
                             var bTextCount = countTextColumns(keyB);
                             if (aTextCount != bTextCount) {
                                 return aTextCount < bTextCount;
                             }
-                            
+
                             // the one that has lower column position
                             return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
                         })[0];
@@ -1706,11 +1706,11 @@ var ERMrest = (function (module) {
                 case 'date':
                     data = utils.printDate(data, options);
                     break;
+                case 'numeric':
                 case 'float4':
                 case 'float8':
                     data = utils.printFloat(data, options);
                     break;
-                case 'numeric':
                 case 'int2':
                 case 'int4':
                 case 'int8':
@@ -1861,7 +1861,7 @@ var ERMrest = (function (module) {
          * @desc foreign key that this column is a member of
          */
         this.memberOfForeignKeys = [];
-        
+
     }
 
     Column.prototype = {
