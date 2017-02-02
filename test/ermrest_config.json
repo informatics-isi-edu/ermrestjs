@@ -34,6 +34,7 @@
         "double precision"
       ]
     },
+    "numeric": null,
     "int2": {
       "aliases": [
         "smallint"
@@ -91,7 +92,6 @@
   },
   "column_types_readonly": {
     "json": null,
-    "numeric": null,
     "text": {
       "aliases": [
         "char",
