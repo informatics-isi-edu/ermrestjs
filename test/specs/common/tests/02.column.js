@@ -214,11 +214,20 @@ exports.execute = function(options) {
                     it('float8 columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_float8');
-                        var options = {numDecDigits: 7};
+                        var options = {numFracDigits: 7};
                         formattedValue = col.formatvalue(234523523.023045230450245, options);
                         expect(spy).toHaveBeenCalledWith(234523523.023045230450245, options);
                         expect(formattedValue).toBe('234,523,523.0230452');
                     });
+
+                    it('numeric columns correctly.', function() {
+                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
+                        var col = table1_schema2.columns.get('table_1_numeric');
+                        var options = {numFracDigits: 8};
+                        formattedValue = col.formatvalue(456456.234682307474076, options);
+                        expect(spy).toHaveBeenCalledWith(456456.234682307474076, options);
+                        expect(formattedValue).toBe('456,456.23468231');
+                    })
 
                     afterEach(function() {
                         expect(formattedValue).toEqual(jasmine.any(String));
@@ -251,7 +260,7 @@ exports.execute = function(options) {
                         var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_int8');
                         var int8 = 9007199254740991; // Max safe integer in JS
-                        var options = {numDecDigits: 7};
+                        var options = {numFracDigits: 7};
                         formattedValue = col.formatvalue(int8);
                         expect(spy).toHaveBeenCalledWith(int8, undefined);
                         expect(formattedValue).toBe('9,007,199,254,740,991');

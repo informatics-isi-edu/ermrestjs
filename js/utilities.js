@@ -596,7 +596,8 @@ var ERMrest = (function(module) {
         /**
          * @function
          * @param {Object} value A float value to transform
-         * @param {Object} [options] Configuration options. One accepted so far: {numDecDigits: 5}
+         * @param {Object} [options] Configuration options.
+         * - "numFracDigits" is the number of fractional digits to appear after the decimal point
          * @return {string} A string representation of value
          * @desc Formats a given float value into a string for display. Removes leading 0s; adds thousands separator.
          */
@@ -608,8 +609,8 @@ var ERMrest = (function(module) {
             }
 
             value = parseFloat(value);
-            if (options.numDecDigits) {
-                value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
+            if (options.numFracDigits) {
+                value = value.toFixed(options.numFracDigits); // toFixed() rounds the value, is ok?
             } else {
                 value = value.toFixed(4);
             }
