@@ -1106,10 +1106,14 @@ var ERMrest = (function(module) {
 
         /**
          * Deletes the referenced resources.
+         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * @returns {Promise} A promise for a TBD result or errors.
          */
-        delete: function() {
+        delete: function(tuples) {
             try {
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
+
                 var defer = module._q.defer();
 
                 var config = {
@@ -1121,26 +1125,48 @@ var ERMrest = (function(module) {
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
                     defer.resolve();
                 }, function error(response) {
-                    var status = response.status || response.statusCode;
-                    // If 412 Precondition Failed it means that etags don't match
+                    var status = response.status || response.statusCode, statusText = response.statusText;
+                    // If 412 Precondition Failed it means that ETags don't match
                     if (status == 412) {
-                        // Check if the record still exists. If it does, delete it. Else, send the error to Chaise
-                        ownReference._server._http.get(ownReference.uri).then(function getReference(response) {
-                            // The record exists; delete it with the new etag.
-                            ownReference._etag = response.headers().etag;
-                            var config = {headers: {"If-Match": ownReference._etag}};
-                            ownReference._server._http.delete(ownReference.uri, config).then(function() {
-                                defer.resolve();
-                            }, function error (response) {
+                        // Check if the record still exists. If it does, compare the data. Else, send the error to Chaise
+                        ownReference.read(tuples.length).then(function getPage(page) {
+                            var currentETag = ownReference._etag;
+                            var oldData = tuples, currentData = page.tuples, mismatchFound;
+                            if (currentData.length !== oldData.length) {
+                                mismatchFound = true;
+                            }
+                            if (!mismatchFound) {
+                                for (var i = 0, len = oldData.length; i < len; i++) {
+                                    var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
+                                    mismatchFound = Object.keys(oldTuple).some(function(key) {
+                                        // If the following statement returns true, this
+                                        // loop breaks and the loop returns true.
+                                        return oldTuple[key] !== currentTuple[key];
+                                    });
+                                    if (mismatchFound) {
+                                        break;
+                                    }
+                                }
+                            }
+                            // If old data matches current data, proceed with delete
+                            if (!mismatchFound) {
+                                var config = {headers: {"If-Match": ownReference._etag}};
+                                ownReference._server._http.delete(ownReference.uri, config).then(function(response) {
+                                    defer.resolve();
+                                }, function error(response) {
+                                    // Errored out a second time (first error was the 412). Send to Chaise.
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                });
+                            } else {
+                                // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
                                 var error = module._responseToError(response);
                                 return defer.reject(error);
-                            });
-                        }, function error(reason) {
-                            // Couldn't get the record (already deleted?), just send it along to _responseToError
-                            // Chaise should ask user to refresh the page.
+                            }
+                        }, function error(response) {
                             var error = module._responseToError(response);
                             return defer.reject(error);
-                        });
+                        })
                     } else {
                         var error = module._responseToError(response);
                         return defer.reject(error);
