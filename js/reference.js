@@ -1737,7 +1737,7 @@ var ERMrest = (function(module) {
          * ```
          * for (var i=0, len=page.tuples.length; i<len; i++) {
          *   var tuple = page.tuples[i];
-         *   console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+         *   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
          * }
          * ```
          * @type {ERMrest.Tuple[]}
@@ -2193,13 +2193,13 @@ var ERMrest = (function(module) {
          *
          * Usage:
          * ```
-         * console.log("This tuple has a displayable name of", tuple.displayname);
+         * console.log("This tuple has a displayable name of ", tuple.displayname.value);
          * ```
          * @type {string}
          */
         get displayname() {
             if (!this._displayname) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
+                this._displayname = { "value": module._generateRowName(this._pageRef._table, this._pageRef._context, this._data), "isHTML": true};
             }
             return this._displayname;
         },
