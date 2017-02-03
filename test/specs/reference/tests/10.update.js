@@ -1322,6 +1322,17 @@ exports.execute = function (options) {
                     });
                 });
             });
+
+            describe("with mismatching ETags (412 error)", function() {
+                it('should return a page object if the old data and current data from DB match', function() {
+
+                });
+
+                it('should raise a 412 error if the old data and current data form DB do not match', function() {
+
+                });
+            })
         });
+
     });
 };
