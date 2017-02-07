@@ -1342,6 +1342,7 @@ var ERMrest = (function(module) {
                     delete newRef._canDelete;
 
                     newRef.origFKR = fkr; // it will be used to trace back the reference
+                    newRef.origColumnName = module._generatePseudoColumnName(fkr.constraint_names[0].join("_"), fkr._table);
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -2499,18 +2500,7 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._name = this._base.name;
                 } else {
-                    /**
-                     * make sure that this name is unique:
-                     * 1. table doesn't have any columns with that name.
-                     * 2. there's no constraint with that name.
-                     **/ 
-                    var i = 0,
-                        table = this._isForeignKey ? this.foreignKey._table : this.table, 
-                        name = this._constraintName;
-                    while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
-                        name += ++i;
-                    }
-                    this._name = name;
+                    this._name = module._generatePseudoColumnName(this._constraintName, this._isForeignKey ? this.foreignKey._table : this.table);
                 }
             }
             return this._name;

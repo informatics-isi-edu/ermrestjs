@@ -273,7 +273,6 @@ to use for ERMrest JavaScript agents.
         * [.key](#ERMrest.ReferenceColumn+key) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
         * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-            * [~i](#ERMrest.ReferenceColumn+name..i)
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -2552,7 +2551,6 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.key](#ERMrest.ReferenceColumn+key) : <code>[ForeignKeyRef](#ERMrest.ForeignKeyRef)</code>
     * [.table](#ERMrest.ReferenceColumn+table) : <code>[Table](#ERMrest.Table)</code>
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-        * [~i](#ERMrest.ReferenceColumn+name..i)
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : <code>[Type](#ERMrest.Type)</code>
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -2610,14 +2608,6 @@ The Foreign key object that this PseudoColumn is created based on
 name of the column.
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
-<a name="ERMrest.ReferenceColumn+name..i"></a>
-
-##### name~i
-make sure that this name is unique:
-1. table doesn't have any columns with that name.
-2. there's no constraint with that name.
-
-**Kind**: inner property of <code>[name](#ERMrest.ReferenceColumn+name)</code>  
 <a name="ERMrest.ReferenceColumn+displayname"></a>
 
 #### referenceColumn.displayname : <code>string</code>
