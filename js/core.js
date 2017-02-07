@@ -505,7 +505,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, null);
+        this.displayname = module._determineDisplayName(this, true);
 
         /**
          *
@@ -724,7 +724,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.schema);
+        this.displayname = module._determineDisplayName(this, true, this.schema);
 
         /**
          *
@@ -1735,15 +1735,15 @@ var ERMrest = (function (module) {
         /**
          * Formats the presentation value corresponding to this column definition.
          * @param {String} data The 'formatted' data value.
-         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
 
-            var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
-            var isMarkdownPattern = false, isMarkdownType = false, annotation;
+            var context = options ? options.context : undefined,
+                utils = module._formatUtils;
 
-            var display = this.getDisplay(options ? options.context : undefined);
+            var display = this.getDisplay(context);
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
@@ -1764,12 +1764,12 @@ var ERMrest = (function (module) {
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                value = module._renderTemplate(template, keyValues, options);
+                value = module._renderTemplate(template, options.formattedValues, options);
             }
 
             // If value is null or empty, return value on basis of `show_nulls`
             if (value === null || value.trim() === '') {
-                return { isHTML: false, value: this._getNullValue(options ? options.context : undefined) };
+                return { isHTML: false, value: this._getNullValue(context) };
             }
 
             /*
@@ -1846,7 +1846,7 @@ var ERMrest = (function (module) {
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.table);
+        this.displayname = module._determineDisplayName(this, true, this.table);
 
         /**
          * Member of Keys
@@ -2203,6 +2203,7 @@ var ERMrest = (function (module) {
         }
 
         this._wellFormed = {};
+        this._display = {};
     }
 
     Key.prototype = {
@@ -2238,7 +2239,27 @@ var ERMrest = (function (module) {
                 this._wellFormed[context] = result;
             }
             return this._wellFormed[context];
-        }
+        },
+
+        /**
+         * @param {String} context the context that we want the display for.
+         * @desc
+         * display object for the column
+         */
+        getDisplay: function (context) {
+            if (!(context in this._display)) {
+                var annotation = -1;
+                if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
+                    annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
+                }
+
+                this._display[context] = {
+                    "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
+                    "markdownPattern": annotation.markdown_pattern,
+                };
+            }
+            return this._display[context];
+        },
     };
 
 

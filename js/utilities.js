@@ -149,12 +149,13 @@ var ERMrest = (function(module) {
     /**
      * @function
      * @param {Object} element a model element (schema, table, or column)
+     * @param {boolean} useName determines whether we can use name and name_style or not
      * @param {Object} parentElement the upper element (schema->null, table->schema, column->table)
      * @desc This function determines the display name for the schema, table, or
      * column elements of a model.
      */
-    module._determineDisplayName = function (element, parentElement) {
-        var value = element.name,
+    module._determineDisplayName = function (element, useName, parentElement) {
+        var value = useName ? element.name : undefined,
             hasDisplayName = false,
             isHTML = false;
         try {
@@ -174,7 +175,7 @@ var ERMrest = (function(module) {
                 }
 
                 //get the name styles
-                if(display_annotation.content.name_style){
+                if(useName && display_annotation.content.name_style){
                     element._nameStyle = display_annotation.content.name_style;
                 }
             }
@@ -197,7 +198,7 @@ var ERMrest = (function(module) {
         }
 
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
-        if(!hasDisplayName && element._nameStyle){
+        if(useName && !hasDisplayName && element._nameStyle){
             if(element._nameStyle.markdown){
                 value = module._formatUtils.printMarkdown(element.name, { inline: true });
                 isHTML = true;
@@ -1272,7 +1273,8 @@ var ERMrest = (function(module) {
         APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
-        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable"
+        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
+        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display"
     });
 
     /**
