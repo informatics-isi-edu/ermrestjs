@@ -1165,7 +1165,7 @@ Formats the presentation value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -2296,7 +2296,7 @@ Usage:
 ```
 for (var i=0, len=page.tuples.length; i<len; i++) {
   var tuple = page.tuples[i];
-  console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+  console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
 }
 ```
 
@@ -2504,7 +2504,7 @@ or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':'
 
 Usage:
 ```
-console.log("This tuple has a displayable name of", tuple.displayname);
+console.log("This tuple has a displayable name of ", tuple.displayname.value);
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
@@ -2687,8 +2687,8 @@ Formats the presentation value corresponding to this reference-column definition
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| options | <code>Object</code> | includes `context` and `formattedValues` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 

@@ -236,7 +236,7 @@ exports.execute = function (options) {
          * contexts that are used:
          *  
          *  compact: has visible-columns with duplicate values
-         *  compact/brief: has visible-columns with nullok and isHTML key
+         *  compact/brief: has visible-columns with three composite keys
          *  compact/select: has all of the columns in visible-columns + has some foreign keys too
          *  detailed: doesn't have visible-columns
          *  entry: doesn't have visible-columns
@@ -321,16 +321,6 @@ exports.execute = function (options) {
                             ["reference_schema", "outbound_fk_7"].join("_") + "1",
                             ["reference_schema", "outbound_fk_8"].join("_"),
                             ["reference_schema", "outbound_fk_9"].join("_")
-                        ]
-                    }]);
-                });
-
-                it('if a key has columns that are html or nullok, should add its consitutent columns (avoid duplicate).', function () {
-                    checkReferenceColumns([{
-                        ref: compactBriefRef,
-                        expected: [
-                            ["reference_schema", "ref_table_fks_second_key"].join("_"), 
-                            "col_1", "col_3", "reference_schema_outbound_fk_7"
                         ]
                     }]);
                 });

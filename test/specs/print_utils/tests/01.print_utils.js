@@ -5,7 +5,7 @@ exports.execute = function (options) {
         // Test Cases:
         it('printFloat() should format floats correctly.', function () {
             var printFloat = formatUtils.printFloat;
-            var options = {numDecDigits: 4};
+            var options = {numFracDigits: 4};
             expect(printFloat(null)).toBe('');
             expect(printFloat(1234.0, options)).toBe('1,234.0000');
             expect(printFloat(23.0)).toBe('23.0000');

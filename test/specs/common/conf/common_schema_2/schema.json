@@ -45,6 +45,10 @@
                     "type": { "typename": "float8" }
                 },
                 {
+                    "name": "table_1_numeric",
+                    "type": { "typename": "numeric" }
+                },
+                {
                     "name": "table_1_int2",
                     "type": { "typename": "int2" }
                 },
