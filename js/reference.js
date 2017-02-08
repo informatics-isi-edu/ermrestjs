@@ -892,7 +892,7 @@ var ERMrest = (function(module) {
                     for(k = 0; k < this._location.sortObject.length; k++) {
                         sortColumn = this._location.sortObject[k];
                         if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
-                            keys.push(sortColumn.column);
+                            keys.push(module._fixedEncodeURIComponent(sortColumn.column));
                         }
                     }
 
