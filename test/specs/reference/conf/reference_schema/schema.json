@@ -413,6 +413,13 @@
                     "type": {
                         "typename": "integer"
                     }
+                },
+                {
+                    "name": "null value",
+                    "nullok": true,
+                    "type": {
+                        "typename": "integer"
+                    }
                 }
             ],
             "annotations": {}

@@ -663,7 +663,7 @@ var ERMrest = (function(module) {
         var modifier = (paging.before ? "@before(" : "@after(");
         for (var i = 0; i < paging.row.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + (paging.row[i] === "null" ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
+            modifier = modifier + ((paging.row[i] === null || paging.row[i] === undefined ) ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
         }
         modifier = modifier + ")";
         return modifier;
