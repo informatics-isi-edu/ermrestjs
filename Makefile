@@ -27,6 +27,7 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
+	   $(JS)/hatrac.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
 
