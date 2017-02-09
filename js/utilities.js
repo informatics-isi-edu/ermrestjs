@@ -140,9 +140,11 @@ var ERMrest = (function(module) {
         var result = encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
-        console.log("------");
-        console.log("encoded " + str + " : " + result);
-        console.log("------");
+        if (str === "col 5 /") {
+            console.log("------");
+            console.log("encoded " + str + " : " + result);
+            console.log("------");
+        }
         return result;
     };
 

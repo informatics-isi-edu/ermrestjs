@@ -2754,7 +2754,9 @@ var ERMrest = (function (module) {
                 rightString += separator;
 
             }
-
+            console.log("----");
+            console.log("fk " + this.constraint_names[0].join("_") + " toString: " + "(" + leftString + ")=(" + rightString + ")");
+            console.log("----");
             return "(" + leftString + ")=(" + rightString + ")";
         },
 

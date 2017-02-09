@@ -973,6 +973,9 @@ var ERMrest = (function(module) {
 
                 // add limit
                 uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
+                console.log("----");
+                console.log("uri is " + uri);
+                console.log("----");
 
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
