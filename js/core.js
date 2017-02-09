@@ -2745,7 +2745,7 @@ var ERMrest = (function (module) {
                 var toCol = this.mapping.get(fromCol);
                 var separator = (i < columnsLength -1 ?",": "");
 
-                leftString += (reverse ? fromCol.name : toCol.name) + separator;
+                leftString += (reverse ? module._fixedEncodeURIComponent(fromCol.name) : module._fixedEncodeURIComponent(toCol.name)) + separator;
                 if (reverse) {
                     rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {

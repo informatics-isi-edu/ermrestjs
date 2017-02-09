@@ -73,7 +73,7 @@ exports.execute = function (options) {
                 "col_2": null,
                 "col_3": "4000",
                 "col_4": "4001",
-                "col_5": "4002",
+                "col 5 /": "4002",
                 "col_6": "4003",
                 "col_7": null,
                 "reference_schema_outbound_fk_7": "12"
@@ -84,13 +84,13 @@ exports.execute = function (options) {
                 "col_2": null,
                 "col_3": "4000",
                 "col_4": "4002",
-                "col_5": "4003",
+                "col 5 /": "4003",
                 "col_6": "4004",
                 "col_7": null,
                 "reference_schema_outbound_fk_7": "13"
             }
         ];
-
+        
         var detailedRefExpectedPartialValue = [ 
             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1">1</a>', 
             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">9000</a>', 
@@ -105,8 +105,8 @@ exports.execute = function (options) {
              '<p>12</p>\n', 
              '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>', 
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4002&id_2=4000">4002 , 4000</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4002&id_2=4001">4002 , 4001</a>', 
              null
         ];
 
@@ -124,8 +124,8 @@ exports.execute = function (options) {
             '<p>12</p>\n',
             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">4000 , 4001</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2">4000 , 4002</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4">4001 , 4002</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5">4002 , 4000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=8">4002 , 4001</a>',
             null
         ];
 
@@ -138,8 +138,8 @@ exports.execute = function (options) {
             '12', 
             '4000 , 4001', 
             '4000:4003', 
-            '4000 , 4002', 
-            '4001 , 4002', 
+            '4002 , 4000', 
+            '4002 , 4001', 
             '' // 
         ];
 
@@ -152,17 +152,17 @@ exports.execute = function (options) {
             '12',
             '4000 , 4001',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '4000 , 4002',
-            '4001 , 4002',
+            '4002 , 4000',
+            '4002 , 4001',
             ''
         ];
 
         var entryCreateRefExpectedLinkedValue = [ 
-            'Hank', '', '4000 , 4002', '1' 
+            'Hank', '', '4002 , 4000', '1' 
         ];
         
         var entryCreateRefExpectedPartialValue = [
-            '9000', '', '4000 , 4002', '1'
+            '9000', '', '4002 , 4000', '1'
         ];
 
         /**
@@ -174,7 +174,7 @@ exports.execute = function (options) {
          *  col_2 -> has displayname (value is null) | has immutable annotation | (colum_order: [id, col_1])
          *  col_3 -> has displayname (nullok is false) | (column_order: false)
          *  col_4 -> has generated annotation | (column_order: [col_2, col_3])
-         *  col_5 -> has generated annotation
+         *  col 5 / -> has generated annotation
          *  col_6 -> nullok false
          *  col_7 -> value is null | has generated and immutable annotation
          *  reference_schema_outbound_fk_7 -> not part of any fk | has immutable
@@ -186,9 +186,9 @@ exports.execute = function (options) {
          *  outbound_fk_4: col_3 -> reference_values | (column_order: [name])
          *  outbound_fk_5: col_3, col_4 -> table_w_composite_key (to_name) | (column_order: [id])
          *  outbound_fk_6: col_3, col_6 -> table_w_composite_key_2
-         *  outbound_fk_7: col_4, col_5 -> table_w_composite_key
-         *  outbound_fk_8: col_3, col_5 -> table_w_composite_key
-         *  outbound_fk_9: col_7, col_5 -> table_w_composite_key -> col_7 is null
+         *  outbound_fk_7: col_4, col 5 / -> table_w_composite_key
+         *  outbound_fk_8: col_3, col 5 / -> table_w_composite_key
+         *  outbound_fk_9: col_7, col 5 / -> table_w_composite_key -> col_7 is null
          * 
          * expected output for ref.columns in detailed, compact/select, and entry/edit contexts:
          * 0:   id
@@ -198,7 +198,7 @@ exports.execute = function (options) {
          * 4:   outbound_fk_4 (check disambiguation)
          * 5:   col_3
          * 6:   col_4
-         * 7:   col_5
+         * 7:   col 5 /
          * 8:   col_6
          * 9:   col_7
          * 10:  reference_schema_outbound_fk_7
@@ -304,7 +304,7 @@ exports.execute = function (options) {
                         ref: compactSelectRef,
                         expected: [
                             "id", ["reference_schema", "outbound_fk_1"].join("_"),
-                            "col_1", "col_2", "col_3", "col_4","col_5", ["reference_schema","outbound_fk_3"].join("_"), 
+                            "col_1", "col_2", "col_3", "col_4","col 5 /", ["reference_schema","outbound_fk_3"].join("_"), 
                             "col_6", "col_7", ["reference_schema","outbound_fk_5"].join("_"), 
                             "reference_schema_outbound_fk_7", ["reference_schema","outbound_fk_7"].join("_") + "1"
                         ]
@@ -416,7 +416,7 @@ exports.execute = function (options) {
                         expect(detailedColumns[6].name).toBe("col_4");
 
                         expect(detailedColumns[7].isPseudo).toBe(false);
-                        expect(detailedColumns[7].name).toBe("col_5");
+                        expect(detailedColumns[7].name).toBe("col 5 /");
 
                         expect(detailedColumns[8].isPseudo).toBe(false);
                         expect(detailedColumns[8].name).toBe("col_6");

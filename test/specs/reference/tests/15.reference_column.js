@@ -192,8 +192,8 @@ exports.execute = function (options) {
                         });
 
                         it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (Column 3 Name, col_5)", false);
-                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col_4, col_5)", false);
+                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (col 5 /, Column 3 Name)", false);
+                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col 5 /, col_4)", false);
                         });
                     })
 
@@ -273,7 +273,7 @@ exports.execute = function (options) {
                 });
 
                 it ('should return a rowname if it is possible to generate one with default values.', function () {
-                    expect(detailedColumns[14].default).toEqual('col 4 default , col 5 default');
+                    expect(detailedColumns[14].default).toEqual('col 5 default , col 4 default');
                 });
 
                 it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {

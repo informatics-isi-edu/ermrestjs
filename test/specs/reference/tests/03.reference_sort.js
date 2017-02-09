@@ -219,6 +219,10 @@ exports.execute = function (options) {
                 it("if column doesn't have `column_order`, should sort based on column value.", function (done) {
                     checkSort([{"column":"id", "descending": true}], "6", done);
                 });
+
+                it("it should encode the column names.", function (done) {
+                    checkSort([{"column":"col 5 /", "descending": false}], "5", done);
+                });
                 
             });
             
