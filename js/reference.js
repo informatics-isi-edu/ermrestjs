@@ -1010,9 +1010,13 @@ var ERMrest = (function(module) {
                     defer.resolve(page);
 
                 }, function error(response) {
+                    console.log("ERROR IN THE ERROR!");
+                    console.log(response);
                     var error = module._responseToError(response);
                     return defer.reject(error);
                 }).catch(function (error) {
+                    console.log("ERROR IN CATCH!");
+                    console.log(error);
                     return defer.reject(error);
                 });
 
