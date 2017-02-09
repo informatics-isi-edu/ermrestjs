@@ -199,7 +199,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("generated schema should return true only for read, false for all", function () {
+            describe("generated schema should return true for read and delete, false for all else", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(false);
@@ -214,7 +214,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -257,7 +257,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("generated table should return true only for read, false for all", function () {
+            describe("generated table should return true only for read and delete, false for all else", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(false);
@@ -272,7 +272,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -314,7 +314,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("generated columns should return true only for read, false for all", function () {
+            describe("generated columns should return true only for read and delete, false for all else", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(false);
@@ -329,7 +329,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -428,7 +428,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("immutable schema should return true for create and read, false for all", function () {
+            describe("immutable schema should return true for create, read, and delete, false for update", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(true);
@@ -443,7 +443,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -486,7 +486,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("immutable table should return true for create and read, false for all", function () {
+            describe("immutable table should return true for create, read, and delete, false for update", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(true);
@@ -501,7 +501,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -543,7 +543,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("immutable columns should return true for create and read, false for all", function () {
+            describe("immutable columns should return true for create, read, and delete, false for update", function () {
 
                 it("canCreate.", function () {
                     expect(reference.canCreate).toBe(true);
@@ -558,7 +558,7 @@ exports.execute = function (options) {
                 });
 
                 it("canDelete.", function () {
-                    expect(reference.canDelete).toBe(false);
+                    expect(reference.canDelete).toBe(true);
                 });
 
             });
@@ -731,10 +731,9 @@ exports.execute = function (options) {
                 it("canDelete.", function () {
                     expect(reference.canDelete).toBe(false);
                 });
-
             });
         });
-        
+
         afterEach(function () {
             nock.cleanAll();
         });

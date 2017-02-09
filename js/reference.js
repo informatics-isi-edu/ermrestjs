@@ -211,7 +211,7 @@ var ERMrest = (function(module) {
          * The display name for this reference.
          * displayname.isHTML will return true/false
          * displayname.value has the value
-         * 
+         *
          * @type {object}
          */
         get displayname () {
@@ -577,18 +577,8 @@ var ERMrest = (function(module) {
             // can delete if all are true
             // 1) table is not non-deletable
             // 2) user has write permission
-            // 3) table is not generated
-            // 4) table is not immutable
-            // 5) not all visible columns in the table are generated/immutable
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isNonDeletable && !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
-
-                if (this._canDelete) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.EDIT) !== false);
-                    });
-                    this._canDelete = !allColumnsDisabled;
-                }
+                this._canDelete = !this._table._isNonDeletable && this._checkPermissions("content_write_user");
             }
             return this._canDelete;
         },
@@ -2582,7 +2572,7 @@ var ERMrest = (function(module) {
             if (!this.isPseudo) {
                 return this._base.formatPresentation(data, options);
             }
-            
+
             var context = options ? options.context : undefined;
             var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
@@ -2644,7 +2634,7 @@ var ERMrest = (function(module) {
                             // if one of the values isHTMl, should not add link
                             addLink = addLink ? !presentation.isHTML : false;
                         } catch (exception) {
-                            // the value doesn't exist 
+                            // the value doesn't exist
                             return nullValue;
                         }
                     }
@@ -2689,7 +2679,7 @@ var ERMrest = (function(module) {
                     var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
                         keyCols = [],
                         col;
-                    
+
                     for (i = 0; i < fkey.colset.columns.length; i++) {
                         col = fkey.colset.columns[i];
                         keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
