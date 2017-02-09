@@ -137,9 +137,13 @@ var ERMrest = (function(module) {
      * converts a string to an URI encoded string
      */
     module._fixedEncodeURIComponent = function (str) {
-        return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+        var result = encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
+        console.log("------");
+        console.log("encoded " + str + " : " + result);
+        console.log("------");
+        return result;
     };
 
     module._nextChar = function (c) {
