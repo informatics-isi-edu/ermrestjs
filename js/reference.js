@@ -2693,7 +2693,7 @@ var ERMrest = (function(module) {
          */
         get sortable() {
             if (this._sortable === undefined) {
-                this.determineSortable();
+                this._determineSortable();
             }   
             return this._sortable; 
         },
@@ -2705,7 +2705,7 @@ var ERMrest = (function(module) {
          */
         get _sortColumns() {
             if (this._sortColumns_cached === undefined) {
-                this.determineSortable();
+                this._determineSortable();
             }
             return this._sortColumns_cached;
         },
@@ -2963,7 +2963,7 @@ var ERMrest = (function(module) {
             return module._getNullValue(this.table, context, [this.table, this.table.schema]);
         },
         
-        determineSortable: function () {
+        _determineSortable: function () {
 
             var display = this._display,
                 useColumn = !this.isPseudo,
