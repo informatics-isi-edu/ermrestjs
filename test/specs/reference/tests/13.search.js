@@ -5,7 +5,8 @@ exports.execute = function (options) {
             schemaName = "reference_schema",
             tableName = "paging table w sort",
             filter1 = "*::ciregexp::hank",
-            filter2 = "*::ciregexp::11";
+            // filter2 is a regular expression that will be url encoded.
+            filter2 = "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent("(^|[^1-9])0*11([^0-9]|$)");
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
@@ -223,7 +224,8 @@ exports.execute = function (options) {
             });
 
             it("with multiple quoted terms split by a space across multiple columns.", function(done) {
-                var quotedFilter = "*::ciregexp::william&*::ciregexp::17";
+                // searching for integer values converts them into a regular expression
+                var quotedFilter = "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent("(^|[^1-9])0*17([^0-9]|$)");
 
                 reference2 = reference1.search("\"william\" \"17\"");
                 expect(reference2.location.searchTerm).toBe("\"william\" \"17\"");
@@ -303,7 +305,7 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('location should have correct search parameters ', function() {
-                expect(reference3.location.searchTerm).toBe("hank 11");
+                expect(reference3.location.searchTerm).toBe("hank (^|[^1-9])0*11([^0-9]|$)");
                 expect(reference3.location.searchFilter).toBe(filter1 + "&" + filter2);
             });
 
