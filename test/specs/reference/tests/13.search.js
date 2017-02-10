@@ -43,7 +43,7 @@ exports.execute = function (options) {
 
         // Test Cases:
         describe('Reference.search() method, ', function() {
-            var page, tuples;
+            var page, tuples, searchTerm;
             var limit = 20;
 
             it('search() using a single term. ', function(done) {
@@ -117,9 +117,10 @@ exports.execute = function (options) {
                 // values with `id x` between 21 and 34 are specifically for this case
                 // `id x` == 21-25, 27, and 28 should all match; 26, 29-34 are negative cases
                 // rows with `name x` == "int" are notating that the int value is what is being tested for
-                reference2 = reference1.search("1");
-                expect(reference2.location.searchTerm).toBe("1");
-                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix));
+                searchTerm = "1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix));
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -129,7 +130,7 @@ exports.execute = function (options) {
                     tuples = page.tuples;
                     expect(tuples.length).toBe(16);
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(matchInAnyColumn(tuples[i], "1")).toBeTruthy();
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
                     }
 
                     done();
@@ -142,8 +143,10 @@ exports.execute = function (options) {
             it("search() with float value '11.1' with matching in text and float columns. ", function(done) {
                 // values with `id x` between 35 and 40 are specifically for this case
                 // `id x` == 35-38, should all match;  39 and 40 are negative cases
-                reference2 = reference1.search("11.1");
-                expect(reference2.location.searchTerm).toBe("11.1");
+                searchTerm = "11.1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"));
 
                 reference2.read(limit).then(function (response) {
@@ -154,7 +157,7 @@ exports.execute = function (options) {
                     tuples = page.tuples;
                     expect(tuples.length).toBe(4);
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(matchInAnyColumn(tuples[i], "11.1")).toBeTruthy();
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
                     }
 
                     done();
@@ -168,8 +171,10 @@ exports.execute = function (options) {
                 // values with `id x` between 41 and 46 are specifically for this case
                 // `id x` == 35-38 and 41-44, should all match; 45 and 46 are negative cases
                 // this is similar to the previous case that tests `11.1` and should match those positive cases as well
-                reference2 = reference1.search("11.");
-                expect(reference2.location.searchTerm).toBe("11.");
+                searchTerm = "11.";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."));
 
                 reference2.read(limit).then(function (response) {
@@ -180,7 +185,7 @@ exports.execute = function (options) {
                     tuples = page.tuples;
                     expect(tuples.length).toBe(8);
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(matchInAnyColumn(tuples[i], "11.")).toBeTruthy();
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
                     }
 
                     done();
@@ -193,8 +198,10 @@ exports.execute = function (options) {
             it("search() with float value '.1' with matching in text and float columns. ", function(done) {
                 // values with `id x` between 47 and 52 are specifically for this case
                 // `id x` == 47-50 should all match; 51 and 52 are negative cases
-                reference2 = reference1.search(".1");
-                expect(reference2.location.searchTerm).toBe(".1");
+                searchTerm = ".1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"));
 
                 reference2.read(limit).then(function (response) {
@@ -205,7 +212,7 @@ exports.execute = function (options) {
                     tuples = page.tuples;
                     expect(tuples.length).toBe(4);
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(matchInAnyColumn(tuples[i], ".1")).toBeTruthy();
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
                     }
 
                     done();
