@@ -159,13 +159,12 @@ exports.execute = function(options) {
                 describe('should call printDate() to format,', function() {
                     it('date columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printDate').and.callThrough();
-                        var testVal = '2016-05-02 13:00:00.00 PST';
+                        var testVal = '2016/05/02 13:00:00.00 PST';
                         var col = table1_schema2.columns.get('table_1_date');
-                        var options = {separator: '.', leadingZero: false};
-                        var formattedValue = col.formatvalue(testVal, options);
-                        expect(spy).toHaveBeenCalledWith(testVal, options);
+                        var formattedValue = col.formatvalue(testVal);
+                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('2016.5.2');
+                        expect(formattedValue).toBe('2016-05-02');
                     });
                 });
 
@@ -196,7 +195,7 @@ exports.execute = function(options) {
                         var formattedValue = col.formatvalue(testVal);
                         expect(spy).toHaveBeenCalledWith(testVal, undefined);
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe(new Date(testVal).toLocaleString());
+                        expect(formattedValue).toBe('2011-05-06 08:25:25');
                     });
                 });
 

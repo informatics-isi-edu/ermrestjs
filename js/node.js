@@ -2,13 +2,13 @@ var _scriptsLoaded = false, _defers = [];
 
 // Check for whether the environment is Node.js or Browser
 if (typeof module === 'object' && module.exports && typeof require === 'function') {
-    
+
     /*
      *  Call configure with node.js request-q package for Http and
      *  q library for promise
      */
     ERMrest.configure(require('request-q'), require('q'));
-    
+
 
     /*
      * Expose authCookie function, to set ermrest cookie
@@ -21,7 +21,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     };
 
     /*
-     * Inject _mustache module in Ermrest
+     * Inject _moment module in ERMrest
+     */
+     ERMrest._moment = require('moment');
+
+    /*
+     * Inject _mustache module in ERMrest
      */
     ERMrest._mustache = require('mustache');
 
@@ -40,7 +45,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     _scriptsLoaded = true;
 
     /*
-     * Set ERMrest as a module 
+     * Set ERMrest as a module
      */
     module.exports = ERMrest;
 } else {
@@ -61,7 +66,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
       if (typeof callback !== "undefined") {
         if (scriptTag.readyState) {
           /* For old versions of IE */
-          scriptTag.onreadystatechange = function () { 
+          scriptTag.onreadystatechange = function () {
             if (this.readyState === 'complete' || this.readyState === 'loaded') {
               setTimeout(callback, 20);
             }
@@ -83,7 +88,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
               if (++count == urls.length) callback();
             });
         });
-    };    
+    };
 
     var ermrestJsPath = "../../ermrestjs/";
 
@@ -91,17 +96,25 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Call this function to load all dependent scripts in order
      */
     loadScripts([
+
+        // Moment.js script
+        ermrestJsPath + "vendor/moment.min.js",
         // Mustache script
-        ermrestJsPath + "vendor/mustache.min.js", 
+        ermrestJsPath + "vendor/mustache.min.js",
 
         // Markdown-it and dependent plugin scripts
-        ermrestJsPath + "vendor/markdown-it.min.js", 
+        ermrestJsPath + "vendor/markdown-it.min.js",
 
-        ermrestJsPath + "vendor/markdown-it-sub.min.js", 
+        ermrestJsPath + "vendor/markdown-it-sub.min.js",
         ermrestJsPath + "vendor/markdown-it-sup.min.js",
         ermrestJsPath + "vendor/markdown-it-attrs.js",
-        ermrestJsPath + "vendor/markdown-it-container.min.js"], 
+        ermrestJsPath + "vendor/markdown-it-container.min.js"],
         function() {
+            /*
+             * Inject _moment module in ERMrest
+             */
+            ERMrest._moment = window.moment;
+            
             /*
              * Inject _mustache module in Ermrest
              */
@@ -125,8 +138,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
                 _defers.forEach(function(defer) {
                     defer.resolve(ERMrest);
                 });
-            } 
-            
+            }
+
     });
 
 }
@@ -140,7 +153,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
  */
 ERMrest._onload = function() {
     var defer = ERMrest._q.defer();
-    
+
     if (_scriptsLoaded) defer.resolve(ERMrest);
     else _defers.push(defer);
 

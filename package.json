@@ -29,6 +29,7 @@
     "markdown-it-sup": "x",
     "markdown-it-attrs": "x",
     "markdown-it-container": "x",
+    "moment": "^2.15.1",
     "mustache": "x"
   },
   "devDependencies": {
