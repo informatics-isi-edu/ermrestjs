@@ -192,8 +192,8 @@ exports.execute = function (options) {
                         });
 
                         it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (col 5 /, Column 3 Name)", false);
-                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col 5 /, col_4)", false);
+                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
+                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col 5, col_4)", false);
                         });
                     })
 

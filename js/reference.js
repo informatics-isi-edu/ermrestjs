@@ -973,9 +973,6 @@ var ERMrest = (function(module) {
 
                 // add limit
                 uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
-                console.log("----");
-                console.log("uri is " + uri);
-                console.log("----");
 
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
@@ -1010,13 +1007,9 @@ var ERMrest = (function(module) {
                     defer.resolve(page);
 
                 }, function error(response) {
-                    console.log("ERROR IN THE ERROR!");
-                    console.log(response);
                     var error = module._responseToError(response);
                     return defer.reject(error);
                 }).catch(function (error) {
-                    console.log("ERROR IN CATCH!");
-                    console.log(error);
                     return defer.reject(error);
                 });
 

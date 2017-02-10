@@ -221,7 +221,7 @@ exports.execute = function (options) {
                 });
 
                 it("it should encode the column names.", function (done) {
-                    checkSort([{"column":"col 5 /", "descending": false}], "5", done);
+                    checkSort([{"column":"col 5", "descending": false}], "5", done);
                 });
                 
             });

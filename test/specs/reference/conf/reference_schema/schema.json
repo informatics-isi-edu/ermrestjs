@@ -1004,7 +1004,7 @@
                       {
                           "schema_name": "reference_schema",
                           "table_name": "reference_table_outbound_fks",
-                          "column_name": "col 5 /"
+                          "column_name": "col 5"
                       }
                     ],
                     "referenced_columns": [
@@ -1033,7 +1033,7 @@
                       {
                           "schema_name": "reference_schema",
                           "table_name": "reference_table_outbound_fks",
-                          "column_name": "col 5 /"
+                          "column_name": "col 5"
                       }
                     ],
                     "referenced_columns": [
@@ -1057,7 +1057,7 @@
                       {
                           "schema_name": "reference_schema",
                           "table_name": "reference_table_outbound_fks",
-                          "column_name": "col 5 /"
+                          "column_name": "col 5"
                       },
                       {
                           "schema_name": "reference_schema",
@@ -1157,7 +1157,7 @@
                     }
                 },
                 {
-                    "name": "col 5 /",
+                    "name": "col 5",
                     "default" : "col 5 default",
                     "type": {
                         "typename": "text"
@@ -1206,7 +1206,7 @@
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "compact": ["id", ["reference_schema","ref_table_outbound_fks_key"], "id", ["reference_schema","outbound_fk_1"], "id", ["reference_schema","outbound_fk_1"], ["reference_schema","ref_table_outbound_fks_key"]],
                     "compact/brief": [["reference_schema", "ref_table_fks_second_key"], ["reference_schema", "ref_table_fks_third_key"], ["reference_schema", "ref_table_fks_fourth_key"], "col_1"],
-                    "compact/select": ["id", ["reference_schema","outbound_fk_1"], ["reference_schema","outbound_fk_1"], "col_1", "col_2", "col_3", "col_4", "col 5 /", ["reference_schema","outbound_fk_3"],  "col_6", "col_7", ["reference_schema","outbound_fk_5"],  "reference_schema_outbound_fk_7", ["reference_schema","outbound_fk_7"]],
+                    "compact/select": ["id", ["reference_schema","outbound_fk_1"], ["reference_schema","outbound_fk_1"], "col_1", "col_2", "col_3", "col_4", "col 5", ["reference_schema","outbound_fk_3"],  "col_6", "col_7", ["reference_schema","outbound_fk_5"],  "reference_schema_outbound_fk_7", ["reference_schema","outbound_fk_7"]],
                     "entry/create": [["reference_schema","outbound_fk_1"], ["reference_schema", "reference_table_key"], ["reference_schema","outbound_fk_9"], ["reference_schema","outbound_fk_8"], "asdasdasdad", 1, [], [1,2], ["reference_schema", "id_fk_association_related_to_reference"], "id", ["reference_schema", "i dont exist"], ["no schema", "id_fk_association_related_to_reference"]],
                     "entry/edit": ["col_6", ["reference_schema","ref_table_outbound_fks_key"], "col_3", ["reference_schema","ref_table_fks_second_key"],"id", ["reference_schema", "outbound_fk_2"], ["reference_schema", "outbound_fk_3"], ["reference_schema", "outbound_fk_7"], ["reference_schema", "outbound_fk_8"], ["reference_schema", "outbound_fk_9"]]
                 }
