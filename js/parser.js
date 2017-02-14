@@ -409,10 +409,10 @@ var ERMrest = (function(module) {
                     var exp;
                     // matches an integer, aka just a number
                     if (t.match(/^[0-9]+$/)) {
-                        exp = "(^|[^1-9])0*" + module._encodeRegexp(t) + "([^0-9]|$)";
+                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t) + "([^0-9].*|$)";
                     // matches a float, aka a number one decimal
                     } else if (t.match(/^([0-9]+[.][0-9]*|[0-9]*[.][0-9]+)$/)) {
-                        exp = "(^|[^1-9])0*" + module._encodeRegexp(t);
+                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t);
                     // matches everything else (words and anything with multiple decimals)
                     } else {
                         exp = module._encodeRegexp(t);

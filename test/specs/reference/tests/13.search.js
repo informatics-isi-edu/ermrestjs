@@ -3,10 +3,12 @@ exports.execute = function (options) {
     describe("Reference Search,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
-            tableName = "paging table w sort",
+            tableName = "search parser",
+            intRegexPrefix = floatRegexPrefix = "^(.*[^0-9.])?0*",
+            intRegexSuffix = "([^0-9].*|$)",
             filter1 = "*::ciregexp::hank",
             // filter2 is a regular expression that will be url encoded.
-            filter2 = "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent("(^|[^1-9])0*11([^0-9]|$)");
+            filter2 = "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix);
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
@@ -15,6 +17,11 @@ exports.execute = function (options) {
             + tableName + "/" + filter1 + "&" + filter2;
 
         var reference1, reference2, reference3, reference4;
+
+        // Specific to this table definition (paging table w sort) because of hard coded column names
+        var matchInAnyColumn = function(tuple, valueToMatch) {
+            return (tuple._data["name x"].match(valueToMatch) || tuple._data["id x"].match(valueToMatch) || (tuple._data["value x"] && tuple._data["value x"] == valueToMatch) || (tuple._data["decimal x"] && ("" + tuple._data["decimal x"]).includes(valueToMatch)));
+        }
 
         beforeAll(function(done) {
             options.ermRest.resolve(multipleEntityUri, {cid:"test"}).then(function(response) {
@@ -36,20 +43,24 @@ exports.execute = function (options) {
 
         // Test Cases:
         describe('Reference.search() method, ', function() {
-            var page, tuples;
+            var page, tuples, searchTerm;
             var limit = 20;
 
-            it('search() using a single term. ', function() {
+            it('search() using a single term. ', function(done) {
                 reference2 = reference1.search("hank");
                 expect(reference2.location.searchTerm).toBe("hank");
                 expect(reference2.location.searchFilter).toBe(filter1);
-            });
 
-            it('read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(2);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(tuples[i]._data["name x"]).toMatch("Hank");
+                    }
 
                     done();
                 }, function (err) {
@@ -58,25 +69,18 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should have correct row values. ', function() {
-                tuples = page.tuples;
-                expect(tuples.length).toBe(2);
-                for(var i = 0; i < tuples.length; i++) {
-                    expect(tuples[i]._data["name x"]).toMatch("Hank");
-                }
-            });
-
-            it('clear search. ', function() {
+            it('clear search. ', function(done) {
                 reference2 = reference1.search();
                 expect(reference2.location.searchTerm).toBeNull();
                 expect(reference2.location.searchFilter).not.toBeDefined();
-            });
 
-            it('read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(20);
 
                     done();
                 }, function (err) {
@@ -85,22 +89,22 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should return all rows. ', function() {
-                tuples = page.tuples;
-                expect(tuples.length).toBe(20);
-            });
-
-            it('search() using conjunction of words. ', function() {
+            it('search() using conjunction of words. ', function(done) {
                 reference2 = reference1.search("\"hank\" 11");
                 expect(reference2.location.searchTerm).toBe("\"hank\" 11");
                 expect(reference2.location.searchFilter).toBe(filter1 + "&" + filter2);
-            });
 
-            it('read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(1);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(tuples[i]._data["name x"]).toMatch("Hank");
+                        expect(tuples[i]._data["id x"]).toMatch("11");
+                    }
 
                     done();
                 }, function (err) {
@@ -109,13 +113,113 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should have correct row values. ', function() {
-                tuples = page.tuples;
-                expect(tuples.length).toBe(1);
-                for(var i = 0; i < tuples.length; i++) {
-                    expect(tuples[i]._data["name x"]).toMatch("Hank");
-                    expect(tuples[i]._data["id x"]).toMatch("11");
-                }
+            it("search() based on integer value with matching in text and integer columns. ", function(done) {
+                // values with `id x` between 21 and 34 are specifically for this case
+                // `id x` == 21-25, 27, and 28 should all match; 26, 29-34 are negative cases
+                // rows with `name x` == "int" are notating that the int value is what is being tested for
+                searchTerm = "1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix));
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(16);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("search() with float value '11.1' with matching in text and float columns. ", function(done) {
+                // values with `id x` between 35 and 40 are specifically for this case
+                // `id x` == 35-38, should all match;  39 and 40 are negative cases
+                searchTerm = "11.1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
+                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"));
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(4);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("search() with float value '11.' with matching in text and float columns. ", function(done) {
+                // values with `id x` between 41 and 46 are specifically for this case
+                // `id x` == 35-38 and 41-44, should all match; 45 and 46 are negative cases
+                // this is similar to the previous case that tests `11.1` and should match those positive cases as well
+                searchTerm = "11.";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
+                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."));
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(8);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("search() with float value '.1' with matching in text and float columns. ", function(done) {
+                // values with `id x` between 47 and 52 are specifically for this case
+                // `id x` == 47-50 should all match; 51 and 52 are negative cases
+                searchTerm = ".1";
+                reference2 = reference1.search(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm);
+                // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
+                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"));
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(4);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
             });
         });
 
@@ -225,7 +329,7 @@ exports.execute = function (options) {
 
             it("with multiple quoted terms split by a space across multiple columns.", function(done) {
                 // searching for integer values converts them into a regular expression
-                var quotedFilter = "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent("(^|[^1-9])0*17([^0-9]|$)");
+                var quotedFilter = "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "17" + intRegexSuffix);
 
                 reference2 = reference1.search("\"william\" \"17\"");
                 expect(reference2.location.searchTerm).toBe("\"william\" \"17\"");
@@ -305,7 +409,7 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('location should have correct search parameters ', function() {
-                expect(reference3.location.searchTerm).toBe("hank (^|[^1-9])0*11([^0-9]|$)");
+                expect(reference3.location.searchTerm).toBe("hank " + intRegexPrefix + "11" + intRegexSuffix);
                 expect(reference3.location.searchFilter).toBe(filter1 + "&" + filter2);
             });
 
