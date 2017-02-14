@@ -143,6 +143,20 @@ var ERMrest = (function(module) {
         return result;
     };
 
+    /**
+     * @function
+     * @param {String} regExp string to be regular expression encoded
+     * @desc converts the string into a regular expression with properly encoded characters
+     */
+    module._encodeRegexp = function (str) {
+        var stringReplaceExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$]/g;
+        // the first '\' escapes the second '\' which is used to escape the matched character in the returned string
+        // $& represents the matched character
+        var escapedRegexString = str.replace(stringReplaceExp, '\\$&');
+
+        return escapedRegexString;
+    };
+
     module._nextChar = function (c) {
         return String.fromCharCode(c.charCodeAt(0) + 1);
     };

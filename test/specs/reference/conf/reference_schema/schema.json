@@ -459,6 +459,63 @@
                     "type": {
                         "typename": "integer"
                     }
+                },
+                {
+                    "name": "decimal x",
+                    "type": {
+                        "typename": "float4"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*" : {
+                        "row_order": [{"column":"name x", "descending":false}]
+                    }
+                }
+            }
+        },
+        "search parser": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id x"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "search parser",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id x",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name x",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "value x",
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "decimal x",
+                    "type": {
+                        "typename": "float4"
+                    }
                 }
             ],
             "annotations": {
@@ -621,7 +678,7 @@
                     }
                 }
             ],
-            "annotations": { 
+            "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                   "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column"]
                 }
