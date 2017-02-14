@@ -157,7 +157,6 @@ to use for ERMrest JavaScript agents.
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
         * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
-        * [.getDisplay(context)](#ERMrest.Key+getDisplay)
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
@@ -280,6 +279,7 @@ to use for ERMrest JavaScript agents.
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+        * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -1340,7 +1340,6 @@ get the key by the column set
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
     * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
-    * [.getDisplay(context)](#ERMrest.Key+getDisplay)
 
 <a name="new_ERMrest.Key_new"></a>
 
@@ -1395,17 +1394,6 @@ whether key has a column
 | Param | Type |
 | --- | --- |
 | column | <code>[Column](#ERMrest.Column)</code> | 
-
-<a name="ERMrest.Key+getDisplay"></a>
-
-#### key.getDisplay(context)
-display object for the column
-
-**Kind**: instance method of <code>[Key](#ERMrest.Key)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| context | <code>String</code> | the context that we want the display for. |
 
 <a name="ERMrest.ColSet"></a>
 
@@ -2196,9 +2184,14 @@ reference.read(10).then(
 ```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid, or
-other errors TBD (TODO document other errors here).  
+**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results.  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid.
+- [BadRequestError](#ERMrest.BadRequestError) if asks for sorting based on columns that are not sortable.
+- [NotFoundError](#ERMrest.NotFoundError) if asks for sorting based on columns that are not valid.
+other errors TBD (TODO document other errors here).
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2564,6 +2557,7 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+    * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -2647,6 +2641,28 @@ Indicates if the input should be disabled
 true: input must be disabled
 false:  input can be enabled
 object: input msut be disabled (show .message to user)
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+sortable"></a>
+
+#### referenceColumn.sortable : <code>boolean</code>
+Heuristics are as follows:
+
+(first applicable rule from top to bottom)
+
+- column_order = false -> disable sort.
+
+- PseudoColumn
+     - column_order defined -> use it.
+     - Foreign key:
+         - table has row_order -> use it.
+         - simple fk -> use the column's
+     - Key:
+         - simple key -> use the column's 
+     - disable it
+- Column:
+     - column_order defined -> use it.
+     - use column actual value.
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>

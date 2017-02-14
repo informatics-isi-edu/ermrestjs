@@ -137,9 +137,10 @@ var ERMrest = (function(module) {
      * converts a string to an URI encoded string
      */
     module._fixedEncodeURIComponent = function (str) {
-        return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+        var result = encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
+        return result;
     };
 
     /**
@@ -315,6 +316,24 @@ var ERMrest = (function(module) {
 
         ref._nullValue[context] = value; // cache the value
         return value;
+    };
+
+    /**
+     * @param {string} name the base name. It usually is the constraintName of that object.
+     * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
+     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     */
+    module._generatePseudoColumnName = function (name, table) {
+        /**
+         * make sure that this name is unique:
+         * 1. table doesn't have any columns with that name.
+         * 2. there's no constraint with that name.
+         **/ 
+        var i = 0;
+        while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
+            name += ++i;
+        }
+        return name;
     };
 
     /*

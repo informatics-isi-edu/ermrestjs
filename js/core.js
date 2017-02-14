@@ -1745,6 +1745,7 @@ var ERMrest = (function (module) {
 
             var display = this.getDisplay(context);
 
+
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
@@ -1766,6 +1767,7 @@ var ERMrest = (function (module) {
                 // Code to do template/string replacement using keyValues
                 value = module._renderTemplate(template, options.formattedValues, options);
             }
+
 
             // If value is null or empty, return value on basis of `show_nulls`
             if (value === null || value.trim() === '') {
@@ -1836,6 +1838,7 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+
         this._nullValue = {}; // Used to avoid recomputation of null value for different contexts.
         this._display = {};  // Used for column.display annotation.
 
@@ -1921,9 +1924,19 @@ var ERMrest = (function (module) {
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1;
+                var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {
@@ -1931,10 +1944,26 @@ var ERMrest = (function (module) {
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
+                    "columnOrder": columnOrder
                 };
             }
             return this._display[context];
         },
+
+        // get the sort columns using the context
+        _getSortColumns: function (context) {
+            var display = this.getDisplay(context);
+
+            if (display.columnOrder === false) {
+                return undefined;
+            }
+
+            if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                return display.columnOrder;
+            }
+
+            return [this];
+        }
     };
 
     /**
@@ -2240,26 +2269,35 @@ var ERMrest = (function (module) {
             }
             return this._wellFormed[context];
         },
-
-        /**
-         * @param {String} context the context that we want the display for.
-         * @desc
-         * display object for the column
-         */
-        getDisplay: function (context) {
+        
+        getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1;
+                var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
-                    annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // column-order is just a list of column names
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {
+                    "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
-                    "markdownPattern": annotation.markdown_pattern,
+                    "markdownPattern": annotation.markdown_pattern
                 };
             }
+
             return this._display[context];
-        },
+        }
     };
 
 
@@ -2687,6 +2725,8 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonFKR.comment;
 
+        this._display = {};
+
     }
 
     ForeignKeyRef.prototype = {
@@ -2705,7 +2745,7 @@ var ERMrest = (function (module) {
                 var toCol = this.mapping.get(fromCol);
                 var separator = (i < columnsLength -1 ?",": "");
 
-                leftString += (reverse ? fromCol.name : toCol.name) + separator;
+                leftString += (reverse ? module._fixedEncodeURIComponent(fromCol.name) : module._fixedEncodeURIComponent(toCol.name)) + separator;
                 if (reverse) {
                     rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {
@@ -2714,7 +2754,6 @@ var ERMrest = (function (module) {
                 rightString += separator;
 
             }
-
             return "(" + leftString + ")=(" + rightString + ")";
         },
 
@@ -2740,6 +2779,34 @@ var ERMrest = (function (module) {
          */
         get simple() {
             return this.key.simple;
+        },
+
+        getDisplay: function(context) {
+            if (!(context in this._display)) {
+                var annotation = -1, columnOrder = [];
+                if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
+                    
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // column-order is just a list of column names
+                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
+                }
+
+                this._display[context] = {
+                    "columnOrder": columnOrder,
+                };
+            }
+
+            return this._display[context];
         }
     };
 

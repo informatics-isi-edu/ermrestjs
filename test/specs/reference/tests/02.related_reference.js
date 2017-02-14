@@ -58,6 +58,13 @@ exports.execute = function(options) {
             expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
         });
 
+        it('.origColumnName should have the correct value', function() {
+            expect(related[0].origColumnName).toBe("reference_schema_fromname_fk_inbound_related_to_reference");
+            expect(related[1].origColumnName).toBe("reference_schema_fk_inbound_related_to_reference");
+            expect(related[2].origColumnName).toBe("reference_schema_toname_fk_association_related_to_reference");
+            expect(related[3].origColumnName).toBe("reference_schema_id_fk_association_related_to_reference");
+        });
+
         describe('for inbound foreign keys, ', function() {
             it('should have the correct catalog, schema, and table.', function() {
                 expect(related[0]._location.catalog).toBe(catalog_id.toString());
@@ -89,15 +96,15 @@ exports.execute = function(options) {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
-                        ["reference_schema", "inbound_related_reference_key"].join(":"), 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema", "fk_inbound_related_to_reference"].join(":")
+                        ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                 ]}, {
                     ref: related[1].contextualize.compactBrief,
                     expected: [
                         "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":")
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                 ]}]);
             });
 
@@ -164,20 +171,20 @@ exports.execute = function(options) {
                     checkReferenceColumns([{
                         ref: related[2],
                         expected:[
-                            ["reference_schema", "inbound_related_reference_key"].join(":"), 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
+                            ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                     ]}]);
                 });
                 it('should ignore extra serial key columns in the assocation table', function() {
                     checkReferenceColumns([{
                         ref: related[3],
                         expected:[
-                            ["reference_schema", "inbound_related_reference_key"].join(":"), 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join(":"), 
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join(":"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join(":")
+                            ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                     ]}]);
                 });
             });

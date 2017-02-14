@@ -55,6 +55,7 @@ exports.execute = function (options) {
             "id_2": "3"
         };
 
+
         var reference, detailedRef, entryCreateRef, entryEditRef, compactSelectRef, compactBriefRef, detailedColumns;
 
         beforeAll(function (done) {
@@ -163,7 +164,7 @@ exports.execute = function (options) {
             });
 
             it('for other columns should return the base column\'s type.', function () {
-                expect(detailedColumns[10].name).toBe("reference_schema:outbound_fk_7");
+                expect(detailedColumns[10].name).toBe("reference_schema_outbound_fk_7");
             });
         });
 
@@ -191,8 +192,8 @@ exports.execute = function (options) {
                         });
 
                         it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (Column 3 Name, col_5)", false);
-                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col_4, col_5)", false);
+                            checkDisplayname(detailedColumns[13].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
+                            checkDisplayname(detailedColumns[14].displayname, "table_w_composite_key (col 5, col_4)", false);
                         });
                     })
 
@@ -272,7 +273,7 @@ exports.execute = function (options) {
                 });
 
                 it ('should return a rowname if it is possible to generate one with default values.', function () {
-                    expect(detailedColumns[14].default).toEqual('col 4 default , col 5 default');
+                    expect(detailedColumns[14].default).toEqual('col 5 default , col 4 default');
                 });
 
                 it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {
@@ -407,7 +408,7 @@ exports.execute = function (options) {
                         });
 
                         it('should not add link if the key columns are html.', function () {
-                            val = compactBriefRef.columns[2].formatPresentation({"reference_schema:outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"reference_schema:outbound_fk_7":"value"}}).value;
+                            val = compactBriefRef.columns[2].formatPresentation({"reference_schema_outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"reference_schema_outbound_fk_7":"value"}}).value;
                             expect(val).toEqual('<p>value</p>\n');
                         })
                     });
@@ -420,6 +421,99 @@ exports.execute = function (options) {
                     expect(val).toBe(null);
                     val = entryEditRef.columns[7].formatPresentation({}).value;
                     expect(val).toBe("");
+                });
+            });
+        });
+
+        describe('.sortable and ._sortColumns, ', function () {
+            describe('for pseudoColumns that are foreignkey, ', function () {
+                it('when foreignkey has `column_order:false` annotation, should return false.', function () {
+                    // outbound_fk_1
+                    expect(detailedColumns[1].sortable).toBe(false);
+                    expect(detailedColumns[1]._sortColumns.length).toBe(0);
+                });
+                
+                it("when foreignKey has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
+                    // outbound_fk_4
+                    expect(detailedColumns[4].sortable).toBe(true);
+                    expect(detailedColumns[4]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[4]._sortColumns[0].name).toBe("name");
+                });
+
+                it("when foreignKey doesn't have any `column_order` annotation and referenced table has `row_order`, should use the table's row_order.", function () {
+                    //outbound_fk_6
+                    expect(detailedColumns[12].sortable).toBe(true);
+                    expect(detailedColumns[12]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[12]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['id_2']);
+                });
+                
+                it("when foreignKey doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
+                    // outbound_fk_2 -> id
+                    expect(detailedColumns[2].sortable).toBe(true);
+                    expect(detailedColumns[2]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[2]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['id']);
+                });
+                
+                it("when foreign doesn't have `column_order` annotation and is not simple, should return false.", function () {
+                    // outbound_fk_7
+                    expect(detailedColumns[14].sortable).toBe(false);
+                    expect(detailedColumns[14]._sortColumns.length).toBe(0);
+                });
+                
+            });
+
+            describe("for pseudoColumns that are key, ", function () {
+                // it('when key has `column_order:false` annotation, should return false.', function () {
+                //     // TODO should define column_order on keys
+                //     // TODO use table_w_composite_key_3
+                // });
+                
+                // it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
+                //     // TODO should define column_order on keys
+                //     // TODO use table_w_composite_key_3
+                // });
+                
+                it("when key doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
+                    expect(detailedColumns[0].sortable).toBe(true);
+                    expect(detailedColumns[0]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[0]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['id']);
+                });
+                
+                it("when key doesn't have `column_order` annotation and is not simple, should return false.", function () {
+                    expect(compactBriefRef.columns[0].sortable).toBe(false);
+                    expect(compactBriefRef.columns[0]._sortColumns.length).toBe(0);
+                });
+            });
+
+            describe('for other columns, ', function () {
+                it('when `column_order:false` annotation is defined in column, should return false.', function () {
+                    // col_3
+                    expect(detailedColumns[5].sortable).toBe(false);
+                    expect(detailedColumns[5]._sortColumns.length).toBe(0);
+                });
+
+                it("when column has a `column_order` annotation with value other than false, should return ture and use those columns for sort.", function () {
+                    // col_4
+                    expect(detailedColumns[6].sortable).toBe(true);
+                    expect(detailedColumns[6]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[6]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['reference_schema_outbound_fk_7']);
+                });
+
+                it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
+                    // reference_schema_outbound_fk_7
+                    expect(detailedColumns[10].sortable).toBe(true);
+                    expect(detailedColumns[10]._sortColumns.length).toBe(1);
+                    expect(detailedColumns[10]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['reference_schema_outbound_fk_7']);
                 });
             });
         });
