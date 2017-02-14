@@ -1211,6 +1211,111 @@
                     "entry/edit": ["col_6", ["reference_schema","ref_table_outbound_fks_key"], "col_3", ["reference_schema","ref_table_fks_second_key"],"id", ["reference_schema", "outbound_fk_2"], ["reference_schema", "outbound_fk_3"], ["reference_schema", "outbound_fk_7"], ["reference_schema", "outbound_fk_8"], ["reference_schema", "outbound_fk_9"]]
                 }
             }
+        },
+        "table_w_slash": {
+            "comment": "Table with /",
+            "table_name": "table_w_slash",
+            "schema_name": "reference_schema",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [
+                {
+                    "comment": "",
+                    "names": [["reference_schema", "table_w_slash_fk_1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_slash",
+                            "column_name": "outbound_col"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                },
+                {
+                    "comment": "",
+                    "names": [["reference_schema", "table_w_slash_fk_2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_slash",
+                            "column_name": "outbound_col_with_slash/"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_1",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "*":  {
+                                    "column_order": ["col_with_slash/"]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_with_slash/",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "comment": "fk to reference_table",
+                    "name": "outbound_col",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                  "name": "outbound_col_with_slash/",
+                  "type" : {
+                      "typename": "text"
+                  }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "compact/brief": [
+                        "id", "col_with_slash/", ["reference_schema", "table_w_slash_fk_1"], ["reference_schema", "table_w_slash_fk_2"]
+                    ]
+                }
+            }
         }
     },
     "table_names": [

@@ -4,10 +4,14 @@ exports.execute = function (options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "sorted_table",
-            outboundTableName = "reference_table_outbound_fks";
+            outboundTableName = "reference_table_outbound_fks",
+            tableWSlashName = "table_w_slash";
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
+
+        var tableWSlashEntity = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableWSlashName;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -44,12 +48,18 @@ exports.execute = function (options) {
             return url;
         };
         
-        var reference1, reference2, outboundRef;
+        var reference1, reference2, outboundRef, tableWSlashRef;
 
         beforeAll(function(done) {
            options.ermRest.resolve(multipleEntityUri, {cid:"test"}).then(function(response) {
                reference1 = response;
-               done();
+               options.ermRest.resolve(tableWSlashEntity, {cid:"test"}).then(function(ref) {
+                   tableWSlashRef = ref;
+                   done();
+               },function (err) {
+                   console.dir(err);
+                   done.fail();
+               });
            },function (err) {
                console.dir(err);
                done.fail();
@@ -207,6 +217,12 @@ exports.execute = function (options) {
                 it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
                     checkSort([{"column": "reference_schema_outbound_fk_2", "descending": true}], "4", done);
                 });
+
+                if (!process.env.TRAVIS) {
+                    it('should work with columns with slash(`/`) in their name.', function (done) {
+                        checkSort([{"column":"outbound_col_with_slash/", "descending": false}], "1", done, tableWSlashRef);
+                    });
+                }
                 
             });
 
@@ -223,6 +239,12 @@ exports.execute = function (options) {
                 it("it should encode the column names.", function (done) {
                     checkSort([{"column":"col 5", "descending": false}], "5", done);
                 });
+
+                if (!process.env.TRAVIS) {
+                    it('should work with columns with slash(`/`) in their name.', function (done) {
+                        checkSort([{"column":"col_with_slash/", "descending": false}], "2", done, tableWSlashRef);
+                    });
+                }
                 
             });
             
@@ -232,10 +254,16 @@ exports.execute = function (options) {
          * to make the testing easier, I just test id of the first tuple.
          * All the tuples have distinct ids and in each scenario based on the data, one of them must be on top.
          */
-        function checkSort(sortColumns, ExpectedFirstId, done) {
+        function checkSort(sortColumns, ExpectedFirstId, done, ref) {
+            var reference = typeof ref === "undefined" ? outboundRef : ref;
+            var isOutbound = typeof ref === "undefined" ? true: false;
             var val;
-            outboundRef.sort(sortColumns).read(1).then(function (response) {
-                val = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
+            reference.sort(sortColumns).read(1).then(function (response) {
+                if (isOutbound) {
+                    val = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
+                } else {
+                    val = ExpectedFirstId;
+                }
                 expect(response.tuples[0].values[0]).toEqual(val);
                 done();
             }, function (err) {

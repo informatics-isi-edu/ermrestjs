@@ -6,6 +6,7 @@ exports.execute = function (options) {
             tableWithCompositeKey = "table_w_composite_key",
             tableWithCompositeKey2 = "table_w_composite_key_2",
             tableWithCompositeKey3 = "table_w_composite_key_3",
+            tableWithSlash = "table_w_slash",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -24,6 +25,9 @@ exports.execute = function (options) {
 
         var singleEnitityUriCompositeKey3 = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithCompositeKey3 + "/id=" + entityId;
+        
+        var singleEnitityUriWithSlash = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWithSlash + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -165,6 +169,14 @@ exports.execute = function (options) {
             '9000', '', '4002 , 4000', '1'
         ];
 
+        var tableWSlashData = [
+            '1', 
+            '1', 
+            '2', 
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001">Harold</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>'
+        ]
+
         /**
          * This is the structure of the used table:
          * reference_table_outbound_fks:
@@ -244,7 +256,7 @@ exports.execute = function (options) {
          *  entry/create: has all of the columns in visible-column + has some foreign keys too
          */
 
-        var compactRef, compactBriefRef, compactSelectRef, detailedRef, entryRef, entryCreateRef, entryEditRef, 
+        var compactRef, compactBriefRef, compactSelectRef, detailedRef, entryRef, entryCreateRef, entryEditRef, slashRef,
             detailedColumns, compactSelectColumns, table2RefColumns;
 
         beforeAll(function (done) {
@@ -266,7 +278,13 @@ exports.execute = function (options) {
                 detailedColumns = detailedRef.columns;
                 compactSelectColumns = compactSelectRef.columns;
 
-                done();
+                options.ermRest.resolve(singleEnitityUriWithSlash, {cid:"test"}).then(function(ref) {
+                    slashRef = ref;
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
             }, function (err) {
                 console.dir(err);
                 done.fail();
@@ -324,6 +342,20 @@ exports.execute = function (options) {
                         ]
                     }]);
                 });
+
+                if (!process.env.TRAVIS) {
+                    it('should handle the columns with slash(`/`) in their names.', function () {
+                        checkReferenceColumns([{
+                            ref: slashRef.contextualize.compactBrief,
+                            expected: [
+                                "id", 
+                                "col_with_slash/", 
+                                ["reference_schema", "table_w_slash_fk_1"].join("_"), 
+                                ["reference_schema", "table_w_slash_fk_2"].join("_")
+                            ]
+                        }]);             
+                    });
+                }
             });
 
 
@@ -378,7 +410,6 @@ exports.execute = function (options) {
                         
                     });
                 })
-
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
                     expect(detailedColumns.length).toBe(16);
@@ -455,6 +486,22 @@ exports.execute = function (options) {
                         expect(detailedColumns[15].name).toBe(["reference_schema", "outbound_fk_9"].join("_"));
                     });
                 });
+
+
+                if (!process.env.TRAVIS) {
+                    it('should handle the columns with slash(`/`) in their names.', function () {
+                        checkReferenceColumns([{
+                            ref: slashRef,
+                            expected: [
+                                "id", 
+                                "col_1", 
+                                "col_with_slash/", 
+                                ["reference_schema", "table_w_slash_fk_1"].join("_"), 
+                                ["reference_schema", "table_w_slash_fk_2"].join("_")
+                            ]
+                        }]);             
+                    });
+                }
             });
             
         });
@@ -508,6 +555,19 @@ exports.execute = function (options) {
                     expect(page.tuples[0].values).toEqual(entryCreateRefExpectedPartialValue);
                 }); 
             });
+
+            if (!process.env.TRAVIS) {
+                it('should handle the columns with slash(`/`) in their names.', function (done) {
+                    slashRef.read(limit).then(function (page) {
+                        var tuples = page.tuples;
+                        expect(tuples[0].values).toEqual(tableWSlashData);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+            }
         });
         
         /************** HELPER FUNCTIONS ************* */
