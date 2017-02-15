@@ -551,80 +551,60 @@ var ERMrest = (function(module) {
         /**
          * @function
          * @param {Object} value An timestamp value to transform
-         * @param {Object} [options] Configuration options
-         * @return {string} A string representation of value. Default is ISO string.
+         * @param {Object} [options] Configuration options. No options implemented so far.
+         * @return {string} A string representation of value. Default is ISO 8601-ish like 2017-01-08 15:06:02.
          * @desc Formats a given timestamp value into a string for display.
          */
         printTimestamp: function printTimestamp(value, options) {
+            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
             }
-            // var year, month, date, hour, minute, second, ms;
+
             try {
                 value = value.toString();
-                value = new Date(value);
-                // Later when we support more formats, we'll probably need to manually
-                // construct the date time with the following pieces:
-
-                // year = value.getFullYear();
-                // month = value.getMonth() + 1;
-                // date = value.getDate();
-                // hour = value.getHours();
-                // minute = value.getMinutes();
-                // second = value.getSeconds();
-                // ms = value.getMilliseconds();
             } catch (exception) {
                 // Is this the right error?
                 throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
             }
 
-            if (typeof value.getTime() !== 'number') {
+            if (!moment(value).isValid()) {
                 // Invalid timestamp
                 throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
             }
 
-            return value.toLocaleString();
+            return moment(value).format('YYYY-MM-DD HH:mm:ss');
         },
 
         /**
          * @function
          * @param {Object} value A date value to transform
-         * @param {Object} [options] Configuration options. Two accepted so far: {separator: '-', leadingZero: false}
+         * @param {Object} [options] Configuration options. No options implemented so far.
          * @return {string} A string representation of value
          * @desc Formats a given date[time] value into a date string for display.
          * If any time information is provided, it will be left off.
          */
         printDate: function printDate(value, options) {
+            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
             }
-            var year, month, date;
+            // var year, month, date;
             try {
                 value = value.toString();
-                value = module._stringToDate(value, "yyyy-mm-dd", "-");
-                year = value.getFullYear();
-                month = value.getMonth() + 1; // 1-12, not 0-11
-                date = value.getDate();
             } catch (exception) {
                 // Is this the right error?
                 throw new module.InvalidInputError("Couldn't extract date info from input" + exception);
             }
 
-            if (typeof value.getTime() !== 'number' || Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(date)) {
+            if (!moment(value).isValid()) {
                 // Invalid date
                 throw new module.InvalidInputError("Couldn't transform input to a valid date");
             }
 
-            var separator = options.separator ? options.separator : '/';
-
-            if (options.leadingZero === true) {
-                // Attach a leading 0 to month and date
-                month = (month > 0 && month < 10) ? '0' + month : month;
-                date = (date > 0 && date < 10) ? '0' + date : date;
-            }
-            return year + separator + month + separator + date;
+            return moment(value).format('YYYY-MM-DD');
         },
 
         /**
