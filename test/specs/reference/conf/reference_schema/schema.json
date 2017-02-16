@@ -760,6 +760,13 @@
                     "unique_columns": [
                         "id_2"
                     ]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_serial"
+                    ]
                 }
             ],
             "entityCount": 0,
@@ -786,6 +793,13 @@
                     "nullok": false,
                     "type": {
                         "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_serial",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
                     }
                 }
             ],

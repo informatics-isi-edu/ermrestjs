@@ -2010,12 +2010,15 @@ The logic is as follows:
      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
 
 2.otherwise go through list of table columns
+     2.0 create a pseudo-column for key if context is not entry and we have key that is notnull and notHTML
      2.1 check if column has not been processed before.
-     2.2 if it's not part of any foreign keys add the column.
-     2.3 go through all of the foreign keys that this column is part of.
-         2.3.1 make sure it is not hidden(+).
-         2.3.2 if it's simple fk, just create PseudoColumn
-         2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+     2.2 hide the columns that are part of origFKR.
+     2.3 if column is serial and part of a simple key hide it.
+     2.4 if it's not part of any foreign keys add the column.
+     2.5 go through all of the foreign keys that this column is part of.
+         2.5.1 make sure it is not hidden(+).
+         2.5.2 if it's simple fk, just create PseudoColumn
+         2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
 
 NOTE:
  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.

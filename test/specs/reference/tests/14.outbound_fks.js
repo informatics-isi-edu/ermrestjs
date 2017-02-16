@@ -409,6 +409,16 @@ exports.execute = function (options) {
                         });
                         
                     });
+                });
+
+                it('should not include serial columns that are part of a simple key, and that key has not been used for self-link.', function (){
+                    options.ermRest.resolve(singleEnitityUriCompositeKey2, {cid:"test"}).then(function(ref) {
+                        expect(ref.columns.length).toBe(3);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
                 })
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
