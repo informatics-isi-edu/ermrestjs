@@ -58,7 +58,7 @@ to use for ERMrest JavaScript agents.
         * [.name](#ERMrest.Schema+name)
         * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
+        * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
         * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
         * [.comment](#ERMrest.Schema+comment) : <code>string</code>
     * [.Tables](#ERMrest.Tables)
@@ -76,7 +76,7 @@ to use for ERMrest JavaScript agents.
             * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
             * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
             * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-            * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
+            * [.displayname](#ERMrest.Table+displayname) : <code>object</code>
             * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
             * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
@@ -124,7 +124,7 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.Column+comment) : <code>string</code>
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
+        * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
@@ -223,7 +223,7 @@ to use for ERMrest JavaScript agents.
     * [.Reference](#ERMrest.Reference)
         * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
         * [.contextualize](#ERMrest.Reference+contextualize)
-        * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
+        * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : <code>[Table](#ERMrest.Table)</code>
@@ -279,6 +279,7 @@ to use for ERMrest JavaScript agents.
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+        * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -522,7 +523,7 @@ check for schema name existence
     * [.name](#ERMrest.Schema+name)
     * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Schema+displayname) : <code>string</code>
+    * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
     * [.tables](#ERMrest.Schema+tables) : <code>[Tables](#ERMrest.Tables)</code>
     * [.comment](#ERMrest.Schema+comment) : <code>string</code>
 
@@ -555,8 +556,10 @@ Constructor for the Catalog.
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+displayname"></a>
 
-#### schema.displayname : <code>string</code>
+#### schema.displayname : <code>object</code>
 Preferred display name for user presentation only.
+this.displayname.isHTML will return true/false
+this.displayname.value has the value
 
 **Kind**: instance property of <code>[Schema](#ERMrest.Schema)</code>  
 <a name="ERMrest.Schema+tables"></a>
@@ -631,7 +634,7 @@ get table by table name
         * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
         * [._baseTable](#ERMrest.Table+_baseTable) : <code>[Table](#ERMrest.Table)</code>
         * [.annotations](#ERMrest.Table+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-        * [.displayname](#ERMrest.Table+displayname) : <code>string</code>
+        * [.displayname](#ERMrest.Table+displayname) : <code>object</code>
         * [.columns](#ERMrest.Table+columns) : <code>[Columns](#ERMrest.Columns)</code>
         * [.keys](#ERMrest.Table+keys) : <code>[Keys](#ERMrest.Keys)</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
@@ -689,8 +692,10 @@ then might be changed on the second pass if this is an alternative table
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+displayname"></a>
 
-#### table.displayname : <code>string</code>
+#### table.displayname : <code>object</code>
 Preferred display name for user presentation only.
+this.displayname.isHTML will return true/false
+this.displayname.value has the value
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+columns"></a>
@@ -1052,7 +1057,7 @@ Constructor for Columns.
     * [.comment](#ERMrest.Column+comment) : <code>string</code>
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : <code>[Annotations](#ERMrest.Annotations)</code>
-    * [.displayname](#ERMrest.Column+displayname) : <code>string</code>
+    * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : <code>[Array.&lt;Key&gt;](#ERMrest.Key)</code>
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : <code>[Array.&lt;ForeignKeyRef&gt;](#ERMrest.ForeignKeyRef)</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
@@ -1119,8 +1124,10 @@ Documentation for this column
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+displayname"></a>
 
-#### column.displayname : <code>string</code>
+#### column.displayname : <code>object</code>
 Preferred display name for user presentation only.
+this.displayname.isHTML will return true/false
+this.displayname.value has the value
 
 **Kind**: instance property of <code>[Column](#ERMrest.Column)</code>  
 <a name="ERMrest.Column+memberOfKeys"></a>
@@ -1158,7 +1165,7 @@ Formats the presentation value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -1876,7 +1883,7 @@ Constructor for a ParsedFilter.
 * [.Reference](#ERMrest.Reference)
     * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
     * [.contextualize](#ERMrest.Reference+contextualize)
-    * [.displayname](#ERMrest.Reference+displayname) : <code>string</code>
+    * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : <code>[Table](#ERMrest.Table)</code>
@@ -1939,8 +1946,10 @@ different compared to `reference.columns`.
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+displayname"></a>
 
-#### reference.displayname : <code>string</code>
+#### reference.displayname : <code>object</code>
 The display name for this reference.
+displayname.isHTML will return true/false
+displayname.value has the value
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 <a name="ERMrest.Reference+uri"></a>
@@ -2175,9 +2184,14 @@ reference.read(10).then(
 ```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid, or
-other errors TBD (TODO document other errors here).  
+**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results.  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid.
+- [BadRequestError](#ERMrest.BadRequestError) if asks for sorting based on columns that are not sortable.
+- [NotFoundError](#ERMrest.NotFoundError) if asks for sorting based on columns that are not valid.
+other errors TBD (TODO document other errors here).
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2282,7 +2296,7 @@ Usage:
 ```
 for (var i=0, len=page.tuples.length; i<len; i++) {
   var tuple = page.tuples[i];
-  console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+  console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
 }
 ```
 
@@ -2490,7 +2504,7 @@ or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':'
 
 Usage:
 ```
-console.log("This tuple has a displayable name of", tuple.displayname);
+console.log("This tuple has a displayable name of ", tuple.displayname.value);
 ```
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
@@ -2543,6 +2557,7 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
+    * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
@@ -2628,6 +2643,28 @@ false:  input can be enabled
 object: input msut be disabled (show .message to user)
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+sortable"></a>
+
+#### referenceColumn.sortable : <code>boolean</code>
+Heuristics are as follows:
+
+(first applicable rule from top to bottom)
+
+- column_order = false -> disable sort.
+
+- PseudoColumn
+     - column_order defined -> use it.
+     - Foreign key:
+         - table has row_order -> use it.
+         - simple fk -> use the column's
+     - Key:
+         - simple key -> use the column's 
+     - disable it
+- Column:
+     - column_order defined -> use it.
+     - use column actual value.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
 #### referenceColumn.formatvalue(data) ⇒ <code>string</code>
@@ -2650,8 +2687,8 @@ Formats the presentation value corresponding to this reference-column definition
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | The 'formatted' data value. |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.values' key |
+| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| options | <code>Object</code> | includes `context` and `formattedValues` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 

@@ -30,6 +30,7 @@
   "dependencies": {
     "markdown-it": "x",
     "markdown-it-sub": "x",
-    "markdown-it-sup": "x"
+    "markdown-it-sup": "x",
+    "moment": "^2.15.1"
   }
 }

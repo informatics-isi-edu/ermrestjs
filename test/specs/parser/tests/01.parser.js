@@ -210,4 +210,14 @@ exports.execute = function (options) {
             });
         });
     });
+
+    describe("Location.search", function() {
+        var catalogId = 1,
+            schemaName = "parse_schema",
+            tableName = "parse_table";
+
+        it("should set the search filter and update the uri parameters.", function() {
+
+        });
+    });
 }

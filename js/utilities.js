@@ -35,6 +35,27 @@ var ERMrest = (function(module) {
         };
     }
 
+    // Polyfill for string.endswith
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(searchString, position) {
+            var subjectString = this.toString();
+            if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                position = subjectString.length;
+            }
+            position -= searchString.length;
+            var lastIndex = subjectString.indexOf(searchString, position);
+            return lastIndex !== -1 && lastIndex === position;
+        };
+    }
+
+    // Polyfill for string.startswith
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(searchString, position){
+            position = position || 0;
+            return this.substr(position, searchString.length) === searchString;
+        };
+    }
+
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
         var target = this;
@@ -116,9 +137,24 @@ var ERMrest = (function(module) {
      * converts a string to an URI encoded string
      */
     module._fixedEncodeURIComponent = function (str) {
-        return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+        var result = encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
+        return result;
+    };
+
+    /**
+     * @function
+     * @param {String} regExp string to be regular expression encoded
+     * @desc converts the string into a regular expression with properly encoded characters
+     */
+    module._encodeRegexp = function (str) {
+        var stringReplaceExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$]/g;
+        // the first '\' escapes the second '\' which is used to escape the matched character in the returned string
+        // $& represents the matched character
+        var escapedRegexString = str.replace(stringReplaceExp, '\\$&');
+
+        return escapedRegexString;
     };
 
     module._nextChar = function (c) {
@@ -128,25 +164,33 @@ var ERMrest = (function(module) {
     /**
      * @function
      * @param {Object} element a model element (schema, table, or column)
+     * @param {boolean} useName determines whether we can use name and name_style or not
      * @param {Object} parentElement the upper element (schema->null, table->schema, column->table)
      * @desc This function determines the display name for the schema, table, or
      * column elements of a model.
      */
-    module._determineDisplayName = function (element, parentElement) {
-        var displayname = element.name;
-        var hasDisplayName = false;
+    module._determineDisplayName = function (element, useName, parentElement) {
+        var value = useName ? element.name : undefined,
+            hasDisplayName = false,
+            isHTML = false;
         try {
             var display_annotation = element.annotations.get(module._annotations.DISPLAY);
             if (display_annotation && display_annotation.content) {
 
+                //get the markdown display name
+                if(display_annotation.content.markdown_name) {
+                    value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
+                    isHTML = true;
+                    hasDisplayName = true;
+                }
                 //get the specified display name
-                if(display_annotation.content.name){
-                    displayname = display_annotation.content.name;
+                else if (display_annotation.content.name){
+                    value = display_annotation.content.name;
                     hasDisplayName = true;
                 }
 
                 //get the name styles
-                if(display_annotation.content.name_style){
+                if(useName && display_annotation.content.name_style){
                     element._nameStyle = display_annotation.content.name_style;
                 }
             }
@@ -155,7 +199,7 @@ var ERMrest = (function(module) {
         }
 
         // if name styles are undefined, get them from the parent element
-        // NOTE: underline_space and title_case might be null.
+        // NOTE: underline_space, title_case, markdown might be null.
         if(parentElement){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
@@ -163,19 +207,27 @@ var ERMrest = (function(module) {
             if(!("title_case" in element._nameStyle)){
                 element._nameStyle.title_case = parentElement._nameStyle.title_case;
             }
+            if(!("markdown" in element._nameStyle)){
+                element._nameStyle.markdown = parentElement._nameStyle.markdown;
+            }
         }
 
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
-        if(!hasDisplayName && element._nameStyle){
-            if(element._nameStyle.underline_space){
-                displayname = module._underlineToSpace(displayname);
-            }
-            if(element._nameStyle.title_case){
-                displayname = module._toTitleCase(displayname);
+        if(useName && !hasDisplayName && element._nameStyle){
+            if(element._nameStyle.markdown){
+                value = module._formatUtils.printMarkdown(element.name, { inline: true });
+                isHTML = true;
+            } else {
+                if(element._nameStyle.underline_space){
+                    value = module._underlineToSpace(value);
+                }
+                if(element._nameStyle.title_case){
+                    value = module._toTitleCase(value);
+                }
             }
         }
 
-        return displayname;
+        return {"isHTML": isHTML, "value": value};
     };
 
     /**
@@ -264,6 +316,24 @@ var ERMrest = (function(module) {
 
         ref._nullValue[context] = value; // cache the value
         return value;
+    };
+
+    /**
+     * @param {string} name the base name. It usually is the constraintName of that object.
+     * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
+     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     */
+    module._generatePseudoColumnName = function (name, table) {
+        /**
+         * make sure that this name is unique:
+         * 1. table doesn't have any columns with that name.
+         * 2. there's no constraint with that name.
+         **/ 
+        var i = 0;
+        while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
+            name += ++i;
+        }
+        return name;
     };
 
     /*
@@ -483,86 +553,67 @@ var ERMrest = (function(module) {
         /**
          * @function
          * @param {Object} value An timestamp value to transform
-         * @param {Object} [options] Configuration options
-         * @return {string} A string representation of value. Default is ISO string.
+         * @param {Object} [options] Configuration options. No options implemented so far.
+         * @return {string} A string representation of value. Default is ISO 8601-ish like 2017-01-08 15:06:02.
          * @desc Formats a given timestamp value into a string for display.
          */
         printTimestamp: function printTimestamp(value, options) {
+            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
             }
-            // var year, month, date, hour, minute, second, ms;
+
             try {
                 value = value.toString();
-                value = new Date(value);
-                // Later when we support more formats, we'll probably need to manually
-                // construct the date time with the following pieces:
-
-                // year = value.getFullYear();
-                // month = value.getMonth() + 1;
-                // date = value.getDate();
-                // hour = value.getHours();
-                // minute = value.getMinutes();
-                // second = value.getSeconds();
-                // ms = value.getMilliseconds();
             } catch (exception) {
                 // Is this the right error?
                 throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
             }
 
-            if (typeof value.getTime() !== 'number') {
+            if (!moment(value).isValid()) {
                 // Invalid timestamp
                 throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
             }
 
-            return value.toLocaleString();
+            return moment(value).format('YYYY-MM-DD HH:mm:ss');
         },
 
         /**
          * @function
          * @param {Object} value A date value to transform
-         * @param {Object} [options] Configuration options. Two accepted so far: {separator: '-', leadingZero: false}
+         * @param {Object} [options] Configuration options. No options implemented so far.
          * @return {string} A string representation of value
          * @desc Formats a given date[time] value into a date string for display.
          * If any time information is provided, it will be left off.
          */
         printDate: function printDate(value, options) {
+            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
             }
-            var year, month, date;
+            // var year, month, date;
             try {
                 value = value.toString();
-                value = module._stringToDate(value, "yyyy-mm-dd", "-");
-                year = value.getFullYear();
-                month = value.getMonth() + 1; // 1-12, not 0-11
-                date = value.getDate();
             } catch (exception) {
                 // Is this the right error?
                 throw new module.InvalidInputError("Couldn't extract date info from input" + exception);
             }
 
-            if (typeof value.getTime() !== 'number' || Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(date)) {
+            if (!moment(value).isValid()) {
                 // Invalid date
                 throw new module.InvalidInputError("Couldn't transform input to a valid date");
             }
 
-            var separator = options.separator ? options.separator : '/';
-
-            if (options.leadingZero === true) {
-                // Attach a leading 0 to month and date
-                month = (month > 0 && month < 10) ? '0' + month : month;
-                date = (date > 0 && date < 10) ? '0' + date : date;
-            }
-            return year + separator + month + separator + date;
+            return moment(value).format('YYYY-MM-DD');
         },
 
         /**
          * @function
          * @param {Object} value A float value to transform
-         * @param {Object} [options] Configuration options. One accepted so far: {numDecDigits: 5}
+         * @param {Object} [options] Configuration options.
+         * - "numFracDigits" is the number of fractional digits to appear after the decimal point
          * @return {string} A string representation of value
          * @desc Formats a given float value into a string for display. Removes leading 0s; adds thousands separator.
          */
@@ -574,8 +625,8 @@ var ERMrest = (function(module) {
             }
 
             value = parseFloat(value);
-            if (options.numDecDigits) {
-                value = value.toFixed(options.numDecDigits); // toFixed() rounds the value, is ok?
+            if (options.numFracDigits) {
+                value = value.toFixed(options.numFracDigits); // toFixed() rounds the value, is ok?
             } else {
                 value = value.toFixed(4);
             }
@@ -1237,7 +1288,8 @@ var ERMrest = (function(module) {
         APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
-        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable"
+        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
+        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display"
     });
 
     /**

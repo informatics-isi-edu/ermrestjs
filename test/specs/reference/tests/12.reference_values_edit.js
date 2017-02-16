@@ -14,7 +14,7 @@ exports.execute = function (options) {
         var reference, page, tuples;
 
         beforeAll(function(done) {
-            
+
             // Fetch the entities beforehand
             options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
                 reference = response;
@@ -23,14 +23,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -53,7 +53,7 @@ exports.execute = function (options) {
          * and a particular column value at the specified valuedIndex
          */
         var checkValueAndIsHTML = function(columnName, tupleIndex, valueIndex, expectedValues) {
-           
+
             it("should check " + columnName + " to be `" + expectedValues[valueIndex] + "`", function() {
                 var tuple = tuples[tupleIndex];
                 var value = tuple.values[valueIndex];
@@ -86,10 +86,9 @@ exports.execute = function (options) {
             it("should return 1 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
 
-                console.log(values);
                 expect(values.length).toBe(11);
             });
-            
+
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues);
             checkValueAndIsHTML("name", tupleIndex, 1, expectedValues);
             checkValueAndIsHTML("url", tupleIndex, 2, expectedValues);
@@ -97,15 +96,15 @@ exports.execute = function (options) {
             checkValueAndIsHTML("image_with_size", tupleIndex, 4, expectedValues);
             checkValueAndIsHTML("download_link", tupleIndex, 5, expectedValues);
             checkValueAndIsHTML("iframe", tupleIndex, 6, expectedValues);
-            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues);  
-            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues);  
-            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues);        
+            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues);
+            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues);
+            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues);
         };
 
 
 
         describe('for tuple 0 with row values {"id":4000, "some_markdown": "** date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT"},', function() {
-            var values = [  
+            var values = [
                             "4000",
                             "Hank",
                             "https://www.google.com",
@@ -138,7 +137,7 @@ exports.execute = function (options) {
                             null
                           ];
 
-            testTupleValidity(1, values);            
+            testTupleValidity(1, values);
         });
 
         describe('for tuple 2 with row values {"id":4002, "url": "https://www.google.com"},', function() {
@@ -175,7 +174,7 @@ exports.execute = function (options) {
                             null,
                             null
                           ];
-           
+
             testTupleValidity(3, values);
         });
 

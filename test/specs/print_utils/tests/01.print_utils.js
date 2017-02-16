@@ -5,7 +5,7 @@ exports.execute = function (options) {
         // Test Cases:
         it('printFloat() should format floats correctly.', function () {
             var printFloat = formatUtils.printFloat;
-            var options = {numDecDigits: 4};
+            var options = {numFracDigits: 4};
             expect(printFloat(null)).toBe('');
             expect(printFloat(1234.0, options)).toBe('1,234.0000');
             expect(printFloat(23.0)).toBe('23.0000');
@@ -38,10 +38,7 @@ exports.execute = function (options) {
         it('printDate() should format dates correctly.', function () {
             var printDate = formatUtils.printDate;
             expect(printDate(null)).toBe('');
-            expect(printDate('2012-04-25 13:00:00.00 PST', {
-                separator: '.',
-                leadingZero: true
-            })).toBe('2012.04.25');
+            expect(printDate('2012-04-25 13:00:00.00 PST')).toBe('2012-04-25');
             expect(function() {
                 printDate(123.45)
             }).toThrowError(module.InvalidInputError);
@@ -49,12 +46,9 @@ exports.execute = function (options) {
 
         it('printTimestamp() should format timestamps correctly.', function () {
             var printTimestamp = formatUtils.printTimestamp;
-            var testTime = '2011-05-06T08:25:25-07:00';
+            var testTime = '2011-05-06T13:25:25-07:00';
             expect(printTimestamp(null)).toBe('');
-            /* Default behavior w/o options parameter = transform time via toLocaleString().
-            Cannot use a static timestamp because toLocaleString() will return
-            different values in different test environments. */
-            expect(printTimestamp(testTime)).toBe(new Date(testTime).toLocaleString());
+            expect(printTimestamp(testTime)).toBe('2011-05-06 13:25:25');
             expect(function() {
                 printTimestamp()
             }).toThrowError(module.InvalidInputError);

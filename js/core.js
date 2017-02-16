@@ -499,10 +499,13 @@ var ERMrest = (function (module) {
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, null);
+        this.displayname = module._determineDisplayName(this, true);
 
         /**
          *
@@ -715,10 +718,13 @@ var ERMrest = (function (module) {
         this._displayKeys = {}; // Used for display key
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.schema);
+        this.displayname = module._determineDisplayName(this, true, this.schema);
 
         /**
          *
@@ -836,10 +842,10 @@ var ERMrest = (function (module) {
         /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
-         * @desc 
+         * @desc
          * returns the key that can be used for display purposes.
          */
-        _getDisplayKey: function (context) {            
+        _getDisplayKey: function (context) {
             if (!(context in this._displayKeys)) {
                 var key;
                 if (this.keys.length() !== 0) {
@@ -866,14 +872,14 @@ var ERMrest = (function (module) {
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
                                 return keyA.colset.columns.length > keyB.colset.columns.length;
                             }
-                            
+
                             // has more text
                             var aTextCount = countTextColumns(keyA);
                             var bTextCount = countTextColumns(keyB);
                             if (aTextCount != bTextCount) {
                                 return aTextCount < bTextCount;
                             }
-                            
+
                             // the one that has lower column position
                             return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
                         })[0];
@@ -1700,11 +1706,11 @@ var ERMrest = (function (module) {
                 case 'date':
                     data = utils.printDate(data, options);
                     break;
+                case 'numeric':
                 case 'float4':
                 case 'float8':
                     data = utils.printFloat(data, options);
                     break;
-                case 'numeric':
                 case 'int2':
                 case 'int4':
                 case 'int8':
@@ -1729,15 +1735,16 @@ var ERMrest = (function (module) {
         /**
          * Formats the presentation value corresponding to this column definition.
          * @param {String} data The 'formatted' data value.
-         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
 
-            var utils = module._formatUtils, keyValues = options.keyValues, columns = options.columns;
-            var isMarkdownPattern = false, isMarkdownType = false, annotation;
+            var context = options ? options.context : undefined,
+                utils = module._formatUtils;
 
-            var display = this.getDisplay(options ? options.context : undefined);
+            var display = this.getDisplay(context);
+
 
             /*
              * TODO: Add code to handle `pre_format` in the annotation
@@ -1758,12 +1765,13 @@ var ERMrest = (function (module) {
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                value = module._renderTemplate(template, keyValues, options);
+                value = module._renderTemplate(template, options.formattedValues, options);
             }
+
 
             // If value is null or empty, return value on basis of `show_nulls`
             if (value === null || value.trim() === '') {
-                return { isHTML: false, value: this._getNullValue(options ? options.context : undefined) };
+                return { isHTML: false, value: this._getNullValue(context) };
             }
 
             /*
@@ -1830,14 +1838,18 @@ var ERMrest = (function (module) {
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
+
         this._nullValue = {}; // Used to avoid recomputation of null value for different contexts.
         this._display = {};  // Used for column.display annotation.
 
         /**
-         * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @type {object}
+         * @desc
+         * Preferred display name for user presentation only.
+         * this.displayname.isHTML will return true/false
+         * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, this.table);
+        this.displayname = module._determineDisplayName(this, true, this.table);
 
         /**
          * Member of Keys
@@ -1852,7 +1864,7 @@ var ERMrest = (function (module) {
          * @desc foreign key that this column is a member of
          */
         this.memberOfForeignKeys = [];
-        
+
     }
 
     Column.prototype = {
@@ -1912,9 +1924,19 @@ var ERMrest = (function (module) {
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1;
+                var annotation = -1, columnOrder = [];
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {
@@ -1922,10 +1944,26 @@ var ERMrest = (function (module) {
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
+                    "columnOrder": columnOrder
                 };
             }
             return this._display[context];
         },
+
+        // get the sort columns using the context
+        _getSortColumns: function (context) {
+            var display = this.getDisplay(context);
+
+            if (display.columnOrder === false) {
+                return undefined;
+            }
+
+            if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                return display.columnOrder;
+            }
+
+            return [this];
+        }
     };
 
     /**
@@ -2194,6 +2232,7 @@ var ERMrest = (function (module) {
         }
 
         this._wellFormed = {};
+        this._display = {};
     }
 
     Key.prototype = {
@@ -2229,6 +2268,35 @@ var ERMrest = (function (module) {
                 this._wellFormed[context] = result;
             }
             return this._wellFormed[context];
+        },
+        
+        getDisplay: function(context) {
+            if (!(context in this._display)) {
+                var annotation = -1, columnOrder = [];
+                if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // column-order is just a list of column names
+                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
+                }
+
+                this._display[context] = {
+                    "columnOrder": columnOrder,
+                    "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
+                    "markdownPattern": annotation.markdown_pattern
+                };
+            }
+
+            return this._display[context];
         }
     };
 
@@ -2657,6 +2725,8 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonFKR.comment;
 
+        this._display = {};
+
     }
 
     ForeignKeyRef.prototype = {
@@ -2675,7 +2745,7 @@ var ERMrest = (function (module) {
                 var toCol = this.mapping.get(fromCol);
                 var separator = (i < columnsLength -1 ?",": "");
 
-                leftString += (reverse ? fromCol.name : toCol.name) + separator;
+                leftString += (reverse ? module._fixedEncodeURIComponent(fromCol.name) : module._fixedEncodeURIComponent(toCol.name)) + separator;
                 if (reverse) {
                     rightString += (i === 0 ? toCol.toString() : module._fixedEncodeURIComponent(toCol.name));
                 } else {
@@ -2684,7 +2754,6 @@ var ERMrest = (function (module) {
                 rightString += separator;
 
             }
-
             return "(" + leftString + ")=(" + rightString + ")";
         },
 
@@ -2710,6 +2779,34 @@ var ERMrest = (function (module) {
          */
         get simple() {
             return this.key.simple;
+        },
+
+        getDisplay: function(context) {
+            if (!(context in this._display)) {
+                var annotation = -1, columnOrder = [];
+                if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
+                    
+                }
+
+                if (Array.isArray(annotation.column_order)) {
+                    columnOrder = [];
+                    for (var i = 0 ; i < annotation.column_order.length; i++) {
+                        try {
+                            // column-order is just a list of column names
+                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
+                        } catch(exception) {}
+                    }
+                } else {
+                    columnOrder = annotation.column_order;
+                }
+
+                this._display[context] = {
+                    "columnOrder": columnOrder,
+                };
+            }
+
+            return this._display[context];
         }
     };
 

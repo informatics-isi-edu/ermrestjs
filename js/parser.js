@@ -389,6 +389,11 @@ var ERMrest = (function(module) {
 
                 // convert term to filter
 
+                // add a quote to the end if string has an odd amount
+                if ( (term.split('"').length-1)%2 === 1 ) {
+                    term = term + '"';
+                }
+
                 // 1) parse terms in quotation
                 // 2) split the rest by space
                 var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
@@ -398,18 +403,31 @@ var ERMrest = (function(module) {
                     terms[i] = terms[i].replace(/"/g, ""); //remove quotes
                 }
 
-                terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+                if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
                 terms.forEach(function(t, index, array) {
-                    filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(t);
+                    var exp;
+                    // matches an integer, aka just a number
+                    if (t.match(/^[0-9]+$/)) {
+                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t) + "([^0-9].*|$)";
+                    // matches a float, aka a number one decimal
+                    } else if (t.match(/^([0-9]+[.][0-9]*|[0-9]*[.][0-9]+)$/)) {
+                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t);
+                    // matches everything else (words and anything with multiple decimals)
+                    } else {
+                        exp = module._encodeRegexp(t);
+                    }
+
+                    filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(exp);
                 });
+
 
             } else {
                 this._searchTerm = null;
             }
 
             if (this._searchFilter) {
-                if (term) { // replace search filter
+                if (this._searchTerm) { // replace search filter
                     this._uri = this._uri.replace(this._searchFilter, filterString);
                     this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
                     this._path = this._path.replace(this._searchFilter, filterString);
@@ -420,7 +438,7 @@ var ERMrest = (function(module) {
                     this._path = this._path.replace(this._searchFilter, "");
                     this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
                 }
-            } else if (term) { // add search filter
+            } else if (this._searchTerm) { // add search filter
                 this._uri = this._uri + "/" + filterString;
                 this._compactUri = this._compactUri + "/" + filterString;
                 this._path = this._path + "/" + filterString;
@@ -658,7 +676,7 @@ var ERMrest = (function(module) {
         var modifier = (paging.before ? "@before(" : "@after(");
         for (var i = 0; i < paging.row.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + (paging.row[i] === "null" ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
+            modifier = modifier + ((paging.row[i] === null || paging.row[i] === undefined ) ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
         }
         modifier = modifier + ")";
         return modifier;
