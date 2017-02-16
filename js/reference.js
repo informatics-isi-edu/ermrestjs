@@ -1178,13 +1178,14 @@ var ERMrest = (function(module) {
                             }
 
                             if (!mismatchFound) {
-                                for (var p = 0, len = allOldData.length; p < len; p++) {
+                                var findMismatch = function findMismatch(key) {
+                                    return oldTuple[key] !== currentTuple[key];
+                                };
+                                for (var p = 0; p < allOldData.length; p++) {
                                     var oldTuple = allOldData[p], currentTuple = currentData[p];
-                                    mismatchFound = Object.keys(oldTuple).some(function(key) {
-                                        // If the following statement returns true, this
-                                        // loop breaks and the loop returns true.
-                                        return oldTuple[key] !== currentTuple[key];
-                                    });
+                                    // If findMismatch() returns true, this
+                                    // loop breaks and the loop returns true.
+                                    mismatchFound = Object.keys(oldTuple).some(findMismatch);
                                     if (mismatchFound) {
                                         break;
                                     }
@@ -1200,7 +1201,7 @@ var ERMrest = (function(module) {
                                     return defer.reject(error);
                                 });
                             } else {
-                                console.log('a mismatch was indeed found')
+                                console.log('a mismatch was indeed found');
                                 // Old data and current data aren't the same; throw the original 412 error.
                                 var additionalData = {'oldData': allOldData, 'currentData': currentData, 'newData': allNewData};
                                 var error = module._responseToError(response, additionalData);
@@ -1256,13 +1257,14 @@ var ERMrest = (function(module) {
                                 mismatchFound = true;
                             }
                             if (!mismatchFound) {
+                                // If findMismatch returns true, this
+                                // loop breaks and the loop returns true.
+                                var findMismatch = function findMismatch(key) {
+                                    return oldTuple[key] !== currentTuple[key];
+                                };
                                 for (var i = 0, len = oldData.length; i < len; i++) {
                                     var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
-                                    mismatchFound = Object.keys(oldTuple).some(function(key) {
-                                        // If the following statement returns true, this
-                                        // loop breaks and the loop returns true.
-                                        return oldTuple[key] !== currentTuple[key];
-                                    });
+                                    mismatchFound = Object.keys(oldTuple).some(findMismatch);
                                     if (mismatchFound) {
                                         break;
                                     }
@@ -1286,7 +1288,7 @@ var ERMrest = (function(module) {
                         }, function error(response) {
                             var error = module._responseToError(response);
                             return defer.reject(error);
-                        })
+                        });
                     } else {
                         var error = module._responseToError(response);
                         return defer.reject(error);

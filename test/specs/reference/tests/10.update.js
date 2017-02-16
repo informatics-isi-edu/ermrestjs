@@ -1324,11 +1324,60 @@ exports.execute = function (options) {
             });
 
             describe("with mismatching ETags (412 error)", function() {
-                it('should return a page object if the old data and current data from DB match', function() {
+                it('should return a page object if the old data and current data from DB match', function(done) {
+                    // {
+                    //     "ind_key1": 1, "ind_key2": "a",
+                    //     "comp_key1_col1": "Ralph", "comp_key1_col2": "Steven", "comp_key1_col3": "Watson",
+                    //     "comp_key2_col1": "auto", "comp_key3_col1": "home", "comp_shared_key_col": "salesman",
+                    //     "non_key_col1": "sales text", "non_key_col2": "other sales text", "non_key_col3": 12
+                    // }
+                    var reference, tuples, tuple,
+                        uri = baseUri + '/ind_key1=1';
 
+                    var updateData = {
+                        "comp_key1_col1": "Robert"
+                    };
+
+                    // Read a reference of Record A -> RefA
+                    options.ermRest.resolve(uri, {cid: 'test'}).then(function(response) {
+                        reference = response;
+                        return reference.read(1);
+                    }).then(function(response) {
+                        // Modify RefA._etag to simulate a change to the table
+                        reference._etag = 'a bad etag';
+
+                        // Perform an update and expect no errors
+                        tuples = response.tuples;
+                        tuple = tuples[0];
+                        var data = tuple.data;
+
+                        for (var key in updateData) {
+                            data[key] = updateData[key];
+                        }
+                        return reference.update(response.tuples);
+                    }).then(function(response) {
+                        expect(response instanceof Page).toBeTruthy();
+                        expect(response._data.length).toBe(1);
+                        checkPageValues(response._data, tuples, sortBy);
+                        var pageData = response._data[0];
+                        expect(pageData.comp_key1_col1).toBe(updateData.comp_key1_col1);
+                        done();
+                    }, function(error) {
+                        expect('There to be no errors in update operation').toBe('but one was encountered.');
+                    }).catch(error) {
+                        console.dir(error);
+                        done.fail();
+                    };
                 });
 
                 it('should raise a 412 error if the old data and current data form DB do not match', function() {
+                    // Read a reference of Record A -> RefA
+
+                    // Read a 2nd reference of Record A -> RefB
+
+                    // RefB.update(someNewTupleB) -> expect no errors, ETag modified
+
+                    // RefA.update(someNewTupleA) -> expect 412 error
 
                 });
             })
