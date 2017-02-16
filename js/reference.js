@@ -1228,7 +1228,7 @@ var ERMrest = (function(module) {
 
         /**
          * Deletes the referenced resources.
-         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
+         * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
          * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function(tuples) {
