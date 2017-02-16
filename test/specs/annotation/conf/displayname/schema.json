@@ -268,6 +268,7 @@
       "keys": [
         {
           "comment": null,
+          "names": [["schema_with_underlinespace_without_titlecase", "table_underline_key_1"]],
           "annotations": {},
           "unique_columns": [
             "column_without_display_annotation"
