@@ -1165,52 +1165,82 @@ var ERMrest = (function(module) {
                     var status = response.status || response.statusCode;
                     // If 412 Precondition Failed error, get current data
                     if (status == 412) {
-                        self.read(tuples.length).then(function getPage(page) {
-                            // Compare current data with old data. If match, perform the update with new ETag. Otherwise, throw an error.
-                            var currentData = [], mismatchFound = false;
-
-                            for (var t = 0, len = page.tuples.length; t < len; t++) {
-                                currentData.push(page.tuples[t]._data);
-                            }
-
-                            if (currentData.length !== allOldData.length) {
-                                mismatchFound = true;
-                            }
-
-                            if (!mismatchFound) {
-                                var findMismatch = function findMismatch(key) {
-                                    return oldTuple[key] !== currentTuple[key];
-                                };
-                                for (var p = 0; p < allOldData.length; p++) {
-                                    var oldTuple = allOldData[p], currentTuple = currentData[p];
-                                    // If findMismatch() returns true, this
-                                    // loop breaks and the loop returns true.
-                                    mismatchFound = Object.keys(oldTuple).some(findMismatch);
-                                    if (mismatchFound) {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!mismatchFound) {
-                                return self.update(tuples).then(function success(page) {
-                                    console.log('no mismatch found... reinitiating update');
-                                    return defer.resolve(page);
-                                }, function error(response) {
-                                    var error = module._responseToError(response);
-                                    return defer.reject(error);
-                                });
-                            } else {
-                                console.log('a mismatch was indeed found');
-                                // Old data and current data aren't the same; throw the original 412 error.
+                        var readReference = function readReference(ref) {
+                            ref.read(tuples.length).then(function getPage(page) {
+                                var currentData = page.tuples;
                                 var additionalData = {'oldData': allOldData, 'currentData': currentData, 'newData': allNewData};
                                 var error = module._responseToError(response, additionalData);
-                                return defer.reject(error);
-                            }
-                        }, function error(response) {
-                            var error = module._responseToError(response);
-                            return defer.reject(error);
-                        });
+
+                                // If current data is empty, then referenced rows
+                                // aren't in the DB. Raise 412 error.
+                                if (currentData.length === 0) {
+                                    return defer.reject(error);
+                                }
+                                // Compare current data with old data. If match, perform the update with new ETag. Otherwise, throw an error.
+                                var mismatchFound = false;
+
+                                for (var t = 0, len = page.tuples.length; t < len; t++) {
+                                    currentData.push(page.tuples[t]._data);
+                                }
+
+                                if (currentData.length !== allOldData.length) {
+                                    mismatchFound = true;
+                                }
+
+                                if (!mismatchFound) {
+                                    var oldAndCurrentDoNotMatch = function (key) {
+                                        return oldTuple[key] !== currentTuple[key];
+                                    };
+                                    for (var p = 0; p < allOldData.length; p++) {
+                                        var oldTuple = allOldData[p], currentTuple = currentData[p];
+                                        // If findMismatch() returns true, this
+                                        // loop breaks and the loop returns true.
+                                        mismatchFound = Object.keys(oldTuple).some(oldAndCurrentDoNotMatch);
+                                        if (mismatchFound) {
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!mismatchFound) {
+                                    return ref.update(tuples);
+                                } else {
+                                    // If old data and current data don't match, it's possible that a user could have attempted this
+                                    // update operation previously, didn't receive a response (e.g. due to connection loss), and is attempting
+                                    // the update again now. In this case, if current data and new data match, then resolve this promise normally.
+                                    // Otherwise, if current and old don't match either, raise 412 error.
+
+                                    mismatchFound = false; // Reset mismatchFound flag
+                                    if (currentData.length !== allNewData.length) {
+                                        mismatchFound = true;
+                                    }
+                                    if (!mismatchFound) {
+                                        var newAndCurrentDoNotMatch = function(key) {
+                                            return newTuple[key] !== currentTuple[key];
+                                        };
+                                        for (var n = 0; n < allNewData.length; n++) {
+                                            var newTuple = allNewData[n];
+                                            // If findMismatch() returns true, this
+                                            // loop breaks and the loop returns true.
+                                            mismatchFound = Object.keys(newTuple).some(newAndCurrentDoNotMatch);
+                                            if (mismatchFound) {
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (!mismatchFound) {
+                                        return defer.resolve();
+                                    }
+                                    // Old and current data don't match. Neither does current and new data. Raise 412 error.
+                                    return defer.reject(error);
+                                }
+                            }, function error(response) {
+                                // The read failed for some reason, retry the read.
+                                readReference(ref);
+                            });
+                        };
+                        readReference(self);
                     } else {
                         var error = module._responseToError(response);
                         return defer.reject(error);
@@ -1250,45 +1280,53 @@ var ERMrest = (function(module) {
                     var status = response.status || response.statusCode;
                     // If 412 Precondition Failed it means that ETags don't match
                     if (status == 412) {
-                        // Check if the record still exists. If it does, compare the data. Else, send the error to Chaise
-                        ownReference.read(tuples.length).then(function getPage(page) {
-                            var oldData = tuples, currentData = page.tuples, mismatchFound = false;
-                            if (currentData.length !== oldData.length) {
-                                mismatchFound = true;
-                            }
-                            if (!mismatchFound) {
-                                // If findMismatch returns true, this
-                                // loop breaks and the loop returns true.
-                                var findMismatch = function findMismatch(key) {
-                                    return oldTuple[key] !== currentTuple[key];
-                                };
-                                for (var i = 0, len = oldData.length; i < len; i++) {
-                                    var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
-                                    mismatchFound = Object.keys(oldTuple).some(findMismatch);
-                                    if (mismatchFound) {
-                                        break;
+                        // Check if the record still exists. If it does, compare the data.
+                        // If it doesn't, the data has already been deleted. If the
+                        // .read goes to error callback, then retry the read.
+                        var readReference = function readReference(ref) {
+                            ref.read(tuples.length).then(function getPage(page) {
+                                var oldData = tuples, currentData = page.tuples, mismatchFound = false;
+                                // If the referenced rows have already been deleted, page.tuples is an empty array.
+                                // Resolve the promise successfully like normal.
+                                if (page.tuples.length === 0) {
+                                    return defer.resolve();
+                                }
+
+                                // Else, compare the data.
+                                if (currentData.length !== oldData.length) {
+                                    mismatchFound = true;
+                                }
+
+                                if (!mismatchFound) {
+                                    // If findMismatch returns true, this
+                                    // loop breaks and the loop returns true.
+                                    var findMismatch = function findMismatch(key) {
+                                        return oldTuple[key] !== currentTuple[key];
+                                    };
+                                    for (var i = 0, len = oldData.length; i < len; i++) {
+                                        var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
+                                        mismatchFound = Object.keys(oldTuple).some(findMismatch);
+                                        if (mismatchFound) {
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            // If old data matches current data, proceed with delete
-                            if (!mismatchFound) {
-                                var config = {headers: {"If-Match": ownReference._etag}};
-                                ownReference._server._http.delete(ownReference.uri, config).then(function(response) {
-                                    defer.resolve();
-                                }, function error(response) {
-                                    // Errored out a second time (first error was the 412). Send to Chaise.
+                                // If old data matches current data, retry the delete w/ updated ETag
+                                if (!mismatchFound) {
+                                    var config = {headers: {"If-Match": ref._etag}};
+                                    return ref.delete(ref.uri, config);
+                                } else {
+                                    // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
                                     var error = module._responseToError(response);
                                     return defer.reject(error);
-                                });
-                            } else {
-                                // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
-                                var error = module._responseToError(response);
-                                return defer.reject(error);
-                            }
-                        }, function error(response) {
-                            var error = module._responseToError(response);
-                            return defer.reject(error);
-                        });
+                                }
+                            }, function error(response) {
+                                // The referenced rows couldn't be read from the DB.
+                                // Retry the read.
+                                readReference(ref);
+                            });
+                        };
+                        readReference(ownReference);
                     } else {
                         var error = module._responseToError(response);
                         return defer.reject(error);
