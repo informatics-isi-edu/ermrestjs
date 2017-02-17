@@ -1193,7 +1193,7 @@ var ERMrest = (function(module) {
                                     };
                                     for (var p = 0; p < allOldData.length; p++) {
                                         var oldTuple = allOldData[p], currentTuple = currentData[p];
-                                        // If findMismatch() returns true, this
+                                        // If oldAndCurrentDoNotMatch is true, this
                                         // loop breaks and the loop returns true.
                                         mismatchFound = Object.keys(oldTuple).some(oldAndCurrentDoNotMatch);
                                         if (mismatchFound) {
@@ -1220,7 +1220,7 @@ var ERMrest = (function(module) {
                                         };
                                         for (var n = 0; n < allNewData.length; n++) {
                                             var newTuple = allNewData[n];
-                                            // If findMismatch() returns true, this
+                                            // If newAndCurrentDoNotMatch is true, this
                                             // loop breaks and the loop returns true.
                                             mismatchFound = Object.keys(newTuple).some(newAndCurrentDoNotMatch);
                                             if (mismatchFound) {
@@ -1288,7 +1288,7 @@ var ERMrest = (function(module) {
                                 var oldData = tuples, currentData = page.tuples, mismatchFound = false;
                                 // If the referenced rows have already been deleted, page.tuples is an empty array.
                                 // Resolve the promise successfully like normal.
-                                if (page.tuples.length === 0) {
+                                if (currentData.length === 0) {
                                     return defer.resolve();
                                 }
 
@@ -1298,7 +1298,7 @@ var ERMrest = (function(module) {
                                 }
 
                                 if (!mismatchFound) {
-                                    // If findMismatch returns true, this
+                                    // If findMismatch is true, this
                                     // loop breaks and the loop returns true.
                                     var findMismatch = function findMismatch(key) {
                                         return oldTuple[key] !== currentTuple[key];
@@ -1313,8 +1313,7 @@ var ERMrest = (function(module) {
                                 }
                                 // If old data matches current data, retry the delete w/ updated ETag
                                 if (!mismatchFound) {
-                                    var config = {headers: {"If-Match": ref._etag}};
-                                    return ref.delete(ref.uri, config);
+                                    return ref.delete(tuples);
                                 } else {
                                     // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
                                     var error = module._responseToError(response);
