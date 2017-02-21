@@ -847,13 +847,27 @@ var ERMrest = (function (module) {
          */
         _getDisplayKey: function (context) {
             if (!(context in this._displayKeys)) {
-                var key;
+                var displayKey;
                 if (this.keys.length() !== 0) {
-                    var candidateKeys = [], i;
-                    // select keys that none of their columns isHTMl and nullok.
+                    var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
                     for (i = 0; i < this.keys.length(); i++) {
-                        if (this.keys.all()[i]._isWellFormed(context)) {
-                            candidateKeys.push(this.keys.all()[i]);
+                        key = this.keys.all()[i];
+                        isPartOfSimpleFk = false;
+
+                        // shouldn't select simple keys that their constituent column is part of any simple foreign key.
+                        if (key.simple && key.colset.columns[0].memberOfForeignKeys.length > 0) {
+                            fkeys = key.colset.columns[0].memberOfForeignKeys;
+                            for (j = 0; j < fkeys.length; j++) {
+                                if (fkeys[j].simple) {
+                                    isPartOfSimpleFk = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // select keys that none of their columns isHTMl and nullok.
+                        if (!isPartOfSimpleFk && key._isWellFormed(context)) {
+                            candidateKeys.push(key);
                         }
                     }
 
@@ -866,9 +880,9 @@ var ERMrest = (function (module) {
                             return res;
                         };
 
-                        key = candidateKeys.sort(function (keyA, keyB) {
+                        displayKey = candidateKeys.sort(function (keyA, keyB) {
 
-                            // shortet
+                            // shorter
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
                                 return keyA.colset.columns.length > keyB.colset.columns.length;
                             }
@@ -885,7 +899,7 @@ var ERMrest = (function (module) {
                         })[0];
                     }
                 }
-                this._displayKeys[context] = key; // might be undefined
+                this._displayKeys[context] = displayKey; // might be undefined
             }
             return this._displayKeys[context];
         },

@@ -2010,7 +2010,7 @@ The logic is as follows:
      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
 
 2.otherwise go through list of table columns
-     2.0 create a pseudo-column for key if context is not entry and we have key that is notnull and notHTML
+     2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
      2.1 check if column has not been processed before.
      2.2 hide the columns that are part of origFKR.
      2.3 if column is serial and part of a simple key hide it.

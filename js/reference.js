@@ -288,7 +288,7 @@ var ERMrest = (function(module) {
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
                  *
                  * 2.otherwise go through list of table columns
-                 *      2.0 create a pseudo-column for key if context is not entry and we have key that is notnull and notHTML
+                 *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
                  *      2.1 check if column has not been processed before.
                  *      2.2 hide the columns that are part of origFKR.
                  *      2.3 if column is serial and part of a simple key hide it.
@@ -396,7 +396,7 @@ var ERMrest = (function(module) {
                 else {
 
                     //add the key
-                    if (!module._isEntryContext(this._context)) {
+                    if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
