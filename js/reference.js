@@ -1328,6 +1328,12 @@ var ERMrest = (function(module) {
                 for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
+                    // make sure that this fkr is not from an alternative table to self
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined && 
+                        fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
+                        continue;
+                    }
+
                     newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
