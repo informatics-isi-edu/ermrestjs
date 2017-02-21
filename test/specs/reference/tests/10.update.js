@@ -1111,7 +1111,7 @@ exports.execute = function (options) {
                             "ind_key1": 3
                         }, {
                             "comp_key2_col1": "plane"
-                        }]
+                        }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                             reference = response;
@@ -1249,7 +1249,7 @@ exports.execute = function (options) {
                         }, {
                             "ind_key2": "d_mod",
                             "comp_shared_key_col": "senior manager"
-                        }]
+                        }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                             reference = response;
@@ -1322,6 +1322,104 @@ exports.execute = function (options) {
                     });
                 });
             });
+
+            describe("with mismatching ETags (412 error)", function() {
+                it('should return a page object if the old data and current data from DB match', function(done) {
+                    var reference, tuples, tuple,
+                        uri = baseUri + '/ind_key1=2';
+
+                    var updateData = {
+                        "comp_key1_col1": "Robert"
+                    };
+
+                    // Read a reference of Record A -> RefA
+                    options.ermRest.resolve(uri, {cid: 'test'}).then(function(response) {
+                        reference = response;
+                        return reference.read(1);
+                    }).then(function(page) {
+                        // Modify RefA._etag to simulate a change to this table that doesn't affect the referenced row
+                        reference._etag = 'a bad etag';
+
+                        // Perform an update and a page object like normal
+                        tuples = page.tuples;
+                        tuple = tuples[0];
+                        var data = tuple.data;
+
+                        for (var key in updateData) {
+                            data[key] = updateData[key];
+                        }
+                        return reference.update(tuples);
+                    }).then(function(response) {
+                        expect(response._data.length).toBe(1);
+                        checkPageValues(response._data, tuples, sortBy);
+                        var pageData = response._data[0];
+                        expect(pageData.comp_key1_col1).toBe(updateData.comp_key1_col1);
+                        done();
+                    }, function(error) {
+                        console.dir(error);
+                        expect('There to be no errors in update operation').toBe('but one was encountered.');
+                    }).catch(function(error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                it('should raise a 412 error if the old data and current data from DB do not match', function(done) {
+                    var ref1, ref2, tuples1, tuple1, tuples2, tuple2,
+                        uri = baseUri + '/ind_key1=2';
+
+                    var newRef1Tuple = {
+                        "comp_key1_col1": "Roberta"
+                    };
+
+                    var newRef2Tuple = {
+                        "comp_key1_col1": "Rowena"
+                    };
+                    // Read a reference of Record A -> Ref1
+                    options.ermRest.resolve(uri, {cid: 'test'}).then(function(response) {
+                        ref1 = response;
+                        return ref1.read(1);
+                    }).then(function(response) {
+                        tuples1 = response.tuples;
+                        tuple1 = tuples1[0];
+                        var data = tuple1.data;
+                        for (var key in newRef1Tuple) {
+                            data[key] = newRef1Tuple[key];
+                        }
+                        return options.ermRest.resolve(uri, {cid: 'test'});
+                    }).then(function(response) {
+                        ref2 = response;
+                        // Read a 2nd reference of Record A -> Ref2
+                        return ref2.read(1);
+                    }).then(function(response) {
+                        tuples2 = response.tuples;
+                        tuple2 = tuples2[0];
+                        var data = tuple2.data;
+                        for (var key in newRef2Tuple) {
+                            data[key] = newRef2Tuple[key];
+                        }
+                        // Ref2.update(someNewTupleB) -> expect a Page back, ETag modified
+                        return ref2.update(response.tuples);
+                    }).then(function(response) {
+                        expect(response._data.length).toBe(1);
+                        var pageData = response._data[0];
+                        expect(pageData.comp_key1_col1).toBe(newRef2Tuple.comp_key1_col1);
+
+                        // Ref1.update(someNewTupleA) -> expect 412 error
+                        return ref1.update(tuples1);
+                    }).then(function(response) {
+                        expect(response).not.toBeDefined();
+                        done.fail();
+                    }, function(error) {
+                        expect(error.code).toBe(412);
+                        done();
+                    }).catch(function(error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+            });
         });
+
     });
 };

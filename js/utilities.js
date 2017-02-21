@@ -469,7 +469,7 @@ var ERMrest = (function(module) {
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response) {
+    module._responseToError = function (response, additionalData) {
         var status = response.status || response.statusCode;
         switch(status) {
             case 0:
@@ -484,6 +484,8 @@ var ERMrest = (function(module) {
                 return new module.NotFoundError(response.statusText, response.data);
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
+            case 412:
+                return new module.PreconditionFailedError(response.statusText, response.data, additionalData);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
             case 503:
