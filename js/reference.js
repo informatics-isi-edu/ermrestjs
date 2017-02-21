@@ -2564,7 +2564,7 @@ var ERMrest = (function(module) {
                     if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
                         this._displayname = {
                             "value": this.key.colset.columns.reduce(function(prev, curr, index) {
-                                return prev + (index>0 ? " " : "") + curr.displayname.value;
+                                return prev + (index>0 ? ":" : "") + curr.displayname.value;
                             }, ""),
                             "isHTML": this.key.colset.columns.some(function (col) {
                                 return col.displayname.isHTML;
@@ -2837,7 +2837,7 @@ var ERMrest = (function(module) {
                             return nullValue;
                         }
                     }
-                    caption = values.join(" ");
+                    caption = values.join(":");
 
                     // if the caption is empty we cannot add any link to that.
                     if (caption.trim() === '') {

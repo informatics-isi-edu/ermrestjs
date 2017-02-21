@@ -209,9 +209,9 @@ exports.execute = function (options) {
                     checkDisplayname(compactBriefRef.columns[1].displayname, "third key", false);
                 });
 
-                it('otherwise, should return the consitutent column displaynames seperated by space.', function() {
+                it('otherwise, should return the consitutent column displaynames seperated by colon.', function() {
                     checkDisplayname(detailedColumns[0].displayname, "id", false);
-                    checkDisplayname(compactBriefRef.columns[0].displayname, "Column 3 Name col_6", false);
+                    checkDisplayname(compactBriefRef.columns[0].displayname, "Column 3 Name:col_6", false);
                 });         
 
             });
@@ -399,12 +399,12 @@ exports.execute = function (options) {
                     });
 
                     describe('otherwise, ', function () {
-                        it ("should use key columns values separated with space for caption. The URL should refer to the current reference.", function(){
+                        it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
                             val = detailedColumns[0].formatPresentation({"id":2}, {context: "detailed", "formattedValues": {"id":2}}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=2">2</a>');
 
                             val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, {context: "compact/brief", "formattedValues": {"col_3":"3", "col_6":"6"}}).value;
-                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/col_3=3&col_6=6">3 6</a>');
+                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns are html.', function () {
