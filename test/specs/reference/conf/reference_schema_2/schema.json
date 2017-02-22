@@ -182,6 +182,68 @@
                     "typename": "text"
                 }
             }]
+        },
+        "table_w_alternate": {
+            "comment": "has one alternative table in detailed context",
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "table_w_alternate",
+            "foreign_keys": [],
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "name", 
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-alternatives": {
+                    "*": ["reference_schema_2", "alternate_for_table_w_alternate"]
+                }
+            }
+        }, 
+        "alternate_for_table_w_alternate": {
+            "comment": "alternative table for table_w_alternate", 
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "alternate_for_table_w_alternate",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_to_table_w_alternate"]],
+                    "foreign_key_columns": [{
+                        "table_name": "alternate_for_table_w_alternate",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_alternate",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "details",
+                    "type": {"typename": "text"}
+                }
+            ]
         }
     },
     "comment": null,

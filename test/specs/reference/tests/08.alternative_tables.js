@@ -148,7 +148,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('1.A.1 read should return a Page object that is defined.', function(done) {
@@ -178,7 +178,7 @@ exports.execute = function (options) {
             it('1.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -202,7 +202,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('1.B.1 read should return a Page object that is defined.', function(done) {
@@ -231,7 +231,7 @@ exports.execute = function (options) {
             it('1.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -255,7 +255,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('1.C.1 read should return a Page object that is defined.', function(done) {
@@ -284,7 +284,7 @@ exports.execute = function (options) {
             it('1.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -345,7 +345,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('2.A.1 read should return a Page object that is defined.', function(done) {
@@ -375,7 +375,7 @@ exports.execute = function (options) {
             it('2.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -399,7 +399,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('2.B.1 read should return a Page object that is defined.', function(done) {
@@ -428,7 +428,7 @@ exports.execute = function (options) {
             it('2.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -452,7 +452,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('2.C.1 read should return a Page object that is defined.', function(done) {
@@ -481,7 +481,7 @@ exports.execute = function (options) {
             it('2.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -543,7 +543,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable2);
+                expect(reference2.displayname.value).toBe(baseTable2);
             });
 
             it('3.A.1 read should return a Page object that is defined.', function(done) {
@@ -573,7 +573,7 @@ exports.execute = function (options) {
             it('3.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -597,7 +597,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable2);
+                expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
             it('3.B.1 read should return a Page object that is defined.', function(done) {
@@ -627,7 +627,7 @@ exports.execute = function (options) {
             it('3.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -653,7 +653,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable2);
+                expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
             it('3.C.1 read should return a Page object that is defined.', function(done) {
@@ -682,7 +682,7 @@ exports.execute = function (options) {
             it('3.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -744,7 +744,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('4.A.1 read should return a Page object that is defined.', function(done) {
@@ -774,7 +774,7 @@ exports.execute = function (options) {
             it('4.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -798,7 +798,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('4.B.1 read should return a Page object that is defined.', function(done) {
@@ -827,7 +827,7 @@ exports.execute = function (options) {
             it('4.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -851,7 +851,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('4.C.1 read should return a Page object that is defined.', function(done) {
@@ -880,7 +880,7 @@ exports.execute = function (options) {
             it('4.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -946,7 +946,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('5.A.1 read should return a Page object that is defined.', function(done) {
@@ -976,7 +976,7 @@ exports.execute = function (options) {
             it('5.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1000,7 +1000,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('5.B.1 read should return a Page object that is defined.', function(done) {
@@ -1029,7 +1029,7 @@ exports.execute = function (options) {
             it('5.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1053,7 +1053,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('5.C.1 read should return a Page object that is defined.', function(done) {
@@ -1082,7 +1082,7 @@ exports.execute = function (options) {
             it('5.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1141,7 +1141,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('6.A.1 read should return a Page object that is defined.', function(done) {
@@ -1171,7 +1171,7 @@ exports.execute = function (options) {
             it('6.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1195,7 +1195,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('6.B.1 read should return a Page object that is defined.', function(done) {
@@ -1224,7 +1224,7 @@ exports.execute = function (options) {
             it('6.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1248,7 +1248,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('6.C.1 read should return a Page object that is defined.', function(done) {
@@ -1277,7 +1277,7 @@ exports.execute = function (options) {
             it('6.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1337,7 +1337,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable2);
+                expect(reference2.displayname.value).toBe(baseTable2);
             });
 
             it('7.A.1 read should return a Page object that is defined.', function(done) {
@@ -1367,7 +1367,7 @@ exports.execute = function (options) {
             it('7.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -1391,7 +1391,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable2);
+                expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
             it('7.B.1 read should return a Page object that is defined.', function(done) {
@@ -1421,7 +1421,7 @@ exports.execute = function (options) {
             it('7.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -1447,7 +1447,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable2);
+                expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
             it('7.C.1 read should return a Page object that is defined.', function(done) {
@@ -1476,7 +1476,7 @@ exports.execute = function (options) {
             it('7.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -1536,7 +1536,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('8.A.1 read should return a Page object that is defined.', function(done) {
@@ -1566,7 +1566,7 @@ exports.execute = function (options) {
             it('8.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1590,7 +1590,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('8.B.1 read should return a Page object that is defined.', function(done) {
@@ -1619,7 +1619,7 @@ exports.execute = function (options) {
             it('8.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1643,7 +1643,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('8.C.1 read should return a Page object that is defined.', function(done) {
@@ -1672,7 +1672,7 @@ exports.execute = function (options) {
             it('8.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1738,7 +1738,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('9.A.1 read should return a Page object that is defined.', function(done) {
@@ -1768,7 +1768,7 @@ exports.execute = function (options) {
             it('9.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1792,7 +1792,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('9.B.1 read should return a Page object that is defined.', function(done) {
@@ -1821,7 +1821,7 @@ exports.execute = function (options) {
             it('9.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1845,7 +1845,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('9.C.1 read should return a Page object that is defined.', function(done) {
@@ -1874,7 +1874,7 @@ exports.execute = function (options) {
             it('9.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1933,7 +1933,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('10.A.1 read should return a Page object that is defined.', function(done) {
@@ -1963,7 +1963,7 @@ exports.execute = function (options) {
             it('10.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -1987,7 +1987,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('10.B.1 read should return a Page object that is defined.', function(done) {
@@ -2016,7 +2016,7 @@ exports.execute = function (options) {
             it('10.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2040,7 +2040,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('10.C.1 read should return a Page object that is defined.', function(done) {
@@ -2069,7 +2069,7 @@ exports.execute = function (options) {
             it('10.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2129,7 +2129,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable2);
+                expect(reference2.displayname.value).toBe(baseTable2);
             });
 
             it('11.A.1 read should return a Page object that is defined.', function(done) {
@@ -2159,7 +2159,7 @@ exports.execute = function (options) {
             it('11.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
             });
 
@@ -2183,7 +2183,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable2);
+                expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
             it('11.B.1 read should return a Page object that is defined.', function(done) {
@@ -2213,7 +2213,7 @@ exports.execute = function (options) {
             it('11.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -2239,7 +2239,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable2);
+                expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
             it('11.C.1 read should return a Page object that is defined.', function(done) {
@@ -2268,7 +2268,7 @@ exports.execute = function (options) {
             it('11.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
-                expect(tuple.reference.displayname).toBe(baseTable2);
+                expect(tuple.reference.displayname.value).toBe(baseTable2);
                 var success = (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12") ||
                     (tuple.reference._location.path === schemaNameEncoded + ":" + baseTable2Encoded+ "/value=12&id=00001");
                 expect(success).toBe(true);
@@ -2328,7 +2328,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
-                expect(reference2.displayname).toBe(baseTable1);
+                expect(reference2.displayname.value).toBe(baseTable1);
             });
 
             it('12.A.1 read should return a Page object that is defined.', function(done) {
@@ -2358,7 +2358,7 @@ exports.execute = function (options) {
             it('12.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2382,7 +2382,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altDetailedTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id x");
-                expect(reference2.displayname).toBe(altDetailedTable1);
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
             it('12.B.1 read should return a Page object that is defined.', function(done) {
@@ -2411,7 +2411,7 @@ exports.execute = function (options) {
             it('12.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
@@ -2435,7 +2435,7 @@ exports.execute = function (options) {
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
-                expect(reference2.displayname).toBe(altCompactTable1);
+                expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
             it('12.C.1 read should return a Page object that is defined.', function(done) {
@@ -2464,7 +2464,7 @@ exports.execute = function (options) {
             it('12.C.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
-                expect(tuple.reference.displayname).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 

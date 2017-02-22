@@ -209,7 +209,10 @@ var ERMrest = (function(module) {
 
         /**
          * The display name for this reference.
-         * @type {string}
+         * displayname.isHTML will return true/false
+         * displayname.value has the value
+         *
+         * @type {object}
          */
         get displayname () {
             /* Note that displayname is context dependent. For instance,
@@ -304,20 +307,21 @@ var ERMrest = (function(module) {
 
                 var columns = -1,
                     addedFKs = {}, // to avoid duplicate foreign keys
-                    compositeFKs = [], // to add composite keys at the end of the lsit
+                    addedKeys = {}, // to avoid duplicate keys
+                    compositeFKs = [], // to add composite keys at the end of the list
                     consideredColumns = {},  // to avoid unnecessary process and duplicate columns
                     hiddenFKR = this.origFKR,
                     colAdded,
                     fkName,
                     colFks,
-                    col, fk, i, j;
+                    cols, col, fk, i, j;
 
                 // should hide the origFKR in case of inbound foreignKey
                 var hideFKR = function (fkr) {
                     return hasOrigFKR && fkr == hiddenFKR;
                 };
 
-                // should hide the columns that are part of origFKR
+                // should hide the columns that are part of origFKR.
                 var hideColumn = function (col) {
                     return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
                 };
@@ -326,21 +330,47 @@ var ERMrest = (function(module) {
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                     columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
                 }
-
-                // annotation
+                
+                 // annotation
                 if (columns !== -1) {
                     for (i = 0; i < columns.length; i++) {
                         col = columns[i];
-                        // foreignKey
+                        // foreignKey or key
                         if (Array.isArray(col)) {
                             fk = this._table.schema.catalog.constraintByNamePair(col);
                             if (fk !== null) {
-                                fkName = fk.constraint_names[0].join(":");
-
-                                // fk is in this table, avoid duplicate and it's not hidden.
-                                if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
-                                    addedFKs[fkName] = true;
-                                    this._referenceColumns.push(new ReferenceColumn(this, fk.colset.columns[0], fk));
+                                fkName = fk.object.constraint_names[0].join("_");
+                                switch(fk.subject) {
+                                    case module._constraintTypes.FOREIGN_KEY:
+                                        fk = fk.object;
+                                        // fk is in this table, avoid duplicate and it's not hidden.
+                                        if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
+                                            addedFKs[fkName] = true;
+                                            this._referenceColumns.push(new ReferenceColumn(this, (fk.simple ? fk.colset.columns[0] : null), {"foreignKey":fk}));
+                                        }
+                                        break;
+                                    case module._constraintTypes.KEY:
+                                        fk = fk.object;
+                                        // key is in this table, and avoid duplicate
+                                        if (!(fkName in addedKeys) && fk.table == this._table) {
+                                            addedKeys[fkName] = true;
+                                            // if in edit context: add its constituent columns
+                                            if (module._isEntryContext(this._context)) {
+                                                cols = fk.colset.columns;
+                                                for (j = 0; j < cols.length; j++) {
+                                                    col = cols[j];
+                                                    if (!(col.name in consideredColumns) && !hideColumn(col)) {
+                                                        consideredColumns[col.name] = true;
+                                                        this._referenceColumns.push(new ReferenceColumn(this, cols[j]));
+                                                    }
+                                                }
+                                            } else {
+                                                this._referenceColumns.push(new ReferenceColumn(this, (fk.simple ? fk.colset.columns[0] : null), {"key":fk}));
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        // visible-columns annotation only supports key, foreignkey and columns.
                                 }
                             }
                         }
@@ -361,6 +391,21 @@ var ERMrest = (function(module) {
                 }
                 // heuristics
                 else {
+
+                    //add the key
+                    if (!module._isEntryContext(this._context)) {
+                        var key = this._table._getDisplayKey(this._context);
+                        if (key !== undefined) {
+                            this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
+
+                            // make sure key columns won't be added
+                            columns = key.colset.columns;
+                            for (i = 0; i < columns.length; i++) {
+                                consideredColumns[columns[i].name] = true;
+                            }
+                        }
+                    }
+
                     columns = this._table.columns.all();
                     for (i = 0; i < columns.length; i++) {
                         col = columns[i];
@@ -378,7 +423,7 @@ var ERMrest = (function(module) {
                             // sort foreign keys of a column
                             if (col.memberOfForeignKeys.length > 1) {
                                 colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                    return a.constraint_names[0].join(":").localeCompare(b.constraint_names[0].join(":"));
+                                    return a.constraint_names[0].join("_").localeCompare(b.constraint_names[0].join("_"));
                                 });
                             } else {
                                 colFKs = col.memberOfForeignKeys;
@@ -387,14 +432,14 @@ var ERMrest = (function(module) {
                             colAdded = false;
                             for (j = 0; j < colFKs.length; j++) {
                                 fk = colFKs[j];
-                                fkName = fk.constraint_names[0].join(":");
+                                fkName = fk.constraint_names[0].join("_");
                                 // hide the origFKR
                                 if(hideFKR(fk)) continue;
 
                                 if (fk.simple) { // simple FKR
                                     if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
                                         addedFKs[fkName] = true;
-                                        this._referenceColumns.push(new ReferenceColumn(this, col, fk));
+                                        this._referenceColumns.push(new ReferenceColumn(this, col, {"foreignKey":fk}));
                                     }
                                 } else { // composite FKR
                                     // add the column if context is not entry and avoid duplicate
@@ -405,7 +450,7 @@ var ERMrest = (function(module) {
                                     // hold composite FKR
                                     if (!(fkName in addedFKs)) {
                                         addedFKs[fkName] = true;
-                                        compositeFKs.push(new ReferenceColumn(this, col, fk));
+                                        compositeFKs.push(new ReferenceColumn(this, null, {"foreignKey":fk}));
                                     }
                                 }
                             }
@@ -532,18 +577,8 @@ var ERMrest = (function(module) {
             // can delete if all are true
             // 1) table is not non-deletable
             // 2) user has write permission
-            // 3) table is not generated
-            // 4) table is not immutable
-            // 5) not all visible columns in the table are generated/immutable
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isNonDeletable && !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
-
-                if (this._canDelete) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.EDIT) !== false);
-                    });
-                    this._canDelete = !allColumnsDisabled;
-                }
+                this._canDelete = !this._table._isNonDeletable && this._checkPermissions("content_write_user");
             }
             return this._canDelete;
         },
@@ -729,8 +764,11 @@ var ERMrest = (function(module) {
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          *
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or {@link ERMrest.InvalidInputError} if `limit` is invalid, or
+         * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
+         * 
+         * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
+         * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
+         * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
          * other errors TBD (TODO document other errors here).
          */
         read: function(limit) {
@@ -749,66 +787,121 @@ var ERMrest = (function(module) {
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-                var uri = this._location.compactUri;
+                var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
+                    _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
+                    sortMap = {}, // maps an alias to PseudoColumn, used for sorting
+                    sortObject,  // the sort that will be accessible by this._location.sortObject
+                    sortCols,
+                    col, i, j, k;
 
-                var sortObject, col;
-
-                // if no sorting provided, use schema defined sort if that's present
-                // If neither one present, use shortestkey
-                var addkey = true;
-                if (!this._location.sortObject || (this._location.sortObject.length === 0)) {
-                    if (this.display._rowOrder) {
-                        this._location.sortObject = this.display._rowOrder;
-                        addkey = true;
-                    } else {
-                        // use shortest key as sort
-                        sortObject = [];
-                        for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                            col = this._shortestKey[sk].name;
-                            sortObject.push({"column":col, "descending":false});
-                        }
-                        this._location.sortObject = sortObject; // this will update location.sort and all the uri and path
-                        addkey = false;
-                    }
-
-                }
-
-                // ermrest requires key columns to be in sort param
-                // add them if they are missing
-                if (addkey) {
-                    var sortCols = this._location.sortObject.map(function(sort) {
-                        return sort.column;});
+                /** Check the sort object. Does not change the `this._location` object.
+                 *   - Throws an error if the column doesn't exist or is not sortable.
+                 *   - maps the sorting to its sort columns.
+                 *       - for columns it's straighforward and uses the actual column name.
+                 *       - for PseudoColumns we need
+                 *           - A new alias: F# where the # is a positive integer.
+                 *           - The sort column name must be the "foreignkey_alias:column_name". 
+                 *
+                 * Assumption: there is no column/alias with `F#` name where # is a positive integer.
+                 * */
+                if (hasSort) {
                     sortObject = this._location.sortObject;
-                    for (var i = 0; i < this._shortestKey.length; i++) { // all the key columns
+
+                    var foreignKeys = this._table.foreignKeys,
+                        colName,
+                        fkIndex;
+
+                    for (i = 0, k = 1; i < sortObject.length; i++) {
+                        
+                        // find the column in ReferenceColumns
+                        col = -1;
+                        for (j = 0; j < this.columns.length; j++) {
+                            if (this.columns[j].name == sortObject[i].column) {
+                                col = this.columns[j];
+                                break;
+                            }
+                        }
+
+                        // column is either invalid or not in visible columns
+                        if (col === -1 ) {
+                            col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
+                            sortCols = col._getSortColumns(this._context);
+                        } 
+                        // column is in visible columns and sortable
+                        else if (col.sortable) {
+                            sortCols = col._sortColumns;
+                        }
+
+                        // column is not sortable
+                        if (typeof sortCols === 'undefined') {
+                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");    
+                        }
+
+                        // use the sort columns instead of the actual column.
+                        for (j = 0; j < sortCols.length; j++) {
+                            if (col.isPseudo && col._isForeignKey) {
+                                fkIndex = foreignKeys.all().indexOf(col.foreignKey);
+                                colName = "F" + (foreignKeys.length() + k++);
+                                sortMap[colName] = ["F" + (fkIndex+1) , module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
+                            } else {
+                                colName = sortCols[j].name;
+                            }
+
+                            _modifiedSortObject.push({
+                                "column": colName,
+                                "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
+                            });
+                         }
+                    }
+                }
+                // use row-order if sort was not provided
+                else if (this.display._rowOrder){
+                    sortObject = this.display._rowOrder;
+                }
+               
+                // ermrest requires key columns to be in sort param for paging
+                if (typeof sortObject !== 'undefined') {
+                    sortCols = sortObject.map( function(sort) {return sort.column;});
+                    for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
                         col = this._shortestKey[i].name;
                         // add if key col is not in the sortby list
-                        if (!sortCols.includes(col)) {
+                        if (sortCols.indexOf(col) === -1) {
                             sortObject.push({"column": col, "descending":false}); // add key to sort
+                            _modifiedSortObject.push({"column": col, "descending":false});
                         }
                     }
-                    this._location.sortObject = sortObject;
+                } else { // no sort provieded: use shortest key for sort
+                    sortObject = [];
+                    for (var sk = 0; sk < this._shortestKey.length; sk++) {
+                        col = this._shortestKey[sk].name;
+                        sortObject.push({"column":col, "descending":false});
+                    }
                 }
 
-                /*
-                * Change api to attributegroup for retrieving the foreign key data
-                * This will just affect the http request and not this._location
-                *
-                * NOTE:
-                * This piece of code is dependent on the same assumptions as the current parser, which are:
-                *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
-                *   2. Filter comes before the link syntax.
-                *   3. There is no trailing `/` in uri (as it will break the ermrest too).
-                */
+                // this will update location.sort and all the uri and path
+                this._location.sortObject = sortObject;
+
+                var uri = this._location.compactUri; // used for the http request
+
+                /** Change api to attributegroup for retrieving the foreign key data
+                 * This will just affect the http request and not this._location
+                 *
+                 * NOTE:
+                 * This piece of code is dependent on the same assumptions as the current parser, which are:
+                 *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
+                 *   2. There is no column with `M` and `F#` (where # is a positive integer) name.
+                 *   3. Filter comes before the link syntax.
+                 *   4. There is no trailing `/` in uri (as it will break the ermrest too).
+                 * */
                 if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.compactPath,
-                        parts,
                         tableIndex = 0,
                         fkList = "",
-                        linking,
                         sortColumn,
-                        keys,
-                        k;
-
+                        addedCols,
+                        linking,
+                        parts;
+                        
                     // add M alias to current table
                     if (this._location.searchFilter) { // remove search filter
                         compactPath = compactPath.replace("/" + this._location.searchFilter, "");
@@ -836,32 +929,47 @@ var ERMrest = (function(module) {
                         // F2:array(F2:*),F1:array(F1:*)
                         fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
                     }
+                    
+                    // add sort columns (it will include the key)
+                    if (hasSort) {
+                        sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
+                    } else {
+                        sortCols = sortObject.map(function(sort) {return sort.column;});
+                    }
 
+                    addedCols = {};
+                    for(k = 0; k < sortCols.length; k++) {
+                        if (sortCols[k] in sortMap) {
+                            // sort column has been created via PseudoColumn, so we should use a new alias
+                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]) + ":=" + sortMap[sortCols[k]];
+                        } else {
+                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
+                        }
 
-                    // add keys
-                    keys = this._shortestKey.map(function(col){
-                        return col.name;
-                    });
-
-                    // add sort columns
-                    for(k = 0; k < this._location.sortObject.length; k++) {
-                        sortColumn = this._location.sortObject[k];
-                        if ("column" in sortColumn && keys.indexOf(sortColumn.column) === -1) {
-                            keys.push(sortColumn.column);
+                        // don't add duplicate columns
+                        if (!(sortColumn in addedCols)) {
+                            addedCols[sortColumn] = 1;
                         }
                     }
 
-                    uri += keys.join(",") + ";M:=array(M:*)," + fkList;
+                    uri += Object.keys(addedCols).join(",") + ";M:=array(M:*)," + fkList;
                 }
 
                 // insert @sort()
-                if (this._location.sort)
+                if (hasSort) {
+                    // if sort is modified, we should use the modified sort Object for uri,
+                    // and the actual sort object for this._location.sortObject
+                    this._location.sortObject = _modifiedSortObject; // this will change the this._location.sort
                     uri = uri + this._location.sort;
-
+                    this._location.sortObject = sortObject;
+                } else if (this._location.sort) {
+                    uri = uri + this._location.sort;
+                }
+                
                 // insert paging
-                if (this._location.paging)
+                if (this._location.paging) {
                     uri = uri + this._location.paging;
-
+                }
 
                 // add limit
                 uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
@@ -1211,11 +1319,17 @@ var ERMrest = (function(module) {
                 for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
+                    // make sure that this fkr is not from an alternative table to self
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined && 
+                        fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
+                        continue;
+                    }
+
                     newRef = _referenceCopy(this);
                     delete newRef._context; // NOTE: related reference is not contextualized
                     delete newRef._related;
                     delete newRef._referenceColumns;
-                    delete newRef._derivedAssociationRef;
+                    delete newRef.derivedAssociationReference;
 
                     // delete permissions
                     delete newRef._canCreate;
@@ -1224,6 +1338,7 @@ var ERMrest = (function(module) {
                     delete newRef._canDelete;
 
                     newRef.origFKR = fkr; // it will be used to trace back the reference
+                    newRef.origColumnName = module._generatePseudoColumnName(fkr.constraint_names[0].join("_"), fkr._table);
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -1238,24 +1353,33 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._displayname = otherFK.to_name ? otherFK.to_name : otherFK.colset.columns[0].table.displayname;
+                        if (otherFK.to_name) {
+                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name};
+                        } else {
+                            newRef._displayname = otherFK.colset.columns[0].table.displayname;
+                        }
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                         newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
-                        // will be used in entry contexts
-                        newRef._derivedAssociationRef = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
-                        newRef._derivedAssociationRef.session = this._session;
-                        newRef._derivedAssociationRef.origFKR = newRef.origFKR;
-                        newRef._derivedAssociationRef._secondFKR = otherFK;
+                        // will be used to determine whether this related reference is derived from association relation or not
+                        newRef.derivedAssociationReference = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                        newRef.derivedAssociationReference.session = this._session;
+                        newRef.derivedAssociationReference.origFKR = newRef.origFKR;
+                        newRef.derivedAssociationReference._secondFKR = otherFK;
 
                     } else { // Simple inbound Table
                         newRef._table = fkrTable;
                         newRef._shortestKey = newRef._table.shortestKey;
 
-                        newRef._displayname = fkr.from_name ? fkr.from_name : newRef._table.displayname;
+                        if (fkr.from_name) {
+                            newRef._displayname = {"isHTML": false, "value": fkr.from_name};
+                        } else {
+                            newRef._displayname = newRef._table.displayname;
+                        }
+
                         newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
 
                         // additional values for sorting related references
@@ -1269,8 +1393,8 @@ var ERMrest = (function(module) {
                 if (notSorted && this._related.length !== 0) {
                     return this._related.sort(function (a, b) {
                         // displayname
-                        if (a._displayname != b._displayname) {
-                            return a._displayname.localeCompare(b._displayname);
+                        if (a._displayname.value != b._displayname.value) {
+                            return a._displayname.value.localeCompare(b._displayname.value);
                         }
 
                         // columns
@@ -1334,7 +1458,7 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this._derivedAssociationRef;
+            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1421,14 +1545,7 @@ var ERMrest = (function(module) {
         },
 
         _contextualize: function(context) {
-            var source;
-
-            // if this is a related association table and context is edit, contextualize based on the association table.
-            if (this._reference._derivedAssociationRef && module._isEntryContext(context)) {
-                source = this._reference._derivedAssociationRef;
-            } else {
-                source = this._reference;
-            }
+            var source = this._reference;
 
             var newRef = _referenceCopy(source);
             delete newRef._related;
@@ -1618,7 +1735,7 @@ var ERMrest = (function(module) {
          * this._linkedData[i] = {`s:constraintName`: data}
          * That is for retrieving data for a foreign key, you should do the following:
          *
-         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join(":")];
+         * var fkData = this._linkedData[i][foreignKey.constraint_names[0].join("_")];
          */
         this._linkedData = [];
 
@@ -1635,7 +1752,7 @@ var ERMrest = (function(module) {
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._linkedData[i][fks[j].constraint_names[0].join(":")] = data[i]["F"+(j+1)][0];
+                        this._linkedData[i][fks[j].constraint_names[0].join("_")] = data[i]["F"+(j+1)][0];
                     }
                 }
             }
@@ -1650,7 +1767,7 @@ var ERMrest = (function(module) {
                 for (i = 0; i < data.length; i++) {
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j].constraint_names[0].join(":");
+                        fkName = fks[j].constraint_names[0].join("_");
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -1690,7 +1807,7 @@ var ERMrest = (function(module) {
          * ```
          * for (var i=0, len=page.tuples.length; i<len; i++) {
          *   var tuple = page.tuples[i];
-         *   console.log("Tuple:", tuple.displayname, "has values:", tuple.values);
+         *   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
          * }
          * ```
          * @type {ERMrest.Tuple[]}
@@ -1731,13 +1848,39 @@ var ERMrest = (function(module) {
             if (this._hasPrevious) {
                 var newReference = _referenceCopy(this._ref);
 
+                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
+
                 // update paging by creating a new location
                 var paging = {};
                 paging.before = true;
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var col = newReference._location.sortObject[i].column;
-                    paging.row.push(this._data[0][col]); // first row
+                    var colName = newReference._location.sortObject[i].column;
+                    
+                    // first row
+                    var data = this._data[0][colName];
+                    if (typeof data !== 'undefined') { 
+                        // normal column
+                        paging.row.push(data); 
+                    } else {
+                        // pseudo column
+                        var pseudoCol, j;
+                        for (j = 0; j < this._ref.columns.length; j++) {
+                            if (this._ref.columns[j].name == colName) {
+                                pseudoCol = this._ref.columns[j];
+                                break;
+                            }
+                        }
+                        
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            if (pseudoCol._isForeignKey) {
+                                data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = this._data[0][pseudoCol._sortColumns[j].name];
+                            }
+                            paging.row.push(data);
+                        }
+                    }
                 }
 
                 newReference._location = this._ref._location._clone();
@@ -1773,13 +1916,39 @@ var ERMrest = (function(module) {
             if (this._hasNext) {
                 var newReference = _referenceCopy(this._ref);
 
+                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
+
                 // update paging by creating a new location
                 var paging = {};
                 paging.before = false;
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var col = newReference._location.sortObject[i].column;
-                    paging.row.push(this._data[this._data.length-1][col]); // last row
+                    var colName = newReference._location.sortObject[i].column;
+
+                    // last row
+                    var data = this._data[this._data.length-1][colName];
+                    if (typeof data !== 'undefined') { 
+                        // normal column
+                        paging.row.push(data); 
+                    } else {
+                        // pseudo column
+                        var pseudoCol, j;
+                        for (j = 0; j < this._ref.columns.length; j++) {
+                            if (this._ref.columns[j].name == colName) {
+                                pseudoCol = this._ref.columns[j];
+                                break;
+                            }
+                        }
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            if (pseudoCol._isForeignKey) {
+                                data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
+                            }
+                            paging.row.push(data);
+                        }
+                    }
+
                 }
 
                 newReference._location = this._ref._location._clone();
@@ -2056,7 +2225,8 @@ var ERMrest = (function(module) {
                 this._values = [];
                 this._isHTML = [];
 
-                var column, presenation;
+                var column, presentation;
+                var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {
@@ -2065,40 +2235,45 @@ var ERMrest = (function(module) {
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            presenation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
-                            this._values[i] = presenation.value;
-                            this._isHTML[i] = presenation.isHTML;
+                            if (column._isKey) {
+                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
+                            } else {
+                                presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            }
+                            this._values[i] = presentation.value;
+                            this._isHTML[i] = presentation.isHTML;
                         } else {
                             this._values[i] = this._data[column.name];
                             this._isHTML[i] = false;
                         }
                     }
                 } else {
-
-                    var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
-
                     /*
                      * use this variable to avoid using computed formatted values in other columns while templating
                      */
-                    var formattedValues = [];
+                    var values = [];
 
                     // format values according to column display annotation
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            formattedValues[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            if (column._isKey) {
+                                values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
+                            } else {
+                                values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            }
                         } else {
-                            formattedValues[i] = column.formatPresentation(keyValues[column.name], { keyValues : keyValues , columns: this._pageRef.columns, context: this._pageRef._context });
+                            values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
 
                             if (column.type.name === "gene_sequence") {
-                                formattedValues[i].isHTML = true;
+                                values[i].isHTML = true;
                             }
                         }
                     }
 
                     var self = this;
 
-                    formattedValues.forEach(function(fv) {
+                    values.forEach(function(fv) {
                         self._values.push(fv.value);
                         self._isHTML.push(fv.isHTML);
                     });
@@ -2138,13 +2313,13 @@ var ERMrest = (function(module) {
          *
          * Usage:
          * ```
-         * console.log("This tuple has a displayable name of", tuple.displayname);
+         * console.log("This tuple has a displayable name of ", tuple.displayname.value);
          * ```
          * @type {string}
          */
         get displayname() {
             if (!this._displayname) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
+                this._displayname = { "value": module._generateRowName(this._pageRef._table, this._pageRef._context, this._data), "isHTML": true};
             }
             return this._displayname;
         },
@@ -2163,8 +2338,8 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef._derivedAssociationRef) {
-                var associationRef = this._pageRef._derivedAssociationRef,
+            if (this._pageRef.derivedAssociationReference) {
+                var associationRef = this._pageRef.derivedAssociationReference,
                     encoder = module._fixedEncodeURIComponent,
                     newFilter = [],
                     missingData = false;
@@ -2218,16 +2393,18 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Reference} reference column's reference
-     * @param {ERMrest.Column} column The column that this reference-column will be created based on.
-     * @param {ERMrest.ForeginKeyRef} foreignKeyRef The foreignKeyRef that represents the PseudoColumn (null if it's not a PseudoColumn)
+     * @param {?ERMrest.Column} base The column that this reference-column will be created based on.
+     * @param {?Object} kwargs if it's not empty then the column is being created based on foreignkey or key.
      * @desc
      * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
      */
-    function ReferenceColumn(reference, column, foreignKey) {
+    function ReferenceColumn(reference, base, kwargs) {
 
-        this._baseReference = reference; //TODO might need to change it
+        this._baseReference = reference;
 
-        this._base = column;
+        this._context = reference._context;
+
+        this._base = base;
 
         /**
          * @type {boolean}
@@ -2235,31 +2412,59 @@ var ERMrest = (function(module) {
          */
         this.isPseudo = false;
 
-        if (typeof foreignKey != 'undefined') {
-            this.isPseudo = true;
+        if (typeof kwargs != 'undefined') {
+            if (kwargs.foreignKey !== undefined) {
 
-            // create ermrest url using the location
-            var table = foreignKey.key.table;
-            var ermrestURI = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
-                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
-            ].join("/");
+                this.isPseudo = true;
 
-            /**
-             * @type {ERMrest.Reference}
-             * @desc The reference object that represents the table of this PseudoColumn
-             */
-            this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
-            this.reference.session = reference._session;
+                // create ermrest url using the location
+                var table = kwargs.foreignKey.key.table;
+                var ermrestURI = [
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
+                ].join("/");
 
-            /**
-             * @type {ERMrest.ForeignKeyRef}
-             * @desc The Foreign key object that this PseudoColumn is created based on
-             */
-            this.foreignKey = foreignKey;
+                /**
+                 * @type {ERMrest.Reference}
+                 * @desc The reference object that represents the table of this PseudoColumn
+                 */
+                this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+                this.reference.session = reference._session;
 
-            this._constraintName = foreignKey.constraint_names[0].join(":");
+                /**
+                 * @type {ERMrest.ForeignKeyRef}
+                 * @desc The Foreign key object that this PseudoColumn is created based on
+                 */
+                this.foreignKey = kwargs.foreignKey;
+
+                this._constraintName = this.foreignKey.constraint_names[0].join("_");
+
+                /**
+                 * @private
+                 * @type {boolean}
+                 * @desc Indicates that this ReferenceColumn is a Foreign key.
+                 */
+                this._isForeignKey = true;
+            } else if (kwargs.key !== undefined) {
+
+                this.isPseudo = true;
+
+                /**
+                 * @type {ERMrest.ForeignKeyRef}
+                 * @desc The Foreign key object that this PseudoColumn is created based on
+                 */
+                this.key = kwargs.key;
+
+                this._constraintName = kwargs.key.constraint_names[0].join("_");
+
+                /**
+                 * @private
+                 * @type {boolean}
+                 * @desc Indicates that this ReferenceColumn is a key.
+                 */
+                this._isKey = true;
+            }
         }
     }
     ReferenceColumn.prototype = {
@@ -2268,7 +2473,16 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Table}
          */
         get table () {
-            return this.isPseudo ? this.foreignKey.key.table : this._base.table;
+            if (this._table === undefined) {
+                if (!this.isPseudo && this._hasBase) {
+                    this._table = this._base.table;
+                } else if (this._isForeignKey) {
+                    this._table = this.foreignKey.key.table;
+                } else if (this._isKey) {
+                    this._table = this.key.table;
+                }
+            }
+            return this._table;
         },
 
         /**
@@ -2280,12 +2494,7 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._name = this._base.name;
                 } else {
-                    // make sure that this name is unique.
-                    var i = 0;
-                    while(this.foreignKey._table.columns.has(this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: ""))) {
-                        i++;
-                    }
-                    this._name = this.foreignKey.constraint_names[0].join(":") + ((i!==0) ? i: "");
+                    this._name = module._generatePseudoColumnName(this._constraintName, this._isForeignKey ? this.foreignKey._table : this.table);
                 }
             }
             return this._name;
@@ -2299,21 +2508,25 @@ var ERMrest = (function(module) {
             if (this._displayname === undefined) {
                 if (!this.isPseudo) {
                     this._displayname = this._base.displayname;
-                } else {
-                    var foreignKey = this.foreignKey;
-
+                } else if (this._isForeignKey){
+                    var foreignKey = this.foreignKey, value, isHTML;
                     if (foreignKey.to_name !== "") {
-                        this._displayname = foreignKey.to_name;
-
+                        value = foreignKey.to_name;
+                        isHTML = false;
                     } else if (foreignKey.simple) {
-                        this._displayname = this._base.displayname;
+                        value = this._base.displayname.value;
+                        isHTML = this._base.displayname.isHTML;
 
                         if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
-                            this._displayname += " ("  + foreignKey.key.table.displayname + ")";
+                            value += " ("  + foreignKey.key.table.displayname.value + ")";
+                            if (!isHTML) {
+                                isHTML = foreignKey.key.table.displayname.isHTML;
+                            }
                         }
 
                     } else {
-                        this._displayname = foreignKey.key.table.displayname;
+                        value = foreignKey.key.table.displayname.value;
+                        isHTML = foreignKey.key.table.displayname.isHTML;
 
                         // disambiguate
                         var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
@@ -2321,14 +2534,35 @@ var ERMrest = (function(module) {
                         }).length;
 
                         if (tableCount > 1) {
-                            this._displayname += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                             value += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
                                 return a.name.localeCompare(b.name);
                             }).map(function(col) {
-                                return col.displayname;
+                                return col.displayname.value;
                             }).join(", ")  + ")";
-                        }
 
+                            if (!isHTML) {
+                                isHTML = foreignKey.colset.columns.some(function (col) {
+                                    return col.displayname.isHTML;
+                                });
+                            }
+                        }
                     }
+                    this._displayname = {"value": value, "isHTML": isHTML};
+
+                } else if (this._isKey) {
+                    this._displayname = module._determineDisplayName(this.key, false);
+
+                    if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
+                        this._displayname = {
+                            "value": this.key.colset.columns.reduce(function(prev, curr, index) {
+                                return prev + (index>0 ? " " : "") + curr.displayname.value;
+                            }, ""),
+                            "isHTML": this.key.colset.columns.some(function (col) {
+                                return col.displayname.isHTML;
+                            })
+                        };
+                    }
+
                 }
             }
             return this._displayname;
@@ -2353,7 +2587,8 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._nullok = this._base.nullok;
                 } else {
-                    this._nullok = !this.foreignKey.colset.columns.some(function (col) {
+                    var colset = this._isForeignKey ? this.foreignKey.colset : this.key.colset;
+                    this._nullok = !colset.columns.some(function (col) {
                         return !col.nullok;
                     });
                 }
@@ -2369,7 +2604,7 @@ var ERMrest = (function(module) {
              if (this._default === undefined) {
                 if (!this.isPseudo) {
                     this._default = this._base.default;
-                } else {
+                } else if (this._isForeignKey) {
                     var fkColumns = this.foreignKey.colset.columns,
                         keyColumns = this.foreignKey.key.colset.columns,
                         mapping = this.foreignKey.mapping,
@@ -2413,7 +2648,17 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get comment() {
-            return (this.isPseudo && !this.foreignKey.simple) ? this.foreignKey.comment : this._base.comment;
+            if (this._comment === undefined) {
+                if (this._hasBase) {
+                    this._comment = this._base.comment;
+                } else if (this._isForeignKey) {
+                    this._comment = this.foreignKey.comment;
+                } else if (this._isKey) {
+                    this._comment = this.key.comment;
+                }
+            }
+            return this._comment;
+
         },
 
         /**
@@ -2426,9 +2671,74 @@ var ERMrest = (function(module) {
          */
         get inputDisabled() {
             if (this._inputDisabled === undefined) {
-                this._inputDisabled = this._determineInputDisabled(this._baseReference._context);
+                this._inputDisabled = this._determineInputDisabled(this._context);
             }
             return this._inputDisabled;
+        },
+
+        /**
+         * Heuristics are as follows:
+         * 
+         * (first applicable rule from top to bottom)
+         * 
+         * - column_order = false -> disable sort.
+         * 
+         * - PseudoColumn
+         *      - column_order defined -> use it.
+         *      - Foreign key:
+         *          - table has row_order -> use it.
+         *          - simple fk -> use the column's
+         *      - Key:
+         *          - simple key -> use the column's 
+         *      - disable it
+         * - Column:
+         *      - column_order defined -> use it.
+         *      - use column actual value.
+         * 
+         * @type {boolean}
+         */
+        get sortable() {
+            if (this._sortable === undefined) {
+                this._determineSortable();
+            }   
+            return this._sortable; 
+        },
+
+        /**
+         * @private
+         * @desc A list of columns that will be used for sorting
+         * @type {Array}
+         */
+        get _sortColumns() {
+            if (this._sortColumns_cached === undefined) {
+                this._determineSortable();
+            }
+            return this._sortColumns_cached;
+        },
+
+        /**
+         * @private
+         * @desc
+         * An object which contains column display properties
+         * The properties are:
+         * 
+         *  - `columnOrder`: list of columns that this column should be sorted based on
+         *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
+         *  - `markdownPattern`: string|undefined
+         * 
+         * @type {Object}
+         */
+        get _display() {
+            if (this._display_cached === undefined) {
+                if (!this.isPseudo) {
+                    this._display_cached = this._base.getDisplay(this._context);
+                } else if (this._isForeignKey) {
+                    this._display_cached = this.foreignKey.getDisplay(this._context);
+                } else if (this._isKey) {
+                    this._display_cached = this.key.getDisplay(this._context);
+                }
+            }
+            return this._display_cached;
         },
 
         /**
@@ -2437,13 +2747,16 @@ var ERMrest = (function(module) {
          * @returns {string} The formatted value.
          */
         formatvalue: function(data, options) {
-            return this._base.formatvalue(data, options);
+            if (this._hasBase) {
+                return this._base.formatvalue(data, options);
+            }
+            return data.toString();
         },
 
         /**
          * Formats the presentation value corresponding to this reference-column definition.
-         * @param {String} data The 'formatted' data value.
-         * @param {Object} options The key value pair of possible options with all formatted values in '.values' key
+         * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {Object} options includes `context` and `formattedValues`
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         formatPresentation: function(data, options) {
@@ -2451,70 +2764,142 @@ var ERMrest = (function(module) {
                 return this._base.formatPresentation(data, options);
             }
 
+            var context = options ? options.context : undefined;
+            var nullValue = {isHTML: false, value: this._getNullValue(context)};
+
             // if data is empty
             if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-                return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
+                return nullValue;
             }
 
-            var shortestKey = this.table.shortestKey, // the shortest key of the table
-                fkKey = this.foreignKey.key.colset.columns, // the key that creates this PseudoColumn
-                key, // the key that is going to be used in href
-                caption, value, i;
+            // used to create key pairs in uri
+            var createKeyPair = function (cols) {
+                 var keyPair = "", col;
+                for (i = 0; i < cols.length; i++) {
+                    col = cols[i].name;
+                    keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                    if (i != cols.length - 1) {
+                        keyPair +="&";
+                    }
+                }
+                return keyPair;
+            };
 
             // check if we have data for the given columns
-            var hasData = function (cols) {
-                for (var i = 0; i < cols.length; i++) {
-                    if (data[cols[i].name] === undefined ||  data[cols[i].name] === null) {
+            var hasData = function (kCols) {
+                for (var i = 0; i < kCols.length; i++) {
+                    if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
                         return false;
                     }
                 }
                 return true;
             };
 
-            // if any of fk key columns don't have data, this link is not valid.
-            if (!hasData(fkKey)) {
-                return {isHTML: false, value: this._getNullValue(options ? options.context : undefined)};
-            }
+            var value, caption, i;
 
-            // use the shortest key if it has data (for shorter url).
-            key = hasData(shortestKey) ? shortestKey: fkKey;
+            if (this._isKey) {
+                var cols = this.key.colset.columns,
+                    addLink = true;
 
-            // use row name as the caption
-            caption = module._generateRowName(this.table, options ? options.context : undefined, data);
-
-            // use fk key for displayname: "col_1:col_2:col_3"
-            if (caption.trim() === '') {
-
-                var keyValues = [];
-                for (i = 0; i < fkKey.length; i++) {
-                    keyValues.push(fkKey[i].formatvalue(data[fkKey[i].name], {context: options ? options.context : undefined}));
+                // if any of key columns don't have data, this link is not valid.
+                if (!hasData(cols)) {
+                    return nullValue;
                 }
-                caption = keyValues.join(":");
-            }
 
-            // if caption has a link, or context is EDIT: don't add the link.
-            if (caption.match(/<a/) || (options && module._isEntryContext(options.context)) ) {
-                value = caption;
-            }
-            // create the link using reference.
-            else {
-                // create a url that points to the current ReferenceColumn
-                var keyPair = "", col;
-                for (i = 0; i < key.length; i++) {
-                    col = key[i].name;
-                    keyPair +=  col + "=" + module._fixedEncodeURIComponent(data[col]);
-                    if (i != key.length - 1) {
-                        keyPair +="&";
+                // use the markdown_pattern that is defiend in key-display annotation
+                var display = this.key.getDisplay(context);
+                if (display.isMarkdownPattern) {
+                    caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
+                    caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+                    addLink = false;
+                } else {
+                    var values = [];
+
+                    // create the caption
+                    var presentation;
+                    for (i = 0; i < cols.length; i++) {
+                        try {
+                            presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                            values.push(presentation.value);
+                            // if one of the values isHTMl, should not add link
+                            addLink = addLink ? !presentation.isHTML : false;
+                        } catch (exception) {
+                            // the value doesn't exist
+                            return nullValue;
+                        }
+                    }
+                    caption = values.join(" ");
+
+                    // if the caption is empty we cannot add any link to that.
+                    if (caption.trim() === '') {
+                        return nullValue;
                     }
                 }
-                var url = [this.reference.location.compactUri, keyPair].join("/");
 
-                // create a reference to just this PseudoColumn to use for url
-                var ref = new Reference(module._parse(url), this.table.schema.catalog);
+                if (addLink) {
+                    var table = this.key.table;
+                    var refURI = [
+                        table.schema.catalog.server.uri ,"catalog" ,
+                        module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                        [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                        createKeyPair(cols)
+                    ].join("/");
+                    var keyRef = new Reference(module._parse(refURI), table.schema.catalog);
+                    value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+                } else {
+                    value = caption;
+                }
 
-                value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+                return {isHTML: true, value: value};
             }
+            // find value for foreign key:
+            else if (this._isForeignKey) {
+                var fkey = this.foreignKey.key; // the key that creates this PseudoColumn
 
+                // if any of key columns don't have data, this link is not valid.
+                if (!hasData(fkey.colset.columns)) {
+                    return nullValue;
+                }
+
+                // use row name as the caption
+                caption = module._generateRowName(this.table, context, data);
+
+                // use key for displayname: "col_1:col_2:col_3"
+                if (caption.trim() === '') {
+                    var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
+                        keyCols = [],
+                        col;
+
+                    for (i = 0; i < fkey.colset.columns.length; i++) {
+                        col = fkey.colset.columns[i];
+                        keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
+                    }
+                    caption = keyCols.join(":");
+
+                    if (caption.trim() === '') {
+                        return nullValue;
+                    }
+                }
+
+                // if caption has a link, or context is EDIT: don't add the link.
+                if (caption.match(/<a/) || module._isEntryContext(context) ) {
+                    value = caption;
+                }
+                // create the link using reference.
+                else {
+
+                    // use the shortest key if it has data (for shorter url).
+                    var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fkey.colset.columns;
+
+                    // create a url that points to the current ReferenceColumn
+                    var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
+
+                    // create a reference to just this PseudoColumn to use for url
+                    var ref = new Reference(module._parse(uri), this.table.schema.catalog);
+
+                    value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+                }
+            }
             return {isHTML: true, value: value};
         },
 
@@ -2531,52 +2916,116 @@ var ERMrest = (function(module) {
         },
 
         _determineInputDisabled: function(context) {
-            if (this.isPseudo && !this.foreignKey.simple) {
-                var cols = this.foreignKey.colset.columns,
-                    generated, i;
+            if (this._hasBase) {
+                return this._base.getInputDisabled(context);
+            }
 
-                if (context == module._contexts.CREATE) {
-                    // if one is not generated
-                    for (i = 0; i < cols.length; i++) {
-                        if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
-                            return false;
-                        }
+            var cols, generated, i;
+
+            if (this._isKey) {
+                cols = this.key.colset.columns;
+            } else {
+                cols = this.foreignKey.colset.columns;
+            }
+
+            if (context == module._contexts.CREATE) {
+                // if one is not generated
+                for (i = 0; i < cols.length; i++) {
+                    if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
+                        return false;
                     }
-
-                    // if all GENERATED
-                    return {
-                        message: "Automatically generated"
-                    };
-
-                } else if (context == module._contexts.EDIT) {
-                    for (i = 0; i < cols.length; i++) {
-
-                        // if one is IMMUTABLE
-                        if (cols[i].annotations.contains(module._annotations.IMMUTABLE)) {
-                            return true;
-                        }
-
-                        // if one is not GENERATED
-                        if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
-                            return false;
-                        }
-                    }
-
-                    // if all GENERATED
-                    return true;
                 }
 
+                // if all GENERATED
+                return {
+                    message: "Automatically generated"
+                };
+
+            } else if (context == module._contexts.EDIT) {
+                for (i = 0; i < cols.length; i++) {
+
+                    // if one is IMMUTABLE
+                    if (cols[i].annotations.contains(module._annotations.IMMUTABLE)) {
+                        return true;
+                    }
+
+                    // if one is not GENERATED
+                    if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
+                        return false;
+                    }
+                }
+                // if all GENERATED
                 return true;
             }
 
-            // use column's
-            return this._base.getInputDisabled(context);
+            // other contexts
+            return true;
         },
 
-        // TODO can change the function (context)
         _getNullValue: function (context) {
-            return this._base._getNullValue(context);
+            if (this._hasBase) {
+                return this._base._getNullValue(context);
+            }
+            return module._getNullValue(this.table, context, [this.table, this.table.schema]);
         },
+        
+        _determineSortable: function () {
+
+            var display = this._display,
+                useColumn = !this.isPseudo,
+                baseCol = this._base;
+
+            this._sortColumns_cached = [];
+            this._sortable = false;
+
+            // disable the sort
+            if (display !== undefined && display.columnOrder === false) return;
+            
+            if (this.isPseudo) {
+                // use the column_order
+                if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                    this._sortColumns_cached = display.columnOrder;
+                    this._sortable = true;
+                    return;
+                }
+                
+                if (this._isForeignKey) {
+                    if (this.reference.display._rowOrder !== undefined) {
+                        var rowOrder = this.reference.display._rowOrder;
+                        for (var i = 0; i < rowOrder.length; i++) {
+                            try{
+                                this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
+                            } catch(exception) {}
+                        }
+                        this._sortable = true;
+                    } else if (this.foreignKey.simple) {
+                        baseCol = this.foreignKey.mapping.get(this._base);
+                        useColumn = true;
+                    }
+                } else if (this._isKey) {
+                    if (this.key.simple) {
+                        baseCol = this.key.colset.columns[0];
+                        useColumn = true;
+                    }
+                }
+            }
+
+            // its an actual column or a simple key/foreign key
+            if (useColumn) {
+                // use the column column_order
+                this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined
+
+                if (typeof this._sortColumns_cached === 'undefined') {
+                    this._sortColumns_cached = [];
+                } else {
+                    this._sortable = true;
+                }
+            }
+        },
+
+        get _hasBase() {
+            return this._base !== null && this._base !== undefined;
+        }
 
     };
 

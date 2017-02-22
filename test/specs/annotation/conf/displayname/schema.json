@@ -1,5 +1,139 @@
 {
   "tables": {
+    "table_with_markdownname": {
+      "table_name": "table_with_markdownname",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "kind": "table",
+      "foreign_keys": [],
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "type": {
+            "typename": "serial4"
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_with_markdownname",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_Column name_"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "**column with markdown**",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "markdown": true
+              }
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "markdown_name": "**Table Name**",
+          "name": "Not used Table name"
+        }
+      }
+    },
+    "**table with markdown**": {
+      "table_name": "**table with markdown**",
+      "schema_name": "schema_with_underlinespace_without_titlecase",
+      "kind": "table",
+      "foreign_keys": [],
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "type": {
+            "typename": "serial4"
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_with_markdownname",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_Column name_"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "column_with_name",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Column Name"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "**column without markdown**",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "markdown": false
+              }
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "**Column Without Display Annotation**",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name_style": {
+            "markdown": true,
+            "title_case": true
+          }
+        }
+      }
+    },
     "table_with_name": {
       "comment": "domain",
       "kind": "table",
@@ -17,6 +151,18 @@
       "table_name": "table_with_name",
       "schema_name": "schema_with_underlinespace_without_titlecase",
       "column_definitions": [
+        {
+          "comment": null,
+          "name": "column_with_markdownname",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_Column name_"
+            }
+          }
+        },
         {
           "comment": null,
           "name": "column_with_name",
@@ -93,6 +239,18 @@
           "type": {
             "typename": "serial4"
           }
+        },
+        {
+          "comment": null,
+          "name": "column_with_markdownname",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_Column name_"
+            }
+          }
         }
       ],
       "annotations": {
@@ -110,6 +268,7 @@
       "keys": [
         {
           "comment": null,
+          "names": [["schema_with_underlinespace_without_titlecase", "table_underline_key_1"]],
           "annotations": {},
           "unique_columns": [
             "column_without_display_annotation"
@@ -197,6 +356,18 @@
             "typename": "timestamptz"
           },
           "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "column_with_markdownname",
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_Column name_"
+            }
+          }
         }
       ],
       "annotations": {}

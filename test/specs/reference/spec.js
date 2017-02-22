@@ -14,7 +14,9 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/11.delete.js",
         "/reference/tests/12.reference_values_edit.js",
         "/reference/tests/13.search.js",
-        "/reference/tests/14.outbound_fks.js"        
+        "/reference/tests/14.outbound_fks.js",
+        "/reference/tests/15.reference_column.js"        
+
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",

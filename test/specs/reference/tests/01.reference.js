@@ -4,10 +4,14 @@ exports.execute = function (options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
+            tableNameWithSlash = "table_w_slash",
             entityId = 9000,
             lowerLimit = 8999,
             upperLimit = 9010,
             originalTimeout;
+        
+        var entityWithSlash = baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaName + ":" + tableNameWithSlash;
 
         var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName;
@@ -15,6 +19,45 @@ exports.execute = function (options) {
         var singleEntityUri = baseUri + "/id=" + entityId;
 
         var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
+        beforeAll(function() {
+            options.ermRest.appLinkFn(appLinkFn);
+        });
 
         // Test Cases:
         describe("for creating an entity/entities,", function () {
@@ -105,7 +148,7 @@ exports.execute = function (options) {
             // Methods that are currently implemented
             it('reference should have methods properly defined.', function() {
                 expect(reference.uri).toBe(reference._location.uri);
-                expect(reference.displayname).toBe(reference._table.name);
+                expect(reference.displayname.value).toBe(reference._table.name);
                 expect(reference.table).toBe(reference._table);
                 expect(reference.canCreate).toBeDefined();
                 expect(reference.canUpdate).toBeDefined();
@@ -205,7 +248,6 @@ exports.execute = function (options) {
             it('values should return only the values of the tuple.', function() {
                 var values = tuple.values;
                 // based on order in reference_table.json
-                expect(values[0]).toBe(tuple._data.id);
                 expect(values[1]).toBe(tuple._data.name);
                 expect(values[2]).toBe(tuple._data.value.toString());
             });
@@ -263,7 +305,6 @@ exports.execute = function (options) {
                     var tuple = tuples[i];
                     var values = tuple.values;
                     // based on order in reference_table.json
-                    expect(values[0]).toBe(tuple._data.id);
                     expect(values[1]).toBe(tuple._data.name);
                     expect(values[2]).toBe(tuple._data.value.toString());
                 }
@@ -338,11 +379,64 @@ exports.execute = function (options) {
                     var tuple = tuples[i];
                     var values = tuple.values;
                     // based on order in reference_table.json
-                    expect(values[0]).toBe(tuple._data.id);
                     expect(values[1]).toBe(tuple._data.name);
                     expect(values[2]).toBe(tuple._data.value.toString());
                 }
             });
         });
+
+        // TODO tset this
+        if (!process.env.TRAVIS) {
+            describe("for tables with slash(`/`) in their name,", function () {
+                var reference, page, tuple;
+                var limit = 2;
+
+                it('resolve should return a Reference object that is defined.', function(done) {
+                    options.ermRest.resolve(entityWithSlash, {cid: "test"}).then(function (response) {
+                        reference = response;
+                        reference.session = { attributes: [] };
+
+                        expect(reference).toEqual(jasmine.any(Object));
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                it('read should return a Page object that is defined.', function(done) {
+                    reference.read(limit).then(function (response) {
+                        page = response;
+
+                        expect(page).toEqual(jasmine.any(Object));
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                }); 
+
+                it('page should be properly defined based on constructor.', function() {
+                    expect(page._ref).toBe(reference);
+                    expect(page._data.length).toBe(limit);
+                });
+
+                it('tuples should return an Array of Tuple objects.', function() {
+                    tuple = page.tuples[0];
+                    expect(page._tuples).toBeDefined();
+                    expect(tuple._data).toBe(page._data[0]);
+                    expect(tuple._pageRef).toBe(reference);
+                });
+
+                it('values should return only the values of the tuple.', function() {
+                    var values = tuple.values;
+                    // based on order in reference_table.json
+                    expect(values[0]).toBe(tuple._data.id);
+                    expect(values[1]).toBe(tuple._data.col_1);
+                });
+            });
+        }
     });
 };
