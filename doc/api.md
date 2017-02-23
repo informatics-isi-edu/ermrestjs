@@ -2658,7 +2658,7 @@ Heuristics are as follows:
          - table has row_order -> use it.
          - simple fk -> use the column's
      - Key:
-         - simple key -> use the column's 
+         - simple key -> use the column's
      - disable it
 - Column:
      - column_order defined -> use it.
