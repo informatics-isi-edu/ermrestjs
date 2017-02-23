@@ -1090,11 +1090,10 @@ var ERMrest = (function(module) {
                 // The list of column names to use in the uri
                 columnProjections = Object.keys(tuples[0].data);
 
-                // always alias the shortest key in the uri
+                // always alias the set of column projections for the key data
                 for (var j = 0; j < columnProjections.length; j++) {
                     if (j !== 0) uri += ',';
-
-                    // need to alias the key in the uri
+                    // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
                 }
 
@@ -1103,7 +1102,7 @@ var ERMrest = (function(module) {
 
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // check if this column is part of the shortest key, alias the column name if it is
+                    // alias all the columns for the projection set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
