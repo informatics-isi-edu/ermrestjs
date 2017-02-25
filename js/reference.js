@@ -1114,13 +1114,7 @@ var ERMrest = (function(module) {
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                var config = {
-                    headers: {
-                        "If-Match": this._tuple.page._etag
-                    }
-                };
-
-                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                this._server._http.put(uri, submissionData).then(function updateReference(response) {
                     var etag = response.headers().etag;
                     var pageData = [],
                         page;
@@ -1164,89 +1158,8 @@ var ERMrest = (function(module) {
 
                     defer.resolve(page);
                 }, function error(response) {
-                    var status = response.status || response.statusCode;
-                    // If 412 Precondition Failed error, get current data
-                    if (status == 412) {
-                        var readReference = function readReference(ref) {
-                            ref.read(tuples.length).then(function getPage(page) {
-                                var currentData = page.tuples;
-                                var additionalData = {'oldData': allOldData, 'currentData': currentData, 'newData': allNewData};
-                                var error = module._responseToError(response, additionalData);
-
-                                // If current data is empty, then referenced rows
-                                // aren't in the DB. Raise 412 error.
-                                if (currentData.length === 0) {
-                                    return defer.reject(error);
-                                }
-                                // Compare current data with old data. If match, perform the update with new ETag. Otherwise, throw an error.
-                                var mismatchFound = false;
-
-                                for (var t = 0, len = page.tuples.length; t < len; t++) {
-                                    currentData.push(page.tuples[t]._data);
-                                }
-
-                                if (currentData.length !== allOldData.length) {
-                                    mismatchFound = true;
-                                }
-
-                                if (!mismatchFound) {
-                                    var oldAndCurrentDoNotMatch = function (key) {
-                                        return oldTuple[key] !== currentTuple[key];
-                                    };
-                                    for (var p = 0; p < allOldData.length; p++) {
-                                        var oldTuple = allOldData[p], currentTuple = currentData[p];
-                                        // If oldAndCurrentDoNotMatch is true, this
-                                        // loop breaks and the loop returns true.
-                                        mismatchFound = Object.keys(oldTuple).some(oldAndCurrentDoNotMatch);
-                                        if (mismatchFound) {
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (!mismatchFound) {
-                                    return ref.update(tuples);
-                                } else {
-                                    // If old data and current data don't match, it's possible that a user could have attempted this
-                                    // update operation previously, didn't receive a response (e.g. due to connection loss), and is attempting
-                                    // the update again now. In this case, if current data and new data match, then resolve this promise normally.
-                                    // Otherwise, if current and old don't match either, raise 412 error.
-
-                                    mismatchFound = false; // Reset mismatchFound flag
-                                    if (currentData.length !== allNewData.length) {
-                                        mismatchFound = true;
-                                    }
-                                    if (!mismatchFound) {
-                                        var newAndCurrentDoNotMatch = function(key) {
-                                            return newTuple[key] !== currentTuple[key];
-                                        };
-                                        for (var n = 0; n < allNewData.length; n++) {
-                                            var newTuple = allNewData[n];
-                                            // If newAndCurrentDoNotMatch is true, this
-                                            // loop breaks and the loop returns true.
-                                            mismatchFound = Object.keys(newTuple).some(newAndCurrentDoNotMatch);
-                                            if (mismatchFound) {
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    if (!mismatchFound) {
-                                        return defer.resolve();
-                                    }
-                                    // Old and current data don't match. Neither does current and new data. Raise 412 error.
-                                    return defer.reject(error);
-                                }
-                            }, function error(response) {
-                                // The read failed for some reason, retry the read.
-                                readReference(ref);
-                            });
-                        };
-                        readReference(self);
-                    } else {
-                        var error = module._responseToError(response);
-                        return defer.reject(error);
-                    }
+                    var error = module._responseToError(response);
+                    return defer.reject(error);
                 }).catch(function (error) {
                     return defer.reject(error);
                 });
@@ -1463,7 +1376,7 @@ var ERMrest = (function(module) {
                     fkr = visibleFKs[i];
 
                     // make sure that this fkr is not from an alternative table to self
-                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined && 
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
                         fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
