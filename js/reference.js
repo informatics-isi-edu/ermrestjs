@@ -1177,6 +1177,7 @@ var ERMrest = (function(module) {
          * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function(tuples) {
+            var MAX_TRIES = 3, numTriesLeft = MAX_TRIES;
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
@@ -1229,7 +1230,10 @@ var ERMrest = (function(module) {
                                 }
                                 // If old data matches current data, retry the delete w/ updated ETag
                                 if (!mismatchFound) {
-                                    return ref.delete(tuples);
+                                    numTriesLeft--;
+                                    if (numTriesLeft > 0) {
+                                        return ref.delete(tuples);
+                                    }
                                 } else {
                                     // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
                                     var error = module._responseToError(response);
@@ -1238,7 +1242,10 @@ var ERMrest = (function(module) {
                             }, function error(response) {
                                 // The referenced rows couldn't be read from the DB.
                                 // Retry the read.
-                                readReference(ref);
+                                numTriesLeft--;
+                                if (numTriesLeft > 0) {
+                                    readReference(ref);
+                                }
                             });
                         };
                         readReference(ownReference);
