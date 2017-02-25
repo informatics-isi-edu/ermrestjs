@@ -1177,7 +1177,6 @@ var ERMrest = (function(module) {
          * @returns {Promise} A promise for a TBD result or errors.
          */
         delete: function(tuples) {
-            var MAX_TRIES = 3, numTriesLeft = MAX_TRIES;
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
@@ -1197,6 +1196,7 @@ var ERMrest = (function(module) {
                     var status = response.status || response.statusCode;
                     // If 412 Precondition Failed it means that ETags don't match
                     if (status == 412) {
+                        var MAX_TRIES = 3, numTriesLeft = MAX_TRIES;
                         // Check if the record still exists. If it does, compare the data.
                         // If it doesn't, the data has already been deleted. If the
                         // .read goes to error callback, then retry the read.
@@ -1229,11 +1229,9 @@ var ERMrest = (function(module) {
                                     }
                                 }
                                 // If old data matches current data, retry the delete w/ updated ETag
-                                if (!mismatchFound) {
+                                if (!mismatchFound && numTriesLeft > 0) {
                                     numTriesLeft--;
-                                    if (numTriesLeft > 0) {
-                                        return ref.delete(tuples);
-                                    }
+                                    return ref.delete(tuples);
                                 } else {
                                     // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
                                     var error = module._responseToError(response);
@@ -1242,9 +1240,12 @@ var ERMrest = (function(module) {
                             }, function error(response) {
                                 // The referenced rows couldn't be read from the DB.
                                 // Retry the read.
-                                numTriesLeft--;
                                 if (numTriesLeft > 0) {
+                                    numTriesLeft--;
                                     readReference(ref);
+                                } else {
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
                                 }
                             });
                         };
@@ -1254,7 +1255,8 @@ var ERMrest = (function(module) {
                         return defer.reject(error);
                     }
                 }).catch(function (error) {
-                    return defer.reject(error);
+                    var reason = module._responseToError(error);
+                    return defer.reject(reason);
                 });
 
                 return defer.promise;
