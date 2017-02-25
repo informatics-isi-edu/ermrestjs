@@ -293,5 +293,22 @@ exports.execute = function(options) {
             });
         });
 
+        it('when table has alternative tables, should not include self-link to the base.', function (done) {
+            var schemaName3 = "reference_schema_2",
+                tableName3 = "table_w_alternate";
+                
+            var tableWAlternateUri = options.url + "/catalog/" + catalog_id + "/entity/"
+                + schemaName3 + ":" + tableName3;
+
+            options.ermRest.resolve(tableWAlternateUri, {cid: "test"}).then(function(response) {
+                var rel = response.related;
+                expect(rel.length).toBe(0);
+                done();
+            }, function(err) {
+                console.dir(err);
+                done.fail();
+            });
+        });
+
     });
 };
