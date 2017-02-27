@@ -1185,7 +1185,6 @@ var ERMrest = (function(module) {
 
                 var config = {
                     headers: {
-                        // Is this all right? Can I just use the first tuple's etag?
                         "If-Match": tuples[0].page._etag
                     }
                 };

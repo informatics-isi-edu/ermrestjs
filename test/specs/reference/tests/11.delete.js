@@ -73,7 +73,7 @@ exports.execute = function (options) {
                     tuples = response.tuples;
                     // Deliberately modify reference's ETag to a bad one to simulate
                     // when someone has made a change to this table (but not this row).
-                    reference._etag = 'a mismatching ETag';
+                    tuples[0].page._etag = 'a mismatching ETag';
                     return reference.delete(tuples);
                 }).then(function success(response) {
                     expect(response).not.toBeDefined();
