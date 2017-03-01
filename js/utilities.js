@@ -328,7 +328,7 @@ var ERMrest = (function(module) {
          * make sure that this name is unique:
          * 1. table doesn't have any columns with that name.
          * 2. there's no constraint with that name.
-         **/ 
+         **/
         var i = 0;
         while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
             name += ++i;
@@ -469,7 +469,7 @@ var ERMrest = (function(module) {
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response, additionalData) {
+    module._responseToError = function (response) {
         var status = response.status || response.statusCode;
         switch(status) {
             case 0:
@@ -485,7 +485,7 @@ var ERMrest = (function(module) {
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
             case 412:
-                return new module.PreconditionFailedError(response.statusText, response.data, additionalData);
+                return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
             case 503:
