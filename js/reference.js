@@ -1056,7 +1056,7 @@ var ERMrest = (function(module) {
         update: function(tuples) {
             try {
                 verify(tuples, "'tuples' must be specified");
-                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+                verify(tuples.length > 0, "'tuples' must have at least one row to update");
 
                 var defer = module._q.defer();
 
@@ -1088,7 +1088,7 @@ var ERMrest = (function(module) {
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + oldAlias] = oldData[key];
+                        submissionData[i][key + oldAlias] = oldData[key];
                         submissionData[i][key + newAlias] = newData[key];
                     }
                 }
@@ -1096,21 +1096,19 @@ var ERMrest = (function(module) {
                 // The list of column names to use in the uri
                 columnProjections = Object.keys(tuples[0].data);
 
-                // always alias the shortest key in the uri
-                for (var j = 0; j < shortestKeyNames.length; j++) {
+                // always alias the set of column projections for the key data
+                for (var j = 0; j < columnProjections.length; j++) {
                     if (j !== 0) uri += ',';
-                    keyName = shortestKeyNames[j];
-
-                    // need to alias the key in the uri
-                    uri += module._fixedEncodeURIComponent(keyName) + oldAlias + ":=" + module._fixedEncodeURIComponent(keyName);
+                    // alias all the columns for the key set
+                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
                 }
 
-                // separator for denoting where the keyset ends and the update column set begins
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
                 uri += ';';
 
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // check if this column is part of the shortest key, alias the column name if it is
+                    // alias all the columns for the projection set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
