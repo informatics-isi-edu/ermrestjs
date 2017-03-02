@@ -333,7 +333,7 @@ var ERMrest = (function(module) {
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                     columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
                 }
-                
+
                  // annotation
                 if (columns !== -1) {
                     for (i = 0; i < columns.length; i++) {
@@ -774,7 +774,7 @@ var ERMrest = (function(module) {
          * read request. __required__
          *
          * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
-         * 
+         *
          * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
          * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
          * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
@@ -809,7 +809,7 @@ var ERMrest = (function(module) {
                  *       - for columns it's straighforward and uses the actual column name.
                  *       - for PseudoColumns we need
                  *           - A new alias: F# where the # is a positive integer.
-                 *           - The sort column name must be the "foreignkey_alias:column_name". 
+                 *           - The sort column name must be the "foreignkey_alias:column_name".
                  *
                  * Assumption: there is no column/alias with `F#` name where # is a positive integer.
                  * */
@@ -821,7 +821,7 @@ var ERMrest = (function(module) {
                         fkIndex;
 
                     for (i = 0, k = 1; i < sortObject.length; i++) {
-                        
+
                         // find the column in ReferenceColumns
                         col = -1;
                         for (j = 0; j < this.columns.length; j++) {
@@ -835,7 +835,7 @@ var ERMrest = (function(module) {
                         if (col === -1 ) {
                             col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
                             sortCols = col._getSortColumns(this._context);
-                        } 
+                        }
                         // column is in visible columns and sortable
                         else if (col.sortable) {
                             sortCols = col._sortColumns;
@@ -843,7 +843,7 @@ var ERMrest = (function(module) {
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");    
+                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
                         }
 
                         // use the sort columns instead of the actual column.
@@ -867,7 +867,7 @@ var ERMrest = (function(module) {
                 else if (this.display._rowOrder){
                     sortObject = this.display._rowOrder;
                 }
-               
+
                 // ermrest requires key columns to be in sort param for paging
                 if (typeof sortObject !== 'undefined') {
                     sortCols = sortObject.map( function(sort) {return sort.column;});
@@ -910,7 +910,7 @@ var ERMrest = (function(module) {
                         addedCols,
                         linking,
                         parts;
-                        
+
                     // add M alias to current table
                     if (this._location.searchFilter) { // remove search filter
                         compactPath = compactPath.replace("/" + this._location.searchFilter, "");
@@ -938,7 +938,7 @@ var ERMrest = (function(module) {
                         // F2:array(F2:*),F1:array(F1:*)
                         fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
                     }
-                    
+
                     // add sort columns (it will include the key)
                     if (hasSort) {
                         sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
@@ -974,7 +974,7 @@ var ERMrest = (function(module) {
                 } else if (this._location.sort) {
                     uri = uri + this._location.sort;
                 }
-                
+
                 // insert paging
                 if (this._location.paging) {
                     uri = uri + this._location.paging;
@@ -1064,7 +1064,7 @@ var ERMrest = (function(module) {
         update: function(tuples) {
             try {
                 verify(tuples, "'tuples' must be specified");
-                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+                verify(tuples.length > 0, "'tuples' must have at least one row to update");
 
                 var defer = module._q.defer();
 
@@ -1091,7 +1091,7 @@ var ERMrest = (function(module) {
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + oldAlias] = oldData[key];
+                        submissionData[i][key + oldAlias] = oldData[key];
                         submissionData[i][key + newAlias] = newData[key];
                     }
                 }
@@ -1099,31 +1099,23 @@ var ERMrest = (function(module) {
                 // The list of column names to use in the uri
                 columnProjections = Object.keys(tuples[0].data);
 
-                // always alias the shortest key in the uri
-                for (var j = 0; j < shortestKeyNames.length; j++) {
+                // always alias the set of column projections for the key data
+                for (var j = 0; j < columnProjections.length; j++) {
                     if (j !== 0) uri += ',';
-                    keyName = shortestKeyNames[j];
-
-                    // need to alias the key in the uri
-                    uri += module._fixedEncodeURIComponent(keyName) + oldAlias + ":=" + module._fixedEncodeURIComponent(keyName);
+                    // alias all the columns for the key set
+                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
                 }
 
-                // separator for denoting where the keyset ends and the update column set begins
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
                 uri += ';';
 
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // check if this column is part of the shortest key, alias the column name if it is
+                    // alias all the columns for the projection set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                var config = {
-                    headers: {
-                        "If-Match": this._etag
-                    }
-                };
-
-                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                this._server._http.put(uri, submissionData).then(function updateReference(response) {
                     var pageData = [],
                         page;
 
@@ -1329,7 +1321,7 @@ var ERMrest = (function(module) {
                     fkr = visibleFKs[i];
 
                     // make sure that this fkr is not from an alternative table to self
-                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined && 
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
                         fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
@@ -1865,12 +1857,12 @@ var ERMrest = (function(module) {
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
-                    
+
                     // first row
                     var data = this._data[0][colName];
-                    if (typeof data !== 'undefined') { 
+                    if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data); 
+                        paging.row.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -1880,7 +1872,7 @@ var ERMrest = (function(module) {
                                 break;
                             }
                         }
-                        
+
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol._isForeignKey) {
                                 data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
@@ -1936,9 +1928,9 @@ var ERMrest = (function(module) {
 
                     // last row
                     var data = this._data[this._data.length-1][colName];
-                    if (typeof data !== 'undefined') { 
+                    if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data); 
+                        paging.row.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -2687,30 +2679,30 @@ var ERMrest = (function(module) {
 
         /**
          * Heuristics are as follows:
-         * 
+         *
          * (first applicable rule from top to bottom)
-         * 
+         *
          * - column_order = false -> disable sort.
-         * 
+         *
          * - PseudoColumn
          *      - column_order defined -> use it.
          *      - Foreign key:
          *          - table has row_order -> use it.
          *          - simple fk -> use the column's
          *      - Key:
-         *          - simple key -> use the column's 
+         *          - simple key -> use the column's
          *      - disable it
          * - Column:
          *      - column_order defined -> use it.
          *      - use column actual value.
-         * 
+         *
          * @type {boolean}
          */
         get sortable() {
             if (this._sortable === undefined) {
                 this._determineSortable();
-            }   
-            return this._sortable; 
+            }
+            return this._sortable;
         },
 
         /**
@@ -2730,11 +2722,11 @@ var ERMrest = (function(module) {
          * @desc
          * An object which contains column display properties
          * The properties are:
-         * 
+         *
          *  - `columnOrder`: list of columns that this column should be sorted based on
          *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
          *  - `markdownPattern`: string|undefined
-         * 
+         *
          * @type {Object}
          */
         get _display() {
@@ -2977,7 +2969,7 @@ var ERMrest = (function(module) {
             }
             return module._getNullValue(this.table, context, [this.table, this.table.schema]);
         },
-        
+
         _determineSortable: function () {
 
             var display = this._display,
@@ -2989,7 +2981,7 @@ var ERMrest = (function(module) {
 
             // disable the sort
             if (display !== undefined && display.columnOrder === false) return;
-            
+
             if (this.isPseudo) {
                 // use the column_order
                 if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
@@ -2997,7 +2989,7 @@ var ERMrest = (function(module) {
                     this._sortable = true;
                     return;
                 }
-                
+
                 if (this._isForeignKey) {
                     if (this.reference.display._rowOrder !== undefined) {
                         var rowOrder = this.reference.display._rowOrder;
