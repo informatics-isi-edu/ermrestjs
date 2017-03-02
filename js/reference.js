@@ -103,8 +103,8 @@ var ERMrest = (function(module) {
     };
 
     // NOTE: This function is only being used in unit tests.
-    module._createPage = function (reference, data, hasPrevious, hasNext) {
-        return new Page(reference, data, hasPrevious, hasNext);
+    module._createPage = function (reference, etag, data, hasPrevious, hasNext) {
+        return new Page(reference, etag, data, hasPrevious, hasNext);
     };
 
     /**
@@ -654,6 +654,7 @@ var ERMrest = (function(module) {
 
                 //  do the 'post' call
                 this._server._http.post(uri, data).then(function(response) {
+                    var etag = response.headers().etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -680,7 +681,7 @@ var ERMrest = (function(module) {
 
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref, response.data, false, false);
+                    var page = new Page(ref, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve(page);
@@ -782,7 +783,7 @@ var ERMrest = (function(module) {
 
                 // if this reference came from a tuple, use tuple object's data
                 if (this._tuple) {
-                    var page = new Page(this, this._tuple.data, false, false);
+                    var page = new Page(this, this._tuple.page._etag, this._tuple.data, false, false);
                     defer.resolve(page);
                     return defer.promise;
                 }
@@ -982,7 +983,7 @@ var ERMrest = (function(module) {
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
                 this._server._http.get(uri).then(function readReference(response) {
-                    ownReference._etag = response.headers().etag;
+                    var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1006,7 +1007,7 @@ var ERMrest = (function(module) {
                             response.data.splice(0, 1);
 
                     }
-                    var page = new Page(ownReference, response.data, hasPrevious, hasNext);
+                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
 
                     defer.resolve(page);
 
@@ -1072,7 +1073,7 @@ var ERMrest = (function(module) {
                     columnProjections = [],
                     shortestKeyNames = [],
                     keyWasModified = false,
-                    tuple, oldData, newData, keyName;
+                    tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
@@ -1082,6 +1083,11 @@ var ERMrest = (function(module) {
                 for(var i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
+
+                    // Collect all old and new data from all tuples to use in the event of a 412 error later
+                    allOldData.push(oldData);
+                    allNewData.push(newData);
+
                     submissionData[i] = {};
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
@@ -1111,6 +1117,7 @@ var ERMrest = (function(module) {
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                    var etag = response.headers().etag;
                     var pageData = [],
                         page;
 
@@ -1149,7 +1156,7 @@ var ERMrest = (function(module) {
                         }
                     }
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                    page = new Page(ref, pageData, false, false);
+                    page = new Page(ref, etag, pageData, false, false);
 
                     defer.resolve(page);
                 }, function error(response) {
@@ -1168,26 +1175,104 @@ var ERMrest = (function(module) {
 
         /**
          * Deletes the referenced resources.
+         * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
          * @returns {Promise} A promise for a TBD result or errors.
          */
-        delete: function() {
+        delete: function(tuples) {
             try {
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
+
                 var defer = module._q.defer();
 
                 var config = {
                     headers: {
-                        "If-Match": this._etag
+                        "If-Match": tuples[0].page._etag
                     }
                 };
-
+                var ownReference = this;
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-
                     defer.resolve();
                 }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                    var status = response.status || response.statusCode;
+                    // If 412 Precondition Failed it means that ETags don't match
+                    if (status == 412) {
+                        var MAX_TRIES = 3,
+                            numTriesLeft = MAX_TRIES,
+                            delay = 100; // the first retry delay in milliseconds
+
+                        // Check if the record still exists. If it does, compare the data.
+                        // If it doesn't, the data has already been deleted. If the
+                        // .read goes to error callback, then retry the read.
+                        var readReference = function readReference(ref) {
+                            ref.read(tuples.length).then(function getPage(page) {
+                                var oldData = tuples, currentData = page.tuples, mismatchFound = false;
+                                // If the referenced rows have already been deleted, page.tuples is an empty array.
+                                // Resolve the promise successfully like normal.
+                                if (currentData.length === 0) {
+                                    return defer.resolve();
+                                }
+
+                                // Else, compare the data.
+                                if (currentData.length !== oldData.length) {
+                                    mismatchFound = true;
+                                }
+
+                                if (!mismatchFound) {
+                                    // If findMismatch is true, this
+                                    // loop breaks and the loop returns true.
+                                    var findMismatch = function findMismatch(key) {
+                                        return oldTuple[key] !== currentTuple[key];
+                                    };
+                                    for (var i = 0, len = oldData.length; i < len; i++) {
+                                        var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
+                                        mismatchFound = Object.keys(oldTuple).some(findMismatch);
+                                        if (mismatchFound) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                // If old data matches current data, retry the delete w/ updated tuples & ETag
+                                if (!mismatchFound && numTriesLeft > 0) {
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        ref.delete(currentData);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(ref.delete(currentData), delay);
+                                        delay *= 2;
+                                    }
+                                    numTriesLeft--;
+                                } else {
+                                    // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                }
+                            }, function error(response) {
+                                // The referenced rows couldn't be read from the DB.
+                                // Retry the read.
+                                if (numTriesLeft > 0) {
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        readReference(ref);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(readReference(ref), delay);
+                                        delay *= 2;
+                                    }
+                                    numTriesLeft--;
+                                } else {
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                }
+                            });
+                        };
+                        readReference(ownReference);
+                    } else {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }
                 }).catch(function (error) {
-                    return defer.reject(error);
+                    var reason = module._responseToError(error);
+                    return defer.reject(reason);
                 });
 
                 return defer.promise;
@@ -1718,13 +1803,15 @@ var ERMrest = (function(module) {
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
      * this data was acquired.
+     * @param {String} etag The etag from the reference object that produced this page
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasNext Whether there is more data before this Page
      * @param {boolean} hasPrevious Whether there is more data after this Page
      *
      */
-    function Page(reference, data, hasPrevious, hasNext) {
+    function Page(reference, etag, data, hasPrevious, hasNext) {
         this._ref = reference;
+        this._etag = etag;
 
         /*
          * This is the structure of this._linkedData
@@ -1812,7 +1899,7 @@ var ERMrest = (function(module) {
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this._data[i], this._linkedData[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i]));
                 }
             }
             return this._tuples;
@@ -2025,10 +2112,13 @@ var ERMrest = (function(module) {
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
      * this data was acquired.
+     * @param {!ERMrest.Page} page The Page object from which
+     * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, data, linkedData) {
+    function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
+        this._page = page;
         this._data = data;
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
@@ -2087,6 +2177,18 @@ var ERMrest = (function(module) {
             }
             return this._ref;
         },
+
+        /**
+         * This is the page of the Tuple
+         * @returns {ERMrest.Page|*} page of the Tuple
+         */
+         get page() {
+            if (this._page === undefined) {
+                // TODO: What happens here?
+                return undefined;
+            }
+            return this._page;
+         },
 
         /**
          * Used for getting the current set of data for the reference.
@@ -3022,7 +3124,6 @@ var ERMrest = (function(module) {
         get _hasBase() {
             return this._base !== null && this._base !== undefined;
         }
-
     };
 
     return module;
