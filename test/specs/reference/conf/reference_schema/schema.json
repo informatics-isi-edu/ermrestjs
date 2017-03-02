@@ -732,6 +732,10 @@
                     "row_name": {
                         "row_markdown_pattern": "{{id_1}} , {{id_2}}"
                     }
+                },
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry/edit": [],
+                    "entry/create": []
                 }
             }
         },

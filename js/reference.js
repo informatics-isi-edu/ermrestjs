@@ -515,10 +515,12 @@ var ERMrest = (function(module) {
                 // 1) user has write permission
                 // 2) table is not generated
                 // 3) not all visible columns in the table are generated
-                this._canCreate = !this._table._isGenerated && this._checkPermissions("content_write_user");
+                var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
+
+                this._canCreate = !ref._table._isGenerated && ref._checkPermissions("content_write_user");
 
                 if (this._canCreate) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
+                    var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
                     this._canCreate = !allColumnsDisabled;
@@ -554,10 +556,12 @@ var ERMrest = (function(module) {
             // 3) table is not immutable
             // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
-                this._canUpdate = !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
+                var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
+
+                this._canUpdate = !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
 
                 if (this._canUpdate) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
+                    var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.EDIT) !== false);
                     });
                     this._canUpdate = !allColumnsDisabled;
