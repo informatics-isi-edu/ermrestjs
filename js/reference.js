@@ -1195,7 +1195,8 @@ var ERMrest = (function(module) {
                     if (status == 412) {
                         var MAX_TRIES = 3,
                             numTriesLeft = MAX_TRIES,
-                            delay = 100; // milliseconds
+                            delay = 100; // the first retry delay in milliseconds
+
                         // Check if the record still exists. If it does, compare the data.
                         // If it doesn't, the data has already been deleted. If the
                         // .read goes to error callback, then retry the read.
@@ -1229,8 +1230,13 @@ var ERMrest = (function(module) {
                                 }
                                 // If old data matches current data, retry the delete w/ updated tuples & ETag
                                 if (!mismatchFound && numTriesLeft > 0) {
-                                    setTimeout(ref.delete(currentData), delay);
-                                    delay *= 2;
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        ref.delete(currentData);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(ref.delete(currentData), delay);
+                                        delay *= 2;
+                                    }
                                     numTriesLeft--;
                                 } else {
                                     // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
@@ -1241,8 +1247,13 @@ var ERMrest = (function(module) {
                                 // The referenced rows couldn't be read from the DB.
                                 // Retry the read.
                                 if (numTriesLeft > 0) {
-                                    setTimeout(readReference(ref), delay);
-                                    delay *= 2;
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        readReference(ref);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(readReference(ref), delay);
+                                        delay *= 2;
+                                    }
                                     numTriesLeft--;
                                 } else {
                                     var error = module._responseToError(response);
