@@ -319,14 +319,16 @@ var ERMrest = (function(module) {
                     colFks,
                     cols, col, fk, i, j;
 
-                // should hide the origFKR in case of inbound foreignKey
+                var context = this._context;
+
+                // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
                 var hideFKR = function (fkr) {
-                    return hasOrigFKR && fkr == hiddenFKR;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && fkr == hiddenFKR;
                 };
 
-                // should hide the columns that are part of origFKR.
+                // should hide the columns that are part of origFKR. (only in compact/brief)
                 var hideColumn = function (col) {
-                    return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
                 };
 
                 // get column orders from annotation
