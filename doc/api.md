@@ -206,6 +206,8 @@ to use for ERMrest JavaScript agents.
         * [new NotFoundError(status, message)](#new_ERMrest.NotFoundError_new)
     * [.ConflictError](#ERMrest.ConflictError)
         * [new ConflictError(status, message)](#new_ERMrest.ConflictError_new)
+    * [.PreconditionFailedError](#ERMrest.PreconditionFailedError)
+        * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.InternalServerError_new)
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
@@ -241,10 +243,10 @@ to use for ERMrest JavaScript agents.
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort)
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.search(term)](#ERMrest.Reference+search)
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+        * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
         * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -253,8 +255,9 @@ to use for ERMrest JavaScript agents.
         * [.next](#ERMrest.Page+next) : <code>[Reference](#ERMrest.Reference)</code> &#124; <code>undefined</code>
         * [.content](#ERMrest.Page+content) : <code>string</code> &#124; <code>null</code>
     * [.Tuple](#ERMrest.Tuple)
-        * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+        * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+        * [.page](#ERMrest.Tuple+page) ⇒ <code>[Page](#ERMrest.Page)</code> &#124; <code>\*</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
@@ -1767,6 +1770,19 @@ returns string representation of ForeignKeyRef object
 | status | <code>string</code> | the network error code |
 | message | <code>string</code> | error message |
 
+<a name="ERMrest.PreconditionFailedError"></a>
+
+### ERMrest.PreconditionFailedError
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.PreconditionFailedError_new"></a>
+
+#### new PreconditionFailedError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
 <a name="ERMrest.InternalServerError"></a>
 
 ### ERMrest.InternalServerError
@@ -1901,7 +1917,7 @@ Constructor for a ParsedFilter.
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort)
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.search(term)](#ERMrest.Reference+search)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -2225,11 +2241,16 @@ Updates a set of resources.
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete() ⇒ <code>Promise</code>
+#### reference.delete(tuples) ⇒ <code>Promise</code>
 Deletes the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tuples | <code>Array</code> | array of tuple objects used to detect differences with data in the DB |
+
 <a name="ERMrest.Reference+search"></a>
 
 #### reference.search(term)
@@ -2252,7 +2273,7 @@ c) use space for conjunction of terms
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+    * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
     * [.tuples](#ERMrest.Page+tuples) : <code>[Array.&lt;Tuple&gt;](#ERMrest.Tuple)</code>
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2263,7 +2284,7 @@ c) use space for conjunction of terms
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, data, hasNext, hasPrevious)
+#### new Page(reference, etag, data, hasNext, hasPrevious)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2279,6 +2300,7 @@ Usage:
 | Param | Type | Description |
 | --- | --- | --- |
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
+| etag | <code>String</code> | The etag from the reference object that produced this page |
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
 | hasNext | <code>boolean</code> | Whether there is more data before this Page |
 | hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
@@ -2369,8 +2391,9 @@ if (content) {
 **Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
 
 * [.Tuple](#ERMrest.Tuple)
-    * [new Tuple(reference, data)](#new_ERMrest.Tuple_new)
+    * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code>
+    * [.page](#ERMrest.Tuple+page) ⇒ <code>[Page](#ERMrest.Page)</code> &#124; <code>\*</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
@@ -2384,7 +2407,7 @@ if (content) {
 
 <a name="new_ERMrest.Tuple_new"></a>
 
-#### new Tuple(reference, data)
+#### new Tuple(reference, page, data)
 Constructs a new Tuple. In database jargon, a tuple is a row in a
 relation. This object represents a row returned by a query to ERMrest.
 
@@ -2396,6 +2419,7 @@ Usage:
 | Param | Type | Description |
 | --- | --- | --- |
 | reference | <code>[Reference](#ERMrest.Reference)</code> | The reference object from which this data was acquired. |
+| page | <code>[Page](#ERMrest.Page)</code> | The Page object from which this data was acquired. |
 | data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
 
 <a name="ERMrest.Tuple+reference"></a>
@@ -2405,6 +2429,13 @@ This is the reference of the Tuple
 
 **Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
 **Returns**: <code>[Reference](#ERMrest.Reference)</code> &#124; <code>\*</code> - reference of the Tuple  
+<a name="ERMrest.Tuple+page"></a>
+
+#### tuple.page ⇒ <code>[Page](#ERMrest.Page)</code> &#124; <code>\*</code>
+This is the page of the Tuple
+
+**Kind**: instance property of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>[Page](#ERMrest.Page)</code> &#124; <code>\*</code> - page of the Tuple  
 <a name="ERMrest.Tuple+data"></a>
 
 #### tuple.data : <code>Object</code>

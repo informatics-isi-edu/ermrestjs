@@ -1,6 +1,6 @@
 exports.execute = function (options) {
 
-    describe("For determining reference objects and it's child objects, ", function () {
+    describe("For determining reference objects and its child objects, ", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
@@ -9,7 +9,7 @@ exports.execute = function (options) {
             lowerLimit = 8999,
             upperLimit = 9010,
             originalTimeout;
-        
+
         var entityWithSlash = baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableNameWithSlash;
 
@@ -416,7 +416,7 @@ exports.execute = function (options) {
                         console.dir(error);
                         done.fail();
                     });
-                }); 
+                });
 
                 it('page should be properly defined based on constructor.', function() {
                     expect(page._ref).toBe(reference);

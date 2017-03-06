@@ -1,1 +1,6 @@
-[{"key_col": 1, "text_col": "delete text", "int_col": 22}]
+[
+    {"key_col": 1, "text_col": "delete text", "int_col": 22},
+    {"key_col": 2, "text_col": "delete text 2", "int_col": 44},
+    {"key_col": 3, "text_col": "delete text 3", "int_col": 88},
+    {"key_col": 4, "text_col": "delete text 4", "int_col": 176}
+]
