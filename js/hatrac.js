@@ -126,9 +126,11 @@ var ERMrest = (function(module) {
 
         return this.xhr;
     };
-})(hatrac || {});
 
-(function(module) {
+    return module; 
+})(ERMrest || {});
+
+var ERMrest = (function(module) {
 
     var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 
@@ -237,9 +239,11 @@ var ERMrest = (function(module) {
 
     module.Checksum = Checksum;
 
-})(hatrac || {});
+    return module; 
 
-(function(module) {
+})(ERMrest || {});
+
+var ERMrest = (function(module) {
     /**
      * HatracMultiUpload Object
      * Create a new instance with new HatracMultiUpload(file, otherInfo)
@@ -725,4 +729,5 @@ var ERMrest = (function(module) {
     };
 
    return module; 
+   
 }(ERMrest || {}));
