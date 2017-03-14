@@ -92,11 +92,12 @@ exports.execute = function(options) {
                 });
             });
 
-            it('.columns should be properly defiend based on schema and not include foreign key columns.', function() {
+            it('.columns should be properly defiend based on schema and only in compact/brief context should not include foreign key columns that created the link.', function() {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
                         ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), // the fk
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
                         ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                 ]}, {

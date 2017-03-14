@@ -288,12 +288,15 @@ var ERMrest = (function(module) {
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
                  *
                  * 2.otherwise go through list of table columns
+                 *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
                  *      2.1 check if column has not been processed before.
-                 *      2.2 if it's not part of any foreign keys add the column.
-                 *      2.3 go through all of the foreign keys that this column is part of.
-                 *          2.3.1 make sure it is not hidden(+).
-                 *          2.3.2 if it's simple fk, just create PseudoColumn
-                 *          2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+                 *      2.2 hide the columns that are part of origFKR.
+                 *      2.3 if column is serial and part of a simple key hide it.
+                 *      2.4 if it's not part of any foreign keys add the column.
+                 *      2.5 go through all of the foreign keys that this column is part of.
+                 *          2.5.1 make sure it is not hidden(+).
+                 *          2.5.2 if it's simple fk, just create PseudoColumn
+                 *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
                  * NOTE:
                  *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
@@ -316,14 +319,16 @@ var ERMrest = (function(module) {
                     colFks,
                     cols, col, fk, i, j;
 
-                // should hide the origFKR in case of inbound foreignKey
+                var context = this._context;
+
+                // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
                 var hideFKR = function (fkr) {
-                    return hasOrigFKR && fkr == hiddenFKR;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && fkr == hiddenFKR;
                 };
 
-                // should hide the columns that are part of origFKR.
+                // should hide the columns that are part of origFKR. (only in compact/brief)
                 var hideColumn = function (col) {
-                    return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
                 };
 
                 // get column orders from annotation
@@ -393,7 +398,7 @@ var ERMrest = (function(module) {
                 else {
 
                     //add the key
-                    if (!module._isEntryContext(this._context)) {
+                    if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
@@ -412,6 +417,12 @@ var ERMrest = (function(module) {
 
                         // avoid duplicate, or should be hidden
                         if (col.name in consideredColumns  || hideColumn(col)) {
+                            continue;
+                        }
+
+                        // if column is serial and part of a simple key
+                        if (col.type.name.toUpperCase().startsWith("SERIAL") &&
+                            col.memberOfKeys.length === 1 && col.memberOfKeys[0].simple) {
                             continue;
                         }
                         consideredColumns[col.name] = true;
@@ -2677,7 +2688,7 @@ var ERMrest = (function(module) {
                     if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
                         this._displayname = {
                             "value": this.key.colset.columns.reduce(function(prev, curr, index) {
-                                return prev + (index>0 ? " " : "") + curr.displayname.value;
+                                return prev + (index>0 ? ":" : "") + curr.displayname.value;
                             }, ""),
                             "isHTML": this.key.colset.columns.some(function (col) {
                                 return col.displayname.isHTML;
@@ -2950,7 +2961,7 @@ var ERMrest = (function(module) {
                             return nullValue;
                         }
                     }
-                    caption = values.join(" ");
+                    caption = values.join(":");
 
                     // if the caption is empty we cannot add any link to that.
                     if (caption.trim() === '') {

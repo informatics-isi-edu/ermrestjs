@@ -761,8 +761,8 @@ Constructor for Entity. This is a container in Table
 
 | Param | Type |
 | --- | --- |
-| server | <code>[Server](#ERMrest.Server)</code> | 
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| server | <code>[Server](#ERMrest.Server)</code> |
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Table.Entity+count"></a>
 
@@ -776,7 +776,7 @@ get the number of rows
 
 | Param | Type |
 | --- | --- |
-| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| [filter] | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+get"></a>
 
@@ -847,7 +847,7 @@ Delete rows from table based on the filter
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Table.Entity+put"></a>
 
@@ -1043,7 +1043,7 @@ Constructor for Columns.
 
 | Param | Type |
 | --- | --- |
-| pos | <code>int</code> | 
+| pos | <code>int</code> |
 
 <a name="ERMrest.Column"></a>
 
@@ -1328,7 +1328,7 @@ get the key by the column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.Key"></a>
 
@@ -1397,7 +1397,7 @@ whether key has a column
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
 
 <a name="ERMrest.ColSet"></a>
 
@@ -1489,7 +1489,7 @@ get the mapping column given the from column
 
 | Param | Type |
 | --- | --- |
-| fromCol | <code>[Column](#ERMrest.Column)</code> | 
+| fromCol | <code>[Column](#ERMrest.Column)</code> |
 
 <a name="ERMrest.Mapping+getFromColumn"></a>
 
@@ -1505,7 +1505,7 @@ get the mapping column given the from column
 
 | Param | Type |
 | --- | --- |
-| toCol | <code>[Column](#ERMrest.Column)</code> | 
+| toCol | <code>[Column](#ERMrest.Column)</code> |
 
 <a name="ERMrest.InboundForeignKeys"></a>
 
@@ -1567,7 +1567,7 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| colset | <code>[ColSet](#ERMrest.ColSet)</code> | 
+| colset | <code>[ColSet](#ERMrest.ColSet)</code> |
 
 <a name="ERMrest.ForeignKeyRef"></a>
 
@@ -1595,8 +1595,8 @@ get the foreign key of the given column set
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| jsonFKR | <code>Object</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| jsonFKR | <code>Object</code> |
 
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 
@@ -1670,7 +1670,7 @@ returns string representation of ForeignKeyRef object
 
 | Param | Type |
 | --- | --- |
-| limit | <code>Number</code> | 
+| limit | <code>Number</code> |
 
 <a name="ERMrest.Type"></a>
 
@@ -1687,7 +1687,7 @@ returns string representation of ForeignKeyRef object
 
 | Param |
 | --- |
-| name | 
+| name |
 
 <a name="ERMrest.Type+name"></a>
 
@@ -2028,12 +2028,15 @@ The logic is as follows:
      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
 
 2.otherwise go through list of table columns
+     2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
      2.1 check if column has not been processed before.
-     2.2 if it's not part of any foreign keys add the column.
-     2.3 go through all of the foreign keys that this column is part of.
-         2.3.1 make sure it is not hidden(+).
-         2.3.2 if it's simple fk, just create PseudoColumn
-         2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+     2.2 hide the columns that are part of origFKR.
+     2.3 if column is serial and part of a simple key hide it.
+     2.4 if it's not part of any foreign keys add the column.
+     2.5 go through all of the foreign keys that this column is part of.
+         2.5.1 make sure it is not hidden(+).
+         2.5.2 if it's simple fk, just create PseudoColumn
+         2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
 
 NOTE:
  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
@@ -2801,7 +2804,7 @@ object: input msut be disabled (show .message to user)
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
 
 <a name="ERMrest.Datapath.DataPath+catalog"></a>
 
@@ -2841,7 +2844,7 @@ delete entities
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+filter"></a>
 
@@ -2853,7 +2856,7 @@ this datapath is not modified
 
 | Param | Type |
 | --- | --- |
-| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> | 
+| filter | <code>[Negation](#ERMrest.Filters.Negation)</code> &#124; <code>[Conjunction](#ERMrest.Filters.Conjunction)</code> &#124; <code>[Disjunction](#ERMrest.Filters.Disjunction)</code> &#124; <code>[UnaryPredicate](#ERMrest.Filters.UnaryPredicate)</code> &#124; <code>[BinaryPredicate](#ERMrest.Filters.BinaryPredicate)</code> |
 
 <a name="ERMrest.Datapath.DataPath+extend"></a>
 
@@ -2864,9 +2867,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| context |  | 
-| link |  | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| context |  |
+| link |  |
 
 <a name="ERMrest.Datapath.PathTable"></a>
 
@@ -2887,9 +2890,9 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> | 
-| alias | <code>string</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| datapath | <code>[DataPath](#ERMrest.Datapath.DataPath)</code> |
+| alias | <code>string</code> |
 
 <a name="ERMrest.Datapath.PathTable+datapath"></a>
 
@@ -2928,8 +2931,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 <a name="ERMrest.Datapath.PathColumn+pathtable"></a>
 
@@ -2946,8 +2949,8 @@ extend the Datapath with table
 
 | Param | Type |
 | --- | --- |
-| table | <code>[Table](#ERMrest.Table)</code> | 
-| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> | 
+| table | <code>[Table](#ERMrest.Table)</code> |
+| pathtable | <code>[PathTable](#ERMrest.Datapath.PathTable)</code> |
 
 
 * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
@@ -3022,7 +3025,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filter | 
+| filter |
 
 <a name="ERMrest.Filters.Negation+toUri"></a>
 
@@ -3044,7 +3047,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Conjunction+toUri"></a>
 
@@ -3066,7 +3069,7 @@ get PathColumn object by column name
 
 | Param |
 | --- |
-| filters | 
+| filters |
 
 <a name="ERMrest.Filters.Disjunction+toUri"></a>
 
@@ -3092,8 +3095,8 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
 
 <a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
 
@@ -3119,9 +3122,9 @@ get PathColumn object by column name
 
 | Param | Type |
 | --- | --- |
-| column | <code>[Column](#ERMrest.Column)</code> | 
-| operator | <code>ERMrest.Filters.OPERATOR</code> | 
-| rvalue | <code>String</code> &#124; <code>Number</code> | 
+| column | <code>[Column](#ERMrest.Column)</code> |
+| operator | <code>ERMrest.Filters.OPERATOR</code> |
+| rvalue | <code>String</code> &#124; <code>Number</code> |
 
 <a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
 
@@ -3211,4 +3214,3 @@ set callback function that converts app tag to app URL
 | Param | Type | Description |
 | --- | --- | --- |
 | fn | <code>[appLinkFn](#appLinkFn)</code> | callback function |
-
