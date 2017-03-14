@@ -1111,7 +1111,7 @@ exports.execute = function (options) {
                             "ind_key1": 3
                         }, {
                             "comp_key2_col1": "plane"
-                        }]
+                        }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                             reference = response;
@@ -1249,7 +1249,7 @@ exports.execute = function (options) {
                         }, {
                             "ind_key2": "d_mod",
                             "comp_shared_key_col": "senior manager"
-                        }]
+                        }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                             reference = response;
@@ -1323,5 +1323,6 @@ exports.execute = function (options) {
                 });
             });
         });
+
     });
 };

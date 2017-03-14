@@ -103,8 +103,8 @@ var ERMrest = (function(module) {
     };
 
     // NOTE: This function is only being used in unit tests.
-    module._createPage = function (reference, data, hasPrevious, hasNext) {
-        return new Page(reference, data, hasPrevious, hasNext);
+    module._createPage = function (reference, etag, data, hasPrevious, hasNext) {
+        return new Page(reference, etag, data, hasPrevious, hasNext);
     };
 
     /**
@@ -288,12 +288,15 @@ var ERMrest = (function(module) {
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
                  *
                  * 2.otherwise go through list of table columns
+                 *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
                  *      2.1 check if column has not been processed before.
-                 *      2.2 if it's not part of any foreign keys add the column.
-                 *      2.3 go through all of the foreign keys that this column is part of.
-                 *          2.3.1 make sure it is not hidden(+).
-                 *          2.3.2 if it's simple fk, just create PseudoColumn
-                 *          2.3.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+                 *      2.2 hide the columns that are part of origFKR.
+                 *      2.3 if column is serial and part of a simple key hide it.
+                 *      2.4 if it's not part of any foreign keys add the column.
+                 *      2.5 go through all of the foreign keys that this column is part of.
+                 *          2.5.1 make sure it is not hidden(+).
+                 *          2.5.2 if it's simple fk, just create PseudoColumn
+                 *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
                  * NOTE:
                  *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
@@ -316,21 +319,23 @@ var ERMrest = (function(module) {
                     colFks,
                     cols, col, fk, i, j;
 
-                // should hide the origFKR in case of inbound foreignKey
+                var context = this._context;
+
+                // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
                 var hideFKR = function (fkr) {
-                    return hasOrigFKR && fkr == hiddenFKR;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && fkr == hiddenFKR;
                 };
 
-                // should hide the columns that are part of origFKR.
+                // should hide the columns that are part of origFKR. (only in compact/brief)
                 var hideColumn = function (col) {
-                    return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                    return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
                 };
 
                 // get column orders from annotation
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                     columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
                 }
-                
+
                  // annotation
                 if (columns !== -1) {
                     for (i = 0; i < columns.length; i++) {
@@ -393,7 +398,7 @@ var ERMrest = (function(module) {
                 else {
 
                     //add the key
-                    if (!module._isEntryContext(this._context)) {
+                    if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
                             this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
@@ -412,6 +417,12 @@ var ERMrest = (function(module) {
 
                         // avoid duplicate, or should be hidden
                         if (col.name in consideredColumns  || hideColumn(col)) {
+                            continue;
+                        }
+
+                        // if column is serial and part of a simple key
+                        if (col.type.name.toUpperCase().startsWith("SERIAL") &&
+                            col.memberOfKeys.length === 1 && col.memberOfKeys[0].simple) {
                             continue;
                         }
                         consideredColumns[col.name] = true;
@@ -515,10 +526,12 @@ var ERMrest = (function(module) {
                 // 1) user has write permission
                 // 2) table is not generated
                 // 3) not all visible columns in the table are generated
-                this._canCreate = !this._table._isGenerated && this._checkPermissions("content_write_user");
+                var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
+
+                this._canCreate = !ref._table._isGenerated && ref._checkPermissions("content_write_user");
 
                 if (this._canCreate) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
+                    var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
                     this._canCreate = !allColumnsDisabled;
@@ -554,10 +567,12 @@ var ERMrest = (function(module) {
             // 3) table is not immutable
             // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
-                this._canUpdate = !this._table._isGenerated && !this._table._isImmutable && this._checkPermissions("content_write_user");
+                var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
+
+                this._canUpdate = !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
 
                 if (this._canUpdate) {
-                    var allColumnsDisabled = this.columns.every(function (col) {
+                    var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.EDIT) !== false);
                     });
                     this._canUpdate = !allColumnsDisabled;
@@ -650,6 +665,7 @@ var ERMrest = (function(module) {
 
                 //  do the 'post' call
                 this._server._http.post(uri, data).then(function(response) {
+                    var etag = response.headers().etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -676,7 +692,7 @@ var ERMrest = (function(module) {
 
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref, response.data, false, false);
+                    var page = new Page(ref, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve(page);
@@ -765,7 +781,7 @@ var ERMrest = (function(module) {
          * read request. __required__
          *
          * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
-         * 
+         *
          * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
          * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
          * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
@@ -778,7 +794,7 @@ var ERMrest = (function(module) {
 
                 // if this reference came from a tuple, use tuple object's data
                 if (this._tuple) {
-                    var page = new Page(this, this._tuple.data, false, false);
+                    var page = new Page(this, this._tuple.page._etag, this._tuple.data, false, false);
                     defer.resolve(page);
                     return defer.promise;
                 }
@@ -800,7 +816,7 @@ var ERMrest = (function(module) {
                  *       - for columns it's straighforward and uses the actual column name.
                  *       - for PseudoColumns we need
                  *           - A new alias: F# where the # is a positive integer.
-                 *           - The sort column name must be the "foreignkey_alias:column_name". 
+                 *           - The sort column name must be the "foreignkey_alias:column_name".
                  *
                  * Assumption: there is no column/alias with `F#` name where # is a positive integer.
                  * */
@@ -812,7 +828,7 @@ var ERMrest = (function(module) {
                         fkIndex;
 
                     for (i = 0, k = 1; i < sortObject.length; i++) {
-                        
+
                         // find the column in ReferenceColumns
                         col = -1;
                         for (j = 0; j < this.columns.length; j++) {
@@ -826,7 +842,7 @@ var ERMrest = (function(module) {
                         if (col === -1 ) {
                             col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
                             sortCols = col._getSortColumns(this._context);
-                        } 
+                        }
                         // column is in visible columns and sortable
                         else if (col.sortable) {
                             sortCols = col._sortColumns;
@@ -834,7 +850,7 @@ var ERMrest = (function(module) {
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");    
+                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
                         }
 
                         // use the sort columns instead of the actual column.
@@ -858,7 +874,7 @@ var ERMrest = (function(module) {
                 else if (this.display._rowOrder){
                     sortObject = this.display._rowOrder;
                 }
-               
+
                 // ermrest requires key columns to be in sort param for paging
                 if (typeof sortObject !== 'undefined') {
                     sortCols = sortObject.map( function(sort) {return sort.column;});
@@ -901,7 +917,7 @@ var ERMrest = (function(module) {
                         addedCols,
                         linking,
                         parts;
-                        
+
                     // add M alias to current table
                     if (this._location.searchFilter) { // remove search filter
                         compactPath = compactPath.replace("/" + this._location.searchFilter, "");
@@ -929,7 +945,7 @@ var ERMrest = (function(module) {
                         // F2:array(F2:*),F1:array(F1:*)
                         fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
                     }
-                    
+
                     // add sort columns (it will include the key)
                     if (hasSort) {
                         sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
@@ -965,7 +981,7 @@ var ERMrest = (function(module) {
                 } else if (this._location.sort) {
                     uri = uri + this._location.sort;
                 }
-                
+
                 // insert paging
                 if (this._location.paging) {
                     uri = uri + this._location.paging;
@@ -978,7 +994,7 @@ var ERMrest = (function(module) {
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
                 this._server._http.get(uri).then(function readReference(response) {
-                    ownReference._etag = response.headers().etag;
+                    var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1002,7 +1018,7 @@ var ERMrest = (function(module) {
                             response.data.splice(0, 1);
 
                     }
-                    var page = new Page(ownReference, response.data, hasPrevious, hasNext);
+                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
 
                     defer.resolve(page);
 
@@ -1055,7 +1071,7 @@ var ERMrest = (function(module) {
         update: function(tuples) {
             try {
                 verify(tuples, "'tuples' must be specified");
-                verify(tuples.length > 0, "'tuples' must have at least one row to create");
+                verify(tuples.length > 0, "'tuples' must have at least one row to update");
 
                 var defer = module._q.defer();
 
@@ -1068,7 +1084,7 @@ var ERMrest = (function(module) {
                     columnProjections = [],
                     shortestKeyNames = [],
                     keyWasModified = false,
-                    tuple, oldData, newData, keyName;
+                    tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
@@ -1078,11 +1094,16 @@ var ERMrest = (function(module) {
                 for(var i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
+
+                    // Collect all old and new data from all tuples to use in the event of a 412 error later
+                    allOldData.push(oldData);
+                    allNewData.push(newData);
+
                     submissionData[i] = {};
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        if (shortestKeyNames.indexOf(key) !== -1) submissionData[i][key + oldAlias] = oldData[key];
+                        submissionData[i][key + oldAlias] = oldData[key];
                         submissionData[i][key + newAlias] = newData[key];
                     }
                 }
@@ -1090,31 +1111,24 @@ var ERMrest = (function(module) {
                 // The list of column names to use in the uri
                 columnProjections = Object.keys(tuples[0].data);
 
-                // always alias the shortest key in the uri
-                for (var j = 0; j < shortestKeyNames.length; j++) {
+                // always alias the set of column projections for the key data
+                for (var j = 0; j < columnProjections.length; j++) {
                     if (j !== 0) uri += ',';
-                    keyName = shortestKeyNames[j];
-
-                    // need to alias the key in the uri
-                    uri += module._fixedEncodeURIComponent(keyName) + oldAlias + ":=" + module._fixedEncodeURIComponent(keyName);
+                    // alias all the columns for the key set
+                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
                 }
 
-                // separator for denoting where the keyset ends and the update column set begins
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
                 uri += ';';
 
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // check if this column is part of the shortest key, alias the column name if it is
+                    // alias all the columns for the projection set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                var config = {
-                    headers: {
-                        "If-Match": this._etag
-                    }
-                };
-
-                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                    var etag = response.headers().etag;
                     var pageData = [],
                         page;
 
@@ -1153,7 +1167,7 @@ var ERMrest = (function(module) {
                         }
                     }
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                    page = new Page(ref, pageData, false, false);
+                    page = new Page(ref, etag, pageData, false, false);
 
                     defer.resolve(page);
                 }, function error(response) {
@@ -1172,26 +1186,104 @@ var ERMrest = (function(module) {
 
         /**
          * Deletes the referenced resources.
+         * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
          * @returns {Promise} A promise for a TBD result or errors.
          */
-        delete: function() {
+        delete: function(tuples) {
             try {
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
+
                 var defer = module._q.defer();
 
                 var config = {
                     headers: {
-                        "If-Match": this._etag
+                        "If-Match": tuples[0].page._etag
                     }
                 };
-
+                var ownReference = this;
                 this._server._http.delete(this.uri, config).then(function deleteReference(response) {
-
                     defer.resolve();
                 }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                    var status = response.status || response.statusCode;
+                    // If 412 Precondition Failed it means that ETags don't match
+                    if (status == 412) {
+                        var MAX_TRIES = 3,
+                            numTriesLeft = MAX_TRIES,
+                            delay = 100; // the first retry delay in milliseconds
+
+                        // Check if the record still exists. If it does, compare the data.
+                        // If it doesn't, the data has already been deleted. If the
+                        // .read goes to error callback, then retry the read.
+                        var readReference = function readReference(ref) {
+                            ref.read(tuples.length).then(function getPage(page) {
+                                var oldData = tuples, currentData = page.tuples, mismatchFound = false;
+                                // If the referenced rows have already been deleted, page.tuples is an empty array.
+                                // Resolve the promise successfully like normal.
+                                if (currentData.length === 0) {
+                                    return defer.resolve();
+                                }
+
+                                // Else, compare the data.
+                                if (currentData.length !== oldData.length) {
+                                    mismatchFound = true;
+                                }
+
+                                if (!mismatchFound) {
+                                    // If findMismatch is true, this
+                                    // loop breaks and the loop returns true.
+                                    var findMismatch = function findMismatch(key) {
+                                        return oldTuple[key] !== currentTuple[key];
+                                    };
+                                    for (var i = 0, len = oldData.length; i < len; i++) {
+                                        var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
+                                        mismatchFound = Object.keys(oldTuple).some(findMismatch);
+                                        if (mismatchFound) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                // If old data matches current data, retry the delete w/ updated tuples & ETag
+                                if (!mismatchFound && numTriesLeft > 0) {
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        ref.delete(currentData);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(ref.delete(currentData), delay);
+                                        delay *= 2;
+                                    }
+                                    numTriesLeft--;
+                                } else {
+                                    // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                }
+                            }, function error(response) {
+                                // The referenced rows couldn't be read from the DB.
+                                // Retry the read.
+                                if (numTriesLeft > 0) {
+                                    if (numTriesLeft === MAX_TRIES) {
+                                        readReference(ref);
+                                    } else {
+                                        // Apply a delay on subsequent tries
+                                        setTimeout(readReference(ref), delay);
+                                        delay *= 2;
+                                    }
+                                    numTriesLeft--;
+                                } else {
+                                    var error = module._responseToError(response);
+                                    return defer.reject(error);
+                                }
+                            });
+                        };
+                        readReference(ownReference);
+                    } else {
+                        var error = module._responseToError(response);
+                        return defer.reject(error);
+                    }
                 }).catch(function (error) {
-                    return defer.reject(error);
+                    var reason = module._responseToError(error);
+                    return defer.reject(reason);
                 });
 
                 return defer.promise;
@@ -1320,7 +1412,7 @@ var ERMrest = (function(module) {
                     fkr = visibleFKs[i];
 
                     // make sure that this fkr is not from an alternative table to self
-                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined && 
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
                         fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
@@ -1722,13 +1814,15 @@ var ERMrest = (function(module) {
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
      * this data was acquired.
+     * @param {String} etag The etag from the reference object that produced this page
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasNext Whether there is more data before this Page
      * @param {boolean} hasPrevious Whether there is more data after this Page
      *
      */
-    function Page(reference, data, hasPrevious, hasNext) {
+    function Page(reference, etag, data, hasPrevious, hasNext) {
         this._ref = reference;
+        this._etag = etag;
 
         /*
          * This is the structure of this._linkedData
@@ -1816,7 +1910,7 @@ var ERMrest = (function(module) {
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this._data[i], this._linkedData[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i]));
                 }
             }
             return this._tuples;
@@ -1856,12 +1950,12 @@ var ERMrest = (function(module) {
                 paging.row = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
-                    
+
                     // first row
                     var data = this._data[0][colName];
-                    if (typeof data !== 'undefined') { 
+                    if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data); 
+                        paging.row.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -1871,7 +1965,7 @@ var ERMrest = (function(module) {
                                 break;
                             }
                         }
-                        
+
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol._isForeignKey) {
                                 data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
@@ -1927,9 +2021,9 @@ var ERMrest = (function(module) {
 
                     // last row
                     var data = this._data[this._data.length-1][colName];
-                    if (typeof data !== 'undefined') { 
+                    if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data); 
+                        paging.row.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -2029,10 +2123,13 @@ var ERMrest = (function(module) {
      * @class
      * @param {!ERMrest.Reference} reference The reference object from which
      * this data was acquired.
+     * @param {!ERMrest.Page} page The Page object from which
+     * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, data, linkedData) {
+    function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
+        this._page = page;
         this._data = data;
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
@@ -2091,6 +2188,18 @@ var ERMrest = (function(module) {
             }
             return this._ref;
         },
+
+        /**
+         * This is the page of the Tuple
+         * @returns {ERMrest.Page|*} page of the Tuple
+         */
+         get page() {
+            if (this._page === undefined) {
+                // TODO: What happens here?
+                return undefined;
+            }
+            return this._page;
+         },
 
         /**
          * Used for getting the current set of data for the reference.
@@ -2555,7 +2664,7 @@ var ERMrest = (function(module) {
                     if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
                         this._displayname = {
                             "value": this.key.colset.columns.reduce(function(prev, curr, index) {
-                                return prev + (index>0 ? " " : "") + curr.displayname.value;
+                                return prev + (index>0 ? ":" : "") + curr.displayname.value;
                             }, ""),
                             "isHTML": this.key.colset.columns.some(function (col) {
                                 return col.displayname.isHTML;
@@ -2678,30 +2787,30 @@ var ERMrest = (function(module) {
 
         /**
          * Heuristics are as follows:
-         * 
+         *
          * (first applicable rule from top to bottom)
-         * 
+         *
          * - column_order = false -> disable sort.
-         * 
+         *
          * - PseudoColumn
          *      - column_order defined -> use it.
          *      - Foreign key:
          *          - table has row_order -> use it.
          *          - simple fk -> use the column's
          *      - Key:
-         *          - simple key -> use the column's 
+         *          - simple key -> use the column's
          *      - disable it
          * - Column:
          *      - column_order defined -> use it.
          *      - use column actual value.
-         * 
+         *
          * @type {boolean}
          */
         get sortable() {
             if (this._sortable === undefined) {
                 this._determineSortable();
-            }   
-            return this._sortable; 
+            }
+            return this._sortable;
         },
 
         /**
@@ -2721,11 +2830,11 @@ var ERMrest = (function(module) {
          * @desc
          * An object which contains column display properties
          * The properties are:
-         * 
+         *
          *  - `columnOrder`: list of columns that this column should be sorted based on
          *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
          *  - `markdownPattern`: string|undefined
-         * 
+         *
          * @type {Object}
          */
         get _display() {
@@ -2828,7 +2937,7 @@ var ERMrest = (function(module) {
                             return nullValue;
                         }
                     }
-                    caption = values.join(" ");
+                    caption = values.join(":");
 
                     // if the caption is empty we cannot add any link to that.
                     if (caption.trim() === '') {
@@ -2968,7 +3077,7 @@ var ERMrest = (function(module) {
             }
             return module._getNullValue(this.table, context, [this.table, this.table.schema]);
         },
-        
+
         _determineSortable: function () {
 
             var display = this._display,
@@ -2980,7 +3089,7 @@ var ERMrest = (function(module) {
 
             // disable the sort
             if (display !== undefined && display.columnOrder === false) return;
-            
+
             if (this.isPseudo) {
                 // use the column_order
                 if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
@@ -2988,7 +3097,7 @@ var ERMrest = (function(module) {
                     this._sortable = true;
                     return;
                 }
-                
+
                 if (this._isForeignKey) {
                     if (this.reference.display._rowOrder !== undefined) {
                         var rowOrder = this.reference.display._rowOrder;
@@ -3026,7 +3135,6 @@ var ERMrest = (function(module) {
         get _hasBase() {
             return this._base !== null && this._base !== undefined;
         }
-
     };
 
     return module;

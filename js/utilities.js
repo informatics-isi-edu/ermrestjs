@@ -256,6 +256,12 @@ var ERMrest = (function(module) {
     * @desc returns the annotation value based on the given context.
     */
     module._getAnnotationValueByContext = function (context, annotation) {
+
+        // check annotation is an object
+        if (typeof annotation !== "object") {
+            return -1;
+        }
+
         if (typeof context === "string") {
             // NOTE: We assume that context names are seperated with `/`
             var partial = context,
@@ -328,7 +334,7 @@ var ERMrest = (function(module) {
          * make sure that this name is unique:
          * 1. table doesn't have any columns with that name.
          * 2. there's no constraint with that name.
-         **/ 
+         **/
         var i = 0;
         while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
             name += ++i;
@@ -484,6 +490,8 @@ var ERMrest = (function(module) {
                 return new module.NotFoundError(response.statusText, response.data);
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
+            case 412:
+                return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
             case 503:
