@@ -256,6 +256,12 @@ var ERMrest = (function(module) {
     * @desc returns the annotation value based on the given context.
     */
     module._getAnnotationValueByContext = function (context, annotation) {
+
+        // check annotation is an object
+        if (typeof annotation !== "object") {
+            return -1;
+        }
+
         if (typeof context === "string") {
             // NOTE: We assume that context names are seperated with `/`
             var partial = context,

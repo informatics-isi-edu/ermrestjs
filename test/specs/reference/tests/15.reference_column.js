@@ -458,10 +458,18 @@ exports.execute = function (options) {
                     })).toEqual(['id']);
                 });
                 
-                it("when foreign doesn't have `column_order` annotation and is not simple, should return false.", function () {
-                    // outbound_fk_7
-                    expect(compactColumns[14].sortable).toBe(false);
-                    expect(compactColumns[14]._sortColumns.length).toBe(0);
+                describe("when foreign key is not simple, ", function () {
+                    it ("and doesn't have `foreign key` annotation (therefore no `column_order` annotation), should return false.", function () {
+                        // outbound_fk_7
+                        expect(compactColumns[14].sortable).toBe(false);
+                        expect(compactColumns[14]._sortColumns.length).toBe(0);
+                    });
+
+                    it ('and has `foreign key` annotation but no `display` (and therefore no `column_order` annotation), should return false.', function () {
+                        // outbound_fk_8
+                        expect(compactColumns[13].sortable).toBe(false);
+                        expect(compactColumns[13]._sortColumns.length).toBe(0);
+                    });
                 });
                 
             });

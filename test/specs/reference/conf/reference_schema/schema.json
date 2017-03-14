@@ -1163,7 +1163,9 @@
                             "column_name": "id_2"
                         }
                     ],
-                    "annotations": {}
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {}
+                    }
                 },
                 {
                     "comment": "composite fk to reference, one value is null",
