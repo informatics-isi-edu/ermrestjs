@@ -1517,17 +1517,14 @@ var ERMrest = (function(module) {
             var filteredRef,
                 uri = this.uri;
 
-            console.log(tuple);
             if (column.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-                var filterPattern = column.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
-                console.log(filterPattern);
-                var uriFilter = module._renderTemplate(filterPattern, tuple.data);
-                console.log(uriFilter);
-                if (uriFilter.trim().length > 0) uri += uriFilter;
+                var filterPattern = column.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+                var uriFilter = module._renderTemplate(filterPattern, data);
+                // NOTE: should we check for (uriFilter.trim() !== '') ?
+                if (uriFilter !== null) uri += ('/' + uriFilter);
             }
-            console.log(uri);
 
-            filteredRef = module._createReference(uri, this.table.schema.catalog);
+            filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
             return filteredRef;
         },
 
