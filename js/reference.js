@@ -1516,30 +1516,6 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * This function takes in a tuple and generates a reference that is
-         * constrained based on the domain_filter_pattern annotation. If this
-         * annotation doesn't exist, it returns this (reference)
-         * `this` is the same as column.reference
-         * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
-         * @param {Object} data - tuple data with potential constraints
-         * @returns {ERMrest.Reference} the constrained reference
-         */
-        filteredRef: function(column, data) {
-            var filteredRef,
-                uri = this.uri;
-
-            if (column.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-                var filterPattern = column.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-                var uriFilter = module._renderTemplate(filterPattern, data);
-                // NOTE: should we check for (uriFilter.trim() !== '') ?
-                if (uriFilter !== null) uri += ('/' + uriFilter);
-            }
-
-            filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
-            return filteredRef;
-        },
-
-        /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
          * search term can be:
@@ -2884,6 +2860,30 @@ var ERMrest = (function(module) {
                 return this._base.formatvalue(data, options);
             }
             return data.toString();
+        },
+
+        /**
+         * This function takes in a tuple and generates a reference that is
+         * constrained based on the domain_filter_pattern annotation. If this
+         * annotation doesn't exist, it returns this (reference)
+         * `this` is the same as column.reference
+         * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
+         * @param {Object} data - tuple data with potential constraints
+         * @returns {ERMrest.Reference} the constrained reference
+         */
+        filteredRef: function(data) {
+            var filteredRef,
+                uri = this.uri;
+
+            if (this._base.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
+                var filterPattern = this._base.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+                var uriFilter = module._renderTemplate(filterPattern, data);
+                // NOTE: should we check for (uriFilter.trim() !== '') ?
+                if (uriFilter !== null) uri += ('/' + uriFilter);
+            }
+
+            filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
+            return filteredRef;
         },
 
         /**
