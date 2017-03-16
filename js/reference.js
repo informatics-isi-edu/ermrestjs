@@ -2873,10 +2873,10 @@ var ERMrest = (function(module) {
          */
         filteredRef: function(data) {
             var filteredRef,
-                uri = this.uri;
+                uri = this.reference.uri;
 
-            if (this._base.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-                var filterPattern = this._base.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+            if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
+                var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
                 var uriFilter = module._renderTemplate(filterPattern, data);
                 // NOTE: should we check for (uriFilter.trim() !== '') ?
                 if (uriFilter !== null) uri += ('/' + uriFilter);
