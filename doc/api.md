@@ -285,6 +285,7 @@ to use for ERMrest JavaScript agents.
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+        * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
@@ -2616,6 +2617,7 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+    * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> &#124; <code>object</code>
 
@@ -2733,6 +2735,22 @@ Formats a value corresponding to this reference-column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+
+<a name="ERMrest.ReferenceColumn+filteredRef"></a>
+
+#### referenceColumn.filteredRef(column, data) ⇒ <code>[Reference](#ERMrest.Reference)</code>
+This function takes in a tuple and generates a reference that is
+constrained based on the domain_filter_pattern annotation. If this
+annotation doesn't exist, it returns this (reference)
+`this` is the same as column.reference
+
+**Kind**: instance method of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+**Returns**: <code>[Reference](#ERMrest.Reference)</code> - the constrained reference  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| column | <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code> | column that `this` is based on |
+| data | <code>Object</code> | tuple data with potential constraints |
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 

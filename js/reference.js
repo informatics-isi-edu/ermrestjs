@@ -2894,6 +2894,30 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * This function takes in a tuple and generates a reference that is
+         * constrained based on the domain_filter_pattern annotation. If this
+         * annotation doesn't exist, it returns this (reference)
+         * `this` is the same as column.reference
+         * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
+         * @param {Object} data - tuple data with potential constraints
+         * @returns {ERMrest.Reference} the constrained reference
+         */
+        filteredRef: function(data) {
+            var filteredRef,
+                uri = this.reference.uri;
+
+            if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
+                var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+                var uriFilter = module._renderTemplate(filterPattern, data);
+                // NOTE: should we check for (uriFilter.trim() !== '') ?
+                if (uriFilter !== null) uri += ('/' + uriFilter);
+            }
+
+            filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
+            return filteredRef;
+        },
+
+        /**
          * Formats the presentation value corresponding to this reference-column definition.
          * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
          * @param {Object} options includes `context` and `formattedValues`
