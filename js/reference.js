@@ -1020,6 +1020,21 @@ var ERMrest = (function(module) {
                     }
                     var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
 
+                    // we are paging based on @before (user navigated backwards in the set of data)
+                    // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
+                    if ( (ownReference.location.pagingObject && ownReference.location.pagingObject.before) && (page.tuples.length < limit || !page.hasPrevious) ) {
+                        // should I clone the reference then set the paging object to null?
+                        ownReference.location.pagingObject = null;
+                        ownReference.read().then(function rereadReference(page) {
+                            defer.resolve(page);
+                        }, function error(response) {
+                            var error = module._responseToError(response);
+                            return defer.reject(error);
+                        }).catch(function (error) {
+                            return defer.reject(error);
+                        });
+                    }
+
                     defer.resolve(page);
 
                 }, function error(response) {
