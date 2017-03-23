@@ -131,7 +131,7 @@ var ERMrest = (function(module) {
                 if (this._sort) {
                     this._paging = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
+                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
                 }
             }
         }
