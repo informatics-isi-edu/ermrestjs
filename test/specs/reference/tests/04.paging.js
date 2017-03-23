@@ -140,7 +140,7 @@ exports.execute = function (options) {
                 });
 
                 // limit was changed after paging back
-                it('read with an increased limit should return a Page object that is defined and has tuples equal to the new limit.', function(done) {
+                it("read with an increased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
                     var increasedLimitPage, increasedLimitPreviousReference,
                         increasedLimit = 15;
 
@@ -152,6 +152,26 @@ exports.execute = function (options) {
 
                         increasedLimitPreviousReference = increasedLimitPage.previous;
                         expect(increasedLimitPreviousReference).toBe(null);
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it("read with a decreased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
+                    var decreasedLimitPage, decreasedLimitPreviousReference,
+                        decreasedLimit = 5;
+
+                    reference3.read(decreasedLimit).then(function (response) {
+                        decreasedLimitPage = response;
+
+                        expect(decreasedLimitPage).toEqual(jasmine.any(Object));
+                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit);
+
+                        decreasedLimitPreviousReference = decreasedLimitPage.previous;
+                        expect(decreasedLimitPreviousReference).toBe(null);
 
                         done();
                     }, function (err) {
