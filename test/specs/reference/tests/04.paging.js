@@ -111,7 +111,6 @@ exports.execute = function (options) {
                 it('previous should return a Reference object that is defined.', function() {
                     reference3 = page2.previous;
                     expect(reference3).toEqual(jasmine.any(Object));
-
                 });
 
                 it('read should return a Page object that is defined.', function(done) {
@@ -138,13 +137,31 @@ exports.execute = function (options) {
                         expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
                     }
                 });
+            });
 
-                // limit was changed after paging back
+            // limit was changed after paging back
+            describe("with navigating back to the first page,", function() {
+                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x)@before(33)?limit=" + limit;
+                var reference5;
+
+                beforeAll(function(done) {
+                    options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                        reference5 = response;
+
+                        expect(reference5).toEqual(jasmine.any(Object));
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
                 it("read with an increased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
                     var increasedLimitPage, increasedLimitPreviousReference,
                         increasedLimit = 15;
 
-                    reference3.read(increasedLimit).then(function (response) {
+                    reference5.read(increasedLimit).then(function (response) {
                         increasedLimitPage = response;
 
                         expect(increasedLimitPage).toEqual(jasmine.any(Object));
@@ -164,7 +181,7 @@ exports.execute = function (options) {
                     var decreasedLimitPage, decreasedLimitPreviousReference,
                         decreasedLimit = 5;
 
-                    reference3.read(decreasedLimit).then(function (response) {
+                    reference5.read(decreasedLimit).then(function (response) {
                         decreasedLimitPage = response;
 
                         expect(decreasedLimitPage).toEqual(jasmine.any(Object));
@@ -180,7 +197,6 @@ exports.execute = function (options) {
                     });
                 });
             });
-
 
             describe("Previous with no more data", function() {
 

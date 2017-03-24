@@ -1023,24 +1023,25 @@ var ERMrest = (function(module) {
                     // we are paging based on @before (user navigated backwards in the set of data)
                     // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
                     if ( (ownReference.location.pagingObject && ownReference.location.pagingObject.before) && (page.tuples.length < limit || !page.hasPrevious) ) {
-                        // should I clone the reference then set the paging object to null?
-                        ownReference.location.pagingObject = null;
-                        ownReference.read().then(function rereadReference(page) {
-                            defer.resolve(page);
+                        var referenceWithoutPaging = _referenceCopy(ownReference);
+                        // set the private values to null because the public functions rely on these
+                        referenceWithoutPaging.location._pagingObject = null;
+                        referenceWithoutPaging.location._paging = null;
+
+                        referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+                            defer.resolve(rereadPage);
                         }, function error(response) {
                             var error = module._responseToError(response);
                             return defer.reject(error);
                         }).catch(function (error) {
                             return defer.reject(error);
                         });
+                    } else {
+                        defer.resolve(page);
                     }
-
-                    defer.resolve(page);
 
                 }, function error(response) {
                     var error = module._responseToError(response);
-                    return defer.reject(error);
-                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
