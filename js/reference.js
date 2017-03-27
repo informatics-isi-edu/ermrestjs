@@ -1082,14 +1082,9 @@ var ERMrest = (function(module) {
 
                 var submissionData = [],
                     columnProjections = [],
-                    shortestKeyNames = [],
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
-
-                shortestKeyNames = this._shortestKey.map(function (column) {
-                    return column.name;
-                });
 
                 for(var i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
@@ -1100,16 +1095,26 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
-                    for (var key in newData) {
+                    // Loop through the columns for the submission data so it's based off of the visible columns list
+                    for (var m = 0; m < this.columns.length; m++) {
+                        var key;
+                        if (this.columns[m].isPseudo) {
+                            var foreignKeyColumns = this.columns[m].foreignKey.colset.columns;
+                            for (var n = 0; n < foreignKeyColumns.length; n++) {
+                                var referenceColumn = foreignKeyColumns[n];
+                                key = referenceColumn.name;
+                            }
+                        } else {
+                            key = this.columns[m].name;
+                        }
+                        // the list of column names to use in the uri
+                        columnProjections.push(key);
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
                         submissionData[i][key + oldAlias] = oldData[key];
                         submissionData[i][key + newAlias] = newData[key];
                     }
                 }
-
-                // The list of column names to use in the uri
-                columnProjections = Object.keys(tuples[0].data);
 
                 // always alias the set of column projections for the key data
                 for (var j = 0; j < columnProjections.length; j++) {
