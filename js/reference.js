@@ -1100,12 +1100,11 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
-                    for (var j = 0; j < shortestKeyNames.length; j++) {
-                        var key = shortestKeyNames[j];
 
-                    }
-                    for (var key in newData) {
-                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
+                        var shortestKey = shortestKeyNames[keyIndex];
+
+                        // shortest key should always be aliased in case that key value was changed
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
                         submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
                         submissionData[i][shortestKey + newAlias] = newData[shortestKey];
