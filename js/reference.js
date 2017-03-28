@@ -1100,6 +1100,10 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
+                    for (var j = 0; j < shortestKeyNames.length; j++) {
+                        var key = shortestKeyNames[j];
+
+                    }
                     for (var key in newData) {
                         // if the key is part of the shortest key for the entity, the data needs to be aliased
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
@@ -1108,6 +1112,7 @@ var ERMrest = (function(module) {
                     }
                 }
 
+                // This should be only changed data
                 // The list of column names to use in the uri
                 columnProjections = Object.keys(tuples[0].data);
 
