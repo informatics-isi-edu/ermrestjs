@@ -1131,12 +1131,18 @@ var ERMrest = (function(module) {
                         } else {
                             key = column.name;
                         }
-                        // the list of column names to use in the uri
-                        columnProjections.push(key);
+
+                        // don't add the current key to the column projections if it's already in there
+                        // this can happen when there are multiple tuples
+                        if (columnProjections.indexOf(key) === -1) {
+                            // the list of column names to use in the uri
+                            columnProjections.push(key);
+                        }
 
                         // if the current key is in shortestKeyNames, we already added the data to submissionData
                         if (shortestKeyNames.indexOf(key) === -1) {
-                            submissionData[i][key] = newData[key];
+                            // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                            submissionData[i][key + newAlias] = newData[key];
                         }
                     }
                 }
@@ -1152,17 +1158,10 @@ var ERMrest = (function(module) {
                 uri += ';';
 
                 // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
-                for (var k = 0; k < shortestKeyNames.length; k++) {
+                for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(shortestKeyNames[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[k]);
-                }
-
-                for (var l = 0; l < columnProjections.length; l++) {
-                    // there is always a shortest key before the other column projections
-                    uri += ',';
-                    // alias all the columns for the projection set
-                    uri += module._fixedEncodeURIComponent(columnProjections[l]);
+                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
