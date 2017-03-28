@@ -1033,8 +1033,6 @@ var ERMrest = (function(module) {
                         }, function error(response) {
                             var error = module._responseToError(response);
                             return defer.reject(error);
-                        }).catch(function (error) {
-                            return defer.reject(error);
                         });
                     } else {
                         defer.resolve(page);
