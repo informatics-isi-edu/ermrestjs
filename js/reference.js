@@ -1112,16 +1112,24 @@ var ERMrest = (function(module) {
 
                     // Loop through the visible columns so the submission data is based off of the visible columns list
                     for (var m = 0; m < this.columns.length; m++) {
+                        var column = this.columns[m];
                         var key;
+
                         if (this.columns[m].isPseudo) {
-                            console.dir(this.columns[m]);
-                            var foreignKeyColumns = this.columns[m].foreignKey.colset.columns;
-                            for (var n = 0; n < foreignKeyColumns.length; n++) {
-                                var referenceColumn = foreignKeyColumns[n];
+                            var keyColumns = [];
+
+                            if (column._isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column._isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (var n = 0; n < keyColumns.length; n++) {
+                                var referenceColumn = keyColumns[n];
                                 key = referenceColumn.name;
                             }
                         } else {
-                            key = this.columns[m].name;
+                            key = column.name;
                         }
                         // the list of column names to use in the uri
                         columnProjections.push(key);
