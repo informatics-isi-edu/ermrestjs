@@ -1082,9 +1082,14 @@ var ERMrest = (function(module) {
 
                 var submissionData = [],
                     columnProjections = [],
+                    shortestKeyNames = [],
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
+
+                shortestKeyNames = this._shortestKey.map(function (column) {
+                    return column.name;
+                });
 
                 for(var i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
@@ -1095,7 +1100,16 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
-                    // Loop through the columns for the submission data so it's based off of the visible columns list
+                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
+                        var shortestKey = shortestKeyNames[keyIndex];
+
+                        // shortest key should always be aliased in case that key value was changed
+                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
+                        submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
+                        submissionData[i][shortestKey + newAlias] = newData[shortestKey];
+                    }
+
+                    // Loop through the visible columns so the submission data is based off of the visible columns list
                     for (var m = 0; m < this.columns.length; m++) {
                         var key;
                         if (this.columns[m].isPseudo) {
@@ -1109,27 +1123,36 @@ var ERMrest = (function(module) {
                         }
                         // the list of column names to use in the uri
                         columnProjections.push(key);
-                        // if the key is part of the shortest key for the entity, the data needs to be aliased
-                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        submissionData[i][key + oldAlias] = oldData[key];
-                        submissionData[i][key + newAlias] = newData[key];
+
+                        // if the current key is in shortestKeyNames, we already added the data to submissionData
+                        if (shortestKeyNames.indexOf(key) === -1) {
+                            submissionData[i][key] = newData[key];
+                        }
                     }
                 }
 
-                // always alias the set of column projections for the key data
-                for (var j = 0; j < columnProjections.length; j++) {
+                // always alias the keyset for the key data
+                for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
+                    uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
-                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
                 uri += ';';
 
-                for (var k = 0; k < columnProjections.length; k++) {
+                // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
+                for (var k = 0; k < shortestKeyNames.length; k++) {
                     if (k !== 0) uri += ',';
+                    // alias all the columns for the key set
+                    uri += module._fixedEncodeURIComponent(shortestKeyNames[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[k]);
+                }
+
+                for (var l = 0; l < columnProjections.length; l++) {
+                    // there is always a shortest key before the other column projections
+                    uri += ',';
                     // alias all the columns for the projection set
-                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
+                    uri += module._fixedEncodeURIComponent(columnProjections[l]);
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
