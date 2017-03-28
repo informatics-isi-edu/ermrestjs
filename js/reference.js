@@ -1114,6 +1114,7 @@ var ERMrest = (function(module) {
                     for (var m = 0; m < this.columns.length; m++) {
                         var key;
                         if (this.columns[m].isPseudo) {
+                            console.dir(this.columns[m]);
                             var foreignKeyColumns = this.columns[m].foreignKey.colset.columns;
                             for (var n = 0; n < foreignKeyColumns.length; n++) {
                                 var referenceColumn = foreignKeyColumns[n];
