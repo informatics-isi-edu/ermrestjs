@@ -2428,7 +2428,7 @@ var ERMrest = (function(module) {
          */
         get displayname() {
             if (!this._displayname) {
-                this._displayname = { "value": module._generateRowName(this._pageRef._table, this._pageRef._context, this._data), "isHTML": true};
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
         },
@@ -2618,16 +2618,18 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._displayname = this._base.displayname;
                 } else if (this._isForeignKey){
-                    var foreignKey = this.foreignKey, value, isHTML;
+                    var foreignKey = this.foreignKey, value, isHTML, unformatted;
                     if (foreignKey.to_name !== "") {
-                        value = foreignKey.to_name;
+                        value = unformatted = foreignKey.to_name;
                         isHTML = false;
                     } else if (foreignKey.simple) {
                         value = this._base.displayname.value;
                         isHTML = this._base.displayname.isHTML;
+                        unformatted = this._base.displayname.unformatted;
 
                         if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
                             value += " ("  + foreignKey.key.table.displayname.value + ")";
+                            unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
                             if (!isHTML) {
                                 isHTML = foreignKey.key.table.displayname.isHTML;
                             }
@@ -2636,6 +2638,7 @@ var ERMrest = (function(module) {
                     } else {
                         value = foreignKey.key.table.displayname.value;
                         isHTML = foreignKey.key.table.displayname.isHTML;
+                        unformatted = foreignKey.key.table.displayname.unformatted;
 
                         // disambiguate
                         var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
@@ -2643,10 +2646,16 @@ var ERMrest = (function(module) {
                         }).length;
 
                         if (tableCount > 1) {
-                             value += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                            var cols = foreignKey.colset.columns.slice().sort(function(a,b) {
                                 return a.name.localeCompare(b.name);
-                            }).map(function(col) {
+                            });
+
+                             value += " (" + cols.map(function(col) {
                                 return col.displayname.value;
+                            }).join(", ")  + ")";
+
+                            unformatted += " (" + cols.map(function(col) {
+                                return col.displayname.unformatted;
                             }).join(", ")  + ")";
 
                             if (!isHTML) {
@@ -2656,7 +2665,7 @@ var ERMrest = (function(module) {
                             }
                         }
                     }
-                    this._displayname = {"value": value, "isHTML": isHTML};
+                    this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
 
                 } else if (this._isKey) {
                     this._displayname = module._determineDisplayName(this.key, false);
@@ -2668,7 +2677,10 @@ var ERMrest = (function(module) {
                             }, ""),
                             "isHTML": this.key.colset.columns.some(function (col) {
                                 return col.displayname.isHTML;
-                            })
+                            }),
+                            "unformatted": this.key.colset.columns.reduce(function(prev, curr, index) {
+                                return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
+                            }, ""),
                         };
                     }
 
@@ -2734,7 +2746,7 @@ var ERMrest = (function(module) {
                         this._default = null;
                     } else {
                         // use row name as the caption
-                        caption = module._generateRowName(this.table, this._context, data);
+                        caption = module._generateRowName(this.table, this._context, data).value;
 
                         // use "col_1:col_2:col_3"
                         if (caption.trim() === '') {
@@ -2995,7 +3007,7 @@ var ERMrest = (function(module) {
                 }
 
                 // use row name as the caption
-                caption = module._generateRowName(this.table, context, data);
+                caption = module._generateRowName(this.table, context, data).value;
 
                 // use key for displayname: "col_1:col_2:col_3"
                 if (caption.trim() === '') {
