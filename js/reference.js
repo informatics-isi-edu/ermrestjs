@@ -1122,6 +1122,13 @@ var ERMrest = (function(module) {
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
                         submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
                         submissionData[i][shortestKey + newAlias] = newData[shortestKey];
+
+                        // don't add the current key to the column projections if it's already in there
+                        // this can happen when there are multiple tuples or when a key is part of the visible column set
+                        if (columnProjections.indexOf(shortestKey) === -1) {
+                            // keys are aliased and included in both the keyset and column projections set
+                            columnProjections.push(shortestKey);
+                        }
                     }
 
                     // Loop through the visible columns so the submission data is based off of the visible columns list
@@ -1147,7 +1154,7 @@ var ERMrest = (function(module) {
                         }
 
                         // don't add the current key to the column projections if it's already in there
-                        // this can happen when there are multiple tuples
+                        // this can happen when there are multiple tuples or when a key is part of the visible column set
                         if (columnProjections.indexOf(key) === -1) {
                             // the list of column names to use in the uri
                             columnProjections.push(key);
@@ -1190,7 +1197,6 @@ var ERMrest = (function(module) {
                         if (j !== 0)
                         uri += ';';
                         // shortest key is made up from one column
-                        console.log(response.data[j]);
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
                             uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
