@@ -1394,10 +1394,48 @@ var ERMrest = (function(module) {
          * ignore `B` and think of this relationship as `A <-> C`, unless `B`
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
-         * @type {ERMrest.Reference[]}
+         * @returns {ERMrest.Reference[]}
+         * 
+         * @param {ERMrest.Tuple=} tuple the current tuple
          */
-        get related() {
+        related: function (tuple) {
             if (this._related === undefined) {
+                /**
+                 * The logic is as follows:
+                 * 
+                 * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
+                 * it will consider all the inbound foreign keys).
+                 * 
+                 * 2. Go through the list of visible inbound foreign keys.
+                 *  2.0 keep track of the linkage and save some attributes:
+                 *      2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
+                 *      2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
+                 *      2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
+                 *          - logic: foriengkey's to_name or this.displayname
+                 * 
+                 * 
+                 *  2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
+                 *      2.1.1 displayname: F2.to_name or T2.displayname
+                 *      2.1.2 table: T2
+                 *      2.1.3 derivedAssociationReference: points to the association table (A)
+                 *      2.1.4 _location:
+                 *          2.1.4.1 Uses the linkage to get to the T2.
+                 *          2.1.4.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+                 *  2.2 otherwise.
+                 *      2.2.1 displayname: F1.from_name or T2.displayname
+                 *      2.2.2 table: T2
+                 *      2.2.3 _location:
+                 *          2.2.3.1 Uses the linkage to get to the T2.
+                 *          2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+                 * 
+                 * The logic for are sorted based on following attributes:
+                 *  1. displayname
+                 *  2. position of key columns that are involved in the foreignkey
+                 *  3. position of columns that are involved in the foreignkey
+                 * 
+                 */            
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
@@ -1407,7 +1445,7 @@ var ERMrest = (function(module) {
                     visibleFKs = this._table.referredBy.all();
                 }
 
-                var i, j, col, fkr, newRef;
+                var i, j, col, fkr, newRef, uri, subset;
                 for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
@@ -1429,11 +1467,30 @@ var ERMrest = (function(module) {
                     delete newRef._canUpdate;
                     delete newRef._canDelete;
 
+                    // the foreignkey that has created this link (link from this.reference to relatedReference)
                     newRef.origFKR = fkr; // it will be used to trace back the reference
+
+                    // the name of pseudocolumn that represents origFKR
                     newRef.origColumnName = module._generatePseudoColumnName(fkr.constraint_names[0].join("_"), fkr._table);
+
+                    // this name will be used to provide more information about the linkage
+                    if (fkr.to_name) {
+                        newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
+                    } else {
+                        newRef.parentDisplayname = this.displayname;
+                    }
+
+                    // create the subset that will be added for visibility
+                    if (typeof tuple !== 'undefined') {
+                        subset = "?subset=" + module._fixedEncodeURIComponent(
+                            "for " + newRef.parentDisplayname.unformatted + " = " + tuple.displayname.unformatted
+                        );
+                    }
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
+
+                        // find the other foreignkey
                         var otherFK;
                         for (j = 0; j < fkrTable.foreignKeys.length(); j++) {
                             if(fkrTable.foreignKeys.all()[j] !== fkr) {
@@ -1445,12 +1502,19 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
+                        // displayname
                         if (otherFK.to_name) {
-                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name};
+                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
                         } else {
                             newRef._displayname = otherFK.colset.columns[0].table.displayname;
                         }
-                        newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+
+                        // uri and location
+                        uri = this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true);
+                        if (typeof subset !== 'undefined') {
+                            uri += subset;
+                        }
+                        newRef._location = module._parse(uri);
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -1466,13 +1530,19 @@ var ERMrest = (function(module) {
                         newRef._table = fkrTable;
                         newRef._shortestKey = newRef._table.shortestKey;
 
+                        // displayname
                         if (fkr.from_name) {
-                            newRef._displayname = {"isHTML": false, "value": fkr.from_name};
+                            newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
                         } else {
                             newRef._displayname = newRef._table.displayname;
                         }
 
-                        newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
+                        // uri and location
+                        uri = this._location.compactUri + "/" + fkr.toString();
+                        if (typeof subset !== 'undefined') {
+                            uri += subset;
+                        }
+                        newRef._location = module._parse(uri);
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -1501,6 +1571,21 @@ var ERMrest = (function(module) {
 
             }
             return this._related;
+        },
+        
+        /**
+         * This will generate a new unfiltered reference each time.
+         * 
+         * @type {ERMrest.Reference} reference a reference that points to all entities of current table
+         */
+        get unfilteredReference() {
+            var table = this._table;
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+            ].join("/");
+            return new Reference(module._parse(refURI), table.schema.catalog);
         },
 
         get appLink() {
