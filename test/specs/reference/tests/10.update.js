@@ -43,7 +43,7 @@ exports.execute = function (options) {
                 };
 
                 options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                    reference = response;
+                    reference = response.contextualize.entryEdit;
 
                     return reference.read(1);
                 }).then(function (response) {
@@ -94,7 +94,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -141,7 +141,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -189,7 +189,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -237,7 +237,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -287,7 +287,7 @@ exports.execute = function (options) {
                         }
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -339,7 +339,7 @@ exports.execute = function (options) {
                         }
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -389,7 +389,7 @@ exports.execute = function (options) {
                     var uri = baseUri + "/ind_key1=1";
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         done();
                     }).catch(function (error) {
@@ -1025,7 +1025,7 @@ exports.execute = function (options) {
                         }]
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1114,7 +1114,7 @@ exports.execute = function (options) {
                         }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1181,7 +1181,7 @@ exports.execute = function (options) {
                         }]
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1252,7 +1252,7 @@ exports.execute = function (options) {
                         }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(3);
                         }).then(function (response) {

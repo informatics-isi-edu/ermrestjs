@@ -1136,6 +1136,12 @@ var ERMrest = (function(module) {
                         var column = this.columns[m];
                         var key;
 
+                        // if the column is disabled (generated or immutable), continue
+                        // no need to submit update data in the submission object
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
                         if (this.columns[m].isPseudo) {
                             var keyColumns = [];
 
