@@ -1190,6 +1190,7 @@ var ERMrest = (function(module) {
                         if (j !== 0)
                         uri += ';';
                         // shortest key is made up from one column
+                        console.log(response.data[j]);
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
                             uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
