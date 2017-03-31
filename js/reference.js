@@ -1142,7 +1142,7 @@ var ERMrest = (function(module) {
                             continue;
                         }
 
-                        if (this.columns[m].isPseudo) {
+                        if (column.isPseudo) {
                             var keyColumns = [];
 
                             if (column._isKey) {
@@ -1153,7 +1153,19 @@ var ERMrest = (function(module) {
 
                             for (var n = 0; n < keyColumns.length; n++) {
                                 var referenceColumn = keyColumns[n];
-                                key = referenceColumn.name;
+                                keyColumnName = referenceColumn.name;
+
+                                // here so each column of the columns in keyColumns set is added
+                                if (columnProjections.indexOf(keyColumnName) === -1) {
+                                    // the list of column names to use in the uri
+                                    columnProjections.push(keyColumnName);
+                                }
+
+                                // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
+                                if (shortestKeyNames.indexOf(keyColumnName) === -1) {
+                                    // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                                    submissionData[i][keyColumnName + newAlias] = newData[keyColumnName];
+                                }
                             }
                         } else {
                             key = column.name;
