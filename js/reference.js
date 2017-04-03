@@ -1100,6 +1100,20 @@ var ERMrest = (function(module) {
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
+                // add column name into list of column projections and data into the submission data
+                var addProjectionAndKeyData = function(index, colName) {
+                    // here so each column of the columns in keyColumns set is added
+                    if (columnProjections.indexOf(colName) === -1) {
+                        // the list of column names to use in the uri
+                        columnProjections.push(colName);
+                    }
+
+                    // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
+                    if (shortestKeyNames.indexOf(colName) === -1) {
+                        // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                        submissionData[index][colName + newAlias] = newData[colName];
+                    }
+                };
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
                     return column.name;
@@ -1155,34 +1169,13 @@ var ERMrest = (function(module) {
                                 var referenceColumn = keyColumns[n];
                                 keyColumnName = referenceColumn.name;
 
-                                // here so each column of the columns in keyColumns set is added
-                                if (columnProjections.indexOf(keyColumnName) === -1) {
-                                    // the list of column names to use in the uri
-                                    columnProjections.push(keyColumnName);
-                                }
-
-                                // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
-                                if (shortestKeyNames.indexOf(keyColumnName) === -1) {
-                                    // alias all data to prevent aliasing data to the same name as another column that exists in the table
-                                    submissionData[i][keyColumnName + newAlias] = newData[keyColumnName];
-                                }
+                                addProjectionAndKeyData(i, keyColumnName);
                             }
                         } else {
                             key = column.name;
                         }
 
-                        // don't add the current key to the column projections if it's already in there
-                        // this can happen when there are multiple tuples or when a key is part of the visible column set
-                        if (columnProjections.indexOf(key) === -1) {
-                            // the list of column names to use in the uri
-                            columnProjections.push(key);
-                        }
-
-                        // if the current key is in shortestKeyNames, we already added the data to submissionData
-                        if (shortestKeyNames.indexOf(key) === -1) {
-                            // alias all data to prevent aliasing data to the same name as another column that exists in the table
-                            submissionData[i][key + newAlias] = newData[key];
-                        }
+                        addProjectionAndKeyData(i, key);
                     }
                 }
 
