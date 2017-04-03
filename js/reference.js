@@ -1148,7 +1148,6 @@ var ERMrest = (function(module) {
                     // Loop through the visible columns so the submission data is based off of the visible columns list
                     for (var m = 0; m < this.columns.length; m++) {
                         var column = this.columns[m];
-                        var key;
 
                         // if the column is disabled (generated or immutable), continue
                         // no need to submit update data in the submission object
@@ -1172,10 +1171,8 @@ var ERMrest = (function(module) {
                                 addProjectionAndKeyData(i, keyColumnName);
                             }
                         } else {
-                            key = column.name;
+                            addProjectionAndKeyData(i, column.name);
                         }
-
-                        addProjectionAndKeyData(i, key);
                     }
                 }
 
