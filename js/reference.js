@@ -1100,6 +1100,20 @@ var ERMrest = (function(module) {
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
+                // add column name into list of column projections and data into the submission data
+                var addProjectionAndKeyData = function(index, colName) {
+                    // here so each column of the columns in keyColumns set is added
+                    if (columnProjections.indexOf(colName) === -1) {
+                        // the list of column names to use in the uri
+                        columnProjections.push(colName);
+                    }
+
+                    // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
+                    if (shortestKeyNames.indexOf(colName) === -1) {
+                        // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                        submissionData[index][colName + newAlias] = newData[colName];
+                    }
+                };
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
                     return column.name;
@@ -1114,30 +1128,71 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
-                    for (var key in newData) {
-                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+
+                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
+                        var shortestKey = shortestKeyNames[keyIndex];
+
+                        // shortest key should always be aliased in case that key value was changed
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        submissionData[i][key + oldAlias] = oldData[key];
-                        submissionData[i][key + newAlias] = newData[key];
+                        submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
+                        submissionData[i][shortestKey + newAlias] = newData[shortestKey];
+
+                        // don't add the current key to the column projections if it's already in there
+                        // this can happen when there are multiple tuples or when a key is part of the visible column set
+                        if (columnProjections.indexOf(shortestKey) === -1) {
+                            // keys are aliased and included in both the keyset and column projections set
+                            columnProjections.push(shortestKey);
+                        }
+                    }
+
+                    // Loop through the visible columns so the submission data is based off of the visible columns list
+                    for (var m = 0; m < this.columns.length; m++) {
+                        var column = this.columns[m];
+                        var key;
+
+                        // if the column is disabled (generated or immutable), continue
+                        // no need to submit update data in the submission object
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        if (column.isPseudo) {
+                            var keyColumns = [];
+
+                            if (column._isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column._isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (var n = 0; n < keyColumns.length; n++) {
+                                var referenceColumn = keyColumns[n];
+                                keyColumnName = referenceColumn.name;
+
+                                addProjectionAndKeyData(i, keyColumnName);
+                            }
+                        } else {
+                            key = column.name;
+                        }
+
+                        addProjectionAndKeyData(i, key);
                     }
                 }
 
-                // The list of column names to use in the uri
-                columnProjections = Object.keys(tuples[0].data);
-
-                // always alias the set of column projections for the key data
-                for (var j = 0; j < columnProjections.length; j++) {
+                // always alias the keyset for the key data
+                for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
+                    uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
-                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
                 uri += ';';
 
+                // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // alias all the columns for the projection set
+                    // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 

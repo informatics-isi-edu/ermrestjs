@@ -43,7 +43,7 @@ exports.execute = function (options) {
                 };
 
                 options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                    reference = response;
+                    reference = response.contextualize.entryEdit;
 
                     return reference.read(1);
                 }).then(function (response) {
@@ -79,7 +79,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe("for updating ", function () {
+        describe("for updating entities in update_table ", function () {
             var tableName = "update_table",
                 sortBy = "ind_key1", // column used to sort the data
                 baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
@@ -94,7 +94,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -141,7 +141,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -189,7 +189,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -237,7 +237,7 @@ exports.execute = function (options) {
                     }
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -287,7 +287,7 @@ exports.execute = function (options) {
                         }
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -339,7 +339,7 @@ exports.execute = function (options) {
                         }
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -389,7 +389,7 @@ exports.execute = function (options) {
                     var uri = baseUri + "/ind_key1=1";
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                        reference = response;
+                        reference = response.contextualize.entryEdit;
 
                         done();
                     }).catch(function (error) {
@@ -1025,7 +1025,7 @@ exports.execute = function (options) {
                         }]
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1114,7 +1114,7 @@ exports.execute = function (options) {
                         }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1181,7 +1181,7 @@ exports.execute = function (options) {
                         }]
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(2);
                         }).then(function (response) {
@@ -1252,7 +1252,7 @@ exports.execute = function (options) {
                         }];
 
                         options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                            reference = response;
+                            reference = response.contextualize.entryEdit;
 
                             return reference.read(3);
                         }).then(function (response) {
@@ -1318,6 +1318,397 @@ exports.execute = function (options) {
                         }).catch(function (error) {
                             console.dir(error);
                             done.fail();
+                        });
+                    });
+                });
+            });
+        });
+
+        describe("for updating entities with foreign keys ", function () {
+            var tableName = "update_table_with_foreign_key",
+                sortBy = "key",
+                baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
+
+            describe("a single entity should return a page object, when ", function () {
+                var reference;
+
+                beforeAll(function (done) {
+                    var uri = baseUri + "/key=1";
+
+                    options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                        reference = response.contextualize.entryEdit;
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                it("modifying an independent foreign key.", function (done) {
+                    var tuples, tuple;
+
+                    var updateData = {
+                        "ind_fkey1_col1": 3
+                    }
+
+                    reference.read(1).then(function (response) {
+                        tuples = response.tuples;
+                        tuple = tuples[0];
+                        var data = tuple.data;
+
+                        for (var key in updateData) {
+                            data[key] = updateData[key];
+                        }
+
+                        return reference.update(response.tuples);
+                    }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
+
+                        return reference.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
+
+                        expect(pageData.ind_fkey1_col1).toBe(updateData.ind_fkey1_col1);
+                        expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                it("modifying 1 column in a composite foreign key.", function (done) {
+                    var tuples, tuple;
+
+                    var updateData = {
+                        "comp_fkey1_col2": 4
+                    }
+
+                    reference.read(1).then(function (response) {
+                        tuples = response.tuples;
+                        tuple = tuples[0];
+                        var data = tuple.data;
+
+                        for (var key in updateData) {
+                            data[key] = updateData[key];
+                        }
+
+                        return reference.update(response.tuples);
+                    }).then(function (response) {
+                        expect(response._data.length).toBe(1);
+
+                        checkPageValues(response._data, tuples, sortBy);
+
+                        return reference.read(1);
+                    }).then(function (response) {
+                        var pageData = response._data[0];
+
+                        expect(pageData.comp_fkey1_col2).toBe(updateData.comp_fkey1_col2);
+                        expect(pageData.comp_fkey1_col2).not.toBe(tuple._oldData.comp_fkey1_col2);
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                describe("modifying multiple columns, ", function () {
+                    it("modifying 1 independent foreign key and 1 composite key column.", function (done) {
+                        var tuples, tuple;
+
+                        var updateData = {
+                            "ind_fkey1_col1": 4,
+                            "comp_fkey1_col1": 2
+                        }
+
+                        reference.read(1).then(function (response) {
+                            tuples = response.tuples;
+                            tuple = tuples[0];
+                            var data = tuple.data;
+
+                            for (var key in updateData) {
+                                data[key] = updateData[key];
+                            }
+
+                            return reference.update(response.tuples);
+                        }).then(function (response) {
+                            expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
+
+                            return reference.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0];
+
+                            expect(pageData.ind_fkey1_col1).toBe(updateData.ind_fkey1_col1);
+                            expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                            expect(pageData.comp_fkey1_col1).toBe(updateData.comp_fkey1_col1);
+                            expect(pageData.comp_fkey1_col1).not.toBe(tuple._oldData.comp_fkey1_col1);
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("modifying 2 composite key columns.", function (done) {
+                        var tuples, tuple;
+
+                        var updateData = {
+                            "comp_fkey1_col1": 10,
+                            "comp_fkey1_col2": 15
+                        }
+
+                        reference.read(1).then(function (response) {
+                            tuples = response.tuples;
+                            tuple = tuples[0];
+                            var data = tuple.data;
+
+                            for (var key in updateData) {
+                                data[key] = updateData[key];
+                            }
+
+                            return reference.update(response.tuples);
+                        }).then(function (response) {
+                            expect(response._data.length).toBe(1);
+
+                            checkPageValues(response._data, tuples, sortBy);
+
+                            return reference.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0];
+
+                            expect(pageData.comp_fkey1_col1).toBe(updateData.comp_fkey1_col1);
+                            expect(pageData.comp_fkey1_col1).not.toBe(tuple._oldData.comp_fkey1_col1);
+
+                            expect(pageData.comp_fkey1_col2).toBe(updateData.comp_fkey1_col2);
+                            expect(pageData.comp_fkey1_col2).not.toBe(tuple._oldData.comp_fkey1_col2);
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+                });
+            });
+
+            describe("multiple entities should return a page object, when ", function () {
+                var reference;
+
+                beforeAll(function (done) {
+                    var uri = baseUri + "/key=2;key=3";
+
+                    options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                        reference = response.contextualize.entryEdit;
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                describe("one column is changed and it's the independent foreign key ", function () {
+                    it("in both entities.", function (done) {
+                        var tuples;
+
+                        var updateData = [{
+                            "ind_fkey1_col1": 4
+                        }, {
+                            "ind_fkey1_col1": 5
+                        }]
+
+                        reference.read(2).then(function (response) {
+                            tuples = response.tuples;
+
+                            for (var i = 0; i < tuples.length; i++) {
+                                for (var key in updateData[i]) {
+                                    tuples[i].data[key] = updateData[i][key];
+                                }
+                            }
+
+                            return reference.update(tuples);
+                        }).then(function (response) {
+                            expect(response._data.length).toBe(updateData.length);
+
+                            checkPageValues(response._data, tuples, sortBy);
+
+                            // Retrieve each updated tuple and verify only updateData columns were changed
+
+                            var getFirstUri = baseUri + "/key=2";
+                            return options.ermRest.resolve(getFirstUri);
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0],
+                                tuple = tuples[0];
+
+                            // Only ind_fkey1_col1 should have changed
+                            expect(pageData.ind_fkey1_col1).toBe(updateData[0].ind_fkey1_col1);
+                            expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                            expect(pageData.key).toBe(tuple._oldData.key);
+                            expect(pageData.comp_fkey1_col1).toBe(tuple._oldData.comp_fkey1_col1);
+                            expect(pageData.comp_fkey1_col2).toBe(tuple._oldData.comp_fkey1_col2);
+
+                            var getSecondUri = baseUri + "/key=3";
+                            return options.ermRest.resolve(getSecondUri, {cid: "test"});
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0],
+                                tuple = tuples[1];
+
+                            // Only ind_fkey1_col1 should have changed
+                            expect(pageData.ind_fkey1_col1).toBe(updateData[1].ind_fkey1_col1);
+                            expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                            expect(pageData.key).toBe(tuple._oldData.key);
+                            expect(pageData.comp_fkey1_col1).toBe(tuple._oldData.comp_fkey1_col1);
+                            expect(pageData.comp_fkey1_col2).toBe(tuple._oldData.comp_fkey1_col2);
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("in one of the entities.", function (done) {
+                        var tuples;
+
+                        var updateData = [{
+                            "ind_fkey1_col1": 2
+                        }, {
+                            "comp_fkey1_col2": 1
+                        }]
+
+                        reference.read(2).then(function (response) {
+                            tuples = response.tuples;
+
+                            for (var i = 0; i < tuples.length; i++) {
+                                for (var key in updateData[i]) {
+                                    tuples[i].data[key] = updateData[i][key];
+                                }
+                            }
+
+                            return reference.update(tuples);
+                        }).then(function (response) {
+                            expect(response._data.length).toBe(updateData.length);
+
+                            checkPageValues(response._data, tuples, sortBy);
+
+                            // Retrieve each updated tuple and verify only updateData columns were changed
+
+                            var getFirstUri = baseUri + "/key=2";
+                            return options.ermRest.resolve(getFirstUri);
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0],
+                                tuple = tuples[0];
+
+                            // Only ind_fkey1_col1 should have changed
+                            expect(pageData.ind_fkey1_col1).toBe(updateData[0].ind_fkey1_col1);
+                            expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                            expect(pageData.key).toBe(tuple._oldData.key);
+                            expect(pageData.comp_fkey1_col1).toBe(tuple._oldData.comp_fkey1_col1);
+                            expect(pageData.comp_fkey1_col2).toBe(tuple._oldData.comp_fkey1_col2);
+
+                            var getSecondUri = baseUri + "/key=3";
+                            return options.ermRest.resolve(getSecondUri, {cid: "test"});
+                        }).then(function (response) {
+                            return response.read(1);
+                        }).then(function (response) {
+                            var pageData = response._data[0],
+                                tuple = tuples[1];
+
+                            // Only ind_fkey1_col1 should have changed
+                            expect(pageData.comp_fkey1_col2).toBe(updateData[1].comp_fkey1_col2);
+                            expect(pageData.comp_fkey1_col2).not.toBe(tuple._oldData.comp_fkey1_col2);
+
+                            expect(pageData.key).toBe(tuple._oldData.key);
+                            expect(pageData.ind_fkey1_col1).toBe(tuple._oldData.ind_fkey1_col1);
+                            expect(pageData.comp_fkey1_col1).toBe(tuple._oldData.comp_fkey1_col1);
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    describe("multiple columns are changed, ", function () {
+                        it("one has it's independent foreign key modified.", function (done) {
+                            var tuples;
+
+                            var updateData = [{
+                                "ind_fkey1_col1": 1,
+                                "comp_fkey1_col2": 2
+                            }, {
+                                "comp_fkey1_col1": 1,
+                                "comp_fkey1_col2": 4
+                            }]
+
+                            reference.read(2).then(function (response) {
+                                tuples = response.tuples;
+
+                                for (var i = 0; i < tuples.length; i++) {
+                                    for (var key in updateData[i]) {
+                                        tuples[i].data[key] = updateData[i][key];
+                                    }
+                                }
+
+                                return reference.update(tuples);
+                            }).then(function (response) {
+                                expect(response._data.length).toBe(updateData.length);
+
+                                checkPageValues(response._data, tuples, sortBy);
+
+                                // Retrieve each updated tuple and verify only updateData columns were changed
+
+                                var getFirstUri = baseUri + "/key=2";
+                                return options.ermRest.resolve(getFirstUri);
+                            }).then(function (response) {
+                                return response.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0],
+                                    tuple = tuples[0];
+
+                                expect(pageData.ind_fkey1_col1).toBe(updateData[0].ind_fkey1_col1);
+                                expect(pageData.ind_fkey1_col1).not.toBe(tuple._oldData.ind_fkey1_col1);
+
+                                expect(pageData.comp_fkey1_col2).toBe(updateData[0].comp_fkey1_col2);
+                                expect(pageData.comp_fkey1_col2).not.toBe(tuple._oldData.comp_fkey1_col2);
+
+                                var getSecondUri = baseUri + "/key=3";
+                                return options.ermRest.resolve(getSecondUri, {cid: "test"});
+                            }).then(function (response) {
+                                return response.read(1);
+                            }).then(function (response) {
+                                var pageData = response._data[0],
+                                    tuple = tuples[1];
+
+                                expect(pageData.comp_fkey1_col1).toBe(updateData[1].comp_fkey1_col1);
+                                expect(pageData.comp_fkey1_col1).not.toBe(tuple._oldData.comp_fkey1_col1);
+
+                                expect(pageData.comp_fkey1_col2).toBe(updateData[1].comp_fkey1_col2);
+                                expect(pageData.comp_fkey1_col2).not.toBe(tuple._oldData.comp_fkey1_col2);
+
+                                done();
+                            }).catch(function (error) {
+                                console.dir(error);
+                                done.fail();
+                            });
                         });
                     });
                 });
