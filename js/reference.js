@@ -1089,6 +1089,7 @@ var ERMrest = (function(module) {
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
+                verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
                 var defer = module._q.defer();
 
