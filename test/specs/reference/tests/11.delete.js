@@ -100,7 +100,7 @@ exports.execute = function (options) {
                 var uri = baseUri + "/key_col=3", tuples1, ref1, ref2;
 
                 options.ermRest.resolve(uri, {cid: 'test'}).then(function(response) {
-                    ref1 = response; ref2 = response;
+                    ref1 = response; ref2 = response.contextualize.entryEdit;
                     return ref1.read(1);
                 }).then(function(response) {
                     tuples1 = response.tuples;
