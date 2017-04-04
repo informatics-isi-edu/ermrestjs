@@ -1474,6 +1474,7 @@ var ERMrest = (function(module) {
                     delete newRef._related;
                     delete newRef._referenceColumns;
                     delete newRef.derivedAssociationReference;
+                    delete newRef._display;
 
                     // delete permissions
                     delete newRef._canCreate;
@@ -1602,17 +1603,24 @@ var ERMrest = (function(module) {
             return new Reference(module._parse(refURI), table.schema.catalog);
         },
 
-        get appLink() {
+        /**
+         * App-specific URL
+         * 
+         * @type {String}
+         * @throws {Error} if `_appLinkFn` is not defined.
+         */
+        get appLink() {
+            if (typeof module._appLinkFn !== "function") {
+                throw new Error("`appLinkFn` function is not defined.");
+            }
 
-            var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
-            if (tag && module._appLinkFn) {
-                return module._appLinkFn(tag, this._location);
-            } else if (!tag && this._context)
-                return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
-            else {
-                return undefined;
-            }
-        },
+            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
+
+            if (tag) {
+                return module._appLinkFn(tag, this._location);
+            }
+            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+        },
 
         /**
          * create a new reference with the new search

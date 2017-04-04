@@ -239,6 +239,7 @@ to use for ERMrest JavaScript agents.
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [._related](#ERMrest.Reference+_related)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -1916,6 +1917,7 @@ Constructor for a ParsedFilter.
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [._related](#ERMrest.Reference+_related)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2186,6 +2188,16 @@ The logic for are sorted based on following attributes:
 This will generate a new unfiltered reference each time.
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+appLink"></a>
+
+#### reference.appLink : <code>String</code>
+App-specific URL
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+**Throws**:
+
+- <code>Error</code> if `_appLinkFn` is not defined.
+
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>
