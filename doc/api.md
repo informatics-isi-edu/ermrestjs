@@ -2164,8 +2164,10 @@ specification, and not according to the contents of in the input
 tuple.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or errors (TBD).  
+**Returns**: <code>Promise</code> - A promise resolved w ith [Page](#ERMrest.Page) of results,
+or rejected with any of the following errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `data` is not valid, or reference is not in `entry/create` context.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |

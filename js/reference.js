@@ -642,8 +642,10 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or errors (TBD).
+         * @returns {Promise} A promise resolved w ith {@link ERMrest.Page} of results,
+         * or rejected with any of the following errors:
+         * - {@link ERMrest.InvalidInputError}: If `data` is not valid, or reference is not in `entry/create` context.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         create: function(data) {
             var self = this;
@@ -651,6 +653,7 @@ var ERMrest = (function(module) {
                 //  verify: data is not null, data has non empty tuple set
                 verify(data, "'data' must be specified");
                 verify(data.length > 0, "'data' must have at least one row to create");
+                verify(self._context === module._contexts.CREATE, "reference must be in 'entry/create' context.");
 
                 var defer = module._q.defer();
 
