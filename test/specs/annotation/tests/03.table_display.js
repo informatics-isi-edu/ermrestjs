@@ -8,7 +8,8 @@ exports.execute = function (options) {
             tableName3 = "table_w_accession_id_wo_annotation"
             tableName4 = "table_w_composite_key_wo_annotation",
             tableName5 = "table_w_table_display_annotation",
-            tableName6 = "table_w_table_display_annotation_w_markdown_pattern";
+            tableName6 = "table_w_table_display_annotation_w_unformatted",
+            tableName7 = "table_w_table_display_annotation_w_markdown_pattern";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName1;
@@ -28,6 +29,9 @@ exports.execute = function (options) {
 
         var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName6;
+
+        var table7EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
+            + tableName7;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -111,8 +115,8 @@ exports.execute = function (options) {
                 ];
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname.value;
-                    expect(displayname).toBe(expected[i]);
+                    expect(tuple.displayname.value).toBe(expected[i]);
+                    expect(tuple.displayname.unformatted).toBe(expected[i]);
                 }
             });
         });
@@ -176,8 +180,8 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname.value;
-                    expect(displayname).toBe(tuple.values[1]);
+                    expect(tuple.displayname.value).toBe(tuple.values[1]);
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[1]);
                 }
             });
 
@@ -185,8 +189,8 @@ exports.execute = function (options) {
                 var tuples = page2.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname.value;
-                    expect(displayname).toBe(tuple.values[1]);
+                    expect(tuple.displayname.value).toBe(tuple.values[1]);
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[1]);
                 }
             });
         });
@@ -231,13 +235,14 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname.value;
-                    expect(displayname).toBe(tuple.values[1] + ":" + tuple.values[0]);
+                    var expected = tuple.values[1] + ":" + tuple.values[0];
+                    expect(tuple.displayname.value).toBe(expected);
+                    expect(tuple.displayname.unformatted).toBe(expected);
                 }
             });
         });
 
-        describe('table entities with table-display.row-name annotation', function() {
+        describe('table entities with table-display.row-name annotation, without table-display.row-name/unformatted annotation, ', function() {
             var reference, page, tuple;
             var limit = 5;
 
@@ -277,8 +282,56 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var displayname = tuple.displayname.value;
-                    expect(displayname).toBe(tuple.values[1] + " " + tuple.values[2]);
+                    var expected = tuple.values[1] + " " + tuple.values[2];
+                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
+                    expect(tuple.displayname.unformatted).toBe("**" + expected + "**");
+                }
+            });
+        });
+
+        describe('table entities with table-display.row-name and table-display.row-name/unformatted annotation, ', function() {
+            var reference, page, tuple;
+            var limit = 5;
+
+            it('resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(table6EntityUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
+            });
+
+            it('read should return a Page object that is defined.', function(done) {
+                reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('tuple displayname should return the defined formatted and unformatted values in annotation.', function() {
+                var tuples = page.tuples;
+                for(var i = 0; i < limit; i++) {
+                    var tuple = tuples[i];
+                    var expected = tuple.values[1] + " " + tuple.values[2];
+                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
+                    expect(tuple.displayname.unformatted).toBe(expected);
                 }
             });
         });
@@ -289,7 +342,7 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table6EntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(table7EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
