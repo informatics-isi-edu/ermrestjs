@@ -382,10 +382,14 @@ var ERMrest = (function(module) {
          * A dictionary of available query parameters
          * @returns {Object}
          */
-        get qureyParams() {
+        get queryParams() {
             return this._queryParams;
         },
 
+        /**
+         * The query parameters string (key1=val1&key2=val2).
+         * @returns {String}
+         */
         get queryParamsString() {
             return this._queryParamsString;
         },
