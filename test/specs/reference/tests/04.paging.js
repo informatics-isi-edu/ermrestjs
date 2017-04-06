@@ -68,7 +68,6 @@ exports.execute = function (options) {
                 it('next should return a Reference object that is defined.', function() {
                     reference2 = page1.next;
                     expect(reference2).toEqual(jasmine.any(Object));
-
                 });
 
                 it('read should return a Page object that is defined.', function(done) {
@@ -112,7 +111,6 @@ exports.execute = function (options) {
                 it('previous should return a Reference object that is defined.', function() {
                     reference3 = page2.previous;
                     expect(reference3).toEqual(jasmine.any(Object));
-
                 });
 
                 it('read should return a Page object that is defined.', function(done) {
@@ -129,7 +127,7 @@ exports.execute = function (options) {
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
-                    tuples = page2.tuples;
+                    tuples = page3.tuples;
                     expect(tuples.length === 10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
@@ -141,8 +139,66 @@ exports.execute = function (options) {
                 });
             });
 
+            // limit was changed after paging back
+            describe("with navigating back to the first page,", function() {
+                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x)@before(33)?limit=" + limit;
+                var reference5;
 
-            describe("Next with no more data", function() {
+                beforeAll(function(done) {
+                    options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                        reference5 = response;
+
+                        expect(reference5).toEqual(jasmine.any(Object));
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it("read with an increased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
+                    var increasedLimitPage, increasedLimitPreviousReference,
+                        increasedLimit = 15;
+
+                    reference5.read(increasedLimit).then(function (response) {
+                        increasedLimitPage = response;
+
+                        expect(increasedLimitPage).toEqual(jasmine.any(Object));
+                        expect(increasedLimitPage.tuples.length).toBe(increasedLimit);
+
+                        increasedLimitPreviousReference = increasedLimitPage.previous;
+                        expect(increasedLimitPreviousReference).toBe(null);
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it("read with a decreased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
+                    var decreasedLimitPage, decreasedLimitPreviousReference,
+                        decreasedLimit = 5;
+
+                    reference5.read(decreasedLimit).then(function (response) {
+                        decreasedLimitPage = response;
+
+                        expect(decreasedLimitPage).toEqual(jasmine.any(Object));
+                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit);
+
+                        decreasedLimitPreviousReference = decreasedLimitPage.previous;
+                        expect(decreasedLimitPreviousReference).toBe(null);
+
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+            });
+
+            describe("Previous with no more data", function() {
 
                 it('previous should return null. ', function() {
                     var reference4 = page3.previous;
@@ -150,6 +206,8 @@ exports.execute = function (options) {
 
                 });
             });
+
+
         });
 
         describe("Paging table with schema defined sort", function() {
@@ -264,7 +322,7 @@ exports.execute = function (options) {
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
-                    tuples = page2.tuples;
+                    tuples = page3.tuples;
                     expect(tuples.length === 10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
@@ -399,7 +457,7 @@ exports.execute = function (options) {
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
-                    tuples = page2.tuples;
+                    tuples = page3.tuples;
                     expect(tuples.length === 10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
@@ -425,7 +483,7 @@ exports.execute = function (options) {
         describe("Paging with sort based on column with null data, ", function () {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                 + tableNameNoSort + "@sort(null%20value)";
-            
+
             var reference1, reference2, reference3;
             var page1, page2, page3;
             var limit = 10;
@@ -455,7 +513,7 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-            
+
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -522,7 +580,7 @@ exports.execute = function (options) {
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
-                    tuples = page2.tuples;
+                    tuples = page3.tuples;
                     expect(tuples.length === 10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {

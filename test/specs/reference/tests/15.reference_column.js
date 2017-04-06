@@ -150,7 +150,7 @@ exports.execute = function (options) {
                 }
             });
         });
-        
+
         describe('.name, ', function () {
             it('for pseudoColumns, ', function () {
                 it('should use constraint name.', function () {
@@ -212,7 +212,7 @@ exports.execute = function (options) {
                 it('otherwise, should return the consitutent column displaynames seperated by colon.', function() {
                     checkDisplayname(compactColumns[0].displayname, "id", false);
                     checkDisplayname(compactBriefRef.columns[0].displayname, "Column 3 Name:col_6", false);
-                });         
+                });
 
             });
 
@@ -237,7 +237,7 @@ exports.execute = function (options) {
                 }
             });
         });
-        
+
         describe('.nullok, ', function () {
             describe('for PseudoColumns,', function () {
                 it("if any of its columns have nullok=false, should return false.", function () {
@@ -264,7 +264,7 @@ exports.execute = function (options) {
                 expect(compactColumns[9].nullok).toBe(true);
             });
         });
-        
+
         describe('.default, ', function () {
             describe('for pseudoColumns that are foreign key, ', function () {
                 it ('should return null if any of the constituent column default values is null.', function () {
@@ -290,7 +290,7 @@ exports.execute = function (options) {
                 expect(compactColumns[7].default).toEqual('col 5 default');
             });
         });
-        
+
         describe('.comment, ', function () {
             describe('for pseudoColumns, ', function () {
                 it('when key/foreign key is simple should use column\'s comment.', function () {
@@ -307,7 +307,7 @@ exports.execute = function (options) {
                 expect(compactColumns[10].comment).toBe("not part of any FKRs.");
             });
         });
-        
+
         describe('.inputDisabled, ', function () {
             describe('for pseudoColumns, ', function () {
                 it('if it\'s based on one column (simple), should return base column\`s result.', function () {
@@ -356,7 +356,107 @@ exports.execute = function (options) {
                 });
             });
         });
-        
+
+        describe('.filteredRef, ', function() {
+            var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData,
+                mainEntityTableName = "main-entity-table",
+                schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
+                mainEntityUri = schemaUri  + mainEntityTableName;
+
+            describe('for pseudoColumns, ', function() {
+                describe('for foreign keys, ', function() {
+
+                    beforeAll(function(done) {
+                        options.ermRest.resolve(mainEntityUri, {
+                            cid: "test"
+                        }).then(function (response) {
+                            mainEntityReference = response;
+
+                            // mainEntityColumns[i] where:
+                            // 1=0 - id for table
+                            // i=1 - foreign key to no constraint table this constrains the following col
+                            // i=2 - foreign key to constrained table with domain filter defined with a dynamic value
+                            // i=3 - foreign key to position table with domain filter defined with a static value
+                            // i=4 - text column that constrains the following fk
+                            // i=5 - foreign key to position table with domain filter defined with dynamic value
+                            // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values
+                            mainEntityColumns = response.columns;
+
+                            done();
+                        }, function (err) {
+                            console.dir(err);
+                            done.fail();
+                        });
+                    });
+
+                    describe('should return a filtered reference based on provided data.', function () {
+                        it('Reference for mainEntityColumns[3], should have proper domain filter.', function() {
+                            mainEntityData = {}
+                            filteredReference = mainEntityColumns[3].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=fixed");
+                        });
+
+                        it('Reference for mainEntityColumns[5], should have proper domain filter.', function() {
+                            mainEntityData = {"position_text_col": "relative"};
+                            filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=" + mainEntityData.position_text_col);
+                        });
+
+                        it('Reference for mainEntityColumns[2], should have proper domain filter.', function() {
+                            mainEntityData = {"fk1": 1};
+                            filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1);
+                        });
+
+                        it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
+                            mainEntityData = {"fk1": 1, "position_text_col": "relative"};
+                            filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col);
+                        });
+                    });
+
+                    describe('should return the originating reference if the variable in the domain filter pattern is not present.', function() {
+                        it('Reference for mainEntityColumns[5], should have no filter defined.', function() {
+                            mainEntityData = {};
+                            filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
+                        });
+
+                        it('Reference for mainEntityColumns[2], should have no filter defined.', function() {
+                            mainEntityData = {};
+                            filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                        });
+
+                        it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
+                            mainEntityData = {};
+                            filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+
+                            // if one value is defined and the other isn't, filter should still be null
+                            mainEntityData.fk1 = 1;
+                            filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+
+                            delete mainEntityData.fk1;
+                            mainEntityData.position_text_col = "relative";
+                            filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                        });
+                    });
+                });
+            });
+        });
+
         describe('.formatPresentation, ', function () {
             var val;
             describe('for pseudoColumns, ', function () {
@@ -392,7 +492,7 @@ exports.execute = function (options) {
                         val = compactBriefRef.columns[0].formatPresentation({"col_3":"3"}, {context: "compact/brief"}).value;
                         expect(val).toBe('');
                     });
-                    
+
                     it('should use `markdown_pattern` from key display annotation.', function () {
                         val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, {context: "compact/brief", "formattedValues": {"col_4":"value"}}).value;
                         expect(val).toEqual('<strong>value</strong>');
@@ -432,7 +532,7 @@ exports.execute = function (options) {
                     expect(compactColumns[1].sortable).toBe(false);
                     expect(compactColumns[1]._sortColumns.length).toBe(0);
                 });
-                
+
                 it("when foreignKey has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
                     // outbound_fk_4
                     expect(compactColumns[4].sortable).toBe(true);
@@ -448,7 +548,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['id_2']);
                 });
-                
+
                 it("when foreignKey doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
                     // outbound_fk_2 -> id
                     expect(compactColumns[2].sortable).toBe(true);
@@ -457,7 +557,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['id']);
                 });
-                
+
                 describe("when foreign key is not simple, ", function () {
                     it ("and doesn't have `foreign key` annotation (therefore no `column_order` annotation), should return false.", function () {
                         // outbound_fk_7
@@ -471,7 +571,7 @@ exports.execute = function (options) {
                         expect(compactColumns[13]._sortColumns.length).toBe(0);
                     });
                 });
-                
+
             });
 
             describe("for pseudoColumns that are key, ", function () {
@@ -479,12 +579,12 @@ exports.execute = function (options) {
                 //     // TODO should define column_order on keys
                 //     // TODO use table_w_composite_key_3
                 // });
-                
+
                 // it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
                 //     // TODO should define column_order on keys
                 //     // TODO use table_w_composite_key_3
                 // });
-                
+
                 it("when key doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
                     expect(compactColumns[0].sortable).toBe(true);
                     expect(compactColumns[0]._sortColumns.length).toBe(1);
@@ -492,7 +592,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['id']);
                 });
-                
+
                 it("when key doesn't have `column_order` annotation and is not simple, should return false.", function () {
                     expect(compactBriefRef.columns[0].sortable).toBe(false);
                     expect(compactBriefRef.columns[0]._sortColumns.length).toBe(0);

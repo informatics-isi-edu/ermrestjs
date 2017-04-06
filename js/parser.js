@@ -48,7 +48,7 @@ var ERMrest = (function(module) {
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>[/filter][/join][@sort(col...)][@before(...)/@after(...)][?limit=n]
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>[/filter][/join][@sort(col...)][@before(...)/@after(...)][?]
      *
      * NOTE ABOUT JOIN AND FILTER:
      * the parser only parses the projection table (projectionTableName) and the last join (tableName)
@@ -74,7 +74,7 @@ var ERMrest = (function(module) {
      * path: the data path which identifies one filtered entity set with optional joined context.
      * sort: optional @sort
      * paging: optional @before/@after
-     * limit: optional ?limit
+     * query params: optional ?
      *
      * @param {String} uri full path
      * @constructor
@@ -84,6 +84,18 @@ var ERMrest = (function(module) {
         // full uri
         this._uri = uri;
 
+        var parts;
+
+        // extract the query params
+        if (uri.indexOf("?") !== -1) {
+            parts = uri.split("?");
+            uri = parts[0];
+            this._queryParamsString = parts[1];
+            this._queryParams = _getQueryParams(parts[1]);
+        } else {
+            this._queryParams = {};
+        }
+
         // compactUri is the full uri without modifiers
         if (uri.indexOf("@sort(") !== -1) {
             this._compactUri = uri.split("@sort(")[0];
@@ -91,14 +103,12 @@ var ERMrest = (function(module) {
             this._compactUri = uri.split("@before(")[0];
         } else if (uri.indexOf("@after(") !== -1) {
             this._compactUri = uri.split("@after(")[0];
-        } else if (uri.indexOf("?limit=") !== -1) {
-            this._compactUri = uri.split("?limit=")[0];
         } else {
             this._compactUri = uri;
         }
 
         // service
-        var parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
+        parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
         this._service = parts[1];
 
         // catalog id
@@ -369,6 +379,22 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * A dictionary of available query parameters
+         * @returns {Object}
+         */
+        get queryParams() {
+            return this._queryParams;
+        },
+
+        /**
+         * The query parameters string (key1=val1&key2=val2).
+         * @returns {String}
+         */
+        get queryParamsString() {
+            return this._queryParamsString;
+        },
+
+        /**
          * string of the search filter in the URI
          * @returns {string}
          */
@@ -511,7 +537,7 @@ var ERMrest = (function(module) {
                 this._uri = this._uri.replace(oldSortString, newSortString);
                 this._path = this._path.replace(oldSortString, newSortString);
             } else { // add sort
-                // since there was no sort, there isn't paging, and we are totally ignoring ?limit in the uri
+                // since there was no sort, there isn't paging, and we are totally ignoring query params in the uri
                 this._uri = this._compactUri + newSortString;
                 this._path = this._compactPath + newSortString;
             }
@@ -589,7 +615,7 @@ var ERMrest = (function(module) {
                 this._uri = this._uri.replace(oldPagingString, newPagingString);
                 this._path = this._path.replace(oldPagingString, newPagingString);
             } else { // add paging
-                // append to the end, we are totally ignoring ?limit in the uri
+                // append to the end, we are totally ignoring query params in the uri
                 this._uri = this._compactUri + this._sort + newPagingString;
                 this._path = this._compactPath + this._sort + newPagingString;
             }
@@ -611,6 +637,24 @@ var ERMrest = (function(module) {
             }
             return copy;
         }
+    };
+
+    /**
+     * given the string of parameters, create an object of them.
+     * 
+     * @param {String} params the string representation of the query params
+     * @returns {Object} the query params object
+     * @private
+     */
+    _getQueryParams = function (params) {
+        var queryParams = {},
+            parts = params.split("&"),
+            part, i;
+        for (i  = 0; i < parts.length; i++) {
+            part = parts[i].split("=");
+            queryParams[decodeURIComponent(part[0])] = decodeURIComponent(part[1]);
+        }
+        return queryParams;
     };
 
     /**

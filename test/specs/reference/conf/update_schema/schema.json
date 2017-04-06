@@ -152,11 +152,185 @@
                 }
             ],
             "annotations": {}
+        },
+        "update_table_with_foreign_key": {
+            "comment": "Table to represent a reference object with independent and composite foreign keys.",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "independent fk to table_w_independent_key",
+                    "names": [["update_schema", "outboud_independent_fk"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "update_schema",
+                          "table_name": "update_table_with_foreign_key",
+                          "column_name": "ind_fkey1_col1"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "update_schema",
+                            "table_name": "table_w_independent_key",
+                            "column_name": "id"
+                        }
+                    ]
+                }, {
+                    "comment": "composite fk to table_w_composite_key",
+                    "names": [["update_schema", "outboud_composite_fk"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "update_schema",
+                          "table_name": "update_table_with_foreign_key",
+                          "column_name": "comp_fkey1_col1"
+                      },
+                      {
+                          "schema_name": "update_schema",
+                          "table_name": "update_table_with_foreign_key",
+                          "column_name": "comp_fkey1_col2"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "update_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "update_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ]
+                }
+            ],
+            "table_name": "update_table_with_foreign_key",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "ind_fkey1_col1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                }, {
+                    "name": "comp_fkey1_col1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                }, {
+                    "name": "comp_fkey1_col2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "table_w_composite_key": {
+            "comment": "Table with composite key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_composite_key",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{id_1}} , {{id_2}}"
+                    }
+                }
+            }
+        },
+        "table_w_independent_key": {
+            "comment": "Table with independent key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_independent_key",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int8"
+                    }
+                }
+            ],
+            "annotations": {}
         }
     },
     "table_names": [
         "alias_table",
-        "update_table"
+        "update_table",
+        "update_table_with_foreign_key",
+        "table_w_composite_key",
+        "table_w_independent_key"
     ],
     "comment": null,
     "annotations": {}
