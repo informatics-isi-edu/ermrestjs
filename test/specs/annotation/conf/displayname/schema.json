@@ -18,6 +18,7 @@
         {
           "comment": null,
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "serial4"
           }
@@ -74,6 +75,7 @@
         {
           "comment": null,
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "serial4"
           }
@@ -166,7 +168,6 @@
         {
           "comment": null,
           "name": "column_with_name",
-          "default": null,
           "nullok": false,
           "type": {
             "typename": "text"
@@ -220,7 +221,6 @@
         {
           "comment": null,
           "name": "column_with_name_2",
-          "default": null,
           "nullok": false,
           "type": {
             "typename": "serial4"
@@ -282,7 +282,6 @@
         {
           "comment": null,
           "name": "column_without_display_annotation",
-          "default": null,
           "nullok": false,
           "type": {
             "typename": "serial4"
@@ -336,7 +335,6 @@
         {
           "comment": null,
           "name": "column_with_name_3",
-          "default": null,
           "nullok": false,
           "type": {
             "typename": "int4"

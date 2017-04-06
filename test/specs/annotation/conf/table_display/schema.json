@@ -119,11 +119,19 @@
         },
         {
           "name": "description",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
         }
-      ]
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns" : {
+          "*": [
+            "id", "description"
+          ]
+        }
+      }
     },
     "table_w_table_display_annotation": {
       "kind": "table",
