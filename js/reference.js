@@ -510,7 +510,7 @@ var ERMrest = (function(module) {
             /* This getter should determine whether the reference is unique
              * on-demand.
              */
-            return undefined; // TODO
+            notimplemented();
         },
 
         /**
@@ -2414,6 +2414,7 @@ var ERMrest = (function(module) {
          */
         set data(data) {
             // TODO needs to be implemented rather than modifying the values directly from UI
+            notimplemented();
         },
 
         /**
@@ -2438,7 +2439,7 @@ var ERMrest = (function(module) {
         get canUpdate() {
             // catalog/ + id + /meta/content_read_user
             // content_write_user
-            return undefined;
+            notimplemented();
         },
 
         /**
@@ -2450,7 +2451,7 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canDelete() {
-            return undefined;
+            notimplemented();
         },
 
         /**
