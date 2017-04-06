@@ -1023,12 +1023,26 @@ var ERMrest = (function(module) {
                     }
                     var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
 
-                    defer.resolve(page);
+                    // we are paging based on @before (user navigated backwards in the set of data)
+                    // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
+                    if ( (ownReference.location.pagingObject && ownReference.location.pagingObject.before) && (page.tuples.length < limit || !page.hasPrevious) ) {
+                        var referenceWithoutPaging = _referenceCopy(ownReference);
+                        // set the private values to null because the public functions rely on these
+                        referenceWithoutPaging.location._pagingObject = null;
+                        referenceWithoutPaging.location._paging = null;
+
+                        referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+                            defer.resolve(rereadPage);
+                        }, function error(response) {
+                            var error = module._responseToError(response);
+                            return defer.reject(error);
+                        });
+                    } else {
+                        defer.resolve(page);
+                    }
 
                 }, function error(response) {
                     var error = module._responseToError(response);
-                    return defer.reject(error);
-                }).catch(function (error) {
                     return defer.reject(error);
                 });
 
@@ -1096,6 +1110,20 @@ var ERMrest = (function(module) {
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
+                // add column name into list of column projections and data into the submission data
+                var addProjectionAndKeyData = function(index, colName) {
+                    // here so each column of the columns in keyColumns set is added
+                    if (columnProjections.indexOf(colName) === -1) {
+                        // the list of column names to use in the uri
+                        columnProjections.push(colName);
+                    }
+
+                    // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
+                    if (shortestKeyNames.indexOf(colName) === -1) {
+                        // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                        submissionData[index][colName + newAlias] = newData[colName];
+                    }
+                };
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
                     return column.name;
@@ -1110,30 +1138,68 @@ var ERMrest = (function(module) {
                     allNewData.push(newData);
 
                     submissionData[i] = {};
-                    for (var key in newData) {
-                        // if the key is part of the shortest key for the entity, the data needs to be aliased
+
+                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
+                        var shortestKey = shortestKeyNames[keyIndex];
+
+                        // shortest key should always be aliased in case that key value was changed
                         // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        submissionData[i][key + oldAlias] = oldData[key];
-                        submissionData[i][key + newAlias] = newData[key];
+                        submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
+                        submissionData[i][shortestKey + newAlias] = newData[shortestKey];
+
+                        // don't add the current key to the column projections if it's already in there
+                        // this can happen when there are multiple tuples or when a key is part of the visible column set
+                        if (columnProjections.indexOf(shortestKey) === -1) {
+                            // keys are aliased and included in both the keyset and column projections set
+                            columnProjections.push(shortestKey);
+                        }
+                    }
+
+                    // Loop through the visible columns so the submission data is based off of the visible columns list
+                    for (var m = 0; m < this.columns.length; m++) {
+                        var column = this.columns[m];
+
+                        // if the column is disabled (generated or immutable), continue
+                        // no need to submit update data in the submission object
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        if (column.isPseudo) {
+                            var keyColumns = [];
+
+                            if (column._isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column._isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (var n = 0; n < keyColumns.length; n++) {
+                                var referenceColumn = keyColumns[n];
+                                keyColumnName = referenceColumn.name;
+
+                                addProjectionAndKeyData(i, keyColumnName);
+                            }
+                        } else {
+                            addProjectionAndKeyData(i, column.name);
+                        }
                     }
                 }
 
-                // The list of column names to use in the uri
-                columnProjections = Object.keys(tuples[0].data);
-
-                // always alias the set of column projections for the key data
-                for (var j = 0; j < columnProjections.length; j++) {
+                // always alias the keyset for the key data
+                for (var j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(columnProjections[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[j]);
+                    uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
-                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The full set of visible columns is used as the keyset
+                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
                 uri += ';';
 
+                // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
                 for (var k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
-                    // alias all the columns for the projection set
+                    // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
@@ -1407,10 +1473,48 @@ var ERMrest = (function(module) {
          * ignore `B` and think of this relationship as `A <-> C`, unless `B`
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
-         * @type {ERMrest.Reference[]}
+         * @returns {ERMrest.Reference[]}
+         * 
+         * @param {ERMrest.Tuple=} tuple the current tuple
          */
-        get related() {
+        related: function (tuple) {
             if (this._related === undefined) {
+                /**
+                 * The logic is as follows:
+                 * 
+                 * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
+                 * it will consider all the inbound foreign keys).
+                 * 
+                 * 2. Go through the list of visible inbound foreign keys.
+                 *  2.0 keep track of the linkage and save some attributes:
+                 *      2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
+                 *      2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
+                 *      2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
+                 *          - logic: foriengkey's to_name or this.displayname
+                 * 
+                 * 
+                 *  2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
+                 *      2.1.1 displayname: F2.to_name or T2.displayname
+                 *      2.1.2 table: T2
+                 *      2.1.3 derivedAssociationReference: points to the association table (A)
+                 *      2.1.4 _location:
+                 *          2.1.4.1 Uses the linkage to get to the T2.
+                 *          2.1.4.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+                 *  2.2 otherwise.
+                 *      2.2.1 displayname: F1.from_name or T2.displayname
+                 *      2.2.2 table: T2
+                 *      2.2.3 _location:
+                 *          2.2.3.1 Uses the linkage to get to the T2.
+                 *          2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+                 * 
+                 * The logic for are sorted based on following attributes:
+                 *  1. displayname
+                 *  2. position of key columns that are involved in the foreignkey
+                 *  3. position of columns that are involved in the foreignkey
+                 * 
+                 */            
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
@@ -1420,7 +1524,7 @@ var ERMrest = (function(module) {
                     visibleFKs = this._table.referredBy.all();
                 }
 
-                var i, j, col, fkr, newRef;
+                var i, j, col, fkr, newRef, uri, subset;
                 for(i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
 
@@ -1435,6 +1539,7 @@ var ERMrest = (function(module) {
                     delete newRef._related;
                     delete newRef._referenceColumns;
                     delete newRef.derivedAssociationReference;
+                    delete newRef._display;
 
                     // delete permissions
                     delete newRef._canCreate;
@@ -1442,11 +1547,30 @@ var ERMrest = (function(module) {
                     delete newRef._canUpdate;
                     delete newRef._canDelete;
 
+                    // the foreignkey that has created this link (link from this.reference to relatedReference)
                     newRef.origFKR = fkr; // it will be used to trace back the reference
+
+                    // the name of pseudocolumn that represents origFKR
                     newRef.origColumnName = module._generatePseudoColumnName(fkr.constraint_names[0].join("_"), fkr._table);
+
+                    // this name will be used to provide more information about the linkage
+                    if (fkr.to_name) {
+                        newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
+                    } else {
+                        newRef.parentDisplayname = this.displayname;
+                    }
+
+                    // create the subset that will be added for visibility
+                    if (typeof tuple !== 'undefined') {
+                        subset = "?subset=" + module._fixedEncodeURIComponent(
+                            "for " + newRef.parentDisplayname.unformatted + " = " + tuple.displayname.unformatted
+                        );
+                    }
 
                     var fkrTable = fkr.colset.columns[0].table;
                     if (fkrTable._isPureBinaryAssociation()) { // Association Table
+
+                        // find the other foreignkey
                         var otherFK;
                         for (j = 0; j < fkrTable.foreignKeys.length(); j++) {
                             if(fkrTable.foreignKeys.all()[j] !== fkr) {
@@ -1458,12 +1582,19 @@ var ERMrest = (function(module) {
                         newRef._table = otherFK.key.table;
                         newRef._shortestKey = newRef._table.shortestKey;
 
+                        // displayname
                         if (otherFK.to_name) {
-                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name};
+                            newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
                         } else {
                             newRef._displayname = otherFK.colset.columns[0].table.displayname;
                         }
-                        newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+
+                        // uri and location
+                        uri = this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true);
+                        if (typeof subset !== 'undefined') {
+                            uri += subset;
+                        }
+                        newRef._location = module._parse(uri);
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -1479,13 +1610,19 @@ var ERMrest = (function(module) {
                         newRef._table = fkrTable;
                         newRef._shortestKey = newRef._table.shortestKey;
 
+                        // displayname
                         if (fkr.from_name) {
-                            newRef._displayname = {"isHTML": false, "value": fkr.from_name};
+                            newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
                         } else {
                             newRef._displayname = newRef._table.displayname;
                         }
 
-                        newRef._location = module._parse(this._location.compactUri + "/" + fkr.toString());
+                        // uri and location
+                        uri = this._location.compactUri + "/" + fkr.toString();
+                        if (typeof subset !== 'undefined') {
+                            uri += subset;
+                        }
+                        newRef._location = module._parse(uri);
 
                         // additional values for sorting related references
                         newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -1517,20 +1654,38 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * Contextualized uri that client has specied. It might be `undefined`.
-         * @type {String|undefined}
+         * This will generate a new unfiltered reference each time.
+         * 
+         * @type {ERMrest.Reference} reference a reference that points to all entities of current table
          */
-        get appLink() {
-
-            var tag = (this._context? this._table._getAppLink(this._context): this._table._getAppLink());
-            if (tag && module._appLinkFn) {
-                return module._appLinkFn(tag, this._location);
-            } else if (!tag && this._context)
-                return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
-            else {
-                return undefined;
-            }
+        get unfilteredReference() {
+            var table = this._table;
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+            ].join("/");
+            return new Reference(module._parse(refURI), table.schema.catalog);
         },
+
+        /**
+         * App-specific URL
+         * 
+         * @type {String}
+         * @throws {Error} if `_appLinkFn` is not defined.
+         */
+        get appLink() {
+            if (typeof module._appLinkFn !== "function") {
+                throw new Error("`appLinkFn` function is not defined.");
+            }
+
+            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
+
+            if (tag) {
+                return module._appLinkFn(tag, this._location);
+            }
+            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+        },
 
         /**
          * create a new reference with the new search
@@ -2459,7 +2614,7 @@ var ERMrest = (function(module) {
          */
         get displayname() {
             if (!this._displayname) {
-                this._displayname = { "value": module._generateRowName(this._pageRef._table, this._pageRef._context, this._data), "isHTML": true};
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
         },
@@ -2649,16 +2804,18 @@ var ERMrest = (function(module) {
                 if (!this.isPseudo) {
                     this._displayname = this._base.displayname;
                 } else if (this._isForeignKey){
-                    var foreignKey = this.foreignKey, value, isHTML;
+                    var foreignKey = this.foreignKey, value, isHTML, unformatted;
                     if (foreignKey.to_name !== "") {
-                        value = foreignKey.to_name;
+                        value = unformatted = foreignKey.to_name;
                         isHTML = false;
                     } else if (foreignKey.simple) {
                         value = this._base.displayname.value;
                         isHTML = this._base.displayname.isHTML;
+                        unformatted = this._base.displayname.unformatted;
 
                         if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
                             value += " ("  + foreignKey.key.table.displayname.value + ")";
+                            unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
                             if (!isHTML) {
                                 isHTML = foreignKey.key.table.displayname.isHTML;
                             }
@@ -2667,6 +2824,7 @@ var ERMrest = (function(module) {
                     } else {
                         value = foreignKey.key.table.displayname.value;
                         isHTML = foreignKey.key.table.displayname.isHTML;
+                        unformatted = foreignKey.key.table.displayname.unformatted;
 
                         // disambiguate
                         var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
@@ -2674,10 +2832,16 @@ var ERMrest = (function(module) {
                         }).length;
 
                         if (tableCount > 1) {
-                             value += " (" + foreignKey.colset.columns.slice().sort(function(a,b) {
+                            var cols = foreignKey.colset.columns.slice().sort(function(a,b) {
                                 return a.name.localeCompare(b.name);
-                            }).map(function(col) {
+                            });
+
+                             value += " (" + cols.map(function(col) {
                                 return col.displayname.value;
+                            }).join(", ")  + ")";
+
+                            unformatted += " (" + cols.map(function(col) {
+                                return col.displayname.unformatted;
                             }).join(", ")  + ")";
 
                             if (!isHTML) {
@@ -2687,7 +2851,7 @@ var ERMrest = (function(module) {
                             }
                         }
                     }
-                    this._displayname = {"value": value, "isHTML": isHTML};
+                    this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
 
                 } else if (this._isKey) {
                     this._displayname = module._determineDisplayName(this.key, false);
@@ -2699,7 +2863,10 @@ var ERMrest = (function(module) {
                             }, ""),
                             "isHTML": this.key.colset.columns.some(function (col) {
                                 return col.displayname.isHTML;
-                            })
+                            }),
+                            "unformatted": this.key.colset.columns.reduce(function(prev, curr, index) {
+                                return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
+                            }, ""),
                         };
                     }
 
@@ -2765,7 +2932,7 @@ var ERMrest = (function(module) {
                         this._default = null;
                     } else {
                         // use row name as the caption
-                        caption = module._generateRowName(this.table, this._context, data);
+                        caption = module._generateRowName(this.table, this._context, data).value;
 
                         // use "col_1:col_2:col_3"
                         if (caption.trim() === '') {
@@ -3026,7 +3193,7 @@ var ERMrest = (function(module) {
                 }
 
                 // use row name as the caption
-                caption = module._generateRowName(this.table, context, data);
+                caption = module._generateRowName(this.table, context, data).value;
 
                 // use key for displayname: "col_1:col_2:col_3"
                 if (caption.trim() === '') {

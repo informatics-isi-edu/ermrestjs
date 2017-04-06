@@ -171,6 +171,7 @@ var ERMrest = (function(module) {
      */
     module._determineDisplayName = function (element, useName, parentElement) {
         var value = useName ? element.name : undefined,
+            unformatted = useName ? element.name : undefined,
             hasDisplayName = false,
             isHTML = false;
         try {
@@ -180,13 +181,16 @@ var ERMrest = (function(module) {
                 //get the markdown display name
                 if(display_annotation.content.markdown_name) {
                     value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
-                    isHTML = true;
+                    unformatted = display_annotation.content.name ? display_annotation.content.name : display_annotation.content.markdown_name;
                     hasDisplayName = true;
+                    isHTML = true;
                 }
                 //get the specified display name
                 else if (display_annotation.content.name){
                     value = display_annotation.content.name;
+                    unformatted = display_annotation.content.name;
                     hasDisplayName = true;
+                    isHTML = false;
                 }
 
                 //get the name styles
@@ -220,14 +224,16 @@ var ERMrest = (function(module) {
             } else {
                 if(element._nameStyle.underline_space){
                     value = module._underlineToSpace(value);
+                    unformatted = module._underlineToSpace(unformatted);
                 }
                 if(element._nameStyle.title_case){
                     value = module._toTitleCase(value);
+                    unformatted = module._toTitleCase(unformatted);
                 }
             }
         }
 
-        return {"isHTML": isHTML, "value": value};
+        return {"isHTML": isHTML, "value": value, "unformatted": unformatted};
     };
 
     /**
@@ -376,14 +382,25 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
-     * @return {object} The display name for the row in HTML.
+     * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
      */
     module._generateRowName = function (table, context, data) {
-        var annotation, col, template, keyValues;
+        var annotation, col, template, keyValues, unformatted, unformattedAnnotation;
+
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+
+            // getting the defined unformatted value
+            unformattedAnnotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME_UNFORMATTED, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+            if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
+                // Get formatted keyValues for a table for the data
+                keyValues = module._getFormattedKeyValues(table.columns, context, data);
+
+                // get templated patten after replacing the values using Mustache
+                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues);
+            }
         }
 
         // if annotation is populated and annotation has display.rowName property
@@ -391,7 +408,9 @@ var ERMrest = (function(module) {
             template = annotation.row_markdown_pattern;
 
             // Get formatted keyValues for a table for the data
-            keyValues = module._getFormattedKeyValues(table.columns, context, data);
+            if (typeof keyValues === 'undefined') {
+                keyValues = module._getFormattedKeyValues(table.columns, context, data);
+            }
 
         } else {
 
@@ -465,7 +484,15 @@ var ERMrest = (function(module) {
         var pattern = module._renderTemplate(template, keyValues);
 
         // Render markdown content for the pattern
-        return (pattern === null || pattern.trim() === '') ? "" : module._formatUtils.printMarkdown(pattern, { inline: true });
+        if (pattern === null || pattern.trim() === '') {
+            return {"value": "", "unformatted": ""};
+        }
+
+        return {
+            "value": module._formatUtils.printMarkdown(pattern, { inline: true }), 
+            "unformatted": (typeof unformatted === 'undefined' || unformatted === null ) ? pattern : unformatted,
+            "isHTML": true
+        };
 
     };
 
@@ -1312,7 +1339,8 @@ var ERMrest = (function(module) {
         ENTRY: 'entry',
         FILTER: 'filter',
         DEFAULT: '*',
-        ROWNAME :'row_name'
+        ROWNAME :'row_name',
+        ROWNAME_UNFORMATTED: "row_name/unformatted"
     });
 
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];

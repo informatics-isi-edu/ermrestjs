@@ -15,7 +15,7 @@ exports.execute = function(options) {
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName + "/id=" + entityId;
 
-        var reference, related, page;
+        var reference, related, relatedWithTuple, page;
 
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
@@ -30,9 +30,13 @@ exports.execute = function(options) {
                 cid: "test"
             }).then(function(response) {
                 reference = response.contextualize.detailed;
-                related = reference.related;
+                related = reference.related();
+                return reference.read(1);
+            }).then(function (responsePage) {
+                delete reference._related;
+                relatedWithTuple = reference.related(responsePage.tuples[0]);
                 done();
-            }, function(err) {
+            }).catch(function(error){
                 console.dir(err);
                 done.fail();
             });
@@ -40,11 +44,11 @@ exports.execute = function(options) {
 
         it('should be defined and not empty.', function() {
             expect(reference.related).toBeDefined();
-            expect(reference.related).not.toEqual([]);
+            expect(related).not.toEqual([]);
         });
 
         it('should only include visible foreign keys that are defined in the annotation.', function() {
-            expect(reference.related.length).toBe(5);
+            expect(related.length).toBe(5);
         });
 
         it('should not be labeled as association when table has extra columns.', function (){
@@ -82,13 +86,37 @@ exports.execute = function(options) {
                 });
             });
 
-            describe('.uri', function() {
-                it('should be properly defiend based on schema.', function() {
-                    expect(related[0].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
+            describe('.uri, ', function() {
+                var uri1 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
+                var uri2 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)";
+
+                describe("without tuple, ", function() {
+                    it('should be properly defiend based on schema and not include subset query parameter.', function() {
+                        expect(related[0].location.uri).toBe(uri1);
+                    });
+                    
+                    it('should be encoded.', function() {
+                        expect(related[1].location.uri).toBe(uri2);
+                    });
                 });
-                
-                it('should be encoded.', function() {
-                    expect(related[1].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)");
+                describe("with tuple defined, ", function () {
+                    it('should include a `subset` query parameter in form of `for "to_name" = tuple.displayname` using the unformatted displayname.', function() {
+                        expect(relatedWithTuple[0].location.uri).toBe(uri1 + "?subset=for%20to_name_value%20%3D%209003%20and%20Henry");
+                    });
+
+                    it('`subset` query parameter should use the table name if `to_name` is not defiend.', function() {
+                        expect(relatedWithTuple[1].location.uri).toBe(uri2 + "?subset=for%20reference_table%20%3D%209003%20and%20Henry");
+                    });
+                });
+            });
+
+            describe(".parentDisplayname", function () {
+                it('should use to_name when annotation is present.', function () {
+                    expect(related[0].parentDisplayname.value).toBe("to_name_value");
+                });
+
+                it("should return current reference displayname when to_name is not defined.", function () {
+                    expect(related[1].parentDisplayname.value).toBe("reference_table");
                 });
             });
 
@@ -115,7 +143,7 @@ exports.execute = function(options) {
             });
 
             it('.read should return a Page object that is defined.', function(done) {
-                reference.related[0].read(limit).then(function(response) {
+                related[0].read(limit).then(function(response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -128,7 +156,7 @@ exports.execute = function(options) {
                     done.fail();
                 });
 
-                reference.related[1].read(limit).then(function(response) {
+                related[1].read(limit).then(function(response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -266,7 +294,7 @@ exports.execute = function(options) {
                 options.ermRest.resolve(noOrderUri, {
                     cid: "test"
                 }).then(function(response) {
-                    related2 = response.contextualize.detailed.related;
+                    related2 = response.contextualize.detailed.related();
                     done();
                 }, function(err) {
                     console.dir(err);
@@ -302,7 +330,7 @@ exports.execute = function(options) {
                 + schemaName3 + ":" + tableName3;
 
             options.ermRest.resolve(tableWAlternateUri, {cid: "test"}).then(function(response) {
-                var rel = response.related;
+                var rel = response.related();
                 expect(rel.length).toBe(0);
                 done();
             }, function(err) {

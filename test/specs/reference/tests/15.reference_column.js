@@ -435,7 +435,6 @@ exports.execute = function (options) {
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
-                            console.dir(mainEntityColumns);
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
