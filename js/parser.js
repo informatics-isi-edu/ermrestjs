@@ -135,13 +135,13 @@ var ERMrest = (function(module) {
                 if (this._sort) {
                     this._paging = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new Error("Invalid uri: " + this._uri + ". Sort modifier required with paging");
+                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
                 }
             } else if (modifiers.indexOf("@after(") !== -1) {
                 if (this._sort) {
                     this._paging = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new Error("Invalid uri: " + this._uri + ". Sort modifier required with paging");
+                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
                 }
             }
         }
@@ -606,7 +606,7 @@ var ERMrest = (function(module) {
                 this._pagingObject = po;
                 this._paging = _getPagingModifier(po);
             } else {
-                throw Error("Error setPagingObject: Paging not allowed without sort");
+                throw new module.MalformedURIError("Error setPagingObject: Paging not allowed without sort");
             }
 
             //  update uri/path

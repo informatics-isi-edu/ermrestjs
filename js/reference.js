@@ -510,7 +510,7 @@ var ERMrest = (function(module) {
             /* This getter should determine whether the reference is unique
              * on-demand.
              */
-            return undefined; // TODO
+            notimplemented();
         },
 
         /**
@@ -642,8 +642,11 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or errors (TBD).
+         * 
+         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         create: function(data) {
             var self = this;
@@ -780,12 +783,12 @@ var ERMrest = (function(module) {
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          *
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
-         *
-         * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
-         * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
-         * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
-         * other errors TBD (TODO document other errors here).
+         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - {@link ERMrest.BadRequestError}: If asks for sorting based on columns that are not sortable.
+         * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit) {
             try {
@@ -1056,6 +1059,10 @@ var ERMrest = (function(module) {
          * @param {Object[]} sort an array of objects in the format
          * {"column":columname, "descending":true|false}
          * in order of priority. Undfined, null or Empty array to use default sorting.
+         * 
+         * @returns {Reference} A new reference with the new sorting
+         * 
+         * @throws {@link ERMrest.InvalidInputError} if `sort` is invalid.
          */
         sort: function(sort) {
 
@@ -1080,7 +1087,10 @@ var ERMrest = (function(module) {
          * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
-         * @returns {Promise} page A promise for a page result or errors.
+         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         update: function(tuples) {
             try {
@@ -1253,7 +1263,10 @@ var ERMrest = (function(module) {
         /**
          * Deletes the referenced resources.
          * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
-         * @returns {Promise} A promise for a TBD result or errors.
+         * 
+         * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         delete: function(tuples) {
             try {
@@ -1639,7 +1652,7 @@ var ERMrest = (function(module) {
             }
             return this._related;
         },
-        
+
         /**
          * This will generate a new unfiltered reference each time.
          * 
@@ -1682,6 +1695,9 @@ var ERMrest = (function(module) {
          * b) A single term with space using ""
          * c) use space for conjunction of terms
          * @param {string} term - search term, undefined to clear search
+         * @returns {Reference} A new reference with the new search
+         * 
+         * @throws {@link ERMrest.InvalidInputError} if `term` is invalid.
          */
         search: function(term) {
 
@@ -1733,6 +1749,17 @@ var ERMrest = (function(module) {
         return referenceCopy;
     }
 
+    /**
+     * Contructs the Contextualize object.
+     * 
+     * Usage:
+     * Clients _do not_ directly access this constructor.
+     * See {@link ERMrest.Reference#contextualize}
+     * 
+     * It will be used for creating contextualized references.
+     * 
+     * @param {Reference} reference the reference that we want to contextualize
+     */
     function Contextualize(reference) {
         this._reference = reference;
     }
@@ -2387,6 +2414,7 @@ var ERMrest = (function(module) {
          */
         set data(data) {
             // TODO needs to be implemented rather than modifying the values directly from UI
+            notimplemented();
         },
 
         /**
@@ -2411,7 +2439,7 @@ var ERMrest = (function(module) {
         get canUpdate() {
             // catalog/ + id + /meta/content_read_user
             // content_write_user
-            return undefined;
+            notimplemented();
         },
 
         /**
@@ -2423,7 +2451,7 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canDelete() {
-            return undefined;
+            notimplemented();
         },
 
         /**
