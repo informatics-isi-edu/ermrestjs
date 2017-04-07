@@ -786,56 +786,53 @@ var ERMrest = (function (module) {
             return (this.annotations.contains(module._annotations.NON_DELETABLE) || this.schema._isNonDeletable);
         },
 
+        /**
+         * The columns that create the shortest key
+         * 
+         * @type{Column[]}
+         */
         get shortestKey() {
             if (!this._shortestKey) {
 
-                if (this.keys.length() === 0) { // no key, use all columns
-                    this._shortestKey = this.columns.all();
-                } else {
-                    var keys = this.keys.all();
+                // returns 1 if all the columns are serial/int, 0 otherwise
+                var allSerialInt = function (key) {
+                    return (key.colset.columns.map(function (column) {
+                        return column.type.name;
+                    }).every(function (current, index, array) {
+                        return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
+                    }) ? 1 : 0);
+                };
 
-                    // sort keys by length
-                    var sortedKeys = keys.sort(function (a, b) {
-                        var val = a.colset.length() - b.colset.length();
+                // find the keys with not-null columns
+                var keys = this.keys.all().filter(function (key) {
+                    return key._notNull;
+                });
 
-                        // if key length equal, choose the one with integer/serial key over text
-                        if (val === 0) {
-
-                            // get a list of column types, and check if every type is int/serial
-                            // return 1 if true, 0 for false
-                            var aSerial = (a.colset.columns.map(function (column) {
-                                return column.type.name;
-                            }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                            }) ? 1 : 0);
-
-                            var bSerial = (b.colset.columns.map(function (column) {
-                                return column.type.name;
-                            }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                            }) ? 1 : 0);
-
-                            // two keys still equal, compare col name
-                            if (aSerial === bSerial) {
-                                for (var i = 0; i < a.colset.length(); i++) { // both key have same length
-                                    var aName = a.colset.columns[i].name;
-                                    var bName = b.colset.columns[i].name;
-                                    if (aName < bName)
-                                        return -1;
-                                    if (aName > bName)
-                                        return 1;
-                                }
-
-                            } else
-                                return bSerial - aSerial; // will make a before b if negative, b before a if positive
-                        } else
-                            return val;
-                    });
-
-                    this._shortestKey = sortedKeys[0].colset.columns;
+                // return error if there's no not-null key
+                if (keys.length === 0) {
+                    throw new Error("Table `" +  this.name + "` does not have any not-null key.");
                 }
-            }
 
+                // pick the first key that is shorter or is all serial/integer.
+                this._shortestKey = keys.sort(function (a, b) {
+                    var compare;
+
+                    // choose the shorter
+                    compare = a.colset.length() - b.colset.length();
+                    if (compare !== 0) {
+                        return compare;
+                    }
+
+                    // if key length equal, choose the one that all of its keys are serial or int
+                    compare = allSerialInt(b) - allSerialInt(a);
+                    if (compare !== 0) {
+                        return compare;
+                    }
+
+                    // the one that has lower column position
+                    return a.colset._getColumnPositions() > b.colset._getColumnPositions();
+                })[0].colset.columns;
+            }
             return this._shortestKey;
         },
 
@@ -2261,6 +2258,27 @@ var ERMrest = (function (module) {
         },
 
         /**
+         * Indicates if all of the constituent columns have nullok=false or not.
+         * If any of them have nullok=true, it will return false.
+         * 
+         * @type{boolean}
+         * @private
+         */
+        get _notNull() {
+            if (this._nullok_cache === undefined) {
+                var cols = this.colset.columns, result = true;
+                for (var c = 0; c < cols.length; c++) {
+                    if (cols[c].nullok) {
+                        result = false;
+                        break;
+                    }
+                }
+                this._nullok_cache = result;
+            }
+            return this._nullok_cache;
+        },
+
+        /**
          * whether key has a column
          * @param {ERMrest.Column} column
          * @returns {boolean}
@@ -2283,7 +2301,7 @@ var ERMrest = (function (module) {
             }
             return this._wellFormed[context];
         },
-        
+
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var annotation = -1, columnOrder = [];
