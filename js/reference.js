@@ -1675,16 +1675,16 @@ var ERMrest = (function(module) {
         * @throws {Error} if `_appLinkFn` is not defined.
         */
         get appLink() {
-            if (typeof module._appLinkFn !== "function") {
-                throw new Error("`appLinkFn` function is not defined.");
+            if (typeof module._appLinkFn !== 'function') {
+                throw new Error("appLinkFn function is not defined");
             }
-            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
+            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
             if (tag) {
                 return module._appLinkFn(tag, this._location);
             }
             return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
-        },
-
+        }
+        
         /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
