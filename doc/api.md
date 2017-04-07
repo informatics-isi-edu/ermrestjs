@@ -237,14 +237,17 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
-        * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+        * [._related](#ERMrest.Reference+_related)
+        * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : <code>[Reference](#ERMrest.Reference)</code>
+        * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-        * [.sort(sort)](#ERMrest.Reference+sort)
+        * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-        * [.search(term)](#ERMrest.Reference+search)
+        * [.related([tuple])](#ERMrest.Reference+related) ⇒ <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+        * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
@@ -1912,14 +1915,17 @@ Constructor for a ParsedFilter.
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> &#124; <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> &#124; <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
-    * [.related](#ERMrest.Reference+related) : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+    * [._related](#ERMrest.Reference+_related)
+    * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : <code>[Reference](#ERMrest.Reference)</code>
+    * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-    * [.sort(sort)](#ERMrest.Reference+sort)
+    * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-    * [.search(term)](#ERMrest.Reference+search)
+    * [.related([tuple])](#ERMrest.Reference+related) ⇒ <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+    * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -2138,23 +2144,60 @@ if ( displayType === 'table') {
 ```
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
-<a name="ERMrest.Reference+related"></a>
+<a name="ERMrest.Reference+_related"></a>
 
-#### reference.related : <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-The "related" references. Relationships are defined by foreign key
-references between [Table](#ERMrest.Table)s. Those references can be
-considered "outbound" where the table has FKRs to other entities or
-"inbound" where other entities have FKRs to this entity. Finally,
-entities can be "associated" by means of associative entities. Those
-are entities in another table that establish _many-to-many_
-relationships between entities. If this help `A <- B -> C` where
-entities in `B` establish relationships between entities in `A` and
-`C`. Thus entities in `A` and `C` may be associated and we may
-ignore `B` and think of this relationship as `A <-> C`, unless `B`
-has other moderating attributes, for instance that indicate the
-`type` of relationship, but this is a model-depenent detail.
+#### reference._related
+The logic is as follows:
+
+1. Get the list of visible inbound foreign keys (if annotation is not defined,
+it will consider all the inbound foreign keys).
+
+2. Go through the list of visible inbound foreign keys.
+ 2.0 keep track of the linkage and save some attributes:
+     2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
+     2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
+     2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
+         - logic: foriengkey's to_name or this.displayname
+
+
+ 2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
+     2.1.1 displayname: F2.to_name or T2.displayname
+     2.1.2 table: T2
+     2.1.3 derivedAssociationReference: points to the association table (A)
+     2.1.4 _location:
+         2.1.4.1 Uses the linkage to get to the T2.
+         2.1.4.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+ 2.2 otherwise.
+     2.2.1 displayname: F1.from_name or T2.displayname
+     2.2.2 table: T2
+     2.2.3 _location:
+         2.2.3.1 Uses the linkage to get to the T2.
+         2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
+                 the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+
+The logic for are sorted based on following attributes:
+ 1. displayname
+ 2. position of key columns that are involved in the foreignkey
+ 3. position of columns that are involved in the foreignkey
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+unfilteredReference"></a>
+
+#### reference.unfilteredReference : <code>[Reference](#ERMrest.Reference)</code>
+This will generate a new unfiltered reference each time.
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+<a name="ERMrest.Reference+appLink"></a>
+
+#### reference.appLink : <code>String</code>
+App-specific URL
+
+**Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
+**Throws**:
+
+- <code>Error</code> if `_appLinkFn` is not defined.
+
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>
@@ -2164,8 +2207,10 @@ specification, and not according to the contents of in the input
 tuple.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or errors (TBD).  
+**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2204,14 +2249,12 @@ reference.read(10).then(
 ```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results.  
-**Throws**:
-
-- [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid.
-- [BadRequestError](#ERMrest.BadRequestError) if asks for sorting based on columns that are not sortable.
-- [NotFoundError](#ERMrest.NotFoundError) if asks for sorting based on columns that are not valid.
-other errors TBD (TODO document other errors here).
-
+**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- [BadRequestError](#ERMrest.BadRequestError): If asks for sorting based on columns that are not sortable.
+- [NotFoundError](#ERMrest.NotFoundError): If asks for sorting based on columns that are not valid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2219,10 +2262,15 @@ other errors TBD (TODO document other errors here).
 
 <a name="ERMrest.Reference+sort"></a>
 
-#### reference.sort(sort)
+#### reference.sort(sort) ⇒ <code>Reference</code>
 Return a new Reference with the new sorting
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Reference</code> - A new reference with the new sorting  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `sort` is invalid.
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2234,7 +2282,10 @@ Return a new Reference with the new sorting
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - page A promise for a page result or errors.  
+**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2246,15 +2297,39 @@ Updates a set of resources.
 Deletes the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+**Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | tuples | <code>Array</code> | array of tuple objects used to detect differences with data in the DB |
 
+<a name="ERMrest.Reference+related"></a>
+
+#### reference.related([tuple]) ⇒ <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
+The "related" references. Relationships are defined by foreign key
+references between [Table](#ERMrest.Table)s. Those references can be
+considered "outbound" where the table has FKRs to other entities or
+"inbound" where other entities have FKRs to this entity. Finally,
+entities can be "associated" by means of associative entities. Those
+are entities in another table that establish _many-to-many_
+relationships between entities. If this help `A <- B -> C` where
+entities in `B` establish relationships between entities in `A` and
+`C`. Thus entities in `A` and `C` may be associated and we may
+ignore `B` and think of this relationship as `A <-> C`, unless `B`
+has other moderating attributes, for instance that indicate the
+`type` of relationship, but this is a model-depenent detail.
+
+**Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [tuple] | <code>[Tuple](#ERMrest.Tuple)</code> | the current tuple |
+
 <a name="ERMrest.Reference+search"></a>
 
-#### reference.search(term)
+#### reference.search(term) ⇒ <code>Reference</code>
 create a new reference with the new search
 by copying this reference and clears previous search filters
 search term can be:
@@ -2263,6 +2338,11 @@ b) A single term with space using ""
 c) use space for conjunction of terms
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Reference</code> - A new reference with the new search  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `term` is invalid.
+
 
 | Param | Type | Description |
 | --- | --- | --- |

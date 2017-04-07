@@ -54,6 +54,11 @@
                         ["reference_schema", "id_fk_association_related_to_reference"],
                         ["reference_schema", "extra_fk_association_related_to_reference"]
                     ]
+                },
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name/unformatted": {
+                        "row_markdown_pattern": "{{id}} and {{name}}"
+                    }
                 }
             }
         },
@@ -82,7 +87,8 @@
                     }],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "from_name": "from_name_value"
+                            "from_name": "from_name_value",
+                            "to_name": "to_name_value"
                         }
                     }
                 },
