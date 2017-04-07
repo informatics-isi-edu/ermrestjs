@@ -2200,12 +2200,12 @@ This will generate a new unfiltered reference each time.
 <a name="ERMrest.Reference+appLink"></a>
 
 #### reference.appLink : <code>String</code>
-App-specific URL
+App-specific URL
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 **Throws**:
 
-- <code>Error</code> if `_appLinkFn` is not defined.
+- <code>Error</code> if `_appLinkFn` is not defined.
 
 <a name="ERMrest.Reference+create"></a>
 

@@ -66,7 +66,7 @@ exports.execute = function (options) {
                 options.ermRest.resolve(base1Uri, {cid: "test"}).then(function (response) {
                     reference = response;
 
-                    expect(function() { appLink = reference.appLink; }).toThrow("`appLinkFn` function is not defined.");
+                    expect(function() { appLink = reference.appLink; }).toThrow("`appLinkFn` function is not defined.");
                     done();
                 }, function (err) {
                     console.dir(err);
@@ -76,7 +76,7 @@ exports.execute = function (options) {
 
             it('1.2 contextualized reference should return error, ', function() {
                 reference_d = reference.contextualize.detailed;
-                expect(function() { appLink = reference_d.appLink; }).toThrow("`appLinkFn` function is not defined.");
+                expect(function() { appLink = reference_d.appLink; }).toThrow("`appLinkFn` function is not defined.");
             });
         });
 
@@ -160,7 +160,7 @@ exports.execute = function (options) {
 
         });
 
-        
+
 
     });
 
