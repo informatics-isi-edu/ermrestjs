@@ -642,7 +642,7 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         * 
+         *
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
@@ -1059,9 +1059,9 @@ var ERMrest = (function(module) {
          * @param {Object[]} sort an array of objects in the format
          * {"column":columname, "descending":true|false}
          * in order of priority. Undfined, null or Empty array to use default sorting.
-         * 
+         *
          * @returns {Reference} A new reference with the new sorting
-         * 
+         *
          * @throws {@link ERMrest.InvalidInputError} if `sort` is invalid.
          */
         sort: function(sort) {
@@ -1206,11 +1206,39 @@ var ERMrest = (function(module) {
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
                     // Some data was not updated
                     if (response.status === 200 && response.data.length < submissionData.length) {
+                        var updatedRows = response.data;
                         // no data updated
-                        if (response.data.length === 0) {
+                        if (updatedRows.length === 0) {
                             throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
                         }
                         // TODO: some data was updated, collect the rows that were not updated and notify the user of that
+                        var rowsOmitted = [];
+                        // loop through submitted data and check if the shortest key content can be found in a row in submissionData
+                        for (var i = 0; i < submissionData.length; i++) {
+                            var submissionRow = submissionData[i],
+                                rowMatch = false;
+
+                            for (var x = 0; x < updatedRows.length; x++) {
+                                var updatedRow = updatedRows[x],
+                                    keyMatch = true;
+
+                                for (var keyNameIndex = 0; keyNameIndex < shortestKeyNames.length; keyNameIndex++) {
+                                    var key = shortestKeyNames[keyNameIndex] + newAlias;
+
+                                    if (submissionRow[key] !== updatedRow[key]) {
+                                        keyMatch = false;
+                                        break;
+                                    }
+                                }
+                                if (keyMatch) {
+                                    rowMatch = true;
+                                }
+                            }
+                            if (!rowMatch) {
+                                rowsOmitted.push(submissionRow);
+                            }
+                        }
+                        console.log(rowsOmitted);
                     }
                     var etag = response.headers().etag;
                     var pageData = [],
@@ -1253,7 +1281,7 @@ var ERMrest = (function(module) {
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     page = new Page(ref, etag, pageData, false, false);
 
-                    defer.resolve(page);
+                    // defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
@@ -1271,7 +1299,7 @@ var ERMrest = (function(module) {
         /**
          * Deletes the referenced resources.
          * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
-         * 
+         *
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1482,25 +1510,25 @@ var ERMrest = (function(module) {
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
          * @returns {ERMrest.Reference[]}
-         * 
+         *
          * @param {ERMrest.Tuple=} tuple the current tuple
          */
         related: function (tuple) {
             if (this._related === undefined) {
                 /**
                  * The logic is as follows:
-                 * 
+                 *
                  * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
                  * it will consider all the inbound foreign keys).
-                 * 
+                 *
                  * 2. Go through the list of visible inbound foreign keys.
                  *  2.0 keep track of the linkage and save some attributes:
                  *      2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
                  *      2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
                  *      2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
                  *          - logic: foriengkey's to_name or this.displayname
-                 * 
-                 * 
+                 *
+                 *
                  *  2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
                  *      2.1.1 displayname: F2.to_name or T2.displayname
                  *      2.1.2 table: T2
@@ -1516,13 +1544,13 @@ var ERMrest = (function(module) {
                  *          2.2.3.1 Uses the linkage to get to the T2.
                  *          2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
                  *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
-                 * 
+                 *
                  * The logic for are sorted based on following attributes:
                  *  1. displayname
                  *  2. position of key columns that are involved in the foreignkey
                  *  3. position of columns that are involved in the foreignkey
-                 * 
-                 */            
+                 *
+                 */
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
@@ -1663,7 +1691,7 @@ var ERMrest = (function(module) {
 
         /**
          * This will generate a new unfiltered reference each time.
-         * 
+         *
          * @type {ERMrest.Reference} reference a reference that points to all entities of current table
          */
         get unfilteredReference() {
@@ -1702,7 +1730,7 @@ var ERMrest = (function(module) {
          * c) use space for conjunction of terms
          * @param {string} term - search term, undefined to clear search
          * @returns {Reference} A new reference with the new search
-         * 
+         *
          * @throws {@link ERMrest.InvalidInputError} if `term` is invalid.
          */
         search: function(term) {
@@ -1757,13 +1785,13 @@ var ERMrest = (function(module) {
 
     /**
      * Contructs the Contextualize object.
-     * 
+     *
      * Usage:
      * Clients _do not_ directly access this constructor.
      * See {@link ERMrest.Reference#contextualize}
-     * 
+     *
      * It will be used for creating contextualized references.
-     * 
+     *
      * @param {Reference} reference the reference that we want to contextualize
      */
     function Contextualize(reference) {
