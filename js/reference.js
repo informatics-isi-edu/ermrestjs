@@ -1211,35 +1211,8 @@ var ERMrest = (function(module) {
                         if (updatedRows.length === 0) {
                             throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
                         }
-                        // TODO: some data was updated, collect the rows that were not updated and notify the user of that
-                        var rowsOmitted = [];
-                        // loop through submitted data and check if the shortest key content can be found in a row in submissionData
-                        for (var i = 0; i < submissionData.length; i++) {
-                            var submissionRow = submissionData[i],
-                                rowMatch = false;
-
-                            for (var x = 0; x < updatedRows.length; x++) {
-                                var updatedRow = updatedRows[x],
-                                    keyMatch = true;
-
-                                for (var keyNameIndex = 0; keyNameIndex < shortestKeyNames.length; keyNameIndex++) {
-                                    var key = shortestKeyNames[keyNameIndex] + newAlias;
-
-                                    if (submissionRow[key] !== updatedRow[key]) {
-                                        keyMatch = false;
-                                        break;
-                                    }
-                                }
-                                if (keyMatch) {
-                                    rowMatch = true;
-                                }
-                            }
-                            if (!rowMatch) {
-                                rowsOmitted.push(submissionRow);
-                            }
-                        }
-                        console.log(rowsOmitted);
                     }
+
                     var etag = response.headers().etag;
                     var pageData = [],
                         page;
@@ -1281,7 +1254,7 @@ var ERMrest = (function(module) {
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     page = new Page(ref, etag, pageData, false, false);
 
-                    // defer.resolve(page);
+                    defer.resolve(page);
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
