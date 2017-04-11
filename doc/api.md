@@ -2216,8 +2216,9 @@ specification, and not according to the contents of in the input
 tuple.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
-or rejected with any of these errors:
+**Returns**: <code>Promise</code> - A promise resolved w ith [Page](#ERMrest.Page) of results,
+or rejected with any of the following errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `data` is not valid, or reference is not in `entry/create` context.
 - [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
@@ -2293,7 +2294,7 @@ Updates a set of resources.
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
 **Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
 or rejected with any of these errors:
-- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid or reference is not in `entry/edit` context.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
