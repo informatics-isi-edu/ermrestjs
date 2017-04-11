@@ -253,7 +253,7 @@ exports.execute = function (options) {
 
                 it('otherwise should return true.', function () {
                     // simple fk
-                    expect(compactColumns[1].nullok).toBe(true);
+                    expect(compactColumns[2].nullok).toBe(true);
                     // composite fk, all true
                     expect(compactColumns[14].nullok).toBe(true);
                 });
