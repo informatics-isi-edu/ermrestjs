@@ -54,6 +54,11 @@
                         ["reference_schema", "id_fk_association_related_to_reference"],
                         ["reference_schema", "extra_fk_association_related_to_reference"]
                     ]
+                },
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name/unformatted": {
+                        "row_markdown_pattern": "{{id}} and {{name}}"
+                    }
                 }
             }
         },
@@ -82,7 +87,8 @@
                     }],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "from_name": "from_name_value"
+                            "from_name": "from_name_value",
+                            "to_name": "to_name_value"
                         }
                     }
                 },
@@ -199,10 +205,12 @@
             "column_definitions": [
                 {
                     "name": "id_from_ref_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ]
@@ -252,14 +260,17 @@
             "column_definitions": [
                 {
                   "name": "ID",
+                  "nullok": false,
                   "type": {"typename":"serial4"}
                 },
                 {
                     "name": "id from ref table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ],
@@ -317,10 +328,12 @@
                 },
                 {
                     "name": "id_from_ref_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ]
@@ -545,6 +558,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -710,18 +724,21 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
                     "name": "id_1",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
                     "name": "id_2",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -911,6 +928,7 @@
             "column_definitions": [
                 {
                     "name": "id_fk",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -1216,7 +1234,7 @@
                 },
                 {
                     "name": "col_1",
-                    "default": null,
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     },
@@ -1387,6 +1405,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -1428,6 +1447,9 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*": [
+                        "id", "col_1", "col_with_slash/",  ["reference_schema", "table_w_slash_fk_1"], ["reference_schema", "table_w_slash_fk_2"]
+                    ],
                     "compact/brief": [
                         "id", "col_with_slash/", ["reference_schema", "table_w_slash_fk_1"], ["reference_schema", "table_w_slash_fk_2"]
                     ]
@@ -1564,7 +1586,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1640,7 +1661,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1705,7 +1725,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1750,7 +1769,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"

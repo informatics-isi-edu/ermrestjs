@@ -208,7 +208,7 @@ exports.execute = function (options) {
          *
          * expected output for ref.columns in detailed, compact/select, and entry/edit contexts:
          * 0:   id
-         * 1:   outbound_fk_1 (check to_name) (check nullok)
+         * 1:   outbound_fk_1 (check to_name)
          * 2:   outbound_fk_2  -> is null
          * 3:   outbound_fk_3 (check disambiguation) (check nullok)
          * 4:   outbound_fk_4 (check disambiguation)
@@ -365,18 +365,6 @@ exports.execute = function (options) {
 
             describe('when visible-columns annotation is not present for the context, ', function () {
                 describe('PseudoColumn for key, ', function () {
-                    it('if key columns are nullable, should not be added.', function (done) {
-                        options.ermRest.resolve(singleEnitityUriCompositeKey, {cid:"test"}).then(function(ref) {
-                            expect(ref.columns[0].isPseudo).toBe(false);
-                            expect(ref.columns[0].name).toEqual("id");
-
-                            done();
-                        }, function (err) {
-                            console.dir(err);
-                            done.fail();
-                        });
-                    });
-
                     it('if key is simple and its contituent columns are part of simple foreign key, should not be added (instead it should apply the PseudoColumn for foreignkey logic.)', function(done) {
                         options.ermRest.resolve(singleEnitityUriSimpleKeyFK, {cid:"test"}).then(function(ref) {
                             expect(ref.columns[0].isPseudo).toBe(true);

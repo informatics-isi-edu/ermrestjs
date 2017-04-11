@@ -222,6 +222,12 @@ exports.execute = function (options) {
                 expect(briefRecord._table).toBe(reference._table);
             });
 
+            it('unfilteredReference should return a reference that refers to all entities of current table', function() {
+                var unfiltered = reference.unfilteredReference;
+                expect(unfiltered.table).toBe(reference.table);
+                expect(unfiltered.uri).toEqual(baseUri);
+            });
+
             // Single Entity specific tests
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
@@ -280,6 +286,12 @@ exports.execute = function (options) {
                     console.dir(error);
                     done.fail();
                 });
+            });
+
+            it('unfilteredReference should return a reference that refers to all entities of current table', function() {
+                var unfiltered = reference.unfilteredReference;
+                expect(unfiltered.table).toBe(reference.table);
+                expect(unfiltered.uri).toEqual(baseUri);
             });
 
             it('read should return a Page object that is defined.', function(done) {
@@ -341,6 +353,12 @@ exports.execute = function (options) {
                 });
             });
 
+            it('unfilteredReference should return a reference that refers to all entities of current table', function() {
+                var unfiltered = reference.unfilteredReference;
+                expect(unfiltered.table).toBe(reference.table);
+                expect(unfiltered.uri).toEqual(baseUri);
+            });
+
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
                     page = response;
@@ -397,7 +415,7 @@ exports.execute = function (options) {
             });
         });
 
-        // TODO tset this
+        // Local Test Cases:
         if (!process.env.TRAVIS) {
             describe("for tables with slash(`/`) in their name,", function () {
                 var reference, page, tuple;
