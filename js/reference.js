@@ -1204,6 +1204,15 @@ var ERMrest = (function(module) {
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                    // Some data was not updated
+                    if (response.status === 200 && response.data.length < submissionData.length) {
+                        var updatedRows = response.data;
+                        // no data updated
+                        if (updatedRows.length === 0) {
+                            throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
+                        }
+                    }
+
                     var etag = response.headers().etag;
                     var pageData = [],
                         page;
