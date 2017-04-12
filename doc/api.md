@@ -82,6 +82,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [.shortestKey](#ERMrest.Table+shortestKey)
             * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -243,11 +244,11 @@ to use for ERMrest JavaScript agents.
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-        * [.sort(sort)](#ERMrest.Reference+sort)
+        * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-        * [.search(term)](#ERMrest.Reference+search)
+        * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : <code>[Reference](#ERMrest.Reference)</code>
@@ -647,6 +648,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [.shortestKey](#ERMrest.Table+shortestKey)
         * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -729,6 +731,13 @@ All the FKRs to this table.
 Documentation for this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+shortestKey"></a>
+
+#### table.shortestKey
+The columns that create the shortest key
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+**Type{column[]}**:   
 <a name="ERMrest.Table+_getDisplayKey"></a>
 
 #### table._getDisplayKey(context)
@@ -1921,11 +1930,11 @@ Constructor for a ParsedFilter.
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-    * [.sort(sort)](#ERMrest.Reference+sort)
+    * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ <code>[Array.&lt;Reference&gt;](#ERMrest.Reference)</code>
-    * [.search(term)](#ERMrest.Reference+search)
+    * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -2191,12 +2200,12 @@ This will generate a new unfiltered reference each time.
 <a name="ERMrest.Reference+appLink"></a>
 
 #### reference.appLink : <code>String</code>
-App-specific URL
+App-specific URL
 
 **Kind**: instance property of <code>[Reference](#ERMrest.Reference)</code>  
 **Throws**:
 
-- <code>Error</code> if `_appLinkFn` is not defined.
+- <code>Error</code> if `_appLinkFn` is not defined.
 
 <a name="ERMrest.Reference+create"></a>
 
@@ -2207,8 +2216,11 @@ specification, and not according to the contents of in the input
 tuple.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results,
-or errors (TBD).  
+**Returns**: <code>Promise</code> - A promise resolved w ith [Page](#ERMrest.Page) of results,
+or rejected with any of the following errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `data` is not valid, or reference is not in `entry/create` context.
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2247,14 +2259,12 @@ reference.read(10).then(
 ```
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a [Page](#ERMrest.Page) of results.  
-**Throws**:
-
-- [InvalidInputError](#ERMrest.InvalidInputError) if `limit` is invalid.
-- [BadRequestError](#ERMrest.BadRequestError) if asks for sorting based on columns that are not sortable.
-- [NotFoundError](#ERMrest.NotFoundError) if asks for sorting based on columns that are not valid.
-other errors TBD (TODO document other errors here).
-
+**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- [BadRequestError](#ERMrest.BadRequestError): If asks for sorting based on columns that are not sortable.
+- [NotFoundError](#ERMrest.NotFoundError): If asks for sorting based on columns that are not valid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2262,10 +2272,15 @@ other errors TBD (TODO document other errors here).
 
 <a name="ERMrest.Reference+sort"></a>
 
-#### reference.sort(sort)
+#### reference.sort(sort) ⇒ <code>Reference</code>
 Return a new Reference with the new sorting
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Reference</code> - A new reference with the new sorting  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `sort` is invalid.
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2277,7 +2292,10 @@ Return a new Reference with the new sorting
 Updates a set of resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - page A promise for a page result or errors.  
+**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid or reference is not in `entry/edit` context.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2289,7 +2307,9 @@ Updates a set of resources.
 Deletes the referenced resources.
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
-**Returns**: <code>Promise</code> - A promise for a TBD result or errors.  
+**Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
+- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
+- ERMrestjs corresponding http errors, if ERMrest returns http error.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2319,7 +2339,7 @@ has other moderating attributes, for instance that indicate the
 
 <a name="ERMrest.Reference+search"></a>
 
-#### reference.search(term)
+#### reference.search(term) ⇒ <code>Reference</code>
 create a new reference with the new search
 by copying this reference and clears previous search filters
 search term can be:
@@ -2328,6 +2348,11 @@ b) A single term with space using ""
 c) use space for conjunction of terms
 
 **Kind**: instance method of <code>[Reference](#ERMrest.Reference)</code>  
+**Returns**: <code>Reference</code> - A new reference with the new search  
+**Throws**:
+
+- [InvalidInputError](#ERMrest.InvalidInputError) if `term` is invalid.
+
 
 | Param | Type | Description |
 | --- | --- | --- |

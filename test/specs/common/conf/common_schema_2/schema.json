@@ -111,7 +111,34 @@
                 }
             }
         },
-        "multi_key_table": {
+        "table_wo_key": {
+            "comment": "",
+            "kind": "table",
+            "keys": [],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_wo_key",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "col_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+            }
+        },
+        "table_wo_notnull_key": {
             "comment": "",
             "kind": "table",
             "keys": [
@@ -121,58 +148,23 @@
                     "unique_columns": [
                         "id"
                     ]
-                },
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "value"
-                    ]
-                },
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "a"
-                    ]
-                },
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "id", "name"
-                    ]
                 }
             ],
             "entityCount": 0,
             "foreign_keys": [],
-            "table_name": "multi_key_table",
+            "table_name": "table_wo_notnull_key",
             "schema_name": "common_schema_2",
             "column_definitions": [
                 {
                     "name": "id",
-                    "nullok": false,
-                    "type": {
-                        "typename": "serial"
-                    }
-                },
-                {
-                    "name": "name",
-                    "nullok": false,
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
-                    "name": "value",
-                    "nullok": false,
-                    "type": {
-                        "typename": "serial"
-                    }
-                },
-                {
-                    "name": "a",
-                    "nullok": false,
+                    "name": "col",
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     }
@@ -180,6 +172,153 @@
             ],
             "annotations": {
             }
+        },
+        "table_w_dif_len_keys": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2", "col_3"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_3"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2"]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_dif_len_keys",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial"
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial"
+                    }
+                },
+                {
+                    "name": "col_3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "multi_w_same_len_keys_w_all_serial": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_2", "col_3"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2", "col_3"]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "multi_w_same_len_keys_w_all_serial",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial"
+                    }
+                },
+                {
+                    "name": "col_3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "multi_w_same_len_keys": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2", "col_3"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_1", "col_2"]
+                },
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": ["col_2", "col_3"]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "multi_w_same_len_keys",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial"
+                    }
+                },
+                {
+                    "name": "col_3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
         }
     },
     "schema_name": "common_schema_2",

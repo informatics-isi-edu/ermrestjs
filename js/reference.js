@@ -510,7 +510,7 @@ var ERMrest = (function(module) {
             /* This getter should determine whether the reference is unique
              * on-demand.
              */
-            return undefined; // TODO
+            notimplemented();
         },
 
         /**
@@ -642,8 +642,11 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results,
-         * or errors (TBD).
+         * @returns {Promise} A promise resolved w ith {@link ERMrest.Page} of results,
+         * or rejected with any of the following errors:
+         * - {@link ERMrest.InvalidInputError}: If `data` is not valid, or reference is not in `entry/create` context.
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         create: function(data) {
             var self = this;
@@ -651,6 +654,7 @@ var ERMrest = (function(module) {
                 //  verify: data is not null, data has non empty tuple set
                 verify(data, "'data' must be specified");
                 verify(data.length > 0, "'data' must have at least one row to create");
+                verify(self._context === module._contexts.CREATE, "reference must be in 'entry/create' context.");
 
                 var defer = module._q.defer();
 
@@ -780,12 +784,12 @@ var ERMrest = (function(module) {
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          *
-         * @returns {Promise} A promise for a {@link ERMrest.Page} of results.
-         *
-         * @throws {@link ERMrest.InvalidInputError} if `limit` is invalid.
-         * @throws {@link ERMrest.BadRequestError} if asks for sorting based on columns that are not sortable.
-         * @throws {@link ERMrest.NotFoundError} if asks for sorting based on columns that are not valid.
-         * other errors TBD (TODO document other errors here).
+         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - {@link ERMrest.BadRequestError}: If asks for sorting based on columns that are not sortable.
+         * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit) {
             try {
@@ -1056,6 +1060,10 @@ var ERMrest = (function(module) {
          * @param {Object[]} sort an array of objects in the format
          * {"column":columname, "descending":true|false}
          * in order of priority. Undfined, null or Empty array to use default sorting.
+         *
+         * @returns {Reference} A new reference with the new sorting
+         *
+         * @throws {@link ERMrest.InvalidInputError} if `sort` is invalid.
          */
         sort: function(sort) {
 
@@ -1080,12 +1088,16 @@ var ERMrest = (function(module) {
          * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
-         * @returns {Promise} page A promise for a page result or errors.
+         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         update: function(tuples) {
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
+                verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
                 var defer = module._q.defer();
 
@@ -1194,6 +1206,15 @@ var ERMrest = (function(module) {
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                    // Some data was not updated
+                    if (response.status === 200 && response.data.length < submissionData.length) {
+                        var updatedRows = response.data;
+                        // no data updated
+                        if (updatedRows.length === 0) {
+                            throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
+                        }
+                    }
+
                     var etag = response.headers().etag;
                     var pageData = [],
                         page;
@@ -1253,7 +1274,10 @@ var ERMrest = (function(module) {
         /**
          * Deletes the referenced resources.
          * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
-         * @returns {Promise} A promise for a TBD result or errors.
+         *
+         * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         delete: function(tuples) {
             try {
@@ -1461,25 +1485,25 @@ var ERMrest = (function(module) {
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
          * @returns {ERMrest.Reference[]}
-         * 
+         *
          * @param {ERMrest.Tuple=} tuple the current tuple
          */
         related: function (tuple) {
             if (this._related === undefined) {
                 /**
                  * The logic is as follows:
-                 * 
+                 *
                  * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
                  * it will consider all the inbound foreign keys).
-                 * 
+                 *
                  * 2. Go through the list of visible inbound foreign keys.
                  *  2.0 keep track of the linkage and save some attributes:
                  *      2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
                  *      2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
                  *      2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
                  *          - logic: foriengkey's to_name or this.displayname
-                 * 
-                 * 
+                 *
+                 *
                  *  2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
                  *      2.1.1 displayname: F2.to_name or T2.displayname
                  *      2.1.2 table: T2
@@ -1495,13 +1519,13 @@ var ERMrest = (function(module) {
                  *          2.2.3.1 Uses the linkage to get to the T2.
                  *          2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
                  *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
-                 * 
+                 *
                  * The logic for are sorted based on following attributes:
                  *  1. displayname
                  *  2. position of key columns that are involved in the foreignkey
                  *  3. position of columns that are involved in the foreignkey
-                 * 
-                 */            
+                 *
+                 */
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
@@ -1639,10 +1663,10 @@ var ERMrest = (function(module) {
             }
             return this._related;
         },
-        
+
         /**
          * This will generate a new unfiltered reference each time.
-         * 
+         *
          * @type {ERMrest.Reference} reference a reference that points to all entities of current table
          */
         get unfilteredReference() {
@@ -1656,23 +1680,21 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * App-specific URL
-         * 
-         * @type {String}
-         * @throws {Error} if `_appLinkFn` is not defined.
-         */
-        get appLink() {
-            if (typeof module._appLinkFn !== "function") {
-                throw new Error("`appLinkFn` function is not defined.");
-            }
-
-            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
-
-            if (tag) {
-                return module._appLinkFn(tag, this._location);
-            }
-            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
-        },
+        * App-specific URL
+        *
+        * @type {String}
+        * @throws {Error} if `_appLinkFn` is not defined.
+        */
+        get appLink() {
+            if (typeof module._appLinkFn !== 'function') {
+                throw new Error("`appLinkFn` function is not defined.");
+            }
+            var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
+            if (tag) {
+                return module._appLinkFn(tag, this._location);
+            }
+            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+        },
 
         /**
          * create a new reference with the new search
@@ -1682,6 +1704,9 @@ var ERMrest = (function(module) {
          * b) A single term with space using ""
          * c) use space for conjunction of terms
          * @param {string} term - search term, undefined to clear search
+         * @returns {Reference} A new reference with the new search
+         *
+         * @throws {@link ERMrest.InvalidInputError} if `term` is invalid.
          */
         search: function(term) {
 
@@ -1733,6 +1758,17 @@ var ERMrest = (function(module) {
         return referenceCopy;
     }
 
+    /**
+     * Contructs the Contextualize object.
+     *
+     * Usage:
+     * Clients _do not_ directly access this constructor.
+     * See {@link ERMrest.Reference#contextualize}
+     *
+     * It will be used for creating contextualized references.
+     *
+     * @param {Reference} reference the reference that we want to contextualize
+     */
     function Contextualize(reference) {
         this._reference = reference;
     }
@@ -2387,6 +2423,7 @@ var ERMrest = (function(module) {
          */
         set data(data) {
             // TODO needs to be implemented rather than modifying the values directly from UI
+            notimplemented();
         },
 
         /**
@@ -2411,7 +2448,7 @@ var ERMrest = (function(module) {
         get canUpdate() {
             // catalog/ + id + /meta/content_read_user
             // content_write_user
-            return undefined;
+            notimplemented();
         },
 
         /**
@@ -2423,7 +2460,7 @@ var ERMrest = (function(module) {
          * @type {(boolean|undefined)}
          */
         get canDelete() {
-            return undefined;
+            notimplemented();
         },
 
         /**

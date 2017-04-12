@@ -205,10 +205,12 @@
             "column_definitions": [
                 {
                     "name": "id_from_ref_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ]
@@ -258,14 +260,17 @@
             "column_definitions": [
                 {
                   "name": "ID",
+                  "nullok": false,
                   "type": {"typename":"serial4"}
                 },
                 {
                     "name": "id from ref table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ],
@@ -323,10 +328,12 @@
                 },
                 {
                     "name": "id_from_ref_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
                     "type": {"typename":"text"}
                 }
             ]
@@ -551,6 +558,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -716,18 +724,21 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
                     "name": "id_1",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
                 },
                 {
                     "name": "id_2",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -917,6 +928,7 @@
             "column_definitions": [
                 {
                     "name": "id_fk",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -1222,7 +1234,7 @@
                 },
                 {
                     "name": "col_1",
-                    "default": null,
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     },
@@ -1393,6 +1405,7 @@
             "column_definitions": [
                 {
                     "name": "id",
+                    "nullok": false,
                     "type": {
                         "typename": "text"
                     }
@@ -1434,6 +1447,9 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*": [
+                        "id", "col_1", "col_with_slash/",  ["reference_schema", "table_w_slash_fk_1"], ["reference_schema", "table_w_slash_fk_2"]
+                    ],
                     "compact/brief": [
                         "id", "col_with_slash/", ["reference_schema", "table_w_slash_fk_1"], ["reference_schema", "table_w_slash_fk_2"]
                     ]
@@ -1570,7 +1586,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1646,7 +1661,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1711,7 +1725,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -1756,7 +1769,6 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "default": null,
                     "nullok": false,
                     "type": {
                         "typename": "serial4"

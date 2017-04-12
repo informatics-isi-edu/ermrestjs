@@ -29,6 +29,37 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "update_schema";
 
+        it('when reference is not contextualized for `entry/edit` should throw an error.', function(done) {
+            var tableName = "update_table",
+                uri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/ind_key1=2";
+
+            var reference;
+            var updateData = {
+                "ind_key1": 777
+            };
+
+            options.ermRest.resolve(uri, {
+                cid: "test"
+            }).then(function (response) {
+                reference = response;
+                return reference.read(1);
+            }).then(function (response) {
+                var data = response.tuples[0].data;
+
+                for (var key in updateData) {
+                    data[key] = updateData[key];
+                }
+
+                return reference.update(response.tuples);
+            }).then(function(response) {
+                throw new Error("Did not return any errors");
+            }).catch(function (err) {
+                expect(err.message).toEqual("reference must be in 'entry/edit' context.");
+                done();
+            });
+
+        });
+
         describe("for updating aliased columns, ", function () {
             var tableName = "alias_table",
                 sortBy = "key", // column used to sort the data
