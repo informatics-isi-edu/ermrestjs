@@ -764,6 +764,12 @@ var ERMrest = (function (module) {
          */
         this.comment = jsonTable.comment;
 
+        /**
+         * @desc The type of this table
+         * @type {string}
+         */
+        this.kind = jsonTable.kind;
+
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
