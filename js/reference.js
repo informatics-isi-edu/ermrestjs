@@ -642,9 +642,9 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         *
-         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
-         * or rejected with any of these errors:
+         * @returns {Promise} A promise resolved w ith {@link ERMrest.Page} of results,
+         * or rejected with any of the following errors:
+         * - {@link ERMrest.InvalidInputError}: If `data` is not valid, or reference is not in `entry/create` context.
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
@@ -654,6 +654,7 @@ var ERMrest = (function(module) {
                 //  verify: data is not null, data has non empty tuple set
                 verify(data, "'data' must be specified");
                 verify(data.length > 0, "'data' must have at least one row to create");
+                verify(self._context === module._contexts.CREATE, "reference must be in 'entry/create' context.");
 
                 var defer = module._q.defer();
 
@@ -1089,13 +1090,14 @@ var ERMrest = (function(module) {
          * tuple._oldData has the data before changes were made
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
-         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
+         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         update: function(tuples) {
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
+                verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
                 var defer = module._q.defer();
 
@@ -1204,6 +1206,15 @@ var ERMrest = (function(module) {
                 }
 
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                    // Some data was not updated
+                    if (response.status === 200 && response.data.length < submissionData.length) {
+                        var updatedRows = response.data;
+                        // no data updated
+                        if (updatedRows.length === 0) {
+                            throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
+                        }
+                    }
+
                     var etag = response.headers().etag;
                     var pageData = [],
                         page;

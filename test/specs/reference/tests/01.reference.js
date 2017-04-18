@@ -61,11 +61,12 @@ exports.execute = function (options) {
 
         // Test Cases:
         describe("for creating an entity/entities,", function () {
-            var reference;
+            var reference, createReference;
 
             beforeAll(function (done) {
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
+                    createReference = response.contextualize.entryCreate;
 
                     done();
                 }).catch(function (error) {
@@ -74,10 +75,21 @@ exports.execute = function (options) {
                 });
             });
 
+            it("should return error if reference is not contextualized for create.", function(done) {
+                var rows = [{ id: 9999, name: "Paula", value: 5 }];
+                
+                reference.create(rows).then(function(response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err.message).toEqual("reference must be in 'entry/create' context.");
+                    done();
+                });
+            });
+
             it("a single entity should return a Page object that is defined.", function(done) {
                 var rows = [{ id: 9999, name: "Paula", value: 5 }];
 
-                reference.create(rows).then(function (response) {
+                createReference.create(rows).then(function (response) {
                     var page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -98,7 +110,7 @@ exports.execute = function (options) {
                             { id: 9801, name: "Steven", value: 12 },
                             { id: 9802, name: "Garnet", value: 36 }];
 
-                reference.create(rows).then(function (response) {
+                createReference.create(rows).then(function (response) {
                     var page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
