@@ -14,7 +14,7 @@ exports.execute = function (options) {
             server._http.max_retries = 0;
         });
 
-        httpError.testForErrors("GET", ["400", "403", "404", "409", "500", "503"], function(error, done) {
+        httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
         	server.catalogs.get(id).then(null, function(err) {
         		expect(err instanceof ermRest[error.type]).toBeTruthy();
 	            done();

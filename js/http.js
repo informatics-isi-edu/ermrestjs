@@ -87,7 +87,7 @@ var ERMrest = (function (module) {
      * @callback httpUnauthorizedFn
      * @param {httpUnauthorizedFn} fn callback function
      */
-    module.httpUnauthorizedFn = function(fn) {
+    module.setHttpUnauthorizedFn = function(fn) {
         module._httpUnauthorizedFn = fn;
     };
 
@@ -186,16 +186,17 @@ var ERMrest = (function (module) {
                                 deferred.resolve(response);
                             });
                         } else if (response.status == 401) {
-                            module._onHttpAuthFlowFn().then(function() {
-                                asyncfn();
-                            });
 
                             if (_ermrestAuthorizationFailureFlag === false) {
                                 
-                                _ermrestAuthorizationFailureFlag = true;
-
                                 if (typeof module._httpUnauthorizedFn == 'function') {
-                                
+                                    
+                                    _ermrestAuthorizationFailureFlag = true;
+
+                                    module._onHttpAuthFlowFn().then(function() {
+                                        asyncfn();
+                                    });
+                                    
                                     module._httpUnauthorizedFn().then(function() {
                                 
                                         _ermrestAuthorizationFailureFlag = false;
@@ -207,7 +208,8 @@ var ERMrest = (function (module) {
                                     });
                                 
                                 } else {
-                                    throw new Error("httpUnauthorizedFn Event Handler not registered");
+                                    //throw new Error("httpUnauthorizedFn Event Handler not registered");
+                                    deferred.reject(response);
                                 }
                             }
 
