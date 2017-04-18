@@ -82,6 +82,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
         * _static_
@@ -648,6 +649,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
     * _static_
@@ -729,6 +731,12 @@ All the FKRs to this table.
 
 #### table.comment : <code>string</code>
 Documentation for this table
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+kind"></a>
+
+#### table.kind : <code>string</code>
+The type of this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+shortestKey"></a>
