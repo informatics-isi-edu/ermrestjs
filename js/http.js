@@ -75,6 +75,42 @@ var ERMrest = (function (module) {
     var _default_initial_delay = 100;
 
     /**
+     * function that is called when a HTTP 401 Error occurs
+     * @callback httpUnauthorizedFn
+     * @type {httpUnauthorizedFn}
+     * @private
+     */
+    module._httpUnauthorizedFn = null;
+
+    /**
+     * set callback function which will be called when a HTTP 401 Error occurs
+     * @callback httpUnauthorizedFn
+     * @param {httpUnauthorizedFn} fn callback function
+     */
+    module.httpUnauthorizedFn = function(fn) {
+        module._httpUnauthorizedFn = fn;
+    };
+
+    var _ermrestAuthorizationFailureFlag = false;
+    var _authorizationDefers = [];
+
+    /**
+     * @function
+     * @private
+     * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
+     * This function is used by http. It resolves promises by calling this function
+     * to make sure thirdparty scripts are loaded.
+     */
+    module._onHttpAuthFlowFn = function() {
+        var defer = module._q.defer();
+
+        if (_ermrestAuthorizationFailureFlag) _authorizationDefers.push(defer);
+        else defer.resolve();
+
+        return defer.promise;
+    };
+
+    /**
      * This is an experimental function for wrapping an http service.
      * @memberof ERMrest
      * @function
@@ -128,7 +164,11 @@ var ERMrest = (function (module) {
                         response.status = response.status || response.statusCode;
                         if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries) {
                             count += 1;
-                            setTimeout(asyncfn, delay);
+                            setTimeout(function() {
+                                module._onHttpAuthFlowFn().then(function() {
+                                    asyncfn();
+                                });
+                            }, delay);
                             delay *= 2;
                         } else if (method == 'delete' && response.status == _http_status_codes.not_found) {
                             /* SPECIAL CASE: "retried delete"
@@ -145,15 +185,44 @@ var ERMrest = (function (module) {
                             module._onload().then(function() {
                                 deferred.resolve(response);
                             });
-                        } else {
+                        } else if (response.status == 401) {
+                            module._onHttpAuthFlowFn().then(function() {
+                                asyncfn();
+                            });
 
+                            if (_ermrestAuthorizationFailureFlag === false) {
+                                
+                                _ermrestAuthorizationFailureFlag = true;
+
+                                if (typeof module._httpUnauthorizedFn == 'function') {
+                                
+                                    module._httpUnauthorizedFn().then(function() {
+                                
+                                        _ermrestAuthorizationFailureFlag = false;
+                                
+                                        _authorizationDefers.forEach(function(defer) {
+                                            defer.resolve();
+                                        });
+                                
+                                    });
+                                
+                                } else {
+                                    throw new Error("httpUnauthorizedFn Event Handler not registered");
+                                }
+                            }
+
+                        } else {
                             module._onload().then(function() {
                                 deferred.reject(response);
                             });
                         }
                     });
                 }
-                asyncfn();
+
+                module._onHttpAuthFlowFn().then(function() {
+                    asyncfn();
+                });
+                
                 return deferred.promise;
             };
         }
