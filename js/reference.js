@@ -1690,10 +1690,7 @@ var ERMrest = (function(module) {
                 throw new Error("`appLinkFn` function is not defined.");
             }
             var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
-            if (tag) {
-                return module._appLinkFn(tag, this._location);
-            }
-            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+            return module._appLinkFn(tag, this._location, this._context);
         },
 
         /**
@@ -1869,7 +1866,7 @@ var ERMrest = (function(module) {
 
                 var newLocationString;
 
-                if (source._location.hasJoin) {
+                if (source._location.hasJoin && newTable._isAlternativeTable()) {
                     // returns true if join is on alternative shared key
                     var joinOnAlternativeKey = function () {
                         var joinCols = source._location.lastJoin.rightCols,
@@ -1886,13 +1883,28 @@ var ERMrest = (function(module) {
 
                     // creates the new join
                     var generateJoin = function () {
+                        /*
+                        * let's assume we have T1, T1_alt, and T2
+                        * last join is from T2 to T1-> T2/(id)=(T1:id)
+                        * now we want to change this to point to T1_alt, to do this we can
+                        * T2/(id)=(T1:id)/(id)=(T1_alt:id) but the better way is
+                        * T2/(id)=(T1_alt:id)
+                        * so we need to map the T1 key that is used in the join to T1_alt key.
+                        * we can do this only if we know the mapping between foreignkey and key (which is true in this case).
+                        */
+
                         var currJoin = source._location.lastJoin,
                             newRightCols = [],
                             col;
 
                         for (var i = 0; i < currJoin.rightCols.length; i++) {
+                            // find the column object
                             col = source._table.columns.get(currJoin.rightCols[i]);
+
+                            // map the column from source table to alternative table
                             col = newTable._altForeignKey.mapping.getFromColumn(col);
+
+                            // the first column must have schema and table name
                             newRightCols.push((i === 0) ? col.toString() : module._fixedEncodeURIComponent(col.name));
                         }
 
@@ -1906,7 +1918,7 @@ var ERMrest = (function(module) {
 
                         // remove the search
                         if (source._location.searchFilter) {
-                            newLocationString = newLocationString.replace("/" + source._location.searchFilter, "");
+                            newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/"));
                         }
 
                         // remove the last join
@@ -1914,12 +1926,6 @@ var ERMrest = (function(module) {
 
                         // add the new join
                         newLocationString += generateJoin();
-
-                        // add query params
-                        if (source._location.queryParamsString) {
-                            newLocationString += "?" + source._location.queryParamsString;
-                        }
-
                     }
                 } else {
                     if (source._location.filter === undefined) {
@@ -2027,9 +2033,7 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                if (newLocationString) {
-                    newRef._location = module._parse(newLocationString);
-                } else {
+                if (!newLocationString) {
                      // all other cases (2.2., 3.2.2), use join
                     var join;
                     if (source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
@@ -2040,9 +2044,15 @@ var ERMrest = (function(module) {
                     } else { // alternative to base
                         join = source._table._altForeignKey.toString(true);
                     }
-
-                    newRef._location = module._parse(source._location.compactUri + "/" + join);
+                    newLocationString = source._location.compactUri + "/" + join;
                 }
+
+                //add the query parameters
+                if (source._location.queryParamsString) {
+                    newLocationString += "?" + source._location.queryParamsString;
+                }
+
+                newRef._location = module._parse(newLocationString);
             }
 
             return newRef;
