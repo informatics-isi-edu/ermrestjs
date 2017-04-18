@@ -1506,7 +1506,7 @@ get the mapping column given the from column
 <a name="ERMrest.Mapping+getFromColumn"></a>
 
 #### mapping.getFromColumn(toCol) ⇒ <code>[Column](#ERMrest.Column)</code>
-get the mapping column given the from column
+get the mapping column given the to column
 
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
 **Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
