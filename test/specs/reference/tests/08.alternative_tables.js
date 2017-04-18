@@ -2501,7 +2501,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('13. related_table join with base with filter,', function() {
+        describe('13. related_table join on different keys with base with filter,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
 
@@ -2558,7 +2558,7 @@ exports.execute = function (options) {
 
             it('13.A.2 page data should be the values from base table.', function() {
                 expect(page._ref).toBe(reference2);
-                expect(page._data.length).toBe(2);
+                expect(page._data.length).toBe(3);
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
@@ -2612,7 +2612,7 @@ exports.execute = function (options) {
 
             it('13.B.2 page data should be the values from alternative table.', function() {
                 expect(page._ref).toBe(reference2);
-                expect(page._data.length).toBe(2);
+                expect(page._data.length).toBe(3);
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
@@ -2665,7 +2665,7 @@ exports.execute = function (options) {
 
             it('13.C.2 page data should be the values from alternative table.', function() {
                 expect(page._ref).toBe(reference2);
-                expect(page._data.length).toBe(2);
+                expect(page._data.length).toBe(3);
 
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
@@ -2696,7 +2696,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('14. related_table join with base with filter,', function() {
+        describe('14. related_table join on shared key with base with filter,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
 
