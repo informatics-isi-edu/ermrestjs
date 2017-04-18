@@ -528,7 +528,7 @@ var ERMrest = (function(module) {
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = !ref._table._isGenerated && ref._checkPermissions("content_write_user");
+                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("content_write_user");
 
                 if (this._canCreate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -569,7 +569,7 @@ var ERMrest = (function(module) {
             if (this._canUpdate === undefined) {
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
+                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -593,7 +593,7 @@ var ERMrest = (function(module) {
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isNonDeletable && this._checkPermissions("content_write_user");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("content_write_user");
             }
             return this._canDelete;
         },
