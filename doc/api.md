@@ -13,6 +13,9 @@ to use for ERMrest JavaScript agents.</p>
 ## Typedefs
 
 <dl>
+<dt><a href="#httpUnauthorizedFn">httpUnauthorizedFn</a> : <code>function</code></dt>
+<dd><p>set callback function which will be called when a HTTP 401 Error occurs</p>
+</dd>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
 <dd><p>set callback function that converts app tag to app URL</p>
 </dd>
@@ -3293,6 +3296,17 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+
+<a name="httpUnauthorizedFn"></a>
+
+## httpUnauthorizedFn : <code>function</code>
+set callback function which will be called when a HTTP 401 Error occurs
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | <code>[httpUnauthorizedFn](#httpUnauthorizedFn)</code> | callback function |
 
 <a name="appLinkFn"></a>
 

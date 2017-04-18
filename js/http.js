@@ -109,7 +109,7 @@ var ERMrest = (function (module) {
      * @private
      * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
      * This function is used by http. It resolves promises by calling this function
-     * to make sure thirdparty scripts are loaded.
+     * to make sure _ermrestAuthorizationFailureFlag is false.
      */
     module._onHttpAuthFlowFn = function() {
         var defer = module._q.defer();
