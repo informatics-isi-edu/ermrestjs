@@ -27,7 +27,7 @@ exports.execute = function (options) {
 
         describe("Entity POST(create) exceptions", function() {
 
-            httpError.testForErrors("POST", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("POST", ["400", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.post([{ "valid_column_name" : "some randome value"}], [column.name]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
                     done();
@@ -43,7 +43,7 @@ exports.execute = function (options) {
 
         describe("Datapath GET exceptions", function() {
 
-            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("GET", ["400", "403", "404", "409", "500", "503"], function(error, done) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 var path = new ermRest.DataPath(table);
                 path = path.filter(filter);
@@ -64,7 +64,7 @@ exports.execute = function (options) {
 
         describe("Attribute GET exceptions", function() {
 
-            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("GET", ["400", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.get(null, null, [column]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
                     done();
@@ -81,7 +81,7 @@ exports.execute = function (options) {
 
         describe("Aggregate GET(count) exceptions", function() {
 
-            httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("GET", ["400", "403", "404", "409", "500", "503"], function(error, done) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 table.entity.count(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
@@ -99,7 +99,7 @@ exports.execute = function (options) {
 
         describe("Entity PUT(updated) exceptions", function() {
 
-            httpError.testForErrors("PUT", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("PUT", ["400", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.put([{ "valid_column_name" : "some randome value"}]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
                     done();
@@ -115,7 +115,7 @@ exports.execute = function (options) {
 
         describe("Entity DELETE exceptions", function() {
 
-            httpError.testForErrors("DELETE", ["400", "401", "403", "409", "500", "503"], function(error, done) {
+            httpError.testForErrors("DELETE", ["400", "403", "409", "500", "503"], function(error, done) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 table.entity.delete(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
