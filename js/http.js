@@ -140,12 +140,26 @@ var ERMrest = (function (module) {
                              * Both of the currently supported delete operations
                              * (entity/ and attribute/) return 204 No Content.
                              */
-                            response.status = response.statusCode = _http_status_codes.no_content;
+
+                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
+                             // Ermrest never produces HTML errors, so this was produced by the server itself
+                             if (response.headers()['content-type'].indexOf("html") > -1) {
+                                 response.status = response.statusCode = _http_status_codes.service_unavailable;
+                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                             } else {
+                                 response.status = response.statusCode = _http_status_codes.no_content;
+                             }
 
                             module._onload().then(function() {
                                 deferred.resolve(response);
                             });
                         } else {
+                            // If we get an HTTP error with HTML in it, this means something the server returned as an error.
+                            // Ermrest never produces HTML errors, so this was produced by the server itself
+                            if (response.headers()['content-type'].indexOf("html") > -1) {
+                                response.status = response.statusCode = _http_status_codes.service_unavailable;
+                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                            }
 
                             module._onload().then(function() {
                                 deferred.reject(response);
