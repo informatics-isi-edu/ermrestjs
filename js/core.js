@@ -1095,12 +1095,8 @@ var ERMrest = (function (module) {
          *
          */
         _getAlternativeTable: function (context) {
-            if (context in this._alternatives)
-                return this._alternatives[context];
-            else if (module._contexts.DEFAULT in this._alternatives)
-                return this._alternatives[module._contexts.DEFAULT];
-            else
-                return this;
+            var altTable = module._getAnnotationValueByContext(context, this._alternatives);
+            return altTable !== -1 ? altTable : this;
         },
 
         /**
