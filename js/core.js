@@ -2501,7 +2501,7 @@ var ERMrest = (function (module) {
          * @param {ERMrest.Column} toCol
          * @returns {ERMrest.Column} mapping column
          * @throws {ERMrest.NotFoundError} no mapping column found
-         * @desc get the mapping column given the from column
+         * @desc get the mapping column given the to column
          */
         getFromColumn: function (toCol) {
             for (var i = 0; i < this._to.length; i++) {

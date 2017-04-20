@@ -16,6 +16,8 @@ exports.execute = function (options) {
             altDetailedTable2Encoded = "alt%20table%20detailed%202",
             altCompactTable2 = "alt table compact 2",
             altCompactTable2Encoded = "alt%20table%20compact%202",
+            relatedTable = "related_table",
+            associatonTable = "association_table",
             entityId = "00001",
             value = "12";
 
@@ -70,6 +72,14 @@ exports.execute = function (options) {
          *      a. contextualize entry (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
+         * 13) start from related table with join to base with filters
+         *      a. contextualize entry (base_table)
+         *      b. contextualize detailed (alt_table_detailed)
+         *      c. contextualize compact (alt_table_compact)
+         * 14) start from related_table with join to base on shared key with filters
+         *      a. contextualize entry (base_table)
+         *      b. contextualize detailed (alt_table_detailed)
+         *      c. contextualize compact (alt_table_compact)
          */
 
         var uri1 = options.url + "/catalog/" + catalog_id + "/entity/"
@@ -107,6 +117,13 @@ exports.execute = function (options) {
 
         var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
             + altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
+
+        var uri13 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
+            + relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)";
+
+        var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
+            + relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=("
+            + schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
 
 
         describe('1. base table with no entity filters,', function() {
@@ -188,7 +205,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -241,7 +258,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -294,7 +311,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -385,7 +402,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -438,7 +455,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -491,7 +508,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -784,7 +801,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -837,7 +854,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -890,7 +907,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -986,7 +1003,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1039,7 +1056,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1092,7 +1109,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1181,7 +1198,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1234,7 +1251,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1287,7 +1304,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1576,7 +1593,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1629,7 +1646,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1682,7 +1699,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1778,7 +1795,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1831,7 +1848,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1884,7 +1901,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -1973,7 +1990,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -2026,7 +2043,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -2079,7 +2096,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -2368,7 +2385,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -2421,7 +2438,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {
@@ -2474,7 +2491,397 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe('13. related_table join on different keys with base with filter,', function() {
+            var reference, reference2, page, tuple;
+            var limit = 25;
+
+            it('13.1 resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(uri13, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.2 base table should be properly defined', function() {
+                expect(reference._table.name).toBe(baseTable1);
+                expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1);
+                expect(reference._table._alternatives.compact.name).toBe(altCompactTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
+            });
+
+            it('13.3. reference should be properly defined', function() {
+                expect(reference._location.uri).toBe(uri13);
+                expect(reference._location.service).toBe(options.url);
+                expect(reference._location.catalog).toBe(catalog_id.toString());
+                expect(reference._location.schemaName).toBe(schemaName);
+                expect(reference._location.tableName).toBe(baseTable1);
+
+            });
+
+            it('13.A contextualize entry should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entry;
+                expect(reference2._table.name).toBe(baseTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id");
+                expect(reference2.displayname.value).toBe(baseTable1);
+            });
+
+            it('13.A.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.A.2 page data should be the values from base table.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(3);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data.id).toBe("00001");
+                expect(tuple._data.name).toBe("Hank");
+                expect(tuple._data.value).toBe(12);
+            });
+
+            it('13.A.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('13.A.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.B contextualize detailed should return a new reference with alternative table', function() {
+                reference2 = reference.contextualize.detailed;
+                expect(reference2._table.name).toBe(altDetailedTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id x");
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
+            });
+
+            it('13.B.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.B.2 page data should be the values from alternative table.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(3);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data["id x"]).toBe("00001");
+                expect(tuple._data.details).toBe("Hank, Male 23");
+            });
+
+            it('13.B.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('13.B.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.C contextualize compact should return a new reference with alternative table', function() {
+                reference2 = reference.contextualize.compact;
+                expect(reference2._table.name).toBe(altCompactTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id y");
+                expect(reference2.displayname.value).toBe(altCompactTable1);
+            });
+
+            it('13.C.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.C.2 page data should be the values from alternative table.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(3);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data["id y"]).toBe("00001");
+                expect(tuple._data.summary).toBe("Hank 23");
+            });
+
+            it('13.C.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('13.C.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe('14. related_table join on shared key with base with filter,', function() {
+            var reference, reference2, page, tuple;
+            var limit = 25;
+
+            it('14.1 resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(uri14, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.2 base table should be properly defined', function() {
+                expect(reference._table.name).toBe(baseTable1);
+                expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1);
+                expect(reference._table._alternatives.compact.name).toBe(altCompactTable1);
+                expect(reference._table._baseTable.name).toBe(baseTable1);
+            });
+
+            it('14.3. reference should be properly defined', function() {
+                expect(reference._location.uri).toBe(uri14);
+                expect(reference._location.service).toBe(options.url);
+                expect(reference._location.catalog).toBe(catalog_id.toString());
+                expect(reference._location.schemaName).toBe(schemaName);
+                expect(reference._location.tableName).toBe(baseTable1);
+
+            });
+
+            it('14.A contextualize entry should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entry;
+                expect(reference2._table.name).toBe(baseTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id");
+                expect(reference2.displayname.value).toBe(baseTable1);
+            });
+
+            it('14.A.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.A.2 page data should be the values from base table with filter.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(2);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data.id).toBe("00001");
+                expect(tuple._data.name).toBe("Hank");
+                expect(tuple._data.value).toBe(12);
+            });
+
+            it('14.A.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('14.A.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.B contextualize detailed should return a new reference with alternative table', function() {
+                reference2 = reference.contextualize.detailed;
+                expect(reference2._table.name).toBe(altDetailedTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id x");
+                expect(reference2.displayname.value).toBe(altDetailedTable1);
+            });
+
+            it('14.B.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.B.2 page data should be the values from alternative table with filter.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(2);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data["id x"]).toBe("00001");
+                expect(tuple._data.details).toBe("Hank, Male 23");
+            });
+
+            it('14.B.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('14.B.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.C contextualize compact should return a new reference with alternative table', function() {
+                reference2 = reference.contextualize.compact;
+                expect(reference2._table.name).toBe(altCompactTable1);
+                expect(reference2._shortestKey.length).toBe(1);
+                expect(reference2._shortestKey[0].name).toBe("id y");
+                expect(reference2.displayname.value).toBe(altCompactTable1);
+            });
+
+            it('14.C.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('14.C.2 page data should be the values from alternative table.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(2);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data["id y"]).toBe("00001");
+                expect(tuple._data.summary).toBe("Hank 23");
+            });
+
+            it('14.C.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('14.C.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
 
                     done();
                 }, function (err) {

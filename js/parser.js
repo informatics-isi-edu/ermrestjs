@@ -168,10 +168,14 @@ var ERMrest = (function(module) {
             index -= 1;
         }
 
+        this._hasJoin = false;
+        this._lastJoin = null;
+
         // if has linking, use the last part as the main table
         var colMapping;
         var linking = parts[index].match(/\((.*)\)=\((.*:.*:.*)\)/);
         if (linking) {
+            this._hasJoin = true;
             var leftCols = linking[1].split(",");
             var rightParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
             this._schemaName = decodeURIComponent(rightParts[1]);
@@ -181,6 +185,12 @@ var ERMrest = (function(module) {
             for (var j = 0; j < leftCols.length; j++) {
                 colMapping[decodeURIComponent(leftCols[j])] = decodeURIComponent(rightCols[j]);
             }
+            this._lastJoin = {
+                "leftCols": leftCols.map(function(colName) {return decodeURIComponent(colName);}),
+                "leftColsStr": linking[1],
+                "rightCols": rightCols.map(function(colName) {return decodeURIComponent(colName);}),
+                "rightColsStr": linking[2],
+            };
         }
 
         // first schema name and first table name
@@ -392,6 +402,18 @@ var ERMrest = (function(module) {
          */
         get queryParamsString() {
             return this._queryParamsString;
+        },
+
+        /**
+        * If there's a join(linking) at the end or not.
+        * @return {boolean}
+        */
+        get hasJoin() {
+            return this._hasJoin;
+        },
+
+        get lastJoin() {
+            return this._lastJoin;
         },
 
         /**
@@ -641,7 +663,7 @@ var ERMrest = (function(module) {
 
     /**
      * given the string of parameters, create an object of them.
-     * 
+     *
      * @param {String} params the string representation of the query params
      * @returns {Object} the query params object
      * @private
