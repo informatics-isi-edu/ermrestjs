@@ -291,6 +291,7 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+        * [.isForeignKey](#ERMrest.ReferenceColumn+isForeignKey) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -2694,6 +2695,7 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+    * [.isForeignKey](#ERMrest.ReferenceColumn+isForeignKey) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -2800,6 +2802,12 @@ Heuristics are as follows:
 - Column:
      - column_order defined -> use it.
      - use column actual value.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+isForeignKey"></a>
+
+#### referenceColumn.isForeignKey : <code>boolean</code>
+returns the private value _isForeignKey
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>

@@ -3124,6 +3124,14 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc returns the private value _isForeignKey
+         * @type {boolean}
+         */
+        get isForeignKey() {
+            return this._isForeignKey;
+        },
+
+        /**
          * Formats a value corresponding to this reference-column definition.
          * @param {Object} data The 'raw' data value.
          * @returns {string} The formatted value.
