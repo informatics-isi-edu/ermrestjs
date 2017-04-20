@@ -268,7 +268,7 @@ exports.execute = function (options) {
             });
 
             it('1.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -465,7 +465,7 @@ exports.execute = function (options) {
             });
 
             it('2.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -666,7 +666,7 @@ exports.execute = function (options) {
             });
 
             it('3.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -864,7 +864,7 @@ exports.execute = function (options) {
             });
 
             it('4.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -1066,7 +1066,7 @@ exports.execute = function (options) {
             });
 
             it('5.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -1261,7 +1261,7 @@ exports.execute = function (options) {
             });
 
             it('6.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -1460,7 +1460,7 @@ exports.execute = function (options) {
             });
 
             it('7.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -1656,7 +1656,7 @@ exports.execute = function (options) {
             });
 
             it('8.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -1858,7 +1858,7 @@ exports.execute = function (options) {
             });
 
             it('9.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -2053,7 +2053,7 @@ exports.execute = function (options) {
             });
 
             it('10.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -2252,7 +2252,7 @@ exports.execute = function (options) {
             });
 
             it('11.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -2448,7 +2448,7 @@ exports.execute = function (options) {
             });
 
             it('12.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -2643,7 +2643,7 @@ exports.execute = function (options) {
             });
 
             it('13.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
@@ -2838,7 +2838,7 @@ exports.execute = function (options) {
             });
 
             it('14.C contextualize compact should return a new reference with alternative table', function() {
-                reference2 = reference.contextualize.compact;
+                reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id y");
