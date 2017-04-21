@@ -197,7 +197,7 @@ var ERMrest = (function (module) {
                              // If we get an HTTP error with HTML in it, this means something the server returned as an error.
                              // Ermrest never produces HTML errors, so this was produced by the server itself
                              if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
-                                 response.status = response.statusCode = _http_status_codes.service_unavailable;
+                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
                                  response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
                              } else {
                                  response.status = response.statusCode = _http_status_codes.no_content;
@@ -246,7 +246,7 @@ var ERMrest = (function (module) {
                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
                             // Ermrest never produces HTML errors, so this was produced by the server itself
                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
-                                response.status = response.statusCode = _http_status_codes.service_unavailable;
+                                response.status = response.statusCode = _http_status_codes.internal_server_error;
                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
                             }
 

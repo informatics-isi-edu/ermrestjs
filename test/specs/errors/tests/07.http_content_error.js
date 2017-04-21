@@ -34,7 +34,7 @@ exports.execute = function (options) {
                 .reply(404, htmlResponseMessage, {"Content-Type": "text/html"});
 
             server.catalogs.get(id).then(null, function(err) {
-                expect(err.code).toBe(503);
+                expect(err.code).toBe(500);
                 expect(err.message).toBe(terminalErrorMessage);
 
                 done();
