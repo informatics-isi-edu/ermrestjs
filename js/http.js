@@ -25,6 +25,7 @@ var ERMrest = (function (module) {
     var _http_status_codes = {
         timed_out: 0,
         no_content: 204,
+        unauthorized: 401,
         not_found: 404,
         internal_server_error: 500,
         service_unavailable: 503
@@ -92,13 +93,13 @@ var ERMrest = (function (module) {
     };
 
     /*
-     * A flag to determine whether emrest authorization error has occured 
-     * as well as to determine the login flow is currently in progress to avoid 
+     * A flag to determine whether emrest authorization error has occured
+     * as well as to determine the login flow is currently in progress to avoid
      * calling the _httpUnauthorizedFn callback again
      */
     var _ermrestAuthorizationFailureFlag = false;
-    
-    /* 
+
+    /*
      * All the calls that were paused because of 401 error are added to this array
      *  Once the _ermrestAuthorizationFailureFlag is false, all of them will be resolved/restarted
     */
@@ -192,19 +193,27 @@ var ERMrest = (function (module) {
                              * Both of the currently supported delete operations
                              * (entity/ and attribute/) return 204 No Content.
                              */
-                            response.status = response.statusCode = _http_status_codes.no_content;
+
+                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
+                             // Ermrest never produces HTML errors, so this was produced by the server itself
+                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
+                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
+                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                             } else {
+                                 response.status = response.statusCode = _http_status_codes.no_content;
+                             }
 
                             module._onload().then(function() {
                                 deferred.resolve(response);
                             });
-                        } else if (response.status == 401) {
+                        } else if (response.status == _http_status_codes.unauthorized) {
 
                             // If _ermrestAuthorizationFailureFlag is not set then
                             if (_ermrestAuthorizationFailureFlag === false) {
-                                
+
                                 // If callback has been registered in _httpUnauthorizedFn
                                 if (typeof module._httpUnauthorizedFn == 'function') {
-                                    
+
                                     // Set _ermrestAuthorizationFailureFlag to avoid the handler from being called again
                                     _ermrestAuthorizationFailureFlag = true;
 
@@ -212,21 +221,21 @@ var ERMrest = (function (module) {
                                     module._onHttpAuthFlowFn().then(function() {
                                         asyncfn();
                                     });
-                                    
+
                                     // Call the handler, which will return a promise
                                     // On success set the flag as false and resolve all the authorizationDefers
                                     // So that other calls which failed due to 401 or were trigerred after the 401
                                     // are reexecuted
                                     module._httpUnauthorizedFn().then(function() {
-                                
+
                                         _ermrestAuthorizationFailureFlag = false;
-                                
+
                                         _authorizationDefers.forEach(function(defer) {
                                             defer.resolve();
                                         });
-                                
+
                                     });
-                                
+
                                 } else {
                                     //throw new Error("httpUnauthorizedFn Event Handler not registered");
                                     deferred.reject(response);
@@ -234,6 +243,13 @@ var ERMrest = (function (module) {
                             }
 
                         } else {
+                            // If we get an HTTP error with HTML in it, this means something the server returned as an error.
+                            // Ermrest never produces HTML errors, so this was produced by the server itself
+                            if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
+                                response.status = response.statusCode = _http_status_codes.internal_server_error;
+                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                            }
+
                             module._onload().then(function() {
                                 deferred.reject(response);
                             });
@@ -247,7 +263,7 @@ var ERMrest = (function (module) {
                 module._onHttpAuthFlowFn().then(function() {
                     asyncfn();
                 });
-                
+
                 return deferred.promise;
             };
         }
