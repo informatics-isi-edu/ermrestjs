@@ -1731,7 +1731,6 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1846,7 +1845,8 @@ var ERMrest = (function(module) {
             * cases:
             *   1. same table: do nothing
             *   2. has join
-            *       2.1. on same key: swap join
+            *       2.1. source is base, newTable is alternative:
+            *           - If the join is on the alternative shared key, swap the joins.
             *       2.2. otherwise: use join
             *   3. doesn't have join
             *       3.1. no filter: swap table and update location only
@@ -1866,7 +1866,7 @@ var ERMrest = (function(module) {
 
                 var newLocationString;
 
-                if (source._location.hasJoin && newTable._isAlternativeTable()) {
+                if (source._location.hasJoin) {
                     // returns true if join is on alternative shared key
                     var joinOnAlternativeKey = function () {
                         var joinCols = source._location.lastJoin.rightCols,
@@ -1912,7 +1912,7 @@ var ERMrest = (function(module) {
                     };
 
                     // 2.1. if _altSharedKey is the same as the join
-                    if (joinOnAlternativeKey(source)) {
+                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable() && joinOnAlternativeKey(source)) {
                         // change to-columns of the join
                         newLocationString =  source._location.compactUri;
 
