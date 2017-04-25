@@ -1949,16 +1949,17 @@ var ERMrest = (function(module) {
                             if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
-                                if (newTable._isAlternativeTable()) // to alternative table
+                                if (newTable._isAlternativeTable()) { // to alternative table
                                     filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
                                         "=" + filter.value;
-                                else // to base table
+                                } else { // to base table
                                     filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
-                            }
+                                }
 
-                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
-                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
-                                                filterString;
+                                newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                    source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
+                                                    filterString;
+                            }
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
 
