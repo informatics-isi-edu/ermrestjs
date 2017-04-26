@@ -25,59 +25,59 @@ exports.execute = function (options) {
          * Test Cases:
          *
          * 1) start from base_table with no filter
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 2) start from base_table with single entity shared key filter (single col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 3) start from base_table with single entity shared key filter (multi col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 4) start from base_table with other filters
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 5) start from alt_table_detailed with no filter
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 6) start from alt_table_detailed with single entity shared key filter (single col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 7) start from alt_table_detailed with single entity shared key filter (multi col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 8) start from alt_table_detailed with other filters
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 9) start from alt_table_compact with no filter
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 10) start from alt_table_compact with single entity shared key filter (single col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 11) start from alt_table_compact with single entity shared key filter (multi col)
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 12) start from alt_table_compact with other filters
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 13) start from related table with join to base with filters
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          * 14) start from related_table with join to base on shared key with filters
-         *      a. contextualize entry (base_table)
+         *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
          */
@@ -160,8 +160,8 @@ exports.execute = function (options) {
 
             });
 
-            it('1.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('1.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -357,8 +357,8 @@ exports.execute = function (options) {
 
             });
 
-            it('2.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('2.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -555,8 +555,8 @@ exports.execute = function (options) {
 
             });
 
-            it('3.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('3.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -756,8 +756,8 @@ exports.execute = function (options) {
 
             });
 
-            it('4.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('4.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -958,8 +958,8 @@ exports.execute = function (options) {
 
             });
 
-            it('5.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('5.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -1153,8 +1153,8 @@ exports.execute = function (options) {
 
             });
 
-            it('6.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('6.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -1349,8 +1349,8 @@ exports.execute = function (options) {
 
             });
 
-            it('7.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('7.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -1548,8 +1548,8 @@ exports.execute = function (options) {
 
             });
 
-            it('8.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('8.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -1750,8 +1750,8 @@ exports.execute = function (options) {
 
             });
 
-            it('9.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('9.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -1945,8 +1945,8 @@ exports.execute = function (options) {
 
             });
 
-            it('10.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('10.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -2141,8 +2141,8 @@ exports.execute = function (options) {
 
             });
 
-            it('11.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('11.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
                 expect(reference2._shortestKey.length).toBe(2);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -2340,8 +2340,8 @@ exports.execute = function (options) {
 
             });
 
-            it('12.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('12.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -2502,7 +2502,7 @@ exports.execute = function (options) {
         });
 
         describe('13. related_table join on different keys with base with filter,', function() {
-            var reference, reference2, page, tuple;
+            var reference, reference2, reference3, page, tuple;
             var limit = 25;
 
             it('13.1 resolve should return a Reference object that is defined.', function(done) {
@@ -2535,8 +2535,8 @@ exports.execute = function (options) {
 
             });
 
-            it('13.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('13.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
@@ -2694,6 +2694,59 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("13.D contextualizing a contextualized reference should not remove the join., ", function () {
+                reference3 = reference2.contextualize.entry;
+                expect(reference3._table.name).toBe(baseTable1);
+                expect(reference3._shortestKey.length).toBe(1);
+                expect(reference3._shortestKey[0].name).toBe("id");
+                expect(reference3.displayname.value).toBe(baseTable1);
+            });
+
+            it('13.D.1 read should return a Page object that is defined.', function(done) {
+                reference3.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('13.D.2 page data should be the values from alternative table.', function() {
+                expect(page._ref).toBe(reference3);
+                expect(page._data.length).toBe(3);
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference3);
+                expect(tuple._data["id"]).toBe("00001");
+                expect(tuple._data.name).toBe("Hank");
+            });
+
+            it('13.D.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined();
+                expect(tuple.reference._table.name).toBe(baseTable1);
+                expect(tuple.reference.displayname.value).toBe(baseTable1);
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+            });
+
+            it('13.D.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page.tuples.length).toBe(1);
+                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
         });
 
         describe('14. related_table join on shared key with base with filter,', function() {
@@ -2730,8 +2783,8 @@ exports.execute = function (options) {
 
             });
 
-            it('14.A contextualize entry should return a new reference with base table', function() {
-                reference2 = reference.contextualize.entry;
+            it('14.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
                 expect(reference2._shortestKey.length).toBe(1);
                 expect(reference2._shortestKey[0].name).toBe("id");
