@@ -608,8 +608,13 @@ var ERMrest = (function(module) {
          */
          _checkPermissions: function (permission) {
             var editCatalog = false,
-                acl = this._meta[permission],
+                acl = [],
                 users = [];
+
+            // make sure this acl was defined in the _meta array before trying to work with it
+            if (this._meta[permission]) {
+                acl = this._meta[permission];
+            }
 
             for (var i = 0; i < acl.length; i++) {
                 if (acl[i] === '*') {
