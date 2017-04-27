@@ -99,14 +99,14 @@ exports.execute = function (options) {
             });
         });
 
-        describe('._isKey, ', function () {
+        describe('.isKey, ', function () {
             it ('for PseudoColumns that are key should return true.', function () {
-                expect(compactColumns[0]._isKey).toBe(true);
+                expect(compactColumns[0].isKey).toBe(true);
             });
 
             it ('for other columns should return undefined.', function () {
                 for (var i = 1; i < 16; i++) {
-                    expect(compactColumns[i]._isKey).toBe(undefined);
+                    expect(compactColumns[i].isKey).toBe(undefined);
                 }
             });
         });
