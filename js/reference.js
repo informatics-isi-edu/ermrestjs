@@ -608,8 +608,13 @@ var ERMrest = (function(module) {
          */
          _checkPermissions: function (permission) {
             var editCatalog = false,
-                acl = this._meta[permission],
+                acl = [],
                 users = [];
+
+            // make sure this acl was defined in the _meta array before trying to work with it
+            if (this._meta[permission]) {
+                acl = this._meta[permission];
+            }
 
             for (var i = 0; i < acl.length; i++) {
                 if (acl[i] === '*') {
@@ -1731,7 +1736,6 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1846,7 +1850,8 @@ var ERMrest = (function(module) {
             * cases:
             *   1. same table: do nothing
             *   2. has join
-            *       2.1. on same key: swap join
+            *       2.1. source is base, newTable is alternative:
+            *           - If the join is on the alternative shared key, swap the joins.
             *       2.2. otherwise: use join
             *   3. doesn't have join
             *       3.1. no filter: swap table and update location only
@@ -1911,24 +1916,21 @@ var ERMrest = (function(module) {
                         return "(" + currJoin.leftColsStr + ")=(" + newRightCols.join(",") + ")";
                     };
 
-                    // going from =
-                    if (newTable._isAlternativeTable()) {
-                        // 2.1. if _altSharedKey is the same as the join
-                        if (joinOnAlternativeKey(source)) {
-                            // change to-columns of the join
-                            newLocationString =  source._location.compactUri;
+                    // 2.1. if _altSharedKey is the same as the join
+                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable() && joinOnAlternativeKey(source)) {
+                        // change to-columns of the join
+                        newLocationString =  source._location.compactUri;
 
-                            // remove the search
-                            if (source._location.searchFilter) {
-                                newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/"));
-                            }
-
-                            // remove the last join
-                            newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/") + 1);
-
-                            // add the new join
-                            newLocationString += generateJoin();
+                        // remove the search
+                        if (source._location.searchFilter) {
+                            newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/"));
                         }
+
+                        // remove the last join
+                        newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/") + 1);
+
+                        // add the new join
+                        newLocationString += generateJoin();
                     }
 
                 } else {
@@ -1953,16 +1955,17 @@ var ERMrest = (function(module) {
                             if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
-                                if (newTable._isAlternativeTable()) // to alternative table
+                                if (newTable._isAlternativeTable()) { // to alternative table
                                     filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
                                         "=" + filter.value;
-                                else // to base table
+                                } else { // to base table
                                     filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
-                            }
+                                }
 
-                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
-                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
-                                                filterString;
+                                newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                    source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
+                                                    filterString;
+                            }
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
 

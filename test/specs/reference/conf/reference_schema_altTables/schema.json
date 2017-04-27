@@ -66,8 +66,7 @@
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference schema altTables", "alt table detailed"],
           "compact": ["reference schema altTables", "alt table compact"],
-          "entry": ["reference schema altTables", "base table"],
-          "*": ["reference schema altTables", "alt table detailed"]
+          "entry/create": ["reference schema altTables", "base table"]
         },
         "tag:isrd.isi.edu,2016:app-links": {
           "detailed": "tag:isrd.isi.edu,2016:chaise:record",
@@ -203,7 +202,7 @@
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference schema altTables", "alt table detailed 2"],
           "compact": ["reference schema altTables", "alt table compact 2"],
-          "entry": ["reference schema altTables", "base table no app link"]
+          "entry/create": ["reference schema altTables", "base table no app link"]
         }
       }
     },
