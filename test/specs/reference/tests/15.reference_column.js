@@ -111,18 +111,18 @@ exports.execute = function (options) {
             });
         });
 
-        describe('._isForeignKey, ', function () {
+        describe('.isForeignKey, ', function () {
             it ('for PseudoColumns that are foreign key should return true.', function () {
                 for (var i = 1; i < 16; i++) {
-                    expect(compactColumns[i]._isForeignKey).toBe(true);
+                    expect(compactColumns[i].isForeignKey).toBe(true);
                     if (i == 4) i = 10;
                 }
             });
 
             it ('for other columns should return undefined.', function () {
-                expect(compactColumns[0]._isForeignKey).toBe(undefined);
+                expect(compactColumns[0].isForeignKey).toBe(undefined);
                 for (var i = 5; i < 11; i++) {
-                    expect(compactColumns[i]._isForeignKey).toBe(undefined);
+                    expect(compactColumns[i].isForeignKey).toBe(undefined);
                 }
             });
         });

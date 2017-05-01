@@ -13,6 +13,9 @@ to use for ERMrest JavaScript agents.</p>
 ## Typedefs
 
 <dl>
+<dt><a href="#httpUnauthorizedFn">httpUnauthorizedFn</a> : <code>function</code></dt>
+<dd><p>set callback function which will be called when a HTTP 401 Error occurs</p>
+</dd>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
 <dd><p>set callback function that converts app tag to app URL</p>
 </dd>
@@ -82,6 +85,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
         * _static_
@@ -287,6 +291,7 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+        * [.isForeignKey](#ERMrest.ReferenceColumn+isForeignKey) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -648,6 +653,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.referredBy](#ERMrest.Table+referredBy) : <code>[ForeignKeys](#ERMrest.ForeignKeys)</code>
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
     * _static_
@@ -729,6 +735,12 @@ All the FKRs to this table.
 
 #### table.comment : <code>string</code>
 Documentation for this table
+
+**Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
+<a name="ERMrest.Table+kind"></a>
+
+#### table.kind : <code>string</code>
+The type of this table
 
 **Kind**: instance property of <code>[Table](#ERMrest.Table)</code>  
 <a name="ERMrest.Table+shortestKey"></a>
@@ -1506,7 +1518,7 @@ get the mapping column given the from column
 <a name="ERMrest.Mapping+getFromColumn"></a>
 
 #### mapping.getFromColumn(toCol) ⇒ <code>[Column](#ERMrest.Column)</code>
-get the mapping column given the from column
+get the mapping column given the to column
 
 **Kind**: instance method of <code>[Mapping](#ERMrest.Mapping)</code>  
 **Returns**: <code>[Column](#ERMrest.Column)</code> - mapping column  
@@ -2683,6 +2695,7 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> &#124; <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+    * [.isForeignKey](#ERMrest.ReferenceColumn+isForeignKey) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ <code>[Reference](#ERMrest.Reference)</code>
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -2789,6 +2802,12 @@ Heuristics are as follows:
 - Column:
      - column_order defined -> use it.
      - use column actual value.
+
+**Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
+<a name="ERMrest.ReferenceColumn+isForeignKey"></a>
+
+#### referenceColumn.isForeignKey : <code>boolean</code>
+returns the private value _isForeignKey
 
 **Kind**: instance property of <code>[ReferenceColumn](#ERMrest.ReferenceColumn)</code>  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
@@ -3293,6 +3312,17 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+
+<a name="httpUnauthorizedFn"></a>
+
+## httpUnauthorizedFn : <code>function</code>
+set callback function which will be called when a HTTP 401 Error occurs
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | <code>[httpUnauthorizedFn](#httpUnauthorizedFn)</code> | callback function |
 
 <a name="appLinkFn"></a>
 

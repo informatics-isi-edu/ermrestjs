@@ -90,7 +90,7 @@ exports.execute = function (options) {
                     reference.session = { attributes: [] };
 
                     // uncontextualized
-                    result = searchURL + "/" + reference.location.path;
+                    result = recordURL + "/" + reference.location.path;
                     expect(reference.appLink).toBe(result);
 
                     done();
@@ -102,19 +102,19 @@ exports.execute = function (options) {
 
             it('2.2 contextualize for detailed should return correct app link, ', function() {
                 reference_d = reference.contextualize.detailed;
-                result = searchURL + "/" + reference_d.location.path;
+                result = recordURL + "/" + reference_d.location.path;
                 expect(reference_d.appLink).toBe(result);
             });
 
             it('2.3 contextualize for compact should return correct app link, ', function() {
                 reference_c = reference_d.contextualize.compact;
-                result = searchURL + "/" + reference_c.location.path;
+                result = recordsetURL + "/" + reference_c.location.path;
                 expect(reference_c.appLink).toBe(result);
             });
 
             it('2.4 contextualize for entry should return correct app link, ', function() {
                 reference_e = reference_c.contextualize.entry;
-                result = searchURL + "/" + reference_e.location.path;
+                result = recordURL + "/" + reference_e.location.path;
                 expect(reference_e.appLink).toBe(result);
             });
 

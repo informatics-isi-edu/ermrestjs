@@ -528,7 +528,7 @@ var ERMrest = (function(module) {
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = !ref._table._isGenerated && ref._checkPermissions("content_write_user");
+                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("content_write_user");
 
                 if (this._canCreate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -569,7 +569,7 @@ var ERMrest = (function(module) {
             if (this._canUpdate === undefined) {
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
+                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -593,7 +593,7 @@ var ERMrest = (function(module) {
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = !this._table._isNonDeletable && this._checkPermissions("content_write_user");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("content_write_user");
             }
             return this._canDelete;
         },
@@ -608,8 +608,13 @@ var ERMrest = (function(module) {
          */
          _checkPermissions: function (permission) {
             var editCatalog = false,
-                acl = this._meta[permission],
+                acl = [],
                 users = [];
+
+            // make sure this acl was defined in the _meta array before trying to work with it
+            if (this._meta[permission]) {
+                acl = this._meta[permission];
+            }
 
             for (var i = 0; i < acl.length; i++) {
                 if (acl[i] === '*') {
@@ -1690,10 +1695,7 @@ var ERMrest = (function(module) {
                 throw new Error("`appLinkFn` function is not defined.");
             }
             var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
-            if (tag) {
-                return module._appLinkFn(tag, this._location);
-            }
-            return module._appLinkFn(null, this._location, this._context); // app link not specified by annotation
+            return module._appLinkFn(tag, this._location, this._context);
         },
 
         /**
@@ -1734,7 +1736,6 @@ var ERMrest = (function(module) {
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this.derivedAssociationReference;
             delete this._canCreate;
             delete this._canRead;
             delete this._canUpdate;
@@ -1845,34 +1846,101 @@ var ERMrest = (function(module) {
             var newTable = source._table._baseTable._getAlternativeTable(context);
 
 
-            // cases:
-            // 1. same table: do nothing more
-            // 2. no filter: swap table and update location only
-            // 3. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
-            // 4. others: if from an alternative table to an alternative table, join base than join alternative table 2
-
-            // if switched to a new table (could be a base table or alternative table)
-            // need to update reference's table, key, displayname, location
-            // modifiers are not kept because columns are not guarenteed to exist when we switch to another table
+            /**
+            * cases:
+            *   1. same table: do nothing
+            *   2. has join
+            *       2.1. source is base, newTable is alternative:
+            *           - If the join is on the alternative shared key, swap the joins.
+            *       2.2. otherwise: use join
+            *   3. doesn't have join
+            *       3.1. no filter: swap table and update location only
+            *       3.2. has filter
+            *           3.2.1. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
+            *           3.2.2. otherwise: use join
+            *
+            * NOTE:
+            * If switched to a new table (could be a base table or alternative table)
+            * need to update reference's table, key, displayname, location
+            * modifiers are not kept because columns are not guarenteed to exist when we switch to another table
+            */
             if (newTable !== source._table) {
 
                 // swap to new table
                 newRef.setNewTable(newTable);
 
-                // case 2: no filter
-                if (source._location.filter === undefined) {
-                    // case 1: no filter
-                    newRef._location = module._parse(source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
-                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name));
+                var newLocationString;
+
+                if (source._location.hasJoin) {
+                    // returns true if join is on alternative shared key
+                    var joinOnAlternativeKey = function () {
+                        var joinCols = source._location.lastJoin.rightCols,
+                            keyCols = source._table._baseTable._altSharedKey.colset.columns;
+
+                        if (joinCols.length != keyCols.length) {
+                            return false;
+                        }
+
+                        return keyCols.every(function(keyCol) {
+                            return joinCols.indexOf(keyCol.name) != -1;
+                        });
+                    };
+
+                    // creates the new join
+                    var generateJoin = function () {
+                        /*
+                        * let's assume we have T1, T1_alt, and T2
+                        * last join is from T2 to T1-> T2/(id)=(T1:id)
+                        * now we want to change this to point to T1_alt, to do this we can
+                        * T2/(id)=(T1:id)/(id)=(T1_alt:id) but the better way is
+                        * T2/(id)=(T1_alt:id)
+                        * so we need to map the T1 key that is used in the join to T1_alt key.
+                        * we can do this only if we know the mapping between foreignkey and key (which is true in this case).
+                        */
+
+                        var currJoin = source._location.lastJoin,
+                            newRightCols = [],
+                            col;
+
+                        for (var i = 0; i < currJoin.rightCols.length; i++) {
+                            // find the column object
+                            col = source._table.columns.get(currJoin.rightCols[i]);
+
+                            // map the column from source table to alternative table
+                            col = newTable._altForeignKey.mapping.getFromColumn(col);
+
+                            // the first column must have schema and table name
+                            newRightCols.push((i === 0) ? col.toString() : module._fixedEncodeURIComponent(col.name));
+                        }
+
+                        return "(" + currJoin.leftColsStr + ")=(" + newRightCols.join(",") + ")";
+                    };
+
+                    // 2.1. if _altSharedKey is the same as the join
+                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable() && joinOnAlternativeKey(source)) {
+                        // change to-columns of the join
+                        newLocationString =  source._location.compactUri;
+
+                        // remove the search
+                        if (source._location.searchFilter) {
+                            newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/"));
+                        }
+
+                        // remove the last join
+                        newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/") + 1);
+
+                        // add the new join
+                        newLocationString += generateJoin();
+                    }
                 } else {
-
-                    var newLocationString;
-
-                    // case 3: single entity key filter (without any join), swap table and switch to mapping key
-                    // filter is single entity if it is binary filters using the shared key of the alternative tables
-                    // or a conjunction of binary predicate that is a key of the alternative tables
-                    if ((!source._location.projectionSchemaName || source._location.projectionSchemaName === source._location.schemaName) &&
-                        source._location.projectionTableName === source._location.tableName) { // no join
+                    if (source._location.filter === undefined) {
+                        // 3.1 no filter
+                        newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
+                    } else {
+                        // 3.2.1 single entity key filter (without any join), swap table and switch to mapping key
+                        // filter is single entity if it is binary filters using the shared key of the alternative tables
+                        // or a conjunction of binary predicate that is a key of the alternative tables
 
                         // use base table's alt shared key
                         var sharedKey = source._table._baseTable._altSharedKey;
@@ -1886,16 +1954,17 @@ var ERMrest = (function(module) {
                             if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
-                                if (newTable._isAlternativeTable()) // to alternative table
+                                if (newTable._isAlternativeTable()) { // to alternative table
                                     filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
                                         "=" + filter.value;
-                                else // to base table
+                                } else { // to base table
                                     filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
-                            }
+                                }
 
-                            newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
-                                                source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
-                                                filterString;
+                                newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                                    source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
+                                                    filterString;
+                            }
 
                         } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
 
@@ -1966,28 +2035,30 @@ var ERMrest = (function(module) {
                                 }
                             }
                         }
+
                     }
-
-                    if (newLocationString) {
-                        newRef._location = module._parse(newLocationString);
-                    } else {
-                         // all other cases, use join
-                        var join;
-                        if (source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
-                            join = source._table._altForeignKey.toString(true) + "/" +
-                                   newTable._altForeignKey.toString();
-                        } else if (!source._table._isAlternativeTable()) { // base to alternative
-                            join = newTable._altForeignKey.toString();
-                        } else { // alternative to base
-                            join = source._table._altForeignKey.toString(true);
-                        }
-
-                        newRef._location = module._parse(source._location.compactUri + "/" + join);
-                        // NOTE: if there is a filter that's not the same key used in linking, parser is not able to convert filter
-                        //       not able to convert filter to the join table
-                    }
-
                 }
+
+                if (!newLocationString) {
+                     // all other cases (2.2., 3.2.2), use join
+                    var join;
+                    if (source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                        join = source._table._altForeignKey.toString(true) + "/" +
+                               newTable._altForeignKey.toString();
+                    } else if (!source._table._isAlternativeTable()) { // base to alternative
+                        join = newTable._altForeignKey.toString();
+                    } else { // alternative to base
+                        join = source._table._altForeignKey.toString(true);
+                    }
+                    newLocationString = source._location.compactUri + "/" + join;
+                }
+
+                //add the query parameters
+                if (source._location.queryParamsString) {
+                    newLocationString += "?" + source._location.queryParamsString;
+                }
+
+                newRef._location = module._parse(newLocationString);
             }
 
             return newRef;
@@ -3056,6 +3127,14 @@ var ERMrest = (function(module) {
                 }
             }
             return this._display_cached;
+        },
+
+        /**
+         * @desc returns the private value _isForeignKey
+         * @type {boolean}
+         */
+        get isForeignKey() {
+            return this._isForeignKey;
         },
 
         /**

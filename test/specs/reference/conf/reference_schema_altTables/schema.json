@@ -14,7 +14,26 @@
         }
       ],
       "entityCount": 0,
-      "foreign_keys": [],
+      "foreign_keys": [
+          {
+              "comment": "",
+              "foreign_key_columns": [{
+                  "table_name": "base table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "fk_to_related"
+              }],
+              "referenced_columns": [{
+                  "table_name": "related_table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "id"
+              }],
+              "annotations": {
+                  "tag:isrd.isi.edu,2016:foreign-key": {
+                      "from_name": "base table inbound related"
+                  }
+              }
+          }
+      ],
       "table_name": "base table",
       "schema_name": "reference schema altTables",
       "column_definitions": [
@@ -36,17 +55,26 @@
           "type": {
             "typename": "integer"
           }
+        }, {
+            "name": "fk_to_related",
+            "type": {
+                "typename": "text"
+            }
         }
       ],
       "annotations": {
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference schema altTables", "alt table detailed"],
           "compact": ["reference schema altTables", "alt table compact"],
-          "entry": ["reference schema altTables", "base table"]
+          "entry/create": ["reference schema altTables", "base table"]
         },
         "tag:isrd.isi.edu,2016:app-links": {
-          "detailed": "tag:isrd.isi.edu,2016:chaise:search",
+          "detailed": "tag:isrd.isi.edu,2016:chaise:record",
+          "compact": "tag:isrd.isi.edu,2016:chaise:recordset",
           "*": "detailed"
+        },
+        "tag:isrd.isi.edu,2016:visible-columns": {
+            "*": ["id", "name", "value"]
         }
       }
     },
@@ -174,7 +202,7 @@
         "tag:isrd.isi.edu,2016:table-alternatives": {
           "detailed": ["reference schema altTables", "alt table detailed 2"],
           "compact": ["reference schema altTables", "alt table compact 2"],
-          "entry": ["reference schema altTables", "base table no app link"]
+          "entry/create": ["reference schema altTables", "base table no app link"]
         }
       }
     },
@@ -293,16 +321,106 @@
           }
         }
       ]
+    },
+    "related_table": {
+      "comment":"",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "related_table",
+      "schema_name": "reference schema altTables",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {}
+    },
+    "association_table": {
+      "comment":"",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id_related", "id_base"
+          ]
+        }
+      ],
+      "foreign_keys": [
+          {
+              "comment": "",
+              "foreign_key_columns": [{
+                  "table_name": "association_table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "id_related"
+              }],
+              "referenced_columns": [{
+                  "table_name": "related_table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "id"
+              }],
+              "annotations": {}
+          },
+          {
+              "comment": "",
+              "foreign_key_columns": [{
+                  "table_name": "association_table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "id_base"
+              }],
+              "referenced_columns": [{
+                  "table_name": "base table",
+                  "schema_name": "reference schema altTables",
+                  "column_name": "id"
+              }],
+              "annotations": {
+                  "tag:isrd.isi.edu,2016:foreign-key": {
+                      "to_name": "base table association related"
+                  }
+              }
+          }
+      ],
+      "table_name": "association_table",
+      "schema_name": "reference schema altTables",
+      "column_definitions": [
+        {
+          "name": "id_related",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "id_base",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {}
     }
   },
-  "table_names": [
-    "base table",
-    "alt table detailed",
-    "alt table compact",
-    "base table no app link",
-    "alt table detailed 2",
-    "alt table compact 2"
-  ],
   "comment": null,
   "annotations": {
     "tag:isrd.isi.edu,2016:app-links": {

@@ -489,7 +489,7 @@ var ERMrest = (function(module) {
         }
 
         return {
-            "value": module._formatUtils.printMarkdown(pattern, { inline: true }), 
+            "value": module._formatUtils.printMarkdown(pattern, { inline: true }),
             "unformatted": (typeof unformatted === 'undefined' || unformatted === null ) ? pattern : unformatted,
             "isHTML": true
         };
@@ -1346,6 +1346,11 @@ var ERMrest = (function(module) {
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
+
+    module._tableKinds = Object.freeze({
+        TABLE: "table",
+        VIEW: "view"
+    });
 
     /*
      * @desc List of display type for table-display annotation

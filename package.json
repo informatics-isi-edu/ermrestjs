@@ -35,7 +35,7 @@
   "devDependencies": {
     "bower": "x",
     "closurecompiler": "x",
-    "jasmine": "x",
+    "jasmine": "2.5.3",
     "jasmine-spec-reporter": "^2.5.0",
     "jsdoc": "x",
     "jsdoc-to-markdown": "x",
