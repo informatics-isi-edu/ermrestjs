@@ -286,20 +286,26 @@ var ERMrest = (function(module) {
                  *          1.1.3 avoid duplicate foreign keys.
                  *          1.1.4 make sure it is not hidden(+).
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+                 *          if the column has asset annotation, create an asset pseudo-column
                  *
                  * 2.otherwise go through list of table columns
                  *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
                  *      2.1 check if column has not been processed before.
                  *      2.2 hide the columns that are part of origFKR.
                  *      2.3 if column is serial and part of a simple key hide it.
-                 *      2.4 if it's not part of any foreign keys add the column.
+                 *      2.4 if it's not part of any foreign keys
+                 *          2.4.1 if it has asset annotation create an asset pseudo-column for it.
+                 *          2.4.2 otherwise add the column.
                  *      2.5 go through all of the foreign keys that this column is part of.
                  *          2.5.1 make sure it is not hidden(+).
                  *          2.5.2 if it's simple fk, just create PseudoColumn
                  *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
                  * NOTE:
-                 *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
+                 *  + If asset annotation was used and context is entry,
+                 *    we should remove the columns that are used as filename, byte, sha256, or md5.
+                 *  + If this reference is actually an inbound related reference,
+                 *    we should hide the foreign key (and all of its columns) that created the link.
                  * */
 
                 this._referenceColumns = [];
@@ -334,7 +340,7 @@ var ERMrest = (function(module) {
                     return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
                 };
 
-                // this function will take care adding column and asset column
+                // this function will take care of adding column and asset column
                 var addColumn = function (col) {
                     var isAsset = col.annotations.contains(module._annotations.ASSET);
                     if (isAsset) {
@@ -514,11 +520,12 @@ var ERMrest = (function(module) {
                     };
 
                     for(i = 0; i < assetColumns.length; i++) {
-                        // we're not storing anything in the columns
+                        // we're not storing anything in the columns, so there is nothing to hide
                         if (assetColumns[i].useDefault) {
                             continue;
                         }
 
+                        // hide the columns
                         removeCol(assetColumns[i].filenameColumn);
                         removeCol(assetColumns[i].byteCountColumn);
                         removeCol(assetColumns[i].md5);
@@ -3644,8 +3651,16 @@ var ERMrest = (function(module) {
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Column} column the asset column
+     * @property {boolean} useDefault whether we should use default heuristics or NotFoundError
+     * @property {(string|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
+     * @property {(string|null)} byteCountColumn if it's string, then it is the name of column we want to store byte count inside of it.
+     * @property {(string|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
+     * @property {(string|boolean|null)} sha256 if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256.
+     * @property {(string[]|null)} filenameExtFilter set of filename extension filters for use by upload agents to indicate to the user the acceptable filename patterns.
+     *
      * @desc
      * Constructor for AssetPseudoColumn.
      * This class is a wrapper for {@link ERMrest.Column} objects that have asset annotation.
@@ -3698,6 +3713,7 @@ var ERMrest = (function(module) {
         var value = "[Download]("+ data[this._baseCol.name] +"){download .btn .btn-primary target=_blank}";
         return {isHTML: true, value: module._formatUtils.printMarkdown(value, {inline:true})};
     };
+
     Object.defineProperty(AssetPseudoColumn.prototype, "useDefault", {
         get: function () {
             if (this._useDefault === undefined) {
