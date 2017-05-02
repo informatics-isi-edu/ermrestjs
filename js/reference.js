@@ -2968,9 +2968,15 @@ var ERMrest = (function(module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         formatPresentation: function(data, options) {
-            return this._baseCols.reduce(function (res, col, index) {
-                return res + (index>0 ? ":" : "") + col.formatPresentation(data, options);
-            }, "");
+            var isHTML = false, value = "", curr;
+            for (var i = 0; i < this._baseCols.length; i++) {
+                curr = this._baseCols[i].formatPresentation(data, options);
+                if (!isHTML && curr.isHTML) {
+                    isHTML = true;
+                }
+                value += (i>0 ? ":" : "") + curr.value;
+            }
+            return {isHTML: isHTML, value: value};
         },
 
         /**
@@ -3396,6 +3402,15 @@ var ERMrest = (function(module) {
         }
     });
 
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {ERMrest.Reference} reference column's reference
+     * @param {?ERMrest.Key} key the key
+     * @desc
+     * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
+     * This class extends the {@link ERMrest.ReferenceColumn}
+     */
     function KeyPseudoColumn (reference, key) {
         // call the parent constructor
         KeyPseudoColumn.superClass.call(this, reference, key.colset.columns);
