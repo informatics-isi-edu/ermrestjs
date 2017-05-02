@@ -78,12 +78,9 @@ var ERMrest = (function(module) {
     module._extends = function (child, parent) {
         var childFns = child.prototype;
         child.prototype = Object.create(parent.prototype);
+        child.prototype.constructor = child;
         child.superClass = parent;
         child.super = parent.prototype;
-        // copy all the functions
-        for(var fn in childFns) {
-            child.prototype[fn] = childFns[fn];
-        }
     };
 
     /**
@@ -1345,7 +1342,8 @@ var ERMrest = (function(module) {
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
-        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display"
+        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
+        ASSET: "tag:isrd.isi.edu,2017:asset"
     });
 
     /**

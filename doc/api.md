@@ -298,8 +298,15 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-        * [.formatPresentation(data, options)](#ERMrest.ForeignKeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
-        * [._determineSortable()](#ERMrest.ForeignKeyPseudoColumn+_determineSortable)
+    * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
+        * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
+        * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
+        * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
+        * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.AssetPseudoColumn](#ERMrest.AssetPseudoColumn)
+        * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
+        * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
+        * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -2821,8 +2828,6 @@ TODO should be removed in favor of inputDisabled
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-    * [.formatPresentation(data, options)](#ERMrest.ForeignKeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
-    * [._determineSortable()](#ERMrest.ForeignKeyPseudoColumn+_determineSortable)
 
 <a name="new_ERMrest.ForeignKeyPseudoColumn_new"></a>
 
@@ -2876,23 +2881,82 @@ annotation doesn't exist, it returns this (reference)
 | column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | column that `this` is based on |
 | data | <code>Object</code> | tuple data with potential constraints |
 
-<a name="ERMrest.ForeignKeyPseudoColumn+formatPresentation"></a>
+<a name="ERMrest.KeyPseudoColumn"></a>
 
-#### foreignKeyPseudoColumn.formatPresentation(data, options) ⇒ <code>Object</code>
-Formats the presentation value corresponding to this reference-column definition.
+### ERMrest.KeyPseudoColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
-**Kind**: instance method of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
-**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+* [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
+    * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
+    * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
+    * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
+    * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+
+<a name="new_ERMrest.KeyPseudoColumn_new"></a>
+
+#### new KeyPseudoColumn(reference, key)
+Constructor for KeyPseudoColumn. This class is a wrapper for [Key](#ERMrest.Key).
+This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
+
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
-| options | <code>Object</code> | includes `context` and `formattedValues` |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| key | [<code>Key</code>](#ERMrest.Key) | the key |
 
-<a name="ERMrest.ForeignKeyPseudoColumn+_determineSortable"></a>
+<a name="ERMrest.KeyPseudoColumn+isPseudo"></a>
 
-#### foreignKeyPseudoColumn._determineSortable()
-**Kind**: instance method of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+#### keyPseudoColumn.isPseudo : <code>boolean</code>
+indicates this represents is a PseudoColumn or a Column.
+
+**Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
+<a name="ERMrest.KeyPseudoColumn+isKey"></a>
+
+#### keyPseudoColumn.isKey : <code>boolean</code>
+Indicates that this ReferenceColumn is a key.
+
+**Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
+<a name="ERMrest.KeyPseudoColumn+key"></a>
+
+#### keyPseudoColumn.key : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn"></a>
+
+### ERMrest.AssetPseudoColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AssetPseudoColumn](#ERMrest.AssetPseudoColumn)
+    * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
+    * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
+    * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+
+<a name="new_ERMrest.AssetPseudoColumn_new"></a>
+
+#### new AssetPseudoColumn(reference, column)
+Constructor for AssetPseudoColumn.
+This class is a wrapper for [Column](#ERMrest.Column) objects that have asset annotation.
+This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| column | [<code>Column</code>](#ERMrest.Column) | the asset column |
+
+<a name="ERMrest.AssetPseudoColumn+isPseudo"></a>
+
+#### assetPseudoColumn.isPseudo : <code>boolean</code>
+indicates this represents is a PseudoColumn or a Column.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+isAsset"></a>
+
+#### assetPseudoColumn.isAsset : <code>boolean</code>
+Indicates that this ReferenceColumn is an asset.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.Datapath"></a>
 
 ### ERMrest.Datapath : <code>object</code>
