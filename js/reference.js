@@ -498,21 +498,20 @@ var ERMrest = (function(module) {
                 // if edit context remove filename, bytecount, md5, and sha256 from visible columns
                 if (module._isEntryContext(this._context) && assetColumns.length !== 0) {
                     // given a colName will remove it from visible columns
-                    var removeCol = function(colName) {
+                    var removeCol = function(col) {
                         // property does not exist
-                        if (typeof colName !== 'string') {
+                        if (col === null) {
                             return;
                         }
 
                         // column is not in list of visible columns
-                        if (!(colName in consideredColumns)) {
+                        if (!(col.name in consideredColumns)) {
                             return;
                         }
 
                         // find the column and remove it
                         for (var x = 0; x < self._referenceColumns.length; x++){
-                            col = self._referenceColumns[x];
-                            if (!col.isPseudo && col.name === colName) {
+                            if (!self._referenceColumns[x].isPseudo && self._referenceColumns[x].name === col.name) {
                                 self._referenceColumns.splice(x, 1);
                                 return;
                             }
@@ -3655,10 +3654,10 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Column} column the asset column
      * @property {boolean} useDefault whether we should use default heuristics or NotFoundError
-     * @property {(string|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
-     * @property {(string|null)} byteCountColumn if it's string, then it is the name of column we want to store byte count inside of it.
-     * @property {(string|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
-     * @property {(string|boolean|null)} sha256 if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256.
+     * @property {(ERMrest.Column|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
+     * @property {(ERMrest.Column|null)} byteCountColumn if it's string, then it is the name of column we want to store byte count inside of it.
+     * @property {(ERMrest.Column|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
+     * @property {(ERMrest.Column|boolean|null)} sha256 if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256.
      * @property {(string[]|null)} filenameExtFilter set of filename extension filters for use by upload agents to indicate to the user the acceptable filename patterns.
      *
      * @desc
@@ -3708,10 +3707,14 @@ var ERMrest = (function(module) {
             return { isHTML: false, value: data[this._baseCol.name] };
         }
 
-        // otherwise return a download button
-        // TODO should we do it?
-        var value = "[Download]("+ data[this._baseCol.name] +"){download .btn .btn-primary target=_blank}";
-        return {isHTML: true, value: module._formatUtils.printMarkdown(value, {inline:true})};
+        // otherwise return a download link
+        var template = "[{{{caption}}}]({{{url}}}){download}";
+        var keyValues = {
+            "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
+            "url": data[this._baseCol.name]
+        };
+        var pattern = module._renderTemplate(template, keyValues);
+        return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
     };
 
     Object.defineProperty(AssetPseudoColumn.prototype, "useDefault", {
@@ -3743,7 +3746,7 @@ var ERMrest = (function(module) {
                 } else {
                     try {
                         // make sure the column exist
-                        this._filenameColumn = this.table.columns.get(this._annotation.filename_column).name;
+                        this._filenameColumn = this.table.columns.get(this._annotation.filename_column);
                     } catch (exception) {
                         this._filenameColumn = null;
                     }
@@ -3760,7 +3763,7 @@ var ERMrest = (function(module) {
                 } else {
                     try {
                         // make sure the column exist
-                        this._byteCountColumn = this.table.columns.get(this._annotation.byte_count_column).name;
+                        this._byteCountColumn = this.table.columns.get(this._annotation.byte_count_column);
                     } catch (exception) {
                         this._byteCountColumn = null;
                     }
@@ -3781,7 +3784,7 @@ var ERMrest = (function(module) {
                     } else {
                         try {
                             // make sure the column exist
-                            this._md5 = this.table.columns.get(md5).name;
+                            this._md5 = this.table.columns.get(md5);
                         } catch (exception) {
                             this._md5 = null;
                         }
@@ -3803,7 +3806,7 @@ var ERMrest = (function(module) {
                     } else {
                         try {
                             // make sure the column exist
-                            this._sha256 = this.table.columns.get(sha256).name;
+                            this._sha256 = this.table.columns.get(sha256);
                         } catch (exception) {
                             this._sha256 = null;
                         }

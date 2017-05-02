@@ -561,8 +561,8 @@ exports.execute = function (options) {
                     });
 
                     it("otherwise return a download link", function() {
-                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com"}).value;
-                        expect(val).toEqual('<a href="https://example.com" download="" class="btn btn-primary" target="_blank">Download</a>');
+                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                        expect(val).toEqual('<a href="https://example.com" download="">filename</a>');
                     });
                  });
 
@@ -710,8 +710,8 @@ exports.execute = function (options) {
                     expect(assetRefCompactCols[9].filenameColumn).toBe(null);
                 });
 
-                it('otherwise should return the column name.', function () {
-                    expect(assetRefCompactCols[10].filenameColumn).toBe("col_filename");
+                it('otherwise should return the column.', function () {
+                    expect(assetRefCompactCols[10].filenameColumn.name).toBe("col_filename");
                 });
             });
 
@@ -725,8 +725,8 @@ exports.execute = function (options) {
                     expect(assetRefCompactCols[9].byteCountColumn).toBe(null);
                 });
 
-                it('otherwise should return the column name.', function () {
-                    expect(assetRefCompactCols[10].byteCountColumn).toBe("col_byte");
+                it('otherwise should return the column.', function () {
+                    expect(assetRefCompactCols[10].byteCountColumn.name).toBe("col_byte");
                 });
             });
 
@@ -737,7 +737,7 @@ exports.execute = function (options) {
 
                 it('should return the md5 defined.', function () {
                     expect(assetRefCompactCols[9].md5).toBe(true);
-                    expect(assetRefCompactCols[10].md5).toBe("col_md5");
+                    expect(assetRefCompactCols[10].md5.name).toBe("col_md5");
                 });
             });
 
@@ -748,7 +748,7 @@ exports.execute = function (options) {
 
                 it('should return the sha256 defined.', function () {
                     expect(assetRefCompactCols[9].sha256).toBe(true);
-                    expect(assetRefCompactCols[10].sha256).toBe("col_sha256");
+                    expect(assetRefCompactCols[10].sha256.name).toBe("col_sha256");
                 });
             });
 

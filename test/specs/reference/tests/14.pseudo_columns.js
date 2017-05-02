@@ -195,7 +195,7 @@ exports.execute = function (options) {
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
-            '<a href="https://dev.isrd.isi.edu" download="" class="btn btn-primary" target="_blank">Download</a>'
+            '<a href="https://dev.isrd.isi.edu" download="">filename</a>'
         ];
 
         /**

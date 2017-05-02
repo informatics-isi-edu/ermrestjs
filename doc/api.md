@@ -2937,10 +2937,10 @@ The Foreign key object that this PseudoColumn is created based on
 | Name | Type | Description |
 | --- | --- | --- |
 | useDefault | <code>boolean</code> | whether we should use default heuristics or NotFoundError |
-| filenameColumn | <code>string</code> \| <code>null</code> | if it's string, then it is the name of column we want to store filename inside of it. |
-| byteCountColumn | <code>string</code> \| <code>null</code> | if it's string, then it is the name of column we want to store byte count inside of it. |
-| md5 | <code>string</code> \| <code>boolean</code> \| <code>null</code> | if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5. |
-| sha256 | <code>string</code> \| <code>boolean</code> \| <code>null</code> | if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256. |
+| filenameColumn | [<code>Column</code>](#ERMrest.Column) \| <code>null</code> | if it's string, then it is the name of column we want to store filename inside of it. |
+| byteCountColumn | [<code>Column</code>](#ERMrest.Column) \| <code>null</code> | if it's string, then it is the name of column we want to store byte count inside of it. |
+| md5 | [<code>Column</code>](#ERMrest.Column) \| <code>boolean</code> \| <code>null</code> | if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5. |
+| sha256 | [<code>Column</code>](#ERMrest.Column) \| <code>boolean</code> \| <code>null</code> | if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256. |
 | filenameExtFilter | <code>Array.&lt;string&gt;</code> \| <code>null</code> | set of filename extension filters for use by upload agents to indicate to the user the acceptable filename patterns. |
 
 
