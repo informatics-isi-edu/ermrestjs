@@ -2915,9 +2915,7 @@ var ERMrest = (function(module) {
          */
         get default() {
             if (this._default === undefined) {
-                this._default = this._baseCols.reduce(function (res, col, index) {
-                    return res + (index>0 ? ":" : "") + col.default;
-                }, "");
+                this._default = this._simple ? this._baseCols[0].default : null;
             }
             return this._default;
         },

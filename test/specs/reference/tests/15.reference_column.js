@@ -324,6 +324,7 @@ exports.execute = function (options) {
             it('for other columns should return the base column\'s default value.', function () {
                 expect(compactColumns[6].default).toEqual('col 4 default');
                 expect(compactColumns[7].default).toEqual('col 5 default');
+                expect(compactColumns[9].default).toEqual(null);
             });
         });
 
