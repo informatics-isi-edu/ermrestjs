@@ -312,7 +312,7 @@ exports.execute = function (options) {
          */
 
         var compactRef, compactBriefRef, compactSelectRef, compactRef, entryRef, entryCreateRef, entryEditRef,
-            slashRef, assetRef, assetRefEntry, assetRefCompact, assetRefCompactCols, assetRefEntryCols,
+            slashRef, assetRef, assetRefEntry, assetRefCompact, assetRefCompactCols,
             compactColumns, compactSelectColumns, table2RefColumns;
 
         beforeAll(function (done) {
@@ -343,7 +343,6 @@ exports.execute = function (options) {
                 assetRefCompact = ref.contextualize.compact;
                 assetRefCompactCols = assetRefCompact.columns;
                 assetRefEntry = ref.contextualize.entry;
-                assetRefEntryCols = assetRefEntry.columns;
                 done();
             }).catch(function (err) {
                 console.dir(err);

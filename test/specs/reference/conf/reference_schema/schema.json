@@ -956,7 +956,8 @@
                     },
                     "tag:isrd.isi.edu,2017:key-display": {
                         "*": {
-                            "markdown_pattern": "**{{col_4}}**"
+                            "markdown_pattern": "**{{col_4}}**",
+                            "column_order": ["col_1", "col_2"]
                         }
                     }
                 }
@@ -966,6 +967,11 @@
                 "annotations": {
                     "tag:misd.isi.edu,2015:display": {
                         "markdown_name": "**fourth key**"
+                    },
+                    "tag:isrd.isi.edu,2017:key-display": {
+                        "*": {
+                            "column_order": false
+                        }
                     }
                 }
             }],

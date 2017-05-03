@@ -174,9 +174,12 @@ exports.execute = function (options) {
             });
 
             it('for other columns should return the base column\'s table.', function () {
-                // TODO asset
                 for (var i = 5; i < 11; i++) {
                     expect(compactColumns[i].table.name).toBe(tableName);
+                }
+
+                for (var i = 8; i < 11; i++) {
+                    expect(assetRefCompactCols[i].table.name).toBe(tableWithAsset);
                 }
             });
         });
@@ -258,6 +261,9 @@ exports.execute = function (options) {
                 }
                 for (var i = 11; i < 16; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
+                }
+                for (var i = 8; i < 11; i++) {
+                    expect(assetRefCompactCols[i].type.name).toBe('markdown');
                 }
             });
 
@@ -627,15 +633,18 @@ exports.execute = function (options) {
             });
 
             describe("for pseudoColumns that are key, ", function () {
-                // it('when key has `column_order:false` annotation, should return false.', function () {
-                //     // TODO should define column_order on keys
-                //     // TODO use table_w_composite_key_3
-                // });
+                it('when key has `column_order:false` annotation, should return false.', function () {
+                    expect(compactBriefRef.columns[2].sortable).toBe(false);
+                    expect(compactBriefRef.columns[2]._sortColumns.length).toBe(0);
+                });
 
-                // it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
-                //     // TODO should define column_order on keys
-                //     // TODO use table_w_composite_key_3
-                // });
+                it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
+                    expect(compactBriefRef.columns[1].sortable).toBe(true);
+                    expect(compactBriefRef.columns[1]._sortColumns.length).toBe(2);
+                    expect(compactBriefRef.columns[1]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['col_1', 'col_2']);
+                });
 
                 it("when key doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
                     expect(compactColumns[0].sortable).toBe(true);
