@@ -14,7 +14,7 @@ exports.execute = function (options) {
             ermRest,
             reference;
 
-        var hatracUrl = options.url.replace("ermrest", "hatrac");
+        var baseUrl = options.url.replace("/ermrest", "");
 
         var files = [{
         	name: "testfile50MB.pdf",
@@ -98,7 +98,7 @@ exports.execute = function (options) {
 			        	uploadObj.calculateChecksum(validRow).then(function(url) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
-			        		expect(url).toBe(hatracUrl + "/hatrac/800001/" + file.md5Checksum, "File generated url is not the same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File generated url is not the same");
 			        		expect(uploadObj.hash.md5_hex).toBe(file.md5Checksum, "Calculated checksum is not same");
 							done();
 
@@ -138,14 +138,33 @@ exports.execute = function (options) {
 
 			        });
 
-			        it("should check for existing file and get resolved for 404 and 409 error codes as well as 200 HTTP code", function(done) {
+			        it("should start upload, show progress and get final url on upload completion", function(done) {
 
-			        	uploadObj.fileExists().then(function() {
-			        		expect(true).toBe(true);
+			        	var uploaded = 0;
+
+			        	uploadObj.start().then(function(url) {
+			        		expect(uploaded).toBe(file.size, "File progress was not called for all uploading");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
-	                    	expect(file).toBe("", e.message);
+	                    	expect(file).toBe("");
+	                    	done.fail();
+	                    }, function(uploadedSize) {
+	                    	expect(uploadedSize).toBeGreaterThan(0);
+	                    	uploaded = uploadedSize;
+	                    });
+
+			        });
+
+			        it("should complete upload job and return final url", function(done) {
+
+			        	uploadObj.completeUpload().then(function(url) {
+			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File  url is not the same");
+			        		done();
+	                    }, function(e) {
+	                    	console.dir(e);
+	                    	expect(file).toBe("");
 	                    	done.fail();
 	                    });
 

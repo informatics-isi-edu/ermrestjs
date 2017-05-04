@@ -174,6 +174,7 @@ var ERMrest = (function(module) {
      * @param {type} otherInfo
      * @returns {MultiUpload}
      */
+
     var upload = function (file, otherInfo) {
         
         this.PART_SIZE = otherInfo.chunkSize || 50 * 1024 * 1024; //minimum part size defined by hatrac 50MB
@@ -191,7 +192,7 @@ var ERMrest = (function(module) {
         this.reference = otherInfo.reference;
         if (!this.reference) throw new Error("No reference provided while creating hatrac file object");
 
-        this.SERVER_URI = this.reference._server.uri.replace("ermrest", "hatrac");
+        this.SERVER_URI = this.reference._server.uri.replace("/ermrest", "");
 
         this.http = this.reference._server._http;
 
@@ -328,13 +329,30 @@ var ERMrest = (function(module) {
         row.escape = module._escapeForTemplate;
 
         // Generate url
-        this.url = module._renderTemplate(template, row);
+        var url = module._renderTemplate(template, row);
 
         // If the template is null then throw an error
-        if (this.url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
+        if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
         
         // Prepend the url with server uri if it is relative
-        this.url = this.getAbsoluteUrl(this.url);
+        url = this.getAbsoluteUrl(url);
+
+        // If new url has changed then there set all other flags to false to recompute them
+        if (this.url !== url) {
+            // To regenerate upload job url
+            this.chunkUrl = false;
+
+            // To make the filesExists call again
+            this.fileExistsFlag = true;
+
+            // To restart upload of all chunks
+            this.completed = false;
+
+            // To recall complete upload method
+            this.jobDone = false;
+        }
+
+        this.url = url;
 
         return this.url;
     };
@@ -402,7 +420,7 @@ var ERMrest = (function(module) {
         };
 
         this.http.post(url, data, config).then(function(response) {
-            self.chunkUrl = response.headers('location'); 
+            self.chunkUrl = self.getAbsoluteUrl(response.headers('location')); 
             deferred.resolve(self.chunkUrl);
         }, function(response) {
             var error = module._responseToError(response);
@@ -424,13 +442,13 @@ var ERMrest = (function(module) {
         
         var deferred = module._q.defer();
 
-        if (typeof this.fileExists == 'boolean') {
+        if (typeof this.fileExistsFlag == 'boolean') {
             deferred.resolve(this.url);
             return deferred.promise;
         }
 
         this.http.head(this.url).then(function(response) {
-            self.fileExists = true;
+            self.fileExistsFlag = true;
 
             var headers = response.headers();
             var md5 = headers["content-md5"];
@@ -439,7 +457,7 @@ var ERMrest = (function(module) {
 
             // If the md5, length ot filename are not same then simply resolve the promise without setting completed and jobDone
             if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                self.fileExists = false;
+                self.fileExistsFlag = false;
                 deferred.resolve(self.url);  
                 return;
             }
@@ -449,7 +467,7 @@ var ERMrest = (function(module) {
             deferred.resolve(self.url);
         }, function(response) {
 
-            self.fileExists = false;
+            self.fileExistsFlag = false;
 
             if (response.status == 404 || response.status == 409) {
               deferred.resolve(self.url);  
@@ -542,7 +560,7 @@ var ERMrest = (function(module) {
             self.jobDone = true;
 
             if (response.headers('location')) {
-                deferred.resolve(response.headers('location'));
+                deferred.resolve(self.getAbsoluteUrl(response.headers('location')));
             } else {
                 deferred.reject(module._responseToError(response));
             }
@@ -709,10 +727,11 @@ var ERMrest = (function(module) {
         // blob is the sliced version of the file from start and end index
         var blob;
         if (isNode) {
-            blobSlice.call(upload.file.buffer, this.start, this.end);
+            blob = Buffer.prototype.slice.call(upload.file.buffer, this.start, this.end);
         } else {
             blob = upload.file.slice(this.start, this.end);
         }
+
         var size = blob.size;
         this.progress = 0;
        
@@ -748,7 +767,7 @@ var ERMrest = (function(module) {
         // If upload is aborted using .abort() for pause or cancel scenario
         // then error callback will be called for which the status code would be 0
         // else it would be in range of 400 and 500
-        this.http.put(request.url, request.data, request.config).then(function() {
+        upload.http.put(request.url, request.data, request.config).then(function() {
             
             // Set progress to blob size, and set chunk completed
             self.progress = self.size;

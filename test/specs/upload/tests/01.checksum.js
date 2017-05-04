@@ -10,11 +10,11 @@ exports.execute = function (options) {
             table,
             columnName = "uri",
             column,
-            template = "/hatrac/{{{fk_id}}}/{{{uri.md5_hex}}}",
+            template = "/hatrac/ermrestjstest/{{{fk_id}}}/{{{uri.md5_hex}}}",
             ermRest,
             reference;
 
-        var hatracUrl = options.url.replace("ermrest", "hatrac");
+        var hatracUrl = options.url.replace("/ermrest", "");
         
         var files = [{
         	name: "testfile50MB.pdf",
@@ -118,7 +118,7 @@ exports.execute = function (options) {
 		        		uploadObj.hash = { md5_hex: file.md5Checksum };
 
 			        	//Note: Property uri.md5_hex is generated at runtime so we are setting it expliticly to test the function
-			        	expect(uploadObj.generateURL(validRow)).toBe(hatracUrl + "/hatrac/800001/" + file.md5Checksum);
+			        	expect(uploadObj.generateURL(validRow)).toBe(hatracUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum);
 			        });
 
 
@@ -131,7 +131,7 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(hatracUrl + "/hatrac/800001/" + file.md5Checksum, "File generated url is not the same");
+			        		expect(url).toBe(hatracUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File generated url is not the same");
 			        		
 			        		expect(uploadObj.hash.md5_hex).toBe(file.md5Checksum, "Calculated checksum is not same");
 
