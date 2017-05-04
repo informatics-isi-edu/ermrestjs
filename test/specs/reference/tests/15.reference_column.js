@@ -3,7 +3,8 @@ exports.execute = function (options) {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
-            tableName = "reference_table_outbound_fks", // the structure of this table is explained in outbound_fks test suit
+            tableName = "reference_table_outbound_fks", // the structure of this table is explained in 14.pseudo_columns.js
+            tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 14.pseudo_columns.js
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -13,6 +14,9 @@ exports.execute = function (options) {
 
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/id=" + entityId;
+
+        var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWithAsset + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -57,6 +61,7 @@ exports.execute = function (options) {
 
 
         var reference, compactRef, entryCreateRef, entryEditRef, compactSelectRef, compactBriefRef, compactColumns;
+        var assetRef, assetRefCompactCols, assetRefEntryCols;
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
@@ -75,8 +80,13 @@ exports.execute = function (options) {
                 compactSelectRef = response.contextualize.compactSelect;
                 compactBriefRef = response.contextualize.compactBrief; // first column is a composite key
 
+                return options.ermRest.resolve(singleEnitityUriWithAsset, {cid:"test"});
+            }).then(function(ref){
+                assetRef = ref;
+                assetRefCompactCols = ref.contextualize.compact.columns;
+                assetRefEntryCols = ref.contextualize.entry.columns;
                 done();
-            }, function (err) {
+            }).catch(function (err){
                 console.dir(err);
                 done.fail();
             });
@@ -90,6 +100,10 @@ exports.execute = function (options) {
                 for (var i = 11; i < 16; i++) {
                     expect(compactColumns[i].isPseudo).toBe(true);
                 }
+
+                for (var i = 9; i < 11; i++) {
+                    expect(assetRefCompactCols[i].isPseudo).toBe(true);
+                }
             });
 
             it('for other columns should return false.', function () {
@@ -99,14 +113,14 @@ exports.execute = function (options) {
             });
         });
 
-        describe('._isKey, ', function () {
+        describe('.isKey, ', function () {
             it ('for PseudoColumns that are key should return true.', function () {
-                expect(compactColumns[0]._isKey).toBe(true);
+                expect(compactColumns[0].isKey).toBe(true);
             });
 
             it ('for other columns should return undefined.', function () {
                 for (var i = 1; i < 16; i++) {
-                    expect(compactColumns[i]._isKey).toBe(undefined);
+                    expect(compactColumns[i].isKey).toBe(undefined);
                 }
             });
         });
@@ -126,6 +140,21 @@ exports.execute = function (options) {
                 }
             });
         });
+
+        describe('.isAsset, ', function () {
+            it ('for PseudoColumns that are asset should return true.', function () {
+                for (var i = 9; i < 11; i++) {
+                    expect(assetRefCompactCols[i].isAsset).toBe(true);
+                }
+            });
+
+            it ('for other columns should return undefined.', function () {
+                for (var i = 0; i < 9; i++) {
+                    expect(assetRefCompactCols[i].isAsset).toBe(undefined);
+                }
+            });
+        });
+
 
         describe('.table, ', function () {
             it('for pseudoColumns that are key, should return the key table.', function () {
@@ -147,6 +176,10 @@ exports.execute = function (options) {
             it('for other columns should return the base column\'s table.', function () {
                 for (var i = 5; i < 11; i++) {
                     expect(compactColumns[i].table.name).toBe(tableName);
+                }
+
+                for (var i = 8; i < 11; i++) {
+                    expect(assetRefCompactCols[i].table.name).toBe(tableWithAsset);
                 }
             });
         });
@@ -229,6 +262,9 @@ exports.execute = function (options) {
                 for (var i = 11; i < 16; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
+                for (var i = 9; i < 11; i++) {
+                    expect(assetRefCompactCols[i].type.name).toBe('markdown');
+                }
             });
 
             it('for other columns should return the base column\'s type.', function () {
@@ -288,6 +324,7 @@ exports.execute = function (options) {
             it('for other columns should return the base column\'s default value.', function () {
                 expect(compactColumns[6].default).toEqual('col 4 default');
                 expect(compactColumns[7].default).toEqual('col 5 default');
+                expect(compactColumns[9].default).toEqual(null);
             });
         });
 
@@ -514,6 +551,23 @@ exports.execute = function (options) {
                     });
                 });
 
+                describe('for assets, ', function() {
+                    it('if coulmn has column-display annotation, use it.', function () {
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"compact", "formattedValues":{"col_filename": "filename"}}).value;
+                        expect(val).toEqual("<h2>filename</h2>\n");
+                    });
+
+                    it('if in entry context, return the original underlying data.', function() {
+                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        expect(val).toEqual("https://example.com");
+                    });
+
+                    it("otherwise return a download link", function() {
+                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                        expect(val).toEqual('<a href="https://example.com" download="" class="btn btn-primary">filename</a>');
+                    });
+                 });
+
                 it('should use the show-nulls annotation, when the data is null.', function () {
                     val = compactColumns[14].formatPresentation({}, {
                         context: "detailed"
@@ -575,15 +629,18 @@ exports.execute = function (options) {
             });
 
             describe("for pseudoColumns that are key, ", function () {
-                // it('when key has `column_order:false` annotation, should return false.', function () {
-                //     // TODO should define column_order on keys
-                //     // TODO use table_w_composite_key_3
-                // });
+                it('when key has `column_order:false` annotation, should return false.', function () {
+                    expect(compactBriefRef.columns[2].sortable).toBe(false);
+                    expect(compactBriefRef.columns[2]._sortColumns.length).toBe(0);
+                });
 
-                // it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
-                //     // TODO should define column_order on keys
-                //     // TODO use table_w_composite_key_3
-                // });
+                it("when key has a `column_order` annotation with value other than false, should return true and use those columns for sort.", function () {
+                    expect(compactBriefRef.columns[1].sortable).toBe(true);
+                    expect(compactBriefRef.columns[1]._sortColumns.length).toBe(2);
+                    expect(compactBriefRef.columns[1]._sortColumns.map(function (col) {
+                        return col.name
+                    })).toEqual(['col_1', 'col_2']);
+                });
 
                 it("when key doesn't have any `column_order` annotation and is simple, should be based on the constituent column.", function () {
                     expect(compactColumns[0].sortable).toBe(true);
@@ -625,6 +682,61 @@ exports.execute = function (options) {
                 });
             });
         });
+
+        describe('Asset related properties, ', function () {
+
+            describe('.urlPattern', function() {
+                it('otherwise should return the defined url_pattern in annotation.', function () {
+                    expect(assetRefCompactCols[9].urlPattern).toBe("{{col_asset_2}}");
+                    expect(assetRefCompactCols[10].urlPattern).toBe("{{col_asset_3}}");
+                });
+            });
+
+            describe('.filenameColumn', function() {
+
+                it('should return null if column is not valid or not present.', function () {
+                    expect(assetRefCompactCols[9].filenameColumn).toBe(null);
+                });
+
+                it('otherwise should return the column.', function () {
+                    expect(assetRefCompactCols[10].filenameColumn.name).toBe("col_filename");
+                });
+            });
+
+            describe('.byteCountColumn', function() {
+                it('should return null if column is not valid or not present.', function () {
+                    expect(assetRefCompactCols[9].byteCountColumn).toBe(null);
+                });
+
+                it('otherwise should return the column.', function () {
+                    expect(assetRefCompactCols[10].byteCountColumn.name).toBe("col_byte");
+                });
+            });
+
+            describe('.md5', function() {
+                it('should return the md5 defined.', function () {
+                    expect(assetRefCompactCols[9].md5).toBe(true);
+                    expect(assetRefCompactCols[10].md5.name).toBe("col_md5");
+                });
+            });
+
+            describe('.sha256', function() {
+                it('should return the sha256 defined.', function () {
+                    expect(assetRefCompactCols[9].sha256).toBe(true);
+                    expect(assetRefCompactCols[10].sha256.name).toBe("col_sha256");
+                });
+            });
+
+            describe('.filenameExtFilter', function() {
+                it('should return null if file_name_ext is not present.', function () {
+                    expect(assetRefCompactCols[9].filenameExtFilter).toBe(null);
+                });
+
+                it('otherwise should return the defined array of file name extensions.', function () {
+                    expect(assetRefCompactCols[10].filenameExtFilter).toEqual(["*.jpg"]);
+                });
+            });
+        })
     });
 
     function checkDisplayname(displayname, expectedVal, expectedHTML) {

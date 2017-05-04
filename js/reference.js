@@ -286,23 +286,38 @@ var ERMrest = (function(module) {
                  *          1.1.3 avoid duplicate foreign keys.
                  *          1.1.4 make sure it is not hidden(+).
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+                 *          apply *addColumn* heuristics explained below.
                  *
                  * 2.otherwise go through list of table columns
                  *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
                  *      2.1 check if column has not been processed before.
                  *      2.2 hide the columns that are part of origFKR.
                  *      2.3 if column is serial and part of a simple key hide it.
-                 *      2.4 if it's not part of any foreign keys add the column.
+                 *      2.4 if it's not part of any foreign keys
+                 *          apply *addColumn* heuristics explained below.
                  *      2.5 go through all of the foreign keys that this column is part of.
                  *          2.5.1 make sure it is not hidden(+).
                  *          2.5.2 if it's simple fk, just create PseudoColumn
                  *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
+                 * *addColumn* heuristics:
+                 *  + If column doesn't have asset annotation, add a normal ReferenceColumn.
+                 *  + Otherwise:
+                 *      + If it has `url_pattern`: add AssetPseudoColumn.
+                 *      + Otherwise:
+                 *          - in entry context: remove it from the visible columns list.
+                 *          - in other contexts: ignore the asset annotation, treat it as normal column.
+                 *
                  * NOTE:
-                 *  + If this reference is actually an inbound related reference, we should hide the foreign key (and all of its columns) that created the link.
+                 *  + If asset annotation was used and context is entry,
+                 *      we should remove the columns that are used as filename, byte, sha256, or md5.
+                 *  + If this reference is actually an inbound related reference,
+                 *      we should hide the foreign key (and all of its columns) that created the link.
                  * */
 
                 this._referenceColumns = [];
+
+                var self = this;
 
                 // check if we should hide some columns or not.
                 // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
@@ -313,6 +328,7 @@ var ERMrest = (function(module) {
                     addedKeys = {}, // to avoid duplicate keys
                     compositeFKs = [], // to add composite keys at the end of the list
                     consideredColumns = {},  // to avoid unnecessary process and duplicate columns
+                    assetColumns = [], // columns that have asset annotation
                     hiddenFKR = this.origFKR,
                     colAdded,
                     fkName,
@@ -329,6 +345,26 @@ var ERMrest = (function(module) {
                 // should hide the columns that are part of origFKR. (only in compact/brief)
                 var hideColumn = function (col) {
                     return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                };
+
+                // this function will take care of adding column and asset column
+                var addColumn = function (col) {
+                    if(col.annotations.contains(module._annotations.ASSET)) {
+                        if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
+                            // add asset annotation
+                            var assetCol = new AssetPseudoColumn(self, col);
+                            assetColumns.push(assetCol);
+                            self._referenceColumns.push(assetCol);
+                            return;
+                        } else if (module._isEntryContext(self._context)) {
+                            // ignore the column
+                            return;
+                        }
+                    }
+
+                    // if annotation is not present,
+                    // or in any context other than entry, and the url_pattern is not present
+                    self._referenceColumns.push(new ReferenceColumn(self, [col]));
                 };
 
                 // get column orders from annotation
@@ -351,7 +387,7 @@ var ERMrest = (function(module) {
                                         // fk is in this table, avoid duplicate and it's not hidden.
                                         if (!(fkName in addedFKs) && fk._table == this._table && !hideFKR(fk)) {
                                             addedFKs[fkName] = true;
-                                            this._referenceColumns.push(new ReferenceColumn(this, (fk.simple ? fk.colset.columns[0] : null), {"foreignKey":fk}));
+                                            this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                         }
                                         break;
                                     case module._constraintTypes.KEY:
@@ -366,11 +402,11 @@ var ERMrest = (function(module) {
                                                     col = cols[j];
                                                     if (!(col.name in consideredColumns) && !hideColumn(col)) {
                                                         consideredColumns[col.name] = true;
-                                                        this._referenceColumns.push(new ReferenceColumn(this, cols[j]));
+                                                        this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
                                                     }
                                                 }
                                             } else {
-                                                this._referenceColumns.push(new ReferenceColumn(this, (fk.simple ? fk.colset.columns[0] : null), {"key":fk}));
+                                                this._referenceColumns.push(new KeyPseudoColumn(this, fk));
                                             }
                                         }
                                         break;
@@ -390,7 +426,7 @@ var ERMrest = (function(module) {
                                     continue;
                             }
                             consideredColumns[col.name] = true;
-                            this._referenceColumns.push(new ReferenceColumn(this, col));
+                            addColumn(col);
                         }
                     }
                 }
@@ -401,7 +437,7 @@ var ERMrest = (function(module) {
                     if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                         var key = this._table._getDisplayKey(this._context);
                         if (key !== undefined) {
-                            this._referenceColumns.push(new ReferenceColumn(this, (key.simple ? key.colset.columns[0] : null), {"key": key}));
+                            this._referenceColumns.push(new KeyPseudoColumn(this, key));
 
                             // make sure key columns won't be added
                             columns = key.colset.columns;
@@ -429,7 +465,7 @@ var ERMrest = (function(module) {
 
                         // add the column if it's not part of any foreign keys
                         if (col.memberOfForeignKeys.length === 0) {
-                            this._referenceColumns.push(new ReferenceColumn(this, col));
+                            addColumn(col);
                         } else {
                             // sort foreign keys of a column
                             if (col.memberOfForeignKeys.length > 1) {
@@ -450,18 +486,18 @@ var ERMrest = (function(module) {
                                 if (fk.simple) { // simple FKR
                                     if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
                                         addedFKs[fkName] = true;
-                                        this._referenceColumns.push(new ReferenceColumn(this, col, {"foreignKey":fk}));
+                                        this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                     }
                                 } else { // composite FKR
                                     // add the column if context is not entry and avoid duplicate
                                     if (!colAdded && !module._isEntryContext(this._context)) {
                                         colAdded = true;
-                                        this._referenceColumns.push(new ReferenceColumn(this, col));
+                                        this._referenceColumns.push(new ReferenceColumn(this, [col]));
                                     }
                                     // hold composite FKR
                                     if (!(fkName in addedFKs)) {
                                         addedFKs[fkName] = true;
-                                        compositeFKs.push(new ReferenceColumn(this, null, {"foreignKey":fk}));
+                                        compositeFKs.push(new ForeignKeyPseudoColumn(this, fk));
                                     }
                                 }
                             }
@@ -471,6 +507,41 @@ var ERMrest = (function(module) {
                     // append composite FKRs
                     for (i = 0; i < compositeFKs.length; i++) {
                         this._referenceColumns.push(compositeFKs[i]);
+                    }
+                }
+
+                // if edit context remove filename, bytecount, md5, and sha256 from visible columns
+                if (module._isEntryContext(this._context) && assetColumns.length !== 0) {
+
+                    // given a column will remove it from visible columns
+                    // this function is used for removing filename, bytecount, md5, and sha256 from visible columns
+                    var removeCol = function(col) {
+                        // if columns are not defined in the annotation, they will be null.
+                        // so we have to check it first.
+                        if (col === null) {
+                            return;
+                        }
+
+                        // column is not in list of visible columns
+                        if (!(col.name in consideredColumns)) {
+                            return;
+                        }
+
+                        // find the column and remove it
+                        for (var x = 0; x < self._referenceColumns.length; x++){
+                            if (!self._referenceColumns[x].isPseudo && self._referenceColumns[x].name === col.name) {
+                                self._referenceColumns.splice(x, 1);
+                                return;
+                            }
+                        }
+                    };
+
+                    for(i = 0; i < assetColumns.length; i++) {
+                        // hide the columns
+                        removeCol(assetColumns[i].filenameColumn);
+                        removeCol(assetColumns[i].byteCountColumn);
+                        removeCol(assetColumns[i].md5);
+                        removeCol(assetColumns[i].sha256);
                     }
                 }
             }
@@ -864,7 +935,7 @@ var ERMrest = (function(module) {
 
                         // use the sort columns instead of the actual column.
                         for (j = 0; j < sortCols.length; j++) {
-                            if (col.isPseudo && col._isForeignKey) {
+                            if (col.isPseudo && col.isForeignKey) {
                                 fkIndex = foreignKeys.all().indexOf(col.foreignKey);
                                 colName = "F" + (foreignKeys.length() + k++);
                                 sortMap[colName] = ["F" + (fkIndex+1) , module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
@@ -1175,9 +1246,9 @@ var ERMrest = (function(module) {
                         if (column.isPseudo) {
                             var keyColumns = [];
 
-                            if (column._isKey) {
+                            if (column.isKey) {
                                 keyColumns = column.key.colset.columns;
-                            } else if (column._isForeignKey) {
+                            } else if (column.isForeignKey) {
                                 keyColumns =  column.foreignKey.colset.columns;
                             }
 
@@ -1932,6 +2003,7 @@ var ERMrest = (function(module) {
                         // add the new join
                         newLocationString += generateJoin();
                     }
+
                 } else {
                     if (source._location.filter === undefined) {
                         // 3.1 no filter
@@ -2233,7 +2305,7 @@ var ERMrest = (function(module) {
                         }
 
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            if (pseudoCol._isForeignKey) {
+                            if (pseudoCol.isForeignKey) {
                                 data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
                             } else {
                                 data = this._data[0][pseudoCol._sortColumns[j].name];
@@ -2300,7 +2372,7 @@ var ERMrest = (function(module) {
                             }
                         }
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            if (pseudoCol._isForeignKey) {
+                            if (pseudoCol.isForeignKey) {
                                 data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
                             } else {
                                 data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
@@ -2611,10 +2683,10 @@ var ERMrest = (function(module) {
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            if (column._isKey) {
-                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
-                            } else {
+                            if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            } else {
+                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -2633,10 +2705,10 @@ var ERMrest = (function(module) {
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            if (column._isKey) {
-                                values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
-                            } else {
+                            if (column.isForeignKey) {
                                 values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                            } else {
+                                values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
@@ -2769,18 +2841,14 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Reference} reference column's reference
-     * @param {?ERMrest.Column} base The column that this reference-column will be created based on.
-     * @param {?Object} kwargs if it's not empty then the column is being created based on foreignkey or key.
+     * @param {ERMrest.Column[]} baseCols List of columns that this reference-column will be created based on.
      * @desc
      * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
      */
-    function ReferenceColumn(reference, base, kwargs) {
-
+    function ReferenceColumn(reference, cols) {
         this._baseReference = reference;
-
         this._context = reference._context;
-
-        this._base = base;
+        this._baseCols = cols;
 
         /**
          * @type {boolean}
@@ -2788,78 +2856,14 @@ var ERMrest = (function(module) {
          */
         this.isPseudo = false;
 
-        if (typeof kwargs != 'undefined') {
-            if (kwargs.foreignKey !== undefined) {
-
-                this.isPseudo = true;
-
-                // create ermrest url using the location
-                var table = kwargs.foreignKey.key.table;
-                var ermrestURI = [
-                    table.schema.catalog.server.uri ,"catalog" ,
-                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
-                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
-                ].join("/");
-
-                /**
-                 * @type {ERMrest.Reference}
-                 * @desc The reference object that represents the table of this PseudoColumn
-                 */
-                this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
-                this.reference.session = reference._session;
-
-                /**
-                 * @type {ERMrest.ForeignKeyRef}
-                 * @desc The Foreign key object that this PseudoColumn is created based on
-                 */
-                this.foreignKey = kwargs.foreignKey;
-
-                this._constraintName = this.foreignKey.constraint_names[0].join("_");
-
-                /**
-                 * @private
-                 * @type {boolean}
-                 * @desc Indicates that this ReferenceColumn is a Foreign key.
-                 */
-                this._isForeignKey = true;
-            } else if (kwargs.key !== undefined) {
-
-                this.isPseudo = true;
-
-                /**
-                 * @type {ERMrest.ForeignKeyRef}
-                 * @desc The Foreign key object that this PseudoColumn is created based on
-                 */
-                this.key = kwargs.key;
-
-                this._constraintName = kwargs.key.constraint_names[0].join("_");
-
-                /**
-                 * @private
-                 * @type {boolean}
-                 * @desc Indicates that this ReferenceColumn is a key.
-                 */
-                this._isKey = true;
-            }
-        }
-    }
-    ReferenceColumn.prototype = {
-
         /**
          * @type {ERMrest.Table}
          */
-        get table () {
-            if (this._table === undefined) {
-                if (!this.isPseudo && this._hasBase) {
-                    this._table = this._base.table;
-                } else if (this._isForeignKey) {
-                    this._table = this.foreignKey.key.table;
-                } else if (this._isKey) {
-                    this._table = this.key.table;
-                }
-            }
-            return this._table;
-        },
+        this.table = this._baseCols[0].table;
+
+    }
+
+    ReferenceColumn.prototype = {
 
         /**
          * @type {string}
@@ -2867,91 +2871,30 @@ var ERMrest = (function(module) {
          */
         get name () {
             if (this._name === undefined) {
-                if (!this.isPseudo) {
-                    this._name = this._base.name;
-                } else {
-                    this._name = module._generatePseudoColumnName(this._constraintName, this._isForeignKey ? this.foreignKey._table : this.table);
-                }
+                this._name = this._baseCols.reduce(function (res, col, index) {
+                    return res + (index>0 ? ", " : "") + col.name;
+                }, "");
             }
             return this._name;
         },
 
         /**
          * @type {string}
-         * @desc Preferred display name for user presentation only.
+         * @desc name of the column.
          */
         get displayname() {
             if (this._displayname === undefined) {
-                if (!this.isPseudo) {
-                    this._displayname = this._base.displayname;
-                } else if (this._isForeignKey){
-                    var foreignKey = this.foreignKey, value, isHTML, unformatted;
-                    if (foreignKey.to_name !== "") {
-                        value = unformatted = foreignKey.to_name;
-                        isHTML = false;
-                    } else if (foreignKey.simple) {
-                        value = this._base.displayname.value;
-                        isHTML = this._base.displayname.isHTML;
-                        unformatted = this._base.displayname.unformatted;
-
-                        if (this._base.memberOfForeignKeys.length > 1) { // disambiguate
-                            value += " ("  + foreignKey.key.table.displayname.value + ")";
-                            unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
-                            if (!isHTML) {
-                                isHTML = foreignKey.key.table.displayname.isHTML;
-                            }
-                        }
-
-                    } else {
-                        value = foreignKey.key.table.displayname.value;
-                        isHTML = foreignKey.key.table.displayname.isHTML;
-                        unformatted = foreignKey.key.table.displayname.unformatted;
-
-                        // disambiguate
-                        var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
-                            return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
-                        }).length;
-
-                        if (tableCount > 1) {
-                            var cols = foreignKey.colset.columns.slice().sort(function(a,b) {
-                                return a.name.localeCompare(b.name);
-                            });
-
-                             value += " (" + cols.map(function(col) {
-                                return col.displayname.value;
-                            }).join(", ")  + ")";
-
-                            unformatted += " (" + cols.map(function(col) {
-                                return col.displayname.unformatted;
-                            }).join(", ")  + ")";
-
-                            if (!isHTML) {
-                                isHTML = foreignKey.colset.columns.some(function (col) {
-                                    return col.displayname.isHTML;
-                                });
-                            }
-                        }
-                    }
-                    this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
-
-                } else if (this._isKey) {
-                    this._displayname = module._determineDisplayName(this.key, false);
-
-                    if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
-                        this._displayname = {
-                            "value": this.key.colset.columns.reduce(function(prev, curr, index) {
-                                return prev + (index>0 ? ":" : "") + curr.displayname.value;
-                            }, ""),
-                            "isHTML": this.key.colset.columns.some(function (col) {
-                                return col.displayname.isHTML;
-                            }),
-                            "unformatted": this.key.colset.columns.reduce(function(prev, curr, index) {
-                                return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
-                            }, ""),
-                        };
-                    }
-
-                }
+                this._displayname = {
+                    "value": this._baseCols.reduce(function(prev, curr, index) {
+                        return prev + (index>0 ? ":" : "") + curr.displayname.value;
+                    }, ""),
+                    "isHTML": this._baseCols.some(function (col) {
+                        return col.displayname.isHTML;
+                    }),
+                    "unformatted": this._baseCols.reduce(function(prev, curr, index) {
+                        return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
+                    }, ""),
+                };
             }
             return this._displayname;
         },
@@ -2962,7 +2905,7 @@ var ERMrest = (function(module) {
          */
         get type() {
             if (this._type === undefined) {
-                this._type = this.isPseudo ? module._createType("markdown") : this._base.type;
+                this._type = (!this._simple || this.isPseudo) ? module._createType("markdown") : this._baseCols[0].type;
             }
             return this._type;
         },
@@ -2972,14 +2915,9 @@ var ERMrest = (function(module) {
          */
         get nullok() {
             if (this._nullok === undefined) {
-                if (!this.isPseudo) {
-                    this._nullok = this._base.nullok;
-                } else {
-                    var colset = this._isForeignKey ? this.foreignKey.colset : this.key.colset;
-                    this._nullok = !colset.columns.some(function (col) {
-                        return !col.nullok;
-                    });
-                }
+                this._nullok = !this._baseCols.some(function (col) {
+                    return !col.nullok;
+                });
             }
             return this._nullok;
         },
@@ -2988,48 +2926,12 @@ var ERMrest = (function(module) {
          * @desc Returns the default value
          * @type {string}
          */
-         get default() {
-             if (this._default === undefined) {
-                if (!this.isPseudo) {
-                    this._default = this._base.default;
-                } else if (this._isForeignKey) {
-                    var fkColumns = this.foreignKey.colset.columns,
-                        keyColumns = this.foreignKey.key.colset.columns,
-                        mapping = this.foreignKey.mapping,
-                        data = {},
-                        caption,
-                        isNull = false,
-                        i;
-
-                    for (i = 0; i < fkColumns.length; i++) {
-                        if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
-                            isNull = true; //return null if one of them is null;
-                            break;
-                        }
-                        data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
-                    }
-
-                    if (isNull) {
-                        this._default = null;
-                    } else {
-                        // use row name as the caption
-                        caption = module._generateRowName(this.table, this._context, data).value;
-
-                        // use "col_1:col_2:col_3"
-                        if (caption.trim() === '') {
-                            var keyValues = [];
-                            for (i = 0; i < keyColumns.length; i++) {
-                                keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], {context: this._context}));
-                            }
-                            caption = keyValues.join(":");
-                        }
-
-                        this._default = caption.trim() !== '' ? caption : null;
-                    }
-                }
-             }
-             return this._default;
-         },
+        get default() {
+            if (this._default === undefined) {
+                this._default = this._simple ? this._baseCols[0].default : null;
+            }
+            return this._default;
+        },
 
         /**
          * @desc Documentation for this reference-column
@@ -3037,16 +2939,9 @@ var ERMrest = (function(module) {
          */
         get comment() {
             if (this._comment === undefined) {
-                if (this._hasBase) {
-                    this._comment = this._base.comment;
-                } else if (this._isForeignKey) {
-                    this._comment = this.foreignKey.comment;
-                } else if (this._isKey) {
-                    this._comment = this.key.comment;
-                }
+                this._comment = this._simple ? this._baseCols[0].comment : null;
             }
             return this._comment;
-
         },
 
         /**
@@ -3068,20 +2963,10 @@ var ERMrest = (function(module) {
          * Heuristics are as follows:
          *
          * (first applicable rule from top to bottom)
-         *
-         * - column_order = false -> disable sort.
-         *
-         * - PseudoColumn
-         *      - column_order defined -> use it.
-         *      - Foreign key:
-         *          - table has row_order -> use it.
-         *          - simple fk -> use the column's
-         *      - Key:
-         *          - simple key -> use the column's
-         *      - disable it
-         * - Column:
-         *      - column_order defined -> use it.
-         *      - use column actual value.
+         * - multiple columns -> disable sort.
+         * - single column:
+         *  - column_order defined -> use it.
+         *  - use column actual value.
          *
          * @type {boolean}
          */
@@ -3118,23 +3003,19 @@ var ERMrest = (function(module) {
          */
         get _display() {
             if (this._display_cached === undefined) {
-                if (!this.isPseudo) {
-                    this._display_cached = this._base.getDisplay(this._context);
-                } else if (this._isForeignKey) {
-                    this._display_cached = this.foreignKey.getDisplay(this._context);
-                } else if (this._isKey) {
-                    this._display_cached = this.key.getDisplay(this._context);
-                }
+                this._display_cached = this._simple ? this._baseCols[0].getDisplay(this._context) : null;
             }
             return this._display_cached;
         },
 
         /**
-         * @desc returns the private value _isForeignKey
+         * @private
+         * @desc
+         * Indicates if this object is wrapping just one column or not
          * @type {boolean}
          */
-        get isForeignKey() {
-            return this._isForeignKey;
+        get _simple() {
+            return this._baseCols.length == 1;
         },
 
         /**
@@ -3143,34 +3024,10 @@ var ERMrest = (function(module) {
          * @returns {string} The formatted value.
          */
         formatvalue: function(data, options) {
-            if (this._hasBase) {
-                return this._base.formatvalue(data, options);
+            if (this._simple) {
+                return this._baseCols[0].formatvalue(data, options);
             }
             return data.toString();
-        },
-
-        /**
-         * This function takes in a tuple and generates a reference that is
-         * constrained based on the domain_filter_pattern annotation. If this
-         * annotation doesn't exist, it returns this (reference)
-         * `this` is the same as column.reference
-         * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
-         * @param {Object} data - tuple data with potential constraints
-         * @returns {ERMrest.Reference} the constrained reference
-         */
-        filteredRef: function(data) {
-            var filteredRef,
-                uri = this.reference.uri;
-
-            if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-                var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-                var uriFilter = module._renderTemplate(filterPattern, data);
-                // NOTE: should we check for (uriFilter.trim() !== '') ?
-                if (uriFilter !== null) uri += ('/' + uriFilter);
-            }
-
-            filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
-            return filteredRef;
         },
 
         /**
@@ -3180,147 +3037,19 @@ var ERMrest = (function(module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         formatPresentation: function(data, options) {
-            if (!this.isPseudo) {
-                return this._base.formatPresentation(data, options);
+            if (this._simple) {
+                return this._baseCols[0].formatPresentation(data, options);
             }
 
-            var context = options ? options.context : undefined;
-            var nullValue = {isHTML: false, value: this._getNullValue(context)};
-
-            // if data is empty
-            if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-                return nullValue;
+            var isHTML = false, value = "", curr;
+            for (var i = 0; i < this._baseCols.length; i++) {
+                curr = this._baseCols[i].formatPresentation(data, options);
+                if (!isHTML && curr.isHTML) {
+                    isHTML = true;
+                }
+                value += (i>0 ? ":" : "") + curr.value;
             }
-
-            // used to create key pairs in uri
-            var createKeyPair = function (cols) {
-                 var keyPair = "", col;
-                for (i = 0; i < cols.length; i++) {
-                    col = cols[i].name;
-                    keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                    if (i != cols.length - 1) {
-                        keyPair +="&";
-                    }
-                }
-                return keyPair;
-            };
-
-            // check if we have data for the given columns
-            var hasData = function (kCols) {
-                for (var i = 0; i < kCols.length; i++) {
-                    if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            var value, caption, i;
-
-            if (this._isKey) {
-                var cols = this.key.colset.columns,
-                    addLink = true;
-
-                // if any of key columns don't have data, this link is not valid.
-                if (!hasData(cols)) {
-                    return nullValue;
-                }
-
-                // use the markdown_pattern that is defiend in key-display annotation
-                var display = this.key.getDisplay(context);
-                if (display.isMarkdownPattern) {
-                    caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
-                    caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
-                    addLink = false;
-                } else {
-                    var values = [];
-
-                    // create the caption
-                    var presentation;
-                    for (i = 0; i < cols.length; i++) {
-                        try {
-                            presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
-                            values.push(presentation.value);
-                            // if one of the values isHTMl, should not add link
-                            addLink = addLink ? !presentation.isHTML : false;
-                        } catch (exception) {
-                            // the value doesn't exist
-                            return nullValue;
-                        }
-                    }
-                    caption = values.join(":");
-
-                    // if the caption is empty we cannot add any link to that.
-                    if (caption.trim() === '') {
-                        return nullValue;
-                    }
-                }
-
-                if (addLink) {
-                    var table = this.key.table;
-                    var refURI = [
-                        table.schema.catalog.server.uri ,"catalog" ,
-                        module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
-                        [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-                        createKeyPair(cols)
-                    ].join("/");
-                    var keyRef = new Reference(module._parse(refURI), table.schema.catalog);
-                    value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
-                } else {
-                    value = caption;
-                }
-
-                return {isHTML: true, value: value};
-            }
-            // find value for foreign key:
-            else if (this._isForeignKey) {
-                var fkey = this.foreignKey.key; // the key that creates this PseudoColumn
-
-                // if any of key columns don't have data, this link is not valid.
-                if (!hasData(fkey.colset.columns)) {
-                    return nullValue;
-                }
-
-                // use row name as the caption
-                caption = module._generateRowName(this.table, context, data).value;
-
-                // use key for displayname: "col_1:col_2:col_3"
-                if (caption.trim() === '') {
-                    var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
-                        keyCols = [],
-                        col;
-
-                    for (i = 0; i < fkey.colset.columns.length; i++) {
-                        col = fkey.colset.columns[i];
-                        keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
-                    }
-                    caption = keyCols.join(":");
-
-                    if (caption.trim() === '') {
-                        return nullValue;
-                    }
-                }
-
-                // if caption has a link, or context is EDIT: don't add the link.
-                if (caption.match(/<a/) || module._isEntryContext(context) ) {
-                    value = caption;
-                }
-                // create the link using reference.
-                else {
-
-                    // use the shortest key if it has data (for shorter url).
-                    var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fkey.colset.columns;
-
-                    // create a url that points to the current ReferenceColumn
-                    var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
-
-                    // create a reference to just this PseudoColumn to use for url
-                    var ref = new Reference(module._parse(uri), this.table.schema.catalog);
-
-                    value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
-                }
-            }
-            return {isHTML: true, value: value};
+            return {isHTML: isHTML, value: value};
         },
 
         /**
@@ -3328,6 +3057,7 @@ var ERMrest = (function(module) {
          * true: input must be disabled
          * false:  input can be enabled
          * object: input msut be disabled (show .message to user)
+         * TODO should be removed in favor of inputDisabled
          *
          * @type {boolean|object}
          */
@@ -3336,17 +3066,11 @@ var ERMrest = (function(module) {
         },
 
         _determineInputDisabled: function(context) {
-            if (this._hasBase) {
-                return this._base.getInputDisabled(context);
+            if (this._simple) {
+                return this._baseCols[0].getInputDisabled(context);
             }
 
-            var cols, generated, i;
-
-            if (this._isKey) {
-                cols = this.key.colset.columns;
-            } else {
-                cols = this.foreignKey.colset.columns;
-            }
+            var cols = this._baseCols, generated, i;
 
             if (context == module._contexts.CREATE) {
                 // if one is not generated
@@ -3382,71 +3106,714 @@ var ERMrest = (function(module) {
             return true;
         },
 
-        _getNullValue: function (context) {
-            if (this._hasBase) {
-                return this._base._getNullValue(context);
-            }
-            return module._getNullValue(this.table, context, [this.table, this.table.schema]);
-        },
-
         _determineSortable: function () {
-
-            var display = this._display,
-                useColumn = !this.isPseudo,
-                baseCol = this._base;
-
             this._sortColumns_cached = [];
             this._sortable = false;
 
-            // disable the sort
-            if (display !== undefined && display.columnOrder === false) return;
+            // disable if mutliple columns
+            if (!this._simple) return;
 
-            if (this.isPseudo) {
-                // use the column_order
-                if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
-                    this._sortColumns_cached = display.columnOrder;
-                    this._sortable = true;
-                    return;
-                }
+            // use the column column_order
+            this._sortColumns_cached = this._baseCols[0]._getSortColumns(this._context); //might return undefined
 
-                if (this._isForeignKey) {
-                    if (this.reference.display._rowOrder !== undefined) {
-                        var rowOrder = this.reference.display._rowOrder;
-                        for (var i = 0; i < rowOrder.length; i++) {
-                            try{
-                                this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-                            } catch(exception) {}
-                        }
-                        this._sortable = true;
-                    } else if (this.foreignKey.simple) {
-                        baseCol = this.foreignKey.mapping.get(this._base);
-                        useColumn = true;
-                    }
-                } else if (this._isKey) {
-                    if (this.key.simple) {
-                        baseCol = this.key.colset.columns[0];
-                        useColumn = true;
-                    }
-                }
+            if (typeof this._sortColumns_cached === 'undefined') {
+                // disable the sort
+                this._sortColumns_cached = [];
+            } else {
+                this._sortable = true;
             }
 
-            // its an actual column or a simple key/foreign key
-            if (useColumn) {
-                // use the column column_order
-                this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined
-
-                if (typeof this._sortColumns_cached === 'undefined') {
-                    this._sortColumns_cached = [];
-                } else {
-                    this._sortable = true;
-                }
-            }
         },
 
-        get _hasBase() {
-            return this._base !== null && this._base !== undefined;
+        _getNullValue: function (context) {
+            if (this._simple) {
+                return this._baseCols[0]._getNullValue(context);
+            }
+            return module._getNullValue(this.table, context, [this.table, this.table.schema]);
         }
     };
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {ERMrest.Reference} reference column's reference
+     * @param {ERMrest.ForeignKeyRef} fk the foreignkey
+     * @desc
+     * Constructor for ForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
+     * This class extends the {@link ERMrest.ReferenceColumn}
+     */
+    function ForeignKeyPseudoColumn (reference, fk) {
+        // call the parent constructor
+        ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns);
+
+        /**
+         * @type {boolean}
+         * @desc indicates this represents is a PseudoColumn or a Column.
+         */
+        this.isPseudo = true;
+
+        /**
+         * @type {boolean}
+         * @desc Indicates that this ReferenceColumn is a Foreign key.
+         */
+        this.isForeignKey = true;
+
+        // create ermrest url using the location
+        var table = fk.key.table;
+        var ermrestURI = [
+            table.schema.catalog.server.uri ,"catalog" ,
+            module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+            [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
+        ].join("/");
+
+        /**
+         * @type {ERMrest.Reference}
+         * @desc The reference object that represents the table of this PseudoColumn
+         */
+        this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+        this.reference.session = reference._session;
+
+        /**
+         * @type {ERMrest.ForeignKeyRef}
+         * @desc The Foreign key object that this PseudoColumn is created based on
+         */
+        this.foreignKey = fk;
+
+        this._constraintName = this.foreignKey.constraint_names[0].join("_");
+
+        this.table = this.foreignKey.key.table;
+    }
+    // extend the prototype
+    module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
+
+    // properties to be overriden:
+    /**
+     * This function takes in a tuple and generates a reference that is
+     * constrained based on the domain_filter_pattern annotation. If this
+     * annotation doesn't exist, it returns this (reference)
+     * `this` is the same as column.reference
+     * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
+     * @param {Object} data - tuple data with potential constraints
+     * @returns {ERMrest.Reference} the constrained reference
+     */
+    ForeignKeyPseudoColumn.prototype.filteredRef = function(data) {
+        var filteredRef,
+            uri = this.reference.uri;
+
+        if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
+            var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+            var uriFilter = module._renderTemplate(filterPattern, data);
+            // NOTE: should we check for (uriFilter.trim() !== '') ?
+            if (uriFilter !== null) uri += ('/' + uriFilter);
+        }
+
+        filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
+        return filteredRef;
+    };
+    ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, options) {
+        var context = options ? options.context : undefined;
+        var nullValue = {isHTML: false, value: this._getNullValue(context)};
+
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return nullValue;
+        }
+
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+             var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+            return keyPair;
+        };
+
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        var value, caption, i;
+
+        var fkey = this.foreignKey.key; // the key that creates this PseudoColumn
+
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(fkey.colset.columns)) {
+            return nullValue;
+        }
+
+        // use row name as the caption
+        caption = module._generateRowName(this.table, context, data).value;
+
+        // use key for displayname: "col_1:col_2:col_3"
+        if (caption.trim() === '') {
+            var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
+                keyCols = [],
+                col;
+
+            for (i = 0; i < fkey.colset.columns.length; i++) {
+                col = fkey.colset.columns[i];
+                keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
+            }
+            caption = keyCols.join(":");
+
+            if (caption.trim() === '') {
+                return nullValue;
+            }
+        }
+
+        // if caption has a link, or context is EDIT: don't add the link.
+        if (caption.match(/<a/) || module._isEntryContext(context) ) {
+            value = caption;
+        }
+        // create the link using reference.
+        else {
+
+            // use the shortest key if it has data (for shorter url).
+            var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fkey.colset.columns;
+
+            // create a url that points to the current ReferenceColumn
+            var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
+
+            // create a reference to just this PseudoColumn to use for url
+            var ref = new Reference(module._parse(uri), this.table.schema.catalog);
+
+            value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+        }
+
+        return {isHTML: true, value: value};
+    };
+    ForeignKeyPseudoColumn.prototype._determineSortable = function () {
+        var display = this._display, useColumn = false, baseCol;
+
+        this._sortColumns_cached = [];
+        this._sortable = false;
+
+        // disable the sort
+        if (display !== undefined && display.columnOrder === false) return;
+
+        // use the column_order
+        if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+            this._sortColumns_cached = display.columnOrder;
+            this._sortable = true;
+            return;
+        }
+
+        // use row-order of the table
+        if (this.reference.display._rowOrder !== undefined) {
+            var rowOrder = this.reference.display._rowOrder;
+            for (var i = 0; i < rowOrder.length; i++) {
+                try{
+                    this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
+                } catch(exception) {}
+            }
+            this._sortable = true;
+            return;
+        }
+
+        // if simple, use column
+        if (this.foreignKey.simple) {
+            baseCol = this.foreignKey.mapping.get(this._baseCols[0]);
+
+            this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined
+
+            if (typeof this._sortColumns_cached === 'undefined') {
+                this._sortColumns_cached = [];
+            } else {
+                this._sortable = true;
+            }
+        }
+    };
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
+        get: function () {
+            if (this._name === undefined) {
+                this._name = module._generatePseudoColumnName(this._constraintName, this.foreignKey._table);
+            }
+            return this._name;
+        }
+    });
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
+        get: function () {
+            if (this._displayname === undefined) {
+                var foreignKey = this.foreignKey, value, isHTML, unformatted;
+                if (foreignKey.to_name !== "") {
+                    value = unformatted = foreignKey.to_name;
+                    isHTML = false;
+                } else if (foreignKey.simple) {
+                    value = this._baseCols[0].displayname.value;
+                    isHTML = this._baseCols[0].displayname.isHTML;
+                    unformatted = this._baseCols[0].displayname.unformatted;
+
+                    if (this._baseCols[0].memberOfForeignKeys.length > 1) { // disambiguate
+                        value += " ("  + foreignKey.key.table.displayname.value + ")";
+                        unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
+                        if (!isHTML) {
+                            isHTML = foreignKey.key.table.displayname.isHTML;
+                        }
+                    }
+
+                } else {
+                    value = foreignKey.key.table.displayname.value;
+                    isHTML = foreignKey.key.table.displayname.isHTML;
+                    unformatted = foreignKey.key.table.displayname.unformatted;
+
+                    // disambiguate
+                    var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
+                        return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
+                    }).length;
+
+                    if (tableCount > 1) {
+                        var cols = foreignKey.colset.columns.slice().sort(function(a,b) {
+                            return a.name.localeCompare(b.name);
+                        });
+
+                         value += " (" + cols.map(function(col) {
+                            return col.displayname.value;
+                        }).join(", ")  + ")";
+
+                        unformatted += " (" + cols.map(function(col) {
+                            return col.displayname.unformatted;
+                        }).join(", ")  + ")";
+
+                        if (!isHTML) {
+                            isHTML = foreignKey.colset.columns.some(function (col) {
+                                return col.displayname.isHTML;
+                            });
+                        }
+                    }
+                }
+                this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
+            }
+            return this._displayname;
+        }
+    });
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "default", {
+        get: function () {
+            if (this._default === undefined) {
+                var fkColumns = this.foreignKey.colset.columns,
+                    keyColumns = this.foreignKey.key.colset.columns,
+                    mapping = this.foreignKey.mapping,
+                    data = {},
+                    caption,
+                    isNull = false,
+                    i;
+
+                for (i = 0; i < fkColumns.length; i++) {
+                    if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+                        isNull = true; //return null if one of them is null;
+                        break;
+                    }
+                    data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+                }
+
+                if (isNull) {
+                    this._default = null;
+                } else {
+                    // use row name as the caption
+                    caption = module._generateRowName(this.table, this._context, data).value;
+
+                    // use "col_1:col_2:col_3"
+                    if (caption.trim() === '') {
+                        var keyValues = [];
+                        for (i = 0; i < keyColumns.length; i++) {
+                            keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], {context: this._context}));
+                        }
+                        caption = keyValues.join(":");
+                    }
+
+                    this._default = caption.trim() !== '' ? caption : null;
+                }
+                return this._default;
+            }
+        }
+    });
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
+        get: function () {
+            if (this._comment === undefined) {
+                // calling the parent
+                Object.getOwnPropertyDescriptor(ForeignKeyPseudoColumn.super,"comment").get.call(this);
+                this._comment = (this._comment !== null) ? this._comment : this.foreignKey.comment;
+            }
+            return this._comment;
+        }
+    });
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "_display", {
+        get: function () {
+            if (this._display_cached === undefined) {
+                this._display_cached = this.foreignKey.getDisplay(this._context);
+            }
+            return this._display_cached;
+        }
+    });
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @param {ERMrest.Reference} reference column's reference
+     * @param {ERMrest.Key} key the key
+     * @desc
+     * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
+     * This class extends the {@link ERMrest.ReferenceColumn}
+     */
+    function KeyPseudoColumn (reference, key) {
+        // call the parent constructor
+        KeyPseudoColumn.superClass.call(this, reference, key.colset.columns);
+
+        /**
+         * @type {boolean}
+         * @desc indicates this represents is a PseudoColumn or a Column.
+         */
+        this.isPseudo = true;
+
+        /**
+         * @type {boolean}
+         * @desc Indicates that this ReferenceColumn is a key.
+         */
+        this.isKey = true;
+
+        /**
+         * @type {ERMrest.ForeignKeyRef}
+         * @desc The Foreign key object that this PseudoColumn is created based on
+         */
+        this.key = key;
+
+        this.table = this.key.table;
+
+        this._constraintName = key.constraint_names[0].join("_");
+    }
+    // extend the prototype
+    module._extends(KeyPseudoColumn, ReferenceColumn);
+
+    // properties to be overriden:
+    KeyPseudoColumn.prototype.formatPresentation = function(data, options) {
+         var context = options ? options.context : undefined;
+         var nullValue = {isHTML: false, value: this._getNullValue(context)};
+
+         // if data is empty
+         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+             return nullValue;
+         }
+
+         // used to create key pairs in uri
+         var createKeyPair = function (cols) {
+              var keyPair = "", col;
+             for (i = 0; i < cols.length; i++) {
+                 col = cols[i].name;
+                 keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                 if (i != cols.length - 1) {
+                     keyPair +="&";
+                 }
+             }
+             return keyPair;
+         };
+
+         // check if we have data for the given columns
+         var hasData = function (kCols) {
+             for (var i = 0; i < kCols.length; i++) {
+                 if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                     return false;
+                 }
+             }
+             return true;
+         };
+
+         var value, caption, i;
+         var cols = this.key.colset.columns,
+             addLink = true;
+
+         // if any of key columns don't have data, this link is not valid.
+         if (!hasData(cols)) {
+             return nullValue;
+         }
+
+         // use the markdown_pattern that is defiend in key-display annotation
+         var display = this.key.getDisplay(context);
+         if (display.isMarkdownPattern) {
+             caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
+             caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+             addLink = false;
+         } else {
+             var values = [];
+
+             // create the caption
+             var presentation;
+             for (i = 0; i < cols.length; i++) {
+                 try {
+                     presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                     values.push(presentation.value);
+                     // if one of the values isHTMl, should not add link
+                     addLink = addLink ? !presentation.isHTML : false;
+                 } catch (exception) {
+                     // the value doesn't exist
+                     return nullValue;
+                 }
+             }
+             caption = values.join(":");
+
+             // if the caption is empty we cannot add any link to that.
+             if (caption.trim() === '') {
+                 return nullValue;
+             }
+         }
+
+         if (addLink) {
+             var table = this.key.table;
+             var refURI = [
+                 table.schema.catalog.server.uri ,"catalog" ,
+                 module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                 createKeyPair(cols)
+             ].join("/");
+             var keyRef = new Reference(module._parse(refURI), table.schema.catalog);
+             value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+         } else {
+             value = caption;
+         }
+
+         return {isHTML: true, value: value};
+     };
+    KeyPseudoColumn.prototype._determineSortable = function () {
+        var display = this._display, useColumn = false, baseCol;
+
+        this._sortColumns_cached = [];
+        this._sortable = false;
+
+        // disable the sort
+        if (display !== undefined && display.columnOrder === false) return;
+
+        // use the column_order
+        if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+            this._sortColumns_cached = display.columnOrder;
+            this._sortable = true;
+            return;
+        }
+
+        // if simple, use column
+        if (this.key.simple) {
+            baseCol = this._baseCols[0];
+
+            this._sortColumns_cached = baseCol._getSortColumns(this._context); //might return undefined
+
+            if (typeof this._sortColumns_cached === 'undefined') {
+                this._sortColumns_cached = [];
+            } else {
+                this._sortable = true;
+            }
+        }
+    };
+    Object.defineProperty(KeyPseudoColumn.prototype, "name", {
+        get: function () {
+            if (this._name === undefined) {
+                this._name = module._generatePseudoColumnName(this._constraintName, this.table);
+            }
+            return this._name;
+        }
+    });
+    Object.defineProperty(KeyPseudoColumn.prototype, "displayname", {
+        get: function () {
+            if (this._displayname === undefined) {
+                this._displayname = module._determineDisplayName(this.key, false);
+
+                // if was undefined, fall back to default
+                if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
+                    this._displayname = undefined;
+                    Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"displayname").get.call(this);
+                }
+
+            }
+            return this._displayname;
+        }
+    });
+    Object.defineProperty(KeyPseudoColumn.prototype, "comment", {
+        get: function () {
+            if (this._comment === undefined) {
+                // calling the parent
+                Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"comment").get.call(this);
+                this._comment = (this._comment !== null) ? this._comment : this.key.comment;
+            }
+            return this._comment;
+        }
+    });
+    Object.defineProperty(KeyPseudoColumn.prototype, "default", {
+        get: function () {
+            // default should be undefined in key
+            return undefined;
+        }
+    });
+    Object.defineProperty(KeyPseudoColumn.prototype, "_display", {
+        get: function () {
+            if (this._display_cached === undefined) {
+                this._display_cached = this.key.getDisplay(this._context);
+            }
+            return this._display_cached;
+        }
+    });
+
+    /**
+     * @memberof ERMrest
+     * @constructor
+     * @class
+     * @param {ERMrest.Reference} reference column's reference
+     * @param {ERMrest.Column} column the asset column
+     *
+     * @property {string} urlPattern  A desired upload location can be derived by Pattern Expansion on pattern.
+     * @property {(ERMrest.Column|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
+     * @property {(ERMrest.Column|null)} byteCountColumn if it's string, then it is the name of column we want to store byte count inside of it.
+     * @property {(ERMrest.Column|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
+     * @property {(ERMrest.Column|boolean|null)} sha256 if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256.
+     * @property {(string[]|null)} filenameExtFilter set of filename extension filters for use by upload agents to indicate to the user the acceptable filename patterns.
+     *
+     * @desc
+     * Constructor for AssetPseudoColumn.
+     * This class is a wrapper for {@link ERMrest.Column} objects that have asset annotation.
+     * This class extends the {@link ERMrest.ReferenceColumn}
+     */
+    function AssetPseudoColumn (reference, column) {
+        // call the parent constructor
+        AssetPseudoColumn.superClass.call(this, reference, [column]);
+
+        this._baseCol = column;
+
+        this._annotation = column.annotations.get(module._annotations.ASSET).content;
+
+        /**
+         * @type {boolean}
+         * @desc indicates this represents is a PseudoColumn or a Column.
+         */
+        this.isPseudo = true;
+
+        /**
+         * @type {boolean}
+         * @desc Indicates that this ReferenceColumn is an asset.
+         */
+        this.isAsset = true;
+    }
+    // extend the prototype
+    module._extends(AssetPseudoColumn, ReferenceColumn);
+
+    // properties to be overriden:
+    AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
+        var context = options ? options.context : undefined;
+
+        // if has column-display annotation, use it
+        if (this._baseCol.getDisplay(context).isMarkdownPattern) {
+            return this._baseCol.formatPresentation(data, options);
+        }
+
+        // if null, return null value
+        if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
+            return { isHTML: false, value: this._getNullValue(context) };
+        }
+
+        // in edit return the original data
+        if (module._isEntryContext(context)) {
+            return { isHTML: false, value: data[this._baseCol.name] };
+        }
+
+        // otherwise return a download link
+        var template = "[{{{caption}}}]({{{url}}}){download .btn .btn-primary}";
+        var keyValues = {
+            "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
+            "url": data[this._baseCol.name]
+        };
+        var pattern = module._renderTemplate(template, keyValues);
+        return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
+    };
+
+    Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
+        get: function () {
+            if (this._urlPattern === undefined) {
+                // url_pattern is a required attribute in annotation
+                this._urlPattern = this._annotation.url_pattern;
+            }
+            return this._urlPattern;
+        }
+    });
+    Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
+        get: function () {
+            if (this._filenameColumn === undefined) {
+                try {
+                    // make sure the column exist
+                    this._filenameColumn = this.table.columns.get(this._annotation.filename_column);
+                } catch (exception) {
+                    this._filenameColumn = null;
+                }
+            }
+            return this._filenameColumn;
+        }
+    });
+    Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
+        get: function () {
+            if (this._byteCountColumn === undefined) {
+                try {
+                    // make sure the column exist
+                    this._byteCountColumn = this.table.columns.get(this._annotation.byte_count_column);
+                } catch (exception) {
+                    this._byteCountColumn = null;
+                }
+            }
+            return this._byteCountColumn;
+        }
+    });
+    Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
+        get: function () {
+            if (this._md5 === undefined) {
+                var md5 = this._annotation.md5;
+                if (md5 === true) {
+                    this._md5 = true;
+                } else {
+                    try {
+                        // make sure the column exist
+                        this._md5 = this.table.columns.get(md5);
+                    } catch (exception) {
+                        this._md5 = null;
+                    }
+                }
+            }
+            return this._md5;
+        }
+    });
+    Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
+        get: function () {
+            if (this._sha256 === undefined) {
+                var sha256 = this._annotation.sha256;
+                if (sha256 === true) {
+                    this._sha256 = true;
+                } else {
+                    try {
+                        // make sure the column exist
+                        this._sha256 = this.table.columns.get(sha256);
+                    } catch (exception) {
+                        this._sha256 = null;
+                    }
+                }
+            }
+            return this._sha256;
+        }
+    });
+    Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
+        get: function () {
+            if (this._filenameExtFilter === undefined) {
+                var ext = this._annotation.filename_ext_filter;
+                if (typeof ext !== 'string' && !Array.isArray(ext)) {
+                    this._filenameExtFilter = null;
+                } else {
+                    this._filenameExtFilter = ext;
+                }
+            }
+            return this._filenameExtFilter;
+        }
+    });
+
 
     return module;
 

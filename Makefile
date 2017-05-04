@@ -138,7 +138,7 @@ $(TEST): $(BUILD)
 	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install installm 
+.PHONY: install installm
 install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(LIBS)
 
 installm: install $(ERMRESTJSDIR)/$(MIN)

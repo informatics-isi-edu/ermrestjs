@@ -956,7 +956,8 @@
                     },
                     "tag:isrd.isi.edu,2017:key-display": {
                         "*": {
-                            "markdown_pattern": "**{{col_4}}**"
+                            "markdown_pattern": "**{{col_4}}**",
+                            "column_order": ["col_1", "col_2"]
                         }
                     }
                 }
@@ -966,6 +967,11 @@
                 "annotations": {
                     "tag:misd.isi.edu,2015:display": {
                         "markdown_name": "**fourth key**"
+                    },
+                    "tag:isrd.isi.edu,2017:key-display": {
+                        "*": {
+                            "column_order": false
+                        }
                     }
                 }
             }],
@@ -1794,14 +1800,167 @@
                     "*": ["id", "position_type_col, int_value"]
                 }
             }
+        },
+        "table_w_asset": {
+            "comment": "table that has some columns with asset annotation",
+            "kind": "table",
+            "keys": [
+                {
+                    "names": [["reference_schema", "table_w_asset_key_1"]],
+                    "unique_columns": ["id"]
+                }
+            ],
+            "table_name": "table_w_asset",
+            "schema_name": "reference_schema",
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "table_w_asset_fk_to_outbound"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_asset",
+                            "column_name": "col_fk"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "reference_table_outbound_fks",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "comment": "id, asset should be ignored",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{id}}"
+                        }
+                    }
+                },
+                {
+                    "name": "col_fk",
+                    "comment": "is fk to another table and has asset annotation",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_fk}}"
+                        }
+                    }
+                },
+                {
+                    "name": "col_1",
+                    "comment": "column without any fk or asset annotation",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "comment": "column without any fk or asset annotation",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_filename",
+                    "comment": "",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_byte",
+                    "comment": "",
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "col_md5",
+                    "comment": "",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_sha256",
+                    "comment": "",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_asset_1",
+                    "comment":"column with asset annotation",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {}
+                    }
+                },
+                {
+                    "name": "col_asset_2",
+                    "comment": "column with asset annotation that has invalid values",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_asset_2}}",
+                            "filename_column": "no col",
+                            "byte_count_column": "no col",
+                            "md5": true,
+                            "sha256": true
+                        },
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*" : {
+                                "markdown_pattern" : "## {{col_filename}}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_asset_3",
+                    "comment": "column with asset annotation",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_asset_3}}",
+                            "filename_column": "col_filename",
+                            "byte_count_column": "col_byte",
+                            "md5": "col_md5",
+                            "sha256": "col_sha256",
+                            "filename_ext_filter": ["*.jpg"]
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry/create": ["col_filename","col_byte","col_md5","col_sha256"],
+                    "entry/edit": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"],
+                    "compact/brief": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"]
+                }
+            }
         }
+
     },
-    "table_names": [
-        "reference_table",
-        "inbound_related_reference_table",
-        "sorted_table",
-        "reference_values_table"
-    ],
     "comment": null,
     "annotations": {}
 }
