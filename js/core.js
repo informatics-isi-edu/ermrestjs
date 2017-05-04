@@ -1890,7 +1890,7 @@ var ERMrest = (function (module) {
 
         /**
          * returns string representation of Column
-         * @retuns {string} string representation of Column
+         * @return {string} string representation of Column
          */
         toString: function() {
             return [module._fixedEncodeURIComponent(this.table.schema.name),
@@ -2367,7 +2367,7 @@ var ERMrest = (function (module) {
 
         /**
          * returns string representation of colset object: (s:t:c1,s:t:c2)
-         * @retuns {string} string representation of colset object
+         * @return {string} string representation of colset object
          */
         toString: function(){
             return "(" + this.columns.slice().sort(function(a,b){
@@ -2442,7 +2442,7 @@ var ERMrest = (function (module) {
 
         /**
          * returns string representation of Mapping object
-         * @retuns {string} string representation of Mapping object
+         * @return {string} string representation of Mapping object
          */
         toString: function() {
             // changing from and to to Colset, makes this easier.
@@ -2774,7 +2774,7 @@ var ERMrest = (function (module) {
         /**
          * returns string representation of ForeignKeyRef object
          * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
-         * @retuns {string} string representation of ForeignKeyRef object
+         * @return {string} string representation of ForeignKeyRef object
          */
         toString: function (reverse){
             var leftString = "", rightString = "";

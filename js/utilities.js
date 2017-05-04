@@ -62,6 +62,26 @@ var ERMrest = (function(module) {
         return target.split(search).join(replacement);
     };
 
+    /**
+     * @private
+     * @param {Object} child child class
+     * @param {Object} parent parent class
+     * @desc
+     * This function should be called to extend a prototype with another one.
+     * Make sure to attach the right constructor to the prototypes after,
+     * and also call `child.superClass.call(this, arguments*)` in frist line of
+     * the child constructor with appropriate arguments.
+     * You can define the extra or overriden functions of child before calling _extends.
+     * This function will take care of copying those functions.
+     * *Must be called after defining parent prototype and child constructor*
+     */
+    module._extends = function (child, parent) {
+        var childFns = child.prototype;
+        child.prototype = Object.create(parent.prototype);
+        child.prototype.constructor = child;
+        child.superClass = parent;
+        child.super = parent.prototype;
+    };
 
     /**
      * @function
@@ -1322,7 +1342,8 @@ var ERMrest = (function(module) {
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
-        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display"
+        KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
+        ASSET: "tag:isrd.isi.edu,2017:asset"
     });
 
     /**

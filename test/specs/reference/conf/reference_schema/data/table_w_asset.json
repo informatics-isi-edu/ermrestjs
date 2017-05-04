@@ -1,0 +1,13 @@
+[{
+    "id": "1",
+    "col_fk": "1",
+    "col_1": "1000",
+    "col_2": "10001",
+    "col_filename": "filename",
+    "col_byte": 1242,
+    "col_md5": "md5",
+    "col_sha256": "sha256",
+    "col_asset_1": null,
+    "col_asset_2": "https://dev.isrd.isi.edu",
+    "col_asset_3": "https://dev.isrd.isi.edu"
+}]
