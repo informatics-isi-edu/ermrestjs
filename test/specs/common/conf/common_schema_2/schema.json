@@ -10,10 +10,12 @@
             "column_definitions": [
                 {
                     "name": "table_1_first_key",
+                    "nullok": false,
                     "type": { "typename": "text" }
                 },
                 {
                     "name": "table_1_second_key",
+                    "nullok": false,
                     "type": { "typename": "text" }
                 },
                 {
@@ -109,68 +111,6 @@
                         "entry/create": "table"
                     }
                 }
-            }
-        },
-        "table_wo_key": {
-            "comment": "",
-            "kind": "table",
-            "keys": [],
-            "entityCount": 0,
-            "foreign_keys": [],
-            "table_name": "table_wo_key",
-            "schema_name": "common_schema_2",
-            "column_definitions": [
-                {
-                    "name": "col_1",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    }
-                },
-                {
-                    "name": "col_2",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    }
-                }
-            ],
-            "annotations": {
-            }
-        },
-        "table_wo_notnull_key": {
-            "comment": "",
-            "kind": "table",
-            "keys": [
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "id"
-                    ]
-                }
-            ],
-            "entityCount": 0,
-            "foreign_keys": [],
-            "table_name": "table_wo_notnull_key",
-            "schema_name": "common_schema_2",
-            "column_definitions": [
-                {
-                    "name": "id",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    }
-                },
-                {
-                    "name": "col",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    }
-                }
-            ],
-            "annotations": {
             }
         },
         "table_w_dif_len_keys": {

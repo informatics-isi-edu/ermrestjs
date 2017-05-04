@@ -28,6 +28,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
@@ -66,6 +67,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
@@ -141,6 +143,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "text"
           }
@@ -170,6 +173,7 @@
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
           "type": {
             "typename": "text"
           }

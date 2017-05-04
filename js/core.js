@@ -809,8 +809,6 @@ var ERMrest = (function (module) {
                     // return error if there's no not-null key
                     if (keys.length === 0) {
                         keys = this.keys.all();
-                        // TODO should throw error instead
-                        // throw new Error("Table `" +  this.name + "` does not have any not-null key.");
                     }
 
                     // returns 1 if all the columns are serial/int, 0 otherwise
@@ -843,7 +841,6 @@ var ERMrest = (function (module) {
                     })[0].colset.columns;
 
                 } else {
-                    // TODO we should remove this
                     this._shortestKey = this.columns.all();
                 }
             }

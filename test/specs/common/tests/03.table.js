@@ -11,17 +11,6 @@ exports.execute = function(options) {
 
         // Test Cases:
         describe('Shortest key, ', function () {
-            // TODO should be deleted
-            it("when table doesn't have any keys, should reutn all the columns.", function () {
-                checkShortestKey("table_wo_key", ["col_1","col_2"]);
-            });
-
-            it("If table doesn't have any not-null key, should use shortest of other keys.", function () {
-                checkShortestKey("table_wo_notnull_key", ["id"]);
-                // TODO should be changed to this:
-                // checkError("table_wo_notnull_key", "Table `table_wo_notnull_key` does not have any not-null key.");
-            });
-
             it("should return the shortest key.", function () {
                 checkShortestKey("table_w_dif_len_keys", ["col_3"]);
             });
