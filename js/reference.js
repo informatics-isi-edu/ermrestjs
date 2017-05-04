@@ -349,16 +349,14 @@ var ERMrest = (function(module) {
 
                 // this function will take care of adding column and asset column
                 var addColumn = function (col) {
-                    var isAsset = col.annotations.contains(module._annotations.ASSET);
-
-                    if(isAsset) {
-                        if (("url_pattern" in annotations.get(module._annotations.ASSET).content)) {
+                    if(col.annotations.contains(module._annotations.ASSET)) {
+                        if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
                             // add asset annotation
                             var assetCol = new AssetPseudoColumn(self, col);
                             assetColumns.push(assetCol);
                             self._referenceColumns.push(assetCol);
                             return;
-                        } else if (module._isEntryContext(this._context)) {
+                        } else if (module._isEntryContext(self._context)) {
                             // ignore the column
                             return;
                         }

@@ -101,7 +101,7 @@ exports.execute = function (options) {
                     expect(compactColumns[i].isPseudo).toBe(true);
                 }
 
-                for (var i = 8; i < 11; i++) {
+                for (var i = 9; i < 11; i++) {
                     expect(assetRefCompactCols[i].isPseudo).toBe(true);
                 }
             });
@@ -143,13 +143,13 @@ exports.execute = function (options) {
 
         describe('.isAsset, ', function () {
             it ('for PseudoColumns that are asset should return true.', function () {
-                for (var i = 8; i < 11; i++) {
+                for (var i = 9; i < 11; i++) {
                     expect(assetRefCompactCols[i].isAsset).toBe(true);
                 }
             });
 
             it ('for other columns should return undefined.', function () {
-                for (var i = 0; i < 8; i++) {
+                for (var i = 0; i < 9; i++) {
                     expect(assetRefCompactCols[i].isAsset).toBe(undefined);
                 }
             });
@@ -262,7 +262,7 @@ exports.execute = function (options) {
                 for (var i = 11; i < 16; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
-                for (var i = 8; i < 11; i++) {
+                for (var i = 9; i < 11; i++) {
                     expect(assetRefCompactCols[i].type.name).toBe('markdown');
                 }
             });
@@ -558,13 +558,13 @@ exports.execute = function (options) {
                     });
 
                     it('if in entry context, return the original underlying data.', function() {
-                        val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
                     });
 
                     it("otherwise return a download link", function() {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com" download="">filename</a>');
+                        expect(val).toEqual('<a href="https://example.com" download="" class="btn btn-primary">filename</a>');
                     });
                  });
 
@@ -686,11 +686,8 @@ exports.execute = function (options) {
         describe('Asset related properties, ', function () {
 
             describe('.urlPattern', function() {
-                it('should return null if url_pattern is undefined.', function () {
-                    expect(assetRefCompactCols[9].urlPattern).toBe(null);
-                });
-
                 it('otherwise should return the defined url_pattern in annotation.', function () {
+                    expect(assetRefCompactCols[9].urlPattern).toBe("{{col_asset_2}}");
                     expect(assetRefCompactCols[10].urlPattern).toBe("{{col_asset_3}}");
                 });
             });

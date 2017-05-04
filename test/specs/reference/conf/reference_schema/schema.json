@@ -1841,7 +1841,9 @@
                         "typename": "text"
                     },
                     "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {}
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{id}}"
+                        }
                     }
                 },
                 {
@@ -1851,7 +1853,9 @@
                         "typename": "text"
                     },
                     "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {}
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_fk}}"
+                        }
                     }
                 },
                 {

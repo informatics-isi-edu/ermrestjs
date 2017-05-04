@@ -2063,7 +2063,7 @@ The logic is as follows:
          1.1.3 avoid duplicate foreign keys.
          1.1.4 make sure it is not hidden(+).
      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
-         if the column has asset annotation, create an asset pseudo-column
+         apply *addColumn* heuristics explained below.
 
 2.otherwise go through list of table columns
      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
@@ -2071,18 +2071,25 @@ The logic is as follows:
      2.2 hide the columns that are part of origFKR.
      2.3 if column is serial and part of a simple key hide it.
      2.4 if it's not part of any foreign keys
-         2.4.1 if it has asset annotation create an asset pseudo-column for it.
-         2.4.2 otherwise add the column.
+         apply *addColumn* heuristics explained below.
      2.5 go through all of the foreign keys that this column is part of.
          2.5.1 make sure it is not hidden(+).
          2.5.2 if it's simple fk, just create PseudoColumn
          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
 
+*addColumn* heuristics:
+ + If column doesn't have asset annotation, add a normal ReferenceColumn.
+ + Otherwise:
+     + If it has `url_pattern`: add AssetPseudoColumn.
+     + Otherwise:
+         - in entry context: remove it from the visible columns list.
+         - in other contexts: ignore the asset annotation, treat it as normal column.
+
 NOTE:
  + If asset annotation was used and context is entry,
-   we should remove the columns that are used as filename, byte, sha256, or md5.
+     we should remove the columns that are used as filename, byte, sha256, or md5.
  + If this reference is actually an inbound related reference,
-   we should hide the foreign key (and all of its columns) that created the link.
+     we should hide the foreign key (and all of its columns) that created the link.
 
 **Kind**: instance property of [<code>columns</code>](#ERMrest.Reference+columns)  
 <a name="ERMrest.Reference+isUnique"></a>
@@ -2936,7 +2943,7 @@ The Foreign key object that this PseudoColumn is created based on
 
 | Name | Type | Description |
 | --- | --- | --- |
-| useDefault | <code>boolean</code> | whether we should use default heuristics or NotFoundError |
+| urlPattern | <code>string</code> | A desired upload location can be derived by Pattern Expansion on pattern. |
 | filenameColumn | [<code>Column</code>](#ERMrest.Column) \| <code>null</code> | if it's string, then it is the name of column we want to store filename inside of it. |
 | byteCountColumn | [<code>Column</code>](#ERMrest.Column) \| <code>null</code> | if it's string, then it is the name of column we want to store byte count inside of it. |
 | md5 | [<code>Column</code>](#ERMrest.Column) \| <code>boolean</code> \| <code>null</code> | if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5. |
