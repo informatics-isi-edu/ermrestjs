@@ -1916,6 +1916,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_asset_2}}",
                             "filename_column": "no col",
                             "byte_count_column": "no col",
                             "md5": true,

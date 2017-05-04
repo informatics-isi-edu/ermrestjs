@@ -280,8 +280,8 @@ exports.execute = function (options) {
          *
          * 2. table_w_asset:
          *  ref.columns for detailed (no context present):
-         *  0: table_w_asset_key_1
-         *  1: table_w_asset_fk_to_outbound
+         *  0: table_w_asset_key_1 *KeyPseudoColumn*
+         *  1: table_w_asset_fk_to_outbound *ForeignKeyPseudoColumn*
          *  2: col_1
          *  3: col_2
          *  4: col_filename
@@ -289,17 +289,16 @@ exports.execute = function (options) {
          *  6: col_md5
          *  7: col_sha256
          *  8: col_asset_1 (asset with default options) is null
-         *  9: col_asset_2 (asset with invalid options) has column-display
-         *  10: col_asset_3 (asset with valid options)
+         *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display
+         *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
          *
          *  ref.columns for entry (no context present):
          *  0: id
-         *  1: table_w_asset_fk_to_outbound
+         *  1: table_w_asset_fk_to_outbound *ForeignKeyPseudoColumn*
          *  2: col_1
          *  3: col_2
-         *  4: col_asset_1 (asset with default options)
-         *  5: col_asset_2 (asset with invalid options)
-         *  6: col_asset_3 (asset with valid options)
+         *  4: col_asset_2 *AssetPseudoColumn*
+         *  5: col_asset_3 *AssetPseudoColumn*
          *
          *
          *  contexts that are used:
@@ -610,7 +609,7 @@ exports.execute = function (options) {
                                 expected: [
                                     "id",
                                     ["reference_schema", "table_w_asset_fk_to_outbound"].join("_"),
-                                    "col_1", "col_2", "col_asset_1", "col_asset_2", "col_asset_3"
+                                    "col_1", "col_2", "col_asset_2", "col_asset_3"
                                 ]
                             }]);
                         });
@@ -625,6 +624,16 @@ exports.execute = function (options) {
                             expect(assetRefCompactCols[6].isPseudo).toBe(false);
                             expect(assetRefCompactCols[7].name).toBe("col_sha256");
                             expect(assetRefCompactCols[7].isPseudo).toBe(false);
+                        });
+                    });
+
+                    describe('if column has asset annotation, but `no url_pattern`', function () {
+                        it('in edit context it should be removed from the visible-columns.', function (){
+                            //TODO
+                        });
+
+                        it('in other contexts it should be treated as a normal column.', function (){
+                            //TODO
                         });
                     });
 

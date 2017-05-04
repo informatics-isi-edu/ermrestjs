@@ -557,11 +557,6 @@ exports.execute = function (options) {
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 
-                    it('if value is null, return the null value.', function() {
-                        val = assetRefCompactCols[8].formatPresentation({"col_filename": "filename"}, {context:"compact", "formattedValues":{"col_filename": "filename"}}).value;
-                        expect(val).toEqual('');
-                    });
-
                     it('if in entry context, return the original underlying data.', function() {
                         val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
@@ -689,19 +684,9 @@ exports.execute = function (options) {
         });
 
         describe('Asset related properties, ', function () {
-            describe('.useDefault', function() {
-                it('should return true if asset annotation is empty.', function (){
-                    expect(assetRefCompactCols[8].useDefault).toBe(true);
-                });
-                it('otherwise should return false.', function (){
-                    expect(assetRefCompactCols[9].useDefault).toBe(false);
-                    expect(assetRefCompactCols[10].useDefault).toBe(false);
-                });
-            });
 
             describe('.urlPattern', function() {
-                it('should return null if asset annotation is empty, or url_pattern is undefined.', function () {
-                    expect(assetRefCompactCols[8].urlPattern).toBe(null);
+                it('should return null if url_pattern is undefined.', function () {
                     expect(assetRefCompactCols[9].urlPattern).toBe(null);
                 });
 
@@ -711,12 +696,8 @@ exports.execute = function (options) {
             });
 
             describe('.filenameColumn', function() {
-                it('should return null if asset annotation is empty.', function () {
-                    expect(assetRefCompactCols[8].filenameColumn).toBe(null);
 
-                });
-
-                it('should return null if column is not valid.', function () {
+                it('should return null if column is not valid or not present.', function () {
                     expect(assetRefCompactCols[9].filenameColumn).toBe(null);
                 });
 
@@ -726,12 +707,7 @@ exports.execute = function (options) {
             });
 
             describe('.byteCountColumn', function() {
-                it('should return null if asset annotation is empty.', function () {
-                    expect(assetRefCompactCols[8].byteCountColumn).toBe(null);
-
-                });
-
-                it('should return null if column is not valid.', function () {
+                it('should return null if column is not valid or not present.', function () {
                     expect(assetRefCompactCols[9].byteCountColumn).toBe(null);
                 });
 
@@ -741,10 +717,6 @@ exports.execute = function (options) {
             });
 
             describe('.md5', function() {
-                it('should return null if asset annotation is empty.', function () {
-                    expect(assetRefCompactCols[8].md5).toBe(null);
-                });
-
                 it('should return the md5 defined.', function () {
                     expect(assetRefCompactCols[9].md5).toBe(true);
                     expect(assetRefCompactCols[10].md5.name).toBe("col_md5");
@@ -752,10 +724,6 @@ exports.execute = function (options) {
             });
 
             describe('.sha256', function() {
-                it('should return null if asset annotation is empty.', function () {
-                    expect(assetRefCompactCols[8].sha256).toBe(null);
-                });
-
                 it('should return the sha256 defined.', function () {
                     expect(assetRefCompactCols[9].sha256).toBe(true);
                     expect(assetRefCompactCols[10].sha256.name).toBe("col_sha256");
@@ -763,8 +731,7 @@ exports.execute = function (options) {
             });
 
             describe('.filenameExtFilter', function() {
-                it('should return null if asset annotation is empty.', function () {
-                    expect(assetRefCompactCols[8].filenameExtFilter).toBe(null);
+                it('should return null if file_name_ext is not present.', function () {
                     expect(assetRefCompactCols[9].filenameExtFilter).toBe(null);
                 });
 

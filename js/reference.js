@@ -286,7 +286,7 @@ var ERMrest = (function(module) {
                  *          1.1.3 avoid duplicate foreign keys.
                  *          1.1.4 make sure it is not hidden(+).
                  *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
-                 *          if the column has asset annotation, create an asset pseudo-column
+                 *          apply *addColumn* heuristics explained below.
                  *
                  * 2.otherwise go through list of table columns
                  *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
@@ -294,18 +294,25 @@ var ERMrest = (function(module) {
                  *      2.2 hide the columns that are part of origFKR.
                  *      2.3 if column is serial and part of a simple key hide it.
                  *      2.4 if it's not part of any foreign keys
-                 *          2.4.1 if it has asset annotation create an asset pseudo-column for it.
-                 *          2.4.2 otherwise add the column.
+                 *          apply *addColumn* heuristics explained below.
                  *      2.5 go through all of the foreign keys that this column is part of.
                  *          2.5.1 make sure it is not hidden(+).
                  *          2.5.2 if it's simple fk, just create PseudoColumn
                  *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
+                 * *addColumn* heuristics:
+                 *  + If column doesn't have asset annotation, add a normal ReferenceColumn.
+                 *  + Otherwise:
+                 *      + If it has `url_pattern`: add AssetPseudoColumn.
+                 *      + Otherwise:
+                 *          - in entry context: remove it from the visible columns list.
+                 *          - in other contexts: ignore the asset annotation, treat it as normal column.
+                 *
                  * NOTE:
                  *  + If asset annotation was used and context is entry,
-                 *    we should remove the columns that are used as filename, byte, sha256, or md5.
+                 *      we should remove the columns that are used as filename, byte, sha256, or md5.
                  *  + If this reference is actually an inbound related reference,
-                 *    we should hide the foreign key (and all of its columns) that created the link.
+                 *      we should hide the foreign key (and all of its columns) that created the link.
                  * */
 
                 this._referenceColumns = [];
@@ -343,13 +350,23 @@ var ERMrest = (function(module) {
                 // this function will take care of adding column and asset column
                 var addColumn = function (col) {
                     var isAsset = col.annotations.contains(module._annotations.ASSET);
-                    if (isAsset) {
-                        var assetCol = new AssetPseudoColumn(self, col);
-                        assetColumns.push(assetCol);
-                        self._referenceColumns.push(assetCol);
-                    } else {
-                        self._referenceColumns.push(new ReferenceColumn(self, [col]));
+
+                    if(isAsset) {
+                        if (("url_pattern" in annotations.get(module._annotations.ASSET).content)) {
+                            // add asset annotation
+                            var assetCol = new AssetPseudoColumn(self, col);
+                            assetColumns.push(assetCol);
+                            self._referenceColumns.push(assetCol);
+                            return;
+                        } else if (module._isEntryContext(this._context)) {
+                            // ignore the column
+                            return;
+                        }
                     }
+
+                    // if annotation is not present,
+                    // or in any context other than entry, and the url_pattern is not present
+                    self._referenceColumns.push(new ReferenceColumn(self, [col]));
                 };
 
                 // get column orders from annotation
@@ -497,9 +514,12 @@ var ERMrest = (function(module) {
 
                 // if edit context remove filename, bytecount, md5, and sha256 from visible columns
                 if (module._isEntryContext(this._context) && assetColumns.length !== 0) {
-                    // given a colName will remove it from visible columns
+
+                    // given a column will remove it from visible columns
+                    // this function is used for removing filename, bytecount, md5, and sha256 from visible columns
                     var removeCol = function(col) {
-                        // property does not exist
+                        // if columns are not defined in the annotation, they will be null.
+                        // so we have to check it first.
                         if (col === null) {
                             return;
                         }
@@ -519,11 +539,6 @@ var ERMrest = (function(module) {
                     };
 
                     for(i = 0; i < assetColumns.length; i++) {
-                        // we're not storing anything in the columns, so there is nothing to hide
-                        if (assetColumns[i].useDefault) {
-                            continue;
-                        }
-
                         // hide the columns
                         removeCol(assetColumns[i].filenameColumn);
                         removeCol(assetColumns[i].byteCountColumn);
@@ -3651,7 +3666,8 @@ var ERMrest = (function(module) {
      * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Column} column the asset column
-     * @property {boolean} useDefault whether we should use default heuristics or NotFoundError
+     *
+     * @property {string} urlPattern  A desired upload location can be derived by Pattern Expansion on pattern.
      * @property {(ERMrest.Column|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
      * @property {(ERMrest.Column|null)} byteCountColumn if it's string, then it is the name of column we want to store byte count inside of it.
      * @property {(ERMrest.Column|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
@@ -3706,7 +3722,7 @@ var ERMrest = (function(module) {
         }
 
         // otherwise return a download link
-        var template = "[{{{caption}}}]({{{url}}}){download}";
+        var template = "[{{{caption}}}]({{{url}}}){download .btn .btn-primary}";
         var keyValues = {
             "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
             "url": data[this._baseCol.name]
@@ -3715,23 +3731,11 @@ var ERMrest = (function(module) {
         return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
     };
 
-    Object.defineProperty(AssetPseudoColumn.prototype, "useDefault", {
-        get: function () {
-            if (this._useDefault === undefined) {
-                this._useDefault = typeof this._annotation !== 'object' || Object.keys(this._annotation).length === 0;
-            }
-            return this._useDefault;
-        }
-    });
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
         get: function () {
             if (this._urlPattern === undefined) {
-                if (this.useDefault) {
-                    this._urlPattern = null;
-                } else {
-                    var pat = this._annotation.url_pattern;
-                    this._urlPattern = (typeof pat === 'string') ? pat : null;
-                }
+                // url_pattern is a required attribute in annotation
+                this._urlPattern = this._annotation.url_pattern;
             }
             return this._urlPattern;
         }
@@ -3739,15 +3743,11 @@ var ERMrest = (function(module) {
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
         get: function () {
             if (this._filenameColumn === undefined) {
-                if (this.useDefault) {
+                try {
+                    // make sure the column exist
+                    this._filenameColumn = this.table.columns.get(this._annotation.filename_column);
+                } catch (exception) {
                     this._filenameColumn = null;
-                } else {
-                    try {
-                        // make sure the column exist
-                        this._filenameColumn = this.table.columns.get(this._annotation.filename_column);
-                    } catch (exception) {
-                        this._filenameColumn = null;
-                    }
                 }
             }
             return this._filenameColumn;
@@ -3756,15 +3756,11 @@ var ERMrest = (function(module) {
     Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
         get: function () {
             if (this._byteCountColumn === undefined) {
-                if (this.useDefault) {
+                try {
+                    // make sure the column exist
+                    this._byteCountColumn = this.table.columns.get(this._annotation.byte_count_column);
+                } catch (exception) {
                     this._byteCountColumn = null;
-                } else {
-                    try {
-                        // make sure the column exist
-                        this._byteCountColumn = this.table.columns.get(this._annotation.byte_count_column);
-                    } catch (exception) {
-                        this._byteCountColumn = null;
-                    }
                 }
             }
             return this._byteCountColumn;
@@ -3773,19 +3769,15 @@ var ERMrest = (function(module) {
     Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
         get: function () {
             if (this._md5 === undefined) {
-                if (this.useDefault) {
-                    this._md5 = null;
+                var md5 = this._annotation.md5;
+                if (md5 === true) {
+                    this._md5 = true;
                 } else {
-                    var md5 = this._annotation.md5;
-                    if (md5 === true) {
-                        this._md5 = true;
-                    } else {
-                        try {
-                            // make sure the column exist
-                            this._md5 = this.table.columns.get(md5);
-                        } catch (exception) {
-                            this._md5 = null;
-                        }
+                    try {
+                        // make sure the column exist
+                        this._md5 = this.table.columns.get(md5);
+                    } catch (exception) {
+                        this._md5 = null;
                     }
                 }
             }
@@ -3795,19 +3787,15 @@ var ERMrest = (function(module) {
     Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
         get: function () {
             if (this._sha256 === undefined) {
-                if (this.useDefault) {
-                    this._sha256 = null;
+                var sha256 = this._annotation.sha256;
+                if (sha256 === true) {
+                    this._sha256 = true;
                 } else {
-                    var sha256 = this._annotation.sha256;
-                    if (sha256 === true) {
-                        this._sha256 = true;
-                    } else {
-                        try {
-                            // make sure the column exist
-                            this._sha256 = this.table.columns.get(sha256);
-                        } catch (exception) {
-                            this._sha256 = null;
-                        }
+                    try {
+                        // make sure the column exist
+                        this._sha256 = this.table.columns.get(sha256);
+                    } catch (exception) {
+                        this._sha256 = null;
                     }
                 }
             }
@@ -3817,15 +3805,11 @@ var ERMrest = (function(module) {
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
         get: function () {
             if (this._filenameExtFilter === undefined) {
-                if (this.useDefault) {
+                var ext = this._annotation.filename_ext_filter;
+                if (typeof ext !== 'string' && !Array.isArray(ext)) {
                     this._filenameExtFilter = null;
                 } else {
-                    var ext = this._annotation.filename_ext_filter;
-                    if (typeof ext !== 'string' && !Array.isArray(ext)) {
-                        this._filenameExtFilter = null;
-                    } else {
-                        this._filenameExtFilter = ext;
-                    }
+                    this._filenameExtFilter = ext;
                 }
             }
             return this._filenameExtFilter;
