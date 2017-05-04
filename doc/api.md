@@ -279,6 +279,12 @@ to use for ERMrest JavaScript agents.
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
         * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
+<<<<<<< HEAD
+=======
+        * [.reference](#ERMrest.ReferenceColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.key](#ERMrest.ReferenceColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
@@ -289,6 +295,7 @@ to use for ERMrest JavaScript agents.
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+<<<<<<< HEAD
         * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
@@ -307,6 +314,11 @@ to use for ERMrest JavaScript agents.
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+=======
+        * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -1212,7 +1224,11 @@ Formats the presentation value corresponding to this column definition.
 returns string representation of Column
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
+<<<<<<< HEAD
 **Returns**: <code>string</code> - string representation of Column  
+=======
+**Retuns**: <code>string</code> string representation of Column  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.Column+getDisplay"></a>
 
 #### column.getDisplay(context)
@@ -1465,7 +1481,11 @@ Constructor for ColSet, a set of Column objects.
 returns string representation of colset object: (s:t:c1,s:t:c2)
 
 **Kind**: instance method of [<code>ColSet</code>](#ERMrest.ColSet)  
+<<<<<<< HEAD
 **Returns**: <code>string</code> - string representation of colset object  
+=======
+**Retuns**: <code>string</code> string representation of colset object  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.ColSet+length"></a>
 
 #### colSet.length() ⇒ <code>Number</code>
@@ -1499,7 +1519,11 @@ returns string representation of colset object: (s:t:c1,s:t:c2)
 returns string representation of Mapping object
 
 **Kind**: instance method of [<code>Mapping</code>](#ERMrest.Mapping)  
+<<<<<<< HEAD
 **Returns**: <code>string</code> - string representation of Mapping object  
+=======
+**Retuns**: <code>string</code> string representation of Mapping object  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.Mapping+length"></a>
 
 #### mapping.length() ⇒ <code>Number</code>
@@ -1689,7 +1713,11 @@ Indicates if the foreign key is simple (not composite)
 returns string representation of ForeignKeyRef object
 
 **Kind**: instance method of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<<<<<<< HEAD
 **Returns**: <code>string</code> - string representation of ForeignKeyRef object  
+=======
+**Retuns**: <code>string</code> string representation of ForeignKeyRef object  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2707,6 +2735,12 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
 * [.ReferenceColumn](#ERMrest.ReferenceColumn)
     * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
+<<<<<<< HEAD
+=======
+    * [.reference](#ERMrest.ReferenceColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.foreignKey](#ERMrest.ReferenceColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.key](#ERMrest.ReferenceColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
@@ -2717,6 +2751,10 @@ to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+<<<<<<< HEAD
+=======
+    * [.filteredRef(column, data)](#ERMrest.ReferenceColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
     * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
 
@@ -2729,7 +2767,12 @@ Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.C
 | Param | Type | Description |
 | --- | --- | --- |
 | reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+<<<<<<< HEAD
 | baseCols | [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column) | List of columns that this reference-column will be created based on. |
+=======
+| base | [<code>Column</code>](#ERMrest.Column) | The column that this reference-column will be created based on. |
+| kwargs | <code>Object</code> | if it's not empty then the column is being created based on foreignkey or key. |
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
 
@@ -2737,6 +2780,27 @@ Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.C
 indicates this represents is a PseudoColumn or a Column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<<<<<<< HEAD
+=======
+<a name="ERMrest.ReferenceColumn+reference"></a>
+
+#### referenceColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
+The reference object that represents the table of this PseudoColumn
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+foreignKey"></a>
+
+#### referenceColumn.foreignKey : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+key"></a>
+
+#### referenceColumn.key : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.ReferenceColumn+table"></a>
 
 #### referenceColumn.table : [<code>Table</code>](#ERMrest.Table)
@@ -2793,6 +2857,29 @@ Heuristics are as follows:
  - column_order defined -> use it.
  - use column actual value.
 
+<<<<<<< HEAD
+=======
+- column_order = false -> disable sort.
+
+- PseudoColumn
+     - column_order defined -> use it.
+     - Foreign key:
+         - table has row_order -> use it.
+         - simple fk -> use the column's
+     - Key:
+         - simple key -> use the column's
+     - disable it
+- Column:
+     - column_order defined -> use it.
+     - use column actual value.
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+isForeignKey"></a>
+
+#### referenceColumn.isForeignKey : <code>boolean</code>
+returns the private value _isForeignKey
+
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
@@ -2806,6 +2893,25 @@ Formats a value corresponding to this reference-column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
 
+<<<<<<< HEAD
+=======
+<a name="ERMrest.ReferenceColumn+filteredRef"></a>
+
+#### referenceColumn.filteredRef(column, data) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+This function takes in a tuple and generates a reference that is
+constrained based on the domain_filter_pattern annotation. If this
+annotation doesn't exist, it returns this (reference)
+`this` is the same as column.reference
+
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the constrained reference  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | column that `this` is based on |
+| data | <code>Object</code> | tuple data with potential constraints |
+
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
 #### referenceColumn.formatPresentation(data, options) ⇒ <code>Object</code>
@@ -2980,7 +3086,11 @@ indicates this represents is a PseudoColumn or a Column.
 #### assetPseudoColumn.isAsset : <code>boolean</code>
 Indicates that this ReferenceColumn is an asset.
 
+<<<<<<< HEAD
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+=======
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+>>>>>>> 638d3729cc72fccc606e4c48982099a07ddbec30
 <a name="ERMrest.Datapath"></a>
 
 ### ERMrest.Datapath : <code>object</code>
