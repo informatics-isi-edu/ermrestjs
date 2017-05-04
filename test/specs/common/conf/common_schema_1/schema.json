@@ -47,6 +47,7 @@
             ],
             "column_definitions": [{
                 "name": "table_1_key",
+                "nullok": false,
                 "type": {
                     "typename": "text"
                 }
@@ -92,6 +93,7 @@
             }],
             "column_definitions": [{
                 "name": "table_2_key",
+                "nullok": false,
                 "type": {
                     "typename": "text"
                 }
