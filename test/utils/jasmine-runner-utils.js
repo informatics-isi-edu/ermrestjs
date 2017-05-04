@@ -86,6 +86,9 @@ exports.run = function(config) {
 		console.log("Unable to create default catalog");
 		process.exit(1);
 	}).catch(function(err) {
+		console.log('Caught unhandled exception: ' + err.message);
+		console.log(err.stack);
+	
 		process.exit(1);
 	});
 };

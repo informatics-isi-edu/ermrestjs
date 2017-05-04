@@ -22,15 +22,18 @@
     "library"
   ],
   "dependencies": {
-    "q": "x",
-    "request-q": "x",
+    "buffer-slice": "0.0.1",
+    "file-api": "^0.10.4",
     "markdown-it": "x",
-    "markdown-it-sub": "x",
-    "markdown-it-sup": "x",
     "markdown-it-attrs": "x",
     "markdown-it-container": "x",
+    "markdown-it-sub": "x",
+    "markdown-it-sup": "x",
     "moment": "^2.15.1",
-    "mustache": "x"
+    "mustache": "x",
+    "q": "x",
+    "request-q": "x",
+    "spark-md5": "^3.0.0"
   },
   "devDependencies": {
     "bower": "x",

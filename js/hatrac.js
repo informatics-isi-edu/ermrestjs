@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
+var isNode =  false;
+
+if (typeof module === 'object' && module.exports && typeof require === 'function') {
+    isNode = true;
+}
+
 var ERMrest = (function(module) {
 
-    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+    var blobSlice, SparkMD5;
+    // Check for whether the environment is Node.js or Browser
+    if (isNode) {
+        SparkMD5 = require('spark-md5');
+        blobSlice =  Buffer.prototype.slice;
+    } else {
+        SparkMD5 = window.SparkMD5;
+        blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+    }
+
+    if (typeof window != 'object') window = {};
 
     if (!window.atob) {
         var tableStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -61,7 +77,7 @@ var ERMrest = (function(module) {
     };
 
     var hexToBase64 = function (str) {
-      return btoa(String.fromCharCode.apply(null,
+      return window.btoa(String.fromCharCode.apply(null,
         str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
       );
     };
@@ -71,7 +87,7 @@ var ERMrest = (function(module) {
         this.options = options || {};
     };
 
-    Checksum.prototype.calculate = function(onProgress, onSuccess, onError) {
+    Checksum.prototype.calculate = function(chunkSize, onProgress, onSuccess, onError) {
 
         var self = this, file = this.file;
         if (!onProgress || (typeof onProgress != 'function')) onProgress = function() {};
@@ -86,15 +102,15 @@ var ERMrest = (function(module) {
             return;
         }
 
-
-        var chunkSize = 50 * 1024 * 1024, // read in chunks of 5MB
-        chunks = Math.ceil(file.size / chunkSize),
+        var chunks = Math.ceil(file.size / chunkSize),
         currentChunk = 0,
         spark = new SparkMD5.ArrayBuffer();
 
         var onLoad = function(e) {
-            console.log("\nRead chunk number " + parseInt(currentChunk + 1) + " of " + chunks);
+            //console.log("\nRead chunk number " + parseInt(currentChunk + 1) + " of " + chunks);
+            
             spark.append(e.target.result); // append array buffer
+            
             currentChunk++;
             
             var completed = chunkSize * currentChunk;
@@ -106,18 +122,28 @@ var ERMrest = (function(module) {
             else {
                 self.md5_hex = spark.end();
                 self.md5_base64 = hexToBase64(self.md5_hex);
-                console.log("\nFinished loading :)\n\nComputed hash: "  + self.md5_base64 + "\n!");
+                //console.log("\nFinished loading :)\n\nComputed hash: "  + self.md5_base64 + "\n!");
                 onSuccess(self.checksum, self);
             }
         };
         
         var loadNext = function () {
-            var fileReader = new FileReader();
-            fileReader.onload = onLoad;
-            fileReader.onerror = onError;
             var start = currentChunk * chunkSize,
                 end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
-            fileReader.readAsArrayBuffer(blobSlice.call(self.file, start, end));
+
+            if (isNode) {
+                setTimeout(function() {
+                    onLoad({ target: {result : blobSlice.call(self.file.buffer, start, end) } });
+                }, 1);
+                
+            } else {
+                var fileReader = new FileReader();
+                fileReader.onload = onLoad;
+                fileReader.onerror = onError;
+
+            
+                fileReader.readAsArrayBuffer(blobSlice.call(self.file, start, end));
+            }
         };
         
         loadNext();
@@ -150,12 +176,24 @@ var ERMrest = (function(module) {
      */
     var upload = function (file, otherInfo) {
         
-        this.PART_SIZE = 50 * 1024 * 1024; //minimum part size defined by hatrac 50MB
-
+        this.PART_SIZE = otherInfo.chunkSize || 50 * 1024 * 1024; //minimum part size defined by hatrac 50MB
+        
         this.defaultTemplate = otherInfo.defaultTemplate; // Default template for the URL
         this.file = file;
         
+        if (isNode) {
+            this.file.buffer = require('fs').readFileSync(file.path);
+        }
+
         this.column = otherInfo.column;
+        if (!this.column) throw new Error("No column provided while creating hatrac file object");
+
+        this.reference = otherInfo.reference;
+        if (!this.reference) throw new Error("No reference provided while creating hatrac file object");
+
+        this.SERVER_URI = this.reference._server.uri.replace("ermrest", "hatrac");
+
+        this.http = this.reference._server._http;
 
         this.fileInfo = {
             name: this.file.name,
@@ -173,6 +211,22 @@ var ERMrest = (function(module) {
         this.chunks = [];
 
         this.log = console.log;
+
+    };
+
+    upload.prototype.getAbsoluteUrl = function(uri) {
+        // A more universal, non case-sensitive, protocol-agnostic regex
+        // to test a URL string is relative or absolute 
+        var r = new RegExp('^(?:[a-z]+:)?//', 'i');
+
+        // The url is absolute so don't make any changes and return it as it is
+        if (r.test(uri))  return uri;
+        
+        // If uri starts with "/" then simply prepend the server uri
+        if (uri.indexOf("/") === 0)  return this.SERVER_URI + uri; 
+        
+        // else prepend the server uri with an additional "/"
+        return this.SERVER_URI + "/" + uri; 
     };
 
     /* 
@@ -181,9 +235,8 @@ var ERMrest = (function(module) {
       If any properties in the template are found null without null handling then return false
       */
     upload.prototype.validateURL = function(row) {
-        var annotation = this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset");
+        var annotation = module._getAnnotationValueByContext("entry/create", this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset").content);
 
-        var isValid = true;
         if (annotation.url_pattern) {
             
             var template = annotation.url_pattern;
@@ -230,19 +283,25 @@ var ERMrest = (function(module) {
 
                         // If key is not in ingored columns value for the key is null or undefined then return null
                         if ((ignoredColumns.indexOf(key) == -1) && row[key] === null || row[key] === undefined) {
-                           return null;
+                           return false;
                         }
                     }
                 }
             }
         }
 
-        return isValid;
+        return true;
     };
 
+    /* 
+       Private
+       Call this function with the ermrestjs column object and the json object row
+       To determine it is able to generate a url
+       If any properties in the template are found null without null handling then return false
+      */
     upload.prototype.generateURL = function(row) {
         
-        var annotation = this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset");
+        var annotation = module._getAnnotationValueByContext("entry/create", this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset").content);
 
         var template = this.defaultTemplate;
         // If annotation has a url pattern then
@@ -269,8 +328,15 @@ var ERMrest = (function(module) {
         row.escape = module._escapeForTemplate;
 
         // Generate url
-        this.url = module._mustache.render(template, row);
+        this.url = module._renderTemplate(template, row);
 
+        // If the template is null then throw an error
+        if (this.url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
+        
+        // Prepend the url with server uri if it is relative
+        this.url = this.getAbsoluteUrl(this.url);
+
+        return this.url;
     };
 
 
@@ -291,8 +357,8 @@ var ERMrest = (function(module) {
         }
 
         var self = this;
-        this.hash.calculate(function(uploaded, fileSize) {
-           deferred.notify(uploaded);
+        this.hash.calculate(this.PART_SIZE, function(uploaded, fileSize) {
+            deferred.notify(uploaded);
         }, function(checksum) {
             self.generateURL(row);
             deferred.resolve(self.url);
@@ -321,20 +387,21 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        var request = {
-            url: this.url + ";upload?parents=true",
-            method: 'POST',
-            data: {
-                "chunk-length" : this.PART_SIZE,
-                "content-length": this.file.size,
-                "content-type": this.file.type,
-                "content-md5": this.hash.md5_base64,
-                "content-disposition": "filename*=UTF-8''" + this.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
-            },
+        var url = this.url + ";upload?parents=true";
+            
+        var data = {
+            "chunk-length" : this.PART_SIZE,
+            "content-length": this.file.size,
+            "content-type": this.file.type,
+            "content-md5": this.hash.md5_base64,
+            "content-disposition": "filename*=UTF-8''" + this.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
+        };
+       
+        var config = {
             headers: { 'content-type' : 'application/json' }
         };
 
-        module._http(request).then(function(response) {
+        this.http.post(url, data, config).then(function(response) {
             self.chunkUrl = response.headers('location'); 
             deferred.resolve(self.chunkUrl);
         }, function(response) {
@@ -362,12 +429,7 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        var request = {
-            url: this.url,
-            method: 'HEAD'   
-        };
-
-        module._http(request).then(function(response) {
+        this.http.head(this.url).then(function(response) {
             self.fileExists = true;
 
             var headers = response.headers();
@@ -476,12 +538,7 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        var request = {
-            url: this.chunkUrl,
-            method: 'POST'
-        };
-
-        module._http(request).then(function(response) {
+        this.http.post(this.chunkUrl).then(function(response) {
             self.jobDone = true;
 
             if (response.headers('location')) {
@@ -605,10 +662,7 @@ var ERMrest = (function(module) {
          * Setting chunkUrl null marks that when we reupload this file, we should create a new job
          */
         if (this.chunkUrl) {
-            module._http({
-                url: this.chunkUrl,
-                method: 'DELETE'
-            }).then(function() {
+            this.http.delete(this.chunkUrl).then(function() {
                 deferred.resolve();
             }, function(err) {
                 deferred.resolve();
@@ -653,7 +707,12 @@ var ERMrest = (function(module) {
         var self = this;
         
         // blob is the sliced version of the file from start and end index
-        var blob = upload.file.slice(this.start, this.end);
+        var blob;
+        if (isNode) {
+            blobSlice.call(upload.file.buffer, this.start, this.end);
+        } else {
+            blob = upload.file.slice(this.start, this.end);
+        }
         var size = blob.size;
         this.progress = 0;
        
@@ -667,17 +726,19 @@ var ERMrest = (function(module) {
             // If index is -1 then upload it to the url or upload it to chunkUrl
             url: upload.chunkUrl + "/" + this.index,
             method: "PUT",                      
-            headers: headers,
-            data: blob,
-            uploadEventHandlers: {
-                progress: function(e) {
-                    // To track progress on upload
-                    if (e.lengthComputable) {
-                        self.progress = e.loaded;
-                        upload.updateProgressBar(self.xhr);
+            config: { 
+                headers: headers,
+                uploadEventHandlers: {
+                    progress: function(e) {
+                        // To track progress on upload
+                        if (e.lengthComputable) {
+                            self.progress = e.loaded;
+                            upload.updateProgressBar(self.xhr);
+                        }
                     }
                 }
-            }
+            },
+            data: blob
         };
 
         self.xhr = request;
@@ -687,7 +748,7 @@ var ERMrest = (function(module) {
         // If upload is aborted using .abort() for pause or cancel scenario
         // then error callback will be called for which the status code would be 0
         // else it would be in range of 400 and 500
-        module._http(request).then(function() {
+        this.http.put(request.url, request.data, request.config).then(function() {
             
             // Set progress to blob size, and set chunk completed
             self.progress = self.size;

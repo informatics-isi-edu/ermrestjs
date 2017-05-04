@@ -43,7 +43,7 @@ exports.runTests = function (options) {
 
         // execute test cases
         testCases.forEach(function (el) {
-            require(process.env.PWD + "/test/specs"+ el).execute(testOptions);
+            require(process.env.PWD + "/test/specs" + el).execute(testOptions);
         });
 
         // Delete the schemas
