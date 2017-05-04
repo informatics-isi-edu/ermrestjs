@@ -179,13 +179,10 @@ var ERMrest = (function(module) {
         
         this.PART_SIZE = otherInfo.chunkSize || 50 * 1024 * 1024; //minimum part size defined by hatrac 50MB
         
-        this.defaultTemplate = otherInfo.defaultTemplate; // Default template for the URL
         this.file = file;
         
-        if (isNode) {
-            this.file.buffer = require('fs').readFileSync(file.path);
-        }
-
+        if (isNode) this.file.buffer = require('fs').readFileSync(file.path);
+        
         this.column = otherInfo.column;
         if (!this.column) throw new Error("No column provided while creating hatrac file object");
 
@@ -236,19 +233,18 @@ var ERMrest = (function(module) {
       If any properties in the template are found null without null handling then return false
       */
     upload.prototype.validateURL = function(row) {
-        var annotation = module._getAnnotationValueByContext("entry/create", this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset").content);
 
-        if (annotation.url_pattern) {
+        if (this.column.urlPattern) {
             
-            var template = annotation.url_pattern;
+            var template = this.column.urlPattern;
 
             var ignoredColumns = [];
 
-            // Add file properties depending on annotation to ignore_columns
-            if (typeof annotation.filename_column == 'string') ignoredColumns.push(annotation.filename_column);
-            if (typeof annotation.byte_count_column == 'string') ignoredColumns.push(annotation.byte_count_column);
-            if (typeof annotation.md5 == 'string') ignoredColumns.push(annotation.md5);
-            if (typeof annotation.sha256 == 'string') ignoredColumns.push(annotation.sha256); 
+            // Add file properties depending on column to ignore_columns
+            if (this.column.filenameColumn) ignoredColumns.push(this.column.filenameColumn.name);
+            if (this.column.byteCountColumn) ignoredColumns.push(this.column.byteCountColumn.name);
+            if (this.column.md5 && typeof this.column.md5 === "object") ignoredColumns.push(this.column.md5.name);
+            if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name); 
 
             ignoredColumns.push("md5_checksum");
             ignoredColumns.push("md5_base64");
@@ -302,19 +298,13 @@ var ERMrest = (function(module) {
       */
     upload.prototype.generateURL = function(row) {
         
-        var annotation = module._getAnnotationValueByContext("entry/create", this.column._base.annotations.get("tag:isrd.isi.edu,2016:asset").content);
-
-        var template = this.defaultTemplate;
-        // If annotation has a url pattern then
-        if (annotation.url_pattern) {
-            template = annotation.url_pattern;
-        }
-
-        // Populate all values in row depending on annotation from current
-        if (typeof annotation.filename_column == 'string') row[annotation.filename_column] = this.file.name;
-        if (typeof annotation.byte_count_column == 'string') row[annotation.byte_count_column] = this.file.size;
-        if (typeof annotation.md5 == 'string') row[annotation.md5] = this.hash.md5_hex;
-        if (typeof annotation.sha256 == 'string') row[annotation.sha256] = this.hash.sha256;
+        var template = this.column.urlPattern;
+        
+        // Populate all values in row depending on column from current
+        if (this.column.filenameColumn) row[this.column.filenameColumn.name] = this.file.name;
+        if (this.column.byteCountColumn) row[this.column.byteCountColumn.name] = this.file.size;
+        if (this.column.md5 && typeof this.column.md5 === 'object') row[this.column.md5.name] = this.hash.md5_hex;
+        if (this.column.sha256 && typeof this.column.sha256 === 'object') row[this.column.sha256.name] = this.hash.sha256;
 
         row[this.column.name].filename = this.file.name;
         row[this.column.name].size = this.file.size;

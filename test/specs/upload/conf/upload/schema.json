@@ -73,13 +73,11 @@
             "typename": "text"
           },
           "annotations": {
-            "tag:isrd.isi.edu,2016:asset": {
-              "*" : {
-                "url_pattern" : "/hatrac/ermrestjstest/{{{fk_id}}}/{{{uri.md5_hex}}}",
-                "filename_column" : "filename", 
-                "byte_count_column" : "bytes",
-                "md5" : "checksum"
-              }
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern" : "/hatrac/ermrestjstest/{{{fk_id}}}/{{{uri.md5_hex}}}",
+              "filename_column" : "filename", 
+              "byte_count_column" : "bytes",
+              "md5" : "checksum"
             }
           }
         },

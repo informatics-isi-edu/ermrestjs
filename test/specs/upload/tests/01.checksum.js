@@ -1,4 +1,5 @@
 exports.execute = function (options) {
+	var spawn = require('child_process').spawnSync;
 
 	var  FileAPI = require('file-api'), File = FileAPI.File;
 	File.prototype.jsdom = true;
@@ -15,29 +16,33 @@ exports.execute = function (options) {
             reference;
 
         var hatracUrl = options.url.replace("/ermrest", "");
-        
+
         var files = [{
         	name: "testfile50MB.pdf",
         	size: 52428800,
-        	displaySize: "52.42MB",
+        	displaySize: "50M",
         	type: "application/pdf",
-        	file: new File(process.env.PWD + "/test/specs/upload/files/testfile50MB.pdf"),
         	md5Checksum: "25e317773f308e446cc84c503a6d1f85"
         }, {
         	name: "testfile5MB.txt",
         	size: 5242880,
-        	displaySize: "5.24MB",
+        	displaySize: "5M",
         	type: "text/plain",
-        	file: new File(process.env.PWD + "/test/specs/upload/files/testfile5MB.txt"),
         	md5Checksum: "5f363e0e58a95f06cbe9bbc662c5dfb6"
         }, {
         	name: "testfile500kb.png",
         	size: 512000,
-        	displaySize: "512kB",
+        	displaySize: "500K",
         	type: "image/png",
-        	file: new File(process.env.PWD + "/test/specs/upload/files/testfile500kb.png"),
         	md5Checksum: "816df6f64deba63b029ca19d880ee10a"
         }];
+
+        files.forEach(function(f) {
+        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+        	spawn('mkfile', [f.displaySize, filePath]);
+        	f.file = new File(filePath);
+        });
+
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
             + schemaName + ":" + tableName;
@@ -152,6 +157,13 @@ exports.execute = function (options) {
         	})(f);
         });
 
+        afterAll(function(done) {
+        	files.forEach(function(f) {
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+	        	spawn('rmfile', [filePath]);
+	        });
+	        done();
+        })
         
     });
 }
