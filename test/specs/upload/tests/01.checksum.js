@@ -39,7 +39,13 @@ exports.execute = function (options) {
 
         files.forEach(function(f) {
         	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-        	spawn('mkfile', [f.displaySize, filePath]);
+
+        	var op = spawn('mkfile', [f.displaySize, filePath]);
+        	if (op.status != 0) {
+        		console.dir(op.error);
+        	}
+
+
         	f.file = new File(filePath);
         });
 
@@ -157,12 +163,11 @@ exports.execute = function (options) {
         	})(f);
         });
 
-        afterAll(function(done) {
+        afterAll(function() {
         	files.forEach(function(f) {
 	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-	        	spawn('rmfile', [filePath]);
+	        	spawn('rm', [filePath]);
 	        });
-	        done();
         })
         
     });

@@ -186,7 +186,7 @@ exports.execute = function (options) {
 		afterAll(function(done) {
         	files.forEach(function(f) {
 	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-	        	spawn('rmfile', [filePath]);
+	        	spawn('rm', [filePath]);
 	        });
 	        done();
         })
