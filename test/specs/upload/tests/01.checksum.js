@@ -37,18 +37,6 @@ exports.execute = function (options) {
         	md5Checksum: "816df6f64deba63b029ca19d880ee10a"
         }];
 
-        files.forEach(function(f) {
-        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-
-        	var op = spawn('mkfile', [f.displaySize, filePath]);
-        	
-        	console.dir(op);
-        	
-        	console.log(filePath);
-
-        	//f.file = new File(filePath);
-        });
-
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
             + schemaName + ":" + tableName;
@@ -56,6 +44,21 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             schema = options.catalog.schemas.get(schemaName);
             ermRest = options.ermRest;
+
+            files.forEach(function(f) {
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+
+	        	var op = spawn('mkfile', [f.displaySize, filePath]);
+	    		
+	    		console.dir(op);
+	        	console.log(filePath);
+
+	        	try {
+		        	f.file = new File(filePath);
+		        } catch(e) {
+		        	done.fail();
+		        }
+	        });
 
 
             options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
