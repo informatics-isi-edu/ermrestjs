@@ -44,7 +44,7 @@ exports.execute = function (options) {
 
 
             files.forEach(function(f) {
-	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+	        	var filePath = "test/specs/upload/files/" + f.name
 
 	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
 	        	f.file = new File(filePath);
@@ -155,8 +155,8 @@ exports.execute = function (options) {
 
         afterAll(function() {
         	files.forEach(function(f) {
-	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name;
-	        	exec('rm ' + filePath );
+	        	var filePath = "test/specs/upload/files/" + f.name;
+	        	exec('rm ' + filePath);
 	        });
 	        done()
         })
