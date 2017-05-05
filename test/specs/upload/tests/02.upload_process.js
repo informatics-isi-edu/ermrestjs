@@ -4,7 +4,7 @@ exports.execute = function (options) {
 	var  FileAPI = require('file-api'), File = FileAPI.File;
 	File.prototype.jsdom = true;
 
-    describe('For Checking upload object creation and checksum calculation works, ', function () {
+    describe('For upload proces , ', function () {
         var schemaName = "upload",
             schema,
             tableName = "file",

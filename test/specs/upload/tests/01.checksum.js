@@ -41,10 +41,10 @@ exports.execute = function (options) {
         	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
 
         	var op = spawn('mkfile', [f.displaySize, filePath]);
-        	if (op.status != 0) {
-        		console.dir(op.error);
-        	}
-
+        	
+        	console.dir(op.error);
+        	
+        	console.log(filePath);
 
         	f.file = new File(filePath);
         });
