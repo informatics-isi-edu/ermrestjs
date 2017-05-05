@@ -61,6 +61,9 @@ before_install:
   - sudo chmod a+r /home/ermrest/ermrest_config.json
   - sudo npm install
   - sudo service apache2 restart
+  - sudo dd if=/dev/random of="test/upload/files/testfile50MB bs=52428800 count=1 
+  - sudo dd if=/dev/random of="test/upload/files/testfile5MB bs=5242880 count=1 
+  - sudo dd if=/dev/random of="test/upload/files/testfile500KB bs=512000 count=1 
 
 install:
   - sudo make build

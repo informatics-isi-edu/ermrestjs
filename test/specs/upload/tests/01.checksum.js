@@ -42,13 +42,15 @@ exports.execute = function (options) {
             schema = options.catalog.schemas.get(schemaName);
             ermRest = options.ermRest;
 
+            if (!process.env.TRAVIS) {
 
-            files.forEach(function(f) {
-	        	var filePath = "test/specs/upload/files/" + f.name
+	            files.forEach(function(f) {
+		        	var filePath = "test/specs/upload/files/" + f.name
 
-	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
-	        	f.file = new File(filePath);
-	        });
+		        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
+		        	f.file = new File(filePath);
+		        });
+	        }
 
             options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
                 reference = response;
@@ -153,13 +155,16 @@ exports.execute = function (options) {
         	})(f);
         });
 
-        afterAll(function() {
-        	files.forEach(function(f) {
-	        	var filePath = "test/specs/upload/files/" + f.name;
-	        	exec('rm ' + filePath);
+        if (!process.env.TRAVIS) {
+
+	        afterAll(function() {
+	        	files.forEach(function(f) {
+		        	var filePath = "test/specs/upload/files/" + f.name;
+		        	exec('rm ' + filePath);
+		        });
+		        done()
 	        });
-	        done()
-        })
+	    }
         
     });
 }

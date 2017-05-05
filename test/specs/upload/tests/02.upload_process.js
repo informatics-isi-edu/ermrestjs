@@ -42,12 +42,15 @@ exports.execute = function (options) {
             ermRest = options.ermRest;
 
 
-            files.forEach(function(f) {
-	        	var filePath = "test/specs/upload/files/" + f.name
+            if (!process.env.TRAVIS) {
 
-	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
-	        	f.file = new File(filePath);
-	        });
+	            files.forEach(function(f) {
+		        	var filePath = "test/specs/upload/files/" + f.name
+
+		        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
+		        	f.file = new File(filePath);
+		        });
+	        }
 
             options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
                 reference = response;
@@ -183,14 +186,19 @@ exports.execute = function (options) {
 
         	})(f);
         });
+
+		if (!process.env.TRAVIS) {
 	
-		afterAll(function(done) {
-        	files.forEach(function(f) {
-	        	var filePath = "test/specs/upload/files/" + f.name;
-	        	exec('rm ' + filePath);
+			afterAll(function(done) {
+	        	files.forEach(function(f) {
+		        	var filePath = "test/specs/upload/files/" + f.name;
+		        	exec('rm ' + filePath);
+		        });
+		        done();
 	        });
-	        done();
-        })
+
+		}
+
         
     });
 }
