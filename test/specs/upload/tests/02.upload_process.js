@@ -1,5 +1,5 @@
 exports.execute = function (options) {
-	var spawn = require('child_process').spawnSync;
+	var exec = require('child_process').execSync;
 
 	var  FileAPI = require('file-api'), File = FileAPI.File;
 	File.prototype.jsdom = true;
@@ -20,28 +20,19 @@ exports.execute = function (options) {
         var files = [{
         	name: "testfile50MB.pdf",
         	size: 52428800,
-        	displaySize: "50M",
-        	type: "application/pdf",
-        	md5Checksum: "25e317773f308e446cc84c503a6d1f85"
+        	displaySize: "50MB",
+        	type: "application/pdf"
         }, {
         	name: "testfile5MB.txt",
         	size: 5242880,
-        	displaySize: "5M",
-        	type: "text/plain",
-        	md5Checksum: "5f363e0e58a95f06cbe9bbc662c5dfb6"
+        	displaySize: "5MB",
+        	type: "text/plain"
         }, {
         	name: "testfile500kb.png",
         	size: 512000,
-        	displaySize: "500K",
-        	type: "image/png",
-        	md5Checksum: "816df6f64deba63b029ca19d880ee10a"
+        	displaySize: "500KB",
+        	type: "image/png"
         }];
-
-        files.forEach(function(f) {
-        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-        	spawn('mkfile', [f.displaySize, filePath]);
-        	f.file = new File(filePath);
-        });
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
             + schemaName + ":" + tableName;
@@ -49,6 +40,14 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             schema = options.catalog.schemas.get(schemaName);
             ermRest = options.ermRest;
+
+
+            files.forEach(function(f) {
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+
+	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
+	        	f.file = new File(filePath);
+	        });
 
             options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
                 reference = response;
@@ -106,8 +105,10 @@ exports.execute = function (options) {
 			        	uploadObj.calculateChecksum(validRow).then(function(url) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File generated url is not the same");
-			        		expect(uploadObj.hash.md5_hex).toBe(file.md5Checksum, "Calculated checksum is not same");
+			        		
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File generated url is not the same");
+
+
 							done();
 
 	                    }, function(e) {
@@ -152,7 +153,7 @@ exports.execute = function (options) {
 
 			        	uploadObj.start().then(function(url) {
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all uploading");
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File  url is not the same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
@@ -168,7 +169,7 @@ exports.execute = function (options) {
 			        it("should complete upload job and return final url", function(done) {
 
 			        	uploadObj.completeUpload().then(function(url) {
-			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File  url is not the same");
+			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
@@ -185,8 +186,8 @@ exports.execute = function (options) {
 	
 		afterAll(function(done) {
         	files.forEach(function(f) {
-	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-	        	spawn('rm', [filePath]);
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name;
+	        	exec('rm ' + filePath );
 	        });
 	        done();
         })

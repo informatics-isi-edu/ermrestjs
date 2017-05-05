@@ -15,26 +15,23 @@ exports.execute = function (options) {
             ermRest,
             reference;
 
-        var hatracUrl = options.url.replace("/ermrest", "");
+        var baseUrl = options.url.replace("/ermrest", "");
 
         var files = [{
         	name: "testfile50MB.pdf",
         	size: 52428800,
-        	displaySize: "50M",
-        	type: "application/pdf",
-        	md5Checksum: "25e317773f308e446cc84c503a6d1f85"
+        	displaySize: "50MB",
+        	type: "application/pdf"
         }, {
         	name: "testfile5MB.txt",
         	size: 5242880,
-        	displaySize: "5M",
-        	type: "text/plain",
-        	md5Checksum: "5f363e0e58a95f06cbe9bbc662c5dfb6"
+        	displaySize: "5MB",
+        	type: "text/plain"
         }, {
         	name: "testfile500kb.png",
         	size: 512000,
-        	displaySize: "500K",
-        	type: "image/png",
-        	md5Checksum: "816df6f64deba63b029ca19d880ee10a"
+        	displaySize: "500KB",
+        	type: "image/png"
         }];
 
 
@@ -45,25 +42,13 @@ exports.execute = function (options) {
             schema = options.catalog.schemas.get(schemaName);
             ermRest = options.ermRest;
 
+
             files.forEach(function(f) {
-	        	var filePath = __dirname + "/../files/" + f.name
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
 
-	        	try {
-	        		var op = exec("mkfile " + f.displaySize + " " + filePath);
-	    		} catch(e) {
-	    			console.dir(e);
-	    			done.fail();
-	    		}
-
-	        	console.log(filePath);
-
-	        	try {
-		        	f.file = new File(filePath);
-		        } catch(e) {
-		        	done.fail();
-		        }
+	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
+	        	f.file = new File(filePath);
 	        });
-
 
             options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
                 reference = response;
@@ -123,7 +108,7 @@ exports.execute = function (options) {
 
 			        it("should throw an error for `generateURL` method as one of the properties 'fk_id' is null in template `" + template + "`", function() {
 			        	// Set hash object for testing generateUrl
-		        		uploadObj.hash = { md5_hex: file.md5Checksum };
+		        		uploadObj.hash = { md5_hex: "md5" };
 
 		        		var fn = uploadObj.generateURL.bind(uploadObj, invalidRow);
 
@@ -133,10 +118,10 @@ exports.execute = function (options) {
 
 			        it("should return actual url for `generateURL` method as one of the properties 'fk_id' is not null in template `" + template + "`", function() {
 			        	// Set hash object for testing generateUrl
-		        		uploadObj.hash = { md5_hex: file.md5Checksum };
+		        		uploadObj.hash = { md5_hex: "md5" };
 
 			        	//Note: Property uri.md5_hex is generated at runtime so we are setting it expliticly to test the function
-			        	expect(uploadObj.generateURL(validRow)).toBe(hatracUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum);
+			        	expect(uploadObj.generateURL(validRow)).toBe(baseUrl + "/hatrac/ermrestjstest/800001/md5");
 			        });
 
 
@@ -149,9 +134,7 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(hatracUrl + "/hatrac/ermrestjstest/800001/" + file.md5Checksum, "File generated url is not the same");
-			        		
-			        		expect(uploadObj.hash.md5_hex).toBe(file.md5Checksum, "Calculated checksum is not same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File generated url is not the same");
 
 			        		done();
 
@@ -172,9 +155,10 @@ exports.execute = function (options) {
 
         afterAll(function() {
         	files.forEach(function(f) {
-	        	var filePath = __dirname + "/../files/" + f.name
+	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name;
 	        	exec('rm ' + filePath );
 	        });
+	        done()
         })
         
     });
