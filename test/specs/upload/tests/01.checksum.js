@@ -42,11 +42,11 @@ exports.execute = function (options) {
 
         	var op = spawn('mkfile', [f.displaySize, filePath]);
         	
-        	console.dir(op.error);
+        	console.dir(op);
         	
         	console.log(filePath);
 
-        	f.file = new File(filePath);
+        	//f.file = new File(filePath);
         });
 
 
