@@ -1,5 +1,5 @@
 exports.execute = function (options) {
-	var spawn = require('child_process').spawnSync;
+	var exec = require('child_process').execSync;
 
 	var  FileAPI = require('file-api'), File = FileAPI.File;
 	File.prototype.jsdom = true;
@@ -46,11 +46,15 @@ exports.execute = function (options) {
             ermRest = options.ermRest;
 
             files.forEach(function(f) {
-	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
+	        	var filePath = __dirname + "/../files/" + f.name
 
-	        	var op = spawn('mkfile', [f.displaySize, filePath]);
-	    		
-	    		console.dir(op);
+	        	try {
+	        		var op = exec("mkfile " + f.displaySize + " " + filePath);
+	    		} catch(e) {
+	    			console.dir(e);
+	    			done.fail();
+	    		}
+
 	        	console.log(filePath);
 
 	        	try {
@@ -168,8 +172,8 @@ exports.execute = function (options) {
 
         afterAll(function() {
         	files.forEach(function(f) {
-	        	var filePath = process.env.PWD + "/test/specs/upload/files/" + f.name
-	        	spawn('rm', [filePath]);
+	        	var filePath = __dirname + "/../files/" + f.name
+	        	exec('rm ' + filePath );
 	        });
         })
         
