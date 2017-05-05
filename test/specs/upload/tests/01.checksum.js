@@ -42,12 +42,10 @@ exports.execute = function (options) {
             schema = options.catalog.schemas.get(schemaName);
             ermRest = options.ermRest;
 
-
             files.forEach(function(f) {
 	        	var filePath = "test/specs/upload/files/" + f.name
 
-	        	exec('perl -e \'print "\1" x ' + f.size + '\' > ' + filePath);
-
+	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
 	        	f.file = new File(filePath);
 	        });
 
@@ -154,14 +152,13 @@ exports.execute = function (options) {
         	})(f);
         });
 
-
         afterAll(function() {
         	files.forEach(function(f) {
 	        	var filePath = "test/specs/upload/files/" + f.name;
 	        	exec('rm ' + filePath);
 	        });
 	        done()
-        });
+        })
         
     });
 }

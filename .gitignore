@@ -63,4 +63,3 @@ bower_components
 node_modules
 dist
 test/support/*.spec.js
-test/specs/upload/files/*.*
