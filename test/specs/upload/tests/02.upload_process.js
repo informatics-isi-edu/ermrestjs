@@ -45,7 +45,8 @@ exports.execute = function (options) {
             files.forEach(function(f) {
 	        	var filePath = "test/specs/upload/files/" + f.name
 
-	        	exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
+	        	exec("perl -e 'print \"\1\" x " + f.size + "' > " + filePath);
+	        	
 	        	f.file = new File(filePath);
 	        });
 
