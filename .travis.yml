@@ -50,6 +50,19 @@ before_install:
   - sudo make deploy PLATFORM=ubuntu1204
   - sudo service apache2 restart
   - cd ..
+  - git clone https://github.com/informatics-isi-edu/hatrac.git
+  - cd hatrac
+  - sudo python ./setup.py install
+  - sudo useradd -m -r hatrac
+  - sudo -H -u postgres createuser -d hatrac
+  - sudo -H -u postgres psql -c "GRANT webauthn TO hatrac"
+  - sudo -H -u hatrac createdb hatrac
+  - sudo cp test/hatrac_config.json ~hatrac/
+  - sudo -H -u hatrac hatrac-deploy admin
+  - sudo cp test/wsgi_hatrac_travis.conf /etc/apache2/conf.d/
+  - sudo mkdir /var/www/hatrac
+  - sudo chown hatrac /var/www/hatrac
+  - cd ..
   - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   - sudo apt-get install -y nodejs
   - git clone https://github.com/informatics-isi-edu/ErmrestDataUtils.git
