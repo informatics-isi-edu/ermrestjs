@@ -154,7 +154,7 @@ exports.execute = function (options) {
         	})(f);
         });
 
-        afterAll(function() {
+        afterAll(function(done) {
         	files.forEach(function(f) {
 	        	var filePath = "test/specs/upload/files/" + f.name;
 	        	exec('rm ' + filePath);
