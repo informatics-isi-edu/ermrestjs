@@ -137,6 +137,10 @@ exports.execute = function (options) {
 			        		
 			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File generated url is not the same");
 
+			        		expect(validRow.filename).toBe(file.name);
+			        		expect(validRow.bytes).toBe(file.size);
+			        		expect(validRow.checksum).toBe(uploadObj.hash.md5_hex);
+			        		
 			        		done();
 
 	                    }, function(e) {
