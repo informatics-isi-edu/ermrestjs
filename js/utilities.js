@@ -1272,13 +1272,13 @@ var ERMrest = (function(module) {
             });
         }
 
-        var conditionalRegex = /\{\{(#|\^)([\w\d-]+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
-        if (!conditionalRegex.exec(template)) {
+        if (!options.avoidValidation && !conditionalRegex.exec(template)) {
 
-            // Grab all placeholders ({{PROP_NAME}}) in the template
-            var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
+                // Grab all placeholders ({{PROP_NAME}}) in the template
+            var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
 
             // If there are any placeholders
             if (placeholders && placeholders.length) {
@@ -1295,6 +1295,8 @@ var ERMrest = (function(module) {
 
                     // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
+
+                    if (key[0] == "{") key = key.substring(1, key.length -1);
 
                     // If value for the key is null or undefined then return null
                     if (obj[key] === null || obj[key] === undefined) {

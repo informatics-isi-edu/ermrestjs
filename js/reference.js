@@ -1243,7 +1243,7 @@ var ERMrest = (function(module) {
                             continue;
                         }
 
-                        if (column.isPseudo) {
+                        if (column.isPseudo && !column.isAsset) {
                             var keyColumns = [];
 
                             if (column.isKey) {

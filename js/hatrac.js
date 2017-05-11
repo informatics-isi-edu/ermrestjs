@@ -250,18 +250,18 @@ var ERMrest = (function(module) {
             ignoredColumns.push("md5_base64");
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
-            ignoredColumns.push(this.column.name + ".md5_checksum");
+            ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
 
-            var conditionalRegex = /\{\{(#|\^)([\w\d-]+)\}\}/;
+            var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
 
             // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
             if (!conditionalRegex.exec(template)) {
 
                 // Grab all placeholders ({{PROP_NAME}}) in the template
-                var placeholders = template.match(/\{\{([\w\d-]+)\}\}/ig);
+                var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
 
                 // If there are any placeholders
                 if (placeholders && placeholders.length) {
@@ -278,8 +278,10 @@ var ERMrest = (function(module) {
                         // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
                         var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
+                        if (key[0] == "{") key = key.substring(1, key.length -1);
+
                         // If key is not in ingored columns value for the key is null or undefined then return null
-                        if ((ignoredColumns.indexOf(key) == -1) && row[key] === null || row[key] === undefined) {
+                        if ((ignoredColumns.indexOf(key) == -1) && (row[key] === null || row[key] === undefined)) {
                            return false;
                         }
                     }
@@ -319,7 +321,7 @@ var ERMrest = (function(module) {
         row.escape = module._escapeForTemplate;
 
         // Generate url
-        var url = module._renderTemplate(template, row);
+        var url = module._renderTemplate(template, row, { avoidValidation: true });
 
         // If the template is null then throw an error
         if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
@@ -333,7 +335,7 @@ var ERMrest = (function(module) {
             this.chunkUrl = false;
 
             // To make the filesExists call again
-            this.fileExistsFlag = true;
+            this.fileExistsFlag = false;
 
             // To restart upload of all chunks
             this.completed = false;
@@ -432,22 +434,15 @@ var ERMrest = (function(module) {
         
         var deferred = module._q.defer();
 
-        if (typeof this.fileExistsFlag == 'boolean') {
-            deferred.resolve(this.url);
-            return deferred.promise;
-        }
-
         this.http.head(this.url).then(function(response) {
-            self.fileExistsFlag = true;
-
+        
             var headers = response.headers();
             var md5 = headers["content-md5"];
             var length = headers["content-length"];
             var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
 
-            // If the md5, length ot filename are not same then simply resolve the promise without setting completed and jobDone
+            // If the md5, length of filename are not same then simply resolve the promise without setting completed and jobDone
             if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                self.fileExistsFlag = false;
                 deferred.resolve(self.url);  
                 return;
             }
@@ -456,8 +451,6 @@ var ERMrest = (function(module) {
             self.jobDone = true;
             deferred.resolve(self.url);
         }, function(response) {
-
-            self.fileExistsFlag = false;
 
             if (response.status == 404 || response.status == 409) {
               deferred.resolve(self.url);  
@@ -523,7 +516,6 @@ var ERMrest = (function(module) {
             this.updateProgressBar();
             return;
         } else if (chunk.xhr && !chunk.completed) {
-            if (chunk.xhr) chunk.xhr.abort();
             chunk.xhr = null;
             chunk.progress = 0;
         }
@@ -574,12 +566,12 @@ var ERMrest = (function(module) {
         for (var i = 0; i < this.chunks.length; i++) {
             done = done + this.chunks[i].progress;
         }
-       
-        this.uploadPromise.notify(done, this.file.size);
+
+        if (this.uploadPromise) this.uploadPromise.notify(done, this.file.size);
 
         if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
             this.completed = true;
-            this.uploadPromise.resolve(this.url);
+            if (this.uploadPromise) this.uploadPromise.resolve(this.url);
         }
     };
 
@@ -595,7 +587,6 @@ var ERMrest = (function(module) {
 
         this.isPaused = true;
         this.chunks.forEach(function(chunk) {
-            if (chunk.xhr) chunk.xhr.abort();
             chunk.xhr = null;
             if (!chunk.completed) chunk.progress = 0;
         });
@@ -653,7 +644,6 @@ var ERMrest = (function(module) {
         // Set the xhr to null, progress to 0 for all cases
         this.chunks.forEach(function(chunk) {
             if (!chunk.completed) {
-                if (chunk.xhr) chunk.xhr.abort();
                 chunk.completed = false;
             }
             chunk.xhr = null;
