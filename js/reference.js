@@ -2832,7 +2832,27 @@ var ERMrest = (function(module) {
                 return null;
             }
 
-        }
+        },
+
+        /**
+         * @desc
+         * This function takes the current Tuple (this) and creates a shallow copy of it while de-referencing
+         * the _data attribute. This way _data can be modified in chaise without changing the originating Tuple
+         * @returns {ERMrest.Tuple} a shallow copy of _this_ tuple with it's _data de-referenced
+         */
+         deepCopyData: function() {
+             var newTuple = Object.create(Tuple.prototype);
+             module._clone(newTuple, this);
+             newTuple._data = {};
+
+             //change _data though
+             var keys = Object.keys(this._data);
+             for (var i = 0; i < keys.length; i++) {
+                 newTuple._data[keys[i]] = this._data[keys[i]];
+             }
+
+             return newTuple;
+         }
 
 
     };
