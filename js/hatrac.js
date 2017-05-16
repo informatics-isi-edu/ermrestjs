@@ -177,7 +177,7 @@ var ERMrest = (function(module) {
 
     var upload = function (file, otherInfo) {
         
-        this.PART_SIZE = otherInfo.chunkSize || 50 * 1024 * 1024; //minimum part size defined by hatrac 50MB
+        this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
         
         this.file = file;
         
@@ -358,7 +358,7 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.hash && (this.hash.md5_base64 || this.hash.sha256)) {
-            self.generateURL(row);
+            this.generateURL(row);
             deferred.notify(this.file.size);
             deferred.resolve(this.url);
             return deferred.promise;
@@ -697,7 +697,7 @@ var ERMrest = (function(module) {
     Chunk.prototype.sendToHatrac = function(upload) {
 
         if (this.xhr || this.completed) {
-            self.progress = this.size;
+            this.progress = this.size;
             upload.updateProgressBar();
             return;
         }
