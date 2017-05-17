@@ -331,6 +331,10 @@ var ERMrest = (function(module) {
 
         // If new url has changed then there set all other flags to false to recompute them
         if (this.url !== url) {
+
+            // Cancel existing upload job which is in progress if chunkUrl is not null
+            this.cancelUploadJob();
+
             // To regenerate upload job url
             this.chunkUrl = false;
 
@@ -382,7 +386,7 @@ var ERMrest = (function(module) {
     };
 
 
-    /** private 
+    /** Public 
      * Call this function to create multipart upload job request to hatrac
      * It will generate a chunkupload identifier by calling ermrest and set it in the chunkUrl
      */
@@ -392,32 +396,116 @@ var ERMrest = (function(module) {
         
         var deferred = module._q.defer();
 
-        if (this.chunkUrl) {
-            deferred.resolve(this.chunkUrl);
-            return deferred.promise;
-        }
 
-        var url = this.url + ";upload?parents=true";
-            
-        var data = {
-            "chunk-length" : this.PART_SIZE,
-            "content-length": this.file.size,
-            "content-type": this.file.type,
-            "content-md5": this.hash.md5_base64,
-            "content-disposition": "filename*=UTF-8''" + this.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
-        };
-       
-        var config = {
-            headers: { 'content-type' : 'application/json' }
-        };
+        //
+        this.getExistingJobsForObject().then(function(exists) {
 
-        this.http.post(url, data, config).then(function(response) {
-            self.chunkUrl = self.getAbsoluteUrl(response.headers('location')); 
-            deferred.resolve(self.chunkUrl);
+            if (exists) {
+                deferred.resolve(self.chunkUrl);
+            }  else {
+
+                var url = self.url + ";upload?parents=true";
+                
+                var data = {
+                    "chunk-length" : self.PART_SIZE,
+                    "content-length": self.file.size,
+                    "content-type": self.file.type,
+                    "content-md5": self.hash.md5_base64,
+                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
+                };
+               
+                var config = {
+                    headers: { 'content-type' : 'application/json' }
+                };
+
+                return self.http.post(url, data, config);
+            }
+
+        }).then(function(response) {
+            if (response) {
+                self.chunkUrl = self.getAbsoluteUrl(response.headers('location')); 
+                deferred.resolve(self.chunkUrl);
+            }
         }, function(response) {
             var error = module._responseToError(response);
             deferred.reject(error);
         });
+
+        return deferred.promise;
+    };
+
+
+    /*
+     * Private
+     * This function first makes call to hatrac upload job listing service to get all the upload jobs for a url
+     * If it finds any then, it picks the first one and makes a call to hatrac for its status
+     * If the content-md5 is the same as we calculated then we resolved with true
+     * else we resolve the promise with  false
+     */
+    upload.prototype.getExistingJobsForObject = function() {
+
+        var deferred = module._q.defer();
+
+        var self = this;
+
+        // get listing of all upload jobs for this object
+        this.http.get(this.url + ";upload").then(function(response) {
+
+            // If upload jobs found then check for its status
+            // Else resolve the promise with no response
+            if (response.data.length > 0) {
+                self.chunkUrl = self.getAbsoluteUrl("/hatrac" + response.data[0]);
+                return self.getExistingJobStatus();
+            } else {
+                deferred.resolve(false);
+            }
+            
+        }).then(function(response) {
+            // if the md5 of the url is same as the once that we calculated then
+            // resolve the promise with the true
+            // else resolve it with false
+            if (response && response.data["content-md5"] == self.hash.md5_base64) {
+                deferred.resolve(true);
+            } else {
+                deferred.resolve(false);
+            }
+        }, function(response) {
+
+            // If no uploadjobs found then resolve with no response
+            // else reject the promise
+            if (response.status == "404") {
+                deferred.resolve();
+            } else {
+                deferred.reject(response);
+            }
+
+        });
+        return deferred.promise;
+    };
+
+    /*
+     * Private
+     * This function fetches the upload job status if chunkurl is not null
+     * It returns a promise
+     */
+    upload.prototype.getExistingJobStatus = function() {
+
+        var deferred = module._q.defer();
+
+
+        // If chunkUrl is not null then fetch  the status of the uploadJob
+        // and resolve promise with it.
+        // else just resolved it without any response
+        if (this.chunkUrl) {
+            this.http.get(this.chunkUrl).then(function(response) {
+                deferred.resolve(response);
+            }, function(response) {
+                deferred.reject(response);
+            });
+        } else {
+            deferred.resolve();
+        }
+
 
         return deferred.promise;
     };
@@ -447,6 +535,7 @@ var ERMrest = (function(module) {
                 return;
             }
 
+            self.isPaused = false;
             self.completed = true;
             self.jobDone = true;
             deferred.resolve(self.url);
@@ -466,7 +555,7 @@ var ERMrest = (function(module) {
      * Call this function to start multipart upload to server
      *
      */
-    upload.prototype.start = function(isResume) {
+    upload.prototype.start = function() {
         var self = this;
 
         this.erred = false;
@@ -476,14 +565,19 @@ var ERMrest = (function(module) {
         this.uploadPromise = deferred;
 
         if (this.completed) {
-            this.updateProgressBar();
-            deferred.resolve(this.url);
+
+            deferred.notify(this.file.size);
+
+            setTimeout(function() {
+                deferred.resolve(self.url);
+            }, 10);
+            
             return deferred.promise;
         }
 
-        // If isResume is not true, then create chunks and start uploading
+        // If isPaused is not true, or chunks length is 0 then create chunks and start uploading
         // else directly start uploading the chunks
-        if (!isResume) {
+        if (!this.isPaused || this.chunks.length === 0) {
             var start = 0;
             var blob;
             var index = 0;
@@ -496,6 +590,7 @@ var ERMrest = (function(module) {
             }
         }
  
+        this.isPaused = false;
         var part = 0;
         this.chunks.forEach(function(chunk) {
             chunk.retryCount = 0;
@@ -512,10 +607,7 @@ var ERMrest = (function(module) {
      */
     upload.prototype.uploadPart = function(chunk) {
 
-        if (chunk.completed) {
-            this.updateProgressBar();
-            return;
-        } else if (chunk.xhr && !chunk.completed) {
+        if (chunk.xhr && !chunk.completed) {
             chunk.xhr = null;
             chunk.progress = 0;
         }
@@ -567,7 +659,7 @@ var ERMrest = (function(module) {
             done = done + this.chunks[i].progress;
         }
 
-        if (this.uploadPromise) this.uploadPromise.notify(done, this.file.size);
+        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : done, this.file.size);
 
         if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
             this.completed = true;
@@ -583,7 +675,7 @@ var ERMrest = (function(module) {
      */
     upload.prototype.pause = function() {
 
-        if(this.completed || this.isPaused) return;
+        if (this.completed || this.isPaused) return;
 
         this.isPaused = true;
         this.chunks.forEach(function(chunk) {
@@ -600,11 +692,10 @@ var ERMrest = (function(module) {
     upload.prototype.resume = function() {
         if (!this.isPaused) return;
 
-        this.isPaused = false;
         this.erred = false;
 
         // code to handle reupload
-        this.start(true);
+        this.start();
     };
 
     /**
@@ -635,17 +726,13 @@ var ERMrest = (function(module) {
 
         // Set isPaused, completed and jobDone to false
         var self = this;
+
         this.isPaused = true;
-        this.completed = false;
-        this.jobDone = false;
 
         // Iterate over each chunk to abort the HTTP call
         // Abort only if the chunk is not completed and has an xhr in progress and set completed to false for chunk
         // Set the xhr to null, progress to 0 for all cases
         this.chunks.forEach(function(chunk) {
-            if (!chunk.completed) {
-                chunk.completed = false;
-            }
             chunk.xhr = null;
             chunk.progress = 0;
         });
@@ -653,20 +740,28 @@ var ERMrest = (function(module) {
         // To zero the update of a file progress bar
         this.updateProgressBar();
 
-        /*
-         * Code to cancel upload job
-         * We resolve the promise successfully even thought the delete fails
-         * because it won't affect the upload
-         * Setting chunkUrl null marks that when we reupload this file, we should create a new job
-         */
-        if (this.chunkUrl) {
-            this.http.delete(this.chunkUrl).then(function() {
-                deferred.resolve();
-            }, function(err) {
-                deferred.resolve();
-            });
+        return deferred.promise;
+    };
 
-            this.chunkUrl = null;
+    /*
+     * Code to cancel upload job
+     * We resolve the promise successfully even though the delete fails
+     * because it won't affect the upload
+     * Setting chunkUrl null marks that when we reupload this file, we should create a new job
+     */
+    upload.prototype.cancelUploadJob = function(url) {
+
+        var deferred = module._q.defer();
+
+        if (this.chunkUrl) {
+                this.http.delete(this.chunkUrl).then(function() {
+                    deferred.resolve();
+                }, function(err) {
+                    deferred.resolve();
+                });
+
+        } else  {
+            deferred.resolve();
         }
 
         return deferred.promise;
@@ -675,7 +770,7 @@ var ERMrest = (function(module) {
     upload.prototype.onUploadError = function(response) {
         if (this.erred) return;
         this.erred = true;
-        this.promise.reject(module._responseToError(response));
+        this.uploadPromise.reject(module._responseToError(response));
     };
 
     module.Upload = upload;

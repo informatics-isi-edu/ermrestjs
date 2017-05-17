@@ -107,15 +107,6 @@ exports.execute = function (options) {
 			        	expect(uploadObj.validateURL(validRow)).toBe(true);
 			        });
 
-			        it("should throw an error for `generateURL` method as one of the properties 'fk_id' is null in template `" + template + "`", function() {
-			        	// Set hash object for testing generateUrl
-		        		uploadObj.hash = { md5_hex: "md5" };
-
-		        		var fn = uploadObj.generateURL.bind(uploadObj, invalidRow);
-
-			        	//Note: Property uri.md5_hex is generated at runtime so we are setting it expliticly to test the function
-			        	expect(fn).toThrow("Some column values are null in the template " + template);
-			        });
 
 			        it("should return actual url for `generateURL` method as one of the properties 'fk_id' is not null in template `" + template + "`", function() {
 			        	// Set hash object for testing generateUrl

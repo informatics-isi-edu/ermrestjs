@@ -525,6 +525,8 @@ var ERMrest = (function(module) {
     module._responseToError = function (response) {
         var status = response.status || response.statusCode;
         switch(status) {
+            case -1:
+                return new module.NoConnectionError("No Internet Connection available");
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:

@@ -73,9 +73,11 @@ exports.execute = function (options) {
 
         		describe("For file " + file.name + "," , function() {
 
+        			var fk_id = (new Date()).getTime();
+
 	        		var uploadObj, 
 	        			invalidRow = { fk_id: null, uri : { md5_hex: "wfqewf4234" } }, 
-	     				validRow = { fk_id: "800001", uri : { md5_hex: "wfqewf4234" } };
+	     				validRow = { fk_id: fk_id, uri : { md5_hex: "wfqewf4234" } };
 
 		        	it("should create an upload object", function(done) {
 
@@ -107,7 +109,7 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File generated url is not the same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/" + fk_id + "/" + uploadObj.hash.md5_hex, "File generated url is not the same");
 
 			        		expect(validRow.filename).toBe(file.name);
 			        		expect(validRow.bytes).toBe(file.size);
@@ -157,7 +159,7 @@ exports.execute = function (options) {
 
 			        	uploadObj.start().then(function(url) {
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all uploading");
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File  url is not the same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/" + fk_id + "/" + uploadObj.hash.md5_hex, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
@@ -173,7 +175,7 @@ exports.execute = function (options) {
 			        it("should complete upload job and return final url", function(done) {
 
 			        	uploadObj.completeUpload().then(function(url) {
-			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File  url is not the same");
+			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/" + fk_id +"/" + uploadObj.hash.md5_hex, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);

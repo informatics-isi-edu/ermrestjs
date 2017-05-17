@@ -28,6 +28,7 @@ var ERMrest = (function(module) {
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
+    module.NoConnectionError = NoConnectionError;
 
     /**
      * @memberof ERMrest
@@ -213,6 +214,20 @@ var ERMrest = (function(module) {
 
     MalformedURIError.prototype = Object.create(Error.prototype);
     MalformedURIError.prototype.constructor = MalformedURIError;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc A no internert was passed to the API.
+     */
+    function NoConnectionError(message) {
+        this.message = message;
+    }
+
+    NoConnectionError.prototype = Object.create(Error.prototype);
+    NoConnectionError.prototype.constructor = NoConnectionError;
+
 
     return module;
 
