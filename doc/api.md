@@ -276,7 +276,7 @@ to use for ERMrest JavaScript agents.
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : <code>[Reference](#ERMrest.Reference)</code>
-        * [.shallowCopy()](#ERMrest.Tuple+shallowCopy)
+        * [.copy()](#ERMrest.Tuple+copy) ⇒ <code>[Tuple](#ERMrest.Tuple)</code>
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
         * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
@@ -2532,7 +2532,7 @@ if (content) {
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : <code>[Reference](#ERMrest.Reference)</code>
-    * [.shallowCopy()](#ERMrest.Tuple+shallowCopy)
+    * [.copy()](#ERMrest.Tuple+copy) ⇒ <code>[Tuple](#ERMrest.Tuple)</code>
 
 <a name="new_ERMrest.Tuple_new"></a>
 
@@ -2701,10 +2701,14 @@ With origFKRData = {"k1": "1"} this function will return a reference
 to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
 
 **Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
-<a name="ERMrest.Tuple+shallowCopy"></a>
+<a name="ERMrest.Tuple+copy"></a>
 
-#### tuple.shallowCopy()
+#### tuple.copy() ⇒ <code>[Tuple](#ERMrest.Tuple)</code>
+This function takes the current Tuple (this) and creates a shallow copy of it while de-referencing
+the _data attribute. This way _data can be modified in chaise without changing the originating Tuple
+
 **Kind**: instance method of <code>[Tuple](#ERMrest.Tuple)</code>  
+**Returns**: <code>[Tuple](#ERMrest.Tuple)</code> - a shallow copy of _this_ tuple with it's _data de-referenced  
 <a name="ERMrest.ReferenceColumn"></a>
 
 ### ERMrest.ReferenceColumn

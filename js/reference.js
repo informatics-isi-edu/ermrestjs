@@ -1824,7 +1824,7 @@ var ERMrest = (function(module) {
     function _referenceCopy(source) {
         var referenceCopy = Object.create(Reference.prototype);
         // referenceCopy must be defined before _clone can copy values from source to referenceCopy
-        module._clone(referenceCopy, source);
+        module._shallowCopy(referenceCopy, source);
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
@@ -2840,9 +2840,9 @@ var ERMrest = (function(module) {
          * the _data attribute. This way _data can be modified in chaise without changing the originating Tuple
          * @returns {ERMrest.Tuple} a shallow copy of _this_ tuple with it's _data de-referenced
          */
-         deepCopyData: function() {
+         copy: function() {
              var newTuple = Object.create(Tuple.prototype);
-             module._clone(newTuple, this);
+             module._shallowCopy(newTuple, this);
              newTuple._data = {};
 
              //change _data though
