@@ -77,7 +77,7 @@ exports.execute = function (options) {
 
             it("should return error if reference is not contextualized for create.", function(done) {
                 var rows = [{ id: 9999, name: "Paula", value: 5 }];
-                
+
                 reference.create(rows).then(function(response) {
                     throw new Error("Did not return any errors");
                 }).catch(function (err) {
@@ -261,6 +261,24 @@ exports.execute = function (options) {
 
             it('tuples should have methods properly defined.', function() {
                 expect(tuple.values).toBeDefined();
+            });
+
+            it('tuple.copy should create a shallow copy of the tuple except for the data.', function() {
+                var key;
+                var newTuple = tuple.copy();
+
+                // The original and new Tuple should not be the same object, neither should the _data
+                expect(newTuple).not.toBe(tuple);
+                expect(newTuple._data).not.toBe(tuple._data);
+                var keys = Object.keys(tuple._data);
+                for (var i = 0; i < keys.length; i++) {
+                    key = keys[i];
+                    expect(newTuple._data[key]).toBe(tuple._data[key]);
+                }
+
+                // All other objects of tuple should be the same object
+                // newTuple should have references to the original objects in tuple
+                expect(newTuple._pageRef).toBe(tuple._pageRef);
             });
 
             it('values should return only the values of the tuple.', function() {
