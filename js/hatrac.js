@@ -532,7 +532,7 @@ var ERMrest = (function(module) {
                 }
 
             } else {
-                self.chunkUrl = false
+                self.chunkUrl = false;
                 deferred.resolve(false);
             }
             
