@@ -47,7 +47,7 @@ var ERMrest = (function(module) {
 
         _copy: function() { // shallow copy
             var dp = Object.create(DataPath.prototype);
-            module._clone(dp, this);
+            module._shallowCopy(dp, this);
             dp.entity._bind(dp);
             return dp;
         },

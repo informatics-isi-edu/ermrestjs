@@ -90,7 +90,7 @@ var ERMrest = (function(module) {
      * @desc
      * This private utility function does a shallow copy between objects.
      */
-    module._clone = function (copyTo, copyFrom) {
+    module._shallowCopy = function (copyTo, copyFrom) {
         for (var key in copyFrom) {
             // only copy those properties that were set in the object, this
             // will skip properties from the source object's prototype
