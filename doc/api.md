@@ -19,6 +19,9 @@ to use for ERMrest JavaScript agents.</p>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
 <dd><p>set callback function that converts app tag to app URL</p>
 </dd>
+<dt><a href="#onError">onError</a> ⇒ <code>Promise</code></dt>
+<dd><p>Calculates  MD5 checksum for a file using spark-md5 library</p>
+</dd>
 </dl>
 
 <a name="ERMrest"></a>
@@ -223,6 +226,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
+    * [.NoConnectionError](#ERMrest.NoConnectionError)
+        * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -308,6 +313,15 @@ to use for ERMrest JavaScript agents.
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+    * [.Checksum](#ERMrest.Checksum)
+        * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
+    * [.upload](#ERMrest.upload)
+        * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
+        * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+        * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+        * [.pause()](#ERMrest.upload+pause)
+        * [.resume()](#ERMrest.upload+resume)
+        * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -1888,6 +1902,20 @@ A malformed URI was passed to the API.
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 
+<a name="ERMrest.NoConnectionError"></a>
+
+### ERMrest.NoConnectionError
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.NoConnectionError_new"></a>
+
+#### new NoConnectionError(message)
+A no internert was passed to the API.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
 <a name="ERMrest.ParsedFilter"></a>
 
 ### ERMrest.ParsedFilter
@@ -2991,6 +3019,92 @@ indicates this represents is a PseudoColumn or a Column.
 Indicates that this ReferenceColumn is an asset.
 
 **Kind**: instance property of <code>[AssetPseudoColumn](#ERMrest.AssetPseudoColumn)</code>  
+<a name="ERMrest.Checksum"></a>
+
+### ERMrest.Checksum
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+<a name="new_ERMrest.Checksum_new"></a>
+
+#### new Checksum({file}, {options})
+
+| Param | Type | Description |
+| --- | --- | --- |
+| {file} | <code>Object</code> | A browser file object |
+| {options} | <code>Object</code> | An optional parameters object. The (key, value) |
+
+<a name="ERMrest.upload"></a>
+
+### ERMrest.upload
+**Kind**: static class of <code>[ERMrest](#ERMrest)</code>  
+
+* [.upload](#ERMrest.upload)
+    * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
+    * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+    * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+    * [.pause()](#ERMrest.upload+pause)
+    * [.resume()](#ERMrest.upload+resume)
+    * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
+
+<a name="new_ERMrest.upload_new"></a>
+
+#### new upload(file, {otherInfo})
+upload Object
+Create a new instance with new upload(file, otherInfo)
+To validate url generation for a file call validateUrl(row) with row of data
+To calculate checksum call calculateChecksum(row) with row of data
+To create an upload call createUploadJob()
+To check for existing file call fileExists()
+To start uploading, call start()
+To complete upload job call completeUploadJob()
+You can pause with pause()
+Resume with resume()
+Cancel with cancel()
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| file | <code>Object</code> | A browser file object |
+| {otherInfo} | <code>type</code> | A set of options 1. chunkSize - Default is 5MB 2. column - [Column](#ERMrest.Column) object is mandatory 3. reference - [Reference](#ERMrest.Reference) object  is mandatory |
+
+<a name="ERMrest.upload+fileExists"></a>
+
+#### upload.fileExists() ⇒ <code>Promise</code>
+Call this function to determine file exists on the server
+If it doesn't then resolve the promise with url.
+If it does then set isPaused, completed and jobDone to true
+
+**Kind**: instance method of <code>[upload](#ERMrest.upload)</code>  
+<a name="ERMrest.upload+start"></a>
+
+#### upload.start() ⇒ <code>Promise</code>
+Call this function to start chunked upload to server. It reads the file and divides in into chunks
+If the completed flag is true, then this means that all chunks were already uploaded, thus it will resolve the promize with url
+else it will start uploading the chunks. If the job was paused then resume by uploading just those chunks which were not completed.
+
+**Kind**: instance method of <code>[upload](#ERMrest.upload)</code>  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we uploaded the file
+or rejected with error if unable to upload any chunk
+and notified with a progress handler, sending number in bytes uploaded uptil now  
+<a name="ERMrest.upload+pause"></a>
+
+#### upload.pause()
+Pause the upload
+Remember, the current progressing part will fail,
+that part will start from beginning (< 5MB of upload is wasted)
+
+**Kind**: instance method of <code>[upload](#ERMrest.upload)</code>  
+<a name="ERMrest.upload+resume"></a>
+
+#### upload.resume()
+Resumes the upload
+
+**Kind**: instance method of <code>[upload](#ERMrest.upload)</code>  
+<a name="ERMrest.upload+cancel"></a>
+
+#### upload.cancel() ⇒ <code>Promise</code>
+Aborts/cancels the upload
+
+**Kind**: instance method of <code>[upload](#ERMrest.upload)</code>  
 <a name="ERMrest.Datapath"></a>
 
 ### ERMrest.Datapath : <code>object</code>
@@ -3465,4 +3579,19 @@ set callback function that converts app tag to app URL
 | Param | Type | Description |
 | --- | --- | --- |
 | fn | <code>[appLinkFn](#appLinkFn)</code> | callback function |
+
+<a name="onError"></a>
+
+## onError ⇒ <code>Promise</code>
+Calculates  MD5 checksum for a file using spark-md5 library
+
+**Kind**: global typedef  
+**Returns**: <code>Promise</code> - if the schema exists or not  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| chunkSize | <code>number</code> | size of the chunks, in which the file is supposed to be broken |
+| fn | <code>onProgress</code> | callback function to be called for progress |
+| fn | <code>onSuccess</code> | callback function to be called for success |
+| fn | <code>[onError](#onError)</code> | callback function to be called for error |
 
