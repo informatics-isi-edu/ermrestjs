@@ -240,6 +240,11 @@ var ERMrest = (function (module) {
                                     //throw new Error("httpUnauthorizedFn Event Handler not registered");
                                     deferred.reject(response);
                                 }
+                            } else {
+                                 // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
+                                module._onHttpAuthFlowFn().then(function() {
+                                    asyncfn();
+                                });
                             }
 
                         } else {

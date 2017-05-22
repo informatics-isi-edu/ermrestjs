@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "upload",   
+        "createNew": true,  
+        "path": "test/specs/upload/conf/upload/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/upload/conf/upload/data"
+    }
+}
