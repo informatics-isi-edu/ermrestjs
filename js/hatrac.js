@@ -113,9 +113,9 @@ var ERMrest = (function(module) {
 
 
         // If checksum is already calculated then don't calculate it again
-        if (this.checksum) {
-            onProgress(this.file.size, this.file.size);
-            onSuccess(this.checksum, this);
+        if (this.md5_hex) {
+            onProgress(this.file.size);
+            onSuccess(this);
             return;
         }
 
@@ -143,7 +143,7 @@ var ERMrest = (function(module) {
                 self.md5_hex = spark.end();
                 self.md5_base64 = hexToBase64(self.md5_hex);
                 //console.log("\nFinished loading :)\n\nComputed hash: "  + self.md5_base64 + "\n!");
-                onSuccess(self.checksum, self);
+                onSuccess(self);
             }
         };
 
@@ -280,7 +280,7 @@ var ERMrest = (function(module) {
             if (this.column.md5 && typeof this.column.md5 === "object") ignoredColumns.push(this.column.md5.name);
             if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name); 
 
-            ignoredColumns.push("md5_checksum");
+            ignoredColumns.push("md5_hex");
             ignoredColumns.push("md5_base64");
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
@@ -417,7 +417,7 @@ var ERMrest = (function(module) {
         var self = this;
         this.hash.calculate(this.PART_SIZE, function(uploaded, fileSize) {
             deferred.notify(uploaded);
-        }, function(checksum) {
+        }, function() {
             self.generateURL(row);
             deferred.resolve(self.url);
         }, function(err) {
@@ -826,6 +826,8 @@ var ERMrest = (function(module) {
 
         // To zero the update of a file progress bar
         this.updateProgressBar();
+
+        this.cancelUploadJob();
 
         return deferred.promise;
     };
