@@ -502,11 +502,13 @@ var ERMrest = (function(module) {
         var self = this;
 
         // get listing of all upload jobs for this object
-        this.http.get(this.url + ";upload").then(function(response) {
+        this.http.get(this.url + ";upload", { headers: { "accept" : "text/uri-list" } }).then(function(response) {
 
             // If upload jobs found then check for its status
             // Else resolve the promise with no response
-            if (response.data.length > 0) {
+            if (response.data.trim().length > 0) {
+
+                var urls = response.data.trim().split("\n");
 
                 // If chunkUrl is not null then check whether the upload jobs returned have the chunkURL
                 // else set the first job url as chunkurl and empty the chunks array as this will be a new upload
@@ -514,8 +516,8 @@ var ERMrest = (function(module) {
                 if (self.chunkUrl) {
 
                     var jobFound = false;
-                    for (var i=0; i< response.data.length; i++) {
-                        var url = self.getAbsoluteUrl("/hatrac" + response.data[i]);
+                    for (var i=0; i< urls.length; i++) {
+                        var url = self.getAbsoluteUrl("/hatrac" + urls[i]);
                         if (url == self.chunkUrl) {
                             self.chunkUrl = url;
                             jobFound = true;
@@ -529,7 +531,7 @@ var ERMrest = (function(module) {
                     return self.getExistingJobStatus();
                 } else {
                     self.chunks = [];
-                    self.chunkUrl = self.getAbsoluteUrl("/hatrac" + response.data[0]);
+                    self.chunkUrl = self.getAbsoluteUrl(urls[0]);
                     return self.getExistingJobStatus();
                 }
 
