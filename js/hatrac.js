@@ -178,6 +178,9 @@ var ERMrest = (function(module) {
 })(ERMrest || {});
 
 var ERMrest = (function(module) {
+
+    var allowedHttpErrors = [500, 503, 408, 401];
+
     /**
      * @desc upload Object
      * Create a new instance with new upload(file, otherInfo)
@@ -369,9 +372,6 @@ var ERMrest = (function(module) {
         // If new url has changed then there set all other flags to false to recompute them
         if (this.url !== url) {
 
-            // Cancel existing upload job which is in progress if chunkUrl is not null
-            this.cancelUploadJob();
-
             // To regenerate upload job url
             this.chunkUrl = false;
 
@@ -446,14 +446,19 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
 
-        // Check whether an existing upload jjob is available for current file
-        this.getExistingJobsForObject().then(function(exists) {
+        // Check whether an existing upload job is available for current file
+        this.getExistingJobStatus().then(function(response) {
 
             // if upload job exists then use current chunk url
             // else create a new chunk url
-            if (exists) {
+            // if the md5 of the url is same as the once that we calculated then
+            // resolve the promise with the true
+            // else resolve it with false
+            if (response && response.data["content-md5"] == self.hash.md5_base64) {
                 deferred.resolve(self.chunkUrl);
             }  else {
+
+                self.chunkUrl = null;
 
                 var url = self.url + ";upload?parents=true";
                 
@@ -485,83 +490,6 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
-
-    /*
-     * @Private
-     * @desc This function first makes call to hatrac upload job listing service to get all the upload jobs for a url
-     * If it finds any then, it picks the first one and makes a call to hatrac for its status
-     * If the content-md5 is the same as we calculated then we resolved with true
-     * else we resolve the promise with  false
-     *
-     * @returns {Promise}
-     */
-    upload.prototype.getExistingJobsForObject = function() {
-
-        var deferred = module._q.defer();
-
-        var self = this;
-
-        // get listing of all upload jobs for this object
-        this.http.get(this.url + ";upload", { headers: { "accept" : "text/uri-list" } }).then(function(response) {
-
-            // If upload jobs found then check for its status
-            // Else resolve the promise with no response
-            if (response.data.trim().length > 0) {
-
-                var urls = response.data.trim().split("\n");
-
-                // If chunkUrl is not null then check whether the upload jobs returned have the chunkURL
-                // else set the first job url as chunkurl and empty the chunks array as this will be a new upload
-                // for existing upload job
-                if (self.chunkUrl) {
-
-                    var jobFound = false;
-                    for (var i=0; i< urls.length; i++) {
-                        var url = self.getAbsoluteUrl("/hatrac" + urls[i]);
-                        if (url == self.chunkUrl) {
-                            self.chunkUrl = url;
-                            jobFound = true;
-                            break;
-                        }
-                    }
-
-                    // If no job found for current chunkUrl then
-                    if (!jobFound) self.chunkUrl = false;
-                    
-                    return self.getExistingJobStatus();
-                } else {
-                    self.chunks = [];
-                    self.chunkUrl = self.getAbsoluteUrl(urls[0]);
-                    return self.getExistingJobStatus();
-                }
-
-            } else {
-                self.chunkUrl = false;
-                deferred.resolve(false);
-            }
-            
-        }).then(function(response) {
-            // if the md5 of the url is same as the once that we calculated then
-            // resolve the promise with the true
-            // else resolve it with false
-            if (response && response.data["content-md5"] == self.hash.md5_base64) {
-                deferred.resolve(true);
-            } else {
-                deferred.resolve(false);
-            }
-        }, function(response) {
-
-            // If no uploadjobs found then resolve with no response
-            // else reject the promise
-            if (response.status == "404") {
-                deferred.resolve();
-            } else {
-                deferred.reject(response);
-            }
-
-        });
-        return deferred.promise;
-    };
 
     /*
      * @Private
@@ -618,7 +546,6 @@ var ERMrest = (function(module) {
             self.isPaused = false;
             self.completed = true;
             self.jobDone = true;
-            self.cancelUploadJob();
             deferred.resolve(self.url);
         }, function(response) {
 
@@ -807,7 +734,7 @@ var ERMrest = (function(module) {
      * @desc Aborts/cancels the upload
      * @returns {Promise} 
      */
-    upload.prototype.cancel = function() {
+    upload.prototype.cancel = function(deleteJob) {
 
         var deferred = module._q.defer();
 
@@ -843,10 +770,10 @@ var ERMrest = (function(module) {
             chunk.xhr = null;
         });
 
+        if (deleteJob) this.cancelUploadJob();
+
         // To zero the update of a file progress bar
         this.updateProgressBar();
-
-        this.cancelUploadJob();
 
         return deferred.promise;
     };

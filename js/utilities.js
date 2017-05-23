@@ -537,6 +537,8 @@ var ERMrest = (function(module) {
                 return new module.ForbiddenError(response.statusText, response.data);
             case 404:
                 return new module.NotFoundError(response.statusText, response.data);
+            case 408:
+                return new module.TimedOutError(response.statusText, response.data);
             case 409:
                 return new module.ConflictError(response.statusText, response.data);
             case 412:
