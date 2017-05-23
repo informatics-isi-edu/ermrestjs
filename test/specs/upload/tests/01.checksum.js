@@ -21,19 +21,27 @@ exports.execute = function (options) {
         	name: "testfile50MB.pdf",
         	size: 52428800,
         	displaySize: "50MB",
-        	type: "application/pdf"
+        	type: "application/pdf",
+        	hash: "d54ead2fe9e6e2bf801bb62b3af43b91",
+        	hash_64: "1U6tL+nm4r+AG7YrOvQ7kQ==",
+        	doNotRunInTravis: true
         }, {
         	name: "testfile5MB.txt",
         	size: 5242880,
         	displaySize: "5MB",
-        	type: "text/plain"
+        	type: "text/plain",
+        	hash: "08b46181d7094b5ece88bb389c7499af",
+        	hash_64: "CLRhgdcJS17OiLs4nHSZrw=="
         }, {
         	name: "testfile500kb.png",
         	size: 512000,
         	displaySize: "500KB",
-        	type: "image/png"
-        }];
+        	type: "image/png",
+        	hash: "4b178700e5f3b15ce799f2c6c1465741",
+        	hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
+        }];	
 
+        if (process.env.TRAVIS) files = files.filter(function(f) { if (!f.doNotRunInTravis) return f; });
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
             + schemaName + ":" + tableName;
@@ -110,10 +118,10 @@ exports.execute = function (options) {
 
 			        it("should return actual url for `generateURL` method as one of the properties 'fk_id' is not null in template `" + template + "`", function() {
 			        	// Set hash object for testing generateUrl
-		        		uploadObj.hash = { md5_hex: "md5" };
+		        		uploadObj.hash = { md5_hex: file.hash };
 
 			        	//Note: Property uri.md5_hex is generated at runtime so we are setting it expliticly to test the function
-			        	expect(uploadObj.generateURL(validRow)).toBe(baseUrl + "/hatrac/ermrestjstest/800001/md5");
+			        	expect(uploadObj.generateURL(validRow)).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.hash);
 			        });
 
 
@@ -126,11 +134,11 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + uploadObj.hash.md5_hex, "File generated url is not the same");
+			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.hash, "File generated url is not the same");
 
 			        		expect(validRow.filename).toBe(file.name);
 			        		expect(validRow.bytes).toBe(file.size);
-			        		expect(validRow.checksum).toBe(uploadObj.hash.md5_hex);
+			        		expect(validRow.checksum).toBe(file.hash);
 			        		
 			        		done();
 
