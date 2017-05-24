@@ -178,6 +178,9 @@ var ERMrest = (function(module) {
 })(ERMrest || {});
 
 var ERMrest = (function(module) {
+
+    var allowedHttpErrors = [500, 503, 408, 401];
+
     /**
      * @desc upload Object
      * Create a new instance with new upload(file, otherInfo)
@@ -205,6 +208,8 @@ var ERMrest = (function(module) {
         
         this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
         
+        this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 10;
+
         this.file = file;
         
         if (isNode) this.file.buffer = require('fs').readFileSync(file.path);
@@ -367,9 +372,6 @@ var ERMrest = (function(module) {
         // If new url has changed then there set all other flags to false to recompute them
         if (this.url !== url) {
 
-            // Cancel existing upload job which is in progress if chunkUrl is not null
-            this.cancelUploadJob();
-
             // To regenerate upload job url
             this.chunkUrl = false;
 
@@ -444,14 +446,19 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
 
-        // Check whether an existing upload jjob is available for current file
-        this.getExistingJobsForObject().then(function(exists) {
+        // Check whether an existing upload job is available for current file
+        this.getExistingJobStatus().then(function(response) {
 
             // if upload job exists then use current chunk url
             // else create a new chunk url
-            if (exists) {
+            // if the md5 of the url is same as the once that we calculated then
+            // resolve the promise with the true
+            // else resolve it with false
+            if (response && response.data["content-md5"] == self.hash.md5_base64) {
                 deferred.resolve(self.chunkUrl);
             }  else {
+
+                self.chunkUrl = null;
 
                 var url = self.url + ";upload?parents=true";
                 
@@ -483,81 +490,6 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
-
-    /*
-     * @Private
-     * @desc This function first makes call to hatrac upload job listing service to get all the upload jobs for a url
-     * If it finds any then, it picks the first one and makes a call to hatrac for its status
-     * If the content-md5 is the same as we calculated then we resolved with true
-     * else we resolve the promise with  false
-     *
-     * @returns {Promise}
-     */
-    upload.prototype.getExistingJobsForObject = function() {
-
-        var deferred = module._q.defer();
-
-        var self = this;
-
-        // get listing of all upload jobs for this object
-        this.http.get(this.url + ";upload").then(function(response) {
-
-            // If upload jobs found then check for its status
-            // Else resolve the promise with no response
-            if (response.data.length > 0) {
-
-                // If chunkUrl is not null then check whether the upload jobs returned have the chunkURL
-                // else set the first job url as chunkurl and empty the chunks array as this will be a new upload
-                // for existing upload job
-                if (self.chunkUrl) {
-
-                    var jobFound = false;
-                    for (var i=0; i< response.data.length; i++) {
-                        var url = self.getAbsoluteUrl("/hatrac" + response.data[i]);
-                        if (url == self.chunkUrl) {
-                            self.chunkUrl = url;
-                            jobFound = true;
-                            break;
-                        }
-                    }
-
-                    // If no job found for current chunkUrl then
-                    if (!jobFound) self.chunkUrl = false;
-                    
-                    return self.getExistingJobStatus();
-                } else {
-                    self.chunks = [];
-                    self.chunkUrl = self.getAbsoluteUrl("/hatrac" + response.data[0]);
-                    return self.getExistingJobStatus();
-                }
-
-            } else {
-                self.chunkUrl = false;
-                deferred.resolve(false);
-            }
-            
-        }).then(function(response) {
-            // if the md5 of the url is same as the once that we calculated then
-            // resolve the promise with the true
-            // else resolve it with false
-            if (response && response.data["content-md5"] == self.hash.md5_base64) {
-                deferred.resolve(true);
-            } else {
-                deferred.resolve(false);
-            }
-        }, function(response) {
-
-            // If no uploadjobs found then resolve with no response
-            // else reject the promise
-            if (response.status == "404") {
-                deferred.resolve();
-            } else {
-                deferred.reject(response);
-            }
-
-        });
-        return deferred.promise;
-    };
 
     /*
      * @Private
@@ -614,7 +546,6 @@ var ERMrest = (function(module) {
             self.isPaused = false;
             self.completed = true;
             self.jobDone = true;
-            self.cancelUploadJob();
             deferred.resolve(self.url);
         }, function(response) {
 
@@ -674,12 +605,20 @@ var ERMrest = (function(module) {
  
         this.isPaused = false;
         var part = 0;
+
+        this.chunkQueue = [];
+
         this.chunks.forEach(function(chunk) {
             chunk.retryCount = 0;
-            self.uploadPart(chunk);
+            self.chunkQueue.push(chunk);
             part++;
         });
 
+        for (var i = 0; i < this.CHUNK_QUEUE_SIZE; i++) {
+            var nextChunk = self.chunkQueue.shift();
+            if (nextChunk) self.uploadPart(nextChunk);
+        }
+        
         return deferred.promise;
     };
 
@@ -691,12 +630,18 @@ var ERMrest = (function(module) {
      */
     upload.prototype.uploadPart = function(chunk) {
 
+        var self = this;
         if (chunk.xhr && !chunk.completed) {
+            chunk.xhr.resolve();
             chunk.xhr = null;
             chunk.progress = 0;
         }
 
-        chunk.sendToHatrac(this);
+        chunk.sendToHatrac(this).then(function() {
+            var nextChunk = self.chunkQueue.shift();
+
+            if (nextChunk) self.uploadPart(nextChunk);
+        });
     };
 
 
@@ -789,7 +734,7 @@ var ERMrest = (function(module) {
      * @desc Aborts/cancels the upload
      * @returns {Promise} 
      */
-    upload.prototype.cancel = function() {
+    upload.prototype.cancel = function(deleteJob) {
 
         var deferred = module._q.defer();
 
@@ -820,14 +765,15 @@ var ERMrest = (function(module) {
         // Abort only if the chunk is not completed and has an xhr in progress and set completed to false for chunk
         // Set the xhr to null, progress to 0 for all cases
         this.chunks.forEach(function(chunk) {
-            chunk.xhr = null;
             chunk.progress = 0;
+            chunk.abort();
+            chunk.xhr = null;
         });
+
+        if (deleteJob) this.cancelUploadJob();
 
         // To zero the update of a file progress bar
         this.updateProgressBar();
-
-        this.cancelUploadJob();
 
         return deferred.promise;
     };
@@ -845,12 +791,11 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.chunkUrl) {
-                this.http.delete(this.chunkUrl).then(function() {
-                    deferred.resolve();
-                }, function(err) {
-                    deferred.resolve();
-                });
-
+            this.http.delete(this.chunkUrl).then(function() {
+                deferred.resolve();
+            }, function(err) {
+                deferred.resolve();
+            });
         } else  {
             deferred.resolve();
         }
@@ -893,7 +838,7 @@ var ERMrest = (function(module) {
         this.progress = 0;
         this.size = end-start;
         this.retryCount = 0;
-    };
+    };    
 
     /**  
      * @desc This function will upload a chunk of file to the url and call updateProgressBar
@@ -901,10 +846,17 @@ var ERMrest = (function(module) {
      */
     Chunk.prototype.sendToHatrac = function(upload) {
 
+        var deferred = module._q.defer();
+
         if (this.xhr || this.completed) {
+            
             this.progress = this.size;
+            
+            deferred.resolve();
+
             upload.updateProgressBar();
-            return;
+
+            return deferred.promise;
         }
 
         var self = this;
@@ -926,6 +878,8 @@ var ERMrest = (function(module) {
         
         headers["content-type"] = "application/octet-stream";
 
+        self.xhr  = module._q.defer();
+    
         var request = {
             // If index is -1 then upload it to the url or upload it to chunkUrl
             url: upload.chunkUrl + "/" + this.index,
@@ -940,14 +894,13 @@ var ERMrest = (function(module) {
                             upload.updateProgressBar(self.xhr);
                         }
                     }
-                }
+                },
+                timeout : self.xhr.promise, 
+                cancel : self.xhr
             },
             data: blob
         };
 
-        self.xhr = request;
-
-        
         // Send the request
         // If upload is aborted using .abort() for pause or cancel scenario
         // then error callback will be called for which the status code would be 0
@@ -959,6 +912,8 @@ var ERMrest = (function(module) {
             self.completed = true;
             self.xhr = null;
             
+            deferred.resolve();
+
             upload.updateProgressBar();
         }, function(response) {
             self.progress = 0;
@@ -974,8 +929,20 @@ var ERMrest = (function(module) {
                 upload.updateProgressBar(self.xhr);
             }
         });
+
+        return deferred.promise;
        
     };
+
+
+    /**  
+     * @desc This function will abort a chunk of file to the url and call updateProgressBar
+     * @param {upload} {upload} - An instance of the upload to which this chunk belongs
+     */
+    Chunk.prototype.abort = function(upload) {
+        if (this.xhr && (typeof this.xhr.resolve == 'function')) this.xhr.resolve();
+    };
+
 
    return module; 
    
