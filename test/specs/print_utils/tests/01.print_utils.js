@@ -74,7 +74,7 @@ exports.execute = function (options) {
 
             // Check for iframe ith height and width
             expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<figure class="embed-block"><figcaption class="embed-caption">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
+                .toBe('<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
 
             // Check for anchor tags
             expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
@@ -98,8 +98,30 @@ exports.execute = function (options) {
 
             // Check for iframe tag with a link and caption
             var iframeMarkdown = ':::iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
-            var iframeHTML = '<figure class="embed-block"><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
+            var iframeHTML = '<figure class="embed-block" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
             expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+            // Check for iframe tag with a link and caption at the bottom with no iframe-style and iframe-class
+            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
+            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+            // Check for iframe tag with a link and caption at the bottom with iframe-style and iframe-class
+            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" iframe-class="iclass" iframe-style="border:1px solid;"} \n:::';
+            var iframeHTML = '<figure class="embed-block iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+            // Check for iframe tag with a caption at the bottom with caption-style and caption-class
+            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
+            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+
+            // Check for iframe tag with a caption at the bottom with iframe-style and caption-class
+            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
+            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
 
             // Check for dropdown tag
             var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
