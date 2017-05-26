@@ -868,7 +868,7 @@ var ERMrest = (function(module) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true;
+                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
@@ -878,10 +878,18 @@ var ERMrest = (function(module) {
                                     enlargeLink = attr[1];
                                 } else if (attr[0] == "pos") {
                                     posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                } else if (attr[0] == "caption-class") {
+                                    captionClass = attr[1];
+                                } else if (attr[0] == "caption-style") {
+                                    captionStyle = attr[1];
+                                } else if (attr[0] == "iframe-class") {
+                                    iframeClass = attr[1];
+                                } else if (attr[0] == "iframe-style") {
+                                    iframeStyle = attr[1];
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
-                               iframeHTML += " ";
+                                iframeHTML += " ";
                             });
                             html += iframeHTML + "></iframe>";
 
@@ -910,13 +918,13 @@ var ERMrest = (function(module) {
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
-                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
+                                html = '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + html;
                             } else {
-                                html += '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
+                                html += '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block">' + html + "</figure>";
+                            html = '<figure class="embed-block' + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
