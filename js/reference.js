@@ -1241,22 +1241,72 @@ var ERMrest = (function(module) {
                         // no need to submit update data in the submission object
                         if (column.inputDisabled) {
                             continue;
-                        }
+                        }   
 
-                        if (column.isPseudo && !column.isAsset) {
-                            var keyColumns = [];
+                        // If columns is a pusedo column
+                        if (column.isPseudo) {
 
-                            if (column.isKey) {
-                                keyColumns = column.key.colset.columns;
-                            } else if (column.isForeignKey) {
-                                keyColumns =  column.foreignKey.colset.columns;
-                            }
+                            // If a column is an asset column then set values for 
+                            // dependent properties like filename, bytes_count_column, md5 and sha
+                            if (column.isAsset) {
 
-                            for (var n = 0; n < keyColumns.length; n++) {
-                                var referenceColumn = keyColumns[n];
-                                keyColumnName = referenceColumn.name;
+                                var isNull = newData[column.name] === null ? true : false;
 
-                                addProjectionAndKeyData(i, keyColumnName);
+                                // Populate all values in row depending on column from current
+
+                                // If column has a filename column then populate its value
+                                if (column.filenameColumn) {
+
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.filenameColumn.name] = null;
+                                    
+                                    addProjectionAndKeyData(i, column.filenameColumn.name);
+                                }  
+                                
+                                // If column has a bytecount column then populate its value
+                                if (column.byteCountColumn) {
+                                    
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.byteCountColumn.name] = null;
+
+                                    addProjectionAndKeyData(i, column.byteCountColumn.name);
+                                } 
+
+                                // If column has a md5 column then populate its value
+                                if (column.md5 && typeof column.md5 === 'object') {
+
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.md5.name] = null;
+
+                                    addProjectionAndKeyData(i, column.md5.name);
+                                } 
+
+                                // If column has a sha256 column then populate its value
+                                if (column.sha256 && typeof column.sha256 === 'object') {
+
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.sha256.name] = null;
+
+                                    addProjectionAndKeyData(i, column.sha256.name);
+                                }
+
+                                addProjectionAndKeyData(i, column.name);
+
+                            } else {
+                                var keyColumns = [];
+
+                                if (column.isKey) {
+                                    keyColumns = column.key.colset.columns;
+                                } else if (column.isForeignKey) {
+                                    keyColumns =  column.foreignKey.colset.columns;
+                                }
+
+                                for (var n = 0; n < keyColumns.length; n++) {
+                                    var referenceColumn = keyColumns[n];
+                                    keyColumnName = referenceColumn.name;
+
+                                    addProjectionAndKeyData(i, keyColumnName);
+                                }
                             }
                         } else {
                             addProjectionAndKeyData(i, column.name);
