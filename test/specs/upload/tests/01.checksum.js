@@ -15,8 +15,6 @@ exports.execute = function (options) {
             ermRest,
             reference;
 
-        var baseUrl = options.url.replace("/ermrest", "");
-
         var files = [{
         	name: "testfile50MB.pdf",
         	size: 52428800,
@@ -121,7 +119,7 @@ exports.execute = function (options) {
 		        		uploadObj.hash = { md5_hex: file.hash };
 
 			        	//Note: Property uri.md5_hex is generated at runtime so we are setting it expliticly to test the function
-			        	expect(uploadObj.generateURL(validRow)).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.hash);
+			        	expect(uploadObj.generateURL(validRow)).toBe("/hatrac/ermrestjstest/800001/" + file.hash);
 			        });
 
 
@@ -134,7 +132,7 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/800001/" + file.hash, "File generated url is not the same");
+			        		expect(url).toBe("/hatrac/ermrestjstest/800001/" + file.hash, "File generated url is not the same");
 
 			        		expect(validRow.filename).toBe(file.name);
 			        		expect(validRow.bytes).toBe(file.size);

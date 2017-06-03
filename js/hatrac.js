@@ -366,9 +366,6 @@ var ERMrest = (function(module) {
         // If the template is null then throw an error
         if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
         
-        // Prepend the url with server uri if it is relative
-        url = this.getAbsoluteUrl(url);
-
         // If new url has changed then there set all other flags to false to recompute them
         if (this.url !== url) {
 
@@ -460,7 +457,8 @@ var ERMrest = (function(module) {
 
                 self.chunkUrl = null;
 
-                var url = self.url + ";upload?parents=true";
+                // Prepend the url with server uri if it is relative
+                var url =  self.getAbsoluteUrl(self.url + ";upload?parents=true");
                 
                 var data = {
                     "chunk-length" : self.PART_SIZE,
@@ -479,7 +477,7 @@ var ERMrest = (function(module) {
 
         }).then(function(response) {
             if (response) {
-                self.chunkUrl = self.getAbsoluteUrl(response.headers('location')); 
+                self.chunkUrl = response.headers('location'); 
                 deferred.resolve(self.chunkUrl);
             }
         }, function(response) {
@@ -505,7 +503,7 @@ var ERMrest = (function(module) {
         // and resolve promise with it.
         // else just resolved it without any response
         if (this.chunkUrl) {
-            this.http.get(this.chunkUrl).then(function(response) {
+            this.http.get(this.getAbsoluteUrl(this.chunkUrl)).then(function(response) {
                 deferred.resolve(response);
             }, function(response) {
                 deferred.reject(response);
@@ -530,7 +528,7 @@ var ERMrest = (function(module) {
         
         var deferred = module._q.defer();
 
-        this.http.head(this.url).then(function(response) {
+        this.http.head(this.getAbsoluteUrl(this.url)).then(function(response) {
         
             var headers = response.headers();
             var md5 = headers["content-md5"];
@@ -661,11 +659,11 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        this.http.post(this.chunkUrl).then(function(response) {
+        this.http.post(this.getAbsoluteUrl(this.chunkUrl)).then(function(response) {
             self.jobDone = true;
 
             if (response.headers('location')) {
-                deferred.resolve(self.getAbsoluteUrl(response.headers('location')));
+                deferred.resolve(response.headers('location'));
             } else {
                 deferred.reject(module._responseToError(response));
             }
@@ -791,7 +789,7 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.chunkUrl) {
-            this.http.delete(this.chunkUrl).then(function() {
+            this.http.delete(this.getAbsoluteUrl(this.chunkUrl)).then(function() {
                 deferred.resolve();
             }, function(err) {
                 deferred.resolve();
@@ -882,7 +880,7 @@ var ERMrest = (function(module) {
     
         var request = {
             // If index is -1 then upload it to the url or upload it to chunkUrl
-            url: upload.chunkUrl + "/" + this.index,
+            url: upload.getAbsoluteUrl(upload.chunkUrl) + "/" + this.index,
             method: "PUT",                      
             config: { 
                 headers: headers,
