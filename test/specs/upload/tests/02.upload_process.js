@@ -39,7 +39,7 @@ exports.execute = function (options) {
         	type: "image/png",
         	hash: "4b178700e5f3b15ce799f2c6c1465741",
         	hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
-        }];	
+        }];
 
         if (process.env.TRAVIS) files = files.filter(function(f) { if (!f.doNotRunInTravis) return f; });
 
@@ -55,7 +55,7 @@ exports.execute = function (options) {
 	        	var filePath = "test/specs/upload/files/" + f.name
 
 	        	exec("perl -e 'print \"\1\" x " + f.size + "' > " + filePath);
-	        	
+
 	        	f.file = new File(filePath);
 	        });
 
@@ -68,7 +68,7 @@ exports.execute = function (options) {
             		console.log("Unable to find column " + columnName);
             		done.fail();
             		return;
-            	} 
+            	}
                 done();
             }, function (err) {
                 console.dir(err);
@@ -84,15 +84,15 @@ exports.execute = function (options) {
 
         			var fk_id = (new Date()).getTime();
 
-	        		var uploadObj, 
-	        			invalidRow = { fk_id: null, uri : { md5_hex: "wfqewf4234" } }, 
+	        		var uploadObj,
+	        			invalidRow = { fk_id: null, uri : { md5_hex: "wfqewf4234" } },
 	     				validRow = { fk_id: fk_id, uri : { md5_hex: file.hash } };
 
 		        	it("should create an upload object", function(done) {
 
 			        	try {
-				        	uploadObj = new ermRest.Upload(file.file, {  
-				        		column: column, 
+				        	uploadObj = new ermRest.Upload(file.file, {
+				        		column: column,
 				        		reference: reference,
 				        		chunkSize: 5 * 1024 * 1024
 			        		});
@@ -115,9 +115,9 @@ exports.execute = function (options) {
 			        	var uploaded = 0;
 
 			        	uploadObj.calculateChecksum(validRow).then(function(url) {
-			        		
+
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
-			        		
+
 			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/" + fk_id + "/" + file.hash, "File generated url is not the same");
 
 			        		expect(validRow.filename).toBe(file.name);
@@ -199,7 +199,7 @@ exports.execute = function (options) {
         	})(f);
         });
 
-	
+
 		afterAll(function(done) {
         	files.forEach(function(f) {
 	        	var filePath = "test/specs/upload/files/" + f.name;
@@ -209,6 +209,6 @@ exports.execute = function (options) {
         });
 
 
-        
+
     });
 }

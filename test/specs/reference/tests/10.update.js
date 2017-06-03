@@ -1,8 +1,11 @@
 exports.execute = function (options) {
+    var exec = require('child_process').execSync;
+    var  FileAPI = require('file-api'), File = FileAPI.File;
+	File.prototype.jsdom = true;
 
     /*
      * @param pageData - data retruned from update request
-     * @param tuples - tuples sent to
+     * @param tuples - tuples sent to the database for update
      * verifies that the returned data is the same as the submitted data
      */
     function checkPageValues(pageData, tuples, sortBy) {
@@ -101,6 +104,132 @@ exports.execute = function (options) {
 
                     expect(pageData.key).toBe(updateData.key);
                     expect(pageData.key).not.toBe(tuple._oldData.key);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("for updating asset columns, ", function() {
+            var reference, column,
+                columnName = "uri",
+                tableName = "file_update_table",
+                sortBy = "key",
+                baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/key=1";
+
+            var file = {
+                name: "testfile500kb.png",
+                size: 512000,
+                displaySize: "500KB",
+                type: "image/png",
+                hash: "4b178700e5f3b15ce799f2c6c1465741",
+                hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
+            }
+
+            beforeAll(function (done) {
+                var filePath = "test/specs/reference/files/" + file.name;
+
+                exec("perl -e 'print \"\1\" x " + file.size + "' > " + filePath);
+
+	        	file.file = new File(filePath);
+
+                options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
+                    reference = response;
+                    reference = reference.contextualize.entryEdit;
+
+                    column = reference.columns.find(function(c) { return c.name == columnName;  });
+
+                	if (!column) {
+                		console.log("Unable to find column " + columnName);
+                		done.fail();
+                		return;
+                	}
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("the metadata for the asset should be updated.", function (done) {
+                var tuples, tuple, fileUrl, updateData = {},
+                    baseUrl = options.url.replace("/ermrest", "");
+
+                var validRow = { key: 1, uri : { md5_hex: file.hash } };
+
+                var uploadObj = new options.ermRest.Upload(file.file, {
+                    column: column,
+                    reference: reference,
+                    chunkSize: 5 * 1024 * 1024
+                });
+
+                expect(uploadObj instanceof options.ermRest.Upload).toBe(true);
+
+                reference.read(1).then(function(response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+
+                    return uploadObj.calculateChecksum(validRow);
+                }).then(function(url) {
+                    expect(url).toBe(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same");
+
+                    expect(validRow.filename).toBe(file.name);
+                    expect(validRow.bytes).toBe(file.size);
+                    expect(validRow.File_MD5).toBe(file.hash);
+
+                    return uploadObj.createUploadJob();
+                }).then(function(url) {
+                    expect(url).toBeDefined("Chunk url not returned");
+
+                    return uploadObj.fileExists();
+                }).then(function() {
+                    expect(true).toBe(true);
+
+                    return uploadObj.start();
+                }).then(function(url) {
+                    expect(url).toBe(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+
+                    return uploadObj.completeUpload();
+                }).then(function(url) {
+                    expect(url).toContain(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+
+                    updateData = {
+                        uri: url,
+                        bytes: validRow.bytes,
+                        File_MD5: validRow.File_MD5,
+                        filename: validRow.filename
+                    }
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(tuples);
+                }).then(function (response) {
+                    expect(response._data.length).toBe(1);
+
+                    checkPageValues(response._data, tuples, sortBy);
+
+                    // verify that reading the reference again returns the updated row
+                    return reference.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0];
+
+                    expect(pageData.uri).toBe(updateData.uri);
+                    expect(pageData.uri).not.toBe(tuple._oldData.uri);
+
+                    expect(pageData.bytes).toBe(updateData.bytes);
+                    expect(pageData.bytes).not.toBe(tuple._oldData.bytes);
+
+                    expect(pageData.File_MD5).toBe(updateData.File_MD5);
+                    expect(pageData.File_MD5).not.toBe(tuple._oldData.File_MD5);
+
+                    expect(pageData.filename).toBe(updateData.filename);
+                    expect(pageData.filename).not.toBe(tuple._oldData.filename);
 
                     done();
                 }).catch(function (error) {
