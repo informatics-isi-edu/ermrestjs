@@ -1250,8 +1250,6 @@ var ERMrest = (function(module) {
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
 
-                                console.log(column);
-
                                 var isNull = newData[column.name] === null ? true : false;
 
                                 // Populate all values in row depending on column from current

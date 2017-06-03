@@ -237,6 +237,12 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            afterAll(function(done) {
+                var filePath = "test/specs/reference/files/" + file.name;
+                exec('rm ' + filePath);
+                done();
+            });
         });
 
         describe("for updating entities in update_table ", function () {
