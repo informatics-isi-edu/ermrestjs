@@ -15,8 +15,6 @@ exports.execute = function (options) {
             ermRest,
             reference;
 
-        var baseUrl = options.url.replace("/ermrest", "");
-
         var files = [{
         	name: "testfile50MB.pdf",
         	size: 52428800,
@@ -118,7 +116,7 @@ exports.execute = function (options) {
 			        		
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all checksum chunk calculation");
 			        		
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/" + fk_id + "/" + file.hash, "File generated url is not the same");
+			        		expect(url).toBe("/hatrac/ermrestjstest/" + fk_id + "/" + file.hash, "File generated url is not the same");
 
 			        		expect(validRow.filename).toBe(file.name);
 			        		expect(validRow.bytes).toBe(file.size);
@@ -168,7 +166,7 @@ exports.execute = function (options) {
 
 			        	uploadObj.start().then(function(url) {
 			        		expect(uploaded).toBe(file.size, "File progress was not called for all uploading");
-			        		expect(url).toBe(baseUrl + "/hatrac/ermrestjstest/" + fk_id + "/" + file.hash, "File  url is not the same");
+			        		expect(url).toBe("/hatrac/ermrestjstest/" + fk_id + "/" + file.hash, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
@@ -184,7 +182,7 @@ exports.execute = function (options) {
 			        it("should complete upload job and return final url", function(done) {
 
 			        	uploadObj.completeUpload().then(function(url) {
-			        		expect(url).toContain(baseUrl + "/hatrac/ermrestjstest/" + fk_id +"/" + file.hash, "File  url is not the same");
+			        		expect(url).toContain("/hatrac/ermrestjstest/" + fk_id +"/" + file.hash, "File  url is not the same");
 			        		done();
 	                    }, function(e) {
 	                    	console.dir(e);
