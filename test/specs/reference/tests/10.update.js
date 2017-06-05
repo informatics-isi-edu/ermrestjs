@@ -166,7 +166,7 @@ exports.execute = function (options) {
                     chunkSize: 5 * 1024 * 1024
                 });
 
-                expect(uploadObj instanceof options.ermRest.Upload).toBe(true);
+                expect(uploadObj instanceof options.ermRest.Upload).toBe(true, "Upload object is not of type 'ermrest.Upload'");
 
                 reference.read(1).then(function(response) {
                     tuples = response.tuples;
@@ -174,27 +174,23 @@ exports.execute = function (options) {
 
                     return uploadObj.calculateChecksum(validRow);
                 }).then(function(url) {
-                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same");
+                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same after calculating the checksum");
 
-                    expect(validRow.filename).toBe(file.name);
-                    expect(validRow.bytes).toBe(file.size);
-                    expect(validRow.File_MD5).toBe(file.hash);
+                    expect(validRow.filename).toBe(file.name, "file.name is not the same");
+                    expect(validRow.bytes).toBe(file.size, "file.size is not the same");
+                    expect(validRow.File_MD5).toBe(file.hash, "file.hash is not the same");
 
                     return uploadObj.createUploadJob();
                 }).then(function(url) {
                     expect(url).toBeDefined("Chunk url not returned");
 
-                    return uploadObj.fileExists();
-                }).then(function() {
-                    expect(true).toBe(true);
-
                     return uploadObj.start();
                 }).then(function(url) {
-                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same during upload");
 
                     return uploadObj.completeUpload();
                 }).then(function(url) {
-                    expect(url).toContain("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+                    expect(url).toContain("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same after upload has completed");
 
                     updateData = {
                         uri: url,
@@ -210,7 +206,7 @@ exports.execute = function (options) {
 
                     return reference.update(tuples);
                 }).then(function (response) {
-                    expect(response._data.length).toBe(1);
+                    expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
 
                     checkPageValues(response._data, tuples, sortBy);
 
@@ -219,17 +215,17 @@ exports.execute = function (options) {
                 }).then(function (response) {
                     var pageData = response._data[0];
 
-                    expect(pageData.uri).toBe(updateData.uri);
-                    expect(pageData.uri).not.toBe(tuple._oldData.uri);
+                    expect(pageData.uri).toBe(updateData.uri, "Entity uri does not match new uri");
+                    expect(pageData.uri).not.toBe(tuple._oldData.uri, "Entity uri matches old uri");
 
-                    expect(pageData.bytes).toBe(updateData.bytes);
-                    expect(pageData.bytes).not.toBe(tuple._oldData.bytes);
+                    expect(pageData.bytes).toBe(updateData.bytes, "Entity bytes does not match new bytes");
+                    expect(pageData.bytes).not.toBe(tuple._oldData.bytes, "Entity bytes matches old bytes");
 
-                    expect(pageData.File_MD5).toBe(updateData.File_MD5);
-                    expect(pageData.File_MD5).not.toBe(tuple._oldData.File_MD5);
+                    expect(pageData.File_MD5).toBe(updateData.File_MD5, "Entity md5 does not match new md5");
+                    expect(pageData.File_MD5).not.toBe(tuple._oldData.File_MD5, "Entity md5 matches old md5");
 
-                    expect(pageData.filename).toBe(updateData.filename);
-                    expect(pageData.filename).not.toBe(tuple._oldData.filename);
+                    expect(pageData.filename).toBe(updateData.filename, "Entity filename does not match new filename");
+                    expect(pageData.filename).not.toBe(tuple._oldData.filename, "Entity filename matches old filename");
 
                     done();
                 }).catch(function (error) {
