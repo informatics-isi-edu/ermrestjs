@@ -174,7 +174,7 @@ exports.execute = function (options) {
 
                     return uploadObj.calculateChecksum(validRow);
                 }).then(function(url) {
-                    expect(url).toBe(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same");
+                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same");
 
                     expect(validRow.filename).toBe(file.name);
                     expect(validRow.bytes).toBe(file.size);
@@ -190,11 +190,11 @@ exports.execute = function (options) {
 
                     return uploadObj.start();
                 }).then(function(url) {
-                    expect(url).toBe(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
 
                     return uploadObj.completeUpload();
                 }).then(function(url) {
-                    expect(url).toContain(baseUrl + "/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
+                    expect(url).toContain("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same");
 
                     updateData = {
                         uri: url,
