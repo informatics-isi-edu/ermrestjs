@@ -39,6 +39,97 @@
             ],
             "annotations": {}
         },
+        "file_update_table": {
+            "comment": "table with foreign key to asset table (file_object_table)",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "file_update_table",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "comment": null,
+                    "name": "bytes",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "int4"
+                    },
+                    "annotations": {}
+                },
+                {
+                    "comment": null,
+                    "name": "File_MD5",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {}
+                },
+                {
+                    "comment": null,
+                    "name": "filename",
+                    "default": null,
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "comment": [
+                            "hidden"
+                        ],
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "markdown_pattern": "{{#uri}}[![{{filename}}]({{{uri}}}){{/uri}}{width=200 height=50}]({{{uri}}}){target=_blank}"
+                            }
+                        },
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "Thumbnail"
+                        }
+                    }
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "uri",
+                    "default": null,
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "comment": [
+                            "thumbnail",
+                            "download"
+                        ],
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "byte_count_column": "bytes",
+                            "url_pattern": "/hatrac/{{{key}}}/{{{File_MD5}}}",
+                            "md5": "File_MD5",
+                            "filename_column": "filename"
+                        },
+                        "tag:isrd.isi.edu,2016:visible-columns" : {
+                          "*" : ["key", "uri"]
+                        }
+                    }
+                }
+            ]
+        },
         "update_table": {
             "comment": "Table to represent a reference object with independent and composite keys for updating",
             "kind": "table",
@@ -327,6 +418,7 @@
     },
     "table_names": [
         "alias_table",
+        "file_update_table",
         "update_table",
         "update_table_with_foreign_key",
         "table_w_composite_key",
