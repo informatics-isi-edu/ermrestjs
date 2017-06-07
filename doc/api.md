@@ -2281,7 +2281,8 @@ specification, and not according to the contents of in the input
 tuple.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - A promise resolved w ith [Page](#ERMrest.Page) of results,
+**Returns**: <code>Promise</code> - A promise resolved with a object containing `successful` and `failure` attributes.
+Both are [Page](#ERMrest.Page) of results.
 or rejected with any of the following errors:
 - [InvalidInputError](#ERMrest.InvalidInputError): If `data` is not valid, or reference is not in `entry/create` context.
 - [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
@@ -2357,7 +2358,8 @@ Return a new Reference with the new sorting
 Updates a set of resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - A promise resolved with [Page](#ERMrest.Page) of results,
+**Returns**: <code>Promise</code> - A promise resolved with a object containing `successful` and `failure` attributes.
+Both are [Page](#ERMrest.Page) of results.
 or rejected with any of these errors:
 - [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid or reference is not in `entry/edit` context.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  

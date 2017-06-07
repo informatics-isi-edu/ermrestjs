@@ -90,7 +90,7 @@ exports.execute = function (options) {
                 var rows = [{ id: 9999, name: "Paula", value: 5 }];
 
                 createReference.create(rows).then(function (response) {
-                    var page = response;
+                    var page = response.successful;
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
@@ -112,7 +112,7 @@ exports.execute = function (options) {
                             { id: 9802, name: "Garnet", value: 36 }];
 
                 createReference.create(rows).then(function (response) {
-                    var page = response;
+                    var page = response.successful;
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
