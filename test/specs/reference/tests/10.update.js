@@ -270,7 +270,8 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        expect(response._data.length).toBe(1);
+                        expect(response._data.length).toBe(1, "response data is not the same size as given.");
+                        expect(response.reference._context).toEqual("compact", "page reference is not in the correct context.");
 
                         checkPageValues(response._data, tuples, sortBy);
 
@@ -281,8 +282,8 @@ exports.execute = function (options) {
                     }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
-                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1, "updated data is not correct.");
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1, "data has not been updated.");
 
                         done();
                     }).catch(function (error) {

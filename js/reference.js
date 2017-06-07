@@ -772,7 +772,7 @@ var ERMrest = (function(module) {
 
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref, etag, response.data, false, false);
+                    var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve(page);
@@ -1380,7 +1380,7 @@ var ERMrest = (function(module) {
                         }
                     }
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                    page = new Page(ref, etag, pageData, false, false);
+                    page = new Page(ref.contextualize.compact, etag, pageData, false, false);
 
                     defer.resolve(page);
                 }, function error(response) {
