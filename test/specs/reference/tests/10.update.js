@@ -91,6 +91,7 @@ exports.execute = function (options) {
 
                     return reference.update(response.tuples);
                 }).then(function (response) {
+                    response = response.successful;
                     expect(response._data.length).toBe(1);
 
                     checkPageValues(response._data, tuples, sortBy);
@@ -206,6 +207,7 @@ exports.execute = function (options) {
 
                     return reference.update(tuples);
                 }).then(function (response) {
+                    response = response.successful;
                     expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
 
                     checkPageValues(response._data, tuples, sortBy);
@@ -270,7 +272,9 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
-                        expect(response._data.length).toBe(1);
+                        response = response.successful;
+                        expect(response._data.length).toBe(1, "response data is not the same size as given.");
+                        expect(response.reference._context).toEqual("compact", "page reference is not in the correct context.");
 
                         checkPageValues(response._data, tuples, sortBy);
 
@@ -281,8 +285,8 @@ exports.execute = function (options) {
                     }).then(function (response) {
                         var pageData = response._data[0];
 
-                        expect(pageData.ind_key1).toBe(updateData.ind_key1);
-                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1);
+                        expect(pageData.ind_key1).toBe(updateData.ind_key1, "updated data is not correct.");
+                        expect(pageData.ind_key1).not.toBe(tuple._oldData.ind_key1, "data has not been updated.");
 
                         done();
                     }).catch(function (error) {
@@ -317,6 +321,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -365,6 +370,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -413,6 +419,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -463,6 +470,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -515,6 +523,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -579,6 +588,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -615,6 +625,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -651,6 +662,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -687,6 +699,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -726,6 +739,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -766,6 +780,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -806,6 +821,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -848,6 +864,7 @@ exports.execute = function (options) {
 
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
+                                    response = response.successful;
                                     expect(response._data.length).toBe(1);
 
                                     checkPageValues(response._data, tuples, sortBy);
@@ -888,6 +905,7 @@ exports.execute = function (options) {
 
                                     return reference.update(response.tuples);
                                 }).then(function (response) {
+                                    response = response.successful;
                                     expect(response._data.length).toBe(1);
 
                                     checkPageValues(response._data, tuples, sortBy);
@@ -929,6 +947,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -969,6 +988,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -1012,6 +1032,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -1056,6 +1077,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -1102,6 +1124,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -1146,6 +1169,7 @@ exports.execute = function (options) {
 
                                 return reference.update(response.tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(1);
 
                                 checkPageValues(response._data, tuples, sortBy);
@@ -1201,6 +1225,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1290,6 +1315,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1357,6 +1383,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1428,6 +1455,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1525,6 +1553,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -1561,6 +1590,7 @@ exports.execute = function (options) {
 
                         return reference.update(response.tuples);
                     }).then(function (response) {
+                        response = response.successful;
                         expect(response._data.length).toBe(1);
 
                         checkPageValues(response._data, tuples, sortBy);
@@ -1599,6 +1629,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1639,6 +1670,7 @@ exports.execute = function (options) {
 
                             return reference.update(response.tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(1);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1699,6 +1731,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1764,6 +1797,7 @@ exports.execute = function (options) {
 
                             return reference.update(tuples);
                         }).then(function (response) {
+                            response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
                             checkPageValues(response._data, tuples, sortBy);
@@ -1832,6 +1866,7 @@ exports.execute = function (options) {
 
                                 return reference.update(tuples);
                             }).then(function (response) {
+                                response = response.successful;
                                 expect(response._data.length).toBe(updateData.length);
 
                                 checkPageValues(response._data, tuples, sortBy);

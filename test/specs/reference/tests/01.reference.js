@@ -90,9 +90,10 @@ exports.execute = function (options) {
                 var rows = [{ id: 9999, name: "Paula", value: 5 }];
 
                 createReference.create(rows).then(function (response) {
-                    var page = response;
+                    var page = response.successful;
 
                     expect(page).toEqual(jasmine.any(Object));
+                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
                     expect(page._data.length).toBe(rows.length);
                     expect(page._data[0].id).toBe((rows[0].id).toString());
                     expect(page._data[0].name).toBe(rows[0].name);
@@ -111,9 +112,10 @@ exports.execute = function (options) {
                             { id: 9802, name: "Garnet", value: 36 }];
 
                 createReference.create(rows).then(function (response) {
-                    var page = response;
+                    var page = response.successful;
 
                     expect(page).toEqual(jasmine.any(Object));
+                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
                     expect(page._data.length).toBe(rows.length);
                     for(var i = 0; i < page._data.length; i++) {
                         expect(page._data[i].id).toBe((rows[i].id).toString());

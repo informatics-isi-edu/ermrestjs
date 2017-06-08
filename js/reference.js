@@ -718,7 +718,8 @@ var ERMrest = (function(module) {
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
-         * @returns {Promise} A promise resolved w ith {@link ERMrest.Page} of results,
+         * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
+         * Both are {@link ERMrest.Page} of results.
          * or rejected with any of the following errors:
          * - {@link ERMrest.InvalidInputError}: If `data` is not valid, or reference is not in `entry/create` context.
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
@@ -772,10 +773,13 @@ var ERMrest = (function(module) {
 
                     var ref = new Reference(module._parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref, etag, response.data, false, false);
+                    var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
-                    return defer.resolve(page);
+                    return defer.resolve({
+                      "successful": page,
+                      "failed": null
+                    });
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
@@ -1164,7 +1168,8 @@ var ERMrest = (function(module) {
          * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
-         * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
+         * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
+         * Both are {@link ERMrest.Page} of results.
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1188,6 +1193,8 @@ var ERMrest = (function(module) {
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
+                var i, j, k;
+
                 // add column name into list of column projections and data into the submission data
                 var addProjectionAndKeyData = function(index, colName) {
                     // here so each column of the columns in keyColumns set is added
@@ -1207,7 +1214,7 @@ var ERMrest = (function(module) {
                     return column.name;
                 });
 
-                for(var i = 0; i < tuples.length; i++) {
+                for(i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
 
@@ -1315,7 +1322,7 @@ var ERMrest = (function(module) {
                 }
 
                 // always alias the keyset for the key data
-                for (var j = 0; j < shortestKeyNames.length; j++) {
+                for (j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
@@ -1325,7 +1332,7 @@ var ERMrest = (function(module) {
                 uri += ';';
 
                 // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
-                for (var k = 0; k < columnProjections.length; k++) {
+                for (k = 0; k < columnProjections.length; k++) {
                     if (k !== 0) uri += ',';
                     // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
@@ -1342,12 +1349,11 @@ var ERMrest = (function(module) {
                     }
 
                     var etag = response.headers().etag;
-                    var pageData = [],
-                        page;
+                    var pageData = [];
 
                     var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
                     // loop through each returned Row and get the key value
-                    for (var j = 0; j < response.data.length; j++) {
+                    for (j = 0; j < response.data.length; j++) {
                         // build the uri
                         if (j !== 0)
                         uri += ';';
@@ -1357,7 +1363,7 @@ var ERMrest = (function(module) {
                             uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
                         } else {
                             uri += '(';
-                            for (var k = 0; k < self._shortestKey.length; k++) {
+                            for (k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                 uri += '&';
                                 keyName = self._shortestKey[k].name;
@@ -1379,10 +1385,61 @@ var ERMrest = (function(module) {
                             }
                         }
                     }
-                    var ref = new Reference(module._parse(uri), self._table.schema.catalog);
-                    page = new Page(ref, etag, pageData, false, false);
 
-                    defer.resolve(page);
+                    // NOTE: ermrest returns only some of the column data.
+                    // make sure that pageData has all the submitted and updated data
+                    for (i = 0; i < tuples.length; i++) {
+                      for (j in tuples[i].data) {
+                        if (!tuples[i].data.hasOwnProperty(j)) continue;
+                        if (j in pageData[i]) continue; // pageData already has this data
+                        pageData[i][j] =tuples[i].data[j]; // add the missing data
+                      }
+                    }
+
+                    var ref = new Reference(module._parse(uri), self._table.schema.catalog).contextualize.compact;
+                    var successfulPage = new Page(ref, etag, pageData, false, false);
+                    var failedPage = null;
+
+
+                    // if the returned page is smaller than the initial page,
+                    // then some of the columns failed to update.
+                    if (tuples.length > successfulPage.tuples.length) {
+                      var unchangedPageData = [], keyMatch, rowMatch;
+
+                      for (i = 0; i < tuples.length; i++) {
+                        rowMatch = false;
+
+                        for (j = 0; j < successfulPage.tuples.length; j++) {
+                          keyMatch = true;
+
+                          for (k = 0; k < shortestKeyNames.length; k++) {
+                            keyName = shortestKeyNames[k];
+                            if (tuples[i].data[keyName] === successfulPage.tuples[j].data[keyName]) {
+                              // these keys don't match, go for the next tuple
+                              keyMatch = false;
+                              break;
+                            }
+                          }
+
+                          if (keyMatch) {
+                            // all the key columns match, then rows match.
+                            rowMatch = true;
+                            break;
+                          }
+                        }
+
+                        if (!rowMatch) {
+                          // didn't find a match, so add as failed
+                          unchangedPageData.push(tuples[i].data);
+                        }
+                      }
+                      failedPage = new Page(ref, etag, unchangedPageData, false, false);
+                    }
+
+                    defer.resolve({
+                      "successful": successfulPage,
+                      "failed": failedPage
+                    });
                 }, function error(response) {
                     var error = module._responseToError(response);
                     return defer.reject(error);
