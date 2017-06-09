@@ -569,7 +569,6 @@ var ERMrest = (function(module) {
      * @desc An object of pretty print utility functions
      * @private
      */
-
     module._formatUtils = {
         /**
          * @function
@@ -795,6 +794,17 @@ var ERMrest = (function(module) {
             // Run it through printMarkdown to get the sequence in a fixed-width font
             return module._markdownIt.renderInline(formattedSeq);
         }
+    };
+
+    /**
+     * @function
+     * @param {Object} value The Markdown to transform
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string representation of value
+     * @desc public function to access markdown it renderer
+     */
+    module.renderMarkdown = function(value, options) {
+      return module._formatUtils.printMarkdown(value, options);
     };
 
     module._parsedFilterToERMrestFilter = function(filter, table) {
