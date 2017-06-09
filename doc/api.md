@@ -2107,7 +2107,7 @@ The logic is as follows:
          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
 
 *addColumn* heuristics:
- + If column doesn't have asset annotation, add a normal ReferenceColumn.
+ + If column doesn't have asset annotation or its type is not `text`, add a normal ReferenceColumn.
  + Otherwise:
      + If it has `url_pattern`: add AssetPseudoColumn.
      + Otherwise:
