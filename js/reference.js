@@ -3559,8 +3559,8 @@ var ERMrest = (function(module) {
 
                     this._default = caption.trim() !== '' ? caption : null;
                 }
-                return this._default;
             }
+            return this._default;
         }
     });
     Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
