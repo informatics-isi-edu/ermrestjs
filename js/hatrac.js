@@ -223,13 +223,6 @@ var ERMrest = (function(module) {
         this.SERVER_URI = this.reference._server.uri.replace("/ermrest", "");
 
         this.http = this.reference._server._http;
-
-        this.fileInfo = {
-            name: this.file.name,
-            type: this.file.type,
-            size: this.file.size,
-            lastModifiedDate: this.file.lastModifiedDate
-        };
         
         this.isPaused = false;
         this.otherInfo = otherInfo;

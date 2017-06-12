@@ -97,10 +97,10 @@ exports.execute = function (options) {
 			        	}
 			        });
 
-			        it("should contains properties of file in `fileInfo` property of uploadObj (Size: " + file.size + " (" + file.displaySize + "), type: " + file.type + ", name: " + file.name + ")", function() {
-			        	expect(uploadObj.fileInfo.size).toBe(file.size);
-			        	expect(uploadObj.fileInfo.name).toBe(file.name);
-			        	expect(uploadObj.fileInfo.type).toBe(file.type);
+			        it("should contains properties of file in `file` property of uploadObj (Size: " + file.size + " (" + file.displaySize + "), type: " + file.type + ", name: " + file.name + ")", function() {
+			        	expect(uploadObj.file.size).toBe(file.size);
+			        	expect(uploadObj.file.name).toBe(file.name);
+			        	expect(uploadObj.file.type).toBe(file.type);
 			        });
 
 			        it("should return false for `validateurl` method as one of the properties 'fk_id' is null in template `" + template + "`", function() {
