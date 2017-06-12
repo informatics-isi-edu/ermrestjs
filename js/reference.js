@@ -301,7 +301,7 @@ var ERMrest = (function(module) {
                  *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
                  *
                  * *addColumn* heuristics:
-                 *  + If column doesn't have asset annotation, add a normal ReferenceColumn.
+                 *  + If column doesn't have asset annotation or its type is not `text`, add a normal ReferenceColumn.
                  *  + Otherwise:
                  *      + If it has `url_pattern`: add AssetPseudoColumn.
                  *      + Otherwise:
@@ -349,7 +349,7 @@ var ERMrest = (function(module) {
 
                 // this function will take care of adding column and asset column
                 var addColumn = function (col) {
-                    if(col.annotations.contains(module._annotations.ASSET)) {
+                    if(col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
                         if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
                             // add asset annotation
                             var assetCol = new AssetPseudoColumn(self, col);

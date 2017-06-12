@@ -186,7 +186,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', '<h2>filename</h2>\n', 'https://dev.isrd.isi.edu'
+            '1', '1', '1000', '10001', '<h2>filename</h2>\n', 'https://dev.isrd.isi.edu', 4
         ];
 
         var assetCompactExpectedValue = [
@@ -195,7 +195,8 @@ exports.execute = function (options) {
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
-            '<a href="https://dev.isrd.isi.edu" download="" class="btn btn-primary">filename</a>'
+            '<a href="https://dev.isrd.isi.edu" download="" class="btn btn-primary">filename</a>',
+            '4'
         ];
 
         /**
@@ -291,6 +292,7 @@ exports.execute = function (options) {
          *  8: col_asset_1 (asset with default options) is null
          *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display
          *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
+         *  11: col_asset_4 (asset with type not text)
          *
          *  ref.columns for entry (no context present):
          *  0: id
@@ -299,6 +301,7 @@ exports.execute = function (options) {
          *  3: col_2
          *  4: col_asset_2 *AssetPseudoColumn*
          *  5: col_asset_3 *AssetPseudoColumn*
+         *  6: col_asset_4
          *
          *
          *  contexts that are used:
@@ -609,13 +612,13 @@ exports.execute = function (options) {
                                 expected: [
                                     "id",
                                     ["reference_schema", "table_w_asset_fk_to_outbound"].join("_"),
-                                    "col_1", "col_2", "col_asset_2", "col_asset_3"
+                                    "col_1", "col_2", "col_asset_2", "col_asset_3", "col_asset_4"
                                 ]
                             }]);
                         });
 
                         it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(11);
+                            expect(assetRefCompactCols.length).toBe(12);
                             expect(assetRefCompactCols[4].name).toBe("col_filename");
                             expect(assetRefCompactCols[4].isPseudo).toBe(false);
                             expect(assetRefCompactCols[5].name).toBe("col_byte");
@@ -635,6 +638,13 @@ exports.execute = function (options) {
                         it('in other contexts it should be treated as a normal column.', function (){
                             //TODO
                         });
+                    });
+                    
+                    it("if column type is not `text`, should ignore the asset annotation.", function() {
+                      expect(assetRefCompactCols[11].name).toBe("col_asset_4");
+                      expect(assetRefCompactCols[11].isPseudo).toBe(false);
+                      expect(assetRefEntry.columns[6].name).toBe("col_asset_4");
+                      expect(assetRefEntry.columns[6].isPseudo).toBe(false);
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {

@@ -9,5 +9,6 @@
     "col_sha256": "sha256",
     "col_asset_1": null,
     "col_asset_2": "https://dev.isrd.isi.edu",
-    "col_asset_3": "https://dev.isrd.isi.edu"
+    "col_asset_3": "https://dev.isrd.isi.edu",
+    "col_asset_4": 4
 }]

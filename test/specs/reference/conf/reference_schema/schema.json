@@ -1949,7 +1949,20 @@
                             "filename_ext_filter": ["*.jpg"]
                         }
                     }
+                },
+                {
+                    "name": "col_asset_4",
+                    "comment": "column with asset annotation",
+                    "type": {
+                        "typename": "int4"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "{{col_asset_4}}"
+                        }
+                    }
                 }
+                
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
