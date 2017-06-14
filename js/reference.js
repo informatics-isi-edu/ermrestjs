@@ -1468,85 +1468,27 @@ var ERMrest = (function(module) {
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 var defer = module._q.defer();
-
-                var DELETE_MAX_TRIES = 3,
-                    READ_MAX_TRIES = 3;
                 
-                var ownReference = this;
+                /**
+                 * NOTE: previous implemenation of delete with 412 logic is here:
+                 * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+                 *
+                 * We decided to drop the support for 412, because the etag that we get from the read function
+                 * is different than the one delete expects. The reason for that is because we are getting etag
+                 * in read with joins in the request, which affects the etag. etag is in response to any change 
+                 * to the returned data and since join introduces extra data it is different than a request
+                 * without any joins.
+                 * 
+                 * github issue: #425
+                 */
                 
-                var deleteWrapper = function (deleteTuples, deleteTries, deleteDelay) {
-                    
-                    var config = {
-                        headers: {
-                            "If-Match": deleteTuples[0].page._etag
-                        }
-                    };
-                    
-                    ownReference._server._http.delete(ownReference.uri, config).then(function deleteReference(deleteResponse) {
-                        defer.resolve();
-                    }, function error(deleteError) {
-                        var status = deleteError.status || deleteError.statusCode;
-                        
-                        if (deleteTries <= 0 || status !== 412) {
-                            return defer.reject(module._responseToError(deleteError));
-                        }
-                        
-                        // 412 logic:
-                        // Check if the record still exists. If it does, compare the data.
-                        // If it doesn't, the data has already been deleted. If the
-                        // .read goes to error callback, then retry the read.
-                        var readReference = function readReference(readTries, readDelay) {
-                            ownReference.read(deleteTuples.length).then(function getPage(readPage) {
-                                
-                                var oldData = deleteTuples, currentData = readPage.tuples, mismatchFound = false;
-                                
-                                // If the referenced rows have already been deleted, readPage.tuples is an empty array.
-                                // Resolve the promise successfully like normal.
-                                if (currentData.length === 0) {
-                                    return defer.resolve();
-                                }
-
-                                // Else, compare the data.
-                                if (currentData.length !== oldData.length) {
-                                    mismatchFound = true;
-                                }
-
-                                if (!mismatchFound) {
-                                    // If findMismatch is true, this
-                                    // loop breaks and the loop returns true.
-                                    var findMismatch = function findMismatch(key) {
-                                        return oldTuple[key] !== currentTuple[key];
-                                    };
-                                    for (var i = 0, len = oldData.length; i < len; i++) {
-                                        var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
-                                        mismatchFound = Object.keys(oldTuple).some(findMismatch);
-                                        if (mismatchFound) {
-                                            break;
-                                        }
-                                    }
-                                }
-                                // If old data matches current data, retry the delete w/ updated tuples & ETag
-                                if (!mismatchFound) {
-                                    // Apply a delay on subsequent tries
-                                    setTimeout(deleteWrapper(currentData, deleteTries-1, deleteDelay*2), deleteDelay);
-                                } else {
-                                    // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
-                                    return defer.reject(module._responseToError(deleteError));
-                                }
-                            }, function error(readError) {
-                                    // The referenced rows couldn't be read from the DB.
-                                    // Retry the read with delay on subsequent tries
-                                    setTimeout(readReference(readTries-1, readDelay*2), readDelay);
-                            });
-                        };
-                        
-                        readReference(READ_MAX_TRIES, 100);
-                    }).catch(function (catchError) {
-                        return defer.reject(module._responseToError(catchError));
-                    });
-                };
-                
-                deleteWrapper(tuples, DELETE_MAX_TRIES, 100);
+                this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
+                    defer.resolve();
+                }, function error(deleteError) {
+                    return defer.reject(module._responseToError(deleteError));
+                }).catch(function (catchError) {
+                    return defer.reject(module._responseToError(catchError));
+                });
                 
                 return defer.promise;
             }
