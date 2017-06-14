@@ -1468,97 +1468,28 @@ var ERMrest = (function(module) {
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 var defer = module._q.defer();
-
-                var config = {
-                    headers: {
-                        "If-Match": tuples[0].page._etag
-                    }
-                };
-                var ownReference = this;
-                this._server._http.delete(this.uri, config).then(function deleteReference(response) {
+                
+                /**
+                 * NOTE: previous implemenation of delete with 412 logic is here:
+                 * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+                 *
+                 * We decided to drop the support for 412, because the etag that we get from the read function
+                 * is different than the one delete expects. The reason for that is because we are getting etag
+                 * in read with joins in the request, which affects the etag. etag is in response to any change 
+                 * to the returned data and since join introduces extra data it is different than a request
+                 * without any joins.
+                 * 
+                 * github issue: #425
+                 */
+                
+                this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
-                }, function error(response) {
-                    var status = response.status || response.statusCode;
-                    // If 412 Precondition Failed it means that ETags don't match
-                    if (status == 412) {
-                        var MAX_TRIES = 3,
-                            numTriesLeft = MAX_TRIES,
-                            delay = 100; // the first retry delay in milliseconds
-
-                        // Check if the record still exists. If it does, compare the data.
-                        // If it doesn't, the data has already been deleted. If the
-                        // .read goes to error callback, then retry the read.
-                        var readReference = function readReference(ref) {
-                            ref.read(tuples.length).then(function getPage(page) {
-                                var oldData = tuples, currentData = page.tuples, mismatchFound = false;
-                                // If the referenced rows have already been deleted, page.tuples is an empty array.
-                                // Resolve the promise successfully like normal.
-                                if (currentData.length === 0) {
-                                    return defer.resolve();
-                                }
-
-                                // Else, compare the data.
-                                if (currentData.length !== oldData.length) {
-                                    mismatchFound = true;
-                                }
-
-                                if (!mismatchFound) {
-                                    // If findMismatch is true, this
-                                    // loop breaks and the loop returns true.
-                                    var findMismatch = function findMismatch(key) {
-                                        return oldTuple[key] !== currentTuple[key];
-                                    };
-                                    for (var i = 0, len = oldData.length; i < len; i++) {
-                                        var oldTuple = oldData[i]._data, currentTuple = currentData[i]._data;
-                                        mismatchFound = Object.keys(oldTuple).some(findMismatch);
-                                        if (mismatchFound) {
-                                            break;
-                                        }
-                                    }
-                                }
-                                // If old data matches current data, retry the delete w/ updated tuples & ETag
-                                if (!mismatchFound && numTriesLeft > 0) {
-                                    if (numTriesLeft === MAX_TRIES) {
-                                        ref.delete(currentData);
-                                    } else {
-                                        // Apply a delay on subsequent tries
-                                        setTimeout(ref.delete(currentData), delay);
-                                        delay *= 2;
-                                    }
-                                    numTriesLeft--;
-                                } else {
-                                    // The current data in DB isn't the same as old data, so reject the promise with the original 412 error.
-                                    var error = module._responseToError(response);
-                                    return defer.reject(error);
-                                }
-                            }, function error(response) {
-                                // The referenced rows couldn't be read from the DB.
-                                // Retry the read.
-                                if (numTriesLeft > 0) {
-                                    if (numTriesLeft === MAX_TRIES) {
-                                        readReference(ref);
-                                    } else {
-                                        // Apply a delay on subsequent tries
-                                        setTimeout(readReference(ref), delay);
-                                        delay *= 2;
-                                    }
-                                    numTriesLeft--;
-                                } else {
-                                    var error = module._responseToError(response);
-                                    return defer.reject(error);
-                                }
-                            });
-                        };
-                        readReference(ownReference);
-                    } else {
-                        var error = module._responseToError(response);
-                        return defer.reject(error);
-                    }
-                }).catch(function (error) {
-                    var reason = module._responseToError(error);
-                    return defer.reject(reason);
+                }, function error(deleteError) {
+                    return defer.reject(module._responseToError(deleteError));
+                }).catch(function (catchError) {
+                    return defer.reject(module._responseToError(catchError));
                 });
-
+                
                 return defer.promise;
             }
             catch (e) {

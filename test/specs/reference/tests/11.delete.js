@@ -58,12 +58,12 @@ exports.execute = function (options) {
         });
 
         describe('if attempting a delete with mismatching ETags', function() {
-        // When a delete request is met with a 412 Precondition Failed, reference.delete
-        // should check if its referenced data has changed (whether it's been deleted or modified
-        // by a previous operation). If there's been no change, the delete proceeds as usual.
-        // Otherwise, reference.delete should raise the 412 error.
+            // When a delete request is met with a 412 Precondition Failed, reference.delete
+            // should check if its referenced data has changed (whether it's been deleted or modified
+            // by a previous operation). If there's been no change, the delete proceeds as usual.
+            // Otherwise, reference.delete should raise the 412 error.
 
-            it('should proceed with the delete if the referenced data has not changed', function(done) {
+            xit('should proceed with the delete if the referenced data has not changed', function(done) {
                 var uri = baseUri + "/key_col=2", tuples, reference;
 
                 options.ermRest.resolve(uri, {cid: "test"}).then(function(response) {
@@ -90,9 +90,9 @@ exports.execute = function (options) {
                     console.dir(error);
                     done.fail();
                 });
-            });
+            }).pend("412 support has been dropped from ermestjs.");
 
-            it('should raise a 412 error if the referenced data was modified', function(done) {
+            xit('should raise a 412 error if the referenced data was modified', function(done) {
                 // To simulate this, we
                 // 1. Get 2 references to the same row: ref1 and ref2.
                 // 2. Update ref2 with new tuples.
@@ -130,9 +130,9 @@ exports.execute = function (options) {
                     console.dir(error);
                     done.fail();
                 });
-            });
+            }).pend("412 support has been dropped from ermestjs.");
 
-            it('should return a positive error code when trying to delete an already deleted entity.', function(done) {
+            xit('should return a positive error code when trying to delete an already deleted entity.', function(done) {
                 // To simulate this, we
                 // 1. Get 2 references to the same row: ref1 and ref2.
                 // 2. Run ref2.delete.
@@ -161,7 +161,7 @@ exports.execute = function (options) {
                     console.dir(error);
                     done.fail();
                 });
-            });
-        });
+            }).pend("412 support has been dropped from ermestjs.");
+        })
     });
 };
