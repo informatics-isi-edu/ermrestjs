@@ -1468,20 +1468,20 @@ var ERMrest = (function(module) {
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 var defer = module._q.defer();
-                
+
                 /**
                  * NOTE: previous implemenation of delete with 412 logic is here:
                  * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
                  *
                  * We decided to drop the support for 412, because the etag that we get from the read function
                  * is different than the one delete expects. The reason for that is because we are getting etag
-                 * in read with joins in the request, which affects the etag. etag is in response to any change 
+                 * in read with joins in the request, which affects the etag. etag is in response to any change
                  * to the returned data and since join introduces extra data it is different than a request
                  * without any joins.
-                 * 
+                 *
                  * github issue: #425
                  */
-                
+
                 this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
@@ -1489,7 +1489,7 @@ var ERMrest = (function(module) {
                 }).catch(function (catchError) {
                     return defer.reject(module._responseToError(catchError));
                 });
-                
+
                 return defer.promise;
             }
             catch (e) {
@@ -2723,12 +2723,19 @@ var ERMrest = (function(module) {
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
-                            } else {
-                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
+                            }
+                            else {
+                                presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
-                        } else {
+                        }
+                        else if(column.type.name === ("json" || "jsonb")){
+                            presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                            this._values[i] = presentation.value;
+                            this._isHTML[i] = false;
+                        }
+                        else {
                             this._values[i] = this._data[column.name];
                             this._isHTML[i] = false;
                         }

@@ -1743,6 +1743,10 @@ var ERMrest = (function (module) {
                 case 'gene_sequence':
                     data = utils.printGeneSeq(data, options);
                     break;
+                case 'json':
+                case 'jsonb':
+                    data = utils.printJSON(data,options);
+                    break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);
                     break;

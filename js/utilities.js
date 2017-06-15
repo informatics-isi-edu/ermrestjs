@@ -698,6 +698,24 @@ var ERMrest = (function(module) {
 
         /**
          * @function
+         * @param {Object} value A json value to transform
+         * @param {Object} [options] Configuration options.
+         * @return {string} A string representation of value
+         * @desc Formats a given json value into a string for display.
+         */
+        printJSON: function printJSON(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            if (typeof value === 'object') {
+                return JSON.stringify(value);
+            }
+            return value.toString();
+        },
+
+        /**
+         * @function
          * @param {Object} value A text value to transform
          * @param {Object} [options] Configuration options.
          * @return {string} A string representation of value
