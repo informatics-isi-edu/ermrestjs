@@ -2733,7 +2733,7 @@ var ERMrest = (function(module) {
                         else if(column.type.name === ("json" || "jsonb")){
                             presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             this._values[i] = presentation.value;
-                            this._isHTML[i] = false;
+                            this._isHTML[i] = true;
                         }
                         else {
                             this._values[i] = this._data[column.name];
@@ -2752,12 +2752,20 @@ var ERMrest = (function(module) {
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
-                            } else {
+                            }
+                            else {
                                 values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
-                        } else {
+                        }
+                        else if (column.type.name === ("json" || "jsonb")){
+                            values[i] = column.formatJsonPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                        }
+                        else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
 
+                            if (column.type.name === "json"|| "jsonb") {
+                                values[i].isHTML = true;
+                            }
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -3114,6 +3122,19 @@ var ERMrest = (function(module) {
                 }
                 value += (i>0 ? ":" : "") + curr.value;
             }
+            return {isHTML: isHTML, value: value};
+        },
+
+        /**
+         * Formats the presentation value corresponding to this reference-column definition.
+         * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {Object} options includes `context` and `formattedValues`
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         */
+        formatJsonPresentation: function(data, options) {
+
+            var isHTML = true, value = "", curr;
+            value = "<pre>"+ data + "</pre>";
             return {isHTML: isHTML, value: value};
         },
 
