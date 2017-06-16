@@ -419,7 +419,7 @@ var ERMrest = (function(module) {
                 keyValues = module._getFormattedKeyValues(table.columns, context, data);
 
                 // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues);
+                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues, table, context, {formatted: true});
             }
         }
 
@@ -501,7 +501,7 @@ var ERMrest = (function(module) {
         }
 
         // get templated patten after replacing the values using Mustache
-        var pattern = module._renderTemplate(template, keyValues);
+        var pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
 
         // Render markdown content for the pattern
         if (pattern === null || pattern.trim() === '') {
@@ -515,7 +515,7 @@ var ERMrest = (function(module) {
         };
 
     };
-
+    
     /**
      * @function
      * @param {Object} response http response object
@@ -1261,7 +1261,7 @@ var ERMrest = (function(module) {
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
-    module._renderTemplate = function(template, keyValues, options) {
+    module._renderMustacheTemplate = function(template, keyValues, options) {
         options = options || {};
 
         var obj = {};
@@ -1294,12 +1294,42 @@ var ERMrest = (function(module) {
             });
         }
 
+        // If we should validate, validate the template and if returns false, return null.
+        if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
+            return null;
+        }
+
+        var content;
+
+        try {
+            content = module._mustache.render(template, obj);
+        } catch(e) {
+            content = null;
+        }
+
+        return content;
+    };
+    
+    /**
+     * Returns true if all the used keys have values.
+     * 
+     * NOTE: 
+     * This implementation is very limited and if conditional Mustache statements 
+     * of the form {{#var}}{{/var}} or {{^var}}{{/var}} found then it won't check 
+     * for null values and will return true.
+     * 
+     * @param  {string}   template       mustache template
+     * @param  {object}   keyValues      key-value pairs
+     * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
+     * @return {boolean} true if all the used keys have values
+     */
+    module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
         var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
-
+        
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
-        if (!options.avoidValidation && !conditionalRegex.exec(template)) {
+        if (!conditionalRegex.exec(template)) {
 
-                // Grab all placeholders ({{PROP_NAME}}) in the template
+            // Grab all placeholders ({{PROP_NAME}}) in the template
             var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
 
             // If there are any placeholders
@@ -1312,7 +1342,6 @@ var ERMrest = (function(module) {
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
-
                 for (var i=0; i<placeholders.length;i++) {
 
                     // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
@@ -1320,23 +1349,74 @@ var ERMrest = (function(module) {
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
 
-                    // If value for the key is null or undefined then return null
-                    if (obj[key] === null || obj[key] === undefined) {
-                       return null;
+                    // If key is not in ingored columns value for the key is null or undefined then return null
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (keyValues[key] === null || keyValues[key] === undefined)) { 
+                       return false;
                     }
                 }
             }
         }
-
-        var content;
-
-        try {
-            content = module._mustache.render(template, obj);
-        } catch(e) {
-            content = null;
+        return true;
+    };
+    
+    /**
+     * A wrapper for {ERMrest._renderMustacheTemplate}
+     * This function will generate formmatted values from the given data, 
+     * if you don't want the funciton to format the data, make sure to have 
+     * options.formatted = true
+     * 
+     * @param  {ERMrest.Table} table   
+     * @param  {object} data
+     * @param  {string} template 
+     * @param  {string} context 
+     * @param  {Array.<Object>=} options optioanl parameters
+     * @return {string} Returns a string produced as a result of templating using `Mustache`.  
+     */
+    module._renderTemplate = function (template, data, table, context, options) {
+        
+        // to avoid computing data mutliple times, or if we don't want the formatted values
+        if (options === undefined || !options.formatted) {
+            data = module._getFormattedKeyValues(table.columns, context, data);
         }
-
-        return content;
+        
+        // render the template using Mustache
+        return module._renderMustacheTemplate(template, data, options);
+    };
+    
+    /**
+     * A wrapper for {ERMrest._validateMustacheTemplate} 
+     * it will take care of adding formmatted and unformatted values.
+     * options.formmatted=true: to avoid formatting key values
+     * options.ignoredColumns: list of columns that you want validator to ignore
+     * 
+     * @param  {ERMrest.Table} table   
+     * @param  {object} data
+     * @param  {string} template 
+     * @param  {string} context 
+     * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
+     * @return {boolean} True if the template is valid.
+     */
+    module._validateTemplate = function (template, data, table, context, options) {
+        
+        var ignoredColumns;
+        if (typeof options !== undefined && Array.isArray(options.ignoredColumns)) {
+            ignoredColumns = options.ignoredColumns;
+        }
+        
+        // to avoid computing data multiple times, or if we don't want the formatted values
+        if (options === undefined || !options.formatted) {
+            // make sure to add formmatted columns too.
+            if (ignoredColumns !== undefined) {
+                ignoredColumns.forEach(function (col) {
+                    ignoredColumns.push("_" + col);
+                });
+            }
+            
+            data = module._getFormattedKeyValues(table.columns, context, data);
+        }
+        
+        // render the template using Mustache
+        return module._validateMustacheTemplate(template, data, ignoredColumns);
     };
 
     module._constraintTypes = Object.freeze({

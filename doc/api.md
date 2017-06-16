@@ -2260,6 +2260,7 @@ The logic for are sorted based on following attributes:
 
 #### reference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
 This will generate a new unfiltered reference each time.
+Returns a reference that points to all entities of current table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+appLink"></a>

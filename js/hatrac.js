@@ -277,48 +277,20 @@ var ERMrest = (function(module) {
             if (this.column.byteCountColumn) ignoredColumns.push(this.column.byteCountColumn.name);
             if (this.column.md5 && typeof this.column.md5 === "object") ignoredColumns.push(this.column.md5.name);
             if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name); 
-
-            ignoredColumns.push("md5_hex");
-            ignoredColumns.push("md5_base64");
-            ignoredColumns.push("filename");
-            ignoredColumns.push("size");
+            
+            // since we are going to format the values, ignoredColumns will be available
+            // in formmatted and unformatted forms. Following makes sure that we have
+            // added these two to the ignoredColumns
+            for(var i = 0; i < ignoredColumns.length; i++) {
+                
+            }
+            
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
-
-            var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
-
-            // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
-            if (!conditionalRegex.exec(template)) {
-
-                // Grab all placeholders ({{PROP_NAME}}) in the template
-                var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
-
-                // If there are any placeholders
-                if (placeholders && placeholders.length) {
-
-                    // Get unique placeholders
-                    placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
-
-                    /*
-                     * Iterate over all placeholders to set pattern as null if any of the
-                     * values turn out to be null or undefined
-                     */
-                    for (var i=0; i<placeholders.length;i++) {
-
-                        // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                        var key = placeholders[i].substring(2, placeholders[i].length - 2);
-
-                        if (key[0] == "{") key = key.substring(1, key.length -1);
-
-                        // If key is not in ingored columns value for the key is null or undefined then return null
-                        if ((ignoredColumns.indexOf(key) == -1) && (row[key] === null || row[key] === undefined)) {
-                           return false;
-                        }
-                    }
-                }
-            }
+            
+            return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
         }
 
         return true;
@@ -347,14 +319,8 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
 
-        // Inject the encode function in the keyValues object
-        row.encode = module._encodeForTemplate;
-
-        // Inject the escape function in the keyValues object
-        row.escape = module._escapeForTemplate;
-
         // Generate url
-        var url = module._renderTemplate(template, row, { avoidValidation: true });
+        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
 
         // If the template is null then throw an error
         if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
