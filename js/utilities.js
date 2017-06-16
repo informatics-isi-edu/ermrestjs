@@ -709,7 +709,7 @@ var ERMrest = (function(module) {
                 return '';
             }
             if (typeof value === 'object') {
-                return JSON.stringify(value,undefined,1);
+                return JSON.stringify(value,undefined,2);
             }
             return value.toString();
         },
