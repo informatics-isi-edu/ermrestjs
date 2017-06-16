@@ -1405,7 +1405,7 @@ var ERMrest = (function(module) {
         
         // to avoid computing data multiple times, or if we don't want the formatted values
         if (options === undefined || !options.formatted) {
-            // make sure to add formmatted columns too.
+            // make sure to add formatted columns too.
             if (ignoredColumns !== undefined) {
                 ignoredColumns.forEach(function (col) {
                     ignoredColumns.push("_" + col);
@@ -1415,7 +1415,7 @@ var ERMrest = (function(module) {
             data = module._getFormattedKeyValues(table.columns, context, data);
         }
         
-        // render the template using Mustache
+        // call the actual mustache validator
         return module._validateMustacheTemplate(template, data, ignoredColumns);
     };
 
