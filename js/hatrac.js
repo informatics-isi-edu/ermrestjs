@@ -278,13 +278,10 @@ var ERMrest = (function(module) {
             if (this.column.md5 && typeof this.column.md5 === "object") ignoredColumns.push(this.column.md5.name);
             if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name); 
             
-            // since we are going to format the values, ignoredColumns will be available
-            // in formmatted and unformatted forms. Following makes sure that we have
-            // added these two to the ignoredColumns
-            for(var i = 0; i < ignoredColumns.length; i++) {
-                
-            }
-            
+            ignoredColumns.push("md5_hex");
+            ignoredColumns.push("md5_base64");
+            ignoredColumns.push("filename");
+            ignoredColumns.push("size");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
