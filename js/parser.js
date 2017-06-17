@@ -810,7 +810,8 @@ var ERMrest = (function(module) {
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
-            if (f[0] && f[1]) {
+            // NOTE: filter value (f[1]) can be empty
+            if (f[0] && f.length === 2) {
                 filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
                 return filter;
