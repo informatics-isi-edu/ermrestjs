@@ -811,13 +811,14 @@ var ERMrest = (function(module) {
                      * If 1 row has it set and none of the others, it cannot be part of defaults
                     **/
                     for (var m = 0; m < data.length; m++) {
-                        if (data[m][columnName]) {
+                        console.log(data[m][columnName]);
+                        if (data[m][columnName]===undefined) {
                             notSet = false;
                             break;
                         }
                     }
 
-                    if (notSet) defaults.push(columnName);
+                    if (!notSet) defaults.push(columnName);
                 });
 
                 return defaults;
