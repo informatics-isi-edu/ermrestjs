@@ -1780,8 +1780,9 @@ var ERMrest = (function(module) {
 
         /**
          * This will generate a new unfiltered reference each time.
-         *
-         * @type {ERMrest.Reference} reference a reference that points to all entities of current table
+         * Returns a reference that points to all entities of current table
+         * 
+         * @type {ERMrest.Reference}
          */
         get unfilteredReference() {
             var table = this._table;
@@ -2456,11 +2457,8 @@ var ERMrest = (function(module) {
                     // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                     for (var i = 0; i < this._data.length; i++) {
 
-                        // Compute formatted value for each column
-                        var keyValues = module._getFormattedKeyValues(this._ref._table.columns, this._ref._context, this._data[i]);
-
-                        // Code to do template/string replacement using keyValues
-                        var value = module._renderTemplate(this._ref.display._markdownPattern, keyValues);
+                        // render template
+                        var value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
 
                         // If value is null or empty, return value on basis of `show_nulls`
                         if (value === null || value.trim() === '') {
@@ -2712,6 +2710,8 @@ var ERMrest = (function(module) {
                 this._isHTML = [];
 
                 var column, presentation;
+                
+                // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                 // If context is entry
@@ -3260,7 +3260,7 @@ var ERMrest = (function(module) {
 
         if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
             var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-            var uriFilter = module._renderTemplate(filterPattern, data);
+            var uriFilter = module._renderTemplate(filterPattern, data, this.table, this._context);
             // NOTE: should we check for (uriFilter.trim() !== '') ?
             if (uriFilter !== null) uri += ('/' + uriFilter);
         }
@@ -3596,7 +3596,13 @@ var ERMrest = (function(module) {
          // use the markdown_pattern that is defiend in key-display annotation
          var display = this.key.getDisplay(context);
          if (display.isMarkdownPattern) {
-             caption = module._renderTemplate(display.markdownPattern, options.formattedValues);
+             
+             // make sure that formattedValues is defined
+             if (options === undefined || options.formattedValues === undefined) {
+                options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
+             }
+             
+             caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
              caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
              addLink = false;
          } else {
@@ -3783,7 +3789,7 @@ var ERMrest = (function(module) {
             "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
             "url": data[this._baseCol.name]
         };
-        var pattern = module._renderTemplate(template, keyValues);
+        var pattern = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
         return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
     };
 
