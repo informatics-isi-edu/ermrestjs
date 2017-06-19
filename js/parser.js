@@ -39,7 +39,7 @@ var ERMrest = (function(module) {
     module._parse = function (uri) {
         var svc_idx = uri.indexOf(_service_name);
         if (svc_idx < 0) {
-            throw new module.InvalidInputError('The URI does not contain the expected service name: ' + _service_name);
+            throw new module.InvalidInputError("Invalid uri: " + uri + '. Does not contain the expected service name: ' + _service_name);
         }
 
         return new Location(uri);
@@ -135,13 +135,13 @@ var ERMrest = (function(module) {
                 if (this._sort) {
                     this._paging = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
+                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
                 }
             } else if (modifiers.indexOf("@after(") !== -1) {
                 if (this._sort) {
                     this._paging = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier required with paging");
+                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
                 }
             }
         }
@@ -217,7 +217,7 @@ var ERMrest = (function(module) {
 
             // if a single filter
             if (items.length === 1) {
-                this._filter = _processSingleFilterString(items[0]);
+                this._filter = _processSingleFilterString(items[0], this._uri);
 
             } else {
                 var filters = [];
@@ -240,7 +240,7 @@ var ERMrest = (function(module) {
                             }
                         }
 
-                        filters.push(_processMultiFilterString(subfilters));
+                        filters.push(_processMultiFilterString(subfilters, this._uri));
 
                     } else if (type === null && items[i] === "&") {
                         // first level filter type
@@ -250,13 +250,13 @@ var ERMrest = (function(module) {
                         type = module.filterTypes.DISJUNCTION;
                     } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                         // using combination of ! and & without ()
-                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                        throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
                     } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                         // using combination of ! and & without ()
-                        throw new module.InvalidFilterOperatorError("Invalid filter " + parts[8]);
+                        throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
                     } else if (items[i] !== "&" && items[i] !== ";") {
                         // single filter on the first level
-                        var binaryFilter = _processSingleFilterString(items[i]);
+                        var binaryFilter = _processSingleFilterString(items[i], this._uri);
                         filters.push(binaryFilter);
                     }
                 }
@@ -801,22 +801,21 @@ var ERMrest = (function(module) {
 
     /**
      *
-     * @param filterString
+     * @param {stirng} filterString
+     * @param {string} fullURI used for loggin purposes
      * @returns {ParsedFilter} returns the parsed representation of the filter
      * @desc converts a filter string to ParsedFilter
      */
-    function _processSingleFilterString(filterString) {
+    function _processSingleFilterString(filterString, fullURI) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
-            if (f[0] && f[1]) {
+            // NOTE: filter value (f[1]) can be empty
+            if (f[0] && f.length === 2) {
                 filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
                 return filter;
-            } else {
-                // invalid filter
-                throw new module.InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         } else {
             f = filterString.split("::");
@@ -824,21 +823,20 @@ var ERMrest = (function(module) {
                 filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "::"+f[1]+"::", decodeURIComponent(f[2]));
                 return filter;
-            } else {
-                // invalid filter error
-                throw new module.InvalidFilterOperatorError("Invalid filter " + filterString);
             }
         }
+        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
     }
 
     /**
      *
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
+     * @param {string} fullURI used for loggin purposes
      * @return {ParsedFilter}
      *
      */
-    function _processMultiFilterString(filterStrings) {
+    function _processMultiFilterString(filterStrings, fullURI) {
         var filters = [];
         var type = null;
         for (var i = 0; i < filterStrings.length; i++) {
@@ -850,13 +848,13 @@ var ERMrest = (function(module) {
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid filter " + filterStrings);
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
-                var binaryFilter = _processSingleFilterString(filterStrings[i]);
+                var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
                 filters.push(binaryFilter);
             }
         }
