@@ -1,0 +1,7 @@
+[
+    {"id": 1, "text_col": "test1", "json_col": "{'name':'nitish'}","jsonb_col": "{'name':'nitish'}"},
+    {"id": 2, "text_col": "test1", "json_col": false,"jsonb_col":false},
+    {"id": 3, "text_col": "test1", "json_col": 0,"jsonb_col":0},
+    {"id": 4, "text_col": "test1", "json_col": null,"jsonb_col":null}
+
+]
