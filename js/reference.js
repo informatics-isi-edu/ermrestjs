@@ -811,8 +811,7 @@ var ERMrest = (function(module) {
                      * If 1 row has it set and none of the others, it cannot be part of defaults
                     **/
                     for (var m = 0; m < data.length; m++) {
-                        console.log(data[m][columnName]);
-                        if (data[m][columnName]===undefined) {
+                        if (data[m][columnName]!== undefined && data[m][columnName] !==null) {
                             notSet = false;
                             break;
                         }

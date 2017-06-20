@@ -1,0 +1,57 @@
+
+{
+    "schema_name": "default_value_schema",
+    "tables": {
+        "default_value_table": {
+            "comment": "Table to represent default values",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "default_value_table",
+            "schema_name": "default_value_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                   "nullok": false,
+                   "type": { "typename": "int"}
+                 },
+                {
+                   "name": "int_col",
+                   "default": 1,
+                   "type": { "typename": "int"}
+               },
+                
+                {
+                   "name": "text_col",
+                   "default": "test",
+                   "type": { "typename": "text"}
+               },
+               {
+                  "name": "json_col",
+                  "default": null,
+                  "type": { "typename": "json"}
+              },
+              {
+                 "name": "jsonb_col",
+                 "default": null,
+                 "type": { "typename": "jsonb"}
+              }
+
+          ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "default_value_table"
+    ],
+    "comment": null,
+    "annotations": {}
+}

@@ -15,7 +15,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/12.reference_values_edit.js",
         "/reference/tests/13.search.js",
         "/reference/tests/14.pseudo_columns.js",
-        "/reference/tests/15.reference_column.js"
+        "/reference/tests/15.reference_column.js",
+        "/reference/tests/16.default_value.js"
 
     ],
     schemaConfigurations: [
@@ -27,6 +28,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/reference_2.conf.json",
         "/reference/conf/reference_altTables.conf.json",
         "/reference/conf/update.conf.json",
-        "/reference/conf/delete.conf.json"
+        "/reference/conf/delete.conf.json",
+        "/reference/conf/default_value.conf.json"
     ]
 });
