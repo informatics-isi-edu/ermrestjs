@@ -384,7 +384,14 @@ var ERMrest = (function(module) {
 
             try {
                 var col = columns.get(k);
-                keyValues[k] = col.formatvalue(data[k], { context: context });
+                //If the column type is json or jsonb, then insert the raw data instead of formatted data.
+                //Inserting a formatted data would lead to show blank value instead of "null" value in UI
+                if(col.type.name===('json'||'jsonb') && data[k]===null){
+                    keyValues[k] = data[k];
+                }
+                else{
+                    keyValues[k] = col.formatvalue(data[k], { context: context });
+                }
             } catch(e) {
                 keyValues[k] = data[k];
             }
