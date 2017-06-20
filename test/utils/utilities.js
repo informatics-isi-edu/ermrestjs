@@ -6,11 +6,11 @@
  */
 exports.checkPageValues = function(pageData, tuples, sortBy) {
     pageData.sort(function(a, b) {
-        return a[sortBy].localeCompare(b[sortBy]);
+        return a[sortBy].toString().localeCompare(b[sortBy].toString());
     });
 
     tuples.sort(function(a, b) {
-        return a._data[sortBy].localeCompare(b._data[sortBy]);
+        return a._data[sortBy].toString().localeCompare(b._data[sortBy].toString());
     });
 
     for (var i = 0; i < pageData.length; i++) {
