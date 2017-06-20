@@ -42,7 +42,7 @@ exports.execute = function (options) {
 
                 for (var i=0; i<files.length; i++) {
                     var file = files[i];
-                    var filePath = "test/specs/reference/files/" + file.name;
+                    var filePath = "test/specs/upload/files/" + file.name;
 
                     exec("perl -e 'print \"\1\" x " + file.size + "' > " + filePath);
 
@@ -161,7 +161,7 @@ exports.execute = function (options) {
 
             afterAll(function(done) {
                 for (var j=0; j<files.length; j++) {
-                    var filePath = "test/specs/reference/files/" + files[j].name;
+                    var filePath = "test/specs/upload/files/" + files[j].name;
                     exec('rm ' + filePath);
                 }
                 done();

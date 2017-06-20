@@ -183,7 +183,7 @@
                         ],
                         "tag:isrd.isi.edu,2017:asset": {
                             "byte_count_column": "file1_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{key}}}/{{{file1_MD5}}}",
+                            "url_pattern": "/hatrac/js/ermrestjs/{{{_key}}}/{{{_file1_MD5}}}",
                             "md5": "file1_MD5",
                             "filename_column": "file1_name"
                         },
@@ -244,7 +244,7 @@
                         ],
                         "tag:isrd.isi.edu,2017:asset": {
                             "byte_count_column": "file2_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{key}}}/{{{file2_MD5}}}",
+                            "url_pattern": "/hatrac/js/ermrestjs/{{{_key}}}/{{{_file2_MD5}}}",
                             "md5": "file2_MD5",
                             "filename_column": "file2_name"
                         },
@@ -287,13 +287,9 @@
     },
     "table_names": [
         "file",
+        "file_update_table",
         "referee"
     ],
     "comment": null,
-    "annotations": {
-        "tag:misd.isi.edu,2015:display": {
-            "name": "accommodation"
-        }
-    },
     "schema_name": "upload"
 }
