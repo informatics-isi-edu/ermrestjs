@@ -11,7 +11,7 @@ exports.execute = function (options) {
             table,
             columnName = "uri",
             column,
-            template = "/hatrac/{{{fk_id}}}/{{{uri.md5_hex}}}",
+            template = "/hatrac/{{{_fk_id}}}/{{{_uri.md5_hex}}}",
             ermRest,
             reference;
 

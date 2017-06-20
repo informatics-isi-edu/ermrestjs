@@ -159,13 +159,13 @@ exports.execute = function (options) {
             }
         });
 
-        it('module._renderTemplate() should function correctly for Null and Non-null values', function() {
-            expect(module._renderTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
-            expect(module._renderTemplate("My name is {{name}}", { name: null })).toBe(null);
-            expect(module._renderTemplate("My name is {{name}}", {})).toBe(null);
-            expect(module._renderTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
-            expect(module._renderTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
-            expect(module._renderTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
+        it('module._renderMustacheTemplate() should function correctly for Null and Non-null values', function() {
+            expect(module._renderMustacheTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
+            expect(module._renderMustacheTemplate("My name is {{name}}", { name: null })).toBe(null);
+            expect(module._renderMustacheTemplate("My name is {{name}}", {})).toBe(null);
+            expect(module._renderMustacheTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderMustacheTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderMustacheTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
         });
 
         var obj = {
@@ -238,11 +238,11 @@ exports.execute = function (options) {
                 "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
             }];
 
-        it('module._renderTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
+        it('module._renderMustacheTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
             var printMarkdown = formatUtils.printMarkdown;
 
             templateCases.forEach(function(ex) {
-                var template = module._renderTemplate(ex.template, obj);
+                var template = module._renderMustacheTemplate(ex.template, obj);
                 expect(template).toBe(ex.after_mustache);
                 var html = printMarkdown(template);
                 expect(html).toBe(ex.after_render + '\n');

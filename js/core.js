@@ -1787,7 +1787,12 @@ var ERMrest = (function (module) {
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                value = module._renderTemplate(template, options.formattedValues, options);
+                if (options === undefined || options.formattedValues === undefined) {
+                    options.formattedValues = module._getFormattedKeyValues(this.table.columns, context, data);
+                }
+                
+                options.formatted = true; // to avoid creating formattedValues again
+                value = module._renderTemplate(template, options.formattedValues, this.table, context, options);
             }
 
 
