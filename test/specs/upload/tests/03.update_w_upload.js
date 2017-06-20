@@ -1,34 +1,10 @@
 var uploadUtils = require("../utils.js");
+var utils = require("../../../utils/utilities.js");
 
 exports.execute = function (options) {
     var exec = require('child_process').execSync;
     var FileAPI = require('file-api'), File = FileAPI.File;
     File.prototype.jsdom = true;
-
-    /*
-     * @param pageData - data retruned from update request
-     * @param tuples - tuples sent to the database for update
-     * verifies that the returned data is the same as the submitted data
-     */
-    function checkPageValues(pageData, tuples, sortBy) {
-        pageData.sort(function(a, b) {
-            return a[sortBy] - b[sortBy];
-        });
-
-        tuples.sort(function(a, b) {
-            return a._data[sortBy] - b._data[sortBy];
-        });
-
-        for (var i = 0; i < pageData.length; i++) {
-            var tupleData = tuples[i]._data;
-            var columns = Object.keys(tupleData);
-            var responseData = pageData[i];
-            for (var j = 0; j < columns.length; j++) {
-                var columnName = columns[j];
-                expect(responseData[columnName]).toBe(tupleData[columnName]);
-            }
-        }
-    }
 
     describe("updating reference objects, ", function () {
         var catalogId = process.env.DEFAULT_CATALOG,
@@ -152,7 +128,7 @@ exports.execute = function (options) {
                     response = response.successful;
                     expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
 
-                    checkPageValues(response._data, tuples, sortBy);
+                    utils.checkPageValues(response._data, tuples, sortBy);
 
                     // verify that reading the reference again returns the updated row
                     return reference.read(1);

@@ -1,4 +1,13 @@
-
+/**
+ * @param {File} file - the file object to be uploaded
+ * @param {int} fileNumber - the file number based on column definitions in update table
+ * @param {Column} column - represents the uri column for the asset
+ * @param {Reference} reference - represents the table the file is being uploaded to
+ * @param {Object} options - contains ermRest and therefore the Upload class
+ * @returns {Promise} - the returned promise includes the url of the file and a row of values representing the file
+ * This function is to be used onlly with the `upload` schema
+ * It relies on the structure of the file_update_table
+ **/
 exports.uploadFileForTests = function(file, fileNumber, column, reference, options) {
     var defer = require('q').defer();
 
