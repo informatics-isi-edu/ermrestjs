@@ -6,7 +6,7 @@
  */
 exports.checkPageValues = function(pageData, tuples, sortBy) {
     pageData.sort(function(a, b) {
-        return a[sortBy] - b[sortBy];
+        return a[sortBy].localeCompare(b[sortBy]);
     });
 
     tuples.sort(function(a, b) {
