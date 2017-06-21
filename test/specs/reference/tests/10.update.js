@@ -1,32 +1,6 @@
+var utils = require("../../../utils/utilities.js");
+
 exports.execute = function (options) {
-    var exec = require('child_process').execSync;
-    var  FileAPI = require('file-api'), File = FileAPI.File;
-	File.prototype.jsdom = true;
-
-    /*
-     * @param pageData - data retruned from update request
-     * @param tuples - tuples sent to the database for update
-     * verifies that the returned data is the same as the submitted data
-     */
-    function checkPageValues(pageData, tuples, sortBy) {
-        pageData.sort(function(a, b) {
-            return a[sortBy] - b[sortBy];
-        });
-
-        tuples.sort(function(a, b) {
-            return a._data[sortBy] - b._data[sortBy];
-        });
-
-        for (var i = 0; i < pageData.length; i++) {
-            var tupleData = tuples[i]._data;
-            var columns = Object.keys(tupleData);
-            var responseData = pageData[i];
-            for (var j = 0; j < columns.length; j++) {
-                var columnName = columns[j];
-                expect(responseData[columnName]).toBe(tupleData[columnName]);
-            }
-        }
-    }
 
     describe("updating reference objects, ", function () {
         var catalogId = process.env.DEFAULT_CATALOG,
@@ -94,7 +68,7 @@ exports.execute = function (options) {
                     response = response.successful;
                     expect(response._data.length).toBe(1);
 
-                    checkPageValues(response._data, tuples, sortBy);
+                    utils.checkPageValues(response._data, tuples, sortBy);
 
                     var getUri = baseUri + "/key=6";
                     return options.ermRest.resolve(getUri, {cid: "test"});
@@ -111,135 +85,6 @@ exports.execute = function (options) {
                     console.dir(error);
                     done.fail();
                 });
-            });
-        });
-
-        describe("for updating asset columns, ", function() {
-            var reference, column,
-                columnName = "uri",
-                tableName = "file_update_table",
-                sortBy = "key",
-                baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/key=1";
-
-            var file = {
-                name: "testfile500kb.png",
-                size: 512000,
-                displaySize: "500KB",
-                type: "image/png",
-                hash: "4b178700e5f3b15ce799f2c6c1465741",
-                hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
-            }
-
-            beforeAll(function (done) {
-                var filePath = "test/specs/reference/files/" + file.name;
-
-                exec("perl -e 'print \"\1\" x " + file.size + "' > " + filePath);
-
-	        	file.file = new File(filePath);
-
-                options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
-                    reference = response;
-                    reference = reference.contextualize.entryEdit;
-
-                    column = reference.columns.find(function(c) { return c.name == columnName;  });
-
-                	if (!column) {
-                		console.log("Unable to find column " + columnName);
-                		done.fail();
-                		return;
-                	}
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
-                });
-            });
-
-            it("the metadata for the asset should be updated.", function (done) {
-                var tuples, tuple, fileUrl, updateData = {},
-                    baseUrl = options.url.replace("/ermrest", "");
-
-                var validRow = { key: 1, uri : { md5_hex: file.hash } };
-
-                var uploadObj = new options.ermRest.Upload(file.file, {
-                    column: column,
-                    reference: reference,
-                    chunkSize: 5 * 1024 * 1024
-                });
-
-                expect(uploadObj instanceof options.ermRest.Upload).toBe(true, "Upload object is not of type 'ermrest.Upload'");
-
-                reference.read(1).then(function(response) {
-                    tuples = response.tuples;
-                    tuple = tuples[0];
-
-                    return uploadObj.calculateChecksum(validRow);
-                }).then(function(url) {
-                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File generated url is not the same after calculating the checksum");
-
-                    expect(validRow.filename).toBe(file.name, "file.name is not the same");
-                    expect(validRow.bytes).toBe(file.size, "file.size is not the same");
-                    expect(validRow.File_MD5).toBe(file.hash, "file.hash is not the same");
-
-                    return uploadObj.createUploadJob();
-                }).then(function(url) {
-                    expect(url).toBeDefined("Chunk url not returned");
-
-                    return uploadObj.start();
-                }).then(function(url) {
-                    expect(url).toBe("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same during upload");
-
-                    return uploadObj.completeUpload();
-                }).then(function(url) {
-                    expect(url).toContain("/hatrac/" + validRow.key + "/" + file.hash, "File url is not the same after upload has completed");
-
-                    updateData = {
-                        uri: url,
-                        bytes: validRow.bytes,
-                        File_MD5: validRow.File_MD5,
-                        filename: validRow.filename
-                    }
-                    var data = tuple.data;
-
-                    for (var key in updateData) {
-                        data[key] = updateData[key];
-                    }
-
-                    return reference.update(tuples);
-                }).then(function (response) {
-                    response = response.successful;
-                    expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
-
-                    checkPageValues(response._data, tuples, sortBy);
-
-                    // verify that reading the reference again returns the updated row
-                    return reference.read(1);
-                }).then(function (response) {
-                    var pageData = response._data[0];
-
-                    expect(pageData.uri).toBe(updateData.uri, "Entity uri does not match new uri");
-                    expect(pageData.uri).not.toBe(tuple._oldData.uri, "Entity uri matches old uri");
-
-                    expect(pageData.bytes).toBe(updateData.bytes, "Entity bytes does not match new bytes");
-                    expect(pageData.bytes).not.toBe(tuple._oldData.bytes, "Entity bytes matches old bytes");
-
-                    expect(pageData.File_MD5).toBe(updateData.File_MD5, "Entity md5 does not match new md5");
-                    expect(pageData.File_MD5).not.toBe(tuple._oldData.File_MD5, "Entity md5 matches old md5");
-
-                    expect(pageData.filename).toBe(updateData.filename, "Entity filename does not match new filename");
-                    expect(pageData.filename).not.toBe(tuple._oldData.filename, "Entity filename matches old filename");
-
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
-
-            afterAll(function(done) {
-                var filePath = "test/specs/reference/files/" + file.name;
-                exec('rm ' + filePath);
-                done();
             });
         });
 
@@ -276,7 +121,7 @@ exports.execute = function (options) {
                         expect(response._data.length).toBe(1, "response data is not the same size as given.");
                         expect(response.reference._context).toEqual("compact", "page reference is not in the correct context.");
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=777";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -324,7 +169,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=2";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -373,7 +218,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=777";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -422,7 +267,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         var getUri = baseUri + "/ind_key1=2";
                         return options.ermRest.resolve(getUri, {cid: "test"});
@@ -473,7 +318,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             var getUri = baseUri + "/ind_key1=777";
                             return options.ermRest.resolve(getUri, {cid: "test"});
@@ -526,7 +371,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             var getUri = baseUri + "/ind_key1=2";
                             return options.ermRest.resolve(getUri, {cid: "test"});
@@ -591,7 +436,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -628,7 +473,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -665,7 +510,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -702,7 +547,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -742,7 +587,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -783,7 +628,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -824,7 +669,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -867,7 +712,7 @@ exports.execute = function (options) {
                                     response = response.successful;
                                     expect(response._data.length).toBe(1);
 
-                                    checkPageValues(response._data, tuples, sortBy);
+                                    utils.checkPageValues(response._data, tuples, sortBy);
 
                                     return reference.read(1);
                                 }).then(function (response) {
@@ -908,7 +753,7 @@ exports.execute = function (options) {
                                     response = response.successful;
                                     expect(response._data.length).toBe(1);
 
-                                    checkPageValues(response._data, tuples, sortBy);
+                                    utils.checkPageValues(response._data, tuples, sortBy);
 
                                     return reference.read(1);
                                 }).then(function (response) {
@@ -950,7 +795,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -991,7 +836,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -1035,7 +880,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -1080,7 +925,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -1127,7 +972,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -1172,7 +1017,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(1);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 return reference.read(1);
                             }).then(function (response) {
@@ -1228,7 +1073,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1318,7 +1163,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1386,7 +1231,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1458,7 +1303,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1556,7 +1401,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -1593,7 +1438,7 @@ exports.execute = function (options) {
                         response = response.successful;
                         expect(response._data.length).toBe(1);
 
-                        checkPageValues(response._data, tuples, sortBy);
+                        utils.checkPageValues(response._data, tuples, sortBy);
 
                         return reference.read(1);
                     }).then(function (response) {
@@ -1632,7 +1477,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -1673,7 +1518,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(1);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             return reference.read(1);
                         }).then(function (response) {
@@ -1734,7 +1579,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1800,7 +1645,7 @@ exports.execute = function (options) {
                             response = response.successful;
                             expect(response._data.length).toBe(updateData.length);
 
-                            checkPageValues(response._data, tuples, sortBy);
+                            utils.checkPageValues(response._data, tuples, sortBy);
 
                             // Retrieve each updated tuple and verify only updateData columns were changed
 
@@ -1869,7 +1714,7 @@ exports.execute = function (options) {
                                 response = response.successful;
                                 expect(response._data.length).toBe(updateData.length);
 
-                                checkPageValues(response._data, tuples, sortBy);
+                                utils.checkPageValues(response._data, tuples, sortBy);
 
                                 // Retrieve each updated tuple and verify only updateData columns were changed
 
