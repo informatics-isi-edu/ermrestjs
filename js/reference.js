@@ -811,7 +811,7 @@ var ERMrest = (function(module) {
                      * If 1 row has it set and none of the others, it cannot be part of defaults
                     **/
                     for (var m = 0; m < data.length; m++) {
-                        if (data[m][columnName]) {
+                        if (data[m][columnName]!== undefined && data[m][columnName] !==null) {
                             notSet = false;
                             break;
                         }
@@ -1468,20 +1468,20 @@ var ERMrest = (function(module) {
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 var defer = module._q.defer();
-                
+
                 /**
                  * NOTE: previous implemenation of delete with 412 logic is here:
                  * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
                  *
                  * We decided to drop the support for 412, because the etag that we get from the read function
                  * is different than the one delete expects. The reason for that is because we are getting etag
-                 * in read with joins in the request, which affects the etag. etag is in response to any change 
+                 * in read with joins in the request, which affects the etag. etag is in response to any change
                  * to the returned data and since join introduces extra data it is different than a request
                  * without any joins.
-                 * 
+                 *
                  * github issue: #425
                  */
-                
+
                 this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
@@ -1489,7 +1489,7 @@ var ERMrest = (function(module) {
                 }).catch(function (catchError) {
                     return defer.reject(module._responseToError(catchError));
                 });
-                
+
                 return defer.promise;
             }
             catch (e) {
