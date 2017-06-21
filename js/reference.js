@@ -2768,7 +2768,7 @@ var ERMrest = (function(module) {
                         else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
 
-                            if (column.type.name === "json"|| "jsonb") {
+                            if (column.type.name === ("json"|| "jsonb")) {
                                 values[i].isHTML = true;
                             }
                             if (column.type.name === "gene_sequence") {
