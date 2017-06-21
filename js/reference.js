@@ -2732,7 +2732,12 @@ var ERMrest = (function(module) {
                         }
                         else if(column.type.name === ("json" || "jsonb")){
                             presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            this._values[i] = presentation.value;
+                            if(typeof keyValues['_'+column.name] === "string"){
+                                this._values[i] = '"'+presentation.value+'"';
+                            }
+                            else{
+                                this._values[i] = presentation.value;
+                            }
                             this._isHTML[i] = true;
                         }
                         else {
@@ -3132,9 +3137,8 @@ var ERMrest = (function(module) {
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         formatJsonPresentation: function(data, options) {
-
             var isHTML = true, value = "", curr;
-            value = "<pre>"+ data + "</pre>";
+            value = '<pre>'+ data + '</pre>';
             return {isHTML: isHTML, value: value};
         },
 
