@@ -731,6 +731,43 @@ var ERMrest = (function(module) {
 
             return module._markdownIt.render(value);
         },
+        
+        /**
+        * @function		    
+        * @param {Object} value A json value to transform
+        * @param {Object} [options] Configuration options.
+        * @return {string} A string representation of value
+        * @desc Formats a given json value into a string for display.
+        */
+        printJSON: function printJSON(value, options) {
+           options = (typeof options === 'undefined') ? {} : options;
+           if(options.context==="entry/edit"){
+               if (value === null) {
+                   return 'null';
+                }
+                else if (typeof value === 'object') {
+                       return JSON.stringify(value,undefined,2);
+                }
+            }
+            
+            else{
+                var formattedValue;
+                if (value === null) {
+                    formattedValue= JSON.stringify(null);
+                    formattedValue ='<pre>'+formattedValue+'</pre>';
+                 }
+                 else if (typeof value === 'object' || typeof value === 'boolean') {
+                    formattedValue= JSON.stringify(value,undefined,2);
+                    formattedValue ='<pre>'+formattedValue+'</pre>';
+                 }
+                 else if (typeof value === 'string') {
+                    formattedValue= JSON.stringify(value,undefined,2);
+                    formattedValue ='"'+formattedValue+'"';
+                 }
+                 return formattedValue;
+            }
+           return value.toString();
+       },
 
         /**
          * @function
