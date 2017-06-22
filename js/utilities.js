@@ -384,7 +384,14 @@ var ERMrest = (function(module) {
 
             try {
                 var col = columns.get(k);
-                keyValues[k] = col.formatvalue(data[k], { context: context });
+                //If the column type is json or jsonb, then insert the raw data instead of formatted data.
+                //Inserting a formatted data would lead to show blank value instead of "null" value in UI
+                if(col.type.name===('json'||'jsonb') && data[k]===null){
+                    keyValues[k] = data[k];
+                }
+                else{
+                    keyValues[k] = col.formatvalue(data[k], { context: context });
+                }
             } catch(e) {
                 keyValues[k] = data[k];
             }
@@ -694,6 +701,24 @@ var ERMrest = (function(module) {
             var parts = value.split(".");
             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             return parts.join(".");
+        },
+
+        /**
+         * @function
+         * @param {Object} value A json value to transform
+         * @param {Object} [options] Configuration options.
+         * @return {string} A string representation of value
+         * @desc Formats a given json value into a string for display.
+         */
+        printJSON: function printJSON(value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+            if (value === null) {
+                return '';
+            }
+            if (typeof value === 'object') {
+                return JSON.stringify(value,undefined,2);
+            }
+            return value.toString();
         },
 
         /**

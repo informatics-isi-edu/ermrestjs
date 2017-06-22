@@ -1780,8 +1780,7 @@ var ERMrest = (function(module) {
 
         /**
          * This will generate a new unfiltered reference each time.
-         * Returns a reference that points to all entities of current table
-         * 
+         * Returns a reference that points to all entities of current table	
          * @type {ERMrest.Reference}
          */
         get unfilteredReference() {
@@ -2457,7 +2456,7 @@ var ERMrest = (function(module) {
                     // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                     for (var i = 0; i < this._data.length; i++) {
 
-                        // render template
+                        // render template		 
                         var value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
 
                         // If value is null or empty, return value on basis of `show_nulls`
@@ -2710,8 +2709,7 @@ var ERMrest = (function(module) {
                 this._isHTML = [];
 
                 var column, presentation;
-                
-                // key value pair of formmated values, to be used in formatPresentation
+                 // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
 
                 // If context is entry
@@ -2723,12 +2721,24 @@ var ERMrest = (function(module) {
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
-                            } else {
+                            }
+                            else {
                                 presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
-                        } else {
+                        }
+                        else if(column.type.name === ("json" || "jsonb")){
+                            presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                            if(typeof keyValues['_'+column.name] === "string"){
+                                this._values[i] = '"'+presentation.value+'"';
+                            }
+                            else{
+                                this._values[i] = presentation.value;
+                            }
+                            this._isHTML[i] = true;
+                        }
+                        else {
                             this._values[i] = this._data[column.name];
                             this._isHTML[i] = false;
                         }
@@ -2745,12 +2755,20 @@ var ERMrest = (function(module) {
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
-                            } else {
+                            }
+                            else {
                                 values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
-                        } else {
+                        }
+                        else if (column.type.name === ("json" || "jsonb")){
+                            values[i] = column.formatJsonPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                        }
+                        else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
 
+                            if (column.type.name === ("json"|| "jsonb")) {
+                                values[i].isHTML = true;
+                            }
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -3107,6 +3125,18 @@ var ERMrest = (function(module) {
                 }
                 value += (i>0 ? ":" : "") + curr.value;
             }
+            return {isHTML: isHTML, value: value};
+        },
+
+        /**
+         * Formats the presentation value corresponding to this reference-column definition.
+         * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {Object} options includes `context` and `formattedValues`
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         */
+        formatJsonPresentation: function(data, options) {
+            var isHTML = true, value = "", curr;
+            value = '<pre>'+ data + '</pre>';
             return {isHTML: isHTML, value: value};
         },
 
@@ -3596,14 +3626,13 @@ var ERMrest = (function(module) {
          // use the markdown_pattern that is defiend in key-display annotation
          var display = this.key.getDisplay(context);
          if (display.isMarkdownPattern) {
-             
-             // make sure that formattedValues is defined
-             if (options === undefined || options.formattedValues === undefined) {
-                options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
-             }
-             
-             caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
-             caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+             // make sure that formattedValues is defined		
+                if (options === undefined || options.formattedValues === undefined) {		
+                    options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);		
+                }		
+                          		
+                caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});             
+                caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
              addLink = false;
          } else {
              var values = [];
@@ -3789,8 +3818,8 @@ var ERMrest = (function(module) {
             "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
             "url": data[this._baseCol.name]
         };
-        var pattern = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
-        return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
+         var pattern = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
+         return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
     };
 
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
