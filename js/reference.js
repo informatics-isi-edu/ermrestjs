@@ -2723,7 +2723,7 @@ var ERMrest = (function(module) {
                                 presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
                             }
                             else {
-                                presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
