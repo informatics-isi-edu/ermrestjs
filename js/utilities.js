@@ -752,18 +752,19 @@ var ERMrest = (function(module) {
             
             else{
                 var formattedValue;
-                if (value === null) {
+                if (value === null || value=== "") {
                     formattedValue= JSON.stringify(null);
-                    formattedValue ='<pre>'+formattedValue+'</pre>';
-                 }
-                 else if (typeof value === 'object' || typeof value === 'boolean') {
-                    formattedValue= JSON.stringify(value,undefined,2);
                     formattedValue ='<pre>'+formattedValue+'</pre>';
                  }
                  else if (typeof value === 'string') {
                     formattedValue= JSON.stringify(value,undefined,2);
                     formattedValue ='"'+formattedValue+'"';
                  }
+                 else {
+                    formattedValue= JSON.stringify(value,undefined,2);
+                    formattedValue ='<pre>'+formattedValue+'</pre>';
+                 }
+                 
                  return formattedValue;
             }
            return value.toString();
