@@ -748,6 +748,9 @@ var ERMrest = (function(module) {
                 else if (typeof value === 'object') {
                        return JSON.stringify(value,undefined,2);
                 }
+                else if (typeof value === 'string') {
+                   return  JSON.stringify(value,undefined,2);
+                }
             }
             
             else{
@@ -756,10 +759,7 @@ var ERMrest = (function(module) {
                     formattedValue= JSON.stringify(null);
                     formattedValue ='<pre>'+formattedValue+'</pre>';
                  }
-                 else if (typeof value === 'string') {
-                    formattedValue= JSON.stringify(value,undefined,2);
-                    formattedValue ='"'+formattedValue+'"';
-                 }
+                 
                  else {
                     formattedValue= JSON.stringify(value,undefined,2);
                     formattedValue ='<pre>'+formattedValue+'</pre>';

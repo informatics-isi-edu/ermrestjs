@@ -66,7 +66,7 @@ exports.execute = function (options) {
             var printJSON = formatUtils.printJSON;
             var options={context:'entry/edit'};
             expect(printJSON(null,options)).toBe('null');
-            expect(printJSON('',options)).toBe('');
+            expect(printJSON('',options)).toBe('""');
             expect(printJSON(true,options)).toBe('true');
             expect(printJSON(false,options)).toBe('false');
             expect(printJSON(2.9,options)).toBe('2.9');
