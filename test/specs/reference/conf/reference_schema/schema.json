@@ -1,6 +1,44 @@
 {
     "schema_name": "reference_schema",
     "tables": {
+        "jsontest_table":{
+            "comment": "Table to represent a testable json object",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "jsontest_table",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "json_col",
+                    "type": {
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "jsonb_col",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                }
+            ]
+        },
         "reference_table": {
             "comment": "Table to represent a testable reference object",
             "kind": "table",

@@ -1,0 +1,7 @@
+[{"id":"1001","json_col":true,"jsonb_col":true},
+{"id":"1002","json_col":{},"jsonb_col":{}},
+{"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
+{"id":"1004","json_col":false,"jsonb_col":false},
+{"id":"1005","json_col":2.9,"jsonb_col":2.9},
+{"id":"1006","json_col":"","jsonb_col":""}
+]

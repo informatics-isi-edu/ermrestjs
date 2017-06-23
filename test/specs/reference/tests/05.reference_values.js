@@ -242,6 +242,70 @@ exports.execute = function (options) {
 
             testTupleValidity(6, values, isHTML);
         });
+        
 
+    });
+    
+    describe("Testing for JSON AND JSONB Values", function() {
+        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true},
+        {"id":"1002","json_col":{},"jsonb_col":{}},
+        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
+        {"id":"1004","json_col":false,"jsonb_col":false},
+        {"id":"1005","json_col":2.9,"jsonb_col":2.9},
+        {"id":"1006","json_col":"","jsonb_col":""}];
+
+        var catalog_id = process.env.DEFAULT_CATALOG,
+            schemaName = "reference_schema",
+            tableName = "jsontest_table",
+            lowerLimit = 1001,
+            upperLimit = 2001,
+            limit = 6;
+
+        var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+
+        var reference, page, tuples;
+
+        beforeAll(function(done) {
+            
+            // Fetch the entities beforehand
+            options.ermRest.resolve(multipleEntityUri).then(function (response) {
+                reference = response;
+                expect(reference).toEqual(jasmine.any(Object));
+                return reference.read(limit);
+            }).then(function (response) {
+                page = response;
+                
+                expect(page).toEqual(jasmine.any(Object));
+                expect(page._data.length).toBe(limit);
+                
+                expect(page.tuples).toBeDefined();
+                jsontuples = page.tuples;
+                expect(jsontuples.length).toBe(limit);
+                
+                done();
+            }, function (err) {
+                console.dir(err);
+                done.fail();
+            }).catch(function(err) {
+                console.dir(err);
+                done.fail();
+            });
+        
+        });
+        
+        it("Testing for JSON and JSONB tuples values", function() {
+            
+            for( var i=0; i<limit; i++){
+                let id=jsontuples[i]._data.id;
+                let josn_col=jsontuples[i]._data.json_col;
+                let josnb_col=jsontuples[i]._data.jsonb_col;
+                expect(id).toBe(expectedValues[i].id);
+                let expectedValueJson=expectedValues[i].json_col;
+                expect(josn_col).toEqual(expectedValueJson);
+            
+                let expectedValueJsonB=expectedValues[i].jsonb_col;
+                expect(josnb_col).toEqual(expectedValueJsonB);
+            }
+        });
     });
 };
