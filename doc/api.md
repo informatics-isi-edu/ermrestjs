@@ -317,8 +317,12 @@ to use for ERMrest JavaScript agents.
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
     * [.upload](#ERMrest.upload)
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
+        * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
+        * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
+        * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
         * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+        * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
         * [.pause()](#ERMrest.upload+pause)
         * [.resume()](#ERMrest.upload+resume)
         * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
@@ -3042,8 +3046,12 @@ Indicates that this ReferenceColumn is an asset.
 
 * [.upload](#ERMrest.upload)
     * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
+    * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
+    * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
+    * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
     * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+    * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
     * [.pause()](#ERMrest.upload+pause)
     * [.resume()](#ERMrest.upload+resume)
     * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
@@ -3069,6 +3077,40 @@ Cancel with cancel()
 | file | <code>Object</code> | A browser file object |
 | {otherInfo} | <code>type</code> | A set of options 1. chunkSize - Default is 5MB 2. column - [Column](#ERMrest.Column) object is mandatory 3. reference - [Reference](#ERMrest.Reference) object  is mandatory |
 
+<a name="ERMrest.upload+validateURL"></a>
+
+#### upload.validateURL(row) ⇒ <code>boolean</code>
+Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
+If any properties in the template are found null without null handling then return false
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| row | <code>object</code> | row object containing keyvalues of entity |
+
+<a name="ERMrest.upload+calculateChecksum"></a>
+
+#### upload.calculateChecksum(row) ⇒ <code>Promise</code>
+Call this function to calculate checksum before uploading to server
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
+or rejected with error if unable to calculate checkum
+and notified with a progress handler, sending number in bytes done  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| row | <code>object</code> | row object containing keyvalues of entity |
+
+<a name="ERMrest.upload+createUploadJob"></a>
+
+#### upload.createUploadJob() ⇒ <code>Promise</code>
+Call this function to create an upload job for chunked uploading
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
+or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+fileExists"></a>
 
 #### upload.fileExists() ⇒ <code>Promise</code>
@@ -3088,6 +3130,14 @@ else it will start uploading the chunks. If the job was paused then resume by up
 **Returns**: <code>Promise</code> - A promise resolved with a url where we uploaded the file
 or rejected with error if unable to upload any chunk
 and notified with a progress handler, sending number in bytes uploaded uptil now  
+<a name="ERMrest.upload+completeUpload"></a>
+
+#### upload.completeUpload() ⇒ <code>Promise</code>
+This function is used to complete the chunk upload by notifying hatrac about it returning a promise with final url
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we uploaded the file
+ or rejected with error if unable to complete the job  
 <a name="ERMrest.upload+pause"></a>
 
 #### upload.pause()

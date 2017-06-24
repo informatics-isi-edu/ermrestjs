@@ -71,9 +71,9 @@ var ERMrest = (function(module) {
         return/^[0-9A-Fa-f]{1,64}$/.test(n);
     };
 
-    var Hex2Bin = function(n) { 
+    var Hex2Bin = function(n) {
         if (!checkHex(n)) return 0;
-        return parseInt(n,16).toString(2); 
+        return parseInt(n,16).toString(2);
     };
 
     var hexToBase64 = function (str) {
@@ -103,7 +103,7 @@ var ERMrest = (function(module) {
      * @param {onError} fn callback function to be called for error
      * @returns {Promise} if the schema exists or not
      * @desc Calculates  MD5 checksum for a file using spark-md5 library
-     */ 
+     */
     Checksum.prototype.calculate = function(chunkSize, onProgress, onSuccess, onError) {
 
         var self = this, file = this.file;
@@ -128,11 +128,11 @@ var ERMrest = (function(module) {
         // Once all chunks are done, it calculates the final md5 and converts it in hex format calling onSuccess
         var onLoad = function(e) {
             //console.log("\nRead chunk number " + parseInt(currentChunk + 1) + " of " + chunks);
-            
+
             spark.append(e.target.result); // append array buffer
-            
+
             currentChunk++;
-            
+
             var completed = chunkSize * currentChunk;
 
             onProgress(completed > file.size ? file.size: completed, file.size);
@@ -157,23 +157,23 @@ var ERMrest = (function(module) {
                 setTimeout(function() {
                     onLoad({ target: {result : blobSlice.call(self.file.buffer, start, end) } });
                 }, 1);
-                
+
             } else {
                 var fileReader = new FileReader();
                 fileReader.onload = onLoad;
                 fileReader.onerror = onError;
 
-            
+
                 fileReader.readAsArrayBuffer(blobSlice.call(self.file, start, end));
             }
         };
-        
+
         loadNext();
     };
 
     module.Checksum = Checksum;
 
-    return module; 
+    return module;
 
 })(ERMrest || {});
 
@@ -193,7 +193,7 @@ var ERMrest = (function(module) {
      * You can pause with pause()
      * Resume with resume()
      * Cancel with cancel()
-     * 
+     *
      * @memberof ERMrest
      * @class
      * @param {Object} file - A browser file object
@@ -201,19 +201,19 @@ var ERMrest = (function(module) {
      * 1. chunkSize - Default is 5MB
      * 2. column - {@link ERMrest.Column} object is mandatory
      * 3. reference - {@link ERMrest.Reference} object  is mandatory
-     * 
+     *
      * @returns {upload}
      */
     var upload = function (file, otherInfo) {
-        
+
         this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
-        
+
         this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 10;
 
         this.file = file;
-        
+
         if (isNode) this.file.buffer = require('fs').readFileSync(file.path);
-        
+
         this.column = otherInfo.column;
         if (!this.column) throw new Error("No column provided while creating hatrac file object");
 
@@ -223,10 +223,10 @@ var ERMrest = (function(module) {
         this.SERVER_URI = this.reference._server.uri.replace("/ermrest", "");
 
         this.http = this.reference._server._http;
-        
+
         this.isPaused = false;
         this.otherInfo = otherInfo;
-        
+
         this.uploadedSize = 0;
         this.uploadingSize = 0;
 
@@ -237,27 +237,6 @@ var ERMrest = (function(module) {
     };
 
     /**
-     * @private
-     * @desc This function converts a url to an absolute one, prepending it with SERVER_URI.
-     * @param {string} uri - uri string
-     * @returns {string}
-     */
-    upload.prototype.getAbsoluteUrl = function(uri) {
-        // A more universal, non case-sensitive, protocol-agnostic regex
-        // to test a URL string is relative or absolute 
-        var r = new RegExp('^(?:[a-z]+:)?//', 'i');
-
-        // The url is absolute so don't make any changes and return it as it is
-        if (r.test(uri))  return uri;
-        
-        // If uri starts with "/" then simply prepend the server uri
-        if (uri.indexOf("/") === 0)  return this.SERVER_URI + uri; 
-        
-        // else prepend the server uri with an additional "/"
-        return this.SERVER_URI + "/" + uri; 
-    };
-
-    /* 
      * @desc Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
      * If any properties in the template are found null without null handling then return false
      * @param {object} row - row object containing keyvalues of entity
@@ -267,7 +246,7 @@ var ERMrest = (function(module) {
     upload.prototype.validateURL = function(row) {
 
         if (this.column.urlPattern) {
-            
+
             var template = this.column.urlPattern;
 
             var ignoredColumns = [];
@@ -276,8 +255,8 @@ var ERMrest = (function(module) {
             if (this.column.filenameColumn) ignoredColumns.push(this.column.filenameColumn.name);
             if (this.column.byteCountColumn) ignoredColumns.push(this.column.byteCountColumn.name);
             if (this.column.md5 && typeof this.column.md5 === "object") ignoredColumns.push(this.column.md5.name);
-            if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name); 
-            
+            if (this.column.sha256 && typeof this.column.sha256 === "object") ignoredColumns.push(this.column.sha256.name);
+
             ignoredColumns.push("md5_hex");
             ignoredColumns.push("md5_base64");
             ignoredColumns.push("filename");
@@ -286,66 +265,15 @@ var ERMrest = (function(module) {
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
-            
+
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
         }
 
         return true;
     };
 
-    /* 
-     * @Private
-     * @desc Call this function with the json row object to  generate an upload url
-     * @param {object} row - row object containing keyvalues of entity
-     *
-     * @returns {string}
-     */
-    upload.prototype.generateURL = function(row) {
-        
-        var template = this.column.urlPattern;
-        
-        // Populate all values in row depending on column from current
-        if (this.column.filenameColumn) row[this.column.filenameColumn.name] = this.file.name;
-        if (this.column.byteCountColumn) row[this.column.byteCountColumn.name] = this.file.size;
-        if (this.column.md5 && typeof this.column.md5 === 'object') row[this.column.md5.name] = this.hash.md5_hex;
-        if (this.column.sha256 && typeof this.column.sha256 === 'object') row[this.column.sha256.name] = this.hash.sha256;
 
-        row[this.column.name].filename = this.file.name;
-        row[this.column.name].size = this.file.size;
-        row[this.column.name].md5_hex = this.hash.md5_hex;
-        row[this.column.name].md5_base64 = this.hash.md5_base64;
-        row[this.column.name].sha256 = this.hash.sha256;
-
-        // Generate url
-        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
-
-        // If the template is null then throw an error
-        if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
-        
-        // If new url has changed then there set all other flags to false to recompute them
-        if (this.url !== url) {
-
-            // To regenerate upload job url
-            this.chunkUrl = false;
-
-            // To make the filesExists call again
-            this.fileExistsFlag = false;
-
-            // To restart upload of all chunks
-            this.completed = false;
-
-            // To recall complete upload method
-            this.jobDone = false;
-        }
-
-        this.url = url;
-
-        return this.url;
-    };
-
-
-    /* 
-     *
+    /**
      * @desc Call this function to calculate checksum before uploading to server
      * @param {object} row - row object containing keyvalues of entity
      *
@@ -360,7 +288,7 @@ var ERMrest = (function(module) {
         // If the hash is calculated then simply generate the url
         // and notify and reoslve the promise
         if (this.hash && (this.hash.md5_base64 || this.hash.sha256)) {
-            this.generateURL(row);
+            this._generateURL(row);
             deferred.notify(this.file.size);
             deferred.resolve(this.url);
             return deferred.promise;
@@ -373,11 +301,11 @@ var ERMrest = (function(module) {
         this.hash.calculate(this.PART_SIZE, function(uploaded, fileSize) {
             deferred.notify(uploaded);
         }, function() {
-            self.generateURL(row);
+            self._generateURL(row);
             deferred.resolve(self.url);
         }, function(err) {
-            deferred.reject(new Error(((err && err.message) ? 
-                                        err.message : 
+            deferred.reject(new Error(((err && err.message) ?
+                                        err.message :
                                         "Unable to calculate checksum for file") + " " + self.file.name));
         });
 
@@ -385,8 +313,7 @@ var ERMrest = (function(module) {
     };
 
 
-    /* 
-     *
+    /**
      * @desc Call this function to create an upload job for chunked uploading
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
@@ -395,12 +322,12 @@ var ERMrest = (function(module) {
     upload.prototype.createUploadJob = function() {
         var self = this;
         this.erred = false;
-        
+
         var deferred = module._q.defer();
 
 
         // Check whether an existing upload job is available for current file
-        this.getExistingJobStatus().then(function(response) {
+        this._getExistingJobStatus().then(function(response) {
 
             // if upload job exists then use current chunk url
             // else create a new chunk url
@@ -414,8 +341,8 @@ var ERMrest = (function(module) {
                 self.chunkUrl = null;
 
                 // Prepend the url with server uri if it is relative
-                var url =  self.getAbsoluteUrl(self.url + ";upload?parents=true");
-                
+                var url =  self._getAbsoluteUrl(self.url + ";upload?parents=true");
+
                 var data = {
                     "chunk-length" : self.PART_SIZE,
                     "content-length": self.file.size,
@@ -423,7 +350,7 @@ var ERMrest = (function(module) {
                     "content-md5": self.hash.md5_base64,
                     "content-disposition": "filename*=UTF-8''" + self.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
                 };
-               
+
                 var config = {
                     headers: { 'content-type' : 'application/json' }
                 };
@@ -433,41 +360,13 @@ var ERMrest = (function(module) {
 
         }).then(function(response) {
             if (response) {
-                self.chunkUrl = response.headers('location'); 
+                self.chunkUrl = response.headers('location');
                 deferred.resolve(self.chunkUrl);
             }
         }, function(response) {
             var error = module._responseToError(response);
             deferred.reject(error);
         });
-
-        return deferred.promise;
-    };
-
-
-    /*
-     * @Private
-     * @desc This function fetches the upload job status if chunkurl is not null
-     * @returns {Promise}
-     */
-    upload.prototype.getExistingJobStatus = function() {
-
-        var deferred = module._q.defer();
-
-
-        // If chunkUrl is not null then fetch  the status of the uploadJob
-        // and resolve promise with it.
-        // else just resolved it without any response
-        if (this.chunkUrl) {
-            this.http.get(this.getAbsoluteUrl(this.chunkUrl)).then(function(response) {
-                deferred.resolve(response);
-            }, function(response) {
-                deferred.reject(response);
-            });
-        } else {
-            deferred.resolve();
-        }
-
 
         return deferred.promise;
     };
@@ -481,11 +380,11 @@ var ERMrest = (function(module) {
      */
     upload.prototype.fileExists = function() {
         var self = this;
-        
+
         var deferred = module._q.defer();
 
-        this.http.head(this.getAbsoluteUrl(this.url)).then(function(response) {
-        
+        this.http.head(this._getAbsoluteUrl(this.url)).then(function(response) {
+
             var headers = response.headers();
             var md5 = headers["content-md5"];
             var length = headers["content-length"];
@@ -493,7 +392,7 @@ var ERMrest = (function(module) {
 
             // If the md5, length of filename are not same then simply resolve the promise without setting completed and jobDone
             if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                deferred.resolve(self.url);  
+                deferred.resolve(self.url);
                 return;
             }
 
@@ -504,7 +403,7 @@ var ERMrest = (function(module) {
         }, function(response) {
 
             if (response.status == 404 || response.status == 409) {
-              deferred.resolve(self.url);  
+              deferred.resolve(self.url);
             } else {
               deferred.reject(module._responseToError(response));
             }
@@ -512,8 +411,8 @@ var ERMrest = (function(module) {
 
         return deferred.promise;
     };
-    
-    /** 
+
+    /**
      * @desc Call this function to start chunked upload to server. It reads the file and divides in into chunks
      * If the completed flag is true, then this means that all chunks were already uploaded, thus it will resolve the promize with url
      * else it will start uploading the chunks. If the job was paused then resume by uploading just those chunks which were not completed.
@@ -538,7 +437,7 @@ var ERMrest = (function(module) {
             setTimeout(function() {
                 deferred.resolve(self.url);
             }, 10);
-            
+
             return deferred.promise;
         }
 
@@ -553,10 +452,10 @@ var ERMrest = (function(module) {
                 end = Math.min(start + this.PART_SIZE, this.file.size);
                 var chunk = new Chunk(index++, start, end);
                 self.chunks.push(chunk);
-                start = end;          
+                start = end;
             }
         }
- 
+
         this.isPaused = false;
         var part = 0;
 
@@ -570,36 +469,14 @@ var ERMrest = (function(module) {
 
         for (var i = 0; i < this.CHUNK_QUEUE_SIZE; i++) {
             var nextChunk = self.chunkQueue.shift();
-            if (nextChunk) self.uploadPart(nextChunk);
+            if (nextChunk) self._uploadPart(nextChunk);
         }
-        
+
         return deferred.promise;
     };
 
-    /*
-     * @private
-     * @desc This function is called by start methid to start uploading the chunk to server. 
-     * If the chunk is not completed and has an xhr then set its progress to 0 and xhr to null
-     * @param {Chunk} chunk - chunk object
-     */
-    upload.prototype.uploadPart = function(chunk) {
 
-        var self = this;
-        if (chunk.xhr && !chunk.completed) {
-            chunk.xhr.resolve();
-            chunk.xhr = null;
-            chunk.progress = 0;
-        }
-
-        chunk.sendToHatrac(this).then(function() {
-            var nextChunk = self.chunkQueue.shift();
-
-            if (nextChunk) self.uploadPart(nextChunk);
-        });
-    };
-
-
-    /*  
+    /**
      *  @desc This function is used to complete the chunk upload by notifying hatrac about it returning a promise with final url
      *
      *  @returns {Promise} A promise resolved with a url where we uploaded the file
@@ -607,7 +484,7 @@ var ERMrest = (function(module) {
      */
     upload.prototype.completeUpload = function() {
         var self = this;
-        
+
         var deferred = module._q.defer();
 
         if (this.completed && this.jobDone) {
@@ -615,7 +492,7 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        this.http.post(this.getAbsoluteUrl(this.chunkUrl)).then(function(response) {
+        this.http.post(this._getAbsoluteUrl(this.chunkUrl)).then(function(response) {
             self.jobDone = true;
 
             if (response.headers('location')) {
@@ -623,34 +500,12 @@ var ERMrest = (function(module) {
             } else {
                 deferred.reject(module._responseToError(response));
             }
-            
+
         }, function(response) {
             deferred.reject(module._responseToError(response));
         });
 
         return deferred.promise;
-    };
-
-    /** 
-     * @private 
-     * @desc This function should be called to update the progress of upload
-     * It calls the onProgressChanged callback that the user subscribes
-     * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
-     * and completeUpload to complete the chunk upload
-     */
-    upload.prototype.updateProgressBar = function(xhr) {
-        var length = this.chunks.length;
-        var done = 0;
-        for (var i = 0; i < this.chunks.length; i++) {
-            done = done + this.chunks[i].progress;
-        }
-
-        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : done, this.file.size);
-
-        if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
-            this.completed = true;
-            if (this.uploadPromise) this.uploadPromise.resolve(this.url);
-        }
     };
 
 
@@ -668,7 +523,7 @@ var ERMrest = (function(module) {
             chunk.xhr = null;
             if (!chunk.completed) chunk.progress = 0;
         });
-        this.updateProgressBar();
+        this._updateProgressBar();
     };
 
     /**
@@ -686,7 +541,7 @@ var ERMrest = (function(module) {
 
     /**
      * @desc Aborts/cancels the upload
-     * @returns {Promise} 
+     * @returns {Promise}
      */
     upload.prototype.cancel = function(deleteJob) {
 
@@ -703,12 +558,12 @@ var ERMrest = (function(module) {
             });
 
             // To zero the update of a file progress bar
-            this.updateProgressBar();
-            
+            this._updateProgressBar();
+
             deferred.resolve();
-            
+
             return deferred.promise;
-        } 
+        }
 
         // Set isPaused, completed and jobDone to false
         var self = this;
@@ -724,28 +579,174 @@ var ERMrest = (function(module) {
             chunk.xhr = null;
         });
 
-        if (deleteJob) this.cancelUploadJob();
+        if (deleteJob) this._cancelUploadJob();
 
         // To zero the update of a file progress bar
-        this.updateProgressBar();
+        this._updateProgressBar();
 
         return deferred.promise;
     };
 
-    /* @private
+
+    // Private function for Upload Object
+
+    /**
+     * @private
+     * @desc This function converts a url to an absolute one, prepending it with SERVER_URI.
+     * @param {string} uri - uri string
+     * @returns {string}
+     */
+    upload.prototype._getAbsoluteUrl = function(uri) {
+        // A more universal, non case-sensitive, protocol-agnostic regex
+        // to test a URL string is relative or absolute
+        var r = new RegExp('^(?:[a-z]+:)?//', 'i');
+
+        // The url is absolute so don't make any changes and return it as it is
+        if (r.test(uri))  return uri;
+
+        // If uri starts with "/" then simply prepend the server uri
+        if (uri.indexOf("/") === 0)  return this.SERVER_URI + uri;
+
+        // else prepend the server uri with an additional "/"
+        return this.SERVER_URI + "/" + uri;
+    };
+
+    /**
+     * @private
+     * @desc Call this function with the json row object to  generate an upload url
+     * @param {object} row - row object containing keyvalues of entity
+     *
+     * @returns {string}
+     */
+    upload.prototype._generateURL = function(row) {
+
+        var template = this.column.urlPattern;
+
+        // Populate all values in row depending on column from current
+        if (this.column.filenameColumn) row[this.column.filenameColumn.name] = this.file.name;
+        if (this.column.byteCountColumn) row[this.column.byteCountColumn.name] = this.file.size;
+        if (this.column.md5 && typeof this.column.md5 === 'object') row[this.column.md5.name] = this.hash.md5_hex;
+        if (this.column.sha256 && typeof this.column.sha256 === 'object') row[this.column.sha256.name] = this.hash.sha256;
+
+        row[this.column.name].filename = this.file.name;
+        row[this.column.name].size = this.file.size;
+        row[this.column.name].md5_hex = this.hash.md5_hex;
+        row[this.column.name].md5_base64 = this.hash.md5_base64;
+        row[this.column.name].sha256 = this.hash.sha256;
+
+        // Generate url
+        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
+
+        // If the template is null then throw an error
+        if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
+
+        // If new url has changed then there set all other flags to false to recompute them
+        if (this.url !== url) {
+
+            // To regenerate upload job url
+            this.chunkUrl = false;
+
+            // To make the filesExists call again
+            this.fileExistsFlag = false;
+
+            // To restart upload of all chunks
+            this.completed = false;
+
+            // To recall complete upload method
+            this.jobDone = false;
+        }
+
+        this.url = url;
+
+        return this.url;
+    };
+
+    /**
+     * @private
+     * @desc This function fetches the upload job status if chunkurl is not null
+     * @returns {Promise}
+     */
+    upload.prototype._getExistingJobStatus = function() {
+
+        var deferred = module._q.defer();
+
+
+        // If chunkUrl is not null then fetch  the status of the uploadJob
+        // and resolve promise with it.
+        // else just resolved it without any response
+        if (this.chunkUrl) {
+            this.http.get(this._getAbsoluteUrl(this.chunkUrl)).then(function(response) {
+                deferred.resolve(response);
+            }, function(response) {
+                deferred.reject(response);
+            });
+        } else {
+            deferred.resolve();
+        }
+
+
+        return deferred.promise;
+    };
+
+    /**
+     * @private
+     * @desc This function is called by start methid to start uploading the chunk to server.
+     * If the chunk is not completed and has an xhr then set its progress to 0 and xhr to null
+     * @param {Chunk} chunk - chunk object
+     */
+    upload.prototype._uploadPart = function(chunk) {
+
+        var self = this;
+        if (chunk.xhr && !chunk.completed) {
+            chunk.xhr.resolve();
+            chunk.xhr = null;
+            chunk.progress = 0;
+        }
+
+        chunk.sendToHatrac(this).then(function() {
+            var nextChunk = self.chunkQueue.shift();
+
+            if (nextChunk) self._uploadPart(nextChunk);
+        });
+    };
+
+    /**
+     * @private
+     * @desc This function should be called to update the progress of upload
+     * It calls the onProgressChanged callback that the user subscribes
+     * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
+     * and completeUpload to complete the chunk upload
+     */
+    upload.prototype._updateProgressBar = function(xhr) {
+        var length = this.chunks.length;
+        var done = 0;
+        for (var i = 0; i < this.chunks.length; i++) {
+            done = done + this.chunks[i].progress;
+        }
+
+        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : done, this.file.size);
+
+        if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
+            this.completed = true;
+            if (this.uploadPromise) this.uploadPromise.resolve(this.url);
+        }
+    };
+
+    /**
+     * @private
      * @desc Code to cancel upload job
      * We resolve the promise successfully even though the delete fails
      * because it won't affect the upload
      * Setting chunkUrl null marks that when we reupload this file, we should create a new job
      *
-     * @returns {Promise} 
+     * @returns {Promise}
      */
-    upload.prototype.cancelUploadJob = function(url) {
+    upload.prototype._cancelUploadJob = function(url) {
 
         var deferred = module._q.defer();
 
         if (this.chunkUrl) {
-            this.http.delete(this.getAbsoluteUrl(this.chunkUrl)).then(function() {
+            this.http.delete(this._getAbsoluteUrl(this.chunkUrl)).then(function() {
                 deferred.resolve();
             }, function(err) {
                 deferred.resolve();
@@ -757,11 +758,12 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
-    /* @private
+    /**
+     * @private
      * @desc This function will be called by chunk upload hanlder with the actual response
      * @param {object} response - network error response
      */
-    upload.prototype.onUploadError = function(response) {
+    upload.prototype._onUploadError = function(response) {
         if (this.erred) return;
         this.erred = true;
         this.uploadPromise.reject(module._responseToError(response));
@@ -774,8 +776,8 @@ var ERMrest = (function(module) {
      * @desc chunk Object
      * Create a new instance with new Chunk(index, start, end)
      * This class contains one of the chunks of the {Ermrest.upload} instance.
-     * It will upload the chunk and call updateProgressBar
-     * 
+     * It will upload the chunk and call _updateProgressBar
+     *
      * @class
      * @param {number} index - Index of the chunk
      * @param {number} start - Start index of the chunk in file
@@ -792,10 +794,10 @@ var ERMrest = (function(module) {
         this.progress = 0;
         this.size = end-start;
         this.retryCount = 0;
-    };    
+    };
 
-    /**  
-     * @desc This function will upload a chunk of file to the url and call updateProgressBar
+    /**
+     * @desc This function will upload a chunk of file to the url and call _updateProgressBar
      * @param {upload} {upload} - An instance of the upload to which this chunk belongs
      */
     Chunk.prototype.sendToHatrac = function(upload) {
@@ -803,18 +805,18 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.xhr || this.completed) {
-            
+
             this.progress = this.size;
-            
+
             deferred.resolve();
 
-            upload.updateProgressBar();
+            upload._updateProgressBar();
 
             return deferred.promise;
         }
 
         var self = this;
-        
+
         // blob is the sliced version of the file from start and end index
         var blob;
         if (isNode) {
@@ -825,31 +827,31 @@ var ERMrest = (function(module) {
 
         var size = blob.size;
         this.progress = 0;
-       
+
         var headers = {};
 
         // set content-type to "application/octet-stream"
-        
+
         headers["content-type"] = "application/octet-stream";
 
         self.xhr  = module._q.defer();
-    
+
         var request = {
             // If index is -1 then upload it to the url or upload it to chunkUrl
-            url: upload.getAbsoluteUrl(upload.chunkUrl) + "/" + this.index,
-            method: "PUT",                      
-            config: { 
+            url: upload._getAbsoluteUrl(upload.chunkUrl) + "/" + this.index,
+            method: "PUT",
+            config: {
                 headers: headers,
                 uploadEventHandlers: {
                     progress: function(e) {
                         // To track progress on upload
                         if (e.lengthComputable) {
                             self.progress = e.loaded;
-                            upload.updateProgressBar(self.xhr);
+                            upload._updateProgressBar(self.xhr);
                         }
                     }
                 },
-                timeout : self.xhr.promise, 
+                timeout : self.xhr.promise,
                 cancel : self.xhr
             },
             data: blob
@@ -860,37 +862,37 @@ var ERMrest = (function(module) {
         // then error callback will be called for which the status code would be 0
         // else it would be in range of 400 and 500
         upload.http.put(request.url, request.data, request.config).then(function() {
-            
+
             // Set progress to blob size, and set chunk completed
             self.progress = self.size;
             self.completed = true;
             self.xhr = null;
-            
+
             deferred.resolve();
 
-            upload.updateProgressBar();
+            upload._updateProgressBar();
         }, function(response) {
             self.progress = 0;
             var status = response.status;
 
-            // If upload is not paused 
+            // If upload is not paused
             // and the status code is in range of 500 then there is a server error, keep retrying for 5 times
             // else the error is in 400 series which is some client error
             if (!upload.isPaused) {
-                upload.updateProgressBar(self.xhr);
-                upload.onUploadError(response);
+                upload._updateProgressBar(self.xhr);
+                upload._onUploadError(response);
             } else {
-                upload.updateProgressBar(self.xhr);
+                upload._updateProgressBar(self.xhr);
             }
         });
 
         return deferred.promise;
-       
+
     };
 
 
-    /**  
-     * @desc This function will abort a chunk of file to the url and call updateProgressBar
+    /**
+     * @desc This function will abort a chunk of file to the url and call _updateProgressBar
      * @param {upload} {upload} - An instance of the upload to which this chunk belongs
      */
     Chunk.prototype.abort = function(upload) {
@@ -898,6 +900,6 @@ var ERMrest = (function(module) {
     };
 
 
-   return module; 
-   
+   return module;
+
 }(ERMrest || {}));
