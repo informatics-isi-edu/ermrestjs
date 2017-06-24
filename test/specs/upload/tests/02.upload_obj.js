@@ -210,29 +210,9 @@ exports.execute = function (options) {
             });
         });
 
-        it("should verify the job and file now exist.", function (done) {
-            uploadObj._getExistingJobStatus().then(function(response) {
-                var data = response.data;
-
-                expect(response).toBeDefined("Job status is not defined");
-
-                return uploadObj.fileExists();
-            }).then(function(response) {
-                expect(response).toBe(serverFilePath, "Server file path is incorrect");
-                expect(uploadObj.isPaused).toBeFalsy("Upload job is paused");
-                expect(uploadObj.completed).toBeTruthy("File didn't complete the upload process");
-                expect(uploadObj.jobDone).toBeTruthy("Upload job is not complete");
-
-                done();
-            }).catch(function(err) {
-                console.dir(err);
-                done.fail();
-            });
-        });
-
         it("should complete the upload.", function (done) {
             uploadObj.completeUpload().then(function(response) {
-                expect(response).toBe(serverFilePath, "Server file path is incorrect");
+                expect(response.startsWith(serverFilePath)).toBeTruthy("Upload job file path is incorrect");
                 expect(uploadObj.jobDone).toBeTruthy("Upload job is not complete");
 
                 done();
