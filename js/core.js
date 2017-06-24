@@ -1710,11 +1710,10 @@ var ERMrest = (function (module) {
          */
         this.formatvalue = function (data, options) {
             //This check has been added to show "null" in all the rows if the user inputs blank string
-            if(this.type.name!=='json'){
-                if (data === undefined || data === null) {
+            //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
+            if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
                     return this._getNullValue(options ? options.context : undefined);
                 }
-            }
             if (data === undefined) {
                 return this._getNullValue(options ? options.context : undefined);
             }

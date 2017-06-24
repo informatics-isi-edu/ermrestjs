@@ -736,21 +736,15 @@ var ERMrest = (function(module) {
         * @function		    
         * @param {Object} value A json value to transform
         * @param {Object} [options] Configuration options.
-        * @return {string} A string representation of value
+        * @return {string} A string representation of value based on different context
+        *                Entry/Edit: the beautified version of JSON in other cases
+        *                View: a string preformatted with <pre> tag to display in the UI
         * @desc Formats a given json value into a string for display.
         */
         printJSON: function printJSON(value, options) {
            options = (typeof options === 'undefined') ? {} : options;
-           if(options.context==="entry/edit"){
-               if (value === null) {
-                   return 'null';
-                }
-                else if (typeof value === 'object') {
-                       return JSON.stringify(value,undefined,2);
-                }
-                else if (typeof value === 'string') {
-                   return  JSON.stringify(value,undefined,2);
-                }
+           if(module._isEntryContext(options.context)){
+               return  JSON.stringify(value,undefined,2);
             }
             
             else{
@@ -767,7 +761,6 @@ var ERMrest = (function(module) {
                  
                  return formattedValue;
             }
-           return value.toString();
        },
 
         /**

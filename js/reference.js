@@ -2730,8 +2730,8 @@ var ERMrest = (function(module) {
                             this._isHTML[i] = presentation.isHTML;
                         }
                         //Added this if conditon explicitly for json/jsonb because we need to pass the 
-                        //formatted string representation of JSON values
-                        else if(column.type.name === ("json" || "jsonb")){
+                        //formatted string representation of JSON and JSONBvalues
+                        else if (column.type.name === "json" || column.type.name === "jsonb") {
                             presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -2758,7 +2758,7 @@ var ERMrest = (function(module) {
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-
+                            // If the column type is json or jsonB we will send the templated string with <pre> tag
                             if (column.type.name === "gene_sequence"|| column.type.name === "json" || column.type.name === "jsonb") {
                                 values[i].isHTML = true;
                             }
