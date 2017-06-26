@@ -56,7 +56,7 @@ exports.execute = function (options) {
             });
         });
 
-        it("should have properties set appropriately by it's constructor.", function () {
+        it("should have properties set appropriately by its constructor.", function () {
             uploadObj = new options.ermRest.Upload(file.file, {
                 column: column,
                 reference: reference,
@@ -253,6 +253,8 @@ exports.execute = function (options) {
         });
 
         // TODO: Upload.pause(), Upload.resume(), and Upload.cancel() are not tested.
+        // we can't interrupt a promise even during the notify callback. We will have to look into
+        // a way to mock the upload endpoint and change the Synchronization so it is ignored
 
         afterAll(function(done) {
             exec('rm ' + filePath);
