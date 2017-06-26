@@ -237,7 +237,7 @@ exports.execute = function (options) {
         
         
         describe("Testing for EDIT JSON and JSONB Values", function() {
-            //Tested this values as formatted values inside it, to get the exact string after JSON.stringify()
+            //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
             var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true},
             {"id":"1002","json_col":{},"jsonb_col":{}},
             {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},

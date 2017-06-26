@@ -247,6 +247,7 @@ exports.execute = function (options) {
     });
     
     describe("Testing for JSON AND JSONB Values", function() {
+        //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
         var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true},
         {"id":"1002","json_col":{},"jsonb_col":{}},
         {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
@@ -265,7 +266,7 @@ exports.execute = function (options) {
 
         var reference, page, tuples, url;
         
-       var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
        var recordURL = chaiseURL + "/record";
        var record2URL = chaiseURL + "/record-two";
        var viewerURL = chaiseURL + "/viewer";
