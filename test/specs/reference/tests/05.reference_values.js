@@ -252,7 +252,7 @@ exports.execute = function (options) {
         {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
         {"id":"1004","json_col":false,"jsonb_col":false},
         {"id":"1005","json_col":2.9,"jsonb_col":2.9},
-        {"id":"1006","json_col":"","jsonb_col":""}];
+        {"id":"1006","json_col":null,"jsonb_col":null}];
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
@@ -263,7 +263,44 @@ exports.execute = function (options) {
 
         var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
 
-        var reference, page, tuples;
+        var reference, page, tuples, url;
+        
+       var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+       var recordURL = chaiseURL + "/record";
+       var record2URL = chaiseURL + "/record-two";
+       var viewerURL = chaiseURL + "/viewer";
+       var searchURL = chaiseURL + "/search";
+       var recordsetURL = chaiseURL + "/recordset";
+
+       var appLinkFn = function (tag, location) {
+           
+           switch (tag) {
+               case "tag:isrd.isi.edu,2016:chaise:record":
+                   url = recordURL;
+                   break;
+               case "tag:isrd.isi.edu,2016:chaise:record-two":
+                   url = record2URL;
+                   break;
+               case "tag:isrd.isi.edu,2016:chaise:viewer":
+                   url = viewerURL;
+                   break;
+               case "tag:isrd.isi.edu,2016:chaise:search":
+                   url = searchURL;
+                   break;
+               case "tag:isrd.isi.edu,2016:chaise:recordset":
+                   url = recordsetURL;
+                   break;
+               default:
+                   url = recordURL;
+                   break;
+           }
+
+           url = url + "/" + location.path;
+
+           return url;
+       };
+
+      
 
         beforeAll(function(done) {
             
@@ -279,8 +316,8 @@ exports.execute = function (options) {
                 expect(page._data.length).toBe(limit);
                 
                 expect(page.tuples).toBeDefined();
-                jsontuples = page.tuples;
-                expect(jsontuples.length).toBe(limit);
+                tuples = page.tuples;
+                expect(tuples.length).toBe(limit);
                 
                 done();
             }, function (err) {
@@ -290,21 +327,19 @@ exports.execute = function (options) {
                 console.dir(err);
                 done.fail();
             });
-        
+            options.ermRest.appLinkFn(appLinkFn);
         });
         
         it("Testing for JSON and JSONB tuples values", function() {
             
             for( var i=0; i<limit; i++){
-                let id=jsontuples[i]._data.id;
-                let josn_col=jsontuples[i]._data.json_col;
-                let josnb_col=jsontuples[i]._data.jsonb_col;
-                expect(id).toBe(expectedValues[i].id);
-                let expectedValueJson=expectedValues[i].json_col;
-                expect(josn_col).toEqual(expectedValueJson);
-            
-                let expectedValueJsonB=expectedValues[i].jsonb_col;
-                expect(josnb_col).toEqual(expectedValueJsonB);
+                var values=tuples[i].values;
+                var uri='<a href="'+url+'">'+expectedValues[i].id+'</a>';
+                expect(values[0]).toBe(uri);
+                var json='<pre>'+JSON.stringify(expectedValues[i].json_col,"undefined",2)+'</pre>';
+                var jsonb='<pre>'+JSON.stringify(expectedValues[i].jsonb_col,"undefined",2)+'</pre>';
+                expect(values[1]).toBe(json);
+                expect(values[2]).toBe(jsonb);
             }
         });
     });

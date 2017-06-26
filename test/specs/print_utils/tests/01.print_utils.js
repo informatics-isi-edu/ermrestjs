@@ -70,6 +70,9 @@ exports.execute = function (options) {
             expect(printJSON(true,options)).toBe('true');
             expect(printJSON(false,options)).toBe('false');
             expect(printJSON(2.9,options)).toBe('2.9');
+            let valueToTest={"name":"testing"};
+            let expectedJSON= JSON.stringify(valueToTest,undefined,2);
+            expect(printJSON(valueToTest,options)).toBe(expectedJSON);
         });
         
         it('printJSON() should format JSON values correctly for Not Edit Context.', function() {
@@ -80,6 +83,9 @@ exports.execute = function (options) {
             expect(printJSON(true,options)).toBe('<pre>true</pre>');
             expect(printJSON(false,options)).toBe('<pre>false</pre>');
             expect(printJSON(2.9,options)).toBe('<pre>2.9</pre>');
+            let valueToTest={"name":"testing"};
+            let expectedJSON= "<pre>"+JSON.stringify(valueToTest,undefined,2)+"</pre>";
+            expect(printJSON(valueToTest,options)).toBe(expectedJSON);
         });
 
         it('printMarkdown() should process Markdown into HTML.', function() {
