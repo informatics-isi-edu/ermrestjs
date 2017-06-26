@@ -321,7 +321,7 @@ exports.execute = function (options) {
                 options.ermRest.appLinkFn(appLinkFn);
             });
             
-            it("Testing for EDIT JSON and JSONB tuples values", function() {
+            it("JSON and JSONB column should return the expected values in Edit Context", function() {
                 
                 for( var i=0; i<limit; i++){
                     var values=tuples[i].values;
