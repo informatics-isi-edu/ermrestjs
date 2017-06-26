@@ -1709,7 +1709,12 @@ var ERMrest = (function (module) {
          * @returns {string} The formatted value.
          */
         this.formatvalue = function (data, options) {
-            if (data === undefined || data === null) {
+            //This check has been added to show "null" in all the rows if the user inputs blank string
+            //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
+            if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0) || (data === null && this.type.name.indexOf('jsonb') !== 0)) {
+                    return this._getNullValue(options ? options.context : undefined);
+                }
+            if (data === undefined) {
                 return this._getNullValue(options ? options.context : undefined);
             }
             /* TODO format the raw value based on the column definition
@@ -1742,6 +1747,11 @@ var ERMrest = (function (module) {
                     break;
                 case 'gene_sequence':
                     data = utils.printGeneSeq(data, options);
+                    break;
+                //Cases to support json and jsonb columns
+                case 'json':
+                case 'jsonb':
+                    data = utils.printJSON(data,options);
                     break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);

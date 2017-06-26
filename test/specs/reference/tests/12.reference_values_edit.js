@@ -234,6 +234,105 @@ exports.execute = function (options) {
 
             testTupleValidity(6, values);
         });
+        
+        
+        describe("Testing for EDIT JSON and JSONB Values", function() {
+            //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
+            var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true},
+            {"id":"1002","json_col":{},"jsonb_col":{}},
+            {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
+            {"id":"1004","json_col":false,"jsonb_col":false},
+            {"id":"1005","json_col":2.9,"jsonb_col":2.9},
+            {"id":"1006","json_col":"","jsonb_col":""}];
+
+            var catalog_id = process.env.DEFAULT_CATALOG,
+                schemaName = "reference_schema",
+                tableName = "jsontest_table",
+                lowerLimit = 1001,
+                upperLimit = 2001,
+                limit = 6;
+
+            var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+
+            var reference, page, tuples,url;
+            
+            var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+            var recordURL = chaiseURL + "/record";
+            var record2URL = chaiseURL + "/record-two";
+            var viewerURL = chaiseURL + "/viewer";
+            var searchURL = chaiseURL + "/search";
+            var recordsetURL = chaiseURL + "/recordset";
+
+            var appLinkFn = function (tag, location) {
+                
+                switch (tag) {
+                    case "tag:isrd.isi.edu,2016:chaise:record":
+                        url = recordURL;
+                        break;
+                    case "tag:isrd.isi.edu,2016:chaise:record-two":
+                        url = record2URL;
+                        break;
+                    case "tag:isrd.isi.edu,2016:chaise:viewer":
+                        url = viewerURL;
+                        break;
+                    case "tag:isrd.isi.edu,2016:chaise:search":
+                        url = searchURL;
+                        break;
+                    case "tag:isrd.isi.edu,2016:chaise:recordset":
+                        url = recordsetURL;
+                        break;
+                    default:
+                        url = recordURL;
+                        break;
+                }
+
+                url = url + "/" + location.path;
+
+                return url;
+            };
+
+
+            beforeAll(function(done) {
+                
+                // Fetch the entities beforehand
+                options.ermRest.resolve(multipleEntityUri).then(function (response) {
+                    reference = response;
+                    expect(reference).toEqual(jasmine.any(Object));
+                    reference = reference.contextualize.entryEdit;
+                    return reference.read(limit);
+                }).then(function (response) {
+                    page = response;
+                    
+                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page._data.length).toBe(limit);
+                    
+                    expect(page.tuples).toBeDefined();
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(limit);
+                    
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                }).catch(function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
+                options.ermRest.appLinkFn(appLinkFn);
+            });
+            
+            it("JSON and JSONB column should return the expected values in Edit Context", function() {
+                
+                for( var i=0; i<limit; i++){
+                    var values=tuples[i].values;
+                    expect(values[0]).toBe(expectedValues[i].id);
+                    var json=JSON.stringify(expectedValues[i].json_col,undefined,2);
+                    var jsonb=JSON.stringify(expectedValues[i].jsonb_col,undefined,2);
+                    expect(values[1]).toBe(json);
+                    expect(values[2]).toBe(jsonb);
+                }
+            });
+        });
 
     });
 };

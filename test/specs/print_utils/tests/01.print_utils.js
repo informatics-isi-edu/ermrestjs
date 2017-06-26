@@ -61,6 +61,32 @@ exports.execute = function (options) {
             expect(printText({key:123})).toBe('{"key":123}');
             expect(printText({key:123,subkey:{subsubkey:456}})).toBe('{"key":123,"subkey":{"subsubkey":456}}');
         });
+        
+        it('printJSON() should format JSON values correctly for Edit Context.', function() {
+            var printJSON = formatUtils.printJSON;
+            var options={context:'entry/edit'};
+            expect(printJSON(null,options)).toBe('null');
+            expect(printJSON('',options)).toBe('""');
+            expect(printJSON(true,options)).toBe('true');
+            expect(printJSON(false,options)).toBe('false');
+            expect(printJSON(2.9,options)).toBe('2.9');
+            let valueToTest={"name":"testing"};
+            let expectedJSON= JSON.stringify(valueToTest,undefined,2);
+            expect(printJSON(valueToTest,options)).toBe(expectedJSON);
+        });
+        
+        it('printJSON() should format JSON values correctly for Not Edit Context.', function() {
+            var printJSON = formatUtils.printJSON;
+            var options={context:'detailed'};
+            expect(printJSON(null,options)).toBe('<pre>null</pre>');
+            expect(printJSON('',options)).toBe('<pre>null</pre>');
+            expect(printJSON(true,options)).toBe('<pre>true</pre>');
+            expect(printJSON(false,options)).toBe('<pre>false</pre>');
+            expect(printJSON(2.9,options)).toBe('<pre>2.9</pre>');
+            let valueToTest={"name":"testing"};
+            let expectedJSON= "<pre>"+JSON.stringify(valueToTest,undefined,2)+"</pre>";
+            expect(printJSON(valueToTest,options)).toBe(expectedJSON);
+        });
 
         it('printMarkdown() should process Markdown into HTML.', function() {
             var printMarkdown = formatUtils.printMarkdown;

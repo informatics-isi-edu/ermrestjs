@@ -731,6 +731,37 @@ var ERMrest = (function(module) {
 
             return module._markdownIt.render(value);
         },
+        
+        /**
+        * @function		    
+        * @param {Object} value A json value to transform
+        * @param {Object} [options] Configuration options.
+        * @return {string} A string representation of value based on different context
+        *                Entry/Edit: the beautified version of JSON in other cases
+        *                View: a string preformatted with <pre> tag to display in the UI
+        * @desc Formats a given json value into a string for display.
+        */
+        printJSON: function printJSON(value, options) {
+           options = (typeof options === 'undefined') ? {} : options;
+           if(module._isEntryContext(options.context)){
+               return  JSON.stringify(value,undefined,2);
+            }
+            
+            else{
+                var formattedValue;
+                if (value === null || value=== "") {
+                    formattedValue= JSON.stringify(null);
+                    formattedValue ='<pre>'+formattedValue+'</pre>';
+                 }
+                 
+                 else {
+                    formattedValue= JSON.stringify(value,undefined,2);
+                    formattedValue ='<pre>'+formattedValue+'</pre>';
+                 }
+                 
+                 return formattedValue;
+            }
+       },
 
         /**
          * @function
