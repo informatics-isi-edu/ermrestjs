@@ -46,13 +46,7 @@
               }
 
           ],
-            "annotations": {
-                "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*": [
-                    "id", "int_col","text_col","json_col","jsonb_col"
-                  ]
-              }
-            }
+            "annotations": {}
         }
     },
     "table_names": [
