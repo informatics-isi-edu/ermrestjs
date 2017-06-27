@@ -19,7 +19,7 @@ exports.execute = function (options) {
                 baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/key=1";
 
             // For update data
-            var file1_url, file1_validRow, file2_url, file2_validRow;
+            var file1_url, file1_validRow, file2_url, file2_validRow, uploadObj1, uploadObj2, time1, time2;
 
             var files = [{
                     name: "testfile500kb.png",
@@ -74,8 +74,20 @@ exports.execute = function (options) {
             });
 
             it("should upload file 1 properly.", function(done) {
+                time1 = Date.now();
+
+                file1_validRow = {
+                    timestamp: time1,
+                    file1_uri: { md5_hex: files[0].hash }
+                 };
+
+                uploadObj1 = new options.ermRest.Upload(files[0].file, {
+                    column: file1_column,
+                    reference: reference,
+                    chunkSize: 5 * 1024 * 1024
+                });
                 // File 1
-                uploadUtils.uploadFileForTests(files[0], 1, file1_column, reference, options).then(function(response) {
+                uploadUtils.uploadFileForTests(files[0], 1, file1_validRow, uploadObj1, options).then(function(response) {
                     file1_url = response.url;
                     file1_validRow = response.validRow;
 
@@ -87,8 +99,20 @@ exports.execute = function (options) {
             });
 
             it("should upload file 2 properly.", function(done) {
+                time2 = Date.now();
+
+                file2_validRow = {
+                    timestamp: time1,
+                    file2_uri: { md5_hex: files[1].hash }
+                 };
+
+                uploadObj2 = new options.ermRest.Upload(files[1].file, {
+                    column: file2_column,
+                    reference: reference,
+                    chunkSize: 5 * 1024 * 1024
+                });
                 // File 2
-                uploadUtils.uploadFileForTests(files[1], 2, file2_column, reference, options).then(function(response) {
+                uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, uploadObj2, options).then(function(response) {
                     file2_url = response.url;
                     file2_validRow = response.validRow;
 
@@ -169,11 +193,23 @@ exports.execute = function (options) {
             });
 
             afterAll(function(done) {
+                // remove the files from the chaise folder
                 for (var j=0; j<files.length; j++) {
                     var filePath = "test/specs/upload/files/" + files[j].name;
                     exec('rm ' + filePath);
                 }
-                done();
+
+                // delete the files from hatrac
+                uploadObj1.deleteFile().then(function() {
+
+                    return uploadObj2.deleteFile();
+                }).then(function() {
+
+                    done();
+                }).catch(function(err) {
+                    console.dir(err);
+                    done.fail();
+                });
             });
         });
     });

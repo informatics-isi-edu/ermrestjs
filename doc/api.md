@@ -326,6 +326,7 @@ to use for ERMrest JavaScript agents.
         * [.pause()](#ERMrest.upload+pause)
         * [.resume()](#ERMrest.upload+resume)
         * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
+        * [.deleteFile()](#ERMrest.upload+deleteFile) ⇒ <code>Promise</code>
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -3055,6 +3056,7 @@ Indicates that this ReferenceColumn is an asset.
     * [.pause()](#ERMrest.upload+pause)
     * [.resume()](#ERMrest.upload+resume)
     * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
+    * [.deleteFile()](#ERMrest.upload+deleteFile) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.upload_new"></a>
 
@@ -3156,6 +3158,12 @@ Resumes the upload
 
 #### upload.cancel() ⇒ <code>Promise</code>
 Aborts/cancels the upload
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+<a name="ERMrest.upload+deleteFile"></a>
+
+#### upload.deleteFile() ⇒ <code>Promise</code>
+deletes the file metadata from the hatrac database and removes it from the namespace
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
 <a name="ERMrest.Datapath"></a>

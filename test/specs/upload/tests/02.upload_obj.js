@@ -24,12 +24,13 @@ exports.execute = function (options) {
             hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
         };
 
+        var firstTime = Date.now();
         var validRow = {
-            fk_id: 2,
+            timestamp: firstTime,
             uri: { md5_hex: file.hash }
         };
 
-        var serverFilePath = "/hatrac/js/ermrestjs/" + validRow.fk_id + "/" + file.hash;
+        var serverFilePath = "/hatrac/js/ermrestjs/" + validRow.timestamp + "/" + file.hash;
 
         beforeAll(function (done) {
             filePath = "test/specs/upload/files/" + file.name;
@@ -222,43 +223,21 @@ exports.execute = function (options) {
             });
         });
 
-        it("should create another upload job, set it to paused, and resume the upload.", function (done) {
-            var anotherUploadObj = new options.ermRest.Upload(file.file, {
-                column: column,
-                reference: reference,
-                chunkSize: chunkSize
-            });
+        // TODO: Upload.pause(), Upload.resume(), and Upload.cancel() are not tested.
+        // we can't interrupt a promise even during the notify callback. We will have to look into
+        // a way to mock the upload endpoint and change the Synchronization so it is ignored
 
-            anotherUploadObj.calculateChecksum(validRow).then(function() {
-
-                return anotherUploadObj.createUploadJob();
-            }).then(function(response) {
-                expect(response.startsWith(serverFilePath)).toBeTruthy("Upload job file path is incorrect");
-                anotherUploadObj.isPaused = true;
-
-                return anotherUploadObj.resume();
-            }).then(function(response) {
-                expect(anotherUploadObj.isPaused).toBeFalsy("Upload job is not paused");
-
-                return uploadObj.completeUpload();
-            }).then(function(response) {
-                expect(response).toBe(serverFilePath, "Server file path is incorrect");
-                expect(uploadObj.jobDone).toBeTruthy("Upload job is not complete");
+        afterAll(function(done) {
+            // removes the file from the chaise folder
+            exec('rm ' + filePath);
+            // removes the files from hatrac
+            uploadObj.deleteFile().then(function() {
 
                 done();
             }).catch(function(err) {
                 console.dir(err);
                 done.fail();
             });
-        });
-
-        // TODO: Upload.pause(), Upload.resume(), and Upload.cancel() are not tested.
-        // we can't interrupt a promise even during the notify callback. We will have to look into
-        // a way to mock the upload endpoint and change the Synchronization so it is ignored
-
-        afterAll(function(done) {
-            exec('rm ' + filePath);
-            done();
         });
     });
 }

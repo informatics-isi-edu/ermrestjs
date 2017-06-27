@@ -587,6 +587,22 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
+    /**
+     * @desc deletes the file metadata from the hatrac database and removes it from the namespace
+     * @returns {Promise}
+     */
+    upload.prototype.deleteFile = function() {
+        var deferred = module._q.defer();
+
+        this.http.delete(this._getAbsoluteUrl(this.url)).then(function (response) {
+            deferred.resolve();
+        }, function () {
+            deferred.reject(module._responseToError(response));
+        });
+
+        return deferred.promise;
+    };
+
 
     // Private function for Upload Object
 
@@ -594,7 +610,7 @@ var ERMrest = (function(module) {
      * @private
      * @desc This function converts a url to an absolute one, prepending it with SERVER_URI.
      * @param {string} uri - uri string
-     * @returns {string}
+     * @returns {string} - the absolute url containing the FQDN
      */
     upload.prototype._getAbsoluteUrl = function(uri) {
         // A more universal, non case-sensitive, protocol-agnostic regex

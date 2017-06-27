@@ -11,7 +11,7 @@ exports.execute = function (options) {
             table,
             columnName = "uri",
             column,
-            template = "/hatrac/js/ermrestjs/{{{_fk_id}}}/{{{_uri.md5_hex}}}",
+            template = "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.md5_hex}}}",
             ermRest,
             reference;
 
@@ -75,10 +75,11 @@ exports.execute = function (options) {
             (function(file) {
 
                 describe("For file " + file.name + "," , function() {
+                    var currentTime = Date.now();
 
                     var uploadObj,
-                        invalidRow = { fk_id: null, uri : { md5_hex: "wfqewf4234" } },
-                        validRow = { fk_id: "800001", uri : { md5_hex: "wfqewf4234" } };
+                        invalidRow = { timestamp: null, uri : { md5_hex: "wfqewf4234" } },
+                        validRow = { timestamp: currentTime, uri : { md5_hex: "wfqewf4234" } };
 
                     it("should create an upload object", function(done) {
 
@@ -103,12 +104,12 @@ exports.execute = function (options) {
                         expect(uploadObj.file.type).toBe(file.type);
                     });
 
-                    it("should return false for `validateurl` method as one of the properties 'fk_id' is null in template `" + template + "`", function() {
+                    it("should return false for `validateurl` method as one of the properties 'timestamp' is null in template `" + template + "`", function() {
                         //Note: Property uri.md5_hex is generated at runtime so we don't need to send it
                         expect(uploadObj.validateURL(invalidRow)).toBe(false);
                     });
 
-                    it("should return true for `validateurl` method as one of the properties 'fk_id' is not null in template `" + template + "`", function() {
+                    it("should return true for `validateurl` method as one of the properties 'timestamp' is not null in template `" + template + "`", function() {
                         //Note: Property uri.md5_hex is generated at runtime so we don't need to send it
                         expect(uploadObj.validateURL(validRow)).toBe(true);
                     });
@@ -120,7 +121,7 @@ exports.execute = function (options) {
                         uploadObj.calculateChecksum(validRow).then(function(url) {
                             expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy("Upload object hash is not of type ermRest.Checksum");
 
-                            expect(url).toBe("/hatrac/js/ermrestjs/800001/" + file.hash, "File generated url is not the same");
+                            expect(url).toBe("/hatrac/js/ermrestjs/" + currentTime + "/" + file.hash, "File generated url is not the same");
 
                             expect(validRow.filename).toBe(file.name, "valid row filename is incorrect");
                             expect(validRow.bytes).toBe(file.size, "valid row bytes is incorrect");
@@ -152,10 +153,12 @@ exports.execute = function (options) {
         });
 
         afterAll(function(done) {
+            // this removes the files from the folder in chaise
             files.forEach(function(f) {
                 var filePath = "test/specs/upload/files/" + f.name;
                 exec('rm ' + filePath);
             });
+            // no reason to remove the files from hatrac as they were never uploaded, just checksums were calculated
             done()
         })
 
