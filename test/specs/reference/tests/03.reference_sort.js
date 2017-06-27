@@ -4,7 +4,8 @@ exports.execute = function (options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "sorted_table",
-            outboundTableName = "reference_table_outbound_fks",
+            outboundTableName = "columns_table",
+            outboundSchemaName = "columns_schema",
             tableWSlashName = "table_w_slash";
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -47,7 +48,7 @@ exports.execute = function (options) {
 
             return url;
         };
-        
+
         var reference1, reference2, outboundRef, tableWSlashRef;
 
         beforeAll(function(done) {
@@ -179,7 +180,7 @@ exports.execute = function (options) {
         });
 
         describe('sorting based on different columns, ', function () {
-            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ outboundTableName,
+            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + outboundSchemaName + ":"+ outboundTableName,
                 colName;
 
             beforeAll(function(done) {
@@ -202,20 +203,20 @@ exports.execute = function (options) {
                 colName = "col_3";
                 checkError([{"column":colName, "descending": false}], "Column " + colName + " is not sortable.", done);
             });
-            
+
             describe('when sorting based on a PseudoColumn, ', function () {
 
                 it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
                     // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=2 will be the first.
-                    checkSort([{"column": "reference_schema_outbound_fk_9", "descending": true}], "2", done);
+                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": true}], "2", done);
                 });
-                
+
                 it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
-                    checkSort([{"column": "reference_schema_outbound_fk_6", "descending": true}], "3", done);
+                    checkSort([{"column": "columns_schema_outbound_fk_6", "descending": true}], "3", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
-                    checkSort([{"column": "reference_schema_outbound_fk_2", "descending": true}], "4", done);
+                    checkSort([{"column": "columns_schema_outbound_fk_2", "descending": true}], "4", done);
                 });
 
                 if (!process.env.TRAVIS) {
@@ -223,15 +224,15 @@ exports.execute = function (options) {
                         checkSort([{"column":"outbound_col_with_slash/", "descending": false}], "1", done, tableWSlashRef);
                     });
                 }
-                
+
             });
 
             describe('when sorting based on a column, ', function () {
-                
+
                 it("if column has a `column_order` other than false, should sort based on that.", function (done) {
                     checkSort([{"column": "col_4", "descending": true}], "5", done);
                 });
-                
+
                 it("if column doesn't have `column_order`, should sort based on column value.", function (done) {
                     checkSort([{"column":"id", "descending": true}], "6", done);
                 });
@@ -245,9 +246,9 @@ exports.execute = function (options) {
                         checkSort([{"column":"col_with_slash/", "descending": false}], "2", done, tableWSlashRef);
                     });
                 }
-                
+
             });
-            
+
         });
 
         /**
@@ -260,7 +261,7 @@ exports.execute = function (options) {
             var val;
             reference.sort(sortColumns).read(1).then(function (response) {
                 if (isOutbound) {
-                    val = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
+                    val = '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
                 } else {
                     val = ExpectedFirstId;
                 }
@@ -269,7 +270,7 @@ exports.execute = function (options) {
             }, function (err) {
                 console.dir(err);
                 done.fail();
-            });          
+            });
         }
 
         function checkError(sortColumns, error, done) {

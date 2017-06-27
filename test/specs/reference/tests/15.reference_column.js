@@ -1,9 +1,12 @@
+/**
+ * All the test cases related to the ReferenceColumn object.
+ */
 exports.execute = function (options) {
     describe('ReferenceColumn, ', function () {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema",
-            tableName = "reference_table_outbound_fks", // the structure of this table is explained in 14.pseudo_columns.js
+            schemaName = "columns_schema",
+            tableName = "columns_table", // the structure of this table is explained in 14.pseudo_columns.js
             tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 14.pseudo_columns.js
             entityId = 1,
             limit = 1,
@@ -61,7 +64,7 @@ exports.execute = function (options) {
 
 
         var reference, compactRef, entryCreateRef, entryEditRef, compactSelectRef, compactBriefRef, compactColumns;
-        var assetRef, assetRefCompactCols, assetRefEntryCols;
+        var assetRef, assetRefCompactCols, assetRefEntryCols, detailedRef, detailedColumns;
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
@@ -70,12 +73,14 @@ exports.execute = function (options) {
             }).then(function (response) {
                 reference = response;
 
+                detailedRef = response.contextualize.detailed;
                 compactRef = response.contextualize.compact;
 
                 entryCreateRef = response.contextualize.entryCreate;
                 entryEditRef = response.contextualize.entryEdit;
 
                 compactColumns = compactRef.columns;
+                detailedColumns = detailedRef.columns; // the
 
                 compactSelectRef = response.contextualize.compactSelect;
                 compactBriefRef = response.contextualize.compactBrief; // first column is a composite key
@@ -94,16 +99,20 @@ exports.execute = function (options) {
 
         describe('.isPseudo, ', function () {
             it('for PseudoColumns should return true.', function () {
-                for (var i = 0; i < 5; i++) {
-                    expect(compactColumns[i].isPseudo).toBe(true);
+                let i;
+                for (i = 0; i < 5; i++) {
+                    expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
-                for (var i = 11; i < 16; i++) {
-                    expect(compactColumns[i].isPseudo).toBe(true);
+                for (i = 11; i < 16; i++) {
+                    expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
 
-                for (var i = 9; i < 11; i++) {
-                    expect(assetRefCompactCols[i].isPseudo).toBe(true);
+                for (i = 9; i < 11; i++) {
+                    expect(assetRefCompactCols[i].isPseudo).toBe(true, "problem with Asset index=" + i);
                 }
+
+                expect(detailedColumns[3].isPseudo).toBe(true, "problem with Inbound FKs.");
+
             });
 
             it('for other columns should return false.', function () {
@@ -155,22 +164,38 @@ exports.execute = function (options) {
             });
         });
 
+        describe('.isInboundForeignKey', function () {
+            it ('for PseudoColumns that are inbound foreign key should return true.', function () {
+                expect(detailedColumns[3].isInboundForeignKey).toEqual(true);
+            });
+
+            it ('for other columns should return undefined.', function () {
+                for (var i = 0; i < 2; i++) {
+                    expect(detailedColumns[i].isInboundForeignKey).toBe(undefined);
+                }
+            });
+        })
+
 
         describe('.table, ', function () {
             it('for pseudoColumns that are key, should return the key table.', function () {
-                expect(compactColumns[0].table.name).toBe("reference_table_outbound_fks");
+                expect(compactColumns[0].table.name).toBe("columns_table");
             });
 
             it('for pseudoColumns that are foreign key, should return the foreign key table.', function () {
                 for (var i = 1; i < 4; i++) {
-                    expect(compactColumns[i].table.name).toBe("reference_table");
+                    expect(compactColumns[i].table.name).toBe("table_w_simple_key");
                 }
-                expect(compactColumns[4].table.name).toBe("reference_values");
+                expect(compactColumns[4].table.name).toBe("table_w_simple_key_2");
                 expect(compactColumns[11].table.name).toBe("table_w_composite_key");
                 expect(compactColumns[12].table.name).toBe("table_w_composite_key_2");
                 expect(compactColumns[13].table.name).toBe("table_w_composite_key");
                 expect(compactColumns[14].table.name).toBe("table_w_composite_key");
                 expect(compactColumns[15].table.name).toBe("table_w_composite_key");
+            });
+
+            it('for pseudoColumns that are inboud foreign key, should return the foreign key table.', function () {
+                expect(detailedColumns[3].table.name).toEqual("inbound_related_to_columns_table_2");
             });
 
             it('for other columns should return the base column\'s table.', function () {
@@ -187,17 +212,18 @@ exports.execute = function (options) {
         describe('.name, ', function () {
             it('for pseudoColumns, ', function () {
                 it('should use constraint name.', function () {
-                    expect(compactColumns[0].name).toBe(["reference_schema", "ref_table_outbound_fks_key"].join(":"));
-                    expect(compactColumns[13].name).toBe(["reference_schema", "outbound_fk_8"].join(":"));
+                    expect(compactColumns[0].name).toBe(["columns_schema", "ref_table_outbound_fks_key"].join(":"));
+                    expect(compactColumns[13].name).toBe(["columns_schema", "outbound_fk_8"].join(":"));
+                    expect(detailedColumns[3].name).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"));
                 });
 
                 it('should make sure that the chosen name is unique.', function () {
-                    expect(compactColumns[14].name).toBe(["reference_schema", "outbound_fk_7"].join(":")+"1");
+                    expect(compactColumns[14].name).toBe(["columns_schema", "outbound_fk_7"].join(":")+"1");
                 });
             });
 
             it('for other columns should return the base column\'s type.', function () {
-                expect(compactColumns[10].name).toBe("reference_schema_outbound_fk_7");
+                expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
             });
         });
 
@@ -214,8 +240,8 @@ exports.execute = function (options) {
                         });
 
                         it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function () {
-                            checkDisplayname(compactColumns[3].displayname, "Column 3 Name (reference_table)", false);
-                            checkDisplayname(compactColumns[4].displayname, "Column 3 Name (reference_values)", false);
+                            checkDisplayname(compactColumns[3].displayname, "Column 3 Name (table_w_simple_key)", false);
+                            checkDisplayname(compactColumns[4].displayname, "Column 3 Name (table_w_simple_key_2)", false);
                         });
                     });
 
@@ -249,6 +275,12 @@ exports.execute = function (options) {
 
             });
 
+            describe('for pseudoColumns that are inbound foreign key, ', function () {
+                it("should return the reference's displayname.", function () {
+                    checkDisplayname(detailedColumns[3].displayname, "inbound_related_to_columns_table_2", false);
+                });
+            });
+
             it('for other columns, should return the base column\'s displayname.', function () {
                 checkDisplayname(compactColumns[5].displayname, "Column 3 Name", false);
             });
@@ -265,6 +297,8 @@ exports.execute = function (options) {
                 for (var i = 9; i < 11; i++) {
                     expect(assetRefCompactCols[i].type.name).toBe('markdown');
                 }
+
+                expect(detailedColumns[3].type.name).toBe("markdown");
             });
 
             it('for other columns should return the base column\'s type.', function () {
@@ -276,6 +310,12 @@ exports.execute = function (options) {
 
         describe('.nullok, ', function () {
             describe('for PseudoColumns,', function () {
+                it('that are inbound foreignkey should return an error.', function () {
+                    expect(function () {
+                        let nullok = detailedColumns[3].nullok;
+                    }).toThrow("can not use this type of column in entry mode.");
+                });
+
                 it("if any of its columns have nullok=false, should return false.", function () {
                     // simple fk
                     expect(compactColumns[3].nullok).toBe(false);
@@ -303,6 +343,12 @@ exports.execute = function (options) {
 
         describe('.default, ', function () {
             describe('for pseudoColumns that are foreign key, ', function () {
+                it('that are inbound foreignkey should return an error.', function () {
+                    expect(function () {
+                        var def = detailedColumns[3].default;
+                    }).toThrow("can not use this type of column in entry mode.");
+                });
+
                 it ('should return null if any of the constituent column default values is null.', function () {
                     expect(compactColumns[1].default).toBe(null);
                     expect(compactColumns[15].default).toBe(null);
@@ -330,6 +376,10 @@ exports.execute = function (options) {
 
         describe('.comment, ', function () {
             describe('for pseudoColumns, ', function () {
+                it('that are inbound foreignkey should return table\'s comment.', function () {
+                    expect(detailedColumns[3].comment).toEqual("inbound related to columns_table");
+                });
+
                 it('when key/foreign key is simple should use column\'s comment.', function () {
                     expect(compactColumns[0].comment).toBe("not part of any FKRs.");
                     expect(compactColumns[1].comment).toBe("simple fk to reference, col_1");
@@ -347,6 +397,12 @@ exports.execute = function (options) {
 
         describe('.inputDisabled, ', function () {
             describe('for pseudoColumns, ', function () {
+                it('that are inbound foreignkey should return an error.', function () {
+                    expect(function () {
+                        let inputDisabled = detailedColumns[3].inputDisabled;
+                    }).toThrow("can not use this type of column in entry mode.");
+                });
+
                 it('if it\'s based on one column (simple), should return base column\`s result.', function () {
                     // has generated
                     expect(entryCreateRef.columns[0].inputDisabled).toEqual({
@@ -501,7 +557,7 @@ exports.execute = function (options) {
                     it('should return the correct link.', function () {
                         val = compactColumns[14].formatPresentation(data).value;
 
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
@@ -513,7 +569,7 @@ exports.execute = function (options) {
                         var partialData = {
                             "id_1": "col_3_data", "id_2": "col_6_data"
                         };
-                        var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/' +
+                        var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/' +
                                             'id_1=' + partialData["id_1"]+ '&id_2='  +partialData["id_2"] + '">' + partialData["id_1"] + ":" + partialData["id_2"] + '</a>';
                         val = compactColumns[12].formatPresentation(partialData).value;
                         expect(val).toEqual(expectetValue);
@@ -538,14 +594,14 @@ exports.execute = function (options) {
                     describe('otherwise, ', function () {
                         it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
                             val = compactColumns[0].formatPresentation({"id":2}, {context: "detailed", "formattedValues": {"id":2}}).value;
-                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=2">2</a>');
+                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=2">2</a>');
 
                             val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, {context: "compact/brief", "formattedValues": {"col_3":"3", "col_6":"6"}}).value;
-                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/col_3=3&col_6=6">3:6</a>');
+                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns are html.', function () {
-                            val = compactBriefRef.columns[2].formatPresentation({"reference_schema_outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"reference_schema_outbound_fk_7":"value"}}).value;
+                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
                             expect(val).toEqual('<p>value</p>\n');
                         })
                     });
@@ -669,16 +725,16 @@ exports.execute = function (options) {
                     expect(compactColumns[6]._sortColumns.length).toBe(1);
                     expect(compactColumns[6]._sortColumns.map(function (col) {
                         return col.name
-                    })).toEqual(['reference_schema_outbound_fk_7']);
+                    })).toEqual(['columns_schema_outbound_fk_7']);
                 });
 
                 it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
-                    // reference_schema_outbound_fk_7
+                    // columns_schema_outbound_fk_7
                     expect(compactColumns[10].sortable).toBe(true);
                     expect(compactColumns[10]._sortColumns.length).toBe(1);
                     expect(compactColumns[10]._sortColumns.map(function (col) {
                         return col.name
-                    })).toEqual(['reference_schema_outbound_fk_7']);
+                    })).toEqual(['columns_schema_outbound_fk_7']);
                 });
             });
         });
@@ -737,6 +793,15 @@ exports.execute = function (options) {
                 });
             });
         })
+
+        describe("Inbound Foreign key related properties, ", function () {
+            it('.reference should return the related reference.', function () {
+                expect(detailedColumns[3].reference).toBeDefined("reference was not defined.");
+                var relatedURI = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+                relatedURI += "/id=1/(id)=(columns_schema:inbound_related_to_columns_table_2:id)";
+                expect(detailedColumns[3].reference.uri).toEqual(relatedURI);
+            });
+        });
     });
 
     function checkDisplayname(displayname, expectedVal, expectedHTML) {

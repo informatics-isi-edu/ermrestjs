@@ -1786,7 +1786,7 @@ var ERMrest = (function (module) {
                 if (options === undefined || options.formattedValues === undefined) {
                     options.formattedValues = module._getFormattedKeyValues(this.table.columns, context, data);
                 }
-                
+
                 options.formatted = true; // to avoid creating formattedValues again
                 value = module._renderTemplate(template, options.formattedValues, this.table, context, options);
             }
@@ -2242,7 +2242,7 @@ var ERMrest = (function (module) {
          * The exact `names` array in key definition
          * @type {Array}
          */
-        this.constraint_names = Array.isArray(jsonKey.names) ? jsonKey.names : [];
+        this.constraint_names = jsonKey.names;
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2253,6 +2253,13 @@ var ERMrest = (function (module) {
                 }
             } catch (exception){}
         }
+
+        // this name is going to be used to refere to this reference
+        // since constraint names are supposed to be unique in databse,
+        // we can assume that this can be used as a unique identifier for key.
+        // NOTE: currently ermrest only returns the first constraint name,
+        // so using the first one is sufficient
+        this._name = this.constraint_names[0].join("_");
 
         this._wellFormed = {};
         this._display = {};
@@ -2707,10 +2714,11 @@ var ERMrest = (function (module) {
 
         /**
          * The exact `names` array in foreign key definition
-         * TODO: it may need to change based on its usage
+         * The constraint names for this foreign key
+         *
          * @type {Array}
          */
-        this.constraint_names = Array.isArray(jsonFKR.names) ? jsonFKR.names : [];
+        this.constraint_names = jsonFKR.names;
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2721,6 +2729,14 @@ var ERMrest = (function (module) {
                 }
             } catch (exception){}
         }
+
+        // this name is going to be used to refere to this reference
+        // since constraint names are supposed to be unique in databse,
+        // we can assume that this can be used as a unique identifier for fk.
+        // NOTE: currently ermrest only returns the first constraint name,
+        // so using the first one is sufficient
+        this._name = this.constraint_names[0].join("_");
+
 
         /**
          * @type {string}

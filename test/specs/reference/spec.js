@@ -29,6 +29,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/reference_altTables.conf.json",
         "/reference/conf/update.conf.json",
         "/reference/conf/delete.conf.json",
-        "/reference/conf/default_value.conf.json"
+        "/reference/conf/default_value.conf.json",
+        "/reference/conf/columns.conf.json"
     ]
 });
