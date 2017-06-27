@@ -240,7 +240,6 @@ to use for ERMrest JavaScript agents.
         * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
-            * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -258,6 +257,7 @@ to use for ERMrest JavaScript agents.
         * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
+        * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -313,6 +313,13 @@ to use for ERMrest JavaScript agents.
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+    * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
+        * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
+        * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.table](#ERMrest.InboundForeignKeyPseudoColumn+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
+        * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
     * [.upload](#ERMrest.upload)
@@ -1672,7 +1679,7 @@ use index 0 since all refCols should be of the same schema:table
 
 #### foreignKeyRef.constraint_names : <code>Array</code>
 The exact `names` array in foreign key definition
-TODO: it may need to change based on its usage
+The constraint names for this foreign key
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+from_name"></a>
@@ -1974,7 +1981,6 @@ Constructor for a ParsedFilter.
     * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
-        * [._referenceColumns](#ERMrest.Reference+columns+_referenceColumns)
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -1992,6 +1998,7 @@ Constructor for a ParsedFilter.
     * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
+    * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -2085,47 +2092,6 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+columns+_referenceColumns"></a>
-
-##### columns._referenceColumns
-The logic is as follows:
-
-1. check if visible-column annotation is present for this context, go through the list,
-     1.1 if it's an array,
-         1.1.1 find the corresponding foreign key
-         1.1.2 check if it's part of this table.
-         1.1.3 avoid duplicate foreign keys.
-         1.1.4 make sure it is not hidden(+).
-     1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
-         apply *addColumn* heuristics explained below.
-
-2.otherwise go through list of table columns
-     2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
-     2.1 check if column has not been processed before.
-     2.2 hide the columns that are part of origFKR.
-     2.3 if column is serial and part of a simple key hide it.
-     2.4 if it's not part of any foreign keys
-         apply *addColumn* heuristics explained below.
-     2.5 go through all of the foreign keys that this column is part of.
-         2.5.1 make sure it is not hidden(+).
-         2.5.2 if it's simple fk, just create PseudoColumn
-         2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
-
-*addColumn* heuristics:
- + If column doesn't have asset annotation or its type is not `text`, add a normal ReferenceColumn.
- + Otherwise:
-     + If it has `url_pattern`: add AssetPseudoColumn.
-     + Otherwise:
-         - in entry context: remove it from the visible columns list.
-         - in other contexts: ignore the asset annotation, treat it as normal column.
-
-NOTE:
- + If asset annotation was used and context is entry,
-     we should remove the columns that are used as filename, byte, sha256, or md5.
- + If this reference is actually an inbound related reference,
-     we should hide the foreign key (and all of its columns) that created the link.
-
-**Kind**: instance property of [<code>columns</code>](#ERMrest.Reference+columns)  
 <a name="ERMrest.Reference+isUnique"></a>
 
 #### reference.isUnique : <code>boolean</code>
@@ -2231,30 +2197,8 @@ The logic is as follows:
 1. Get the list of visible inbound foreign keys (if annotation is not defined,
 it will consider all the inbound foreign keys).
 
-2. Go through the list of visible inbound foreign keys.
- 2.0 keep track of the linkage and save some attributes:
-     2.0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
-     2.0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
-     2.0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
-         - logic: foriengkey's to_name or this.displayname
-
-
- 2.1 If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
-     2.1.1 displayname: F2.to_name or T2.displayname
-     2.1.2 table: T2
-     2.1.3 derivedAssociationReference: points to the association table (A)
-     2.1.4 _location:
-         2.1.4.1 Uses the linkage to get to the T2.
-         2.1.4.2 if tuple was given, it will include a subset queryparam that proviedes more information
-                 the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
- 2.2 otherwise.
-     2.2.1 displayname: F1.from_name or T2.displayname
-     2.2.2 table: T2
-     2.2.3 _location:
-         2.2.3.1 Uses the linkage to get to the T2.
-         2.2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
-                 the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
-
+2. Go through the list of visible inbound foreign keys
+ 2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
 The logic for are sorted based on following attributes:
  1. displayname
  2. position of key columns that are involved in the foreignkey
@@ -2430,6 +2374,55 @@ c) use space for conjunction of terms
 | Param | Type | Description |
 | --- | --- | --- |
 | term | <code>string</code> | search term, undefined to clear search |
+
+<a name="ERMrest.Reference+generateColumnsList"></a>
+
+#### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+Generates the list of visible columns
+The logic is as follows:
+
+1. check if visible-column annotation is present for this context, go through the list,
+     1.1 if it's an array,
+         1.1.1 find the corresponding foreign key
+         1.1.2 avoid duplicate foreign keys.
+         1.1.3 make sure it is not hidden(+).
+         1.1.4 if it's outbound foreign key, create a pseudo-column for that.
+         1.1.5 if it's inbound foreign key, create the related reference and a pseudo-column based on that.
+     1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+         apply *addColumn* heuristics explained below.
+
+2.otherwise go through list of table columns
+     2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
+     2.1 check if column has not been processed before.
+     2.2 hide the columns that are part of origFKR.
+     2.3 if column is serial and part of a simple key hide it.
+     2.4 if it's not part of any foreign keys
+         apply *addColumn* heuristics explained below.
+     2.5 go through all of the foreign keys that this column is part of.
+         2.5.1 make sure it is not hidden(+).
+         2.5.2 if it's simple fk, just create PseudoColumn
+         2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+
+*addColumn* heuristics:
+ + If column doesn't have asset annotation or its type is not `text`, add a normal ReferenceColumn.
+ + Otherwise:
+     + If it has `url_pattern`: add AssetPseudoColumn.
+     + Otherwise:
+         - in entry context: remove it from the visible columns list.
+         - in other contexts: ignore the asset annotation, treat it as normal column.
+
+NOTE:
+ + If asset annotation was used and context is entry,
+     we should remove the columns that are used as filename, byte, sha256, or md5.
+ + If this reference is actually an inbound related reference,
+     we should hide the foreign key (and all of its columns) that created the link.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn) - Array of [ReferenceColumn](#ERMrest.ReferenceColumn).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
 
 <a name="ERMrest.Page"></a>
 
@@ -3027,6 +3020,64 @@ indicates this represents is a PseudoColumn or a Column.
 Indicates that this ReferenceColumn is an asset.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
+
+### ERMrest.InboundForeignKeyPseudoColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
+    * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
+    * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.table](#ERMrest.InboundForeignKeyPseudoColumn+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
+    * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+
+<a name="new_ERMrest.InboundForeignKeyPseudoColumn_new"></a>
+
+#### new InboundForeignKeyPseudoColumn(reference, fk)
+Constructor for InboundForeignKeyPseudoColumn. This class is a wrapper for [ForeignKeyRef](#ERMrest.ForeignKeyRef).
+This is a bit different than the [ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn), as that was for foreign keys
+of current table. This wrapper is for inbound foreignkeys. It is actually warpping the whole reference (table).
+
+This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| fk | [<code>Reference</code>](#ERMrest.Reference) | the foreignkey |
+
+<a name="ERMrest.InboundForeignKeyPseudoColumn+reference"></a>
+
+#### inboundForeignKeyPseudoColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
+The reference that can be used to get the data for this pseudo-column
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+table"></a>
+
+#### inboundForeignKeyPseudoColumn.table : [<code>Table</code>](#ERMrest.Table)
+The table that this pseudo-column represents
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+foreignKey"></a>
+
+#### inboundForeignKeyPseudoColumn.foreignKey : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+The [ForeignKeyRef](#ERMrest.ForeignKeyRef) that this pseudo-column is based on.
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+isPseudo"></a>
+
+#### inboundForeignKeyPseudoColumn.isPseudo : <code>boolean</code>
+indicates this represents is a PseudoColumn or a Column.
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey"></a>
+
+#### inboundForeignKeyPseudoColumn.isInboundForeignKey : <code>boolean</code>
+Indicates that this ReferenceColumn is an inbound foreign key.
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum

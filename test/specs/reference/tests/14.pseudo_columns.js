@@ -1,11 +1,14 @@
+/**
+ * All the test cases related to the reference.columns logic
+ */
 exports.execute = function (options) {
     describe('In case of outbound foreign keys, ', function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema",
-            tableName = "reference_table_outbound_fks",
+            schemaName = "columns_schema",
+            tableName = "columns_table",
             tableWithCompositeKey = "table_w_composite_key",
             tableWithCompositeKey2 = "table_w_composite_key_2",
-            tableWithSimpleKeyFK = "table_w_simple_key_fk",
+            tableWithSimpleKeyFK = "table_w_simple_key_as_fk",
             tableWithCompositeKey3 = "table_w_composite_key_3",
             tableWithSlash = "table_w_slash",
             tableWithAsset = "table_w_asset",
@@ -88,7 +91,7 @@ exports.execute = function (options) {
                 "col 5": "4002",
                 "col_6": "4003",
                 "col_7": null,
-                "reference_schema_outbound_fk_7": "12"
+                "columns_schema_outbound_fk_7": "12"
             },
             {
                 "id": "2",
@@ -99,45 +102,45 @@ exports.execute = function (options) {
                 "col 5": "4003",
                 "col_6": "4004",
                 "col_7": null,
-                "reference_schema_outbound_fk_7": "13"
+                "columns_schema_outbound_fk_7": "13"
             }
         ];
 
         var compactRefExpectedPartialValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">9000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
             '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">4000</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">4000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
             '4000',
             '4001',
             '4002',
             '4003',
              '',
              '<p>12</p>\n',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4002&id_2=4000">4002 , 4000</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id_1=4002&id_2=4001">4002 , 4001</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4002&id_2=4000">4002 , 4000</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4002&id_2=4001">4002 , 4001</a>',
              ''
         ];
 
         var compactRefExpectedLinkedValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">Hank</a>',
             '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=4000">John</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_values/id=4000">Hank</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">John</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">Hank</a>',
             '4000',
             '4001',
             '4002',
             '4003',
             '',
             '<p>12</p>\n',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1">4000 , 4001</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">4000 , 4001</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5">4002 , 4000</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=8">4002 , 4001</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=5">4002 , 4000</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=8">4002 , 4001</a>',
             ''
         ];
 
@@ -181,8 +184,8 @@ exports.execute = function (options) {
             '1',
             '1',
             '2',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001">Harold</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000">Hank</a>'
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9001">Harold</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">Hank</a>'
         ];
 
         var assetEntryExpectedValue = [
@@ -190,8 +193,8 @@ exports.execute = function (options) {
         ];
 
         var assetCompactExpectedValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_asset/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table_outbound_fks/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
@@ -202,7 +205,7 @@ exports.execute = function (options) {
         /**
          * This is the structure of the used tables:
          *
-         * 1. reference_table_outbound_fks:
+         * 1. columns_table:
          * columns:
          *  id -> single key, not part of any fk
          *  col_1 -> has generated annotation
@@ -212,20 +215,20 @@ exports.execute = function (options) {
          *  col 5 -> has generated annotation
          *  col_6 -> nullok false
          *  col_7 -> value is null | has generated and immutable annotation
-         *  reference_schema_outbound_fk_7 -> not part of any fk | has immutable
+         *  columns_schema_outbound_fk_7 -> not part of any fk | has immutable
          *
          * FKRs:
          *  outbound_fk_1: col_1 -> ref_table (to_name) (column_order: false)
          *  outbound_fk_2: col_2 -> ref_table
          *  outbound_fk_3: col_3 -> ref_table
-         *  outbound_fk_4: col_3 -> reference_values | (column_order: [name])
+         *  outbound_fk_4: col_3 -> table_w_simple_key_2 | (column_order: [name])
          *  outbound_fk_5: col_3, col_4 -> table_w_composite_key (to_name) | (column_order: [id])
          *  outbound_fk_6: col_3, col_6 -> table_w_composite_key_2
          *  outbound_fk_7: col_4, col 5 -> table_w_composite_key
          *  outbound_fk_8: col_3, col 5 -> table_w_composite_key
          *  outbound_fk_9: col_7, col 5 -> table_w_composite_key -> col_7 is null
          *
-         * expected output for ref.columns in detailed, compact/select, and entry/edit contexts:
+         * expected output for ref.columns in compact (default heuristics) contexts:
          * 0:   id
          * 1:   outbound_fk_1 (check to_name)
          * 2:   outbound_fk_2  -> is null
@@ -236,7 +239,7 @@ exports.execute = function (options) {
          * 7:   col 5
          * 8:   col_6
          * 9:   col_7
-         * 10:  reference_schema_outbound_fk_7
+         * 10:  columns_schema_outbound_fk_7
          * 11:  outbound_fk_5 (check to_name) (check nullok)
          * 12:  outbound_fk_6 (check nullok)
          * 13:  outbound_fk_8 (check disambiguation)
@@ -249,7 +252,7 @@ exports.execute = function (options) {
          * 2:   outbound_fk_2
          * 3:   outbound_fk_3
          * 4:   outbound_fk_4
-         * 5:   reference_schema_outbound_fk_7
+         * 5:   columns_schema_outbound_fk_7
          * 6:   outbound_fk_5
          * 7:   outbound_fk_6
          * 8:   outbound_fk_8
@@ -273,10 +276,10 @@ exports.execute = function (options) {
          *  compact: doesn't have visible-columns
          *  compact/brief: has visible-columns with three composite keys
          *  compact/select: has all of the columns in visible-columns + has some foreign keys too
-         *  detailed: has visible-columns with duplicate values
+         *  detailed: has visible-columns with duplicate values + inbound fk (last one, index: 3)
          *  entry: doesn't have visible-columns
          *  entry/edit: has visible-columns annotation. (just key)
-         *  entry/create: has all of the columns in visible-column + has some foreign keys too
+         *  entry/create: has all of the columns in visible-column + has some foreign keys too + inbound fk (which should be ignored)
          *
          *
          * 2. table_w_asset:
@@ -359,8 +362,9 @@ exports.execute = function (options) {
                         ref: detailedRef,
                         expected: [
                             "id",
-                            ["reference_schema","ref_table_outbound_fks_key"].join("_"),
-                            ["reference_schema", "outbound_fk_1"].join("_")
+                            ["columns_schema","ref_table_outbound_fks_key"].join("_"),
+                            ["columns_schema", "outbound_fk_1"].join("_"),
+                            ["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_")
                         ]
                     }]);
                 });
@@ -369,9 +373,9 @@ exports.execute = function (options) {
                     checkReferenceColumns([{
                         ref: entryCreateRef,
                         expected: [
-                            ["reference_schema", "outbound_fk_1"].join("_"),
-                            ["reference_schema", "outbound_fk_9"].join("_"),
-                            ["reference_schema", "outbound_fk_8"].join("_"),
+                            ["columns_schema", "outbound_fk_1"].join("_"),
+                            ["columns_schema", "outbound_fk_9"].join("_"),
+                            ["columns_schema", "outbound_fk_8"].join("_"),
                             "id"
                         ]
                     }]);
@@ -383,10 +387,10 @@ exports.execute = function (options) {
                         checkReferenceColumns([{
                             ref: compactSelectRef,
                             expected: [
-                                "id", ["reference_schema", "outbound_fk_1"].join("_"),
-                                "col_1", "col_2", "col_3", "col_4","col 5", ["reference_schema","outbound_fk_3"].join("_"),
-                                "col_6", "col_7", ["reference_schema","outbound_fk_5"].join("_"),
-                                "reference_schema_outbound_fk_7", ["reference_schema","outbound_fk_7"].join("_") + "1"
+                                "id", ["columns_schema", "outbound_fk_1"].join("_"),
+                                "col_1", "col_2", "col_3", "col_4","col 5", ["columns_schema","outbound_fk_3"].join("_"),
+                                "col_6", "col_7", ["columns_schema","outbound_fk_5"].join("_"),
+                                "columns_schema_outbound_fk_7", ["columns_schema","outbound_fk_7"].join("_") + "1"
                             ]
                         }]);
                     });
@@ -398,11 +402,11 @@ exports.execute = function (options) {
                             ref: entryEditRef,
                             expected: [
                                 "col_6", "id", "col_3",
-                                ["reference_schema", "outbound_fk_2"].join("_"),
-                                ["reference_schema", "outbound_fk_3"].join("_"),
-                                ["reference_schema", "outbound_fk_7"].join("_") + "1",
-                                ["reference_schema", "outbound_fk_8"].join("_"),
-                                ["reference_schema", "outbound_fk_9"].join("_")
+                                ["columns_schema", "outbound_fk_2"].join("_"),
+                                ["columns_schema", "outbound_fk_3"].join("_"),
+                                ["columns_schema", "outbound_fk_7"].join("_") + "1",
+                                ["columns_schema", "outbound_fk_8"].join("_"),
+                                ["columns_schema", "outbound_fk_9"].join("_")
                             ]
                         }]);
                     });
@@ -439,6 +443,19 @@ exports.execute = function (options) {
                     });
                 });
 
+                describe("for inbound foreignkey columns, ", function () {
+                    it("in entry context, should ignore them.", function () {
+                        expect(entryCreateRef.columns.length).toBe(4);
+                    });
+
+                    it('in other columns, should create a pseudo-column for those and remove them from related references.', function () {
+                        expect(detailedRef.columns[3].name).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
+
+                        expect(detailedRef.related().length).toBe(1, "didn't remove the column from related references");
+                        expect(detailedRef.related()[0].table.name).toBe("inbound_related_to_columns_table", "the name of related reference is not what was expected");
+                    });
+                });
+
                 if (!process.env.TRAVIS) {
                     it('should handle the columns with slash(`/`) in their names.', function () {
                         checkReferenceColumns([{
@@ -446,8 +463,8 @@ exports.execute = function (options) {
                             expected: [
                                 "id",
                                 "col_with_slash/",
-                                ["reference_schema", "table_w_slash_fk_1"].join("_"),
-                                ["reference_schema", "table_w_slash_fk_2"].join("_")
+                                ["columns_schema", "table_w_slash_fk_1"].join("_"),
+                                ["columns_schema", "table_w_slash_fk_2"].join("_")
                             ]
                         }]);
                     });
@@ -460,7 +477,7 @@ exports.execute = function (options) {
                     it('if key is simple and its contituent columns are part of simple foreign key, should not be added (instead it should apply the PseudoColumn for foreignkey logic.)', function(done) {
                         options.ermRest.resolve(singleEnitityUriSimpleKeyFK, {cid:"test"}).then(function(ref) {
                             expect(ref.columns[0].isPseudo).toBe(true);
-                            expect(ref.columns[0].name).toEqual("reference_schema_table_w_simple_key_fk_foreignkey");
+                            expect(ref.columns[0].name).toEqual("columns_schema_table_w_simple_key_as_fk_key_foreignkey");
 
                             done();
                         }, function (err) {
@@ -488,13 +505,13 @@ exports.execute = function (options) {
                     describe('otherwise, ', function () {
                         it ('should pick the shortest notnull and not html key.', function () {
                             expect(compactColumns[0].isPseudo).toBe(true);
-                            expect(compactColumns[0].name).toEqual(["reference_schema", "ref_table_outbound_fks_key"].join("_"));
+                            expect(compactColumns[0].name).toEqual(["columns_schema", "ref_table_outbound_fks_key"].join("_"));
                         });
 
                         it("if table has several keys with same size, should pick the one with most text columns.", function (done) {
                             options.ermRest.resolve(singleEnitityUriCompositeKey3, {cid:"test"}).then(function(ref) {
                                 expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0].name).toEqual(["reference_schema", "table_w_composite_key_3_key"].join("_"));
+                                expect(ref.columns[0].name).toEqual(["columns_schema", "table_w_composite_key_3_key"].join("_"));
 
                                 done();
                             }, function (err) {
@@ -506,7 +523,7 @@ exports.execute = function (options) {
                         it('if table has several keys with same size and same number of texts, should pick the key that has lower column positions.', function (done) {
                             options.ermRest.resolve(singleEnitityUriCompositeKey2, {cid:"test"}).then(function(ref) {
                                 expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0].name).toEqual(["reference_schema", "table_w_composite_key_2_key"].join("_"));
+                                expect(ref.columns[0].name).toEqual(["columns_schema", "table_w_composite_key_2_key"].join("_"));
 
                                 done();
                             }, function (err) {
@@ -535,22 +552,22 @@ exports.execute = function (options) {
 
                 it('should include columns that are not part of any FKRs.', function () {
                     expect(compactColumns[10].isPseudo).toBe(false);
-                    expect(compactColumns[10].name).toBe("reference_schema_outbound_fk_7");
+                    expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
                 });
 
                 describe('for columns that are part of a simple FKR, ', function () {
                     it('should replace them with PseudoColumn.', function () {
                         expect(compactColumns[1].isPseudo).toBe(true);
-                        expect(compactColumns[1].name).toBe(["reference_schema", "outbound_fk_1"].join("_"));
+                        expect(compactColumns[1].name).toBe(["columns_schema", "outbound_fk_1"].join("_"));
 
                         expect(compactColumns[2].isPseudo).toBe(true);
-                        expect(compactColumns[2].name).toBe(["reference_schema", "outbound_fk_2"].join("_"));
+                        expect(compactColumns[2].name).toBe(["columns_schema", "outbound_fk_2"].join("_"));
 
                         expect(compactColumns[3].isPseudo).toBe(true);
-                        expect(compactColumns[3].name).toBe(["reference_schema", "outbound_fk_3"].join("_"));
+                        expect(compactColumns[3].name).toBe(["columns_schema", "outbound_fk_3"].join("_"));
 
                         expect(compactColumns[4].isPseudo).toBe(true);
-                        expect(compactColumns[4].name).toBe(["reference_schema", "outbound_fk_4"].join("_"));
+                        expect(compactColumns[4].name).toBe(["columns_schema", "outbound_fk_4"].join("_"));
                     });
                 });
 
@@ -576,8 +593,8 @@ exports.execute = function (options) {
 
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
                         var expectedCols = [
-                            "id", ["reference_schema", "outbound_fk_1"].join("_"), ["reference_schema", "outbound_fk_2"].join("_"), ["reference_schema", "outbound_fk_3"].join("_"), ["reference_schema", "outbound_fk_4"].join("_"),
-                            "reference_schema_outbound_fk_7", ["reference_schema", "outbound_fk_5"].join("_"), ["reference_schema", "outbound_fk_6"].join("_"), ["reference_schema", "outbound_fk_8"].join("_"), ["reference_schema", "outbound_fk_7"].join("_") + "1", ["reference_schema", "outbound_fk_9"].join("_")
+                            "id", ["columns_schema", "outbound_fk_1"].join("_"), ["columns_schema", "outbound_fk_2"].join("_"), ["columns_schema", "outbound_fk_3"].join("_"), ["columns_schema", "outbound_fk_4"].join("_"),
+                            "columns_schema_outbound_fk_7", ["columns_schema", "outbound_fk_5"].join("_"), ["columns_schema", "outbound_fk_6"].join("_"), ["columns_schema", "outbound_fk_8"].join("_"), ["columns_schema", "outbound_fk_7"].join("_") + "1", ["columns_schema", "outbound_fk_9"].join("_")
                         ];
 
                         checkReferenceColumns([{
@@ -588,19 +605,19 @@ exports.execute = function (options) {
 
                     it('should create just one PseudoColumn for the FKR.', function () {
                         expect(compactColumns[11].isPseudo).toBe(true);
-                        expect(compactColumns[11].name).toBe(["reference_schema", "outbound_fk_5"].join("_"));
+                        expect(compactColumns[11].name).toBe(["columns_schema", "outbound_fk_5"].join("_"));
 
                         expect(compactColumns[12].isPseudo).toBe(true);
-                        expect(compactColumns[12].name).toBe(["reference_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[12].name).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[13].isPseudo).toBe(true);
-                        expect(compactColumns[13].name).toBe(["reference_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[13].name).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[14].isPseudo).toBe(true);
-                        expect(compactColumns[14].name).toBe(["reference_schema", "outbound_fk_7"].join("_") + "1");
+                        expect(compactColumns[14].name).toBe(["columns_schema", "outbound_fk_7"].join("_") + "1");
 
                         expect(compactColumns[15].isPseudo).toBe(true);
-                        expect(compactColumns[15].name).toBe(["reference_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[15].name).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 
@@ -611,7 +628,7 @@ exports.execute = function (options) {
                                 ref: assetRefEntry,
                                 expected: [
                                     "id",
-                                    ["reference_schema", "table_w_asset_fk_to_outbound"].join("_"),
+                                    ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
                                     "col_1", "col_2", "col_asset_2", "col_asset_3", "col_asset_4"
                                 ]
                             }]);
@@ -639,7 +656,7 @@ exports.execute = function (options) {
                             //TODO
                         });
                     });
-                    
+
                     it("if column type is not `text`, should ignore the asset annotation.", function() {
                       expect(assetRefCompactCols[11].name).toBe("col_asset_4");
                       expect(assetRefCompactCols[11].isPseudo).toBe(false);
@@ -648,12 +665,12 @@ exports.execute = function (options) {
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
-                        expect(assetRefCompactCols[0].name).toBe(["reference_schema", "table_w_asset_key_1"].join("_"));
+                        expect(assetRefCompactCols[0].name).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
                         expect(assetRefCompactCols[0].isKey).toBe(true);
                     });
 
                     it('if column is part of any foreignkeys, should ignore the asset annotation.', function() {
-                        expect(assetRefCompactCols[1].name).toBe(["reference_schema", "table_w_asset_fk_to_outbound"].join("_"));
+                        expect(assetRefCompactCols[1].name).toBe(["columns_schema", "table_w_asset_fk_to_outbound"].join("_"));
                         expect(assetRefCompactCols[1].isForeignKey).toBe(true);
                     });
                 });
@@ -666,14 +683,21 @@ exports.execute = function (options) {
                                 "id",
                                 "col_1",
                                 "col_with_slash/",
-                                ["reference_schema", "table_w_slash_fk_1"].join("_"),
-                                ["reference_schema", "table_w_slash_fk_2"].join("_")
+                                ["columns_schema", "table_w_slash_fk_1"].join("_"),
+                                ["columns_schema", "table_w_slash_fk_2"].join("_")
                             ]
                         }]);
                     });
                 }
             });
 
+        });
+
+        describe('.generateColumnsList, ', function () {
+            it('should return the same columns list as .columns', function () {
+                areSameColumnList(compactRef.generateColumnsList(), compactColumns);
+                areSameColumnList(entryEditRef.generateColumnsList(), entryEditRef.columns);
+            });
         });
 
         describe('tuple.values, ', function () {
@@ -689,7 +713,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('should not return a link for PseudoColumns and just return row name in entry contexts; and respect null values.', function (done) {
+                it('in entry contexts should not return a link for PseudoColumns and just return row name; and respect null values.', function (done) {
                     entryRef.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(entryRefExpectedLinkedValue);
@@ -717,7 +741,7 @@ exports.execute = function (options) {
                     expect(page.tuples[0].values).toEqual(compactRefExpectedPartialValue);
                 });
 
-                it('should not return a link for PseudoColumns and just return row name in entry contexts; and respect null values.', function () {
+                it('in entry contexts should not return a link for PseudoColumns and just return row name; and respect null values.', function () {
                     page = options.ermRest._createPage(entryRef, null, referenceRawData, false, false);
                     expect(page.tuples[0].values).toEqual(entryRefExpectedPartialValue);
 
@@ -765,6 +789,13 @@ exports.execute = function (options) {
         });
 
         /************** HELPER FUNCTIONS ************* */
+        function areSameColumnList(cols1, cols2) {
+            expect(cols1.length).toEqual(cols2.length, "didn't have the same length.");
+            for (var i = 0; i < cols1.length; i++) {
+                expect(cols1[i].name).toEqual(cols2[i].name, "missmatch in column with index=" + i);
+            }
+        }
+
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function (test) {
                 expect(test.ref.columns.map(function (col) {
