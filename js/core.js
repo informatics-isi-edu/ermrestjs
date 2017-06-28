@@ -1918,8 +1918,7 @@ var ERMrest = (function (module) {
                 try {
                     switch (this.type.name) {
                         case "boolean":
-                            console.log(defaultVal);
-                            if (defaultVal != true || defaultVal != false) {
+                            if (typeof(defaultVal) !== "boolean") {
                                 throw new Error();
                             }
                             break;
