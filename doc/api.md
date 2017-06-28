@@ -128,13 +128,13 @@ to use for ERMrest JavaScript agents.
         * [.name](#ERMrest.Column+name) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-        * [.default](#ERMrest.Column+default) : <code>string</code>
         * [.comment](#ERMrest.Column+comment) : <code>string</code>
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+        * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -1119,13 +1119,13 @@ Constructor for Columns.
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-    * [.default](#ERMrest.Column+default) : <code>string</code>
     * [.comment](#ERMrest.Column+comment) : <code>string</code>
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+    * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
     * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -1170,10 +1170,6 @@ TODO: to be implemented
 
 #### column.nullok : <code>Boolean</code>
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
-<a name="ERMrest.Column+default"></a>
-
-#### column.default : <code>string</code>
-**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+comment"></a>
 
 #### column.comment : <code>string</code>
@@ -1206,6 +1202,12 @@ keys that this column is a member of
 
 #### column.memberOfForeignKeys : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
 foreign key that this column is a member of
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+default"></a>
+
+#### column.default ⇒ <code>string</code>
+return the default value for a column after checking whether it's a primitive that can be displayed properly
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>
