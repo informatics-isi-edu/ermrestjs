@@ -1913,7 +1913,7 @@ var ERMrest = (function (module) {
          * @return {string}
          */
         get default () {
-            if (!this._default) {
+            if (this._default == undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
                     switch (this.type.name) {
@@ -1943,16 +1943,20 @@ var ERMrest = (function (module) {
                         case "timestamptz":
                             // convert using moment, if it doesn't error out, set the value.
                             // try/catch catches this if it does error out and sets it to null
-                            var ts = moment(defaultVal);
+                            moment(defaultVal);
+                            break;
+                        case "json":
+                        case "jsonb":
+                            JSON.parse(defaultVal);
                             break;
                         default:
                             break;
 
                     }
+                    this._default = defaultVal;
                 } catch(e) {
                     this._default = null;
                 }
-                this._default = defaultVal;
             }
             return this._default;
         },
