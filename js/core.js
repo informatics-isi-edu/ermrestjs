@@ -1943,7 +1943,9 @@ var ERMrest = (function (module) {
                         case "timestamptz":
                             // convert using moment, if it doesn't error out, set the value.
                             // try/catch catches this if it does error out and sets it to null
-                            moment(defaultVal);
+                            if (!module._moment(defaultVal).isValid()) {
+                                throw new Error();
+                            }
                             break;
                         case "json":
                         case "jsonb":
@@ -1955,6 +1957,7 @@ var ERMrest = (function (module) {
                     }
                     this._default = defaultVal;
                 } catch(e) {
+                    console.dir(e);
                     this._default = null;
                 }
             }
