@@ -1837,11 +1837,6 @@ var ERMrest = (function (module) {
         this.nullok = jsonColumn.nullok;
 
         /**
-         * @type {string}
-         */
-        this.default = jsonColumn.default;
-
-        /**
          * @desc Documentation for this column
          * @type {string}
          */
@@ -1911,6 +1906,62 @@ var ERMrest = (function (module) {
             return [module._fixedEncodeURIComponent(this.table.schema.name),
                     module._fixedEncodeURIComponent(this.table.name),
                     module._fixedEncodeURIComponent(this.name)].join(":");
+        },
+
+        /**
+         * return the default value for a column after checking whether it's a primitive that can be displayed properly
+         * @return {string}
+         */
+        get default () {
+            if (this._default == undefined) {
+                var defaultVal = this._jsonColumn.default;
+                try {
+                    switch (this.type.name) {
+                        case "boolean":
+                            if (typeof(defaultVal) !== "boolean") {
+                                throw new Error();
+                            }
+                            break;
+                        case "int2":
+                        case "int4":
+                        case "int8":
+                            var intVal = parseInt(defaultVal, 10);
+                            if (isNaN(intVal)) {
+                                throw new Error();
+                            }
+                            break;
+                        case "float4":
+                        case "float8":
+                        case "numeric":
+                            var floatVal = parseFloat(defaultVal);
+                            if (isNaN(floatVal)) {
+                                throw new Error();
+                            }
+                            break;
+                        case "date":
+                        case "timestamp":
+                        case "timestamptz":
+                            // convert using moment, if it doesn't error out, set the value.
+                            // try/catch catches this if it does error out and sets it to null
+                            if (!module._moment(defaultVal).isValid()) {
+                                throw new Error();
+                            }
+                            break;
+                        case "json":
+                        case "jsonb":
+                            JSON.parse(defaultVal);
+                            break;
+                        default:
+                            break;
+
+                    }
+                    this._default = defaultVal;
+                } catch(e) {
+                    console.dir(e);
+                    this._default = null;
+                }
+            }
+            return this._default;
         },
 
         delete: function () {
