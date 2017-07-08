@@ -946,6 +946,13 @@ var ERMrest = (function(module) {
                     }
                 };
 
+                // gets the key value based on which way the key was aliased.
+                // use the new alias value for the shortest key first meaning the key was changed
+                // if the new alias value is null, key wasn't changed so we can use the old alias
+                var getAliasedKeyVal = function(responseRowData, keyName) {
+                    return (responseRowData[keyName + newAlias] == null ? responseRowData[keyName + oldAlias] : responseRowData[keyName + newAlias] );
+                };
+
                 shortestKeyNames = this._shortestKey.map(function (column) {
                     return column.name;
                 });
@@ -1133,17 +1140,18 @@ var ERMrest = (function(module) {
                         // build the uri
                         if (j !== 0)
                         uri += ';';
+
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
                         } else {
                             uri += '(';
                             for (k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                 uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
                             }
                             uri += ')';
                         }
@@ -1158,9 +1166,8 @@ var ERMrest = (function(module) {
                         for (var n = 0; n < shortestKeyNames.length; n++) {
                             shortKey = shortestKeyNames[n];
                             for (var t = 0; t < tuples.length; t++) {
-                                // use the new alias value for the shortest key first meaning the key was changed
-                                // if the new alias value is null, key wasn't changed so we can use the old alias
-                                var responseVal = (response.data[j][shortKey + newAlias] == null ? response.data[j][shortKey + oldAlias] : response.data[j][shortKey + newAlias] );
+                                var responseVal = getAliasedKeyVal(response.data[j], shortKey);
+
                                 // if the value is the same, use this t index for the pageData object
                                 if (tuples[t].data[shortKey] == responseVal) {
                                     // we haven't matched the row yet
