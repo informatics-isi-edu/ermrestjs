@@ -1031,8 +1031,6 @@ var ERMrest = (function(module) {
 
                         // shortest key should always be aliased in case that key value was changed
                         // use a suffix of '_o' to represent the old value for the shortest key everything else gets '_n'
-                        console.log("tuples index: ", i);
-                        console.log(oldData);
                         submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
                     }
 
@@ -1116,8 +1114,6 @@ var ERMrest = (function(module) {
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                console.log("+++++++++++submissionData++++++++++++");
-                console.log(submissionData);
                 this._server._http.put(uri, submissionData).then(function updateReference(response) {
                     // Some data was not updated
                     if (response.status === 200 && response.data.length < submissionData.length) {
@@ -1152,8 +1148,41 @@ var ERMrest = (function(module) {
                             uri += ')';
                         }
 
+                        // response.data is sometimes in a different order
+                        // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
+                        // the entity is updated properly just the data returned from this request is in a different order sometimes
+                        // NOTE: this doesn't take into account whether there's a composite key or not, if composite key is used and one part of the key is the same for both rows, it may flip the value incorrectly
+                        var rowIndexInSubData, shortKey;
+                        var match = false,
+                            duplicate = false;
+                        for (var n = 0; n < shortestKeyNames.length; n++) {
+                            shortKey = shortestKeyNames[n];
+                            for (var t = 0; t < tuples.length; t++) {
+                                // use the new alias value for the shortest key first meaning the key was changed
+                                // if the new alias value is null, key wasn't changed so we can use the old alias
+                                var responseVal = (response.data[j][shortKey + newAlias] == null ? response.data[j][shortKey + oldAlias] : response.data[j][shortKey + newAlias] );
+                                // if the value is the same, use this t index for the pageData object
+                                if (tuples[t].data[shortKey] == responseVal) {
+                                    // we haven't matched the row yet
+                                    // this comes into play when the shortest key is a set of column names
+                                    if (!match) {
+                                        match = true;
+                                    } else {
+                                        // this means the current shortest key is a composite key and both tuples have the same value for this key name
+                                        duplicate = true;
+                                    }
+
+                                    if (match && !duplicate) {
+                                        rowIndexInSubData = t;
+                                    }
+                                }
+                            }
+                        }
+
+
+                        pageData[rowIndexInSubData] = {};
+
                         // unalias the keys for the page data
-                        pageData[j] = {};
                         var responseColumns = Object.keys(response.data[j]);
 
                         for (var m = 0; m < responseColumns.length; m++) {
@@ -1161,13 +1190,10 @@ var ERMrest = (function(module) {
                             if (columnAlias.endsWith(newAlias)) {
                                 // alias is always at end and length 2
                                 var columnName = columnAlias.slice(0, columnAlias.length-newAlias.length);
-                                pageData[j][columnName] = response.data[j][columnAlias];
+                                pageData[rowIndexInSubData][columnName] = response.data[j][columnAlias];
                             }
                         }
                     }
-
-                    // TODO: response.data is sometimes in a different order, so collecting the data is sometimes incorrect
-                    // the entity is updated properly just the data returned from this request is wrong somtimes.
 
                     // NOTE: ermrest returns only some of the column data.
                     // make sure that pageData has all the submitted and updated data
