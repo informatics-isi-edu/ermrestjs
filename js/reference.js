@@ -924,7 +924,8 @@ var ERMrest = (function(module) {
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
-                var i, j, k, m, n;
+                // for loop variables, NOTE: maybe we should name these better
+                var i, j, k, m, n, t;
 
                 var column, keyColumns, referenceColumn;
 
@@ -1159,13 +1160,14 @@ var ERMrest = (function(module) {
                         // response.data is sometimes in a different order
                         // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
                         // the entity is updated properly just the data returned from this request is in a different order sometimes
-                        // NOTE: this doesn't take into account whether there's a composite key or not, if composite key is used and one part of the key is the same for both rows, it may flip the value incorrectly
-                        var rowIndexInSubData, shortKey;
-                        var match = false,
+                        var shortKey,
+                            rowIndexInSubData = j,
+                            match = false,
                             duplicate = false;
-                        for (var n = 0; n < shortestKeyNames.length; n++) {
+                            
+                        for (n = 0; n < shortestKeyNames.length; n++) {
                             shortKey = shortestKeyNames[n];
-                            for (var t = 0; t < tuples.length; t++) {
+                            for (t = 0; t < tuples.length; t++) {
                                 var responseVal = getAliasedKeyVal(response.data[j], shortKey);
 
                                 // if the value is the same, use this t index for the pageData object
