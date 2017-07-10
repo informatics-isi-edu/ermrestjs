@@ -168,6 +168,7 @@ exports.execute = function (options) {
                 expect(reference.canUpdate).toBeDefined();
                 expect(reference.create()).toBeDefined();
                 expect(reference.read()).toBeDefined();
+                expect(reference.csvDownloadLink).toBe(singleEntityUri + "?limit=none&accept=csv&download=" + reference.displayname.unformatted);
             });
 
             it('reference should be properly defined after the callback is resolved.', function() {
