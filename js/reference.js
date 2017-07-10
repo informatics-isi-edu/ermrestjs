@@ -1160,28 +1160,22 @@ var ERMrest = (function(module) {
                         // response.data is sometimes in a different order
                         // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
                         // the entity is updated properly just the data returned from this request is in a different order sometimes
-                        var shortKey,
-                            rowIndexInSubData = j,
-                            match = false,
-                            duplicate = false;
-                            
-                        for (n = 0; n < shortestKeyNames.length; n++) {
-                            shortKey = shortestKeyNames[n];
-                            for (t = 0; t < tuples.length; t++) {
+                        var shortKey, rowIndexInSubData,
+                            matchCt = 0;            // used to verify the number of matches for each shortest key value
+
+                        for (t = 0; t < tuples.length; t++) {
+                            for (n = 0; n < shortestKeyNames.length; n++) {
+                                shortKey = shortestKeyNames[n];
                                 var responseVal = getAliasedKeyVal(response.data[j], shortKey);
 
                                 // if the value is the same, use this t index for the pageData object
                                 if (tuples[t].data[shortKey] == responseVal) {
-                                    // we haven't matched the row yet
                                     // this comes into play when the shortest key is a set of column names
-                                    if (!match) {
-                                        match = true;
-                                    } else {
-                                        // this means the current shortest key is a composite key and both tuples have the same value for this key name
-                                        duplicate = true;
-                                    }
+                                    // if the values match increase te counter
+                                    matchCt++;
 
-                                    if (match && !duplicate) {
+                                    // if our counter is the asme length as the list of shortest key names, it's an exact match to the t tuple
+                                    if (matchCt == shortestKeyNames.length) {
                                         rowIndexInSubData = t;
                                     }
                                 }
