@@ -914,7 +914,7 @@ var ERMrest = (function (module) {
 
         get reference() {
             if (!this._reference) {
-                this._reference = module._createReference(module._parse(this._uri), this.schema.catalog);
+                this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
             }
 
             return this._reference;

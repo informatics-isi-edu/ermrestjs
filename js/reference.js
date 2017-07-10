@@ -70,7 +70,7 @@ var ERMrest = (function(module) {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
 
-            var location = module._parse(uri);
+            var location = module.parse(uri);
 
             var server = module.ermrestFactory.getServer(location.service, params);
             server.catalogs.get(location.catalog).then(function (catalog) {
@@ -502,7 +502,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    var ref = new Reference(module._parse(uri), self._table.schema.catalog);
+                    var ref = new Reference(module.parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
                     var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
 
@@ -1208,7 +1208,7 @@ var ERMrest = (function(module) {
                         }
                     }
 
-                    var ref = new Reference(module._parse(uri), self._table.schema.catalog).contextualize.compact;
+                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compact;
                     var successfulPage = new Page(ref, etag, pageData, false, false);
                     var failedPage = null;
 
@@ -1496,7 +1496,7 @@ var ERMrest = (function(module) {
                 module._fixedEncodeURIComponent(table.schema.catalog.id), this.location.api,
                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             ].join("/");
-            return new Reference(module._parse(refURI), table.schema.catalog);
+            return new Reference(module.parse(refURI), table.schema.catalog);
         },
 
         /**
@@ -1511,6 +1511,15 @@ var ERMrest = (function(module) {
             }
             var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
             return module._appLinkFn(tag, this._location, this._context);
+        },
+
+        /**
+         * Returns a uri that will properly generate the download link for a csv document
+         *
+         * @returns {String} A string representing the url for direct csv download
+         **/
+        get csvDownloadLink() {
+            return this.uri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**
@@ -1945,14 +1954,14 @@ var ERMrest = (function(module) {
                 if (typeof subset !== 'undefined') {
                     uri += subset;
                 }
-                newRef._location = module._parse(uri);
+                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                 newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
                 // will be used to determine whether this related reference is derived from association relation or not
-                newRef.derivedAssociationReference = new Reference(module._parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
                 newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
@@ -1973,7 +1982,7 @@ var ERMrest = (function(module) {
                 if (typeof subset !== 'undefined') {
                     uri += subset;
                 }
-                newRef._location = module._parse(uri);
+                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -2300,7 +2309,7 @@ var ERMrest = (function(module) {
                     newLocationString += "?" + source._location.queryParamsString;
                 }
 
-                newRef._location = module._parse(newLocationString);
+                newRef._location = module.parse(newLocationString);
             }
 
             return newRef;
@@ -2685,7 +2694,7 @@ var ERMrest = (function(module) {
                     }
                 }
 
-                this._ref._location = module._parse(uri);
+                this._ref._location = module.parse(uri);
 
                 // add the tuple to reference so that when calling read() we don't need to fetch the data again.
                 this._ref._tuple = this._tuple;
@@ -3000,7 +3009,7 @@ var ERMrest = (function(module) {
                         newFilter.join("&")
                     ].join("/");
 
-                    var reference = new Reference(module._parse(uri), this._pageRef._table.schema.catalog);
+                    var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
                     reference.session = associationRef._session;
                     return reference;
                 }
@@ -3367,7 +3376,7 @@ var ERMrest = (function(module) {
          * @type {ERMrest.Reference}
          * @desc The reference object that represents the table of this PseudoColumn
          */
-        this.reference =  new Reference(module._parse(ermrestURI), table.schema.catalog);
+        this.reference =  new Reference(module.parse(ermrestURI), table.schema.catalog);
         this.reference.session = reference._session;
 
         /**
@@ -3404,7 +3413,7 @@ var ERMrest = (function(module) {
             if (uriFilter !== null) uri += ('/' + uriFilter);
         }
 
-        filteredRef = module._createReference(module._parse(uri), this.table.schema.catalog);
+        filteredRef = module._createReference(module.parse(uri), this.table.schema.catalog);
         return filteredRef;
     };
     ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, options) {
@@ -3482,7 +3491,7 @@ var ERMrest = (function(module) {
             var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
 
             // create a reference to just this PseudoColumn to use for url
-            var ref = new Reference(module._parse(uri), this.table.schema.catalog);
+            var ref = new Reference(module.parse(uri), this.table.schema.catalog);
 
             value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
         }
@@ -3776,7 +3785,7 @@ var ERMrest = (function(module) {
                  [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
                  createKeyPair(cols)
              ].join("/");
-             var keyRef = new Reference(module._parse(refURI), table.schema.catalog);
+             var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
              value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
          } else {
              value = caption;

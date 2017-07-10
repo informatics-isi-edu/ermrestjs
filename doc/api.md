@@ -249,6 +249,7 @@ to use for ERMrest JavaScript agents.
         * [._related](#ERMrest.Reference+_related)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
+        * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -378,6 +379,7 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [params])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
@@ -1992,6 +1994,7 @@ Constructor for a ParsedFilter.
     * [._related](#ERMrest.Reference+_related)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
+    * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2224,6 +2227,13 @@ App-specific URL
 
 - <code>Error</code> if `_appLinkFn` is not defined.
 
+<a name="ERMrest.Reference+csvDownloadLink"></a>
+
+#### reference.csvDownloadLink ⇒ <code>String</code>
+Returns a uri that will properly generate the download link for a csv document
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>String</code> - A string representing the url for direct csv download  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>
@@ -3629,6 +3639,24 @@ URI should be to the ERMrest _service_. For example,
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
 | [params] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server query parameter appended to the end of any request to the server. |
+
+<a name="ERMrest.parse"></a>
+
+### ERMrest.parse(uri) ⇒ <code>ERMrest.Location</code>
+This is an internal function that parses a URI and constructs an
+internal representation of the URI.
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>ERMrest.Location</code> - Location object created from the URI.  
+**Throws**:
+
+- [<code>InvalidInputError</code>](#ERMrest.InvalidInputError) If the URI does not contain the
+service name.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>String</code> | An ERMrest resource URI to be parsed. |
 
 <a name="ERMrest.resolve"></a>
 

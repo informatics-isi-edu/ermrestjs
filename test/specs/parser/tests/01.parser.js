@@ -11,8 +11,8 @@ exports.execute = function (options) {
             var singleFilterPath = "/catalog/" + catalogId + "/entity/"
                 + schemaName + ":" + tableName + "/id=" + entityId;
 
-            it('_parse should take a uri with a single filter and return a location object.', function() {
-                var location = options.ermRest._parse(options.url + singleFilterPath);
+            it('parse should take a uri with a single filter and return a location object.', function() {
+                var location = options.ermRest.parse(options.url + singleFilterPath);
                 parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
@@ -49,8 +49,8 @@ exports.execute = function (options) {
             var singleFilterPath = "/catalog/" + catalogId + "/entity/"
                 + schemaName + ":" + tableName + "/id=";
 
-            it('_parse should take a uri with a single filter and return a location object.', function() {
-                var location = options.ermRest._parse(options.url + singleFilterPath);
+            it('parse should take a uri with a single filter and return a location object.', function() {
+                var location = options.ermRest.parse(options.url + singleFilterPath);
                 parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
@@ -91,8 +91,8 @@ exports.execute = function (options) {
             var multipleFilterPath = "/catalog/" + catalogId + "/entity/" + schemaName + ":"
                 + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "@sort(" + sort + ")" + "@after(" + text + ")";
 
-            it('_parse should take a uri with multiple filters and return a location object.', function() {
-                var location = options.ermRest._parse(options.url + multipleFilterPath);
+            it('parse should take a uri with multiple filters and return a location object.', function() {
+                var location = options.ermRest.parse(options.url + multipleFilterPath);
                 parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
@@ -144,8 +144,8 @@ exports.execute = function (options) {
             var multipleFilterPath = "/catalog/" + catalogId + "/entity/" + schemaName + ":"
                 + tableName + "/id=" + firstEntityId + ";id=" + secondEntityId;
 
-            it('_parse should take a uri with multiple filters and return a location object.', function() {
-                var location = options.ermRest._parse(options.url + multipleFilterPath);
+            it('parse should take a uri with multiple filters and return a location object.', function() {
+                var location = options.ermRest.parse(options.url + multipleFilterPath);
                 parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
@@ -197,8 +197,8 @@ exports.execute = function (options) {
                 + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)"
                 + "@sort(" + sort + ")" + "@after(" + text + ")";
 
-            it('_parse should take a uri with multiple filters and return a location object.', function() {
-                var location = options.ermRest._parse(options.url + complexPath);
+            it('parse should take a uri with multiple filters and return a location object.', function() {
+                var location = options.ermRest.parse(options.url + complexPath);
                 parsedFilter = location.filter;
 
                 expect(location).toBeDefined();
