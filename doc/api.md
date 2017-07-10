@@ -379,6 +379,7 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [params])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
@@ -3638,6 +3639,24 @@ URI should be to the ERMrest _service_. For example,
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
 | [params] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server query parameter appended to the end of any request to the server. |
+
+<a name="ERMrest.parse"></a>
+
+### ERMrest.parse(uri) ⇒ <code>ERMrest.Location</code>
+This is an internal function that parses a URI and constructs an
+internal representation of the URI.
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>ERMrest.Location</code> - Location object created from the URI.  
+**Throws**:
+
+- [<code>InvalidInputError</code>](#ERMrest.InvalidInputError) If the URI does not contain the
+service name.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>String</code> | An ERMrest resource URI to be parsed. |
 
 <a name="ERMrest.resolve"></a>
 

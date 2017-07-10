@@ -26,17 +26,15 @@ var ERMrest = (function(module) {
     var _service_name = 'ermrest';
 
     /**
-     * This is an internal function that parses a URI and constructs an
-     * internal representation of the URI.
+     * This function parses a URI and constructs a representation of the URI.
      * @memberof ERMrest
-     * @function _parse
+     * @function parse
      * @param {String} uri An ERMrest resource URI to be parsed.
      * @returns {ERMrest.Location} Location object created from the URI.
      * @throws {ERMrest.InvalidInputError} If the URI does not contain the
      * service name.
-     * @private
      */
-    module._parse = function (uri) {
+    module.parse = function (uri) {
         var svc_idx = uri.indexOf(_service_name);
         if (svc_idx < 0) {
             throw new module.InvalidInputError("Invalid uri: " + uri + '. Does not contain the expected service name: ' + _service_name);
