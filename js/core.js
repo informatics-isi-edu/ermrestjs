@@ -1913,7 +1913,7 @@ var ERMrest = (function (module) {
          * @return {string}
          */
         get default () {
-            if (this._default == undefined) {
+            if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
                     switch (this.type.name) {
