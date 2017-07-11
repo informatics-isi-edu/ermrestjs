@@ -316,14 +316,14 @@
             "column_definitions": [
                 {
                     "name": "id_1",
-                    "nullok": true,
+                    "nullok": false,
                     "type": {
                         "typename": "int8"
                     }
                 },
                 {
                     "name": "id_2",
-                    "nullok": true,
+                    "nullok": false,
                     "type": {
                         "typename": "int8"
                     }
