@@ -297,6 +297,60 @@
                 }
             }
         },
+        "table_w_composite_key_as_shortest_key": {
+            "comment": "Table with composite key which is the shortest key too",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_composite_key_as_shortest_key",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int8"
+                    }
+                },
+                {
+                    "name": "text_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "text_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{id_1}} , {{id_2}}"
+                    }
+                }
+            }
+        },
         "table_w_independent_key": {
             "comment": "Table with independent key",
             "kind": "table",
@@ -330,6 +384,7 @@
         "update_table",
         "update_table_with_foreign_key",
         "table_w_composite_key",
+        "table_w_composite_key_as_shortest_key",
         "table_w_independent_key"
     ],
     "comment": null,
