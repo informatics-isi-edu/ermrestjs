@@ -3634,8 +3634,7 @@ URI should be to the ERMrest _service_. For example,
 <a name="ERMrest.parse"></a>
 
 ### ERMrest.parse(uri) ⇒ <code>ERMrest.Location</code>
-This is an internal function that parses a URI and constructs an
-internal representation of the URI.
+This function parses a URI and constructs a representation of the URI.
 
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
 **Returns**: <code>ERMrest.Location</code> - Location object created from the URI.  
