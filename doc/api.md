@@ -249,6 +249,7 @@ to use for ERMrest JavaScript agents.
         * [._related](#ERMrest.Reference+_related)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
+        * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -1993,6 +1994,7 @@ Constructor for a ParsedFilter.
     * [._related](#ERMrest.Reference+_related)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
+    * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2225,6 +2227,13 @@ App-specific URL
 
 - <code>Error</code> if `_appLinkFn` is not defined.
 
+<a name="ERMrest.Reference+csvDownloadLink"></a>
+
+#### reference.csvDownloadLink ⇒ <code>String</code>
+Returns a uri that will properly generate the download link for a csv document
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>String</code> - A string representing the url for direct csv download  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>

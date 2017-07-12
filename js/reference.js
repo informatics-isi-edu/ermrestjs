@@ -1433,6 +1433,15 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * Returns a uri that will properly generate the download link for a csv document
+         *
+         * @returns {String} A string representing the url for direct csv download
+         **/
+        get csvDownloadLink() {
+            return this.uri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+        },
+
+        /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
          * search term can be:
@@ -2779,13 +2788,13 @@ var ERMrest = (function(module) {
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
                         }
-                        //Added this if conditon explicitly for json/jsonb because we need to pass the 
+                        //Added this if conditon explicitly for json/jsonb because we need to pass the
                         //formatted string representation of JSON and JSONBvalues
                         else if (column.type.name === "json" || column.type.name === "jsonb") {
                             presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
-                        } 
+                        }
                         else {
                             this._values[i] = this._data[column.name];
                             this._isHTML[i] = false;
