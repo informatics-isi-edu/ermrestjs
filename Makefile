@@ -134,14 +134,16 @@ test: $(BUILD)
 	node test/jasmine-runner.js
 
 # Rule to install the package
-.PHONY: install
-install: $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/*
+.PHONY: install installm dont_install_in_root
+install: $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root
 	rsync -avz $(BUILD)/ $(ERMRESTJSDIR)
 	rsync -avz $(VENDOR) $(ERMRESTJSDIR)
 
-.PHONY: installm
-installm: install $(BUILD)/$(MIN)
+installm: install $(BUILD)/$(MIN) dont_install_in_root
 	rsync -avz $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
+
+dont_install_in_root:
+	@echo "$(ERMRESTJSDIR)" | egrep -vq "^/$$|.*:/$$"
 
 # Rules for help/usage
 .PHONY: help usage
