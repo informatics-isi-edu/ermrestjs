@@ -4085,11 +4085,11 @@ var ERMrest = (function(module) {
          * @param {string} alias - key name that the returned values for this aggregate will be available under
          * @desc minimum aggregate representation
          */
-        get minAgg (alias) {
+        minAgg: function(alias) {
             return {
                 "alias": typeof alias !== "string" ? null: alias,
                 "value": "min(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            }
+            };
         },
 
         /**
@@ -4097,11 +4097,11 @@ var ERMrest = (function(module) {
          * @param {string} alias - key name that the returned values for this aggregate will be available under
          * @desc maximum aggregate representation
          */
-        get maxAgg (alias) {
+        maxAgg: function(alias) {
             return {
                 "alias": typeof alias !== "string" ? null : alias,
                 "value": "max(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            }
+            };
         },
 
         /**
@@ -4109,11 +4109,11 @@ var ERMrest = (function(module) {
          * @param {string} alias - key name that the returned values for this aggregate will be available under
          * @desc distinct count aggregate representation
          */
-        get countDistinctAgg (alias) {
+        countDistinctAgg: function(alias) {
             return {
                 "alias": typeof alias !== "string" ? null : alias,
                 "value": "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            }
+            };
         }
     };
 

@@ -287,6 +287,7 @@ to use for ERMrest JavaScript agents.
         * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
@@ -321,6 +322,11 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
+        * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
+        * [.minAgg(alias)](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
+        * [.maxAgg(alias)](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
+        * [.countDistinctAgg(alias)](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
     * [.upload](#ERMrest.upload)
@@ -2759,6 +2765,7 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
@@ -2791,6 +2798,10 @@ indicates this represents is a PseudoColumn or a Column.
 <a name="ERMrest.ReferenceColumn+table"></a>
 
 #### referenceColumn.table : [<code>Table</code>](#ERMrest.Table)
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+aggregate"></a>
+
+#### referenceColumn.aggregate : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+name"></a>
 
@@ -3090,6 +3101,70 @@ indicates this represents is a PseudoColumn or a Column.
 Indicates that this ReferenceColumn is an inbound foreign key.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.ColumnAggregateFn"></a>
+
+### ERMrest.ColumnAggregateFn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
+    * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
+    * [.minAgg(alias)](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
+    * [.maxAgg(alias)](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
+    * [.countDistinctAgg(alias)](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
+
+<a name="new_ERMrest.ColumnAggregateFn_new"></a>
+
+#### new ColumnAggregateFn(column)
+Constructs an Aggregate Function object
+
+Column Aggregate Functions is a collection of available aggregates for the
+particular ReferenceColumn (min, max, and distinct for it's column).
+Each aggregate should return an object that includes it's `alias` if it was
+provided and the string representation for querying for that information.
+
+Usage:
+ Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+ will access this constructor for purposes of fetching aggregate data
+ for a specific column
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | if provided, the column that is used for creating column aggregates |
+
+<a name="ERMrest.ColumnAggregateFn+minAgg"></a>
+
+#### columnAggregateFn.minAgg(alias) : <code>Object</code>
+minimum aggregate representation
+
+**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| alias | <code>string</code> | key name that the returned values for this aggregate will be available under |
+
+<a name="ERMrest.ColumnAggregateFn+maxAgg"></a>
+
+#### columnAggregateFn.maxAgg(alias) : <code>Object</code>
+maximum aggregate representation
+
+**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| alias | <code>string</code> | key name that the returned values for this aggregate will be available under |
+
+<a name="ERMrest.ColumnAggregateFn+countDistinctAgg"></a>
+
+#### columnAggregateFn.countDistinctAgg(alias) : <code>Object</code>
+distinct count aggregate representation
+
+**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| alias | <code>string</code> | key name that the returned values for this aggregate will be available under |
+
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum
