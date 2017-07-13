@@ -1473,6 +1473,10 @@ var ERMrest = (function(module) {
             return newReference;
         },
 
+        getAggregates: function() {
+
+        },
+
         setNewTable: function(table) {
             this._table = table;
             this._shortestKey = table.shortestKey;
@@ -2986,6 +2990,11 @@ var ERMrest = (function(module) {
          */
         this.table = this._baseCols[0].table;
 
+        /**
+         * @type {ERMrest.ColumnAggregateFn}
+         */
+        this.aggregate = new ColumnAggregateFn(this);
+
     }
 
     ReferenceColumn.prototype = {
@@ -4050,8 +4059,63 @@ var ERMrest = (function(module) {
         }
     });
 
+    /**
+     * Constructs an Aggregate Function object
+     *
+     * Column Aggregate Functions is a collection of available aggregates for the
+     * particular ReferenceColumn (min, max, and distinct for it's column).
+     * Each aggregate should return an object that includes it's `alias` if it was
+     * provided and the string representation for querying for that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+     *  will access this constructor for purposes of fetching aggregate data
+     *  for a specific column
+     * @memberof ERMrest
+     * @class
+     * @param {ERMrest.ReferenceColumn} column - if provided, the column that is used for creating column aggregates
+     */
+    function ColumnAggregateFn (column) {
+        this.column = column;
+    }
 
+    ColumnAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @param {string} alias - key name that the returned values for this aggregate will be available under
+         * @desc minimum aggregate representation
+         */
+        get minAgg (alias) {
+            return {
+                "alias": typeof alias !== "string" ? null: alias,
+                "value": "min(" + module._fixedEncodeURIComponent(this.column.name) + ")"
+            }
+        },
 
+        /**
+         * @type {Object}
+         * @param {string} alias - key name that the returned values for this aggregate will be available under
+         * @desc maximum aggregate representation
+         */
+        get maxAgg (alias) {
+            return {
+                "alias": typeof alias !== "string" ? null : alias,
+                "value": "max(" + module._fixedEncodeURIComponent(this.column.name) + ")"
+            }
+        },
+
+        /**
+         * @type {Object}
+         * @param {string} alias - key name that the returned values for this aggregate will be available under
+         * @desc distinct count aggregate representation
+         */
+        get countDistinctAgg (alias) {
+            return {
+                "alias": typeof alias !== "string" ? null : alias,
+                "value": "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")"
+            }
+        }
+    };
 
     return module;
 
