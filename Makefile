@@ -130,7 +130,7 @@ distclean: clean
 
 # Rule to run the unit tests
 .PHONY: test
-test: $(BUILD)
+test: $(BUILD) ../ErmrestDataUtils
 	node test/jasmine-runner.js
 
 # Rule to install the package
