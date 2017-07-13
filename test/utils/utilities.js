@@ -19,7 +19,7 @@ exports.checkPageValues = function(pageData, tuples, sortBy) {
         var responseData = pageData[i];
         for (var j = 0; j < columns.length; j++) {
             var columnName = columns[j];
-            expect(responseData[columnName]).toBe(tupleData[columnName]);
+            expect(responseData[columnName]).toBe(tupleData[columnName], "Value " + responseData[columnName] + " for column " + columnName + " does not match tuple data value");
         }
     }
 }
