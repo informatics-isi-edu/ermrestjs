@@ -117,6 +117,8 @@ $ make doc
 ## How to test the package
 
 Before running the test cases you need to set the environment variables.
+- `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
+- `AUTH_COOKIE`: a cookie valid to the (possibly, remote) host running the ermrest service. See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/chaise/wiki/E2E-tests-guide#how-to-get-your-auth_cookie).
 
 ```
 export ERMREST_URL=https://hostname/ermrest
