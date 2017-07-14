@@ -6,9 +6,9 @@ exports.execute = function (options) {
             tableName = "search parser",
             intRegexPrefix = floatRegexPrefix = "^(.*[^0-9.])?0*",
             intRegexSuffix = "([^0-9].*|$)",
-            filter1 = "*::ciregexp::hank",
+            filter1 = "*::search::hank",
             // filter2 is a regular expression that will be url encoded.
-            filter2 = "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix);
+            filter2 = "*::search::" + 11;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
             + tableName;
@@ -91,8 +91,9 @@ exports.execute = function (options) {
 
             it('search() using conjunction of words. ', function(done) {
                 reference2 = reference1.search("\"hank\" 11");
-                expect(reference2.location.searchTerm).toBe("\"hank\" 11");
-                expect(reference2.location.searchFilter).toBe(filter1 + "&" + filter2);
+                expect(reference2.location.searchTerm).toBe("\"hank\" 11", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22hank%22%2011", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::hank&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix), "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -119,8 +120,9 @@ exports.execute = function (options) {
                 // rows with `name x` == "int" are notating that the int value is what is being tested for
                 searchTerm = "1";
                 reference2 = reference1.search(searchTerm);
-                expect(reference2.location.searchTerm).toBe(searchTerm);
-                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix));
+                expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::" + searchTerm, "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix), "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -145,9 +147,10 @@ exports.execute = function (options) {
                 // `id x` == 35-38, should all match;  39 and 40 are negative cases
                 searchTerm = "11.1";
                 reference2 = reference1.search(searchTerm);
-                expect(reference2.location.searchTerm).toBe(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::" + searchTerm, "searchFilter missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
-                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"));
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"), "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -173,9 +176,10 @@ exports.execute = function (options) {
                 // this is similar to the previous case that tests `11.1` and should match those positive cases as well
                 searchTerm = "11.";
                 reference2 = reference1.search(searchTerm);
-                expect(reference2.location.searchTerm).toBe(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::" + searchTerm, "searchFilter missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
-                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."));
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."), "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -200,9 +204,10 @@ exports.execute = function (options) {
                 // `id x` == 47-50 should all match; 51 and 52 are negative cases
                 searchTerm = ".1";
                 reference2 = reference1.search(searchTerm);
-                expect(reference2.location.searchTerm).toBe(searchTerm);
+                expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::" + searchTerm, "searchFilter missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
-                expect(reference2.location.searchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"));
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"), "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -228,11 +233,10 @@ exports.execute = function (options) {
                 limit = 20;
 
             it("with a full set of quotation marks.", function(done) {
-                var quotedFilter = "*::ciregexp::harold";
-
                 reference2 = reference1.search("\"harold\"");
-                expect(reference2.location.searchTerm).toBe("\"harold\"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\"harold\"", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22harold%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::harold", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -253,11 +257,10 @@ exports.execute = function (options) {
             });
 
             it("with quoted whitespace around the search term.", function(done) {
-                var quotedFilter = "*::ciregexp::%20william%20";
-
                 reference2 = reference1.search("\" william \"");
-                expect(reference2.location.searchTerm).toBe("\" william \"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\" william \"", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22%20william%20%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::%20william%20", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -278,11 +281,10 @@ exports.execute = function (options) {
             });
 
             it("with two words in 1 quoted term.", function(done) {
-                var quotedFilter = "*::ciregexp::wallace%20II";
-
                 reference2 = reference1.search("\"wallace II\"");
-                expect(reference2.location.searchTerm).toBe("\"wallace II\"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\"wallace II\"", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22wallace%20II%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::wallace%20II", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -303,11 +305,10 @@ exports.execute = function (options) {
             });
 
             it("with multiple quoted terms split by a space.", function(done) {
-                var quotedFilter = "*::ciregexp::wallace&*::ciregexp::II";
-
                 reference2 = reference1.search("\"wallace\" \"II\"");
-                expect(reference2.location.searchTerm).toBe("\"wallace\" \"II\"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\"wallace\" \"II\"", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22wallace%22%20%22II%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::wallace&*::ciregexp::II", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -332,8 +333,9 @@ exports.execute = function (options) {
                 var quotedFilter = "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "17" + intRegexSuffix);
 
                 reference2 = reference1.search("\"william\" \"17\"");
-                expect(reference2.location.searchTerm).toBe("\"william\" \"17\"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\"william\" \"17\"", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22william%22%20%2217%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe(quotedFilter, "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -354,11 +356,10 @@ exports.execute = function (options) {
             });
 
             it("with multiple quoted terms split by a '|'.", function(done) {
-                var quotedFilter = "*::ciregexp::wallace%7CII";
-
                 reference2 = reference1.search("\"wallace|II\"");
                 expect(reference2.location.searchTerm).toBe("\"wallace|II\"");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchFilter).toBe("*::search::%22wallace%7CII%22", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::wallace%7CII", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -379,11 +380,10 @@ exports.execute = function (options) {
             });
 
             it("without an ending quote.", function(done) {
-                var quotedFilter = "*::ciregexp::harold";
-
                 reference2 = reference1.search("\"harold");
-                expect(reference2.location.searchTerm).toBe("\"harold");
-                expect(reference2.location.searchFilter).toBe(quotedFilter);
+                expect(reference2.location.searchTerm).toBe("\"harold", "searchTerm missmatch.");
+                expect(reference2.location.searchFilter).toBe("*::search::%22harold", "searchFilter missmatch.");
+                expect(reference2.location.ermrestSearchFilter).toBe("*::ciregexp::harold", "ermrestSearchFilter missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -409,8 +409,9 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('location should have correct search parameters ', function() {
-                expect(reference3.location.searchTerm).toBe("hank " + intRegexPrefix + "11" + intRegexSuffix);
-                expect(reference3.location.searchFilter).toBe(filter1 + "&" + filter2);
+                expect(reference3.location.searchTerm).toBe("hank 11", "searchTerm missmatch.");
+                expect(reference3.location.searchFilter).toBe(filter1 + "&" + filter2, "searchFilter missmatch.");
+                expect(reference3.location.ermrestSearchFilter).toBe("*::ciregexp::hank" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix), "ermrestSearchFilter missmatch.");
             });
 
             it('read should return a Page object that is defined.', function(done) {

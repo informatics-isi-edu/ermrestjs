@@ -712,7 +712,7 @@ var ERMrest = (function(module) {
                 // this will update location.sort and all the uri and path
                 this._location.sortObject = sortObject;
 
-                var uri = this._location.compactUri; // used for the http request
+                var uri = this._location.ermrestCompactUri; // used for the http request
 
                 /** Change api to attributegroup for retrieving the foreign key data
                  * This will just affect the http request and not this._location

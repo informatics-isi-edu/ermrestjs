@@ -164,14 +164,9 @@ var ERMrest = (function(module) {
                 var term = decodeURIComponent(f.match(/\*::search::(.+)/)[1]);
                 
                 // make sure the ermrest url is correct
-                var ermrestFilter = _convertSearchToRegExp(term);
+                var ermrestFilter = _convertSearchTermToFilter(term);
                 that._ermrestSearchFilter += (idx === 0 ? "" : "&") + ermrestFilter;
-                
-                // make sure the search term is set correctly
-                if (term.indexOf(" ") !== -1) {
-                    // term has white spaces, add quotation
-                    term = "\"" + term + "\"";
-                }
+
                 that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
             });
 
@@ -182,33 +177,11 @@ var ERMrest = (function(module) {
         // <join(s)>
         this._joins = [];
         // parts[1] to parts[index] might be joins
-        var colMapping = {}, linking;
-        var createJoin = function (self, linking, ji) {
-            var fromCols = linking[1].split(",");
-            var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
-            var toCols = toParts[3].split(",");
-            
-            // used for filter
-            if (ji === index) {
-                for (var j = 0; j < fromCols.length; j++) {
-                    colMapping[decodeURIComponent(fromCols[j])] = decodeURIComponent(toCols[j]);
-                }
-            }
-
-            self._joins.push({
-                "fromCols": fromCols.map(function(colName) {return decodeURIComponent(colName);}),
-                "fromColsStr": linking[1],
-                "toCols": toCols.map(function(colName) {return decodeURIComponent(colName);}),
-                "toColsStr": linking[2],
-                "toSchema": toParts[1],
-                "toTable": toParts[2],
-                "str": linking
-            });
-        };
+        var linking;
         for (var ji = 1; ji <= index; ji++) {
             linking = parts[ji].match(/\((.*)\)=\((.*:.*:.*)\)/);
             if (!linking) continue;
-            createJoin(this, linking, ji);
+            this._joins.push(_createJoin(linking));
         }
         
         //<schema:table>
@@ -232,7 +205,9 @@ var ERMrest = (function(module) {
         this._filtersString = '';
         if (parts[1]) {
             linking = parts[1].match(/\((.*)\)=\((.*:.*:.*)\)/);
-            if (!linking) { // parts[1] could be linking if there's no filter
+            var isSearch = parts[1].match(/\*::search::[^&]+/g);
+            // parts[1] could be linking or search
+            if (!linking && !isSearch) {
                 this._filtersString = parts[1];
                 
                 // split by ';' and '&'
@@ -307,7 +282,7 @@ var ERMrest = (function(module) {
 
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
          * @returns {String} The full URI of the location
          */
         get uri() {
@@ -318,47 +293,48 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>
          * @returns {String} The URI without modifiers or queries
          */
         get compactUri() {
             if (this._compactUri === undefined) {
-                this._compactUri = this.service + "/" + this.compactPath;
+                var path = [this.service, "catalog", this.catalog, this.api].join("/");
+                this._compactUri = path + "/" + this.compactPath;
             }
             return this._compactUri;
         },
         
         /**
-         *
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
          * @returns {String} Path portion of the URI
          * This is everything after the catalog id
          */
         get path() {
-            if (this._path= undefined) {
+            if (this._path === undefined) {
                 this._path = this.compactPath + this._modifiers;
             }
             return this._path;
         },
 
         /**
-         *
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
          * @returns {String} Path without modifiers or queries
          */
         get compactPath() {
             if (this._compactPath === undefined) {
                 var uri = "";
-                if (this.projectionSchema) {
-                    uri += this.projectionSchema + ":";
+                if (this.projectionSchemaName) {
+                    uri += this.projectionSchemaName + ":";
                 }
-                uri += this.projectionTable;
+                uri += this.projectionTableName;
                 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
                 }
                 
                 if (this.joins.length > 0) {
-                    uri += this.joins.reduce(function (join) {
-                        return "/" + join.str;
+                    uri += "/" + this.joins.reduce(function (prev, join, i) {
+                        return prev + (i > 0 ? "/" : "") + join.str;
                     }, "");
                 }
                 
@@ -374,10 +350,10 @@ var ERMrest = (function(module) {
         
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
          * @returns {String} The full URI of the location for ermrest
          */
-        get emrestUri() {
+        get ermrestUri() {
             if (this._ermrestUri === undefined) {
                 this._ermrestUri = this.ermrestCompactUri + this._modifiers;
             }
@@ -391,7 +367,8 @@ var ERMrest = (function(module) {
          */
         get ermrestCompactUri() {
             if (this._ermrestCompactUri === undefined) {
-                this._ermrestCompactUri = this.service + "/" + this.ermrestCompactPath;
+                var path = [this.service, "catalog", this.catalog, this.api].join("/");
+                this._ermrestCompactUri = path + "/" + this.ermrestCompactPath;
             }
             return this._ermrestCompactUri;
         },
@@ -402,7 +379,7 @@ var ERMrest = (function(module) {
          * This is everything after the catalog id for ermrest
          */
         get ermrestPath() {
-            if (this._ermrestPath= undefined) {
+            if (this._ermrestPath === undefined) {
                 this._ermrestPath = this.ermrestCompactPath + this._modifiers;
             }
             return this._ermrestPath;
@@ -415,18 +392,18 @@ var ERMrest = (function(module) {
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
                 var uri = "";
-                if (this.projectionSchema) {
-                    uri += this.projectionSchema + ":";
+                if (this.projectionSchemaName) {
+                    uri += this.projectionSchemaName + ":";
                 }
-                uri += this.projectionTable;
+                uri += this.projectionTableName;
                 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
                 }
                 
                 if (this.joins.length > 0) {
-                    uri += this.joins.reduce(function (join) {
-                        return "/" + join.str;
+                    uri += "/" + this.joins.reduce(function (prev, join, i) {
+                        return prev + (i > 0 ? "/" : "") + join.str;
                     }, "");
                 }
 
@@ -523,7 +500,7 @@ var ERMrest = (function(module) {
         
         get filtersString() {
             return this._filtersString;
-        }
+        },
 
         /**
          * A dictionary of available query parameters
@@ -557,6 +534,19 @@ var ERMrest = (function(module) {
             return this._ermrestSearchFilter;
         },
         
+        /**
+         * Array of joins that are in the given uri.
+         * Each join has the following attributes:
+         *  `fromCols`: array of column names.
+         *  `fromColsStr`: complete string of left part of join
+         *  `toCols`: array of column names
+         *  `toColsStr`: complete string of right part of join
+         *  `toSchema`: the schema names
+         *  `toTable`: the table names
+         *  `str`: complete string of join
+         * 
+         * @return {object}
+         */
         get joins() {
             return this._joins;
         },
@@ -568,7 +558,11 @@ var ERMrest = (function(module) {
         get hasJoin() {
             return this._joins.length > 0;
         },
-
+        
+        /**
+         * The last join in the uri. Take a look at `joins` for structure of join object.
+         * @return {object}
+         */
         get lastJoin() {
             var joinLen = this._joins.length;
             if (joinLen > 0) {
@@ -577,9 +571,13 @@ var ERMrest = (function(module) {
             return null;
         },
         
+        /**
+         * modifiers that are available in the uri.
+         * @return {string}
+         */
         get _modifiers() {
             return (this.sort ? this.sort : "") + (this.paging ? this.paging : "") + (this.queryParamsString ? this.queryParamsString : "");
-        }
+        },
 
         /**
          * Apply, replace, clear filter term on the location
@@ -588,7 +586,7 @@ var ERMrest = (function(module) {
         search: function(term) {
             
             var searchFilter = ""; // will be shown in chaise
-            var filterString = _convertSearchToRegExp(term); // ermrest uses this for http request
+            var filterString = _convertSearchTermToFilter(term); // ermrest uses this for http request
 
             if (filterString != "") {
                 this._searchTerm = term;
@@ -826,7 +824,13 @@ var ERMrest = (function(module) {
         return modifier;
     };
     
-    _convertSearchToRegExp = function (term) {
+    /**
+     * Given a term will return the filter string that ermrest understands
+     * @param  {string} term Search term
+     * @return {string} corresponding ermrest filter
+     * @private
+     */
+    _convertSearchTermToFilter = function (term) {
         var filterString = "";
         
         if (term && term !== "") {
@@ -864,6 +868,28 @@ var ERMrest = (function(module) {
         }
         
         return filterString;
+    };
+    
+    /**
+     * Create a join object given the linking
+     * @private
+     * @param  {string[]} linking the linking array
+     * @return {object}
+     */
+    _createJoin = function (linking) {
+        var fromCols = linking[1].split(",");
+        var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
+        var toCols = toParts[3].split(",");
+
+        return {
+            "fromCols": fromCols.map(function(colName) {return decodeURIComponent(colName);}),
+            "fromColsStr": linking[1],
+            "toCols": toCols.map(function(colName) {return decodeURIComponent(colName);}),
+            "toColsStr": linking[2],
+            "toSchema": decodeURIComponent(toParts[1]),
+            "toTable": decodeURIComponent(toParts[2]),
+            "str": linking[0]
+        };
     };
 
     /**
@@ -950,7 +976,7 @@ var ERMrest = (function(module) {
      *
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
-     * @param {string} fullURI used for loggin purposes
+     * @param {string} fullURI used for logging purposes
      * @return {ParsedFilter}
      *
      */
