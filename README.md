@@ -80,10 +80,10 @@ $ make all
 
 ### Set the deployment directory (optional)
 
-Set `ERMRESTJSDIR` to specify a target deployment location. By default, it the
+Set `ERMRESTJSDIR` to specify a target deployment location. By default, the
 install target is `/var/www/html/ermrestjs`. If this directory does not exist,
 it will first create it. You may need to run `make install` with _super user_
-privileges depending on the installation directory you chose.
+privileges depending on the installation directory you choose.
 
 **Important Note**: A very silly thing to do would be to set your deployment directory to root `/` and run `make install` with `sudo`. This would be very silly indeed, and would probably result in some corruption of your operating system. Surely, no one would ever do this. But, in the off chance that one might attempt such silliness, the `make install` rule specifies a `dont_install_in_root` prerequisite that attempts to put a stop to any such silliness before it goes to far.
 
