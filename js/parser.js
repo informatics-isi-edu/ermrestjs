@@ -146,7 +146,7 @@ var ERMrest = (function(module) {
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter(s)>/<joins(s)/<search>"
+        // Expected format: "<schema:table>/<filter(s)>/<joins(s)>/<search>"
         parts = this._compactPath.split('/');
 
         var index = parts.length - 1;
@@ -283,6 +283,8 @@ var ERMrest = (function(module) {
 
         /**
          * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * 
          * @returns {String} The full URI of the location
          */
         get uri() {
@@ -294,6 +296,8 @@ var ERMrest = (function(module) {
 
         /**
          * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         *
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * @returns {String} The URI without modifiers or queries
          */
         get compactUri() {
@@ -306,6 +310,8 @@ var ERMrest = (function(module) {
         
         /**
          * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         *  
          * @returns {String} Path portion of the URI
          * This is everything after the catalog id
          */
@@ -318,6 +324,8 @@ var ERMrest = (function(module) {
 
         /**
          * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * 
          * @returns {String} Path without modifiers or queries
          */
         get compactPath() {
@@ -350,6 +358,8 @@ var ERMrest = (function(module) {
         
         /**
          * should only be used for internal usage and sending request to ermrest
+         * NOTE: returns a uri that ermrest understands
+         * 
          * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
          * @returns {String} The full URI of the location for ermrest
          */
@@ -363,6 +373,8 @@ var ERMrest = (function(module) {
         /**
          * should only be used for internal usage and sending request to ermrest
          * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         *
+         * NOTE: returns a uri that ermrest understands
          * @returns {String} The URI without modifiers or queries for ermrest
          */
         get ermrestCompactUri() {
@@ -375,6 +387,8 @@ var ERMrest = (function(module) {
         
         /**
          * should only be used for internal usage and sending request to ermrest
+         * 
+         * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
          * This is everything after the catalog id for ermrest
          */
@@ -387,6 +401,8 @@ var ERMrest = (function(module) {
 
         /**
          * should only be used for internal usage and sending request to ermrest
+         *
+         * NOTE: returns a path that ermrest understands
          * @returns {String} Path without modifiers or queries for ermrest
          */
         get ermrestCompactPath() {
