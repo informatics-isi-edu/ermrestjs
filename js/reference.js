@@ -1473,7 +1473,12 @@ var ERMrest = (function(module) {
             return newReference;
         },
 
-        getAggregates: function() {
+        /**
+         *
+         * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
+         * @return {Promise} TODO: not sure of the structure of this returned promise yet
+         */
+        getAggregates: function(aggregateList) {
 
         },
 
