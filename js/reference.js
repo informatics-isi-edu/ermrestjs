@@ -1571,12 +1571,12 @@ var ERMrest = (function(module) {
             // use this index to get the next ascii value in the alphabet starting at `a`
             var aliasCounter = 0;
             function generateAlias() {
-                var alias = String.fromCharCode(97 + aliasCounter);
+                var alias = aliasCounter;
                 aliasCounter++;
                 return alias;
             }
 
-            var url = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.compactPath + "/";
+            var url = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
             // for matching the aliases after the data returns
             var aggAliases = [];
             for (var i = 0; i < aggregateList.length; i++) {

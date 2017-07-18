@@ -159,5 +159,35 @@ exports.execute = function (options) {
                 done.fail();
             });
         });
+
+        it("should get aggregates for different columns without aliases being set.", function(done) {
+            var aggregateList = [
+                reference.columns[1].aggregate.countNotNullAgg(),
+                reference.columns[1].aggregate.minAgg(),
+                reference.columns[1].aggregate.maxAgg(),
+                reference.columns[2].aggregate.countNotNullAgg(),
+                reference.columns[2].aggregate.minAgg(),
+                reference.columns[2].aggregate.maxAgg()
+            ];
+
+            reference.getAggregates(aggregateList).then(function (response) {
+                response = response[0];
+
+                // returned values have keys based on their index in the aggregateList
+                // int aggs
+                expect(response['0']).toBe(5);
+                expect(response['1']).toBe(2);
+                expect(response['2']).toBe(215);
+                // float aggs
+                expect(response['3']).toBe(4);
+                expect(response['4']).toBe(0.4222);
+                expect(response['5']).toBe(36.9201);
+
+                done();
+            }).catch(function (error) {
+                console.dir(error);
+                done.fail();
+            });
+        });
     });
 }
