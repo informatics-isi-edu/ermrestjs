@@ -470,7 +470,7 @@ var ERMrest = (function(module) {
                 var defaults = getDefaults();
 
                 // construct the uri
-                var uri = this._location.compactUri;
+                var uri = this._location.ermrestCompactUri;
                 for (var i = 0; i < defaults.length; i++) {
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
@@ -712,7 +712,7 @@ var ERMrest = (function(module) {
                 // this will update location.sort and all the uri and path
                 this._location.sortObject = sortObject;
 
-                var uri = this._location.compactUri; // used for the http request
+                var uri = this._location.ermrestCompactUri; // used for the http request
 
                 /** Change api to attributegroup for retrieving the foreign key data
                  * This will just affect the http request and not this._location
@@ -725,7 +725,7 @@ var ERMrest = (function(module) {
                  *   4. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
                 if (this._table.foreignKeys.length() > 0) {
-                    var compactPath = this._location.compactPath,
+                    var compactPath = this._location.ermrestCompactPath,
                         tableIndex = 0,
                         fkList = "",
                         sortColumn,
@@ -734,8 +734,8 @@ var ERMrest = (function(module) {
                         parts;
 
                     // add M alias to current table
-                    if (this._location.searchFilter) { // remove search filter
-                        compactPath = compactPath.replace("/" + this._location.searchFilter, "");
+                    if (this._location.ermrestSearchFilter) { // remove search filter
+                        compactPath = compactPath.replace("/" + this._location.ermrestSearchFilter, "");
                     }
                     parts = compactPath.split('/');
                     linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
@@ -744,9 +744,9 @@ var ERMrest = (function(module) {
                     }
                     compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
 
-                    // add search filter back
-                    if (this._location.searchFilter) {
-                        compactPath = compactPath + "/" + this._location.searchFilter;
+                    // add ermrest understandable search filter back
+                    if (this._location.ermrestSearchFilter) {
+                        compactPath = compactPath + "/" + this._location.ermrestSearchFilter;
                     }
 
                     // create the uri with attributegroup and alias
@@ -1294,7 +1294,7 @@ var ERMrest = (function(module) {
                  * github issue: #425
                  */
 
-                this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
+                this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError));
@@ -2124,7 +2124,7 @@ var ERMrest = (function(module) {
                 if (source._location.hasJoin) {
                     // returns true if join is on alternative shared key
                     var joinOnAlternativeKey = function () {
-                        var joinCols = source._location.lastJoin.rightCols,
+                        var joinCols = source._location.lastJoin.toCols,
                             keyCols = source._table._baseTable._altSharedKey.colset.columns;
 
                         if (joinCols.length != keyCols.length) {
@@ -2152,9 +2152,9 @@ var ERMrest = (function(module) {
                             newRightCols = [],
                             col;
 
-                        for (var i = 0; i < currJoin.rightCols.length; i++) {
+                        for (var i = 0; i < currJoin.toCols.length; i++) {
                             // find the column object
-                            col = source._table.columns.get(currJoin.rightCols[i]);
+                            col = source._table.columns.get(currJoin.toCols[i]);
 
                             // map the column from source table to alternative table
                             col = newTable._altForeignKey.mapping.getFromColumn(col);
@@ -2163,7 +2163,7 @@ var ERMrest = (function(module) {
                             newRightCols.push((i === 0) ? col.toString() : module._fixedEncodeURIComponent(col.name));
                         }
 
-                        return "(" + currJoin.leftColsStr + ")=(" + newRightCols.join(",") + ")";
+                        return "(" + currJoin.fromColsStr + ")=(" + newRightCols.join(",") + ")";
                     };
 
                     // 2.1. if _altSharedKey is the same as the join

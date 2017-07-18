@@ -123,6 +123,7 @@ var ERMrest = (function(module) {
         // compactPath is path without modifiers
         this._compactPath = (modifiers === "" ? this._path : this._path.split(modifiers)[0]);
 
+        // <sort>/<page>
         // sort and paging
         if (modifiers) {
             if (modifiers.indexOf("@sort(") !== -1) {
@@ -145,52 +146,45 @@ var ERMrest = (function(module) {
         }
 
         // Split compact path on '/'
-        // Expected format: "[schema_name:]table_name[/{attribute::op::value}{&attribute::op::value}*]"
+        // Expected format: "<schema:table>/<filter(s)>/<joins(s)>/<search>"
         parts = this._compactPath.split('/');
 
         var index = parts.length - 1;
+        
+        //<search>
         // search should be the last part of compact path
-        var match = parts[index].match(/\*::ciregexp::[^&]+/g);
+        var match = parts[index].match(/\*::search::[^&]+/g);
         var that = this;
         if (match) { // this is a search filter
+            
             this._searchFilter = parts[index];
+            this._ermrestSearchFilter = "";
+            
             match.forEach(function(f, idx, array) {
-                var term = decodeURIComponent(f.match(/\*::ciregexp::(.+)/)[1]);
-                if (term.indexOf(" ") !== -1) {
-                    // term has white spaces, add quotation
-                    term = "\"" + term + "\"";
-                }
+                var term = decodeURIComponent(f.match(/\*::search::(.+)/)[1]);
+                
+                // make sure the ermrest url is correct
+                var ermrestFilter = _convertSearchTermToFilter(term);
+                that._ermrestSearchFilter += (idx === 0 ? "" : "&") + ermrestFilter;
+
                 that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
             });
 
             index -= 1;
         }
 
-        this._hasJoin = false;
-        this._lastJoin = null;
-
-        // if has linking, use the last part as the main table
-        var colMapping;
-        var linking = parts[index].match(/\((.*)\)=\((.*:.*:.*)\)/);
-        if (linking) {
-            this._hasJoin = true;
-            var leftCols = linking[1].split(",");
-            var rightParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
-            this._schemaName = decodeURIComponent(rightParts[1]);
-            this._tableName = decodeURIComponent(rightParts[2]);
-            var rightCols = rightParts[3].split(",");
-            colMapping = {};
-            for (var j = 0; j < leftCols.length; j++) {
-                colMapping[decodeURIComponent(leftCols[j])] = decodeURIComponent(rightCols[j]);
-            }
-            this._lastJoin = {
-                "leftCols": leftCols.map(function(colName) {return decodeURIComponent(colName);}),
-                "leftColsStr": linking[1],
-                "rightCols": rightCols.map(function(colName) {return decodeURIComponent(colName);}),
-                "rightColsStr": linking[2],
-            };
+        
+        // <join(s)>
+        this._joins = [];
+        // parts[1] to parts[index] might be joins
+        var linking;
+        for (var ji = 1; ji <= index; ji++) {
+            linking = parts[ji].match(/\((.*)\)=\((.*:.*:.*)\)/);
+            if (!linking) continue;
+            this._joins.push(_createJoin(linking));
         }
-
+        
+        //<schema:table>
         // first schema name and first table name
         // we can't handle complex path right now, only knows the first schema and table
         // so after doing a Reference.relate() and generate a new uri/location, we don't have schema/table information here
@@ -205,72 +199,72 @@ var ERMrest = (function(module) {
             }
         }
 
+        //<filter(s)>
         // If there are filters appended after projection table
         // modify the columns to the linked table
-
-        if (parts[1] && (!linking || (linking && parts.length > 2))) { // parts[1] could be linking if there's no filter
-            // split by ';' and '&'
-            var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-            var items = parts[1].match(regExp);
-
-            // if a single filter
-            if (items.length === 1) {
-                this._filter = _processSingleFilterString(items[0], this._uri);
-
-            } else {
-                var filters = [];
-                var type = null;
-                for (var i = 0; i < items.length; i++) {
-                    // process anything that's inside () first
-                    if (items[i].startsWith("(")) {
-                        items[i] = items[i].replace("(", "");
-                        // collect all filters until reaches ")"
-                        var subfilters = [];
-                        while (true) {
-                            if (items[i].endsWith(")")) {
-                                items[i] = items[i].replace(")", "");
-                                subfilters.push(items[i]);
-                                // get out of while loop
-                                break;
-                            } else {
-                                subfilters.push(items[i]);
-                                i++;
+        this._filtersString = '';
+        if (parts[1]) {
+            linking = parts[1].match(/\((.*)\)=\((.*:.*:.*)\)/);
+            var isSearch = parts[1].match(/\*::search::[^&]+/g);
+            // parts[1] could be linking or search
+            if (!linking && !isSearch) {
+                this._filtersString = parts[1];
+                
+                // split by ';' and '&'
+                var regExp = new RegExp('(;|&|[^;&]+)', 'g');
+                var items = parts[1].match(regExp);
+                
+                // if a single filter
+                if (items.length === 1) {
+                    this._filter = _processSingleFilterString(items[0], this._uri);
+                    
+                } else {
+                    var filters = [];
+                    var type = null;
+                    for (var i = 0; i < items.length; i++) {
+                        // process anything that's inside () first
+                        if (items[i].startsWith("(")) {
+                            items[i] = items[i].replace("(", "");
+                            // collect all filters until reaches ")"
+                            var subfilters = [];
+                            while (true) {
+                                if (items[i].endsWith(")")) {
+                                    items[i] = items[i].replace(")", "");
+                                    subfilters.push(items[i]);
+                                    // get out of while loop
+                                    break;
+                                } else {
+                                    subfilters.push(items[i]);
+                                    i++;
+                                }
                             }
+                            
+                            filters.push(_processMultiFilterString(subfilters, this._uri));
+                            
+                        } else if (type === null && items[i] === "&") {
+                            // first level filter type
+                            type = module.filterTypes.CONJUNCTION;
+                        } else if (type === null && items[i] === ";") {
+                            // first level filter type
+                            type = module.filterTypes.DISJUNCTION;
+                        } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
+                            // using combination of ! and & without ()
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                        } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
+                            // using combination of ! and & without ()
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                        } else if (items[i] !== "&" && items[i] !== ";") {
+                            // single filter on the first level
+                            var binaryFilter = _processSingleFilterString(items[i], this._uri);
+                            filters.push(binaryFilter);
                         }
-
-                        filters.push(_processMultiFilterString(subfilters, this._uri));
-
-                    } else if (type === null && items[i] === "&") {
-                        // first level filter type
-                        type = module.filterTypes.CONJUNCTION;
-                    } else if (type === null && items[i] === ";") {
-                        // first level filter type
-                        type = module.filterTypes.DISJUNCTION;
-                    } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
-                        // using combination of ! and & without ()
-                        throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
-                    } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
-                        // using combination of ! and & without ()
-                        throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
-                    } else if (items[i] !== "&" && items[i] !== ";") {
-                        // single filter on the first level
-                        var binaryFilter = _processSingleFilterString(items[i], this._uri);
-                        filters.push(binaryFilter);
                     }
+                    
+                    this._filter = new ParsedFilter(type);
+                    this._filter.setFilters(filters);
                 }
-
-                this._filter = new ParsedFilter(type);
-                this._filter.setFilters(filters);
-            }
-
-            // columns in the filters are on the projection table
-            // use the mapped columns to replace column name to the linked table's column names
-            if (colMapping) {
-                var res = _replaceFilterColumns(this._filter, colMapping);
-                if (res === -1) {
-                    console.log("WARNING: Unable to convert filter.");
-                    delete this._filter;
-                }
+                
+                //NOTE: might need to replace columns based on join
             }
         }
 
@@ -283,24 +277,159 @@ var ERMrest = (function(module) {
          * @returns {String} the string representation of the Location, which is the full URI.
          */
         toString: function(){
-            return this._uri;
+            return this.uri;
         },
 
 
         /**
-         *
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * 
          * @returns {String} The full URI of the location
          */
         get uri() {
+            if (this._uri === undefined) {
+                this._uri = this.compactUri + this._modifiers;
+            }
             return this._uri;
         },
 
         /**
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>
          *
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * @returns {String} The URI without modifiers or queries
          */
         get compactUri() {
+            if (this._compactUri === undefined) {
+                var path = [this.service, "catalog", this.catalog, this.api].join("/");
+                this._compactUri = path + "/" + this.compactPath;
+            }
             return this._compactUri;
+        },
+        
+        /**
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         *  
+         * @returns {String} Path portion of the URI
+         * This is everything after the catalog id
+         */
+        get path() {
+            if (this._path === undefined) {
+                this._path = this.compactPath + this._modifiers;
+            }
+            return this._path;
+        },
+
+        /**
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * 
+         * @returns {String} Path without modifiers or queries
+         */
+        get compactPath() {
+            if (this._compactPath === undefined) {
+                var uri = "";
+                if (this.projectionSchemaName) {
+                    uri += this.projectionSchemaName + ":";
+                }
+                uri += this.projectionTableName;
+                
+                if (this.filtersString) {
+                    uri += "/" + this.filtersString;
+                }
+                
+                if (this.joins.length > 0) {
+                    uri += "/" + this.joins.reduce(function (prev, join, i) {
+                        return prev + (i > 0 ? "/" : "") + join.str;
+                    }, "");
+                }
+                
+                if (this.searchFilter) {
+                    uri += "/" + this.searchFilter;
+                }
+                
+                this._compactPath = uri;
+            }
+            return this._compactPath;
+        },
+        
+        
+        /**
+         * should only be used for internal usage and sending request to ermrest
+         * NOTE: returns a uri that ermrest understands
+         * 
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * @returns {String} The full URI of the location for ermrest
+         */
+        get ermrestUri() {
+            if (this._ermrestUri === undefined) {
+                this._ermrestUri = this.ermrestCompactUri + this._modifiers;
+            }
+            return this._ermrestUri;
+        },
+
+        /**
+         * should only be used for internal usage and sending request to ermrest
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         *
+         * NOTE: returns a uri that ermrest understands
+         * @returns {String} The URI without modifiers or queries for ermrest
+         */
+        get ermrestCompactUri() {
+            if (this._ermrestCompactUri === undefined) {
+                var path = [this.service, "catalog", this.catalog, this.api].join("/");
+                this._ermrestCompactUri = path + "/" + this.ermrestCompactPath;
+            }
+            return this._ermrestCompactUri;
+        },
+        
+        /**
+         * should only be used for internal usage and sending request to ermrest
+         * 
+         * NOTE: returns a path that ermrest understands
+         * @returns {String} Path portion of the URI
+         * This is everything after the catalog id for ermrest
+         */
+        get ermrestPath() {
+            if (this._ermrestPath === undefined) {
+                this._ermrestPath = this.ermrestCompactPath + this._modifiers;
+            }
+            return this._ermrestPath;
+        },
+
+        /**
+         * should only be used for internal usage and sending request to ermrest
+         *
+         * NOTE: returns a path that ermrest understands
+         * @returns {String} Path without modifiers or queries for ermrest
+         */
+        get ermrestCompactPath() {
+            if (this._ermrestCompactPath === undefined) {
+                var uri = "";
+                if (this.projectionSchemaName) {
+                    uri += this.projectionSchemaName + ":";
+                }
+                uri += this.projectionTableName;
+                
+                if (this.filtersString) {
+                    uri += "/" + this.filtersString;
+                }
+                
+                if (this.joins.length > 0) {
+                    uri += "/" + this.joins.reduce(function (prev, join, i) {
+                        return prev + (i > 0 ? "/" : "") + join.str;
+                    }, "");
+                }
+
+                if (this.ermrestSearchFilter) {
+                    uri += "/" + this.ermrestSearchFilter;
+                }
+                
+                this._ermrestCompactPath = uri;
+            }
+            return this._ermrestCompactPath;
         },
 
         /**
@@ -329,24 +458,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         *
-         * @returns {String} Path portion of the URI
-         * This is everything after the catalog id
-         */
-        get path() {
-            return this._path;
-        },
-
-        /**
-         *
-         * @returns {String} Path without modifiers or queries
-         */
-        get compactPath() {
-            return this._compactPath;
-        },
-
-        /**
-         *
+         * 
          * @returns {string} The schema name in the projection table, null if schema is not specified
          */
         get projectionSchemaName() {
@@ -366,7 +478,15 @@ var ERMrest = (function(module) {
          * @returns {string} the schema name which the uri referres to, null if schema is not specified
          */
         get schemaName() {
-            return (this._schemaName? this._schemaName : this._projectionSchemaName);
+            if (this._schemaName === undefined) {
+                var joinLen = this._joins.length;
+                if (joinLen > 0) {
+                    this._schemaName = this._joins[joinLen-1].toSchema;
+                } else {
+                    this._schemaName = this._projectionSchemaName;
+                }
+            }
+            return this._schemaName;
         },
 
         /**
@@ -374,7 +494,15 @@ var ERMrest = (function(module) {
          * @returns {string} the table name which the uri referres to
          */
         get tableName() {
-            return (this._tableName? this._tableName : this._projectionTableName);
+            if (this._tableName === undefined) {
+                var joinLen = this._joins.length;
+                if (joinLen > 0) {
+                    this._tableName = this._joins[joinLen-1].toTable;
+                } else {
+                    this._tableName = this._projectionTableName;
+                }
+            }
+            return this._tableName;
         },
 
 
@@ -384,6 +512,10 @@ var ERMrest = (function(module) {
          */
         get filter() {
             return this._filter;
+        },
+        
+        get filtersString() {
+            return this._filtersString;
         },
 
         /**
@@ -403,23 +535,64 @@ var ERMrest = (function(module) {
         },
 
         /**
-        * If there's a join(linking) at the end or not.
-        * @return {boolean}
-        */
-        get hasJoin() {
-            return this._hasJoin;
-        },
-
-        get lastJoin() {
-            return this._lastJoin;
-        },
-
-        /**
          * string of the search filter in the URI
          * @returns {string}
          */
         get searchFilter() {
             return this._searchFilter;
+        },
+        
+        /**
+         * string that search understands for search filter
+         * @return {string}
+         */
+        get ermrestSearchFilter() {
+            return this._ermrestSearchFilter;
+        },
+        
+        /**
+         * Array of joins that are in the given uri.
+         * Each join has the following attributes:
+         *  `fromCols`: array of column names.
+         *  `fromColsStr`: complete string of left part of join
+         *  `toCols`: array of column names
+         *  `toColsStr`: complete string of right part of join
+         *  `toSchema`: the schema names
+         *  `toTable`: the table names
+         *  `str`: complete string of join
+         * 
+         * @return {object}
+         */
+        get joins() {
+            return this._joins;
+        },
+        
+        /**
+        * If there's a join(linking) at the end or not.
+        * @return {boolean}
+        */
+        get hasJoin() {
+            return this._joins.length > 0;
+        },
+        
+        /**
+         * The last join in the uri. Take a look at `joins` for structure of join object.
+         * @return {object}
+         */
+        get lastJoin() {
+            var joinLen = this._joins.length;
+            if (joinLen > 0) {
+                return this._joins[joinLen-1];
+            }
+            return null;
+        },
+        
+        /**
+         * modifiers that are available in the uri.
+         * @return {string}
+         */
+        get _modifiers() {
+            return (this.sort ? this.sort : "") + (this.paging ? this.paging : "") + (this.queryParamsString ? this.queryParamsString : "");
         },
 
         /**
@@ -427,71 +600,22 @@ var ERMrest = (function(module) {
          * @param {string} term - optional, set or clear search
          */
         search: function(term) {
+            
+            var searchFilter = ""; // will be shown in chaise
+            var filterString = _convertSearchTermToFilter(term); // ermrest uses this for http request
 
-            var filterString = "";
-
-            if (term && term !== "") {
+            if (filterString != "") {
                 this._searchTerm = term;
-
-                // convert term to filter
-
-                // add a quote to the end if string has an odd amount
-                if ( (term.split('"').length-1)%2 === 1 ) {
-                    term = term + '"';
-                }
-
-                // 1) parse terms in quotation
-                // 2) split the rest by space
-                var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
-                if (!terms) terms = [];
-                for (var i = 0; i < terms.length; i++) {
-                    term = term.replace(terms[i], ""); // remove from term
-                    terms[i] = terms[i].replace(/"/g, ""); //remove quotes
-                }
-
-                if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
-
-                terms.forEach(function(t, index, array) {
-                    var exp;
-                    // matches an integer, aka just a number
-                    if (t.match(/^[0-9]+$/)) {
-                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t) + "([^0-9].*|$)";
-                    // matches a float, aka a number one decimal
-                    } else if (t.match(/^([0-9]+[.][0-9]*|[0-9]*[.][0-9]+)$/)) {
-                        exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t);
-                    // matches everything else (words and anything with multiple decimals)
-                    } else {
-                        exp = module._encodeRegexp(t);
-                    }
-
-                    filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(exp);
-                });
-
-
+                searchFilter = "*::search::" + module._fixedEncodeURIComponent(term);
             } else {
                 this._searchTerm = null;
             }
-
-            if (this._searchFilter) {
-                if (this._searchTerm) { // replace search filter
-                    this._uri = this._uri.replace(this._searchFilter, filterString);
-                    this._compactUri = this._compactUri.replace(this._searchFilter, filterString);
-                    this._path = this._path.replace(this._searchFilter, filterString);
-                    this._compactPath = this._compactPath.replace(this._searchFilter, filterString);
-                } else { // remove search filter
-                    this._uri = this._uri.replace("/" + this._searchFilter, "");
-                    this._compactUri = this._compactUri.replace("/" + this._searchFilter, "");
-                    this._path = this._path.replace(this._searchFilter, "");
-                    this._compactPath = this._compactPath.replace("/" + this._searchFilter, "");
-                }
-            } else if (this._searchTerm) { // add search filter
-                this._uri = this._uri + "/" + filterString;
-                this._compactUri = this._compactUri + "/" + filterString;
-                this._path = this._path + "/" + filterString;
-                this._compactPath = this._compactPath + "/" + filterString;
-            }
-
-            this._searchFilter = (filterString? filterString: undefined);
+            
+            // enforce updating uri
+            this._setDirty();
+            
+            this._searchFilter = (searchFilter? searchFilter: undefined);
+            this._ermrestSearchFilter = filterString;
         },
 
         /**
@@ -550,17 +674,9 @@ var ERMrest = (function(module) {
                 this._sortObject = so;
                 this._sort = _getSortModifier(so);
             }
-
-            // update uri/path
-            var newSortString = (this._sort? this._sort : "");
-            if (oldSortString !== "") {
-                this._uri = this._uri.replace(oldSortString, newSortString);
-                this._path = this._path.replace(oldSortString, newSortString);
-            } else { // add sort
-                // since there was no sort, there isn't paging, and we are totally ignoring query params in the uri
-                this._uri = this._compactUri + newSortString;
-                this._path = this._compactPath + newSortString;
-            }
+            
+            // enforce updating uri
+            this._setDirty();
         },
 
         /**
@@ -629,16 +745,8 @@ var ERMrest = (function(module) {
                 throw new module.MalformedURIError("Error setPagingObject: Paging not allowed without sort");
             }
 
-            //  update uri/path
-            var newPagingString = (this._paging? this._paging : "");
-            if (oldPagingString !== "") {
-                this._uri = this._uri.replace(oldPagingString, newPagingString);
-                this._path = this._path.replace(oldPagingString, newPagingString);
-            } else { // add paging
-                // append to the end, we are totally ignoring query params in the uri
-                this._uri = this._compactUri + this._sort + newPagingString;
-                this._path = this._compactPath + this._sort + newPagingString;
-            }
+            // enforce updating uri
+            this._setDirty();
         },
 
         /**
@@ -656,6 +764,17 @@ var ERMrest = (function(module) {
                 }
             }
             return copy;
+        },
+        
+        _setDirty: function() {
+            delete this._uri;
+            delete this._path;
+            delete this._compactUri;
+            delete this._compactPath;
+            delete this._ermrestUri;
+            delete this._ermrestPath;
+            delete this._ermrestCompactUri;
+            delete this._ermrestCompactPath;
         }
     };
 
@@ -675,31 +794,6 @@ var ERMrest = (function(module) {
             queryParams[decodeURIComponent(part[0])] = decodeURIComponent(part[1]);
         }
         return queryParams;
-    };
-
-    /**
-     * given a parsedFilter, replace all the columns with mapping column names
-     * @param filter parsedFilter format
-     * @param {Object} colMapping in the form of {col_a:col_a1, ...}
-     * @private
-     */
-    _replaceFilterColumns = function(filter, colMapping) {
-        if (filter.type === module.filterTypes.BINARYPREDICATE) {
-            if (colMapping[filter.column])
-                filter.column = colMapping[filter.column];
-            else {
-                return -1;
-            }
-        } else {
-            if (filter.filters) {
-                for (var i = 0; i < filter.filters.length; i++) {
-                    var res = _replaceFilterColumns(filter.filters[i], colMapping);
-                    if (res === -1)
-                        return res;
-                }
-            }
-
-        }
     };
 
     /**
@@ -744,6 +838,74 @@ var ERMrest = (function(module) {
         }
         modifier = modifier + ")";
         return modifier;
+    };
+    
+    /**
+     * Given a term will return the filter string that ermrest understands
+     * @param  {string} term Search term
+     * @return {string} corresponding ermrest filter
+     * @private
+     */
+    _convertSearchTermToFilter = function (term) {
+        var filterString = "";
+        
+        if (term && term !== "") {
+            // add a quote to the end if string has an odd amount
+            if ( (term.split('"').length-1)%2 === 1 ) {
+                term = term + '"';
+            }
+
+            // 1) parse terms in quotation
+            // 2) split the rest by space
+            var terms = term.match(/"[^"]*"/g); // everything that's inside quotation
+            if (!terms) terms = [];
+            for (var i = 0; i < terms.length; i++) {
+                term = term.replace(terms[i], ""); // remove from term
+                terms[i] = terms[i].replace(/"/g, ""); //remove quotes
+            }
+
+            if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
+
+            terms.forEach(function(t, index, array) {
+                var exp;
+                // matches an integer, aka just a number
+                if (t.match(/^[0-9]+$/)) {
+                    exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t) + "([^0-9].*|$)";
+                // matches a float, aka a number one decimal
+                } else if (t.match(/^([0-9]+[.][0-9]*|[0-9]*[.][0-9]+)$/)) {
+                    exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t);
+                // matches everything else (words and anything with multiple decimals)
+                } else {
+                    exp = module._encodeRegexp(t);
+                }
+
+                filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(exp);
+            });
+        }
+        
+        return filterString;
+    };
+    
+    /**
+     * Create a join object given the linking
+     * @private
+     * @param  {string[]} linking the linking array
+     * @return {object}
+     */
+    _createJoin = function (linking) {
+        var fromCols = linking[1].split(",");
+        var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
+        var toCols = toParts[3].split(",");
+
+        return {
+            "fromCols": fromCols.map(function(colName) {return decodeURIComponent(colName);}),
+            "fromColsStr": linking[1],
+            "toCols": toCols.map(function(colName) {return decodeURIComponent(colName);}),
+            "toColsStr": linking[2],
+            "toSchema": decodeURIComponent(toParts[1]),
+            "toTable": decodeURIComponent(toParts[2]),
+            "str": linking[0]
+        };
     };
 
     /**
@@ -830,7 +992,7 @@ var ERMrest = (function(module) {
      *
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
-     * @param {string} fullURI used for loggin purposes
+     * @param {string} fullURI used for logging purposes
      * @return {ParsedFilter}
      *
      */
