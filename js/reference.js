@@ -951,7 +951,8 @@ var ERMrest = (function(module) {
                 // use the new alias value for the shortest key first meaning the key was changed
                 // if the new alias value is null, key wasn't changed so we can use the old alias
                 var getAliasedKeyVal = function(responseRowData, keyName) {
-                    return (responseRowData[keyName + newAlias] == null ? responseRowData[keyName + oldAlias] : responseRowData[keyName + newAlias] );
+                    var isNotDefined = responseRowData[keyName + newAlias] === null || responseRowData[keyName + newAlias] === undefined;
+                    return (isNotDefined ? responseRowData[keyName + oldAlias] : responseRowData[keyName + newAlias] );
                 };
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
