@@ -202,6 +202,11 @@ var ERMrest = (function(module) {
         }
 
         this._shortestKey = this._table.shortestKey;
+
+        /**
+         * @type {ERMrest.ReferenceAggregateFn}
+         */
+        this.aggregate = new ReferenceAggregateFn(this);
     }
 
     Reference.prototype = {
@@ -1479,7 +1484,41 @@ var ERMrest = (function(module) {
          * @return {Promise} TODO: not sure of the structure of this returned promise yet
          */
         getAggregates: function(aggregateList) {
+            var defer = module._q.defer();
 
+            // use this index to get the next ascii value in the alphabet starting at `a`
+            var aliasCounter = 0;
+            function generateAlias() {
+                var alias = String.fromCharCode(97 + aliasCounter);
+                aliasCounter++;
+                return alias;
+            }
+
+            var url = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.compactPath + "/";
+            // for matching the aliases after the data returns
+            var aggAliases = [];
+            for (var i = 0; i < aggregateList.length; i++) {
+                var agg = aggregateList[i];
+                if (i != 0) {
+                    url += ",";
+                }
+                var alias = (agg.alias != null ? agg.alias : generateAlias());
+                aggAliases.push(alias);
+
+                url += alias + ":=" + agg.value;
+            }
+
+            this._server._http.get(url).then(function getAggregates(response) {
+
+                defer.resolve(response.data);
+            }, function error(response) {
+                var error = module._responseToError(response);
+                return defer.reject(error);
+            }).catch(function (error) {
+                return defer.reject(error);
+            });
+
+            return defer.promise;
         },
 
         setNewTable: function(table) {
@@ -4065,10 +4104,35 @@ var ERMrest = (function(module) {
     });
 
     /**
+     * Constructs an Aggregate Funciton object
+     *
+     * Reference Aggregate Functions is a collection of available aggregates for the
+     * particular Reference (count for the table). Each aggregate should return an
+     * object that includes it's `alias` if it was provided and the string
+     * representation for querying the information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.Reference will
+     *  access this constructor for purposes of fetching aggregate data about the table.
+     * @memberof ERMrest
+     * @class
+     */
+    function ReferenceAggregateFn () {}
+
+    ReferenceAggregateFn.prototype = {
+        countAgg: function(alias) {
+            return {
+                "alias": typeof alias !== "string" ? null : alias,
+                "value": "cnt(*)"
+            };
+        }
+    };
+
+    /**
      * Constructs an Aggregate Function object
      *
      * Column Aggregate Functions is a collection of available aggregates for the
-     * particular ReferenceColumn (min, max, and distinct for it's column).
+     * particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
      * Each aggregate should return an object that includes it's `alias` if it was
      * provided and the string representation for querying for that information.
      *
@@ -4078,7 +4142,7 @@ var ERMrest = (function(module) {
      *  for a specific column
      * @memberof ERMrest
      * @class
-     * @param {ERMrest.ReferenceColumn} column - if provided, the column that is used for creating column aggregates
+     * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
      */
     function ColumnAggregateFn (column) {
         this.column = column;
@@ -4106,6 +4170,13 @@ var ERMrest = (function(module) {
             return {
                 "alias": typeof alias !== "string" ? null : alias,
                 "value": "max(" + module._fixedEncodeURIComponent(this.column.name) + ")"
+            };
+        },
+
+        countNotNullAgg: function(alias) {
+            return {
+                "alias": typeof alias !== "string" ? null : alias,
+                "value": "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")"
             };
         },
 

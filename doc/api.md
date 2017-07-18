@@ -235,6 +235,7 @@ to use for ERMrest JavaScript agents.
     * [.Reference](#ERMrest.Reference)
         * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
         * [.contextualize](#ERMrest.Reference+contextualize)
+        * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
@@ -258,6 +259,7 @@ to use for ERMrest JavaScript agents.
         * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
+        * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
@@ -322,6 +324,8 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
+        * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
     * [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
         * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
         * [.minAgg(alias)](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
@@ -1986,6 +1990,7 @@ Constructor for a ParsedFilter.
 * [.Reference](#ERMrest.Reference)
     * [new Reference(location, catalog)](#new_ERMrest.Reference_new)
     * [.contextualize](#ERMrest.Reference+contextualize)
+    * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
@@ -2009,6 +2014,7 @@ Constructor for a ParsedFilter.
     * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
+    * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -2050,6 +2056,10 @@ The `reference` is unchanged, while `recordref` now represents a
 reconfigured reference. For instance, `recordref.columns` may be
 different compared to `reference.columns`.
 
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+aggregate"></a>
+
+#### reference.aggregate : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+displayname"></a>
 
@@ -2392,6 +2402,16 @@ c) use space for conjunction of terms
 | Param | Type | Description |
 | --- | --- | --- |
 | term | <code>string</code> | search term, undefined to clear search |
+
+<a name="ERMrest.Reference+getAggregates"></a>
+
+#### reference.getAggregates(aggregateList) ⇒ <code>Promise</code>
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>Promise</code> - TODO: not sure of the structure of this returned promise yet  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| aggregateList | [<code>Array.&lt;ColumnAggregateFn&gt;</code>](#ERMrest.ColumnAggregateFn) | list of aggregate functions to apply to GET uri |
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
@@ -3101,6 +3121,24 @@ indicates this represents is a PseudoColumn or a Column.
 Indicates that this ReferenceColumn is an inbound foreign key.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.ReferenceAggregateFn"></a>
+
+### ERMrest.ReferenceAggregateFn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.ReferenceAggregateFn_new"></a>
+
+#### new ReferenceAggregateFn()
+Constructs an Aggregate Funciton object
+
+Reference Aggregate Functions is a collection of available aggregates for the
+particular Reference (count for the table). Each aggregate should return an
+object that includes it's `alias` if it was provided and the string
+representation for querying the information.
+
+Usage:
+ Clients _do not_ directly access this constructor. ERMrest.Reference will
+ access this constructor for purposes of fetching aggregate data about the table.
+
 <a name="ERMrest.ColumnAggregateFn"></a>
 
 ### ERMrest.ColumnAggregateFn
@@ -3118,7 +3156,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
 Constructs an Aggregate Function object
 
 Column Aggregate Functions is a collection of available aggregates for the
-particular ReferenceColumn (min, max, and distinct for it's column).
+particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
 Each aggregate should return an object that includes it's `alias` if it was
 provided and the string representation for querying for that information.
 
@@ -3130,7 +3168,7 @@ Usage:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | if provided, the column that is used for creating column aggregates |
+| column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | the column that is used for creating column aggregates |
 
 <a name="ERMrest.ColumnAggregateFn+minAgg"></a>
 
