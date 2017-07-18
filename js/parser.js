@@ -46,25 +46,10 @@ var ERMrest = (function(module) {
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>[/filter][/join][@sort(col...)][@before(...)/@after(...)][?]
-     *
-     * NOTE ABOUT JOIN AND FILTER:
-     * the parser only parses the projection table (projectionTableName) and the last join (tableName)
-     * all the other join in between are ignored. Therefore, IF FILTER IS USED, uri must be this format
-     *       /s:t/c=123/(c)=(s:t2:c2)    ==> one level linking, filter is converted from t to t2
-     *       where filter is the key used in join, then filter can be converted from t to t2
-     *       Otherwise, filter's non key columns are not converted
-     *
-     *  V    /s:t/(c)=(s:t2:c2)                               ==> ._projectionTableName = t, ._tableName = t2
-     *  V    /s:t/(c)=(s:t2:c2)/(c2)=(s:t3:c3)                ==> ._projectionTableName = t, ._tableName = t3, first join ignored
-     *  V    /s:t/c=123/(c)=(s:t2:c2)                         ==> ._projectionTableName = t, ._tableName = t2
-     *                                                            ._filter is converted for t2 (c2=123), but uri does not change
-     *  X    /s:t/c=123/(c)=(s:t2:c2)/filter/(c2)=(s:t3:c3)   ==> can't handle this right now, result will be wrong, cannot convert nested join and filters
-     *  *    /s:t/ab="xyz"/(c)=(s:t2:c2)                      ==> unable to convert filter from t1 to t2, should use the key used in linking
-     *                                                            this does not affect read(), since filter is only used when contextualizing with
-     *                                                            alternative table. In that case, we do not expect this type of uri.
-     *  *    /s:t/(c)=(s:t2:c2)/c2=123                        ==> Not handled yet TODO
-     *
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/join(s)][/facets][/search][@sort(col...)][@before(...)/@after(...)][?]
+     * 
+     * path =  <filters(s)>/<join(s)>/<facets>/<search>
+     * 
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
      * catalog: the catalog identifier for one dataset such as 42.
@@ -170,6 +155,12 @@ var ERMrest = (function(module) {
                 that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
             });
 
+            index -= 1;
+        }
+        
+        match = parts[index].match(/\*::facets::(.+)/);
+        if (match) { // this is the facets blob
+            this._facets = new ParsedFacets(match[1]);
             index -= 1;
         }
 
@@ -346,6 +337,10 @@ var ERMrest = (function(module) {
                     }, "");
                 }
                 
+                if (this.facets) {
+                    uri += "/" + this.facets.encoded;
+                }
+                
                 if (this.searchFilter) {
                     uri += "/" + this.searchFilter;
                 }
@@ -402,12 +397,23 @@ var ERMrest = (function(module) {
         /**
          * should only be used for internal usage and sending request to ermrest
          *
-         * NOTE: returns a path that ermrest understands
+         * NOTE: 
+         *  1. returns a path that ermrest understands
+         *  2. Adds `M` alias to the last table.
          * @returns {String} Path without modifiers or queries for ermrest
          */
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
+                var tableAlias = "M";
+                var joinsLength = this.joins.length;
+                
                 var uri = "";
+                
+                // add tableAlias
+                if (joinsLength == 0) {
+                    uri += tableAlias + ":=";
+                }
+
                 if (this.projectionSchemaName) {
                     uri += this.projectionSchemaName + ":";
                 }
@@ -417,10 +423,14 @@ var ERMrest = (function(module) {
                     uri += "/" + this.filtersString;
                 }
                 
-                if (this.joins.length > 0) {
+                if (joinsLength > 0) {
                     uri += "/" + this.joins.reduce(function (prev, join, i) {
-                        return prev + (i > 0 ? "/" : "") + join.str;
+                        return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? tableAlias + ":=" : "") + join.str;
                     }, "");
+                }
+                
+                if (this.facets) {
+                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, tableAlias);
                 }
 
                 if (this.ermrestSearchFilter) {
@@ -585,6 +595,10 @@ var ERMrest = (function(module) {
                 return this._joins[joinLen-1];
             }
             return null;
+        },
+        
+        get facets() {
+            return this._facets;
         },
         
         /**
@@ -1031,6 +1045,73 @@ var ERMrest = (function(module) {
         UNARYPREDICATE: "UnaryPredicate",
         NEGATION: "Negation"
     });
+    
+    function ParsedFacets (blob) {
+        /**
+         * encode JSON object that represents facets
+         * @type {object}
+         */
+        this.encoded = blob;
+        
+        try {
+            /**
+             * JSON object that represents facets
+             * @type {string}
+             */
+            this.decoded = _decodeJSON(blob);
+        } catch (exception) {
+            throw new module.MalformedURIError("Given facets string is not valid.");
+        }
+    }
+    
+    ParsedFacets.prototype = {
+        constructor: ParsedFacets,
+        
+        /**
+         * Change the applied facets
+         * @param  {object} obj JSON object that represents facets
+         */
+        set: function (obj) {
+            this.encoded = obj;
+            this.decoded = _encodeJSON(obj);
+        }
+    };
+    
+    /**
+     * Given a blob string return the JSON object.
+     * TODO needs to be changed to compress the string
+     *
+     * @private
+     * @param       {string} blob the encoded JSON object.
+     * @return      {object} decoded JSON object.
+     */
+    function _decodeJSON(blob) {
+        return JSON.parse(decodeURIComponent(blob));
+    }
+    
+    /**
+     * Given a JSON return an encoded blob.
+     * TODO needs to be changed to compress the string
+     *
+     * @private
+     * @param       {object} json JSON object
+     * @return      {string} string blob
+     */
+    function _encodeJSON(json) {
+        return module._fixedEncodeURIComponent(JSON.stringify(json, null, 0));
+    }
+    
+    /**
+     * [_JSONToErmrestFilter description]
+     * @param       {[type]} json  [description]
+     * @param       {[type]} alias [description]
+     * @constructor
+     * @return      {[type]}       [description]
+     */
+    function _JSONToErmrestFilter(json, alias) {
+        //TODO
+        return "";
+    }
 
     return module;
 
