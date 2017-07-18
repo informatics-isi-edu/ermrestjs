@@ -15,9 +15,7 @@ exports.execute = function (options) {
                 "ind_key1": 777
             };
 
-            options.ermRest.resolve(uri, {
-                cid: "test"
-            }).then(function (response) {
+            options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                 reference = response;
                 return reference.read(1);
             }).then(function (response) {
@@ -1753,6 +1751,110 @@ exports.execute = function (options) {
                             });
                         });
                     });
+                });
+            });
+        });
+
+        describe("for updating multiple entities should return a page object, when", function () {
+            var tableName = "table_w_composite_key_as_shortest_key",
+                sortBy = "id_1",
+                reference, tuples;
+
+            it("both parts of a composite key are changed.", function (done) {
+                var updateData = [{
+                    "id_1": 7,
+                    "id_2": 7
+                }, {
+                    "id_1": 7,
+                    "id_2": 8
+                }, {
+                    "id_1": 9,
+                    "id_2": 8
+                }];
+
+                var baseCompositeUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName,
+                    setUri = baseCompositeUri + "/id_1=1;id_1=2;id_1=3";
+
+                options.ermRest.resolve(setUri, {cid: "test"}).then(function (response) {
+                    reference = response.contextualize.entryEdit;
+                    return reference.read(3);
+                }).then(function (response) {
+                    tuples = response.tuples;
+
+                    for (var i = 0; i < tuples.length; i++) {
+                        for (var key in updateData[i]) {
+                            tuples[i].data[key] = updateData[i][key];
+                        }
+                    }
+
+                    return reference.update(tuples);
+                }).then(function (response){
+                    response = response.successful;
+
+                    expect(response._data.length).toBe(updateData.length);
+
+                    utils.checkPageValues(response._data, tuples, sortBy);
+                    var getFirstUri = baseCompositeUri + "/id_1=7&id_2=7";
+                    return options.ermRest.resolve(getFirstUri, {cid: "test"});
+                }).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0],
+                        tuple = tuples[0];
+
+                    // id 1 and id 2 should be changed
+                    expect(pageData.id_1).toBe(updateData[0].id_1);
+                    expect(pageData.id_1).not.toBe(tuple._oldData.id_1);
+
+                    expect(pageData.id_2).toBe(updateData[0].id_2);
+                    expect(pageData.id_2).not.toBe(tuple._oldData.id_2);
+
+                    // text values should not have changed
+                    expect(pageData.text_1).toBe(tuple._oldData.text_1);
+                    expect(pageData.text_2).toBe(tuple._oldData.text_2);
+
+                    var getSecondUri = baseCompositeUri + "/id_1=7&id_2=8";
+                    return options.ermRest.resolve(getSecondUri, {cid: "test"});
+                }).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0],
+                        tuple = tuples[1];
+
+                    // id 1 and id 2 should be changed
+                    expect(pageData.id_1).toBe(updateData[1].id_1);
+                    expect(pageData.id_1).not.toBe(tuple._oldData.id_1);
+
+                    expect(pageData.id_2).toBe(updateData[1].id_2);
+                    expect(pageData.id_2).not.toBe(tuple._oldData.id_2);
+
+                    // text values should not have changed
+                    expect(pageData.text_1).toBe(tuple._oldData.text_1);
+                    expect(pageData.text_2).toBe(tuple._oldData.text_2);
+
+                    var getThirdUri = baseCompositeUri + "/id_1=9&id_2=8";
+                    return options.ermRest.resolve(getThirdUri, {cid: "test"});
+                }).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0],
+                        tuple = tuples[2];
+
+                    // id 1 and id 2 should be changed
+                    expect(pageData.id_1).toBe(updateData[2].id_1);
+                    expect(pageData.id_1).not.toBe(tuple._oldData.id_1);
+
+                    expect(pageData.id_2).toBe(updateData[2].id_2);
+                    expect(pageData.id_2).not.toBe(tuple._oldData.id_2);
+
+                    // text values should not have changed
+                    expect(pageData.text_1).toBe(tuple._oldData.text_1);
+                    expect(pageData.text_2).toBe(tuple._oldData.text_2);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
                 });
             });
         });

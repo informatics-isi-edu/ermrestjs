@@ -236,26 +236,18 @@ exports.execute = function (options) {
 
                 var filter1 = parsedFilter.filters[0];
                 expect(filter1.type).toBe("BinaryPredicate");
-                expect(filter1.column).toBe("id2");
+                expect(filter1.column).toBe("id");
                 expect(filter1.operator).toBe("::gt::");
                 expect(filter1.value).toBe(lowerLimit.toString());
 
                 var filter2 = parsedFilter.filters[1];
                 expect(filter2.type).toBe("BinaryPredicate");
-                expect(filter2.column).toBe("id2");
+                expect(filter2.column).toBe("id");
                 expect(filter2.operator).toBe("::lt::");
                 expect(filter2.value).toBe(upperLimit.toString());
             });
         });
     });
 
-    describe("Location.search", function() {
-        var catalogId = 1,
-            schemaName = "parse_schema",
-            tableName = "parse_table";
-
-        it("should set the search filter and update the uri parameters.", function() {
-
-        });
-    });
+    // NOTE: search test cases are in refererence/13.search.js
 }

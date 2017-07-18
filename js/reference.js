@@ -475,7 +475,7 @@ var ERMrest = (function(module) {
                 var defaults = getDefaults();
 
                 // construct the uri
-                var uri = this._location.compactUri;
+                var uri = this._location.ermrestCompactUri;
                 for (var i = 0; i < defaults.length; i++) {
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
@@ -717,7 +717,7 @@ var ERMrest = (function(module) {
                 // this will update location.sort and all the uri and path
                 this._location.sortObject = sortObject;
 
-                var uri = this._location.compactUri; // used for the http request
+                var uri = this._location.ermrestCompactUri; // used for the http request
 
                 /** Change api to attributegroup for retrieving the foreign key data
                  * This will just affect the http request and not this._location
@@ -730,7 +730,7 @@ var ERMrest = (function(module) {
                  *   4. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
                 if (this._table.foreignKeys.length() > 0) {
-                    var compactPath = this._location.compactPath,
+                    var compactPath = this._location.ermrestCompactPath,
                         tableIndex = 0,
                         fkList = "",
                         sortColumn,
@@ -739,8 +739,8 @@ var ERMrest = (function(module) {
                         parts;
 
                     // add M alias to current table
-                    if (this._location.searchFilter) { // remove search filter
-                        compactPath = compactPath.replace("/" + this._location.searchFilter, "");
+                    if (this._location.ermrestSearchFilter) { // remove search filter
+                        compactPath = compactPath.replace("/" + this._location.ermrestSearchFilter, "");
                     }
                     parts = compactPath.split('/');
                     linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
@@ -749,9 +749,9 @@ var ERMrest = (function(module) {
                     }
                     compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
 
-                    // add search filter back
-                    if (this._location.searchFilter) {
-                        compactPath = compactPath + "/" + this._location.searchFilter;
+                    // add ermrest understandable search filter back
+                    if (this._location.ermrestSearchFilter) {
+                        compactPath = compactPath + "/" + this._location.ermrestSearchFilter;
                     }
 
                     // create the uri with attributegroup and alias
@@ -923,34 +923,50 @@ var ERMrest = (function(module) {
                     newAlias = "_n",
                     uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
 
-                var submissionData = [],
-                    columnProjections = [],
-                    shortestKeyNames = [],
+                var submissionData = [],        // the list of submission data for updating
+                    columnProjections = [],     // the list of column names to use in the uri projection list
+                    shortestKeyNames = [],      // list of shortest key names to use in the uri key list
                     keyWasModified = false,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
-                var i, j, k;
+                // for loop variables, NOTE: maybe we should name these better
+                var i, j, k, m, n, t;
 
-                // add column name into list of column projections and data into the submission data
-                var addProjectionAndKeyData = function(index, colName) {
-                    // here so each column of the columns in keyColumns set is added
-                    if (columnProjections.indexOf(colName) === -1) {
-                        // the list of column names to use in the uri
+                var column, keyColumns, referenceColumn;
+
+                // add column name into list of column projections if not in column projections set and data has changed
+                var addProjection = function(colName) {
+                    // don't add a column name in if it's already there
+                    // this can be the case for multi-edit
+                    // and if the data is unchanged, no need to add the column name to the projections list
+                    if ( (columnProjections.indexOf(colName) === -1) && (oldData[colName] != newData[colName]) ) {
                         columnProjections.push(colName);
                     }
+                };
 
-                    // if the current keyColumnName is in shortestKeyNames, we already added the data to submissionData
-                    if (shortestKeyNames.indexOf(colName) === -1) {
-                        // alias all data to prevent aliasing data to the same name as another column that exists in the table
+                // add data into submission data if in column projection set
+                var addSubmissionData = function(index, colName) {
+                    // if the column is in the column projections list, add the data to submission data
+                    if (columnProjections.indexOf(colName) > -1) {
                         submissionData[index][colName + newAlias] = newData[colName];
                     }
+                };
+
+                // gets the key value based on which way the key was aliased.
+                // use the new alias value for the shortest key first meaning the key was changed
+                // if the new alias value is null, key wasn't changed so we can use the old alias
+                var getAliasedKeyVal = function(responseRowData, keyName) {
+                    var isNotDefined = responseRowData[keyName + newAlias] === null || responseRowData[keyName + newAlias] === undefined;
+                    return (isNotDefined ? responseRowData[keyName + oldAlias] : responseRowData[keyName + newAlias] );
                 };
 
                 shortestKeyNames = this._shortestKey.map(function (column) {
                     return column.name;
                 });
 
-                for(i = 0; i < tuples.length; i++) {
+                // loop through each tuple and the visible columns list for each to determine what columns to add to the projection set
+                // If a column is changed in one tuple but not another, that column's value for every tuple needs to be present in the submission data
+                for (i = 0; i < tuples.length; i++) {
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
 
@@ -958,85 +974,45 @@ var ERMrest = (function(module) {
                     allOldData.push(oldData);
                     allNewData.push(newData);
 
-                    submissionData[i] = {};
+                    // Loop throught the visible columns list and see what data the user changed
+                    // if we saw changes to data, add the constituent columns to the projections list
+                    for (m = 0; m < this.columns.length; m++) {
+                        column = this.columns[m];
 
-                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
-                        var shortestKey = shortestKeyNames[keyIndex];
-
-                        // shortest key should always be aliased in case that key value was changed
-                        // use a suffix of '_o' to represent changes to a value that's in the shortest key that was changed, everything else gets '_n'
-                        submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
-                        submissionData[i][shortestKey + newAlias] = newData[shortestKey];
-
-                        // don't add the current key to the column projections if it's already in there
-                        // this can happen when there are multiple tuples or when a key is part of the visible column set
-                        if (columnProjections.indexOf(shortestKey) === -1) {
-                            // keys are aliased and included in both the keyset and column projections set
-                            columnProjections.push(shortestKey);
-                        }
-                    }
-
-                    // Loop through the visible columns so the submission data is based off of the visible columns list
-                    for (var m = 0; m < this.columns.length; m++) {
-                        var column = this.columns[m];
-
-                        // if the column is disabled (generated or immutable), continue
-                        // no need to submit update data in the submission object
+                        // if the column is disabled (generated or immutable), no need to add the column name to the projections list
                         if (column.inputDisabled) {
                             continue;
                         }
 
                         // If columns is a pusedo column
                         if (column.isPseudo) {
-
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
-
-                                var isNull = newData[column.name] === null ? true : false;
-
-                                // Populate all values in row depending on column from current
-
-                                // If column has a filename column then populate its value
+                                // If column has a filename column then add it to the projections
                                 if (column.filenameColumn) {
-
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
-
-                                    addProjectionAndKeyData(i, column.filenameColumn.name);
+                                    addProjection(column.filenameColumn.name);
                                 }
 
-                                // If column has a bytecount column then populate its value
+                                // If column has a bytecount column thenadd it to the projections
                                 if (column.byteCountColumn) {
-
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
-
-                                    addProjectionAndKeyData(i, column.byteCountColumn.name);
+                                    addProjection(column.byteCountColumn.name);
                                 }
 
-                                // If column has a md5 column then populate its value
+                                // If column has a md5 column then add it to the projections
                                 if (column.md5 && typeof column.md5 === 'object') {
-
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
-
-                                    addProjectionAndKeyData(i, column.md5.name);
+                                    addProjection(column.md5.name);
                                 }
 
-                                // If column has a sha256 column then populate its value
+                                // If column has a sha256 column then add it to the projections
                                 if (column.sha256 && typeof column.sha256 === 'object') {
-
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
-
-                                    addProjectionAndKeyData(i, column.sha256.name);
+                                    addProjection(column.sha256.name);
                                 }
 
-                                addProjectionAndKeyData(i, column.name);
+                                addProjection(column.name);
 
                             } else {
-                                var keyColumns = [];
+                                keyColumns = [];
 
                                 if (column.isKey) {
                                     keyColumns = column.key.colset.columns;
@@ -1044,15 +1020,93 @@ var ERMrest = (function(module) {
                                     keyColumns =  column.foreignKey.colset.columns;
                                 }
 
-                                for (var n = 0; n < keyColumns.length; n++) {
-                                    var referenceColumn = keyColumns[n];
-                                    keyColumnName = referenceColumn.name;
+                                for (n = 0; n < keyColumns.length; n++) {
+                                    keyColumnName = keyColumns[n].name;
 
-                                    addProjectionAndKeyData(i, keyColumnName);
+                                    addProjection(keyColumnName);
                                 }
                             }
                         } else {
-                            addProjectionAndKeyData(i, column.name);
+                            addProjection(column.name);
+                        }
+                    }
+                }
+
+                /* This loop manages adding the values based on the columnProjections set and setting columns associated with asset columns properly */
+                // loop through each tuple again and set the data value from the tuple in submission data for each column projection
+                for (i = 0; i < tuples.length; i++) {
+                    newData = tuples[i].data;
+                    oldData = tuples[i]._oldData;
+
+                    submissionData[i] = {};
+
+                    for (var keyIndex = 0; keyIndex < shortestKeyNames.length; keyIndex++) {
+                        var shortestKey = shortestKeyNames[keyIndex];
+
+                        // shortest key should always be aliased in case that key value was changed
+                        // use a suffix of '_o' to represent the old value for the shortest key everything else gets '_n'
+                        submissionData[i][shortestKey + oldAlias] = oldData[shortestKey];
+                    }
+
+                    // Loop through the columns, check if it;s in columnProjections, and collect the necessary data for submission
+                    for (m = 0; m < this.columns.length; m++) {
+                        column = this.columns[m];
+
+                        // If columns is a pusedo column
+                        if (column.isPseudo) {
+                            // If a column is an asset column then set values for
+                            // dependent properties like filename, bytes_count_column, md5 and sha
+                            if (column.isAsset) {
+                                var isNull = newData[column.name] === null ? true : false;
+                                /* Populate all values in row depending on column from current asset */
+
+                                // If column has a filename column then populate its value
+                                if (column.filenameColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.filenameColumn.name] = null;
+                                    addSubmissionData(i, column.filenameColumn.name);
+                                }
+
+                                // If column has a bytecount column then populate its value
+                                if (column.byteCountColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.byteCountColumn.name] = null;
+                                    addSubmissionData(i, column.byteCountColumn.name);
+                                }
+
+                                // If column has a md5 column then populate its value
+                                if (column.md5 && typeof column.md5 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.md5.name] = null;
+                                    addSubmissionData(i, column.md5.name);
+                                }
+
+                                // If column has a sha256 column then populate its value
+                                if (column.sha256 && typeof column.sha256 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.sha256.name] = null;
+                                    addSubmissionData(i, column.sha256.name);
+                                }
+
+                                addSubmissionData(i, column.name);
+
+                            } else {
+                                keyColumns = [];
+
+                                if (column.isKey) {
+                                    keyColumns = column.key.colset.columns;
+                                } else if (column.isForeignKey) {
+                                    keyColumns =  column.foreignKey.colset.columns;
+                                }
+
+                                for (n = 0; n < keyColumns.length; n++) {
+                                    keyColumnName = keyColumns[n].name;
+
+                                    addSubmissionData(i, keyColumnName);
+                                }
+                            }
+                        } else {
+                            addSubmissionData(i, column.name);
                         }
                     }
                 }
@@ -1091,25 +1145,53 @@ var ERMrest = (function(module) {
                     // loop through each returned Row and get the key value
                     for (j = 0; j < response.data.length; j++) {
                         // build the uri
-                        if (j !== 0)
-                        uri += ';';
+                        if (j !== 0) uri += ';';
+
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
+                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
                         } else {
                             uri += '(';
                             for (k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                 uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName + newAlias]);
+                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
                             }
                             uri += ')';
                         }
 
+                        // response.data is sometimes in a different order
+                        // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
+                        // the entity is updated properly just the data returned from this request is in a different order sometimes
+                        var shortKey,
+                            rowIndexInSubData = -1;
+
+                        for (t = 0; t < tuples.length && rowIndexInSubData === -1; t++) {
+                            // used to verify the number of matches for each shortest key value
+                            var matchCt = 0;
+                            for (n = 0; n < shortestKeyNames.length; n++) {
+                                shortKey = shortestKeyNames[n];
+                                var responseVal = getAliasedKeyVal(response.data[j], shortKey);
+
+                                // if the value is the same, use this t index for the pageData object
+                                if (tuples[t].data[shortKey] == responseVal) {
+                                    // this comes into play when the shortest key is a set of column names
+                                    // if the values match increase te counter
+                                    matchCt++;
+                                }
+                            }
+                            // if our counter is the same length as the list of shortest key names, it's an exact match to the t tuple
+                            if (matchCt == shortestKeyNames.length) {
+                                rowIndexInSubData = t;
+                            }
+                        }
+
+
+                        pageData[rowIndexInSubData] = {};
+
                         // unalias the keys for the page data
-                        pageData[j] = {};
                         var responseColumns = Object.keys(response.data[j]);
 
                         for (var m = 0; m < responseColumns.length; m++) {
@@ -1117,7 +1199,7 @@ var ERMrest = (function(module) {
                             if (columnAlias.endsWith(newAlias)) {
                                 // alias is always at end and length 2
                                 var columnName = columnAlias.slice(0, columnAlias.length-newAlias.length);
-                                pageData[j][columnName] = response.data[j][columnAlias];
+                                pageData[rowIndexInSubData][columnName] = response.data[j][columnAlias];
                             }
                         }
                     }
@@ -1125,11 +1207,11 @@ var ERMrest = (function(module) {
                     // NOTE: ermrest returns only some of the column data.
                     // make sure that pageData has all the submitted and updated data
                     for (i = 0; i < tuples.length; i++) {
-                      for (j in tuples[i].data) {
-                        if (!tuples[i].data.hasOwnProperty(j)) continue;
-                        if (j in pageData[i]) continue; // pageData already has this data
-                        pageData[i][j] =tuples[i].data[j]; // add the missing data
-                      }
+                        for (j in tuples[i].data) {
+                            if (!tuples[i].data.hasOwnProperty(j)) continue;
+                            if (j in pageData[i]) continue; // pageData already has this data
+                            pageData[i][j] =tuples[i].data[j]; // add the missing data
+                        }
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compact;
@@ -1140,41 +1222,41 @@ var ERMrest = (function(module) {
                     // if the returned page is smaller than the initial page,
                     // then some of the columns failed to update.
                     if (tuples.length > successfulPage.tuples.length) {
-                      var unchangedPageData = [], keyMatch, rowMatch;
+                        var unchangedPageData = [], keyMatch, rowMatch;
 
-                      for (i = 0; i < tuples.length; i++) {
-                        rowMatch = false;
+                        for (i = 0; i < tuples.length; i++) {
+                            rowMatch = false;
 
-                        for (j = 0; j < successfulPage.tuples.length; j++) {
-                          keyMatch = true;
+                            for (j = 0; j < successfulPage.tuples.length; j++) {
+                                keyMatch = true;
 
-                          for (k = 0; k < shortestKeyNames.length; k++) {
-                            keyName = shortestKeyNames[k];
-                            if (tuples[i].data[keyName] === successfulPage.tuples[j].data[keyName]) {
-                              // these keys don't match, go for the next tuple
-                              keyMatch = false;
-                              break;
+                                for (k = 0; k < shortestKeyNames.length; k++) {
+                                    keyName = shortestKeyNames[k];
+                                    if (tuples[i].data[keyName] === successfulPage.tuples[j].data[keyName]) {
+                                        // these keys don't match, go for the next tuple
+                                        keyMatch = false;
+                                        break;
+                                    }
+                                }
+
+                                if (keyMatch) {
+                                    // all the key columns match, then rows match.
+                                    rowMatch = true;
+                                    break;
+                                }
                             }
-                          }
 
-                          if (keyMatch) {
-                            // all the key columns match, then rows match.
-                            rowMatch = true;
-                            break;
-                          }
+                            if (!rowMatch) {
+                                // didn't find a match, so add as failed
+                                unchangedPageData.push(tuples[i].data);
+                            }
                         }
-
-                        if (!rowMatch) {
-                          // didn't find a match, so add as failed
-                          unchangedPageData.push(tuples[i].data);
-                        }
-                      }
-                      failedPage = new Page(ref, etag, unchangedPageData, false, false);
+                        failedPage = new Page(ref, etag, unchangedPageData, false, false);
                     }
 
                     defer.resolve({
-                      "successful": successfulPage,
-                      "failed": failedPage
+                        "successful": successfulPage,
+                        "failed": failedPage
                     });
                 }, function error(response) {
                     var error = module._responseToError(response);
@@ -1218,7 +1300,7 @@ var ERMrest = (function(module) {
                  * github issue: #425
                  */
 
-                this._server._http.delete(this.uri).then(function deleteReference(deleteResponse) {
+                this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError));
@@ -1443,7 +1525,7 @@ var ERMrest = (function(module) {
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.uri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestUri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**
@@ -2091,7 +2173,7 @@ var ERMrest = (function(module) {
                 if (source._location.hasJoin) {
                     // returns true if join is on alternative shared key
                     var joinOnAlternativeKey = function () {
-                        var joinCols = source._location.lastJoin.rightCols,
+                        var joinCols = source._location.lastJoin.toCols,
                             keyCols = source._table._baseTable._altSharedKey.colset.columns;
 
                         if (joinCols.length != keyCols.length) {
@@ -2119,9 +2201,9 @@ var ERMrest = (function(module) {
                             newRightCols = [],
                             col;
 
-                        for (var i = 0; i < currJoin.rightCols.length; i++) {
+                        for (var i = 0; i < currJoin.toCols.length; i++) {
                             // find the column object
-                            col = source._table.columns.get(currJoin.rightCols[i]);
+                            col = source._table.columns.get(currJoin.toCols[i]);
 
                             // map the column from source table to alternative table
                             col = newTable._altForeignKey.mapping.getFromColumn(col);
@@ -2130,7 +2212,7 @@ var ERMrest = (function(module) {
                             newRightCols.push((i === 0) ? col.toString() : module._fixedEncodeURIComponent(col.name));
                         }
 
-                        return "(" + currJoin.leftColsStr + ")=(" + newRightCols.join(",") + ")";
+                        return "(" + currJoin.fromColsStr + ")=(" + newRightCols.join(",") + ")";
                     };
 
                     // 2.1. if _altSharedKey is the same as the join

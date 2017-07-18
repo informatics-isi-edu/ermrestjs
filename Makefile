@@ -31,9 +31,8 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
 
-# Vendor libs; it installs everything in that dir
+# Vendor libs
 VENDOR=vendor
-LIBS=$(patsubst %, $(ERMRESTJSDIR)/%, $(wildcard $(VENDOR)/*))
 
 # Build target
 BUILD=build
@@ -129,44 +128,22 @@ clean:
 distclean: clean
 	rm -rf $(MODULES)
 
-.PHONY: test
-test:  $(TEST)
-
 # Rule to run the unit tests
-$(TEST): $(BUILD)
+.PHONY: test
+test: $(BUILD) ../ErmrestDataUtils
 	node test/jasmine-runner.js
-	@touch $(TEST)
 
 # Rule to install the package
-.PHONY: install installm
-install: $(ERMRESTJSDIR)/$(PKG) $(ERMRESTJSDIR)/$(VER) $(LIBS)
+.PHONY: install installm dont_install_in_root
+install: $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root
+	rsync -avz $(BUILD)/ $(ERMRESTJSDIR)
+	rsync -avz $(VENDOR) $(ERMRESTJSDIR)
 
-installm: install $(ERMRESTJSDIR)/$(MIN)
+installm: install $(BUILD)/$(MIN) dont_install_in_root
+	rsync -avz $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
 
-# Rule to make deployment dir
-# NOTE: we do not make the base dir, it must be present.
-#       For example `/var/www/html/ermrestjs` will require
-#       that `/var/www/html` exists. If it does not, then
-#       the user must create it _before_ attempting to
-#       install this package.
-$(ERMRESTJSDIR): $(dir $(ERMRESTJSDIR))
-	mkdir -p $(ERMRESTJSDIR)
-
-$(ERMRESTJSDIR)/$(VENDOR): $(ERMRESTJSDIR)
-	mkdir -p $(ERMRESTJSDIR)/$(VENDOR)
-
-$(ERMRESTJSDIR)/$(VER): $(BUILD)/$(VER) $(ERMRESTJSDIR)
-	cp $(BUILD)/$(VER) $(ERMRESTJSDIR)/$(VER)
-
-$(ERMRESTJSDIR)/$(PKG): $(BUILD)/$(PKG) $(ERMRESTJSDIR)
-	cp $(BUILD)/$(PKG) $(ERMRESTJSDIR)/$(PKG)
-
-$(ERMRESTJSDIR)/$(MIN): $(BUILD)/$(MIN) $(ERMRESTJSDIR)
-	cp $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
-
-# Rule to install vendor libs
-$(ERMRESTJSDIR)/$(VENDOR)/%: $(VENDOR)/% $(ERMRESTJSDIR)/$(VENDOR)
-	cp -f $< $@
+dont_install_in_root:
+	@echo "$(ERMRESTJSDIR)" | egrep -vq "^/$$|.*:/$$"
 
 # Rules for help/usage
 .PHONY: help usage
