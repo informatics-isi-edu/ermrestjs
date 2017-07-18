@@ -1519,7 +1519,7 @@ var ERMrest = (function(module) {
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.uri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestUri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**
