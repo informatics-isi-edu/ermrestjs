@@ -29,7 +29,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(5, "Table count is incorrect");
 
@@ -50,7 +49,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(5, "Int count not null is incorrect");
                 expect(response.unique).toBe(4, "Int unique count is incorrect");
@@ -74,7 +72,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(4, "Float count not null is incorrect");
                 expect(response.unique).toBe(4, "Float unique count is incorrect");
@@ -98,7 +95,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(4, "Text count not null is incorrect");
                 expect(response.unique).toBe(3, "Text unique count is incorrect");
@@ -122,7 +118,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(3, "Date count not null is incorrect");
                 expect(response.unique).toBe(3, "Date unique count is incorrect");
@@ -146,7 +141,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 expect(response.cnt).toBe(5, "Timestamp count not null is incorrect");
                 expect(response.unique).toBe(5, "Timestamp unique count is incorrect");
@@ -171,7 +165,6 @@ exports.execute = function (options) {
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
-                response = response[0];
 
                 // returned values have keys based on their index in the aggregateList
                 // int aggs

@@ -1567,6 +1567,9 @@ var ERMrest = (function(module) {
          */
         getAggregates: function(aggregateList) {
             var defer = module._q.defer();
+            var url;
+
+            var URL_LENGTH_LIMIT = 2048;
 
             // use this index to get the next ascii value in the alphabet starting at `a`
             var aliasCounter = 0;
@@ -1576,23 +1579,59 @@ var ERMrest = (function(module) {
                 return alias;
             }
 
-            var url = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+            var urlSet = [];
+            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
             // for matching the aliases after the data returns
             var aggAliases = [];
             for (var i = 0; i < aggregateList.length; i++) {
                 var agg = aggregateList[i];
-                if (i != 0) {
+                // if this is the first aggregate, begin with the baseUri
+                if (i == 0) {
+                    url = baseUri;
+                } else {
                     url += ",";
                 }
                 var alias = (agg.alias != null ? agg.alias : generateAlias());
+                // this alias is already used, should only be the case when the user defined an alias to be used twice
+                if (aggAliases.indexOf(alias) > -1) {
+                    alias = generateAlias();
+                }
                 aggAliases.push(alias);
 
+                // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+                if ((url + alias + ":=" + agg.value).length > URL_LENGTH_LIMIT) {
+                    // strip off an extra ','
+                    if (url.charAt(url.length-1) == ',') {
+                        url = url.substring(0, url.length-1);
+                    }
+
+                    urlSet.push(url);
+                    url = baseUri;
+                }
+
                 url += alias + ":=" + agg.value;
+
+                // We are at the end of the aggregate list
+                if (i+1 == aggregateList.length) {
+                    urlSet.push(url);
+                }
             }
 
-            this._server._http.get(url).then(function getAggregates(response) {
+            var aggregatePromises = [];
+            var http = this._server._http;
+            for (var j = 0; j < urlSet.length; j++) {
+                aggregatePromises.push(http.get(urlSet[j]));
+            }
 
-                defer.resolve(response.data);
+            module._q.all(aggregatePromises).then(function getAggregates(response) {
+                // all response rows merged into one object
+                var singleResponse = {};
+
+                for (var k = 0; k < response.length; k++) {
+                    Object.assign(singleResponse, response[k].data[0]);
+                }
+
+                defer.resolve(singleResponse);
             }, function error(response) {
                 var error = module._responseToError(response);
                 return defer.reject(error);
