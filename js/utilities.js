@@ -1449,6 +1449,53 @@ var ERMrest = (function(module) {
         // call the actual mustache validator
         return module._validateMustacheTemplate(template, data, ignoredColumns);
     };
+    
+    // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
+    module._constraintNames = {};
+    
+    /**
+     * Creaes a map from catalog id, schema name, and constraint names to the actual object.
+     * 
+     * @private
+     * @param  {string} catalogId      catalog id
+     * @param  {string} schemaName     schema name
+     * @param  {string} constraintName the constraint name of the object
+     * @param  {string} obj            the object that we want to store
+     * @param  {string} subject        one of module._constraintTypes
+     */
+    module._addConstraintName = function (catalogId, schemaName, constraintName, obj, subject) {
+        if (!(catalogId in module._constraintNames)) {
+            module._constraintNames[catalogId] = {};
+        }
+        
+        if (!(schemaName in this._constraintNames[catalogId])) {
+            module._constraintNames[catalogId][schemaName] = {};
+        }
+        
+        module._constraintNames[catalogId][schemaName][constraintName] = {
+            "subject": subject,
+            "object": obj
+        };
+    };
+    
+    /**
+     * Return an object given catalog id, schema name, and constraint name.
+     * 
+     * @private
+     * @param  {string} catalogId      catalog id
+     * @param  {string} schemaName     schema name
+     * @param  {string} constraintName the constraint name of the object
+     * @param  {string} subject        one of module._constraintTypes
+     * @return {object}                the constraint object. It will have .subject (any of module._constraintTypes) and .object (actual object)
+     */
+    module._getConstraintObject = function (catalogId, schemaName, constraintName, subject) {
+        var result;
+        if ((catalogId in module._constraintNames) && (schemaName in module._constraintNames[catalogId])){
+            result = module._constraintNames[catalogId][schemaName][constraintName];
+        }
+        return (result === undefined || (subject !== undefined && result.subject !== subject)) ? null : result;
+    };
+    
 
     module._constraintTypes = Object.freeze({
         KEY: "k",
