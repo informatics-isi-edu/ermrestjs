@@ -636,7 +636,7 @@ var ERMrest = (function(module) {
             var searchFilter = ""; // will be shown in chaise
             var filterString = _convertSearchTermToFilter(term); // ermrest uses this for http request
 
-            if (filterString != "") {
+            if (filterString !== "") {
                 this._searchTerm = term;
                 searchFilter = "*::search::" + module._fixedEncodeURIComponent(term);
             } else {
