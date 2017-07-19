@@ -1572,32 +1572,26 @@ var ERMrest = (function(module) {
 
             var URL_LENGTH_LIMIT = 2048;
 
-            // use this index to get the next ascii value in the alphabet starting at `a`
-            var aliasCounter = 0;
-            function generateAlias() {
-                var alias = aliasCounter;
-                aliasCounter++;
-                return alias;
-            }
-
             var urlSet = [];
             var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
             // for matching the aliases after the data returns
             var aggAliases = [];
             for (var i = 0; i < aggregateList.length; i++) {
                 var agg = aggregateList[i];
+                var alias = (agg.alias != null ? agg.alias : i);
+
+                // this alias is already used, should only be the case when the user defined an alias to be used twice
+                if (aggAliases.indexOf(alias) > -1) {
+                    alias = i;
+                }
+                aggAliases.push(alias);
+
                 // if this is the first aggregate, begin with the baseUri
                 if (i == 0) {
                     url = baseUri;
                 } else {
                     url += ",";
                 }
-                var alias = (agg.alias != null ? agg.alias : generateAlias());
-                // this alias is already used, should only be the case when the user defined an alias to be used twice
-                if (aggAliases.indexOf(alias) > -1) {
-                    alias = generateAlias();
-                }
-                aggAliases.push(alias);
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
                 if ((url + alias + ":=" + agg.value).length > URL_LENGTH_LIMIT) {
