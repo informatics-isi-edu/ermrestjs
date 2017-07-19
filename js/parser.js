@@ -68,6 +68,10 @@ var ERMrest = (function(module) {
         this._uri = uri;
 
         var parts;
+        
+        var searchRegExp = /\*::search::[^&]+/g;
+        var joinRegExp = /\((.*)\)=\((.*:.*:.*)\)/;
+        var facetsRegExp = /\*::facets::(.+)/;
 
         // extract the query params
         if (uri.indexOf("?") !== -1) {
@@ -138,7 +142,7 @@ var ERMrest = (function(module) {
         
         //<search>
         // search should be the last part of compact path
-        var match = parts[index].match(/\*::search::[^&]+/g);
+        var match = parts[index].match(searchRegExp);
         var that = this;
         if (match) { // this is a search filter
             
@@ -158,7 +162,7 @@ var ERMrest = (function(module) {
             index -= 1;
         }
         
-        match = parts[index].match(/\*::facets::(.+)/);
+        match = parts[index].match(facetsRegExp);
         if (match) { // this is the facets blob
             this._facets = new ParsedFacets(match[1]);
             index -= 1;
@@ -170,7 +174,7 @@ var ERMrest = (function(module) {
         // parts[1] to parts[index] might be joins
         var linking;
         for (var ji = 1; ji <= index; ji++) {
-            linking = parts[ji].match(/\((.*)\)=\((.*:.*:.*)\)/);
+            linking = parts[ji].match(joinRegExp);
             if (!linking) continue;
             this._joins.push(_createJoin(linking));
         }
@@ -195,10 +199,13 @@ var ERMrest = (function(module) {
         // modify the columns to the linked table
         this._filtersString = '';
         if (parts[1]) {
-            linking = parts[1].match(/\((.*)\)=\((.*:.*:.*)\)/);
-            var isSearch = parts[1].match(/\*::search::[^&]+/g);
+            // TODO should refactor these checks into one match statement
+            linking = parts[1].match(searchRegExp);
+            var isSearch = parts[1].match(joinRegExp);
+            var isFacets = parts[1].match(facetsRegExp);
+            
             // parts[1] could be linking or search
-            if (!linking && !isSearch) {
+            if (!linking && !isSearch && !isFacets) {
                 this._filtersString = parts[1];
                 
                 // split by ';' and '&'
@@ -430,7 +437,7 @@ var ERMrest = (function(module) {
                 }
                 
                 if (this.facets) {
-                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, tableAlias);
+                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, tableAlias, this.tableName, this.catalog);
                 }
 
                 if (this.ermrestSearchFilter) {
@@ -515,7 +522,6 @@ var ERMrest = (function(module) {
             return this._tableName;
         },
 
-
         /**
          * filter is converted to the last join table (if uri has join)
          * @returns {ParsedFilter} undefined if there is no filter
@@ -597,6 +603,18 @@ var ERMrest = (function(module) {
             return null;
         },
         
+        /**
+         * set the facets.decoded to the given JSON. will populate the .encoded too.
+         * @param  {object} json the json object of facets
+         */
+        set facets(json) {
+            this._facets.set(json);
+        },
+        
+        /**
+         * facets object. It has .encoded and .decoded apis.
+         * @return {ParsedFacets} facets object
+         */
         get facets() {
             return this._facets;
         },
@@ -857,11 +875,13 @@ var ERMrest = (function(module) {
     /**
      * Given a term will return the filter string that ermrest understands
      * @param  {string} term Search term
+     * @param {string=} column the column that search is based on (if undefined, search on table).
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term) {
+    _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
+        column = typeof column !== 'string' ? "*": column;
         
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount
@@ -893,7 +913,7 @@ var ERMrest = (function(module) {
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + "::ciregexp::" + module._fixedEncodeURIComponent(exp);
             });
         }
         
@@ -1058,7 +1078,7 @@ var ERMrest = (function(module) {
              * JSON object that represents facets
              * @type {string}
              */
-            this.decoded = _decodeJSON(blob);
+            this.decoded = this._decodeJSON(blob);
         } catch (exception) {
             throw new module.MalformedURIError("Given facets string is not valid.");
         }
@@ -1073,45 +1093,190 @@ var ERMrest = (function(module) {
          */
         set: function (obj) {
             this.encoded = obj;
-            this.decoded = _encodeJSON(obj);
-        }
+            this.decoded = this._encodeJSON(obj);
+        },
+        
+        /**
+         * Given a JSON return an encoded blob.
+         * TODO needs to be changed to compress the string
+         *
+         * @private
+         * @param       {object} json JSON object
+         * @return      {string} string blob
+         */
+        _encodeJSON: function (obj) {
+            return module._fixedEncodeURIComponent(JSON.stringify(json, null, 0));
+        },
+        
+        /**
+         * Given a blob string return the JSON object.
+         * TODO needs to be changed to compress the string
+         *
+         * @private
+         * @param       {string} blob the encoded JSON object.
+         * @return      {object} decoded JSON object.
+         */
+        _decodeJSON: function (blob) {
+            return JSON.parse(decodeURIComponent(blob));
+        }    
     };
     
     /**
-     * Given a blob string return the JSON object.
-     * TODO needs to be changed to compress the string
+     * This should eventually support a more complex structure. But currently it only supports the following:
+     * {
+     *  "and": [
+     *      {
+     *          "source": <data-path>,
+     *          "choices": [v, ...],
+     *          "ranges": [{"min": v1, "max": v2}, ...],
+     *          "search": [v, ...]
+     *      },
+     *      ...
+     *  ]
+     * }
      *
-     * @private
-     * @param       {string} blob the encoded JSON object.
-     * @return      {object} decoded JSON object.
-     */
-    function _decodeJSON(blob) {
-        return JSON.parse(decodeURIComponent(blob));
-    }
-    
-    /**
-     * Given a JSON return an encoded blob.
-     * TODO needs to be changed to compress the string
-     *
-     * @private
-     * @param       {object} json JSON object
-     * @return      {string} string blob
-     */
-    function _encodeJSON(json) {
-        return module._fixedEncodeURIComponent(JSON.stringify(json, null, 0));
-    }
-    
-    /**
-     * [_JSONToErmrestFilter description]
-     * @param       {[type]} json  [description]
-     * @param       {[type]} alias [description]
+     * NOTE: 
+     * If the data-path or the strucure is not as expected, it will just ignore facets
+     * (won't throw any errros)
+     * 
+     * @param       {object} json  JSON representation of filters
+     * @param       {string} alias the table alias
      * @constructor
-     * @return      {[type]}       [description]
+     * @return      {string} A string representation of filters that is understanable by ermrest
      */
-    function _JSONToErmrestFilter(json, alias) {
-        //TODO
-        return "";
-    }
+    _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
+        var isDefinedAndNotNull = function (v) {
+            return v !== undefined && v !== null;
+        };
+        
+        var parseChoices = function (choices, column) {
+            return choices.reduce(function (prev, curr, i) {
+                return prev + (i != 0 ? ";": "") + column + "=" + curr;
+            }, "");
+        };
+        
+        var parseRanges = function (ranges, column) {
+            var res = "", hasFilter = false;
+            ranges.forEach(function (range, index) {
+                if (hasFilter) {
+                    res += ";";
+                    hasFilter = false;
+                }
+                
+                if (isDefinedAndNotNull(range.min)) {
+                    res += column + "::gt::" + range.min;
+                    hasFilter = true;
+                }
+                
+                if (isDefinedAndNotNull(range.max)) {
+                    if (hasFilter) {
+                        res += "&";
+                    }
+                    res += column + "::lt::" + range.max;
+                    hasFilter = true;
+                }
+            });
+            return res;
+        };
+        
+        var parseSearch = function (search, column) {
+            return search.reduce(function (prev, curr, i) {
+                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr);
+            }, "");
+        };
+        
+        // returns null if the path is invalid
+        var parsePath = function (source, tableName, catalogId) {
+            var res = [], fk, i, table = tableName;
+            // from 0 to source.length-1 we have paths
+            for (i = 0; i < source.length - 1; i++) {
+                fk = module._getConstraintObject(catalogId, source[i].schema, source[i].constraint);
+                
+                // constraint name was not valid
+                if (fk == null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    return null;
+                }
+                
+                fk = fk.object;
+                
+                // outbound
+                if (fk.key.table.name === table) {
+                    res.push(fk.toString());
+                    table = fk._table.name;
+                } 
+                // inbound
+                else if (fk._table.name === table) {
+                    res.push(fk.toString(true));
+                    table = fk.key.table.name;
+                }
+                else {
+                    // constraint name was not valid
+                    return null;
+                }
+            }
+            return res.length == 0 ? null : res.join("/");
+        };
+        
+        // only one level
+        var parseAnd = function (and) {
+            var res = [], i, term, col, path, constraints;
+            
+            for (i = 0; i < and.length; i++) {
+                path = ""; // the source path if there are some joins
+                constraints = []; // the current constraints for this source
+                term = and[i];
+                
+                // ignore the facet, if there's no source in it.
+                if (!term.hasOwnProperty('source')) {
+                    continue;
+                }
+                
+                // parse the source
+                if (Array.isArray(term.source)) {
+                    path = parsePath(term.source, tableName, catalogId);
+                    col = term.source[term.source.length - 1];
+                } else {
+                    col = term.source;
+                }
+                
+                // if the data-path was invalid, ignore this facet
+                if (path === null) {
+                    continue;
+                }
+                
+                // parse the constraints
+                if (Array.isArray(term.choices)) {
+                    constraints.push(parseChoices(term.choices, col));
+                }
+                
+                if (Array.isArray(term.ranges)) {
+                    constraints.push(parseRanges(term.ranges, col));
+                }
+                
+                if (Array.isArray(term.search)) {
+                    constraints.push(parseSearch(term.search, col));
+                }
+                
+                if (constraints.length > 0) {
+                    res.push((path.length != 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                }
+            }
+            return res.join("/");
+        };
+        
+        var ermrestFilter = "";
+        
+        // NOTE we only support and at the moment.
+        if (json.hasOwnProperty(_logicalOperators.AND) && Array.isArray(json[_logicalOperators.AND])) {
+            ermrestFilter += parseAnd(json[_logicalOperators.AND]);
+        }
+        
+        return ermrestFilter;
+    };
+    
+    _logicalOperators = Object.freeze({
+        AND: "and"
+    });
 
     return module;
 
