@@ -1578,7 +1578,7 @@ var ERMrest = (function(module) {
             var aggAliases = [];
             for (var i = 0; i < aggregateList.length; i++) {
                 var agg = aggregateList[i];
-                var alias = (agg.alias != null ? agg.alias : i);
+                var alias = (agg.alias !== null ? agg.alias : i);
 
                 // this alias is already used, should only be the case when the user defined an alias to be used twice
                 if (aggAliases.indexOf(alias) > -1) {
@@ -1587,7 +1587,7 @@ var ERMrest = (function(module) {
                 aggAliases.push(alias);
 
                 // if this is the first aggregate, begin with the baseUri
-                if (i == 0) {
+                if (i === 0) {
                     url = baseUri;
                 } else {
                     url += ",";
@@ -1596,7 +1596,7 @@ var ERMrest = (function(module) {
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
                 if ((url + alias + ":=" + agg.value).length > URL_LENGTH_LIMIT) {
                     // strip off an extra ','
-                    if (url.charAt(url.length-1) == ',') {
+                    if (url.charAt(url.length-1) === ',') {
                         url = url.substring(0, url.length-1);
                     }
 
@@ -1607,7 +1607,7 @@ var ERMrest = (function(module) {
                 url += alias + ":=" + agg.value;
 
                 // We are at the end of the aggregate list
-                if (i+1 == aggregateList.length) {
+                if (i+1 === aggregateList.length) {
                     urlSet.push(url);
                 }
             }
