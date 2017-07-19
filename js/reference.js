@@ -1561,9 +1561,10 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * NOTE: If an alias for an aggregate is a duplicate of another provided alias, a new one will be generated
          *
          * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
-         * @return {Promise} TODO: not sure of the structure of this returned promise yet
+         * @return {Promise} - Promise contains an object in the form of {alias: value, alias: value}
          */
         getAggregates: function(aggregateList) {
             var defer = module._q.defer();

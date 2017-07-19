@@ -2406,8 +2406,10 @@ c) use space for conjunction of terms
 <a name="ERMrest.Reference+getAggregates"></a>
 
 #### reference.getAggregates(aggregateList) ⇒ <code>Promise</code>
+NOTE: If an alias for an aggregate is a duplicate of another provided alias, a new one will be generated
+
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - TODO: not sure of the structure of this returned promise yet  
+**Returns**: <code>Promise</code> - - Promise contains an object in the form of {alias: value, alias: value}  
 
 | Param | Type | Description |
 | --- | --- | --- |
