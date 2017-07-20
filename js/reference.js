@@ -1574,17 +1574,9 @@ var ERMrest = (function(module) {
 
             var urlSet = [];
             var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
-            // for matching the aliases after the data returns
-            var aggAliases = [];
+
             for (var i = 0; i < aggregateList.length; i++) {
                 var agg = aggregateList[i];
-                var alias = (agg.alias !== null ? agg.alias : i);
-
-                // this alias is already used, should only be the case when the user defined an alias to be used twice
-                if (aggAliases.indexOf(alias) > -1) {
-                    alias = i;
-                }
-                aggAliases.push(alias);
 
                 // if this is the first aggregate, begin with the baseUri
                 if (i === 0) {
@@ -1594,7 +1586,7 @@ var ERMrest = (function(module) {
                 }
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-                if ((url + alias + ":=" + agg.value).length > URL_LENGTH_LIMIT) {
+                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
                     // strip off an extra ','
                     if (url.charAt(url.length-1) === ',') {
                         url = url.substring(0, url.length-1);
@@ -1604,7 +1596,8 @@ var ERMrest = (function(module) {
                     url = baseUri;
                 }
 
-                url += alias + ":=" + agg.value;
+                // use i as the alias
+                url += i + ":=" + agg;
 
                 // We are at the end of the aggregate list
                 if (i+1 === aggregateList.length) {
@@ -1622,11 +1615,17 @@ var ERMrest = (function(module) {
                 // all response rows merged into one object
                 var singleResponse = {};
 
+                // collect all the data in one object so we can map it to an array
                 for (var k = 0; k < response.length; k++) {
                     Object.assign(singleResponse, response[k].data[0]);
                 }
 
-                defer.resolve(singleResponse);
+                var responseArray = [];
+                for (var m = 0; m < aggregateList.length; m++) {
+                    responseArray.push(singleResponse[m]);
+                }
+
+                defer.resolve(responseArray);
             }, function error(response) {
                 var error = module._responseToError(response);
                 return defer.reject(error);
@@ -4223,9 +4222,8 @@ var ERMrest = (function(module) {
      * Constructs an Aggregate Funciton object
      *
      * Reference Aggregate Functions is a collection of available aggregates for the
-     * particular Reference (count for the table). Each aggregate should return an
-     * object that includes it's `alias` if it was provided and the string
-     * representation for querying the information.
+     * particular Reference (count for the table). Each aggregate should return the string
+     * representation for querying that information.
      *
      * Usage:
      *  Clients _do not_ directly access this constructor. ERMrest.Reference will
@@ -4236,11 +4234,12 @@ var ERMrest = (function(module) {
     function ReferenceAggregateFn () {}
 
     ReferenceAggregateFn.prototype = {
-        countAgg: function(alias) {
-            return {
-                "alias": typeof alias !== "string" ? null : alias,
-                "value": "cnt(*)"
-            };
+        /**
+         * @type {Object}
+         * @desc count aggregate representation
+         */
+        countAgg: function() {
+            return "cnt(*)";
         }
     };
 
@@ -4249,8 +4248,7 @@ var ERMrest = (function(module) {
      *
      * Column Aggregate Functions is a collection of available aggregates for the
      * particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
-     * Each aggregate should return an object that includes it's `alias` if it was
-     * provided and the string representation for querying for that information.
+     * Each aggregate should return the string representation for querying for that information.
      *
      * Usage:
      *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
@@ -4267,45 +4265,34 @@ var ERMrest = (function(module) {
     ColumnAggregateFn.prototype = {
         /**
          * @type {Object}
-         * @param {string} alias - key name that the returned values for this aggregate will be available under
          * @desc minimum aggregate representation
          */
-        minAgg: function(alias) {
-            return {
-                "alias": typeof alias !== "string" ? null: alias,
-                "value": "min(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            };
+        minAgg: function() {
+            return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         },
 
         /**
          * @type {Object}
-         * @param {string} alias - key name that the returned values for this aggregate will be available under
          * @desc maximum aggregate representation
          */
-        maxAgg: function(alias) {
-            return {
-                "alias": typeof alias !== "string" ? null : alias,
-                "value": "max(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            };
-        },
-
-        countNotNullAgg: function(alias) {
-            return {
-                "alias": typeof alias !== "string" ? null : alias,
-                "value": "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            };
+        maxAgg: function() {
+            return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         },
 
         /**
          * @type {Object}
-         * @param {string} alias - key name that the returned values for this aggregate will be available under
+         * @desc not null count aggregate representation
+         */
+        countNotNullAgg: function() {
+            return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
          * @desc distinct count aggregate representation
          */
-        countDistinctAgg: function(alias) {
-            return {
-                "alias": typeof alias !== "string" ? null : alias,
-                "value": "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")"
-            };
+        countDistinctAgg: function() {
+            return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         }
     };
 
