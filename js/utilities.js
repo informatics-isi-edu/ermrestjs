@@ -738,7 +738,7 @@ var ERMrest = (function(module) {
         * @param {Object} [options] Configuration options.
         * @return {string} A string representation of value based on different context
         *                Entry/Edit: the beautified version of JSON in other cases
-        *                View: a string preformatted with <pre> tag to display in the UI
+        *                View: a special case to show null if the value is blank string
         * @desc Formats a given json value into a string for display.
         */
         printJSON: function printJSON(value, options) {
@@ -749,16 +749,12 @@ var ERMrest = (function(module) {
              
              else{
                  var formattedValue;
-                 if (value === null || value=== "") {
+                 if (value=== "") {
                      formattedValue= JSON.stringify(null);
-                     formattedValue =formattedValue;
                   }
-                  
                   else {
                      formattedValue= JSON.stringify(value,undefined,2);
-                     formattedValue =formattedValue;
                   }
-                  
                   return formattedValue;
              }
        },

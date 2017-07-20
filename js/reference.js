@@ -3262,7 +3262,11 @@ var ERMrest = (function(module) {
             }
             return {isHTML: isHTML, value: value};
         },
-        
+        /**
+         * Append a <pre> tag to the value so that the beautified JSON can be shown including the whitespaces.
+         * @param {String} value This is the formatted string that we get after stringifying
+         * @returns {String} A string representation of the stringified value enclosed in a <pre> tag
+         */
         appendPreTag: function appendPreTag(value) {
             return '<pre>'+value+'</pre>';
         },
