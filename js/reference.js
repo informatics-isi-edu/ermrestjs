@@ -1113,12 +1113,10 @@ var ERMrest = (function(module) {
                     uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
-                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
-                uri += ';';
-
                 // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
                 for (k = 0; k < columnProjections.length; k++) {
-                    if (k !== 0) uri += ',';
+                    // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
+                    uri += (k === 0 ? ';' : ',');
                     // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
