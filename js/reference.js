@@ -3928,7 +3928,12 @@ var ERMrest = (function(module) {
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
         var context = options ? options.context : undefined;
-
+        
+        // in edit return the original data
+        if (module._isEntryContext(context)) {
+            return { isHTML: false, value: data[this._baseCol.name] };
+        }
+        
         // if has column-display annotation, use it
         if (this._baseCol.getDisplay(context).isMarkdownPattern) {
             return this._baseCol.formatPresentation(data, options);
@@ -3937,11 +3942,6 @@ var ERMrest = (function(module) {
         // if null, return null value
         if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
             return { isHTML: false, value: this._getNullValue(context) };
-        }
-
-        // in edit return the original data
-        if (module._isEntryContext(context)) {
-            return { isHTML: false, value: data[this._baseCol.name] };
         }
 
         // otherwise return a download link

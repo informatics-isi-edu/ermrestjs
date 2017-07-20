@@ -608,14 +608,17 @@ exports.execute = function (options) {
                 });
 
                 describe('for assets, ', function() {
+                    it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
+                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        expect(val).toEqual("https://example.com");
+                        
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"entry", "formattedValues":{"col_filename": "filename"}}).value;
+                        expect(val).toEqual("value");
+                    });
+                    
                     it('if coulmn has column-display annotation, use it.', function () {
                         val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"compact", "formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("<h2>filename</h2>\n");
-                    });
-
-                    it('if in entry context, return the original underlying data.', function() {
-                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
-                        expect(val).toEqual("https://example.com");
                     });
 
                     it("otherwise return a download link", function() {
