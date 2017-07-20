@@ -135,6 +135,15 @@ var ERMrest = (function(module) {
             throw new module.InvalidInputError(message);
         }
     }
+    
+    /**
+     * Returns true if given value is defined and not null.
+     * @param  {object}  v 
+     * @return {Boolean}  true if defined and not null, otherwise false.
+     */
+    function isDefinedAndNotNull(v) {
+        return v !== null && v !== undefined;
+    }
 
     /**
      * Constructs a Reference object.
@@ -231,6 +240,8 @@ var ERMrest = (function(module) {
 
         /**
          * The string form of the `URI` for this reference.
+         * NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
+         * Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
          * @type {string}
          */
         get uri() {
@@ -272,7 +283,7 @@ var ERMrest = (function(module) {
          *   console.log("Column name:", col.name, "has display name:", col.displayname);
          * }
          * ```
-         * @type {ERMrest.Column[]}
+         * @type {ERMrest.ReferenceColumn[]}
          */
         get columns() {
             if (this._referenceColumns === undefined) {
@@ -280,7 +291,11 @@ var ERMrest = (function(module) {
             }
             return this._referenceColumns;
         },
-
+        
+        /**
+         * Location object that has uri of current reference
+         * @return {[type]} [description]
+         */
         get location() {
             return this._location;
         },
@@ -4112,10 +4127,158 @@ var ERMrest = (function(module) {
             throw new Error("can not use this type of column in entry mode.");
         }
     });
+        
+    /**
+     * Represent facet columns that are available.
+     * NOTE:
+     * Based on facets JSON structure we can have joins that result in facets
+     * on columns that are not part of reference column.
+     *
+     * If the ReferenceColumn is not provided, then the FacetColumn is for reference
+     *
+     * @param {Reference} reference reference that this Facet blongs to
+     * @param {ReferenceColumn=} refColumn reference column
+     * @constructor
+     */
+    function FacetColumn (reference, refColumn) {
+        verify(!refColumn.isAsset || !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
+        verif(refColumn.isForeignKey && !refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
+        
+        this.reference = reference;
+        this.referenceColumn = refColumn;
+        
+        this.filters = new FacetFilters(this);
+    }
+    FacetColumn.prototype = {
+        constructor: FacetColumn,
+        
+        get dataPath () {
+            if (!isDefinedAndNotNull(this.referenceColumn)) {
+                return "*";
+            }
+            
+            if (this.referenceColumn.isForeignKey) {
+                var constraint = this.referenceColumn.foreignKey.constraint_names[0];
+                return [
+                    {"schema": constraint[0], "constraint": constraint[1]},
+                    this.referenceColumn.foreignKey.colset.columns[0].name
+                ];
+            }
+            
+            if (this.referenceColumn.isInboundForeignKey) {
+                var origFkR = this.referenceColumn.foreignKey;
+                var secondFKR = this.referenceColumn.reference.derivedAssociationReference._secondFKR;
+                return [
+                    {"schema": origFkR.constraint_names[0][0], "constraint": origFkR.constraint_names[0][1]},
+                    {"schema": secondFKR.constraint_names[0][0], "constraint": secondFKR.constraint_names[0][1]},
+                    secondFKR.key.colset.columns[0].name
+                ]
+            }
+            
+            return this.referenceColumn.name;
+        }
+    }
 
+    function FacetFilters(facetColumn) {        
+        this._facetColumn = facetColumn;
+        this._filters = [];
+    }
+    FacetFilters.prototype = {
+        constructor: FacetFilter,
+        
+        all: function () {
+            return this._filters;
+        }
+        
+        remove: function (index) {
+            verify(index >= 0 && index < this.filters.length, "Invalid index.");
+            this.filters.splice(index, 1);
+        },
+        
+        addChoice: function (term) {
+            verify (isDefinedAndNotNull(term), "`term` is required.");
+            this.filters.push(new ChoiceFacetFilter(term));
+        },
+        
+        addRange: function (min, max) {
+            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            this.filters.push(new RangeFacetFilter(min, max));
+        },
+        
+        addSearch: function (term) {
+            verify (isDefinedAndNotNull(term), "`term` is required.");
+            this.filters.push(new SearchFacetFilter(term));
+        },
+        
+        toJSON: function () {            
+            var res = { "source": this._facetColumn.dataPath};
+            for (var i = 0, f; i < this._filters.length; i++) {
+                f = this._filters[i];
+                if (!(f.facetFilterKey in res)) {
+                    res[f.facetFilterKey] = [];
+                }
+                res[f.facetFilterKey].push(f.toJSON());
+            }
+            
+            return res;
+        }
+    }
+    
+    function FacetFilter(term) {
+        this.term = term;
+    }
+    FacetFilter.prototype = {
+        constructor: ChoiceFacetFilter,
+        
+        toString: function () {
+            return term;
+        },
+        
+        toJSON: function () {
+            return this.toString();
+        }
+    }
+    
+    function ChoiceFacetFilter(term) {
+        FacetFilter.superClass.call(this, term);
+        this.facetFilterKey = "choices";
+    }
+    module._extends(ChoiceFacetFilter, FacetFilter);
+    
+    function SearchFacetFilter(term) {
+        FacetFilter.superClass.call(this, term);
+        this.facetFilterKey = "search";
+    }
+    module._extends(SearchFacetFilter, FacetFilter);
+    
+    function RangeFacetFilter(min, max) {
+        this.min = min;
+        this.max = max;
+        this.facetFilterKey = "ranges";
+    }
+    module._extends(RangeFacetFilter, FacetFilter);
+    RangeFacetFilter.prototype.toString = function () {
+        // assumption: at least one of them is defined
+        if (!isDefinedAndNotNull(this.max)) {
+            return "> " + this.min;
+        }
+        if (!isDefinedAndNotNull(this.min)) {
+            return this.max + " <";
+        }
+        return this.min + " - " + this.max;
+    };
+    RangeFacetFilter.prototype.toJSON = function () {
+        var res = {};
+        if (isDefinedAndNotNull(this.max)) {
+            res['max'] = this.max;
+        }
+        if (isDefinedAndNotNull(this.min)) {
+            res['min'] = this.min;
+        }
+        return res;
+    };
 
-
-
+    
     return module;
 
 }(ERMrest || {}));

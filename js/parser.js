@@ -1199,12 +1199,12 @@ var ERMrest = (function(module) {
                 
                 fk = fk.object;
                 
-                // outbound
+                // inbound
                 if (fk.key.table.name === table) {
                     res.push(fk.toString());
                     table = fk._table.name;
                 } 
-                // inbound
+                // outbound
                 else if (fk._table.name === table) {
                     res.push(fk.toString(true));
                     table = fk.key.table.name;
