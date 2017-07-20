@@ -735,28 +735,13 @@ var ERMrest = (function(module) {
         /**
         * @function		    
         * @param {Object} value A json value to transform
-        * @param {Object} [options] Configuration options.
         * @return {string} A string representation of value based on different context
-        *                Entry/Edit: the beautified version of JSON in other cases
-        *                View: a special case to show null if the value is blank string
+        *                  The beautified version of JSON in other cases
+            *              A special case to show null if the value is blank string
         * @desc Formats a given json value into a string for display.
         */
         printJSON: function printJSON(value, options) {
-            options = (typeof options === 'undefined') ? {} : options;
-            if(module._isEntryContext(options.context)){
-                return  JSON.stringify(value,undefined,2);
-             }
-             
-             else{
-                 var formattedValue;
-                 if (value=== "") {
-                     formattedValue= JSON.stringify(null);
-                  }
-                  else {
-                     formattedValue= JSON.stringify(value,undefined,2);
-                  }
-                  return formattedValue;
-             }
+            return value === "" ? JSON.stringify(null) : JSON.stringify(value, undefined, 2);
        },
 
         /**
