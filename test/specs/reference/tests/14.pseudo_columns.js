@@ -189,7 +189,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', '<h2>filename</h2>\n', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
         var assetCompactExpectedValue = [
