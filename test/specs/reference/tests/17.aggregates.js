@@ -25,7 +25,7 @@ exports.execute = function (options) {
 
         it("should get the aggregate count for the aggregate_table table.", function(done) {
             var aggregateList = [
-                reference.aggregate.countAgg()
+                reference.aggregate.countAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
@@ -42,10 +42,10 @@ exports.execute = function (options) {
         it("should get aggregates for int_agg column.", function(done) {
             var intColumnAggs = reference.columns[1].aggregate;
             var aggregateList = [
-                intColumnAggs.countNotNullAgg(),
-                intColumnAggs.countDistinctAgg(),
-                intColumnAggs.minAgg(),
-                intColumnAggs.maxAgg()
+                intColumnAggs.countNotNullAgg,
+                intColumnAggs.countDistinctAgg,
+                intColumnAggs.minAgg,
+                intColumnAggs.maxAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
@@ -65,10 +65,10 @@ exports.execute = function (options) {
         it("should get aggregates for float_agg column.", function(done) {
             var floatColumnAggs = reference.columns[2].aggregate;
             var aggregateList = [
-                floatColumnAggs.countNotNullAgg(),
-                floatColumnAggs.countDistinctAgg(),
-                floatColumnAggs.minAgg(),
-                floatColumnAggs.maxAgg()
+                floatColumnAggs.countNotNullAgg,
+                floatColumnAggs.countDistinctAgg,
+                floatColumnAggs.minAgg,
+                floatColumnAggs.maxAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
@@ -88,10 +88,10 @@ exports.execute = function (options) {
         it("should get aggregates for text_agg column.", function(done) {
             var textColumnAggs = reference.columns[3].aggregate;
             var aggregateList = [
-                textColumnAggs.countNotNullAgg(),
-                textColumnAggs.countDistinctAgg(),
-                textColumnAggs.minAgg(),
-                textColumnAggs.maxAgg()
+                textColumnAggs.countNotNullAgg,
+                textColumnAggs.countDistinctAgg,
+                textColumnAggs.minAgg,
+                textColumnAggs.maxAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
@@ -111,10 +111,10 @@ exports.execute = function (options) {
         it("should get aggregates for date_agg column.", function(done) {
             var dateColumnAggs = reference.columns[4].aggregate;
             var aggregateList = [
-                dateColumnAggs.countNotNullAgg(),
-                dateColumnAggs.countDistinctAgg(),
-                dateColumnAggs.minAgg(),
-                dateColumnAggs.maxAgg()
+                dateColumnAggs.countNotNullAgg,
+                dateColumnAggs.countDistinctAgg,
+                dateColumnAggs.minAgg,
+                dateColumnAggs.maxAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {
@@ -134,10 +134,10 @@ exports.execute = function (options) {
         it("should get aggregates for timestamp_agg column.", function(done) {
             var timestampColumnAggs = reference.columns[5].aggregate;
             var aggregateList = [
-                timestampColumnAggs.countNotNullAgg(),
-                timestampColumnAggs.countDistinctAgg(),
-                timestampColumnAggs.minAgg(),
-                timestampColumnAggs.maxAgg()
+                timestampColumnAggs.countNotNullAgg,
+                timestampColumnAggs.countDistinctAgg,
+                timestampColumnAggs.minAgg,
+                timestampColumnAggs.maxAgg
             ];
 
             reference.getAggregates(aggregateList).then(function (response) {

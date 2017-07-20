@@ -289,12 +289,12 @@ to use for ERMrest JavaScript agents.
         * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
+        * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -326,13 +326,13 @@ to use for ERMrest JavaScript agents.
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
     * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
         * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
-        * [.countAgg()](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
+        * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
         * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
-        * [.minAgg()](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
-        * [.maxAgg()](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
-        * [.countNotNullAgg()](#ERMrest.ColumnAggregateFn+countNotNullAgg) : <code>Object</code>
-        * [.countDistinctAgg()](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
+        * [.minAgg](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
+        * [.maxAgg](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
+        * [.countNotNullAgg](#ERMrest.ColumnAggregateFn+countNotNullAgg) : <code>Object</code>
+        * [.countDistinctAgg](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
     * [.upload](#ERMrest.upload)
@@ -2408,10 +2408,8 @@ c) use space for conjunction of terms
 <a name="ERMrest.Reference+getAggregates"></a>
 
 #### reference.getAggregates(aggregateList) ⇒ <code>Promise</code>
-NOTE: If an alias for an aggregate is a duplicate of another provided alias, a new one will be generated
-
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - - Promise contains an object in the form of {alias: value, alias: value}  
+**Returns**: <code>Promise</code> - - Promise contains an array of the aggregate values in the same order as the supplied aggregate list  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2789,12 +2787,12 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
+    * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -2823,10 +2821,6 @@ indicates this represents is a PseudoColumn or a Column.
 
 #### referenceColumn.table : [<code>Table</code>](#ERMrest.Table)
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-<a name="ERMrest.ReferenceColumn+aggregate"></a>
-
-#### referenceColumn.aggregate : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
-**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+name"></a>
 
 #### referenceColumn.name : <code>string</code>
@@ -2851,6 +2845,12 @@ name of the column.
 
 #### referenceColumn.default : <code>string</code>
 Returns the default value
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+aggregate"></a>
+
+#### referenceColumn.aggregate : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
+Returns the aggregate function object
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+comment"></a>
@@ -3132,7 +3132,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
 
 * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
     * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
-    * [.countAgg()](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
+    * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
 
 <a name="new_ERMrest.ReferenceAggregateFn_new"></a>
 
@@ -3149,10 +3149,10 @@ Usage:
 
 <a name="ERMrest.ReferenceAggregateFn+countAgg"></a>
 
-#### referenceAggregateFn.countAgg() : <code>Object</code>
+#### referenceAggregateFn.countAgg : <code>Object</code>
 count aggregate representation
 
-**Kind**: instance method of [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)  
+**Kind**: instance property of [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)  
 <a name="ERMrest.ColumnAggregateFn"></a>
 
 ### ERMrest.ColumnAggregateFn
@@ -3160,10 +3160,10 @@ count aggregate representation
 
 * [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
     * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
-    * [.minAgg()](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
-    * [.maxAgg()](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
-    * [.countNotNullAgg()](#ERMrest.ColumnAggregateFn+countNotNullAgg) : <code>Object</code>
-    * [.countDistinctAgg()](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
+    * [.minAgg](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
+    * [.maxAgg](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
+    * [.countNotNullAgg](#ERMrest.ColumnAggregateFn+countNotNullAgg) : <code>Object</code>
+    * [.countDistinctAgg](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
 
 <a name="new_ERMrest.ColumnAggregateFn_new"></a>
 
@@ -3186,28 +3186,28 @@ Usage:
 
 <a name="ERMrest.ColumnAggregateFn+minAgg"></a>
 
-#### columnAggregateFn.minAgg() : <code>Object</code>
+#### columnAggregateFn.minAgg : <code>Object</code>
 minimum aggregate representation
 
-**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+**Kind**: instance property of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
 <a name="ERMrest.ColumnAggregateFn+maxAgg"></a>
 
-#### columnAggregateFn.maxAgg() : <code>Object</code>
+#### columnAggregateFn.maxAgg : <code>Object</code>
 maximum aggregate representation
 
-**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+**Kind**: instance property of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
 <a name="ERMrest.ColumnAggregateFn+countNotNullAgg"></a>
 
-#### columnAggregateFn.countNotNullAgg() : <code>Object</code>
+#### columnAggregateFn.countNotNullAgg : <code>Object</code>
 not null count aggregate representation
 
-**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+**Kind**: instance property of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
 <a name="ERMrest.ColumnAggregateFn+countDistinctAgg"></a>
 
-#### columnAggregateFn.countDistinctAgg() : <code>Object</code>
+#### columnAggregateFn.countDistinctAgg : <code>Object</code>
 distinct count aggregate representation
 
-**Kind**: instance method of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+**Kind**: instance property of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum

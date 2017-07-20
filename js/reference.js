@@ -3148,11 +3148,6 @@ var ERMrest = (function(module) {
          */
         this.table = this._baseCols[0].table;
 
-        /**
-         * @type {ERMrest.ColumnAggregateFn}
-         */
-        this.aggregate = new ColumnAggregateFn(this);
-
     }
 
     ReferenceColumn.prototype = {
@@ -3223,6 +3218,17 @@ var ERMrest = (function(module) {
                 this._default = this._simple ? this._baseCols[0].default : null;
             }
             return this._default;
+        },
+
+        /**
+         * @desc Returns the aggregate function object
+         * @type {ERMrest.ColumnAggregateFn}
+         */
+        get aggregate() {
+            if (this._aggregate === undefined) {
+                this._aggregate = !this.isPseudo ? new ColumnAggregateFn(this) : null;
+            }
+            return this._aggregate;
         },
 
         /**
@@ -4237,7 +4243,7 @@ var ERMrest = (function(module) {
          * @type {Object}
          * @desc count aggregate representation
          */
-        countAgg: function() {
+        get countAgg() {
             return "cnt(*)";
         }
     };
@@ -4258,11 +4264,7 @@ var ERMrest = (function(module) {
      * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
      */
     function ColumnAggregateFn (column) {
-        if (column.isPseudo && !column.isAsset) {
-            // NOTE: not sure how to handle this
-        } else {
-            this.column = column;
-        }
+        this.column = column;
     }
 
     ColumnAggregateFn.prototype = {
@@ -4270,7 +4272,7 @@ var ERMrest = (function(module) {
          * @type {Object}
          * @desc minimum aggregate representation
          */
-        minAgg: function() {
+        get minAgg() {
             return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         },
 
@@ -4278,7 +4280,7 @@ var ERMrest = (function(module) {
          * @type {Object}
          * @desc maximum aggregate representation
          */
-        maxAgg: function() {
+        get maxAgg() {
             return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         },
 
@@ -4286,7 +4288,7 @@ var ERMrest = (function(module) {
          * @type {Object}
          * @desc not null count aggregate representation
          */
-        countNotNullAgg: function() {
+        get countNotNullAgg() {
             return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         },
 
@@ -4294,7 +4296,7 @@ var ERMrest = (function(module) {
          * @type {Object}
          * @desc distinct count aggregate representation
          */
-        countDistinctAgg: function() {
+        get countDistinctAgg() {
             return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         }
     };
