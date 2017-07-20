@@ -246,14 +246,14 @@ exports.execute = function (options) {
 
     });
     
-    describe("Testing for JSON AND JSONB Values", function() {
+    describe("Testing for JSON AND JSONB Values,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
-        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true},
-        {"id":"1002","json_col":{},"jsonb_col":{}},
-        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}},
-        {"id":"1004","json_col":false,"jsonb_col":false},
-        {"id":"1005","json_col":2.9,"jsonb_col":2.9},
-        {"id":"1006","json_col":null,"jsonb_col":null}];
+        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<pre><p>Status is: “processed”</p>\n</pre>"},
+        {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<pre><p>Status is: “Activated”</p>\n</pre>"},
+        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_with_markdownpattern": "<pre><p>Status is: “Analysed”</p>\n</pre>"},
+        {"id":"1004","json_col":false,"jsonb_col":false, "json_col_with_markdownpattern": "<pre><p>Status is: “Shipped”</p>\n</pre>"},
+        {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_with_markdownpattern": "<pre><p>Status is: “OnHold”</p>\n</pre>"},
+        {"id":"1006","json_col":null,"jsonb_col":null, "json_col_with_markdownpattern": "<pre><p>Status is: “Complete”</p>\n</pre>"}];
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
@@ -341,6 +341,7 @@ exports.execute = function (options) {
                 var jsonb='<pre>'+JSON.stringify(expectedValues[i].jsonb_col,"undefined",2)+'</pre>';
                 expect(values[1]).toBe(json);
                 expect(values[2]).toBe(jsonb);
+                expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern);
             }
         });
     });
