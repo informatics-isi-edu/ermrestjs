@@ -243,7 +243,7 @@ exports.execute = function (options) {
             {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_without_markdownpattern": "\"Analysed\""},
             {"id":"1004","json_col":false,"jsonb_col":false, "json_col_without_markdownpattern": "\"Shipped\""},
             {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_without_markdownpattern": "\"OnHold\""},
-            {"id":"1006","json_col":"","jsonb_col":"", "json_col_without_markdownpattern": "\"Complete\""}];
+            {"id":"1006","json_col":null,"jsonb_col":null, "json_col_without_markdownpattern": "\"Complete\""}];
 
             var catalog_id = process.env.DEFAULT_CATALOG,
                 schemaName = "reference_schema",

@@ -62,17 +62,16 @@ exports.execute = function (options) {
             expect(printText({key:123,subkey:{subsubkey:456}})).toBe('{"key":123,"subkey":{"subsubkey":456}}');
         });
         
-        it('printJSON() should show raw JSON value Edit Context.', function() {
+        it('printJSON() should show stringified version of JSON value.', function() {
             var printJSON = formatUtils.printJSON;
-            var options={context:'entry/edit'};
-            expect(printJSON(null,options)).toBe('null');
-            expect(printJSON('',options)).toBe('""');
-            expect(printJSON(true,options)).toBe('true');
-            expect(printJSON(false,options)).toBe('false');
-            expect(printJSON(2.9,options)).toBe('2.9');
+            expect(printJSON(null)).toBe('null');
+            expect(printJSON('')).toBe('null');
+            expect(printJSON(true)).toBe('true');
+            expect(printJSON(false)).toBe('false');
+            expect(printJSON(2.9)).toBe('2.9');
             let valueToTest={"name":"testing"};
             let expectedJSON= JSON.stringify(valueToTest,undefined,2);
-            expect(printJSON(valueToTest,options)).toBe(expectedJSON);
+            expect(printJSON(valueToTest)).toBe(expectedJSON);
         });
 
         it('printMarkdown() should process Markdown into HTML.', function() {
