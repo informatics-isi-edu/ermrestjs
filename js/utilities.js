@@ -742,25 +742,25 @@ var ERMrest = (function(module) {
         * @desc Formats a given json value into a string for display.
         */
         printJSON: function printJSON(value, options) {
-           options = (typeof options === 'undefined') ? {} : options;
-           if(module._isEntryContext(options.context)){
-               return  JSON.stringify(value,undefined,2);
-            }
-            
-            else{
-                var formattedValue;
-                if (value === null || value=== "") {
-                    formattedValue= JSON.stringify(null);
-                    formattedValue ='<pre>'+formattedValue+'</pre>';
-                 }
-                 
-                 else {
-                    formattedValue= JSON.stringify(value,undefined,2);
-                    formattedValue ='<pre>'+formattedValue+'</pre>';
-                 }
-                 
-                 return formattedValue;
-            }
+            options = (typeof options === 'undefined') ? {} : options;
+            if(module._isEntryContext(options.context)){
+                return  JSON.stringify(value,undefined,2);
+             }
+             
+             else{
+                 var formattedValue;
+                 if (value === null || value=== "") {
+                     formattedValue= JSON.stringify(null);
+                     formattedValue =formattedValue;
+                  }
+                  
+                  else {
+                     formattedValue= JSON.stringify(value,undefined,2);
+                     formattedValue =formattedValue;
+                  }
+                  
+                  return formattedValue;
+             }
        },
 
         /**
