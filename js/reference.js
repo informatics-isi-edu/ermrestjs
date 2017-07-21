@@ -202,6 +202,11 @@ var ERMrest = (function(module) {
         }
 
         this._shortestKey = this._table.shortestKey;
+
+        /**
+         * @type {ERMrest.ReferenceAggregateFn}
+         */
+        this.aggregate = new ReferenceAggregateFn(this);
     }
 
     Reference.prototype = {
@@ -1553,6 +1558,81 @@ var ERMrest = (function(module) {
             newReference._location.search(term);
 
             return newReference;
+        },
+
+        /**
+         *
+         * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
+         * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
+         */
+        getAggregates: function(aggregateList) {
+            var defer = module._q.defer();
+            var url;
+
+            var URL_LENGTH_LIMIT = 2048;
+
+            var urlSet = [];
+            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+
+            for (var i = 0; i < aggregateList.length; i++) {
+                var agg = aggregateList[i];
+
+                // if this is the first aggregate, begin with the baseUri
+                if (i === 0) {
+                    url = baseUri;
+                } else {
+                    url += ",";
+                }
+
+                // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                    // strip off an extra ','
+                    if (url.charAt(url.length-1) === ',') {
+                        url = url.substring(0, url.length-1);
+                    }
+
+                    urlSet.push(url);
+                    url = baseUri;
+                }
+
+                // use i as the alias
+                url += i + ":=" + agg;
+
+                // We are at the end of the aggregate list
+                if (i+1 === aggregateList.length) {
+                    urlSet.push(url);
+                }
+            }
+
+            var aggregatePromises = [];
+            var http = this._server._http;
+            for (var j = 0; j < urlSet.length; j++) {
+                aggregatePromises.push(http.get(urlSet[j]));
+            }
+
+            module._q.all(aggregatePromises).then(function getAggregates(response) {
+                // all response rows merged into one object
+                var singleResponse = {};
+
+                // collect all the data in one object so we can map it to an array
+                for (var k = 0; k < response.length; k++) {
+                    Object.assign(singleResponse, response[k].data[0]);
+                }
+
+                var responseArray = [];
+                for (var m = 0; m < aggregateList.length; m++) {
+                    responseArray.push(singleResponse[m]);
+                }
+
+                defer.resolve(responseArray);
+            }, function error(response) {
+                var error = module._responseToError(response);
+                return defer.reject(error);
+            }).catch(function (error) {
+                return defer.reject(error);
+            });
+
+            return defer.promise;
         },
 
         setNewTable: function(table) {
@@ -3145,6 +3225,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc Returns the aggregate function object
+         * @type {ERMrest.ColumnAggregateFn}
+         */
+        get aggregate() {
+            if (this._aggregate === undefined) {
+                this._aggregate = !this.isPseudo ? new ColumnAggregateFn(this) : null;
+            }
+            return this._aggregate;
+        },
+
+        /**
          * @desc Documentation for this reference-column
          * @type {string}
          */
@@ -4136,8 +4227,83 @@ var ERMrest = (function(module) {
         }
     });
 
+    /**
+     * Constructs an Aggregate Funciton object
+     *
+     * Reference Aggregate Functions is a collection of available aggregates for the
+     * particular Reference (count for the table). Each aggregate should return the string
+     * representation for querying that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.Reference will
+     *  access this constructor for purposes of fetching aggregate data about the table.
+     * @memberof ERMrest
+     * @class
+     */
+    function ReferenceAggregateFn () {}
 
+    ReferenceAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc count aggregate representation
+         */
+        get countAgg() {
+            return "cnt(*)";
+        }
+    };
 
+    /**
+     * Constructs an Aggregate Function object
+     *
+     * Column Aggregate Functions is a collection of available aggregates for the
+     * particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
+     * Each aggregate should return the string representation for querying for that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+     *  will access this constructor for purposes of fetching aggregate data
+     *  for a specific column
+     * @memberof ERMrest
+     * @class
+     * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
+     */
+    function ColumnAggregateFn (column) {
+        this.column = column;
+    }
+
+    ColumnAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc minimum aggregate representation
+         */
+        get minAgg() {
+            return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc maximum aggregate representation
+         */
+        get maxAgg() {
+            return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc not null count aggregate representation
+         */
+        get countNotNullAgg() {
+            return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc distinct count aggregate representation
+         */
+        get countDistinctAgg() {
+            return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        }
+    };
 
     return module;
 

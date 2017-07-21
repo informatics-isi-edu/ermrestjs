@@ -1,0 +1,71 @@
+{
+    "comment": "schema for testing aggregate APIs",
+    "schema_name": "aggregate_schema",
+    "tables": {
+        "aggregate_table": {
+            "comment": "Table to represent a testing aggregate functions.",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "aggregate_table",
+            "schema_name": "aggregate_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "int_agg",
+                    "nullok": true,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "float_agg",
+                    "nullok": true,
+                    "type": {
+                        "typename": "float4"
+                    }
+                },
+                {
+                    "name": "text_agg",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "date_agg",
+                    "nullok": true,
+                    "type": {
+                        "typename": "date"
+                    }
+                },
+                {
+                    "name": "timestamp_agg",
+                    "nullok": true,
+                    "type": {
+                        "typename": "timestamp"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "annotations": {},
+    "table_names": [
+        "aggregate_table"
+    ]
+}
