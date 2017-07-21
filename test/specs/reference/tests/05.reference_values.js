@@ -248,12 +248,12 @@ exports.execute = function (options) {
     
     describe("Testing for JSON AND JSONB Values,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
-        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<pre><p>Status is: “processed”</p>\n</pre>"},
-        {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<pre><p>Status is: “Activated”</p>\n</pre>"},
-        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_with_markdownpattern": "<pre><p>Status is: “Analysed”</p>\n</pre>"},
-        {"id":"1004","json_col":false,"jsonb_col":false, "json_col_with_markdownpattern": "<pre><p>Status is: “Shipped”</p>\n</pre>"},
-        {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_with_markdownpattern": "<pre><p>Status is: “OnHold”</p>\n</pre>"},
-        {"id":"1006","json_col":null,"jsonb_col":null, "json_col_with_markdownpattern": "<pre><p>Status is: “Complete”</p>\n</pre>"}];
+        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n"},
+        {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<p>Status is: “Activated”</p>\n"},
+        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_with_markdownpattern": "<p>Status is: “Analysed”</p>\n"},
+        {"id":"1004","json_col":false,"jsonb_col":false, "json_col_with_markdownpattern": "<p>Status is: “Shipped”</p>\n"},
+        {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_with_markdownpattern": "<p>Status is: “OnHold”</p>\n"},
+        {"id":"1006","json_col":null,"jsonb_col":null, "json_col_with_markdownpattern": "<p>Status is: “Complete”</p>\n"}];
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
