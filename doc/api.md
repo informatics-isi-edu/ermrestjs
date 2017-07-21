@@ -226,6 +226,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
+    * [.NoDataChangedError](#ERMrest.NoDataChangedError)
+        * [new NoDataChangedError(message)](#new_ERMrest.NoDataChangedError_new)
     * [.NoConnectionError](#ERMrest.NoConnectionError)
         * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
@@ -1912,6 +1914,20 @@ An invalid input
 
 #### new MalformedURIError(message)
 A malformed URI was passed to the API.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.NoDataChangedError"></a>
+
+### ERMrest.NoDataChangedError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.NoDataChangedError_new"></a>
+
+#### new NoDataChangedError(message)
+no data was changed for update
 
 
 | Param | Type | Description |
