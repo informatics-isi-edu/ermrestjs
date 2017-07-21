@@ -2899,8 +2899,8 @@ var ERMrest = (function(module) {
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if(column.type.name === "json" || column.type.name === "jsonb"){
-                                values[i].value = column.appendPreTag(values[i].value);
+                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
+                                values[i].value = "<pre>"+ values[i].value + "</pre>";
                                 values[i].isHTML = true;
                             }
                             
@@ -3261,14 +3261,6 @@ var ERMrest = (function(module) {
                 value += (i>0 ? ":" : "") + curr.value;
             }
             return {isHTML: isHTML, value: value};
-        },
-        /**
-         * Append a <pre> tag to the value so that the beautified JSON can be shown including the whitespaces.
-         * @param {String} value This is the formatted string that we get after stringifying
-         * @returns {String} A string representation of the stringified value enclosed in a <pre> tag
-         */
-        appendPreTag: function appendPreTag(value) {
-            return '<pre>'+value+'</pre>';
         },
         
         /**
