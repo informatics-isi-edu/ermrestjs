@@ -325,12 +325,12 @@ exports.execute = function (options) {
                 
                 for( var i=0; i<limit; i++){
                     var values=tuples[i].values;
-                    expect(values[0]).toBe(expectedValues[i].id);
+                    expect(values[0]).toBe(expectedValues[i].id, "Mismatch in tuple with index = "+ i +", column=id");
                     var json=JSON.stringify(expectedValues[i].json_col,undefined,2);
                     var jsonb=JSON.stringify(expectedValues[i].jsonb_col,undefined,2);
-                    expect(values[1]).toBe(json);
-                    expect(values[2]).toBe(jsonb);
-                    expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern);
+                    expect(values[1]).toBe(json, "Mismatch in tuple with index = "+ i +", column= json_col");
+                    expect(values[2]).toBe(jsonb, "Mismatch in tuple with index = "+ i +", column= jsonb_col");
+                    expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern, "Mismatch in tuple with index = "+ i +", column= json_col_with_markdownpattern");
                 }
             });
         });
