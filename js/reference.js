@@ -2873,9 +2873,8 @@ var ERMrest = (function(module) {
                         //Added this if conditon explicitly for json/jsonb because we need to pass the
                         //formatted string representation of JSON and JSONBvalues
                         else if (column.type.name === "json" || column.type.name === "jsonb") {
-                            presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            this._values[i] = presentation.value;
-                            this._isHTML[i] = presentation.isHTML;
+                            this._values[i] = keyValues[column.name];
+                            this._isHTML[i] = false;
                         }
                         else {
                             this._values[i] = this._data[column.name];
@@ -2900,7 +2899,12 @@ var ERMrest = (function(module) {
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if (column.type.name === "gene_sequence"|| column.type.name === "json" || column.type.name === "jsonb") {
+                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
+                                values[i].value = "<pre>"+ values[i].value + "</pre>";
+                                values[i].isHTML = true;
+                            }
+                            
+                            if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
                         }
@@ -3258,7 +3262,7 @@ var ERMrest = (function(module) {
             }
             return {isHTML: isHTML, value: value};
         },
-
+        
         /**
          * @desc Indicates if the input should be disabled, in different contexts
          * true: input must be disabled
