@@ -345,7 +345,7 @@ var ERMrest = (function(module) {
                 }
                 
                 if (this.facets) {
-                    uri += "/" + this.facets.encoded;
+                    uri += "/*::facets::" + this.facets.encoded;
                 }
                 
                 if (this.searchFilter) {
@@ -608,7 +608,11 @@ var ERMrest = (function(module) {
          * @param  {object} json the json object of facets
          */
         set facets(json) {
-            this._facets.set(json);
+            delete this._facets;
+            if (json !== null && json !== undefined) {
+                this._facets = new ParsedFacets(json);
+            }
+            this._setDirty();
         },
         
         /**
@@ -1066,35 +1070,33 @@ var ERMrest = (function(module) {
         NEGATION: "Negation"
     });
     
-    function ParsedFacets (blob) {
-        /**
-         * encode JSON object that represents facets
-         * @type {object}
-         */
-        this.encoded = blob;
+    /**
+     * str might be blob or json, if it's object then it's json
+     * @param       {[type]} str [description]
+     * @constructor
+     */
+    function ParsedFacets (str) {
         
-        try {
+        if (typeof str === 'object') {
+            /**
+             * encode JSON object that represents facets
+             * @type {object}
+             */
+            this.decoded = str;
+            
             /**
              * JSON object that represents facets
              * @type {string}
              */
-            this.decoded = this._decodeJSON(blob);
-        } catch (exception) {
-            throw new module.MalformedURIError("Given facets string is not valid.");
+            this.encoded = this._encodeJSON(str);
+        } else {
+            this.encoded = str;
+            this.decoded = this._decodeJSON(str);
         }
     }
     
     ParsedFacets.prototype = {
         constructor: ParsedFacets,
-        
-        /**
-         * Change the applied facets
-         * @param  {object} obj JSON object that represents facets
-         */
-        set: function (obj) {
-            this.encoded = obj;
-            this.decoded = this._encodeJSON(obj);
-        },
         
         /**
          * Given a JSON return an encoded blob.
@@ -1105,7 +1107,8 @@ var ERMrest = (function(module) {
          * @return      {string} string blob
          */
         _encodeJSON: function (obj) {
-            return module._fixedEncodeURIComponent(JSON.stringify(json, null, 0));
+            // TODO should throw error
+            return module._fixedEncodeURIComponent(JSON.stringify(obj, null, 0));
         },
         
         /**
@@ -1117,6 +1120,7 @@ var ERMrest = (function(module) {
          * @return      {object} decoded JSON object.
          */
         _decodeJSON: function (blob) {
+            // TODO should throw error
             return JSON.parse(decodeURIComponent(blob));
         }    
     };
@@ -1186,7 +1190,7 @@ var ERMrest = (function(module) {
         };
         
         // returns null if the path is invalid
-        var parsePath = function (source, tableName, catalogId) {
+        var parseDataSource = function (source, tableName, catalogId) {
             var res = [], fk, i, table = tableName;
             // from 0 to source.length-1 we have paths
             for (i = 0; i < source.length - 1; i++) {
@@ -1233,7 +1237,7 @@ var ERMrest = (function(module) {
                 
                 // parse the source
                 if (Array.isArray(term.source)) {
-                    path = parsePath(term.source, tableName, catalogId);
+                    path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
                 } else {
                     col = term.source;
@@ -1266,15 +1270,17 @@ var ERMrest = (function(module) {
         
         var ermrestFilter = "";
         
+        var andOperator = module._FacetsLogicalOperators.AND;
+        
         // NOTE we only support and at the moment.
-        if (json.hasOwnProperty(_logicalOperators.AND) && Array.isArray(json[_logicalOperators.AND])) {
-            ermrestFilter += parseAnd(json[_logicalOperators.AND]);
+        if (json.hasOwnProperty(andOperator) && Array.isArray(json[andOperator])) {
+            ermrestFilter += parseAnd(json[andOperator]);
         }
         
         return ermrestFilter;
     };
     
-    _logicalOperators = Object.freeze({
+    module._FacetsLogicalOperators = Object.freeze({
         AND: "and"
     });
 

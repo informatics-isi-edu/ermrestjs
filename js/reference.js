@@ -293,6 +293,118 @@ var ERMrest = (function(module) {
         },
         
         /**
+         * Facets that should be represented to the user.
+         * Heuristics:
+         *  - All the visible columns in detailed context.
+         *  - All the related entities in detailed context.
+         * 
+         * @return {ERMrest.FacetColumn[]} 
+         */
+        get facetColumns() {
+            if (this._facetColumns === undefined) {
+                this._facetColumns = [];
+                
+                // this reference should be only used for getting the list,
+                var ref = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
+                var self = this;
+                
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                var andOperator = module._FacetsLogicalOperators.AND;
+                var andFilters = [];
+                
+                var sameSource = function (source, filterSource) {
+                    if (!Array.isArray(source)) {
+                        return source === filterSource;
+                    }
+                    
+                    if (source.length !== filterSource.length) {
+                        return false;
+                    }
+                    
+                    for (var i = 0; i < source.length; i++) {
+                        if (typeof source[i] === "string" && source[i] !== filterSource[i]) {
+                            return false;
+                        }
+                        
+                        if (source[i].schema !== filterSource[i].schema || source[i].constraint != filterSource[i].constraint) {
+                            return false;
+                        }
+                        
+                    }
+                    return true;
+                };
+                
+                var findFilter = function (source) {
+                    for (var i = 0; i < andFilters.length; i++) {
+                        if (sameSource(source, andFilters[i].source)) {
+                            return andFilters[i];
+                        }
+                    }
+                    return null;
+                };
+                
+                // extract the filters
+                if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
+                    andFilters = jsonFilters[andOperator];
+                }
+                
+                // all the visible columns
+                var columns = ref.columns;
+                columns.forEach(function (col) {
+                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
+                        var fc = new FacetColumn(self, col);
+                        fc.filters.fromJSON(findFilter(fc.dataSource));
+                        self._facetColumns.push(fc);
+                    }
+                });
+                
+                // all the realted 
+                var related = ref.related();
+                related.forEach(function (relRef) {
+                    var col = new InboundForeignKeyPseudoColumn(self, relRef);
+                    var fc = new FacetColumn(self, col);
+                    fc.filters.fromJSON(findFilter(fc.dataSource));
+                    self._facetColumns.push(fc);
+                });
+            }
+            return this._facetColumns;
+        },
+        
+        /**
+         * Apply filters of the given facets and return a new reference.
+         * This will remove current facet filters and apply new ones.
+         * If given facet columns don't have any filters, it
+         * 
+         * @param {ERMrest.FacetColumn[]=} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
+         * @return {ERMrest.Reference} A new reference with apply facet filters
+         */
+        applyFacets: function (facetColumns) {
+            facetColumns = (Array.isArray(facetColumns) ? facetColumns : this.facetColumns);
+            
+            var jsonFilters = [];
+            
+            facetColumns.forEach(function (fc) {
+                if (!fc.filters.isEmpty()) {
+                    jsonFilters.push(fc.filters.toJSON());
+                }
+            });
+            
+            var newReference = _referenceCopy(this);
+            delete newReference._facetColumns;
+            
+            newReference._location = this._location._clone();
+            
+            if (jsonFilters.length > 0) {
+                newReference._location.facets = {"and": jsonFilters};
+            } else {
+                newReference._location.facets = null;
+            }
+            
+            return newReference;
+            
+        },
+        
+        /**
          * Location object that has uri of current reference
          * @return {[type]} [description]
          */
@@ -1340,7 +1452,7 @@ var ERMrest = (function(module) {
          *   // Use modulePath to render the rows
          * }
          * ```
-         * @type {Object}
+         * @type {Object}``
          *
          **/
         get display() {
@@ -1895,6 +2007,7 @@ var ERMrest = (function(module) {
             delete newRef._context; // NOTE: related reference is not contextualized
             delete newRef._related;
             delete newRef._referenceColumns;
+            delete newRef._facetColumns;
             delete newRef.derivedAssociationReference;
             delete newRef._display;
 
@@ -4141,77 +4254,102 @@ var ERMrest = (function(module) {
      * @constructor
      */
     function FacetColumn (reference, refColumn) {
-        verify(!refColumn.isAsset || !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
-        verif(refColumn.isForeignKey && !refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
+        verify(!refColumn.isAsset && !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
+        verify(!refColumn.isForeignKey || refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
         
         this.reference = reference;
-        this.referenceColumn = refColumn;
+        this.column = refColumn;
         
         this.filters = new FacetFilters(this);
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
-        get dataPath () {
-            if (!isDefinedAndNotNull(this.referenceColumn)) {
-                return "*";
+        get dataSource () {
+            if (this._source === undefined) {
+                if (!isDefinedAndNotNull(this.column)) {
+                    return "*";
+                }
+                
+                if (this.column.isForeignKey) {
+                    var constraint = this.column.foreignKey.constraint_names[0];
+                    return [
+                        {"schema": constraint[0], "constraint": constraint[1]},
+                        this.column.foreignKey.key.colset.columns[0].name
+                    ];
+                }
+                
+                if (this.column.isInboundForeignKey) {
+                    var res = [];
+                    var origFkR = this.column.foreignKey;
+                    var association = this.column.reference.derivedAssociationReference;
+                    
+                    res.push({
+                        "schema": origFkR.constraint_names[0][0], 
+                        "constraint": origFkR.constraint_names[0][1]
+                    });
+                    
+                    if (association) {
+                        res.push({
+                            "schema": association._secondFKR.constraint_names[0][0], 
+                            "constraint": association._secondFKR.constraint_names[0][1]
+                        });
+                        res.push(association._secondFKR.key.colset.columns[0].name);
+                    } else {
+                        res.push(origFkR.colset.columns[0].name);
+                    }
+
+                    return res;
+                }
+                
+                return this.column.name;
             }
-            
-            if (this.referenceColumn.isForeignKey) {
-                var constraint = this.referenceColumn.foreignKey.constraint_names[0];
-                return [
-                    {"schema": constraint[0], "constraint": constraint[1]},
-                    this.referenceColumn.foreignKey.colset.columns[0].name
-                ];
-            }
-            
-            if (this.referenceColumn.isInboundForeignKey) {
-                var origFkR = this.referenceColumn.foreignKey;
-                var secondFKR = this.referenceColumn.reference.derivedAssociationReference._secondFKR;
-                return [
-                    {"schema": origFkR.constraint_names[0][0], "constraint": origFkR.constraint_names[0][1]},
-                    {"schema": secondFKR.constraint_names[0][0], "constraint": secondFKR.constraint_names[0][1]},
-                    secondFKR.key.colset.columns[0].name
-                ]
-            }
-            
-            return this.referenceColumn.name;
+            return this._source;
         }
-    }
+    };
 
     function FacetFilters(facetColumn) {        
         this._facetColumn = facetColumn;
         this._filters = [];
     }
+    
     FacetFilters.prototype = {
         constructor: FacetFilter,
         
+        isEmpty: function () {
+            return this._filters.length === 0;
+        },
+        
         all: function () {
             return this._filters;
-        }
+        },
+        
+        removeAll: function() {
+            this._filters = [];
+        },
         
         remove: function (index) {
-            verify(index >= 0 && index < this.filters.length, "Invalid index.");
-            this.filters.splice(index, 1);
+            verify(index >= 0 && index < this._filters.length, "Invalid index.");
+            this._filters.splice(index, 1);
         },
         
         addChoice: function (term) {
             verify (isDefinedAndNotNull(term), "`term` is required.");
-            this.filters.push(new ChoiceFacetFilter(term));
+            this._filters.push(new ChoiceFacetFilter(term));
         },
         
         addRange: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
-            this.filters.push(new RangeFacetFilter(min, max));
+            this._filters.push(new RangeFacetFilter(min, max));
         },
         
         addSearch: function (term) {
             verify (isDefinedAndNotNull(term), "`term` is required.");
-            this.filters.push(new SearchFacetFilter(term));
+            this._filters.push(new SearchFacetFilter(term));
         },
         
         toJSON: function () {            
-            var res = { "source": this._facetColumn.dataPath};
+            var res = { "source": this._facetColumn.dataSource};
             for (var i = 0, f; i < this._filters.length; i++) {
                 f = this._filters[i];
                 if (!(f.facetFilterKey in res)) {
@@ -4221,8 +4359,39 @@ var ERMrest = (function(module) {
             }
             
             return res;
+        },
+        
+        fromJSON: function (json) {
+            var self = this;
+            self._filters = [];
+                        
+            if (!isDefinedAndNotNull(json)) {
+                return;
+            }
+            
+            //TODO might need to extract these into functions
+
+            if (Array.isArray(json.choices)) {
+                json.choices.forEach(function (ch) {
+                    self._filters.push(new ChoiceFacetFilter(ch));
+                });
+            }
+            
+            if (Array.isArray(json.ranges)) {
+                json.ranges.forEach(function (ch) {
+                    self._filters.push(new RangeFacetFilter(ch.min, ch.max));
+                });
+            }
+            
+            if (Array.isArray(json.search)) {
+                json.search.forEach(function (ch) {
+                    self._filters.push(new SearchFacetFilter(ch));
+                });
+            }
+            
+            return;
         }
-    }
+    };
     
     function FacetFilter(term) {
         this.term = term;
@@ -4231,22 +4400,21 @@ var ERMrest = (function(module) {
         constructor: ChoiceFacetFilter,
         
         toString: function () {
-            return term;
+            return this.term;
         },
         
         toJSON: function () {
             return this.toString();
-        }
-    }
-    
+        },
+    };
     function ChoiceFacetFilter(term) {
-        FacetFilter.superClass.call(this, term);
+        ChoiceFacetFilter.superClass.call(this, term);
         this.facetFilterKey = "choices";
     }
     module._extends(ChoiceFacetFilter, FacetFilter);
     
     function SearchFacetFilter(term) {
-        FacetFilter.superClass.call(this, term);
+        ChoiceFacetFilter.superClass.call(this, term);
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
@@ -4270,10 +4438,10 @@ var ERMrest = (function(module) {
     RangeFacetFilter.prototype.toJSON = function () {
         var res = {};
         if (isDefinedAndNotNull(this.max)) {
-            res['max'] = this.max;
+            res.max = this.max;
         }
         if (isDefinedAndNotNull(this.min)) {
-            res['min'] = this.min;
+            res.min = this.min;
         }
         return res;
     };
