@@ -202,6 +202,11 @@ var ERMrest = (function(module) {
         }
 
         this._shortestKey = this._table.shortestKey;
+
+        /**
+         * @type {ERMrest.ReferenceAggregateFn}
+         */
+        this.aggregate = new ReferenceAggregateFn(this);
     }
 
     Reference.prototype = {
@@ -1557,6 +1562,81 @@ var ERMrest = (function(module) {
             return newReference;
         },
 
+        /**
+         *
+         * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
+         * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
+         */
+        getAggregates: function(aggregateList) {
+            var defer = module._q.defer();
+            var url;
+
+            var URL_LENGTH_LIMIT = 2048;
+
+            var urlSet = [];
+            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+
+            for (var i = 0; i < aggregateList.length; i++) {
+                var agg = aggregateList[i];
+
+                // if this is the first aggregate, begin with the baseUri
+                if (i === 0) {
+                    url = baseUri;
+                } else {
+                    url += ",";
+                }
+
+                // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                    // strip off an extra ','
+                    if (url.charAt(url.length-1) === ',') {
+                        url = url.substring(0, url.length-1);
+                    }
+
+                    urlSet.push(url);
+                    url = baseUri;
+                }
+
+                // use i as the alias
+                url += i + ":=" + agg;
+
+                // We are at the end of the aggregate list
+                if (i+1 === aggregateList.length) {
+                    urlSet.push(url);
+                }
+            }
+
+            var aggregatePromises = [];
+            var http = this._server._http;
+            for (var j = 0; j < urlSet.length; j++) {
+                aggregatePromises.push(http.get(urlSet[j]));
+            }
+
+            module._q.all(aggregatePromises).then(function getAggregates(response) {
+                // all response rows merged into one object
+                var singleResponse = {};
+
+                // collect all the data in one object so we can map it to an array
+                for (var k = 0; k < response.length; k++) {
+                    Object.assign(singleResponse, response[k].data[0]);
+                }
+
+                var responseArray = [];
+                for (var m = 0; m < aggregateList.length; m++) {
+                    responseArray.push(singleResponse[m]);
+                }
+
+                defer.resolve(responseArray);
+            }, function error(response) {
+                var error = module._responseToError(response);
+                return defer.reject(error);
+            }).catch(function (error) {
+                return defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
         setNewTable: function(table) {
             this._table = table;
             this._shortestKey = table.shortestKey;
@@ -2875,9 +2955,8 @@ var ERMrest = (function(module) {
                         //Added this if conditon explicitly for json/jsonb because we need to pass the
                         //formatted string representation of JSON and JSONBvalues
                         else if (column.type.name === "json" || column.type.name === "jsonb") {
-                            presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            this._values[i] = presentation.value;
-                            this._isHTML[i] = presentation.isHTML;
+                            this._values[i] = keyValues[column.name];
+                            this._isHTML[i] = false;
                         }
                         else {
                             this._values[i] = this._data[column.name];
@@ -2902,7 +2981,12 @@ var ERMrest = (function(module) {
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if (column.type.name === "gene_sequence"|| column.type.name === "json" || column.type.name === "jsonb") {
+                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
+                                values[i].value = "<pre>"+ values[i].value + "</pre>";
+                                values[i].isHTML = true;
+                            }
+                            
+                            if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
                         }
@@ -3143,6 +3227,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc Returns the aggregate function object
+         * @type {ERMrest.ColumnAggregateFn}
+         */
+        get aggregate() {
+            if (this._aggregate === undefined) {
+                this._aggregate = !this.isPseudo ? new ColumnAggregateFn(this) : null;
+            }
+            return this._aggregate;
+        },
+
+        /**
          * @desc Documentation for this reference-column
          * @type {string}
          */
@@ -3260,7 +3355,7 @@ var ERMrest = (function(module) {
             }
             return {isHTML: isHTML, value: value};
         },
-
+        
         /**
          * @desc Indicates if the input should be disabled, in different contexts
          * true: input must be disabled
@@ -3918,7 +4013,12 @@ var ERMrest = (function(module) {
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
         var context = options ? options.context : undefined;
-
+        
+        // in edit return the original data
+        if (module._isEntryContext(context)) {
+            return { isHTML: false, value: data[this._baseCol.name] };
+        }
+        
         // if has column-display annotation, use it
         if (this._baseCol.getDisplay(context).isMarkdownPattern) {
             return this._baseCol.formatPresentation(data, options);
@@ -3927,11 +4027,6 @@ var ERMrest = (function(module) {
         // if null, return null value
         if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
             return { isHTML: false, value: this._getNullValue(context) };
-        }
-
-        // in edit return the original data
-        if (module._isEntryContext(context)) {
-            return { isHTML: false, value: data[this._baseCol.name] };
         }
 
         // otherwise return a download link
@@ -4134,8 +4229,83 @@ var ERMrest = (function(module) {
         }
     });
 
+    /**
+     * Constructs an Aggregate Funciton object
+     *
+     * Reference Aggregate Functions is a collection of available aggregates for the
+     * particular Reference (count for the table). Each aggregate should return the string
+     * representation for querying that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.Reference will
+     *  access this constructor for purposes of fetching aggregate data about the table.
+     * @memberof ERMrest
+     * @class
+     */
+    function ReferenceAggregateFn () {}
 
+    ReferenceAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc count aggregate representation
+         */
+        get countAgg() {
+            return "cnt(*)";
+        }
+    };
 
+    /**
+     * Constructs an Aggregate Function object
+     *
+     * Column Aggregate Functions is a collection of available aggregates for the
+     * particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
+     * Each aggregate should return the string representation for querying for that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+     *  will access this constructor for purposes of fetching aggregate data
+     *  for a specific column
+     * @memberof ERMrest
+     * @class
+     * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
+     */
+    function ColumnAggregateFn (column) {
+        this.column = column;
+    }
+
+    ColumnAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc minimum aggregate representation
+         */
+        get minAgg() {
+            return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc maximum aggregate representation
+         */
+        get maxAgg() {
+            return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc not null count aggregate representation
+         */
+        get countNotNullAgg() {
+            return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc distinct count aggregate representation
+         */
+        get countDistinctAgg() {
+            return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        }
+    };
 
     return module;
 

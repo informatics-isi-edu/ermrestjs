@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "aggregate_schema",
+        "createNew": true,
+        "path": "test/specs/reference/conf/aggregate_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/reference/conf/aggregate_schema/data"
+    }
+}
