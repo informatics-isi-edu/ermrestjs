@@ -211,6 +211,11 @@ var ERMrest = (function(module) {
         }
 
         this._shortestKey = this._table.shortestKey;
+
+        /**
+         * @type {ERMrest.ReferenceAggregateFn}
+         */
+        this.aggregate = new ReferenceAggregateFn(this);
     }
 
     Reference.prototype = {
@@ -312,6 +317,7 @@ var ERMrest = (function(module) {
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
                 
+                // check if both sources are the same.
                 var sameSource = function (source, filterSource) {
                     if (!Array.isArray(source)) {
                         return source === filterSource;
@@ -334,6 +340,7 @@ var ERMrest = (function(module) {
                     return true;
                 };
                 
+                // find already applied filter to the face column.
                 var findFilter = function (source) {
                     for (var i = 0; i < andFilters.length; i++) {
                         if (sameSource(source, andFilters[i].source)) {
@@ -352,7 +359,7 @@ var ERMrest = (function(module) {
                 var columns = ref.columns;
                 columns.forEach(function (col) {
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
-                        var fc = new FacetColumn(self, col);
+                        var fc = new FacetColumn(col);
                         fc.filters.fromJSON(findFilter(fc.dataSource));
                         self._facetColumns.push(fc);
                     }
@@ -362,7 +369,7 @@ var ERMrest = (function(module) {
                 var related = ref.related();
                 related.forEach(function (relRef) {
                     var col = new InboundForeignKeyPseudoColumn(self, relRef);
-                    var fc = new FacetColumn(self, col);
+                    var fc = new FacetColumn(col);
                     fc.filters.fromJSON(findFilter(fc.dataSource));
                     self._facetColumns.push(fc);
                 });
@@ -375,7 +382,7 @@ var ERMrest = (function(module) {
          * This will remove current facet filters and apply new ones.
          * If given facet columns don't have any filters, it
          * 
-         * @param {ERMrest.FacetColumn[]=} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
+         * @param {ERMrest.FacetColumn[]?} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
          * @return {ERMrest.Reference} A new reference with apply facet filters
          */
         applyFacets: function (facetColumns) {
@@ -406,7 +413,7 @@ var ERMrest = (function(module) {
         
         /**
          * Location object that has uri of current reference
-         * @return {[type]} [description]
+         * @return {ERMrest.LOcation}
          */
         get location() {
             return this._location;
@@ -1135,6 +1142,10 @@ var ERMrest = (function(module) {
                     }
                 }
 
+                if (columnProjections.length < 1) {
+                    throw new module.NoDataChangedError("No data was changed in the update request. Please check the form content and resubmit the data.");
+                }
+
                 /* This loop manages adding the values based on the columnProjections set and setting columns associated with asset columns properly */
                 // loop through each tuple again and set the data value from the tuple in submission data for each column projection
                 for (i = 0; i < tuples.length; i++) {
@@ -1221,12 +1232,10 @@ var ERMrest = (function(module) {
                     uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
-                // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
-                uri += ';';
-
                 // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
                 for (k = 0; k < columnProjections.length; k++) {
-                    if (k !== 0) uri += ',';
+                    // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
+                    uri += (k === 0 ? ';' : ',');
                     // alias all the columns for the key set
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
@@ -1452,7 +1461,7 @@ var ERMrest = (function(module) {
          *   // Use modulePath to render the rows
          * }
          * ```
-         * @type {Object}``
+         * @type {Object}
          *
          **/
         get display() {
@@ -1661,6 +1670,81 @@ var ERMrest = (function(module) {
             newReference._location.search(term);
 
             return newReference;
+        },
+
+        /**
+         *
+         * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
+         * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
+         */
+        getAggregates: function(aggregateList) {
+            var defer = module._q.defer();
+            var url;
+
+            var URL_LENGTH_LIMIT = 2048;
+
+            var urlSet = [];
+            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+
+            for (var i = 0; i < aggregateList.length; i++) {
+                var agg = aggregateList[i];
+
+                // if this is the first aggregate, begin with the baseUri
+                if (i === 0) {
+                    url = baseUri;
+                } else {
+                    url += ",";
+                }
+
+                // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                    // strip off an extra ','
+                    if (url.charAt(url.length-1) === ',') {
+                        url = url.substring(0, url.length-1);
+                    }
+
+                    urlSet.push(url);
+                    url = baseUri;
+                }
+
+                // use i as the alias
+                url += i + ":=" + agg;
+
+                // We are at the end of the aggregate list
+                if (i+1 === aggregateList.length) {
+                    urlSet.push(url);
+                }
+            }
+
+            var aggregatePromises = [];
+            var http = this._server._http;
+            for (var j = 0; j < urlSet.length; j++) {
+                aggregatePromises.push(http.get(urlSet[j]));
+            }
+
+            module._q.all(aggregatePromises).then(function getAggregates(response) {
+                // all response rows merged into one object
+                var singleResponse = {};
+
+                // collect all the data in one object so we can map it to an array
+                for (var k = 0; k < response.length; k++) {
+                    Object.assign(singleResponse, response[k].data[0]);
+                }
+
+                var responseArray = [];
+                for (var m = 0; m < aggregateList.length; m++) {
+                    responseArray.push(singleResponse[m]);
+                }
+
+                defer.resolve(responseArray);
+            }, function error(response) {
+                var error = module._responseToError(response);
+                return defer.reject(error);
+            }).catch(function (error) {
+                return defer.reject(error);
+            });
+
+            return defer.promise;
         },
 
         setNewTable: function(table) {
@@ -2982,9 +3066,8 @@ var ERMrest = (function(module) {
                         //Added this if conditon explicitly for json/jsonb because we need to pass the
                         //formatted string representation of JSON and JSONBvalues
                         else if (column.type.name === "json" || column.type.name === "jsonb") {
-                            presentation = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            this._values[i] = presentation.value;
-                            this._isHTML[i] = presentation.isHTML;
+                            this._values[i] = keyValues[column.name];
+                            this._isHTML[i] = false;
                         }
                         else {
                             this._values[i] = this._data[column.name];
@@ -3009,7 +3092,12 @@ var ERMrest = (function(module) {
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
                             // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if (column.type.name === "gene_sequence"|| column.type.name === "json" || column.type.name === "jsonb") {
+                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
+                                values[i].value = "<pre>"+ values[i].value + "</pre>";
+                                values[i].isHTML = true;
+                            }
+                            
+                            if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
                         }
@@ -3250,6 +3338,17 @@ var ERMrest = (function(module) {
         },
 
         /**
+         * @desc Returns the aggregate function object
+         * @type {ERMrest.ColumnAggregateFn}
+         */
+        get aggregate() {
+            if (this._aggregate === undefined) {
+                this._aggregate = !this.isPseudo ? new ColumnAggregateFn(this) : null;
+            }
+            return this._aggregate;
+        },
+
+        /**
          * @desc Documentation for this reference-column
          * @type {string}
          */
@@ -3367,7 +3466,7 @@ var ERMrest = (function(module) {
             }
             return {isHTML: isHTML, value: value};
         },
-
+        
         /**
          * @desc Indicates if the input should be disabled, in different contexts
          * true: input must be disabled
@@ -4025,7 +4124,12 @@ var ERMrest = (function(module) {
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
         var context = options ? options.context : undefined;
-
+        
+        // in edit return the original data
+        if (module._isEntryContext(context)) {
+            return { isHTML: false, value: data[this._baseCol.name] };
+        }
+        
         // if has column-display annotation, use it
         if (this._baseCol.getDisplay(context).isMarkdownPattern) {
             return this._baseCol.formatPresentation(data, options);
@@ -4034,11 +4138,6 @@ var ERMrest = (function(module) {
         // if null, return null value
         if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
             return { isHTML: false, value: this._getNullValue(context) };
-        }
-
-        // in edit return the original data
-        if (module._isEntryContext(context)) {
-            return { isHTML: false, value: data[this._baseCol.name] };
         }
 
         // otherwise return a download link
@@ -4249,22 +4348,33 @@ var ERMrest = (function(module) {
      *
      * If the ReferenceColumn is not provided, then the FacetColumn is for reference
      *
-     * @param {Reference} reference reference that this Facet blongs to
      * @param {ReferenceColumn=} refColumn reference column
      * @constructor
      */
-    function FacetColumn (reference, refColumn) {
+    function FacetColumn (refColumn) {
         verify(!refColumn.isAsset && !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
         verify(!refColumn.isForeignKey || refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
         
-        this.reference = reference;
+        /**
+         * The {@link ERMrest.ReferenceColumn} that this facet belongs to. If it is
+         * undefined, that means this facet belongs to the table and not column.
+         * @type {ERMrest.ReferenceColumn}
+         */
         this.column = refColumn;
         
+        /**
+         * Filters that are applied to this facet.
+         * @type {FacetFilters}
+         */
         this.filters = new FacetFilters(this);
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
+        /**
+         * data source of this facet. Can be used to find filters for this facet
+         * @return {String} [description]
+         */
         get dataSource () {
             if (this._source === undefined) {
                 if (!isDefinedAndNotNull(this.column)) {
@@ -4298,7 +4408,6 @@ var ERMrest = (function(module) {
                     } else {
                         res.push(origFkR.colset.columns[0].name);
                     }
-
                     return res;
                 }
                 
@@ -4308,6 +4417,11 @@ var ERMrest = (function(module) {
         }
     };
 
+    /**
+     * A container for list of FacetFilter(s).
+     * @param {FaceColumn[]}
+     * @constructor
+     */
     function FacetFilters(facetColumn) {        
         this._facetColumn = facetColumn;
         this._filters = [];
@@ -4316,38 +4430,73 @@ var ERMrest = (function(module) {
     FacetFilters.prototype = {
         constructor: FacetFilter,
         
+        /**
+         * Indicator for emptiness of filters
+         * 
+         * @return {boolean} true if empty, otherwise false.
+         */
         isEmpty: function () {
             return this._filters.length === 0;
         },
         
+        /**
+         * Returns list of filters
+         * @return {FacetFilter[]} list of FacetFilter(s).
+         */
         all: function () {
             return this._filters;
         },
         
+        /**
+         * Remove all the facets in this container
+         */
         removeAll: function() {
             this._filters = [];
         },
         
+        /**
+         * Remove a filter from the given index.
+         * @param  {int} index index of element that we want to remove from list 
+         * @return {FacetFilter}  the removed filter. Will return nul if index is
+         * invalid or array is empty.
+         */
         remove: function (index) {
-            verify(index >= 0 && index < this._filters.length, "Invalid index.");
-            this._filters.splice(index, 1);
+            var res = this._filters.splice(index, 1);
+            return (res !== undefined) ? res[0] : null;
         },
         
+        /**
+         * Add a ChoiceFacetFilter
+         * @param  {String|int} term the term for choice
+         */
         addChoice: function (term) {
             verify (isDefinedAndNotNull(term), "`term` is required.");
             this._filters.push(new ChoiceFacetFilter(term));
         },
         
+        /**
+         * Add a RangeFacetFilter
+         * @param  {String|int=} min minimum value. Can be null or undefined.
+         * @param  {String|int=} max maximum value. Can be null or undefined.
+         */
         addRange: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
             this._filters.push(new RangeFacetFilter(min, max));
         },
         
+        /**
+         * Add a SearchFacetFilter
+         * @param  {String} term the term for search
+         */
         addSearch: function (term) {
             verify (isDefinedAndNotNull(term), "`term` is required.");
             this._filters.push(new SearchFacetFilter(term));
         },
         
+        /**
+         * Return JSON presentation of the filters. This includes the source too.
+         * @return {Object}
+         */
         toJSON: function () {            
             var res = { "source": this._facetColumn.dataSource};
             for (var i = 0, f; i < this._filters.length; i++) {
@@ -4361,6 +4510,10 @@ var ERMrest = (function(module) {
             return res;
         },
         
+        /**
+         * Given a JSON will create list of filters
+         * @param  {Object} json JSON representation of filters
+         */
         fromJSON: function (json) {
             var self = this;
             self._filters = [];
@@ -4368,63 +4521,106 @@ var ERMrest = (function(module) {
             if (!isDefinedAndNotNull(json)) {
                 return;
             }
-            
-            //TODO might need to extract these into functions
 
+            // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
                     self._filters.push(new ChoiceFacetFilter(ch));
                 });
             }
             
+            // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
                     self._filters.push(new RangeFacetFilter(ch.min, ch.max));
                 });
             }
             
+            // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
                     self._filters.push(new SearchFacetFilter(ch));
                 });
             }
-            
-            return;
         }
     };
     
+    /**
+     * Represent filters that can be applied to facet
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
     function FacetFilter(term) {
         this.term = term;
     }
     FacetFilter.prototype = {
-        constructor: ChoiceFacetFilter,
+        constructor: FacetFilter,
         
+        /**
+         * String representation of filter
+         * @return {string}
+         */
         toString: function () {
             return this.term;
         },
         
+        /**
+         * JSON representation of filter
+         * @return {string}
+         */
         toJSON: function () {
             return this.toString();
         },
     };
+    
+    /**
+     * Represent choice filters that can be applied to facet.
+     * Extends {@link ERMrest.FacetFilter}.
+     * 
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
     function ChoiceFacetFilter(term) {
         ChoiceFacetFilter.superClass.call(this, term);
         this.facetFilterKey = "choices";
     }
     module._extends(ChoiceFacetFilter, FacetFilter);
     
+    /**
+     * Represent search filters that can be applied to facet.
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
     function SearchFacetFilter(term) {
         ChoiceFacetFilter.superClass.call(this, term);
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
     
+    /**
+     * Represent range filters that can be applied to facet.
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int=} min
+     * @param       {String|int=} max
+     * @constructor
+     */
     function RangeFacetFilter(min, max) {
         this.min = min;
         this.max = max;
         this.facetFilterKey = "ranges";
     }
     module._extends(RangeFacetFilter, FacetFilter);
+    
+    /**
+     * String representation of range filter. With the format of:
+     *
+     * - both min and max defined: `{{min}}-{{max}}`
+     * - only min defined: `> {{min}}`
+     * - only max defined: `{{max}} <`
+     * 
+     * @return {string}
+     */
     RangeFacetFilter.prototype.toString = function () {
         // assumption: at least one of them is defined
         if (!isDefinedAndNotNull(this.max)) {
@@ -4435,6 +4631,11 @@ var ERMrest = (function(module) {
         }
         return this.min + " - " + this.max;
     };
+    
+    /**
+     * JSON representation of range filter.
+     * @return {Object}
+     */
     RangeFacetFilter.prototype.toJSON = function () {
         var res = {};
         if (isDefinedAndNotNull(this.max)) {
@@ -4444,6 +4645,84 @@ var ERMrest = (function(module) {
             res.min = this.min;
         }
         return res;
+    };
+
+    /**
+     * Constructs an Aggregate Funciton object
+     *
+     * Reference Aggregate Functions is a collection of available aggregates for the
+     * particular Reference (count for the table). Each aggregate should return the string
+     * representation for querying that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.Reference will
+     *  access this constructor for purposes of fetching aggregate data about the table.
+     * @memberof ERMrest
+     * @class
+     */
+    function ReferenceAggregateFn () {}
+
+    ReferenceAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc count aggregate representation
+         */
+        get countAgg() {
+            return "cnt(*)";
+        }
+    };
+
+    /**
+     * Constructs an Aggregate Function object
+     *
+     * Column Aggregate Functions is a collection of available aggregates for the
+     * particular ReferenceColumn (min, max, count not null, and count distinct for it's column).
+     * Each aggregate should return the string representation for querying for that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+     *  will access this constructor for purposes of fetching aggregate data
+     *  for a specific column
+     * @memberof ERMrest
+     * @class
+     * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
+     */
+    function ColumnAggregateFn (column) {
+        this.column = column;
+    }
+
+    ColumnAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc minimum aggregate representation
+         */
+        get minAgg() {
+            return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc maximum aggregate representation
+         */
+        get maxAgg() {
+            return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc not null count aggregate representation
+         */
+        get countNotNullAgg() {
+            return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        },
+
+        /**
+         * @type {Object}
+         * @desc distinct count aggregate representation
+         */
+        get countDistinctAgg() {
+            return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        }
     };
 
     

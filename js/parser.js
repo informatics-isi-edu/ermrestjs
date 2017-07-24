@@ -1072,7 +1072,7 @@ var ERMrest = (function(module) {
     
     /**
      * str might be blob or json, if it's object then it's json
-     * @param       {[type]} str [description]
+     * @param       {String} str [description]
      * @constructor
      */
     function ParsedFacets (str) {
@@ -1107,7 +1107,6 @@ var ERMrest = (function(module) {
          * @return      {string} string blob
          */
         _encodeJSON: function (obj) {
-            // TODO should throw error
             return module._fixedEncodeURIComponent(JSON.stringify(obj, null, 0));
         },
         
@@ -1120,8 +1119,11 @@ var ERMrest = (function(module) {
          * @return      {object} decoded JSON object.
          */
         _decodeJSON: function (blob) {
-            // TODO should throw error
-            return JSON.parse(decodeURIComponent(blob));
+            try {
+                return JSON.parse(decodeURIComponent(blob));
+            } catch (exception) {
+                throw new module.MalformedURIError("Given encoded string for facets is not valid.");
+            }
         }    
     };
     
@@ -1280,6 +1282,10 @@ var ERMrest = (function(module) {
         return ermrestFilter;
     };
     
+    /**
+     * List of logical operators that parser accepts in JSON facets.
+     * @type {Object}
+     */
     module._FacetsLogicalOperators = Object.freeze({
         AND: "and"
     });

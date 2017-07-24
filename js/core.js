@@ -1734,7 +1734,7 @@ var ERMrest = (function (module) {
                 //Cases to support json and jsonb columns
                 case 'json':
                 case 'jsonb':
-                    data = utils.printJSON(data,options);
+                    data = utils.printJSON(data);
                     break;
                 default: // includes 'text' and 'longtext' cases
                     data = utils.printText(data, options);

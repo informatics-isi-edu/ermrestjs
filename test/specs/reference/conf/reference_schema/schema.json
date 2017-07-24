@@ -36,7 +36,24 @@
                     "type": {
                         "typename": "jsonb"
                     }
-                }
+                },
+                {
+                     "comment": null, 
+                     "name": "json_col_with_markdownpattern", 
+                     "default": null, 
+                     "nullok": true, 
+                     "type": {
+                       "typename": "json"
+                     }, 
+                     "annotations": {
+                       "tag:isrd.isi.edu,2016:column-display": {
+                         "*": {
+                           "markdown_pattern": " Status is: {{{json_col_with_markdownpattern}}}"
+                         }
+                       }
+                   }
+               }
+
             ]
         },
         "reference_table": {
