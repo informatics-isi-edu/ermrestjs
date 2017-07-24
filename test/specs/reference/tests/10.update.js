@@ -58,7 +58,7 @@ exports.execute = function (options) {
                     expect(err.message).toEqual("No data was changed in the update request. Please check the form content and resubmit the data.", "Wrong error message was returned");
 
                     done();
-                })
+                });
             });
         });
 
