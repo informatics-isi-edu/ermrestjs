@@ -28,6 +28,7 @@ var ERMrest = (function(module) {
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
+    module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
 
     /**
@@ -174,6 +175,9 @@ var ERMrest = (function(module) {
     ServiceUnavailableError.prototype = Object.create(Error.prototype);
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
+
+    // Errors not associated with http status codes
+    // these are errors that we defined to manage errors in the API
     /**
      * @memberof ERMrest
      * @param {string} message error message
@@ -214,6 +218,19 @@ var ERMrest = (function(module) {
 
     MalformedURIError.prototype = Object.create(Error.prototype);
     MalformedURIError.prototype.constructor = MalformedURIError;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc no data was changed for update
+     */
+    function NoDataChangedError(message) {
+        this.message = message;
+    }
+
+    NoDataChangedError.prototype = Object.create(Error.prototype);
+    NoDataChangedError.prototype.constructor = NoDataChangedError;
 
     /**
      * @memberof ERMrest
