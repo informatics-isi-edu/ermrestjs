@@ -6,33 +6,60 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "update_schema";
 
-        it('when reference is not contextualized for `entry/edit` should throw an error.', function(done) {
+        describe("should throw errors", function () {
             var tableName = "update_table",
                 uri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/ind_key1=2";
 
             var reference;
-            var updateData = {
-                "ind_key1": 777
-            };
 
-            options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
-                reference = response;
-                return reference.read(1);
-            }).then(function (response) {
-                var data = response.tuples[0].data;
+            beforeAll(function (done) {
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                    reference = response;
 
-                for (var key in updateData) {
-                    data[key] = updateData[key];
-                }
-
-                return reference.update(response.tuples);
-            }).then(function(response) {
-                throw new Error("Did not return any errors");
-            }).catch(function (err) {
-                expect(err.message).toEqual("reference must be in 'entry/edit' context.");
-                done();
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
             });
 
+            it('when reference is not contextualized for `entry/edit` should throw an error.', function(done) {
+                var updateData = {
+                    "ind_key1": 777
+                };
+
+                return reference.read(1).then(function (response) {
+                    var data = response.tuples[0].data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(response.tuples);
+                }).then(function(response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err.message).toEqual("reference must be in 'entry/edit' context.");
+
+                    done();
+                });
+
+            });
+
+            it("should throw an error when no data was updated.", function(done) {
+                reference = reference.contextualize.entryEdit;
+
+                reference.read(1).then(function (response) {
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err instanceof options.ermRest.NoDataChangedError).toBe(true);
+                    expect(err.message).toEqual("No data was changed in the update request. Please check the form content and resubmit the data.", "Wrong error message was returned");
+
+                    done();
+                })
+            });
         });
 
         describe("for updating aliased columns, ", function () {
