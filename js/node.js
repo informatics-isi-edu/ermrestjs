@@ -42,7 +42,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
     
-    ERMrest._LZString = require('LZString');
+    ERMrest._LZString = require('lz-string');
 
     _scriptsLoaded = true;
 
@@ -99,7 +99,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      */
     loadScripts([
         
-        // Moment.js script
+        // lz-string script
         ermrestJsPath + "vendor/lz-string.min.js",
         
         // Moment.js script

@@ -2147,6 +2147,19 @@ Heuristics:
  - All the visible columns in compact context.
  - All the related entities in detailed context.
 
+Usage:
+```
+ var facets = reference.facetColumns;
+ reference.facetColumns[0].filters.addChoice('value');
+ reference.facetColumns[1].filters.addSearch('text 1');
+ reference.facetColumns[2].filters.addRange(1, 2);
+ reference.facetColumns[3].filters.removeAll();
+ for (var i=0, len=reference.facetColumns.length; i<len; i++) {
+   var fc = reference.facetColumns[i];
+   console.log("Column name:", fc.column.name, "has following facets:", fc.filters.all());
+ }
+```
+
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+location"></a>
 
@@ -2296,7 +2309,6 @@ Returns a uri that will properly generate the download link for a csv document
 #### reference.applyFacets(facetColumns) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Apply filters of the given facets and return a new reference.
 This will remove current facet filters and apply new ones.
-If given facet columns don't have any filters, it
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: [<code>Reference</code>](#ERMrest.Reference) - A new reference with apply facet filters  
