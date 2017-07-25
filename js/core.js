@@ -241,11 +241,6 @@ var ERMrest = (function (module) {
          */
         this.schemas = new Schemas();
 
-
-         // A map from schema name to constraint names to the actual object.
-         // this._constraintNames[schemaName][constraintName] will return an object.
-        this._constraintNames = {};
-
         /*
          * Value that holds the meta resource object returned from the server for the catalog
          * @type null
@@ -335,25 +330,13 @@ var ERMrest = (function (module) {
          * @returns {Object|null} the constraint object. Null means the constraint name is not valid.
          */
         constraintByNamePair: function (pair, subject) {
-            var result = null;
-            if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
-                result = this._constraintNames[pair[0]][pair[1]];
-            }
-            return (result === null || (subject !== undefined && result.subject !== subject)) ? null : result;
+            return module._getConstraintObject(this.id, pair[0], pair[1], subject);
         },
 
         // used in ForeignKeyRef to add the defined constraintNames.
         // subject can be one of module._constraintTypes
         _addConstraintName: function (pair, obj, subject) {
-            // if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
-            if (!(pair[0] in this._constraintNames)) {
-                this._constraintNames[pair[0]] = {};
-            }
-            this._constraintNames[pair[0]][pair[1]] = {
-                "subject": subject,
-                "object": obj
-            };
-            // }
+            module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         }
     };
 
