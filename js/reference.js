@@ -69,16 +69,24 @@ var ERMrest = (function(module) {
         try {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
-
-            var location = module.parse(uri);
-
-            var server = module.ermrestFactory.getServer(location.service, params);
-            server.catalogs.get(location.catalog).then(function (catalog) {
+            var location;
+            
+            // make sure all the dependencies are loaded
+            module._onload().then(function () {
+                location = module.parse(uri);
+                var server = module.ermrestFactory.getServer(location.service, params);
+                
+                // find the catalog
+                return server.catalogs.get(location.catalog);
+            }).then(function (catalog) {
+                
+                //create Reference
                 defer.resolve(new Reference(location, catalog));
-
             }, function (error) {
-                defer.reject(error);
+                
+                throw error;
             }).catch(function(exception) {
+                
                 defer.reject(exception);
             });
 
@@ -138,7 +146,7 @@ var ERMrest = (function(module) {
     
     /**
      * Returns true if given value is defined and not null.
-     * @param  {object}  v 
+     * @param  {object}  v the object that we want to test
      * @return {Boolean}  true if defined and not null, otherwise false.
      */
     function isDefinedAndNotNull(v) {
@@ -302,6 +310,19 @@ var ERMrest = (function(module) {
          * Heuristics:
          *  - All the visible columns in compact context.
          *  - All the related entities in detailed context.
+         *
+         * Usage:
+         * ```
+         *  var facets = reference.facetColumns;
+         *  reference.facetColumns[0].filters.addChoice('value');
+         *  reference.facetColumns[1].filters.addSearch('text 1');
+         *  reference.facetColumns[2].filters.addRange(1, 2);
+         *  reference.facetColumns[3].filters.removeAll();
+         *  for (var i=0, len=reference.facetColumns.length; i<len; i++) {
+         *    var fc = reference.facetColumns[i];
+         *    console.log("Column name:", fc.column.name, "has following facets:", fc.filters.all());
+         *  }
+         * ```
          * 
          * @return {ERMrest.FacetColumn[]} 
          */
@@ -356,7 +377,7 @@ var ERMrest = (function(module) {
                     andFilters = jsonFilters[andOperator];
                 }
                 
-                // all the visible columns
+                // all the visible columns in compact context
                 var columns = compactRef.columns;
                 columns.forEach(function (col) {
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
@@ -366,7 +387,7 @@ var ERMrest = (function(module) {
                     }
                 });
                 
-                // all the realted 
+                // all the realted in detailed context
                 var related = detailedRef.related();
                 related.forEach(function (relRef) {
                     var col = new InboundForeignKeyPseudoColumn(self, relRef);
@@ -381,16 +402,17 @@ var ERMrest = (function(module) {
         /**
          * Apply filters of the given facets and return a new reference.
          * This will remove current facet filters and apply new ones.
-         * If given facet columns don't have any filters, it
          * 
-         * @param {ERMrest.FacetColumn[]?} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
+         * @param {?ERMrest.FacetColumn[]} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
          * @return {ERMrest.Reference} A new reference with apply facet filters
          */
         applyFacets: function (facetColumns) {
+            // if facetColumns was not specified will use list of all the facet columns
             facetColumns = (Array.isArray(facetColumns) ? facetColumns : this.facetColumns);
             
             var jsonFilters = [];
             
+            // gather all the filters inside the facetColumns
             facetColumns.forEach(function (fc) {
                 if (!fc.filters.isEmpty()) {
                     jsonFilters.push(fc.filters.toJSON());
@@ -398,10 +420,12 @@ var ERMrest = (function(module) {
             });
             
             var newReference = _referenceCopy(this);
+            
+            // make sure we will create new list 
             delete newReference._facetColumns;
             
+            // change the facets in location object
             newReference._location = this._location._clone();
-            
             if (jsonFilters.length > 0) {
                 newReference._location.facets = {"and": jsonFilters};
             } else {
@@ -409,12 +433,11 @@ var ERMrest = (function(module) {
             }
             
             return newReference;
-            
         },
         
         /**
          * Location object that has uri of current reference
-         * @return {ERMrest.LOcation}
+         * @return {ERMrest.Location}
          */
         get location() {
             return this._location;

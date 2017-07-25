@@ -244,7 +244,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
-        * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.LOcation</code>
+        * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -2018,7 +2018,7 @@ Constructor for a ParsedFilter.
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
-    * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.LOcation</code>
+    * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -2150,7 +2150,7 @@ Heuristics:
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+location"></a>
 
-#### reference.location ⇒ <code>ERMrest.LOcation</code>
+#### reference.location ⇒ <code>ERMrest.Location</code>
 Location object that has uri of current reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
