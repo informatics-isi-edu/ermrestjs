@@ -609,7 +609,7 @@ var ERMrest = (function(module) {
          */
         set facets(json) {
             delete this._facets;
-            if (json !== null && json !== undefined) {
+            if (typeof json === 'object' && json !== null) {
                 this._facets = new ParsedFacets(json);
             }
             this._setDirty();
@@ -1071,8 +1071,35 @@ var ERMrest = (function(module) {
     });
     
     /**
-     * str might be blob or json, if it's object then it's json
-     * @param       {String} str [description]
+     * The complete structure of ermrest JSON filter is as follows:
+     * 
+     * ```
+     * <FILTERS>:  { <logical-operator>: <TERMSET> }
+     * <TERMSET>: '[' <TERM> [, <TERM>]* ']'
+     *
+     * <TERM>:     { <logical-operator>: <TERMSET> } 
+     *             or
+     *             { "source": <data-source>, <constraint(s)> }
+     * ```
+     * 
+     * But currently it only supports the following:
+     * 
+     * {
+     *  "and": [
+     *      {
+     *          "source": <data-source>,
+     *          "choices": [v, ...],
+     *          "ranges": [{"min": v1, "max": v2}, ...],
+     *          "search": [v, ...]
+     *      },
+     *      ...
+     *  ]
+     * }
+     *
+     * For detailed explanation take a look at the following link:
+     * https://github.com/informatics-isi-edu/ermrestjs/issues/447
+     *
+     * @param       {String|Object} str Can be blob or json (object).
      * @constructor
      */
     function ParsedFacets (str) {
@@ -1100,7 +1127,6 @@ var ERMrest = (function(module) {
         
         /**
          * Given a JSON return an encoded blob.
-         * TODO needs to be changed to compress the string
          *
          * @private
          * @param       {object} json JSON object
@@ -1112,7 +1138,6 @@ var ERMrest = (function(module) {
         
         /**
          * Given a blob string return the JSON object.
-         * TODO needs to be changed to compress the string
          *
          * @private
          * @param       {string} blob the encoded JSON object.
@@ -1128,19 +1153,8 @@ var ERMrest = (function(module) {
     };
     
     /**
-     * This should eventually support a more complex structure. But currently it only supports the following:
-     * {
-     *  "and": [
-     *      {
-     *          "source": <data-path>,
-     *          "choices": [v, ...],
-     *          "ranges": [{"min": v1, "max": v2}, ...],
-     *          "search": [v, ...]
-     *      },
-     *      ...
-     *  ]
-     * }
-     *
+     * For the structure of JSON, take a look at ParsedFacets documentation.
+     * 
      * NOTE: 
      * If the data-path or the strucure is not as expected, it will just ignore facets
      * (won't throw any errros)
@@ -1155,12 +1169,14 @@ var ERMrest = (function(module) {
             return v !== undefined && v !== null;
         };
         
+        // parse choices constraint
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
                 return prev + (i != 0 ? ";": "") + column + "=" + curr;
             }, "");
         };
         
+        // parse ranges constraint
         var parseRanges = function (ranges, column) {
             var res = "", hasFilter = false;
             ranges.forEach(function (range, index) {
@@ -1185,6 +1201,7 @@ var ERMrest = (function(module) {
             return res;
         };
         
+        // parse search constraint
         var parseSearch = function (search, column) {
             return search.reduce(function (prev, curr, i) {
                 return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr);
@@ -1223,7 +1240,7 @@ var ERMrest = (function(module) {
             return res.length == 0 ? null : res.join("/");
         };
         
-        // only one level
+        // parse TERM (it will not do it recursively)
         var parseAnd = function (and) {
             var res = [], i, term, col, path, constraints;
             

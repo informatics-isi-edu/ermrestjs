@@ -401,7 +401,9 @@ var ERMrest = (function(module) {
         
         /**
          * Apply filters of the given facets and return a new reference.
-         * This will remove current facet filters and apply new ones.
+         * It will remove current facet filters and apply new ones.
+         * 
+         * The returned filter will be the conjunction of all the filters in each FacetColumn.
          * 
          * @param {?ERMrest.FacetColumn[]} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
          * @return {ERMrest.Reference} A new reference with apply facet filters
@@ -4518,7 +4520,18 @@ var ERMrest = (function(module) {
         },
         
         /**
-         * Return JSON presentation of the filters. This includes the source too.
+         * Return JSON presentation of the filters.
+         * It will be in the following format:
+         *
+         * ```
+         * {
+         *    "source": <data-source>,
+         *    "choices": [v, ...],
+         *    "ranges": [{"min": v1, "max": v2}, ...],
+         *    "search": [v, ...]
+         * }
+         * ```
+         * 
          * @return {Object}
          */
         toJSON: function () {            
@@ -4599,8 +4612,10 @@ var ERMrest = (function(module) {
     
     /**
      * Represent choice filters that can be applied to facet.
-     * Extends {@link ERMrest.FacetFilter}.
+     * JSON representation of this filter:
+     * "choices": [v1, ...]
      * 
+     * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
@@ -4612,6 +4627,9 @@ var ERMrest = (function(module) {
     
     /**
      * Represent search filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "search": [v1, ...]
+     * 
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
@@ -4624,6 +4642,9 @@ var ERMrest = (function(module) {
     
     /**
      * Represent range filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "ranges": [{min: v1, max: v2}]
+     * 
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int=} min
      * @param       {String|int=} max

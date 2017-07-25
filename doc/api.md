@@ -2308,7 +2308,9 @@ Returns a uri that will properly generate the download link for a csv document
 
 #### reference.applyFacets(facetColumns) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Apply filters of the given facets and return a new reference.
-This will remove current facet filters and apply new ones.
+It will remove current facet filters and apply new ones.
+
+The returned filter will be the conjunction of all the filters in each FacetColumn.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: [<code>Reference</code>](#ERMrest.Reference) - A new reference with apply facet filters  
