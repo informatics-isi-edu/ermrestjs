@@ -300,7 +300,7 @@ var ERMrest = (function(module) {
         /**
          * Facets that should be represented to the user.
          * Heuristics:
-         *  - All the visible columns in detailed context.
+         *  - All the visible columns in compact context.
          *  - All the related entities in detailed context.
          * 
          * @return {ERMrest.FacetColumn[]} 
@@ -310,7 +310,8 @@ var ERMrest = (function(module) {
                 this._facetColumns = [];
                 
                 // this reference should be only used for getting the list,
-                var ref = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
+                var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
+                var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
                 var self = this;
                 
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
@@ -356,7 +357,7 @@ var ERMrest = (function(module) {
                 }
                 
                 // all the visible columns
-                var columns = ref.columns;
+                var columns = compactRef.columns;
                 columns.forEach(function (col) {
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
                         var fc = new FacetColumn(col);
@@ -366,7 +367,7 @@ var ERMrest = (function(module) {
                 });
                 
                 // all the realted 
-                var related = ref.related();
+                var related = detailedRef.related();
                 related.forEach(function (relRef) {
                     var col = new InboundForeignKeyPseudoColumn(self, relRef);
                     var fc = new FacetColumn(col);

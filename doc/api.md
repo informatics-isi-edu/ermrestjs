@@ -2144,7 +2144,7 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 #### reference.facetColumns ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
 Facets that should be represented to the user.
 Heuristics:
- - All the visible columns in detailed context.
+ - All the visible columns in compact context.
  - All the related entities in detailed context.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
