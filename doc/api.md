@@ -1503,6 +1503,9 @@ Constructor for ColSet, a set of Column objects.
 <a name="ERMrest.ColSet+columns"></a>
 
 #### colSet.columns : <code>Array</code>
+It won't preserve the order of given columns.
+Returns set of columns sorted by their names.
+
 **Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
 <a name="ERMrest.ColSet+toString"></a>
 
