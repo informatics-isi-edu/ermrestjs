@@ -2427,12 +2427,6 @@ var ERMrest = (function (module) {
          * @type {Array}
          */
         this.columns = columns;
-
-        // sorting the column based on their name
-        columns.sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        });
-
     }
 
     ColSet.prototype = {
