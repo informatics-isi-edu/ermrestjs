@@ -282,14 +282,14 @@ var ERMrest = (function(module) {
 
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>?<queryParams>
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * 
          * @returns {String} The full URI of the location
          */
         get uri() {
             if (this._uri === undefined) {
-                this._uri = this.compactUri + this._modifiers;
+                this._uri = this.compactUri + this._modifiers +  (this.queryParamsString ? "?" + this.queryParamsString : "");
             }
             return this._uri;
         },
@@ -309,7 +309,7 @@ var ERMrest = (function(module) {
         },
         
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
          *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          *  
          * @returns {String} Path portion of the URI
@@ -360,7 +360,7 @@ var ERMrest = (function(module) {
          * should only be used for internal usage and sending request to ermrest
          * NOTE: returns a uri that ermrest understands
          * 
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>/<queryParams>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
          * @returns {String} The full URI of the location for ermrest
          */
         get ermrestUri() {
@@ -387,6 +387,7 @@ var ERMrest = (function(module) {
         
         /**
          * should only be used for internal usage and sending request to ermrest
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
          * 
          * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
@@ -401,6 +402,7 @@ var ERMrest = (function(module) {
 
         /**
          * should only be used for internal usage and sending request to ermrest
+         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
          *
          * NOTE: returns a path that ermrest understands
          * @returns {String} Path without modifiers or queries for ermrest
@@ -592,7 +594,7 @@ var ERMrest = (function(module) {
          * @return {string}
          */
         get _modifiers() {
-            return (this.sort ? this.sort : "") + (this.paging ? this.paging : "") + (this.queryParamsString ? this.queryParamsString : "");
+            return (this.sort ? this.sort : "") + (this.paging ? this.paging : "");
         },
 
         /**
