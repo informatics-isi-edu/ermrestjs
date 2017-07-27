@@ -885,7 +885,7 @@ var ERMrest = (function(module) {
      */
     _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
-        column = typeof column !== 'string' ? "*": column;
+        column = (typeof column !== 'string') ? "*": column;
         
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount
@@ -1172,7 +1172,13 @@ var ERMrest = (function(module) {
         // parse choices constraint
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
-                return prev + (i != 0 ? ";": "") + column + "=" + curr;
+                var res = prev += (i != 0 ? ";": "");
+                if (isDefinedAndNotNull(curr)) {
+                    res += column + "=" + curr;
+                } else {
+                    res += column + "::null::";
+                }
+                return res;
             }, "");
         };
         
@@ -1204,7 +1210,7 @@ var ERMrest = (function(module) {
         // parse search constraint
         var parseSearch = function (search, column) {
             return search.reduce(function (prev, curr, i) {
-                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr);
+                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
             }, "");
         };
         

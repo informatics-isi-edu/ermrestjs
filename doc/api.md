@@ -255,7 +255,6 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
-        * [.applyFacets(facetColumns)](#ERMrest.Reference+applyFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2029,7 +2028,6 @@ Constructor for a ParsedFilter.
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
-    * [.applyFacets(facetColumns)](#ERMrest.Reference+applyFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2304,21 +2302,6 @@ Returns a uri that will properly generate the download link for a csv document
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
-<a name="ERMrest.Reference+applyFacets"></a>
-
-#### reference.applyFacets(facetColumns) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-Apply filters of the given facets and return a new reference.
-It will remove current facet filters and apply new ones.
-
-The returned filter will be the conjunction of all the filters in each FacetColumn.
-
-**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: [<code>Reference</code>](#ERMrest.Reference) - A new reference with apply facet filters  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| facetColumns | <code>Array.&lt;ERMrest.FacetColumn&gt;</code> | If the input is not defined, it will apply all the filters inside facetColumns |
-
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>

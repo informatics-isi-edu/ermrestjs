@@ -377,12 +377,14 @@ var ERMrest = (function(module) {
                     andFilters = jsonFilters[andOperator];
                 }
                 
+                var index = 0;
+                
                 // all the visible columns in compact context
                 var columns = compactRef.columns;
                 columns.forEach(function (col) {
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
-                        var fc = new FacetColumn(col);
-                        fc.filters.fromJSON(findFilter(fc.dataSource));
+                        var fc = new FacetColumn(self, col, index++);
+                        fc.setFilters(findFilter(fc.dataSource));
                         self._facetColumns.push(fc);
                     }
                 });
@@ -391,48 +393,20 @@ var ERMrest = (function(module) {
                 var related = detailedRef.related();
                 related.forEach(function (relRef) {
                     var col = new InboundForeignKeyPseudoColumn(self, relRef);
-                    var fc = new FacetColumn(col);
-                    fc.filters.fromJSON(findFilter(fc.dataSource));
+                    var fc = new FacetColumn(self, col, index++);
+                    fc.setFilters(findFilter(fc.dataSource));
                     self._facetColumns.push(fc);
                 });
             }
             return this._facetColumns;
         },
         
-        /**
-         * Apply filters of the given facets and return a new reference.
-         * It will remove current facet filters and apply new ones.
-         * 
-         * The returned filter will be the conjunction of all the filters in each FacetColumn.
-         * 
-         * @param {?ERMrest.FacetColumn[]} facetColumns If the input is not defined, it will apply all the filters inside facetColumns
-         * @return {ERMrest.Reference} A new reference with apply facet filters
-         */
-        applyFacets: function (facetColumns) {
-            // if facetColumns was not specified will use list of all the facet columns
-            facetColumns = (Array.isArray(facetColumns) ? facetColumns : this.facetColumns);
-            
-            var jsonFilters = [];
-            
-            // gather all the filters inside the facetColumns
-            facetColumns.forEach(function (fc) {
-                if (!fc.filters.isEmpty()) {
-                    jsonFilters.push(fc.filters.toJSON());
-                }
-            });
-            
+        removeAllFacetFilters: function () {
             var newReference = _referenceCopy(this);
-            
-            // make sure we will create new list 
             delete newReference._facetColumns;
             
-            // change the facets in location object
             newReference._location = this._location._clone();
-            if (jsonFilters.length > 0) {
-                newReference._location.facets = {"and": jsonFilters};
-            } else {
-                newReference._location.facets = null;
-            }
+            newReference._location.facets = null;
             
             return newReference;
         },
@@ -4377,7 +4351,7 @@ var ERMrest = (function(module) {
      * @param {ReferenceColumn=} refColumn reference column
      * @constructor
      */
-    function FacetColumn (refColumn) {
+    function FacetColumn (reference, refColumn, index) {
         verify(!refColumn.isAsset && !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
         verify(!refColumn.isForeignKey || refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
         
@@ -4388,11 +4362,14 @@ var ERMrest = (function(module) {
          */
         this.column = refColumn;
         
+        this.reference = reference;
+        
+        this.index = index;
+        
         /**
          * Filters that are applied to this facet.
-         * @type {FacetFilters}
          */
-        this.filters = new FacetFilters(this);
+        this.filters = [];
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
@@ -4440,83 +4417,6 @@ var ERMrest = (function(module) {
                 return this.column.name;
             }
             return this._source;
-        }
-    };
-
-    /**
-     * A container for list of FacetFilter(s).
-     * @param {FaceColumn[]}
-     * @constructor
-     */
-    function FacetFilters(facetColumn) {        
-        this._facetColumn = facetColumn;
-        this._filters = [];
-    }
-    
-    FacetFilters.prototype = {
-        constructor: FacetFilter,
-        
-        /**
-         * Indicator for emptiness of filters
-         * 
-         * @return {boolean} true if empty, otherwise false.
-         */
-        isEmpty: function () {
-            return this._filters.length === 0;
-        },
-        
-        /**
-         * Returns list of filters
-         * @return {FacetFilter[]} list of FacetFilter(s).
-         */
-        all: function () {
-            return this._filters;
-        },
-        
-        /**
-         * Remove all the facets in this container
-         */
-        removeAll: function() {
-            this._filters = [];
-        },
-        
-        /**
-         * Remove a filter from the given index.
-         * @param  {int} index index of element that we want to remove from list 
-         * @return {FacetFilter}  the removed filter. Will return nul if index is
-         * invalid or array is empty.
-         */
-        remove: function (index) {
-            var res = this._filters.splice(index, 1);
-            return (res !== undefined) ? res[0] : null;
-        },
-        
-        /**
-         * Add a ChoiceFacetFilter
-         * @param  {String|int} term the term for choice
-         */
-        addChoice: function (term) {
-            verify (isDefinedAndNotNull(term), "`term` is required.");
-            this._filters.push(new ChoiceFacetFilter(term));
-        },
-        
-        /**
-         * Add a RangeFacetFilter
-         * @param  {String|int=} min minimum value. Can be null or undefined.
-         * @param  {String|int=} max maximum value. Can be null or undefined.
-         */
-        addRange: function (min, max) {
-            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
-            this._filters.push(new RangeFacetFilter(min, max));
-        },
-        
-        /**
-         * Add a SearchFacetFilter
-         * @param  {String} term the term for search
-         */
-        addSearch: function (term) {
-            verify (isDefinedAndNotNull(term), "`term` is required.");
-            this._filters.push(new SearchFacetFilter(term));
         },
         
         /**
@@ -4535,9 +4435,9 @@ var ERMrest = (function(module) {
          * @return {Object}
          */
         toJSON: function () {            
-            var res = { "source": this._facetColumn.dataSource};
-            for (var i = 0, f; i < this._filters.length; i++) {
-                f = this._filters[i];
+            var res = { "source": this.dataSource};
+            for (var i = 0, f; i < this.filters.length; i++) {
+                f = this.filters[i];
                 if (!(f.facetFilterKey in res)) {
                     res[f.facetFilterKey] = [];
                 }
@@ -4551,9 +4451,9 @@ var ERMrest = (function(module) {
          * Given a JSON will create list of filters
          * @param  {Object} json JSON representation of filters
          */
-        fromJSON: function (json) {
+        setFilters: function (json) {
             var self = this;
-            self._filters = [];
+            self.filters = [];
                         
             if (!isDefinedAndNotNull(json)) {
                 return;
@@ -4562,23 +4462,129 @@ var ERMrest = (function(module) {
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    self._filters.push(new ChoiceFacetFilter(ch));
+                    self.filters.push(new ChoiceFacetFilter(ch));
                 });
             }
             
             // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
-                    self._filters.push(new RangeFacetFilter(ch.min, ch.max));
+                    self.filters.push(new RangeFacetFilter(ch.min, ch.max));
                 });
             }
             
             // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
-                    self._filters.push(new SearchFacetFilter(ch));
+                    self.filters.push(new SearchFacetFilter(ch));
                 });
             }
+        },
+        
+        /**
+         * Create a new Reference with appending a new Search filter to current FacetColumn
+         * @param  {String} term the term for search
+         * @return {ERMrest.Reference} the Reference with the new filter
+         */
+        addSearchFilter: function (term) {
+            verify (isDefinedAndNotNull(term), "`term` is required.");
+            
+            var filters = this.filters.slice();
+            filters.push(new SearchFacetFilter(term));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with appending a new choice filter to current FacetColumn
+         * @param  {String|int} term the term for choice
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        addChoiceFilter: function (term) {
+            var filters = this.filters.slice();
+            filters.push(new ChoiceFacetFilter(term));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with appending a new range filter to current FacetColumn
+         * @param  {String|int=} min minimum value. Can be null or undefined.
+         * @param  {String|int=} max maximum value. Can be null or undefined.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        addRangeFilter: function (min, max) {
+            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            
+            var filters = this.filters.slice();
+            filters.push(new RangeFacetFilter(min, max));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference by removing all the filters from current facet.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeAllFilters: function() {
+            
+            return this._applyFilters([]);
+        },
+        
+        /**
+         * Create a new Reference by removing a filter from current facet.
+         * @param  {int} index index of element that we want to remove from list 
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeFilter: function (index) {
+            var filters = this._filters.slice();
+            filters.splice(index, 1);
+            
+            return this._applyFilters(filters);
+        },
+        
+        
+        /**
+         * Given an array of {@link ERMrest.FacetFilter}, will return a new 
+         * {@link ERMrest.Reference} with the applied filters to the current FacetColumn
+         * @private
+         * @param  {ERMrest.FacetFilter[]} filters array of filters
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        _applyFilters: function (filters) {
+            
+            // create a new FacetColumn so that it doesn't reference to the current FacetColumn
+            var fc = new FacetColumn(this.reference, this.column, this.index);
+            fc.filters = filters;
+            
+            var newReference = _referenceCopy(this.reference);
+            
+            // clone the location object
+            newReference._location = this.reference._location._clone();
+            
+            // make sure they are not referencing the same thing
+            delete newReference._facetColumns;
+            newReference._facetColumns = this.reference.facetColumns.slice();
+            newReference._facetColumns[this.index] = fc;
+            
+            var jsonFilters = [];
+            
+            // gather all the filters from the facetColumns
+            // NOTE: this part can be improved so we just change one JSON element.
+            newReference._facetColumns.forEach(function (fc) {
+                if (fc.filters.length !== 0) {
+                    jsonFilters.push(fc.toJSON());
+                }
+            });
+            
+            // change the facets in location object
+            if (jsonFilters.length > 0) {
+                newReference._location.facets = {"and": jsonFilters};
+            } else {
+                newReference._location.facets = null;
+            }
+            
+            return newReference;
         }
     };
     
