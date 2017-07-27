@@ -1049,6 +1049,7 @@ var ERMrest = (function(module) {
                     // don't add a column name in if it's already there
                     // this can be the case for multi-edit
                     // and if the data is unchanged, no need to add the column name to the projections list
+                    // NOTE: This doesn't properly verify if date/timestamp/timestamptz values were changed
                     if ( (columnProjections.indexOf(colName) === -1) && (oldData[colName] != newData[colName]) ) {
                         columnProjections.push(colName);
                     }
@@ -3096,7 +3097,7 @@ var ERMrest = (function(module) {
                                 values[i].value = "<pre>"+ values[i].value + "</pre>";
                                 values[i].isHTML = true;
                             }
-                            
+
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -3466,7 +3467,7 @@ var ERMrest = (function(module) {
             }
             return {isHTML: isHTML, value: value};
         },
-        
+
         /**
          * @desc Indicates if the input should be disabled, in different contexts
          * true: input must be disabled
@@ -4124,12 +4125,12 @@ var ERMrest = (function(module) {
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
         var context = options ? options.context : undefined;
-        
+
         // in edit return the original data
         if (module._isEntryContext(context)) {
             return { isHTML: false, value: data[this._baseCol.name] };
         }
-        
+
         // if has column-display annotation, use it
         if (this._baseCol.getDisplay(context).isMarkdownPattern) {
             return this._baseCol.formatPresentation(data, options);

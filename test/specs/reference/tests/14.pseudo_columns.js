@@ -120,8 +120,8 @@ exports.execute = function (options) {
              '<p>12</p>\n',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4002&id_2=4000">4002 , 4000</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4002&id_2=4001">4002 , 4001</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
+             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
              ''
         ];
 
@@ -139,8 +139,8 @@ exports.execute = function (options) {
             '<p>12</p>\n',
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">4000 , 4001</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=5">4002 , 4000</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=8">4002 , 4001</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=2">4000 , 4002</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=4">4001 , 4002</a>',
             ''
         ];
 
@@ -153,9 +153,9 @@ exports.execute = function (options) {
             '12',
             '4000 , 4001',
             '4000:4003',
-            '4002 , 4000',
-            '4002 , 4001',
-            '' //
+            '4000 , 4002',
+            '4001 , 4002',
+            ''
         ];
 
         var entryRefExpectedLinkedValue = [
@@ -167,17 +167,17 @@ exports.execute = function (options) {
             '12',
             '4000 , 4001',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '4002 , 4000',
-            '4002 , 4001',
+            '4000 , 4002',
+            '4001 , 4002',
             ''
         ];
 
         var entryCreateRefExpectedLinkedValue = [
-            'Hank', '', '4002 , 4000', '1'
+            'Hank', '', '4000 , 4002', '1'
         ];
 
         var entryCreateRefExpectedPartialValue = [
-            '9000', '', '4002 , 4000', '1'
+            '9000', '', '4000 , 4002', '1'
         ];
 
         var tableWSlashData = [

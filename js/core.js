@@ -2406,16 +2406,14 @@ var ERMrest = (function (module) {
     function ColSet(columns) {
 
         /**
-         *
+         * It won't preserve the order of given columns.
+         * Returns set of columns sorted by their names.
+         * 
          * @type {Array}
          */
-        this.columns = columns;
-
-        // sorting the column based on their name
-        columns.sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        });
-
+        this.columns = columns.slice().sort(function(a, b) {
+           return a.name.localeCompare(b.name);
+       });
     }
 
     ColSet.prototype = {
@@ -2426,9 +2424,7 @@ var ERMrest = (function (module) {
          * @return {string} string representation of colset object
          */
         toString: function(){
-            return "(" + this.columns.slice().sort(function(a,b){
-                return module._fixedEncodeURIComponent(a.name.localeCompare(b.name));
-            }).map(function(col){
+            return "(" + this.columns.map(function(col){
                 return col.toString();
             }).join(",") + ")";
         },
