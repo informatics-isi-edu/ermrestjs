@@ -24,9 +24,9 @@ describe("for testing default values while creating an entity/entities,", functi
     it("Creating entry should throw an error if id is not passed", function(done) {
         var rows = [{"text_col": "test1", "json_col": true,"jsonb_col":true}];
         createReference.create(rows).then(function(response) {
-            done();
+            done.fail();
         }).catch(function (err) {
-            expect(err.message.substring(0,90)).toEqual('409 Conflict\nThe request conflicts with the state of the server. Input data violates model');
+            expect(err.message.substring(0,12)).toEqual('409 Conflict');
             done();
         });
     });
@@ -41,7 +41,7 @@ describe("for testing default values while creating an entity/entities,", functi
             done();
         }).catch(function (err) {
             console.log(err);
-            done();
+            done.fail();
         });
     });
     
@@ -56,7 +56,7 @@ describe("for testing default values while creating an entity/entities,", functi
             done();
         }).catch(function (err) {
             console.log(err);
-            done();
+            done.fail();
         });
     });
     
@@ -70,7 +70,7 @@ describe("for testing default values while creating an entity/entities,", functi
             done();
         }).catch(function (err) {
             console.log(err);
-            done();
+            done.fail();
         });
     });
     
@@ -84,7 +84,7 @@ describe("for testing default values while creating an entity/entities,", functi
             done();
         }).catch(function (err) {
             console.log(err);
-            done();
+            done.fail();
         });
     });
     
