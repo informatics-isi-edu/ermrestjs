@@ -1,10 +1,9 @@
 {
   "catalog": {
-    "acls": [
-      { "name": "content_write_user", "user": "write-tester" },
-      { "name": "content_read_user", "user": "write-tester" },
-      { "name": "content_read_user", "user": "read-tester" }
-    ]
+      "acls": {
+        "select": ["read-tester"],
+        "write": ["write-tester"]
+      }
   },
   "schema": {
     "name": "nondeletable_schema",
