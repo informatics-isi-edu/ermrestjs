@@ -26,7 +26,7 @@ describe("for testing default values while creating an entity/entities,", functi
         createReference.create(rows).then(function(response) {
             done();
         }).catch(function (err) {
-            expect(err.message.substring(0,90)).toEqual('409 Conflict\nThe request conflicts with the state of the server. Input data violates model');
+            expect(err.message.substring(0,64)).toEqual('409 Conflict\nThe request conflicts with the state of the server.');
             done();
         });
     });
