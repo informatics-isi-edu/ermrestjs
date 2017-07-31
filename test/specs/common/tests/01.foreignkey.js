@@ -180,7 +180,7 @@ exports.execute = function(options) {
             })
 
             describe('.constraint_names ', function() {
-                it('shoild use the explicitly defined names in schema.', function() {
+                it('should use the explicitly defined names in schema.', function() {
                     table1_schema1.foreignKeys.all().forEach(function(fk, index) {
                         // NOTE: this if statement assumes that foreignKey with annotation in table1_schema1 has defiend names.
                         if (fk.annotations.length() > 0) {
@@ -194,8 +194,8 @@ exports.execute = function(options) {
                 it('should use the value that ermrest automatically generated when it was not explicitly defined in schema.', function() {
                     // NOTE: ermrest creates a default constraint_name for fks when they are not explicitly defined.
                     expect(table2_schema1.foreignKeys.all()[0].constraint_names[0].join("|")).toBeAnyOf([
-                        'common_schema_1|table_2_schema_1_fk_1_from_table_1_schema_2_fkey1',
-                        'common_schema_1|table_2_schema_1_fk_2_from_table_1_schema_2_fkey1'
+                        'common_schema_1|table_2_schema_1_fk_1_from_table_1_schema_21',
+                        'common_schema_1|table_2_schema_1_fk_2_from_table_1_schema_21'
                     ]);
                 });
             });
@@ -211,8 +211,8 @@ exports.execute = function(options) {
 
                     // NOTE: ermrest creates a default constraint_name for fks when they are not explicitly defined.
                     expect(table2_schema1.foreignKeys.all()[0]._name).toBeAnyOf([
-                        'common_schema_1_table_2_schema_1_fk_1_from_table_1_schema_2_fkey1',
-                        'common_schema_1_table_2_schema_1_fk_2_from_table_1_schema_2_fkey1'
+                        'common_schema_1_table_2_schema_1_fk_1_from_table_1_schema_21',
+                        'common_schema_1_table_2_schema_1_fk_2_from_table_1_schema_21'
                     ]);
                 });
             })
