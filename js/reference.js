@@ -314,13 +314,13 @@ var ERMrest = (function(module) {
          * Usage:
          * ```
          *  var facets = reference.facetColumns;
-         *  reference.facetColumns[0].filters.addChoice('value');
-         *  reference.facetColumns[1].filters.addSearch('text 1');
-         *  reference.facetColumns[2].filters.addRange(1, 2);
-         *  reference.facetColumns[3].filters.removeAll();
-         *  for (var i=0, len=reference.facetColumns.length; i<len; i++) {
+         *  var newRef = reference.facetColumns[0].addChoiceFilter('value');
+         *  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+         *  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+         *  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+         *  for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
          *    var fc = reference.facetColumns[i];
-         *    console.log("Column name:", fc.column.name, "has following facets:", fc.filters.all());
+         *    console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
          *  }
          * ```
          * 
@@ -401,6 +401,10 @@ var ERMrest = (function(module) {
             return this._facetColumns;
         },
         
+        /**
+         * Remove all the fitlers from facets
+         * @return {ERMrest.reference} A reference without facet filters
+         */
         removeAllFacetFilters: function () {
             var newReference = _referenceCopy(this);
             delete newReference._facetColumns;
@@ -4449,7 +4453,18 @@ var ERMrest = (function(module) {
         },
         
         /**
-         * Given a JSON will create list of filters
+         * Given an object will create list of filters.
+         *
+         * Expected object format format:
+         * ```
+         * {
+         *    "source": <data-source>,
+         *    "choices": [v, ...],
+         *    "ranges": [{"min": v1, "max": v2}, ...],
+         *    "search": [v, ...]
+         * }
+         * ```
+         * 
          * @param  {Object} json JSON representation of filters
          */
         setFilters: function (json) {
@@ -4538,7 +4553,7 @@ var ERMrest = (function(module) {
          * @return {ERMrest.Reference} the reference with the new filter
          */
         removeFilter: function (index) {
-            var filters = this._filters.slice();
+            var filters = this.filters.slice();
             filters.splice(index, 1);
             
             return this._applyFilters(filters);
@@ -4554,7 +4569,7 @@ var ERMrest = (function(module) {
          */
         _applyFilters: function (filters) {
             
-            // create a new FacetColumn so that it doesn't reference to the current FacetColumn
+            // create a new FacetColumn so it doesn't reference to the current FacetColumn
             var fc = new FacetColumn(this.reference, this.column, this.index);
             fc.filters = filters;
             
@@ -4563,7 +4578,7 @@ var ERMrest = (function(module) {
             // clone the location object
             newReference._location = this.reference._location._clone();
             
-            // make sure they are not referencing the same thing
+            // make sure reference.facetColumns and newRef.facetColumns are not referencing the same thing
             delete newReference._facetColumns;
             newReference._facetColumns = this.reference.facetColumns.slice();
             newReference._facetColumns[this.index] = fc;
@@ -4614,7 +4629,7 @@ var ERMrest = (function(module) {
          */
         toJSON: function () {
             return this.toString();
-        },
+        }
     };
     
     /**

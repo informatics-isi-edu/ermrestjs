@@ -253,6 +253,7 @@ exports.execute = function (options) {
         var queryParamsString = "subset=SOMESUBSET&limit=2";
         var path =  schemaName + ":" + tableName;
         var uriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" +  path;
+        var ermrestUriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" +  "M:=" + path;
         var uriWithQuery =  uriWithoutQuery + "?" + queryParamsString;
         var location;
         
@@ -264,9 +265,9 @@ exports.execute = function (options) {
             expect(location.uri).toBe(uriWithQuery, "uri mismatch.");
             expect(location.path).toBe(path, "path mismatch.");
             expect(location.compactPath).toBe(path, "compactPath mismatch.");
-            expect(location.ermrestUri).toBe(uriWithoutQuery, "ermrestUri mismatch.");
-            expect(location.ermrestPath).toBe(path, "ermrestPath mismatch.");
-            expect(location.ermrestCompactPath).toBe(path, "ermrestCompactPath mismatch.");
+            expect(location.ermrestUri).toBe(ermrestUriWithoutQuery, "ermrestUri mismatch.");
+            expect(location.ermrestPath).toBe("M:=" + path, "ermrestPath mismatch.");
+            expect(location.ermrestCompactPath).toBe("M:=" + path, "ermrestCompactPath mismatch.");
         });
         
         it("parser should reutrn the correct queryParamsString.", function () {

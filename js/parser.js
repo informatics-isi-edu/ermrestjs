@@ -1149,6 +1149,7 @@ var ERMrest = (function(module) {
             try {
                 return JSON.parse(module._LZString.decompressFromEncodedURIComponent(blob));
             } catch (exception) {
+                console.log(exception);
                 throw new module.MalformedURIError("Given encoded string for facets is not valid.");
             }
         }    

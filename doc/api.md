@@ -255,6 +255,7 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+        * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2031,6 +2032,7 @@ Constructor for a ParsedFilter.
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+    * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2151,13 +2153,13 @@ Heuristics:
 Usage:
 ```
  var facets = reference.facetColumns;
- reference.facetColumns[0].filters.addChoice('value');
- reference.facetColumns[1].filters.addSearch('text 1');
- reference.facetColumns[2].filters.addRange(1, 2);
- reference.facetColumns[3].filters.removeAll();
- for (var i=0, len=reference.facetColumns.length; i<len; i++) {
+ var newRef = reference.facetColumns[0].addChoiceFilter('value');
+ var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+ var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+ var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+ for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
    var fc = reference.facetColumns[i];
-   console.log("Column name:", fc.column.name, "has following facets:", fc.filters.all());
+   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
  }
 ```
 
@@ -2305,6 +2307,13 @@ Returns a uri that will properly generate the download link for a csv document
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
+<a name="ERMrest.Reference+removeAllFacetFilters"></a>
+
+#### reference.removeAllFacetFilters() ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers from facets
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>
