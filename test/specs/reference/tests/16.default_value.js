@@ -21,7 +21,7 @@ describe("for testing default values while creating an entity/entities,", functi
         });
     });
     
-    it("Creating entry should throw an error if id is not passed", function(done) {
+    xit("Creating entry should throw an error if id is not passed", function(done) {
         var rows = [{"text_col": "test1", "json_col": true,"jsonb_col":true}];
         createReference.create(rows).then(function(response) {
             done.fail();
@@ -29,10 +29,10 @@ describe("for testing default values while creating an entity/entities,", functi
             expect(err.message.substring(0,12)).toEqual('409 Conflict');
             done();
         });
-    });
+    }).pend("No Special case for JSON column, as they are supposed to work just like other columns");
     
     
-    it("JSON and JSONB column should abe able to store FALSE value", function(done) {
+    xit("JSON and JSONB column should abe able to store FALSE value", function(done) {
         var rows = [{"id": 10, "text_col": "test1", "json_col": false,"jsonb_col":false}];
         createReference.create(rows).then(function(response) {
             var page = response.successful;
@@ -58,9 +58,9 @@ describe("for testing default values while creating an entity/entities,", functi
             console.log(err);
             done.fail();
         });
-    });
+    }).pend("No Special case for JSON column, as they are supposed to work just like other columns");
     
-    it("JSON column should be able to store default value if not passed", function(done) {
+    xit("JSON column should be able to store default value if not passed", function(done) {
         var rows = [{"id": 12, "text_col": "test1","jsonb_col":null}];
 
         createReference.create(rows).then(function(response) {
@@ -72,9 +72,9 @@ describe("for testing default values while creating an entity/entities,", functi
             console.log(err);
             done.fail();
         });
-    });
+    }).pend("No Special case for JSON column, as they are supposed to work just like other columns");
     
-    it("JSONB column should be able to store default value if not passed", function(done) {
+    xit("JSONB column should be able to store default value if not passed", function(done) {
         var rows = [{"id": 13, "text_col": "test1"}];
 
         createReference.create(rows).then(function(response) {
@@ -86,7 +86,7 @@ describe("for testing default values while creating an entity/entities,", functi
             console.log(err);
             done.fail();
         });
-    });
+    }).pend("No Special case for JSON column, as they are supposed to work just like other columns");
     
     
     
