@@ -551,24 +551,11 @@ var ERMrest = (function(module) {
                             notSet = false;
                             break;
                         }
-                    } 
+                    }
 
                     if (notSet) defaults.push(columnName);
                 });
-                
-                /**
-                 * Since we decided to have null instead of balnk string ("")
-                 * Whenever we have a json column we do not set it to default, instead
-                 * We use the null value, which is a valid JSON value
-                 * We get this null value from chaise when ever any field is left blank
-                **/
-                var jsonColumnName=[];
-                for( var k= 0; k< self.table.columns.all().length; k++){
-                   if(self.table.columns.all()[k].type.name.indexOf('json') !== -1){
-                       jsonColumnName.push(self.table.columns.all()[k].name);
-                   }
-                }
-                defaults = columnDiff(defaults, jsonColumnName);
+
                 return defaults;
             }
 
