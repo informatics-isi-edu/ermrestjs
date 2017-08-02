@@ -69,16 +69,24 @@ var ERMrest = (function(module) {
         try {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
-
-            var location = module.parse(uri);
-
-            var server = module.ermrestFactory.getServer(location.service, params);
-            server.catalogs.get(location.catalog).then(function (catalog) {
+            var location;
+            
+            // make sure all the dependencies are loaded
+            module._onload().then(function () {
+                location = module.parse(uri);
+                var server = module.ermrestFactory.getServer(location.service, params);
+                
+                // find the catalog
+                return server.catalogs.get(location.catalog);
+            }).then(function (catalog) {
+                
+                //create Reference
                 defer.resolve(new Reference(location, catalog));
-
             }, function (error) {
-                defer.reject(error);
+                
+                throw error;
             }).catch(function(exception) {
+                
                 defer.reject(exception);
             });
 
@@ -134,6 +142,15 @@ var ERMrest = (function(module) {
         if (! test) {
             throw new module.InvalidInputError(message);
         }
+    }
+    
+    /**
+     * Returns true if given value is defined and not null.
+     * @param  {object}  v the object that we want to test
+     * @return {Boolean}  true if defined and not null, otherwise false.
+     */
+    function isDefinedAndNotNull(v) {
+        return v !== null && v !== undefined;
     }
 
     /**
@@ -236,6 +253,8 @@ var ERMrest = (function(module) {
 
         /**
          * The string form of the `URI` for this reference.
+         * NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
+         * Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
          * @type {string}
          */
         get uri() {
@@ -277,7 +296,7 @@ var ERMrest = (function(module) {
          *   console.log("Column name:", col.name, "has display name:", col.displayname);
          * }
          * ```
-         * @type {ERMrest.Column[]}
+         * @type {ERMrest.ReferenceColumn[]}
          */
         get columns() {
             if (this._referenceColumns === undefined) {
@@ -285,7 +304,121 @@ var ERMrest = (function(module) {
             }
             return this._referenceColumns;
         },
-
+        
+        /**
+         * Facets that should be represented to the user.
+         * Heuristics:
+         *  - All the visible columns in compact context.
+         *  - All the related entities in detailed context.
+         *
+         * Usage:
+         * ```
+         *  var facets = reference.facetColumns;
+         *  var newRef = reference.facetColumns[0].addChoiceFilter('value');
+         *  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+         *  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+         *  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+         *  for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+         *    var fc = reference.facetColumns[i];
+         *    console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+         *  }
+         * ```
+         * 
+         * @return {ERMrest.FacetColumn[]} 
+         */
+        get facetColumns() {
+            if (this._facetColumns === undefined) {
+                this._facetColumns = [];
+                
+                // this reference should be only used for getting the list,
+                var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
+                var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
+                var self = this;
+                
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                var andOperator = module._FacetsLogicalOperators.AND;
+                var andFilters = [];
+                
+                // check if both sources are the same.
+                var sameSource = function (source, filterSource) {
+                    if (!Array.isArray(source)) {
+                        return source === filterSource;
+                    }
+                    
+                    if (source.length !== filterSource.length) {
+                        return false;
+                    }
+                    
+                    for (var i = 0; i < source.length; i++) {
+                        if (typeof source[i] === "string" && source[i] !== filterSource[i]) {
+                            return false;
+                        }
+                        
+                        if (source[i].schema !== filterSource[i].schema || source[i].constraint != filterSource[i].constraint) {
+                            return false;
+                        }
+                        
+                    }
+                    return true;
+                };
+                
+                // find already applied filter to the face column.
+                var findFilter = function (source) {
+                    for (var i = 0; i < andFilters.length; i++) {
+                        if (sameSource(source, andFilters[i].source)) {
+                            return andFilters[i];
+                        }
+                    }
+                    return null;
+                };
+                
+                // extract the filters
+                if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
+                    andFilters = jsonFilters[andOperator];
+                }
+                
+                var index = 0;
+                
+                // all the visible columns in compact context
+                var columns = compactRef.columns;
+                columns.forEach(function (col) {
+                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
+                        var fc = new FacetColumn(self, col, index++);
+                        fc.setFilters(findFilter(fc.dataSource));
+                        self._facetColumns.push(fc);
+                    }
+                });
+                
+                // all the realted in detailed context
+                var related = detailedRef.related();
+                related.forEach(function (relRef) {
+                    var col = new InboundForeignKeyPseudoColumn(self, relRef);
+                    var fc = new FacetColumn(self, col, index++);
+                    fc.setFilters(findFilter(fc.dataSource));
+                    self._facetColumns.push(fc);
+                });
+            }
+            return this._facetColumns;
+        },
+        
+        /**
+         * Remove all the fitlers from facets
+         * @return {ERMrest.reference} A reference without facet filters
+         */
+        removeAllFacetFilters: function () {
+            var newReference = _referenceCopy(this);
+            delete newReference._facetColumns;
+            
+            newReference._location = this._location._clone();
+            newReference._location.facets = null;
+            
+            return newReference;
+        },
+        
+        /**
+         * Location object that has uri of current reference
+         * @return {ERMrest.Location}
+         */
         get location() {
             return this._location;
         },
@@ -724,35 +857,16 @@ var ERMrest = (function(module) {
                  *
                  * NOTE:
                  * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   1. There is no alias in url (more precisely `M`, `F1`, `F2`, `F3`, ...)
-                 *   2. There is no column with `M` and `F#` (where # is a positive integer) name.
-                 *   3. Filter comes before the link syntax.
-                 *   4. There is no trailing `/` in uri (as it will break the ermrest too).
+                 *   0. 
+                 *   1. There is no alias in url (more precisely `F1`, `F2`, `F3`, ...)
+                 *   2. Filter comes before the link syntax.
+                 *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
                 if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.ermrestCompactPath,
-                        tableIndex = 0,
                         fkList = "",
                         sortColumn,
-                        addedCols,
-                        linking,
-                        parts;
-
-                    // add M alias to current table
-                    if (this._location.ermrestSearchFilter) { // remove search filter
-                        compactPath = compactPath.replace("/" + this._location.ermrestSearchFilter, "");
-                    }
-                    parts = compactPath.split('/');
-                    linking = parts[parts.length-1].match(/(\(.*\)=\(.*:.*:.*\))/);
-                    if (linking && linking[1]) { // the same logic as parser for finding the link syntax
-                        tableIndex = compactPath.lastIndexOf("/") + 1;
-                    }
-                    compactPath = compactPath.substring(0, tableIndex) + "M:=" + compactPath.substring(tableIndex);
-
-                    // add ermrest understandable search filter back
-                    if (this._location.ermrestSearchFilter) {
-                        compactPath = compactPath + "/" + this._location.ermrestSearchFilter;
-                    }
+                        addedCols;
 
                     // create the uri with attributegroup and alias
                     uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
@@ -1982,6 +2096,7 @@ var ERMrest = (function(module) {
             delete newRef._context; // NOTE: related reference is not contextualized
             delete newRef._related;
             delete newRef._referenceColumns;
+            delete newRef._facetColumns;
             delete newRef.derivedAssociationReference;
             delete newRef._display;
 
@@ -4229,6 +4344,375 @@ var ERMrest = (function(module) {
             throw new Error("can not use this type of column in entry mode.");
         }
     });
+        
+    /**
+     * Represent facet columns that are available.
+     * NOTE:
+     * Based on facets JSON structure we can have joins that result in facets
+     * on columns that are not part of reference column.
+     *
+     * If the ReferenceColumn is not provided, then the FacetColumn is for reference
+     *
+     * @param {ReferenceColumn=} refColumn reference column
+     * @constructor
+     */
+    function FacetColumn (reference, refColumn, index) {
+        verify(!refColumn.isAsset && !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
+        verify(!refColumn.isForeignKey || refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
+        
+        /**
+         * The {@link ERMrest.ReferenceColumn} that this facet belongs to. If it is
+         * undefined, that means this facet belongs to the table and not column.
+         * @type {ERMrest.ReferenceColumn}
+         */
+        this.column = refColumn;
+        
+        this.reference = reference;
+        
+        this.index = index;
+        
+        /**
+         * Filters that are applied to this facet.
+         */
+        this.filters = [];
+    }
+    FacetColumn.prototype = {
+        constructor: FacetColumn,
+        
+        /**
+         * data source of this facet. Can be used to find filters for this facet
+         * @return {String} [description]
+         */
+        get dataSource () {
+            if (this._source === undefined) {
+                if (!isDefinedAndNotNull(this.column)) {
+                    return "*";
+                }
+                
+                if (this.column.isForeignKey) {
+                    var constraint = this.column.foreignKey.constraint_names[0];
+                    return [
+                        {"schema": constraint[0], "constraint": constraint[1]},
+                        this.column.foreignKey.key.colset.columns[0].name
+                    ];
+                }
+                
+                if (this.column.isInboundForeignKey) {
+                    var res = [];
+                    var origFkR = this.column.foreignKey;
+                    var association = this.column.reference.derivedAssociationReference;
+                    
+                    res.push({
+                        "schema": origFkR.constraint_names[0][0], 
+                        "constraint": origFkR.constraint_names[0][1]
+                    });
+                    
+                    if (association) {
+                        res.push({
+                            "schema": association._secondFKR.constraint_names[0][0], 
+                            "constraint": association._secondFKR.constraint_names[0][1]
+                        });
+                        res.push(association._secondFKR.key.colset.columns[0].name);
+                    } else {
+                        res.push(origFkR.colset.columns[0].name);
+                    }
+                    return res;
+                }
+                
+                return this.column.name;
+            }
+            return this._source;
+        },
+        
+        /**
+         * Return JSON presentation of the filters.
+         * It will be in the following format:
+         *
+         * ```
+         * {
+         *    "source": <data-source>,
+         *    "choices": [v, ...],
+         *    "ranges": [{"min": v1, "max": v2}, ...],
+         *    "search": [v, ...]
+         * }
+         * ```
+         * 
+         * @return {Object}
+         */
+        toJSON: function () {            
+            var res = { "source": this.dataSource};
+            for (var i = 0, f; i < this.filters.length; i++) {
+                f = this.filters[i];
+                if (!(f.facetFilterKey in res)) {
+                    res[f.facetFilterKey] = [];
+                }
+                res[f.facetFilterKey].push(f.toJSON());
+            }
+            
+            return res;
+        },
+        
+        /**
+         * Given an object will create list of filters.
+         *
+         * Expected object format format:
+         * ```
+         * {
+         *    "source": <data-source>,
+         *    "choices": [v, ...],
+         *    "ranges": [{"min": v1, "max": v2}, ...],
+         *    "search": [v, ...]
+         * }
+         * ```
+         * 
+         * @param  {Object} json JSON representation of filters
+         */
+        setFilters: function (json) {
+            var self = this;
+            self.filters = [];
+                        
+            if (!isDefinedAndNotNull(json)) {
+                return;
+            }
+
+            // create choice filters
+            if (Array.isArray(json.choices)) {
+                json.choices.forEach(function (ch) {
+                    self.filters.push(new ChoiceFacetFilter(ch));
+                });
+            }
+            
+            // create range filters
+            if (Array.isArray(json.ranges)) {
+                json.ranges.forEach(function (ch) {
+                    self.filters.push(new RangeFacetFilter(ch.min, ch.max));
+                });
+            }
+            
+            // create search filters
+            if (Array.isArray(json.search)) {
+                json.search.forEach(function (ch) {
+                    self.filters.push(new SearchFacetFilter(ch));
+                });
+            }
+        },
+        
+        /**
+         * Create a new Reference with appending a new Search filter to current FacetColumn
+         * @param  {String} term the term for search
+         * @return {ERMrest.Reference} the Reference with the new filter
+         */
+        addSearchFilter: function (term) {
+            verify (isDefinedAndNotNull(term), "`term` is required.");
+            
+            var filters = this.filters.slice();
+            filters.push(new SearchFacetFilter(term));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with appending a new choice filter to current FacetColumn
+         * @param  {String|int} term the term for choice
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        addChoiceFilter: function (term) {
+            var filters = this.filters.slice();
+            filters.push(new ChoiceFacetFilter(term));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with appending a new range filter to current FacetColumn
+         * @param  {String|int=} min minimum value. Can be null or undefined.
+         * @param  {String|int=} max maximum value. Can be null or undefined.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        addRangeFilter: function (min, max) {
+            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            
+            var filters = this.filters.slice();
+            filters.push(new RangeFacetFilter(min, max));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference by removing all the filters from current facet.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeAllFilters: function() {
+            
+            return this._applyFilters([]);
+        },
+        
+        /**
+         * Create a new Reference by removing a filter from current facet.
+         * @param  {int} index index of element that we want to remove from list 
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeFilter: function (index) {
+            var filters = this.filters.slice();
+            filters.splice(index, 1);
+            
+            return this._applyFilters(filters);
+        },
+        
+        
+        /**
+         * Given an array of {@link ERMrest.FacetFilter}, will return a new 
+         * {@link ERMrest.Reference} with the applied filters to the current FacetColumn
+         * @private
+         * @param  {ERMrest.FacetFilter[]} filters array of filters
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        _applyFilters: function (filters) {
+            
+            // create a new FacetColumn so it doesn't reference to the current FacetColumn
+            var fc = new FacetColumn(this.reference, this.column, this.index);
+            fc.filters = filters;
+            
+            var newReference = _referenceCopy(this.reference);
+            
+            // clone the location object
+            newReference._location = this.reference._location._clone();
+            
+            // make sure reference.facetColumns and newRef.facetColumns are not referencing the same thing
+            delete newReference._facetColumns;
+            newReference._facetColumns = this.reference.facetColumns.slice();
+            newReference._facetColumns[this.index] = fc;
+            
+            var jsonFilters = [];
+            
+            // gather all the filters from the facetColumns
+            // NOTE: this part can be improved so we just change one JSON element.
+            newReference._facetColumns.forEach(function (fc) {
+                if (fc.filters.length !== 0) {
+                    jsonFilters.push(fc.toJSON());
+                }
+            });
+            
+            // change the facets in location object
+            if (jsonFilters.length > 0) {
+                newReference._location.facets = {"and": jsonFilters};
+            } else {
+                newReference._location.facets = null;
+            }
+            
+            return newReference;
+        }
+    };
+    
+    /**
+     * Represent filters that can be applied to facet
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
+    function FacetFilter(term) {
+        this.term = term;
+    }
+    FacetFilter.prototype = {
+        constructor: FacetFilter,
+        
+        /**
+         * String representation of filter
+         * @return {string}
+         */
+        toString: function () {
+            return this.term;
+        },
+        
+        /**
+         * JSON representation of filter
+         * @return {string}
+         */
+        toJSON: function () {
+            return this.toString();
+        }
+    };
+    
+    /**
+     * Represent choice filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "choices": [v1, ...]
+     * 
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
+    function ChoiceFacetFilter(term) {
+        ChoiceFacetFilter.superClass.call(this, term);
+        this.facetFilterKey = "choices";
+    }
+    module._extends(ChoiceFacetFilter, FacetFilter);
+    
+    /**
+     * Represent search filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "search": [v1, ...]
+     * 
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
+    function SearchFacetFilter(term) {
+        ChoiceFacetFilter.superClass.call(this, term);
+        this.facetFilterKey = "search";
+    }
+    module._extends(SearchFacetFilter, FacetFilter);
+    
+    /**
+     * Represent range filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "ranges": [{min: v1, max: v2}]
+     * 
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int=} min
+     * @param       {String|int=} max
+     * @constructor
+     */
+    function RangeFacetFilter(min, max) {
+        this.min = min;
+        this.max = max;
+        this.facetFilterKey = "ranges";
+    }
+    module._extends(RangeFacetFilter, FacetFilter);
+    
+    /**
+     * String representation of range filter. With the format of:
+     *
+     * - both min and max defined: `{{min}}-{{max}}`
+     * - only min defined: `> {{min}}`
+     * - only max defined: `{{max}} <`
+     * 
+     * @return {string}
+     */
+    RangeFacetFilter.prototype.toString = function () {
+        // assumption: at least one of them is defined
+        if (!isDefinedAndNotNull(this.max)) {
+            return "> " + this.min;
+        }
+        if (!isDefinedAndNotNull(this.min)) {
+            return this.max + " <";
+        }
+        return this.min + " - " + this.max;
+    };
+    
+    /**
+     * JSON representation of range filter.
+     * @return {Object}
+     */
+    RangeFacetFilter.prototype.toJSON = function () {
+        var res = {};
+        if (isDefinedAndNotNull(this.max)) {
+            res.max = this.max;
+        }
+        if (isDefinedAndNotNull(this.min)) {
+            res.min = this.min;
+        }
+        return res;
+    };
 
     /**
      * Constructs an Aggregate Funciton object
@@ -4308,6 +4792,7 @@ var ERMrest = (function(module) {
         }
     };
 
+    
     return module;
 
 }(ERMrest || {}));

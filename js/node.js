@@ -41,6 +41,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
+    
+    ERMrest._LZString = require('lz-string');
 
     _scriptsLoaded = true;
 
@@ -96,7 +98,10 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Call this function to load all dependent scripts in order
      */
     loadScripts([
-
+        
+        // lz-string script
+        ermrestJsPath + "vendor/lz-string.min.js",
+        
         // Moment.js script
         ermrestJsPath + "vendor/moment.min.js",
         // Mustache script
@@ -131,6 +136,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
             // set custom markdown tags using markdown-it-container plugin
             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
+            
+            ERMrest._LZString = window.LZString;
 
             _scriptsLoaded = true;
 

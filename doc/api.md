@@ -242,7 +242,9 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+        * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -253,6 +255,7 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+        * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2016,7 +2019,9 @@ Constructor for a ParsedFilter.
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+    * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+    * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
@@ -2027,6 +2032,7 @@ Constructor for a ParsedFilter.
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+    * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2094,6 +2100,8 @@ displayname.value has the value
 
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
+NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
+Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+session"></a>
@@ -2115,7 +2123,7 @@ The table object for this reference
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+columns"></a>
 
-#### reference.columns : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+#### reference.columns : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 The array of column definitions which represent the model of
 the resources accessible via this reference.
 
@@ -2132,6 +2140,34 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
   console.log("Column name:", col.name, "has display name:", col.displayname);
 }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+facetColumns"></a>
+
+#### reference.facetColumns ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+Facets that should be represented to the user.
+Heuristics:
+ - All the visible columns in compact context.
+ - All the related entities in detailed context.
+
+Usage:
+```
+ var facets = reference.facetColumns;
+ var newRef = reference.facetColumns[0].addChoiceFilter('value');
+ var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+ var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+ var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+ for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+   var fc = reference.facetColumns[i];
+   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+ }
+```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+location"></a>
+
+#### reference.location ⇒ <code>ERMrest.Location</code>
+Location object that has uri of current reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+isUnique"></a>
@@ -2271,6 +2307,13 @@ Returns a uri that will properly generate the download link for a csv document
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
+<a name="ERMrest.Reference+removeAllFacetFilters"></a>
+
+#### reference.removeAllFacetFilters() ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers from facets
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data) ⇒ <code>Promise</code>

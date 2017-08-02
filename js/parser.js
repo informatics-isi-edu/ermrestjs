@@ -46,25 +46,10 @@ var ERMrest = (function(module) {
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>[/filter][/join][@sort(col...)][@before(...)/@after(...)][?]
-     *
-     * NOTE ABOUT JOIN AND FILTER:
-     * the parser only parses the projection table (projectionTableName) and the last join (tableName)
-     * all the other join in between are ignored. Therefore, IF FILTER IS USED, uri must be this format
-     *       /s:t/c=123/(c)=(s:t2:c2)    ==> one level linking, filter is converted from t to t2
-     *       where filter is the key used in join, then filter can be converted from t to t2
-     *       Otherwise, filter's non key columns are not converted
-     *
-     *  V    /s:t/(c)=(s:t2:c2)                               ==> ._projectionTableName = t, ._tableName = t2
-     *  V    /s:t/(c)=(s:t2:c2)/(c2)=(s:t3:c3)                ==> ._projectionTableName = t, ._tableName = t3, first join ignored
-     *  V    /s:t/c=123/(c)=(s:t2:c2)                         ==> ._projectionTableName = t, ._tableName = t2
-     *                                                            ._filter is converted for t2 (c2=123), but uri does not change
-     *  X    /s:t/c=123/(c)=(s:t2:c2)/filter/(c2)=(s:t3:c3)   ==> can't handle this right now, result will be wrong, cannot convert nested join and filters
-     *  *    /s:t/ab="xyz"/(c)=(s:t2:c2)                      ==> unable to convert filter from t1 to t2, should use the key used in linking
-     *                                                            this does not affect read(), since filter is only used when contextualizing with
-     *                                                            alternative table. In that case, we do not expect this type of uri.
-     *  *    /s:t/(c)=(s:t2:c2)/c2=123                        ==> Not handled yet TODO
-     *
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/join(s)][/facets][/search][@sort(col...)][@before(...)/@after(...)][?]
+     * 
+     * path =  <filters(s)>/<join(s)>/<facets>/<search>
+     * 
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
      * catalog: the catalog identifier for one dataset such as 42.
@@ -83,6 +68,10 @@ var ERMrest = (function(module) {
         this._uri = uri;
 
         var parts;
+        
+        var searchRegExp = /\*::search::[^&]+/g;
+        var joinRegExp = /\((.*)\)=\((.*:.*:.*)\)/;
+        var facetsRegExp = /\*::facets::(.+)/;
 
         // extract the query params
         if (uri.indexOf("?") !== -1) {
@@ -153,7 +142,7 @@ var ERMrest = (function(module) {
         
         //<search>
         // search should be the last part of compact path
-        var match = parts[index].match(/\*::search::[^&]+/g);
+        var match = parts[index].match(searchRegExp);
         var that = this;
         if (match) { // this is a search filter
             
@@ -172,6 +161,12 @@ var ERMrest = (function(module) {
 
             index -= 1;
         }
+        
+        match = parts[index].match(facetsRegExp);
+        if (match) { // this is the facets blob
+            this._facets = new ParsedFacets(match[1]);
+            index -= 1;
+        }
 
         
         // <join(s)>
@@ -179,7 +174,7 @@ var ERMrest = (function(module) {
         // parts[1] to parts[index] might be joins
         var linking;
         for (var ji = 1; ji <= index; ji++) {
-            linking = parts[ji].match(/\((.*)\)=\((.*:.*:.*)\)/);
+            linking = parts[ji].match(joinRegExp);
             if (!linking) continue;
             this._joins.push(_createJoin(linking));
         }
@@ -204,10 +199,13 @@ var ERMrest = (function(module) {
         // modify the columns to the linked table
         this._filtersString = '';
         if (parts[1]) {
-            linking = parts[1].match(/\((.*)\)=\((.*:.*:.*)\)/);
-            var isSearch = parts[1].match(/\*::search::[^&]+/g);
+            // TODO should refactor these checks into one match statement
+            linking = parts[1].match(searchRegExp);
+            var isSearch = parts[1].match(joinRegExp);
+            var isFacets = parts[1].match(facetsRegExp);
+            
             // parts[1] could be linking or search
-            if (!linking && !isSearch) {
+            if (!linking && !isSearch && !isFacets) {
                 this._filtersString = parts[1];
                 
                 // split by ';' and '&'
@@ -346,6 +344,10 @@ var ERMrest = (function(module) {
                     }, "");
                 }
                 
+                if (this.facets) {
+                    uri += "/*::facets::" + this.facets.encoded;
+                }
+                
                 if (this.searchFilter) {
                     uri += "/" + this.searchFilter;
                 }
@@ -404,12 +406,23 @@ var ERMrest = (function(module) {
          * should only be used for internal usage and sending request to ermrest
          * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
          *
-         * NOTE: returns a path that ermrest understands
+         * NOTE: 
+         *  1. returns a path that ermrest understands
+         *  2. Adds `M` alias to the last table.
          * @returns {String} Path without modifiers or queries for ermrest
          */
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
+                var tableAlias = "M";
+                var joinsLength = this.joins.length;
+                
                 var uri = "";
+                
+                // add tableAlias
+                if (joinsLength == 0) {
+                    uri += tableAlias + ":=";
+                }
+
                 if (this.projectionSchemaName) {
                     uri += this.projectionSchemaName + ":";
                 }
@@ -419,10 +432,14 @@ var ERMrest = (function(module) {
                     uri += "/" + this.filtersString;
                 }
                 
-                if (this.joins.length > 0) {
+                if (joinsLength > 0) {
                     uri += "/" + this.joins.reduce(function (prev, join, i) {
-                        return prev + (i > 0 ? "/" : "") + join.str;
+                        return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? tableAlias + ":=" : "") + join.str;
                     }, "");
+                }
+                
+                if (this.facets) {
+                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, tableAlias, this.tableName, this.catalog);
                 }
 
                 if (this.ermrestSearchFilter) {
@@ -507,7 +524,6 @@ var ERMrest = (function(module) {
             return this._tableName;
         },
 
-
         /**
          * filter is converted to the last join table (if uri has join)
          * @returns {ParsedFilter} undefined if there is no filter
@@ -587,6 +603,26 @@ var ERMrest = (function(module) {
                 return this._joins[joinLen-1];
             }
             return null;
+        },
+        
+        /**
+         * set the facets.decoded to the given JSON. will populate the .encoded too.
+         * @param  {object} json the json object of facets
+         */
+        set facets(json) {
+            delete this._facets;
+            if (typeof json === 'object' && json !== null) {
+                this._facets = new ParsedFacets(json);
+            }
+            this._setDirty();
+        },
+        
+        /**
+         * facets object. It has .encoded and .decoded apis.
+         * @return {ParsedFacets} facets object
+         */
+        get facets() {
+            return this._facets;
         },
         
         /**
@@ -845,11 +881,13 @@ var ERMrest = (function(module) {
     /**
      * Given a term will return the filter string that ermrest understands
      * @param  {string} term Search term
+     * @param {string=} column the column that search is based on (if undefined, search on table).
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term) {
+    _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
+        column = (typeof column !== 'string') ? "*": column;
         
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount
@@ -881,7 +919,7 @@ var ERMrest = (function(module) {
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + "*::ciregexp::" + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + "::ciregexp::" + module._fixedEncodeURIComponent(exp);
             });
         }
         
@@ -1032,6 +1070,250 @@ var ERMrest = (function(module) {
         DISJUNCTION: "Disjunction",
         UNARYPREDICATE: "UnaryPredicate",
         NEGATION: "Negation"
+    });
+    
+    /**
+     * The complete structure of ermrest JSON filter is as follows:
+     * 
+     * ```
+     * <FILTERS>:  { <logical-operator>: <TERMSET> }
+     * <TERMSET>: '[' <TERM> [, <TERM>]* ']'
+     *
+     * <TERM>:     { <logical-operator>: <TERMSET> } 
+     *             or
+     *             { "source": <data-source>, <constraint(s)> }
+     * ```
+     * 
+     * But currently it only supports the following:
+     * 
+     * {
+     *  "and": [
+     *      {
+     *          "source": <data-source>,
+     *          "choices": [v, ...],
+     *          "ranges": [{"min": v1, "max": v2}, ...],
+     *          "search": [v, ...]
+     *      },
+     *      ...
+     *  ]
+     * }
+     *
+     * For detailed explanation take a look at the following link:
+     * https://github.com/informatics-isi-edu/ermrestjs/issues/447
+     *
+     * @param       {String|Object} str Can be blob or json (object).
+     * @constructor
+     */
+    function ParsedFacets (str) {
+        
+        if (typeof str === 'object') {
+            /**
+             * encode JSON object that represents facets
+             * @type {object}
+             */
+            this.decoded = str;
+            
+            /**
+             * JSON object that represents facets
+             * @type {string}
+             */
+            this.encoded = this._encodeJSON(str);
+        } else {
+            this.encoded = str;
+            this.decoded = this._decodeJSON(str);
+        }
+    }
+    
+    ParsedFacets.prototype = {
+        constructor: ParsedFacets,
+        
+        /**
+         * Given a JSON return an encoded blob.
+         *
+         * @private
+         * @param       {object} json JSON object
+         * @return      {string} string blob
+         */
+        _encodeJSON: function (obj) {
+            return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
+        },
+        
+        /**
+         * Given a blob string return the JSON object.
+         *
+         * @private
+         * @param       {string} blob the encoded JSON object.
+         * @return      {object} decoded JSON object.
+         */
+        _decodeJSON: function (blob) {
+            try {
+                return JSON.parse(module._LZString.decompressFromEncodedURIComponent(blob));
+            } catch (exception) {
+                console.log(exception);
+                throw new module.MalformedURIError("Given encoded string for facets is not valid.");
+            }
+        }    
+    };
+    
+    /**
+     * For the structure of JSON, take a look at ParsedFacets documentation.
+     * 
+     * NOTE: 
+     * If the data-path or the strucure is not as expected, it will just ignore facets
+     * (won't throw any errros)
+     * 
+     * @param       {object} json  JSON representation of filters
+     * @param       {string} alias the table alias
+     * @constructor
+     * @return      {string} A string representation of filters that is understanable by ermrest
+     */
+    _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
+        var isDefinedAndNotNull = function (v) {
+            return v !== undefined && v !== null;
+        };
+        
+        // parse choices constraint
+        var parseChoices = function (choices, column) {
+            return choices.reduce(function (prev, curr, i) {
+                var res = prev += (i != 0 ? ";": "");
+                if (isDefinedAndNotNull(curr)) {
+                    res += column + "=" + curr;
+                } else {
+                    res += column + "::null::";
+                }
+                return res;
+            }, "");
+        };
+        
+        // parse ranges constraint
+        var parseRanges = function (ranges, column) {
+            var res = "", hasFilter = false;
+            ranges.forEach(function (range, index) {
+                if (hasFilter) {
+                    res += ";";
+                    hasFilter = false;
+                }
+                
+                if (isDefinedAndNotNull(range.min)) {
+                    res += column + "::gt::" + range.min;
+                    hasFilter = true;
+                }
+                
+                if (isDefinedAndNotNull(range.max)) {
+                    if (hasFilter) {
+                        res += "&";
+                    }
+                    res += column + "::lt::" + range.max;
+                    hasFilter = true;
+                }
+            });
+            return res;
+        };
+        
+        // parse search constraint
+        var parseSearch = function (search, column) {
+            return search.reduce(function (prev, curr, i) {
+                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
+            }, "");
+        };
+        
+        // returns null if the path is invalid
+        var parseDataSource = function (source, tableName, catalogId) {
+            var res = [], fk, i, table = tableName;
+            // from 0 to source.length-1 we have paths
+            for (i = 0; i < source.length - 1; i++) {
+                fk = module._getConstraintObject(catalogId, source[i].schema, source[i].constraint);
+                
+                // constraint name was not valid
+                if (fk == null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    return null;
+                }
+                
+                fk = fk.object;
+                
+                // inbound
+                if (fk.key.table.name === table) {
+                    res.push(fk.toString());
+                    table = fk._table.name;
+                } 
+                // outbound
+                else if (fk._table.name === table) {
+                    res.push(fk.toString(true));
+                    table = fk.key.table.name;
+                }
+                else {
+                    // constraint name was not valid
+                    return null;
+                }
+            }
+            return res.length == 0 ? null : res.join("/");
+        };
+        
+        // parse TERM (it will not do it recursively)
+        var parseAnd = function (and) {
+            var res = [], i, term, col, path, constraints;
+            
+            for (i = 0; i < and.length; i++) {
+                path = ""; // the source path if there are some joins
+                constraints = []; // the current constraints for this source
+                term = and[i];
+                
+                // ignore the facet, if there's no source in it.
+                if (!term.hasOwnProperty('source')) {
+                    continue;
+                }
+                
+                // parse the source
+                if (Array.isArray(term.source)) {
+                    path = parseDataSource(term.source, tableName, catalogId);
+                    col = term.source[term.source.length - 1];
+                } else {
+                    col = term.source;
+                }
+                
+                // if the data-path was invalid, ignore this facet
+                if (path === null) {
+                    continue;
+                }
+                
+                // parse the constraints
+                if (Array.isArray(term.choices)) {
+                    constraints.push(parseChoices(term.choices, col));
+                }
+                
+                if (Array.isArray(term.ranges)) {
+                    constraints.push(parseRanges(term.ranges, col));
+                }
+                
+                if (Array.isArray(term.search)) {
+                    constraints.push(parseSearch(term.search, col));
+                }
+                
+                if (constraints.length > 0) {
+                    res.push((path.length != 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                }
+            }
+            return res.join("/");
+        };
+        
+        var ermrestFilter = "";
+        
+        var andOperator = module._FacetsLogicalOperators.AND;
+        
+        // NOTE we only support and at the moment.
+        if (json.hasOwnProperty(andOperator) && Array.isArray(json[andOperator])) {
+            ermrestFilter += parseAnd(json[andOperator]);
+        }
+        
+        return ermrestFilter;
+    };
+    
+    /**
+     * List of logical operators that parser accepts in JSON facets.
+     * @type {Object}
+     */
+    module._FacetsLogicalOperators = Object.freeze({
+        AND: "and"
     });
 
     return module;
