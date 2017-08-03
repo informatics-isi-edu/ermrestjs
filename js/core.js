@@ -1777,15 +1777,23 @@ var ERMrest = (function (module) {
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
-
-            // If column doesn't has column-display annotation and is not of type markdown
-            // then return data as it is
-            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+             
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * but the column type is json then append <pre> tag and return the value
+              */
+            
+              if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + data + '</pre>'};
-            }
-            else{
+              }
+                
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * then return data as it is
+              */
+              if (!display.isHTML) {
                 return { isHTML: false, value: data };
-            }
+              }
 
             var value = data;
 
@@ -1806,6 +1814,7 @@ var ERMrest = (function (module) {
 
 
             // If value is null or empty, return value on basis of `show_nulls`
+            // We are excluding json columns here so that we can append the <pre> tags later
             if ((value === null || value.trim() === '') && (this.type.name.indexOf('json') === -1)) {
                 return { isHTML: false, value: this._getNullValue(context) };
             }
@@ -1814,6 +1823,11 @@ var ERMrest = (function (module) {
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
              value = utils.printMarkdown(value, options);
+             
+             /*
+             * If the column type is not JSON, we are returning the value as it is 
+             * And if the column type is json we append the <pre> tag for non blank values
+             */
              if(this.type.name.indexOf('json')=== -1)
              	return { isHTML: true, value: value };
              else
