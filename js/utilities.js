@@ -62,6 +62,17 @@ var ERMrest = (function(module) {
         return target.split(search).join(replacement);
     };
 
+    // utility function to clear out an array
+    // 3 options to do this:
+    //  1. this.length = 0
+    //  2. this.splice(0, this.length)
+    //  3. while (this.length) this.pop()
+    // options 1 and 2 are fastest. Option 1 sets
+    // the internal data to be removed by the garbage collector
+    Array.prototype.clear = function() {
+        this.length = 0;
+    };
+
     /**
      * @private
      * @param {Object} child child class
@@ -515,7 +526,7 @@ var ERMrest = (function(module) {
         };
 
     };
-    
+
     /**
      * @function
      * @param {Object} response http response object
@@ -731,9 +742,9 @@ var ERMrest = (function(module) {
 
             return module._markdownIt.render(value);
         },
-        
+
         /**
-        * @function		    
+        * @function
         * @param {Object} value A json value to transform
         * @return {string} A string representation of value based on different context
         *                  The beautified version of JSON in other cases
@@ -1321,15 +1332,15 @@ var ERMrest = (function(module) {
 
         return content;
     };
-    
+
     /**
      * Returns true if all the used keys have values.
-     * 
-     * NOTE: 
-     * This implementation is very limited and if conditional Mustache statements 
-     * of the form {{#var}}{{/var}} or {{^var}}{{/var}} found then it won't check 
+     *
+     * NOTE:
+     * This implementation is very limited and if conditional Mustache statements
+     * of the form {{#var}}{{/var}} or {{^var}}{{/var}} found then it won't check
      * for null values and will return true.
-     * 
+     *
      * @param  {string}   template       mustache template
      * @param  {object}   keyValues      key-value pairs
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
@@ -1337,7 +1348,7 @@ var ERMrest = (function(module) {
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
         var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
-        
+
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
@@ -1362,7 +1373,7 @@ var ERMrest = (function(module) {
                     if (key[0] == "{") key = key.substring(1, key.length -1);
 
                     // If key is not in ingored columns value for the key is null or undefined then return null
-                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (keyValues[key] === null || keyValues[key] === undefined)) { 
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (keyValues[key] === null || keyValues[key] === undefined)) {
                        return false;
                     }
                 }
@@ -1370,51 +1381,51 @@ var ERMrest = (function(module) {
         }
         return true;
     };
-    
+
     /**
      * A wrapper for {ERMrest._renderMustacheTemplate}
-     * This function will generate formmatted values from the given data, 
-     * if you don't want the funciton to format the data, make sure to have 
+     * This function will generate formmatted values from the given data,
+     * if you don't want the funciton to format the data, make sure to have
      * options.formatted = true
-     * 
-     * @param  {ERMrest.Table} table   
+     *
+     * @param  {ERMrest.Table} table
      * @param  {object} data
-     * @param  {string} template 
-     * @param  {string} context 
+     * @param  {string} template
+     * @param  {string} context
      * @param  {Array.<Object>=} options optioanl parameters
-     * @return {string} Returns a string produced as a result of templating using `Mustache`.  
+     * @return {string} Returns a string produced as a result of templating using `Mustache`.
      */
     module._renderTemplate = function (template, data, table, context, options) {
-        
+
         // to avoid computing data mutliple times, or if we don't want the formatted values
         if (options === undefined || !options.formatted) {
             data = module._getFormattedKeyValues(table.columns, context, data);
         }
-        
+
         // render the template using Mustache
         return module._renderMustacheTemplate(template, data, options);
     };
-    
+
     /**
-     * A wrapper for {ERMrest._validateMustacheTemplate} 
+     * A wrapper for {ERMrest._validateMustacheTemplate}
      * it will take care of adding formmatted and unformatted values.
      * options.formmatted=true: to avoid formatting key values
      * options.ignoredColumns: list of columns that you want validator to ignore
-     * 
-     * @param  {ERMrest.Table} table   
+     *
+     * @param  {ERMrest.Table} table
      * @param  {object} data
-     * @param  {string} template 
-     * @param  {string} context 
+     * @param  {string} template
+     * @param  {string} context
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} True if the template is valid.
      */
     module._validateTemplate = function (template, data, table, context, options) {
-        
+
         var ignoredColumns;
         if (typeof options !== undefined && Array.isArray(options.ignoredColumns)) {
             ignoredColumns = options.ignoredColumns;
         }
-        
+
         // to avoid computing data multiple times, or if we don't want the formatted values
         if (options === undefined || !options.formatted) {
             // make sure to add formatted columns too.
@@ -1423,20 +1434,20 @@ var ERMrest = (function(module) {
                     ignoredColumns.push("_" + col);
                 });
             }
-            
+
             data = module._getFormattedKeyValues(table.columns, context, data);
         }
-        
+
         // call the actual mustache validator
         return module._validateMustacheTemplate(template, data, ignoredColumns);
     };
-    
+
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
     module._constraintNames = {};
-    
+
     /**
      * Creaes a map from catalog id, schema name, and constraint names to the actual object.
-     * 
+     *
      * @private
      * @param  {string} catalogId      catalog id
      * @param  {string} schemaName     schema name
@@ -1448,20 +1459,20 @@ var ERMrest = (function(module) {
         if (!(catalogId in module._constraintNames)) {
             module._constraintNames[catalogId] = {};
         }
-        
+
         if (!(schemaName in this._constraintNames[catalogId])) {
             module._constraintNames[catalogId][schemaName] = {};
         }
-        
+
         module._constraintNames[catalogId][schemaName][constraintName] = {
             "subject": subject,
             "object": obj
         };
     };
-    
+
     /**
      * Return an object given catalog id, schema name, and constraint name.
-     * 
+     *
      * @private
      * @param  {string} catalogId      catalog id
      * @param  {string} schemaName     schema name
@@ -1476,7 +1487,7 @@ var ERMrest = (function(module) {
         }
         return (result === undefined || (subject !== undefined && result.subject !== subject)) ? null : result;
     };
-    
+
 
     module._constraintTypes = Object.freeze({
         KEY: "k",
