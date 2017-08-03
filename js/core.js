@@ -241,6 +241,11 @@ var ERMrest = (function (module) {
          */
         this.schemas = new Schemas();
 
+
+         // A map from schema name to constraint names to the actual object.
+         // this._constraintNames[schemaName][constraintName] will return an object.
+        this._constraintNames = {};
+
         /*
          * Value that holds the meta resource object returned from the server for the catalog
          * @type null
@@ -330,13 +335,25 @@ var ERMrest = (function (module) {
          * @returns {Object|null} the constraint object. Null means the constraint name is not valid.
          */
         constraintByNamePair: function (pair, subject) {
-            return module._getConstraintObject(this.id, pair[0], pair[1], subject);
+            var result = null;
+            if ((pair[0] in this._constraintNames) && (pair[1] in this._constraintNames[pair[0]]) ){
+                result = this._constraintNames[pair[0]][pair[1]];
+            }
+            return (result === null || (subject !== undefined && result.subject !== subject)) ? null : result;
         },
 
         // used in ForeignKeyRef to add the defined constraintNames.
         // subject can be one of module._constraintTypes
         _addConstraintName: function (pair, obj, subject) {
-            module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
+            // if (pair[0] === "" || this.schemas.has(pair[0])) { //only empty schema and defined schema names are allowed
+            if (!(pair[0] in this._constraintNames)) {
+                this._constraintNames[pair[0]] = {};
+            }
+            this._constraintNames[pair[0]][pair[1]] = {
+                "subject": subject,
+                "object": obj
+            };
+            // }
         }
     };
 
@@ -1763,7 +1780,10 @@ var ERMrest = (function (module) {
 
             // If column doesn't has column-display annotation and is not of type markdown
             // then return data as it is
-            if (!display.isHTML) {
+            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+                return { isHTML: true, value: '<pre>' + data + '</pre>'};
+            }
+            else{
                 return { isHTML: false, value: data };
             }
 
@@ -1786,15 +1806,18 @@ var ERMrest = (function (module) {
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            if (value === null || value.trim() === '') {
+            if ((value === null || value.trim() === '') && (this.type.name.indexOf('json') === -1)) {
                 return { isHTML: false, value: this._getNullValue(context) };
             }
-
+            
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-            value = utils.printMarkdown(value, options);
-            return { isHTML: true, value: value };
+             value = utils.printMarkdown(value, options);
+             if(this.type.name.indexOf('json')=== -1)
+             	return { isHTML: true, value: value };
+             else
+             	return { isHTML: true, value: value !== "" ? '<pre>' +value+ '<\pre>' : value };
         };
 
         /**
