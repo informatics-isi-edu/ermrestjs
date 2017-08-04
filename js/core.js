@@ -1814,8 +1814,8 @@ var ERMrest = (function (module) {
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            // We are excluding json columns here so that we can append the <pre> tags later
-            if ((value === null || value.trim() === '') && (this.type.name.indexOf('json') === -1)) {
+            
+            if (value === null || value.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context) };
             }
             
@@ -1824,14 +1824,8 @@ var ERMrest = (function (module) {
              */
              value = utils.printMarkdown(value, options);
              
-             /*
-             * If the column type is not JSON, we are returning the value as it is 
-             * And if the column type is json we append the <pre> tag for non blank values
-             */
-             if(this.type.name.indexOf('json')=== -1)
-             	return { isHTML: true, value: value };
-             else
-             	return { isHTML: true, value: value !== "" ? '<pre>' +value+ '<\pre>' : value };
+             return { isHTML: true, value: value };
+            
         };
 
         /**
