@@ -246,7 +246,7 @@ exports.execute = function (options) {
 
     });
     
-    describe("Testing for JSON AND JSONB Values,", function() {
+    describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
         var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n"},
         {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<p>Status is: “Activated”</p>\n"},
@@ -331,7 +331,7 @@ exports.execute = function (options) {
             options.ermRest.appLinkFn(appLinkFn);
         });
         
-        it("JSON and JSONB column should return the expected values in Display Context", function() {
+        it("JSON column should display pre tags without markdown and should not append pre tag with markdown", function() {
             
             for( var i=0; i<limit; i++){
                 var values=tuples[i].values;
@@ -344,5 +344,6 @@ exports.execute = function (options) {
                 expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern, "Mismatch in tuple with index = "+ i +", column= json_col_with_markdownpattern");
             }
         });
+
     });
 };
