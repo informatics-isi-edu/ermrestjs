@@ -245,7 +245,7 @@ var ERMrest = (function (module) {
          * Value that holds the meta resource object returned from the server for the catalog
          * @type null
          */
-         this.meta = null;
+        this.meta = null;
     }
 
     Catalog.prototype = {
@@ -336,7 +336,7 @@ var ERMrest = (function (module) {
         // used in ForeignKeyRef to add the defined constraintNames.
         // subject can be one of module._constraintTypes
         _addConstraintName: function (pair, obj, subject) {
-             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
+            module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         }
     };
 
