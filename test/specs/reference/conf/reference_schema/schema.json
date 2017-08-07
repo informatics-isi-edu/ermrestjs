@@ -52,7 +52,23 @@
                          }
                        }
                    }
-               }
+               },
+               {
+                    "comment": null, 
+                    "name": "col_markdown_blankable", 
+                    "default": null, 
+                    "nullok": true, 
+                    "type": {
+                      "typename": "json"
+                    }, 
+                    "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display": {
+                        "*": {
+                          "markdown_pattern": "{{#_col_markdown_blankable}} [![{{{filename}}}]({{{url}}}){height=90}]({{{url}}}){target=_blank} {{/_col_markdown_blankable}}"
+                        }
+                      }
+                  }
+              }
 
             ]
         },
