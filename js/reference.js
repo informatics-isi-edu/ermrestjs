@@ -3161,6 +3161,12 @@ var ERMrest = (function(module) {
             return this._displayname;
         },
 
+        /**
+         * The unique identifier for this tuple composed of the values for each
+         * of the shortest key columns concatenated together by an '_'
+         *
+         * @type {string}
+         */
         get uniqueId() {
             if (!this._uniqueId) {
                 var key;
