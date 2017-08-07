@@ -1760,12 +1760,23 @@ var ERMrest = (function (module) {
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
-
-            // If column doesn't has column-display annotation and is not of type markdown
-            // then return data as it is
-            if (!display.isHTML) {
+             
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * but the column type is json then append <pre> tag and return the value
+              */
+            
+              if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+                return { isHTML: true, value: '<pre>' + data + '</pre>'};
+              }
+                
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * then return data as it is
+              */
+              if (!display.isHTML) {
                 return { isHTML: false, value: data };
-            }
+              }
 
             var value = data;
 
@@ -1786,15 +1797,18 @@ var ERMrest = (function (module) {
 
 
             // If value is null or empty, return value on basis of `show_nulls`
+            
             if (value === null || value.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context) };
             }
-
+            
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-            value = utils.printMarkdown(value, options);
-            return { isHTML: true, value: value };
+             value = utils.printMarkdown(value, options);
+             
+             return { isHTML: true, value: value };
+            
         };
 
         /**

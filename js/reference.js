@@ -3096,12 +3096,7 @@ var ERMrest = (function(module) {
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
-                                values[i].value = "<pre>"+ values[i].value + "</pre>";
-                                values[i].isHTML = true;
-                            }
-
+                            
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
