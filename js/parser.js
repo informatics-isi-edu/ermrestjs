@@ -419,7 +419,7 @@ var ERMrest = (function(module) {
                 var uri = "";
                 
                 // add tableAlias
-                if (joinsLength == 0) {
+                if (joinsLength === 0) {
                     uri += tableAlias + ":=";
                 }
 
@@ -1175,7 +1175,7 @@ var ERMrest = (function(module) {
         // parse choices constraint
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
-                var res = prev += (i != 0 ? ";": "");
+                var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
                     res += column + "=" + curr;
                 } else {
@@ -1213,7 +1213,7 @@ var ERMrest = (function(module) {
         // parse search constraint
         var parseSearch = function (search, column) {
             return search.reduce(function (prev, curr, i) {
-                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
+                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
             }, "");
         };
         
@@ -1225,7 +1225,7 @@ var ERMrest = (function(module) {
                 fk = module._getConstraintObject(catalogId, source[i].schema, source[i].constraint);
                 
                 // constraint name was not valid
-                if (fk == null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
                     return null;
                 }
                 
@@ -1246,7 +1246,7 @@ var ERMrest = (function(module) {
                     return null;
                 }
             }
-            return res.length == 0 ? null : res.join("/");
+            return res.length === 0 ? null : res.join("/");
         };
         
         // parse TERM (it will not do it recursively)
@@ -1290,7 +1290,7 @@ var ERMrest = (function(module) {
                 }
                 
                 if (constraints.length > 0) {
-                    res.push((path.length != 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                    res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
                 }
             }
             return res.join("/");
