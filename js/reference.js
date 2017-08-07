@@ -3135,7 +3135,7 @@ var ERMrest = (function(module) {
          */
         get isHTML() {
             // this._isHTML has not been populated then call this.values getter to populate values and isHTML array
-            if (!this._isHTML) {
+            if (this._isHTML == undefined) {
                 var value = this.values;
             }
 
@@ -3155,7 +3155,7 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            if (!this._displayname) {
+            if (this._displayname === undefined) {
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
@@ -3168,7 +3168,7 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get uniqueId() {
-            if (!this._uniqueId) {
+            if (this._uniqueId === undefined) {
                 var key;
                 this._uniqueId = "";
                 for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
