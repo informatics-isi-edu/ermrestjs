@@ -1,7 +1,3 @@
-/**
- * @namespace ERMrest.Filters
- */
-var ERMrest = (function(module) {
 
     module.Negation = Negation;
 
@@ -194,8 +190,3 @@ var ERMrest = (function(module) {
             return colName + this.operator + module._fixedEncodeURIComponent(this.rvalue);
         }
     };
-
-
-    return module;
-
-}(ERMrest || {}));

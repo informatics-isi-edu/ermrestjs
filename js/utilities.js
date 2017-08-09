@@ -1,4 +1,3 @@
-var ERMrest = (function(module) {
 
     // polyfill for Array.includes
     // came from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes#Polyfill
@@ -1556,6 +1555,3 @@ var ERMrest = (function(module) {
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-    return module;
-
-}(ERMrest || {}));

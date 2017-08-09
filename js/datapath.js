@@ -1,7 +1,3 @@
-/**
- * @namespace ERMrest.Datapath
- */
-var ERMrest = (function(module) {
 
     module.DataPath = DataPath;
 
@@ -190,9 +186,9 @@ var ERMrest = (function(module) {
 
         /**
          *
-         * @type {ERMrest.Datapath.Columns}
+         * @type {ERMrest.Datapath.PathColumns}
          */
-        this.columns = new Columns(table, this); // pathcolumns
+        this.columns = new PathColumns(table, this); // pathcolumns
     }
 
     PathTable.prototype = {
@@ -215,14 +211,14 @@ var ERMrest = (function(module) {
      * @param {ERMrest.Table} table
      * @param {ERMrest.Datapath.PathTable} pathtable
      */
-    function Columns(table, pathtable) {
+    function PathColumns(table, pathtable) {
         this._table = table;
         this._pathtable = pathtable;
         this._pathcolumns = {};
     }
 
-    Columns.prototype = {
-        constructor: Columns,
+    PathColumns.prototype = {
+        constructor: PathColumns,
 
         _push: function(pathcolumn) {
             this._pathcolumns[pathcolumn.column.name] = pathcolumn;
@@ -320,7 +316,3 @@ var ERMrest = (function(module) {
             return this._operators[name];
         }
     };
-
-    return module;
-
-}(ERMrest || {}));
