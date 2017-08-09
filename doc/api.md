@@ -286,6 +286,7 @@ to use for ERMrest JavaScript agents.
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+        * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2660,6 +2661,7 @@ if (content) {
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+    * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2800,6 +2802,13 @@ Usage:
 ```
 console.log("This tuple has a displayable name of ", tuple.displayname.value);
 ```
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+uniqueId"></a>
+
+#### tuple.uniqueId : <code>string</code>
+The unique identifier for this tuple composed of the values for each
+of the shortest key columns concatenated together by an '_'
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+update"></a>

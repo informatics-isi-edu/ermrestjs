@@ -5,13 +5,17 @@ exports.execute = function (options) {
             schemaName = "reference_schema",
             tableName = "reference_table",
             tableNameWithSlash = "table_w_slash",
+            tableNameWithCompKey = "table_w_only_composite_key",
             entityId = 9000,
             lowerLimit = 8999,
             upperLimit = 9010,
             originalTimeout;
 
-        var entityWithSlash = baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
+        var entityWithSlash = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableNameWithSlash;
+
+        var entityWithCompositeKey = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaName + ":" + tableNameWithCompKey;
 
         var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName;
@@ -264,6 +268,10 @@ exports.execute = function (options) {
 
             it('tuples should have methods properly defined.', function() {
                 expect(tuple.values).toBeDefined();
+                expect(tuple.isHTML).toBeDefined();
+                expect(tuple.displayname).toEqual(jasmine.any(Object), "tuple.displayname is not an object");
+                expect(tuple.displayname.value).toBe("Hank", "tuple.displayname.value is incorrect");
+                expect(tuple.uniqueId).toBe("9000", "tuple.uniqueId is incorrect");
             });
 
             it('tuple.copy should create a shallow copy of the tuple except for the data.', function() {
@@ -289,6 +297,27 @@ exports.execute = function (options) {
                 // based on order in reference_table.json
                 expect(values[1]).toBe(tuple._data.name);
                 expect(values[2]).toBe(tuple._data.value.toString());
+            });
+
+            it('uniqueId for an entity with a composite key should be set properly.', function(done) {
+                var reference, page, tuple;
+
+                options.ermRest.resolve(entityWithCompositeKey, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    return reference.read(limit);
+                }).then(function (response) {
+                    page = response;
+                    tuple = page.tuples[0];
+
+                    expect(tuple.uniqueId).toBe("comp-part-1_comp-part-2", "tuple.uniqueId with composite key is incorrect");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
             });
         });
 
