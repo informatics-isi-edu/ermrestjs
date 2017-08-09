@@ -3135,7 +3135,7 @@ var ERMrest = (function(module) {
          */
         get isHTML() {
             // this._isHTML has not been populated then call this.values getter to populate values and isHTML array
-            if (this._isHTML == undefined) {
+            if (this._isHTML === undefined) {
                 var value = this.values;
             }
 
