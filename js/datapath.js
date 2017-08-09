@@ -1,4 +1,7 @@
-
+/**
+ * @namespace ERMrest.Datapath
+ */
+    
     module.DataPath = DataPath;
 
     /**

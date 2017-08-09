@@ -1,3 +1,6 @@
+/**
+ * @namespace ERMrest.Filters
+ */
 
     module.Negation = Negation;
 

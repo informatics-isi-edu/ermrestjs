@@ -103,7 +103,7 @@ $(API): $(SOURCE) $(BIN)
 # jsdoc: target for html docs produced (using 'jsdoc')
 $(JSDOC): $(SOURCE) $(BIN)
 	mkdir -p $(JSDOC)
-	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(SOURCE)
+	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(BUILD)/$(PKG)
 	@touch $(JSDOC)
 
 # Rule to ensure Node bin scripts are present

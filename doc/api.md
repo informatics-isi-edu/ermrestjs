@@ -352,6 +352,48 @@ to use for ERMrest JavaScript agents.
         * [.resume()](#ERMrest.upload+resume)
         * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
         * [.deleteFile()](#ERMrest.upload+deleteFile) ⇒ <code>Promise</code>
+    * [.Datapath](#ERMrest.Datapath) : <code>object</code>
+        * [.DataPath](#ERMrest.Datapath.DataPath)
+            * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+            * [.catalog](#ERMrest.Datapath.DataPath+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
+            * [.context](#ERMrest.Datapath.DataPath+context) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+            * [.entity](#ERMrest.Datapath.DataPath+entity)
+                * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+                * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+            * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+            * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+        * [.PathTable](#ERMrest.Datapath.PathTable)
+            * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+            * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+            * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
+            * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+            * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
+            * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+        * [.PathColumn](#ERMrest.Datapath.PathColumn)
+            * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+            * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+            * [.column](#ERMrest.Datapath.PathColumn+column) : [<code>Column</code>](#ERMrest.Column)
+        * [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+            * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+            * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+            * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+        * [.Operators()](#ERMrest.Datapath.Operators)
+    * [.Filters](#ERMrest.Filters) : <code>object</code>
+        * [.Negation](#ERMrest.Filters.Negation)
+            * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+            * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+        * [.Conjunction](#ERMrest.Filters.Conjunction)
+            * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+            * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+        * [.Disjunction](#ERMrest.Filters.Disjunction)
+            * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+            * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+        * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+            * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+            * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+        * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
+            * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+            * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
@@ -3367,6 +3409,386 @@ Aborts/cancels the upload
 deletes the file metadata from the hatrac database and removes it from the namespace
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+<a name="ERMrest.Datapath"></a>
+
+### ERMrest.Datapath : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+
+* [.Datapath](#ERMrest.Datapath) : <code>object</code>
+    * [.DataPath](#ERMrest.Datapath.DataPath)
+        * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+        * [.catalog](#ERMrest.Datapath.DataPath+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
+        * [.context](#ERMrest.Datapath.DataPath+context) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+        * [.entity](#ERMrest.Datapath.DataPath+entity)
+            * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+            * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+        * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+        * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+    * [.PathTable](#ERMrest.Datapath.PathTable)
+        * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+        * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+        * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+        * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
+        * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+    * [.PathColumn](#ERMrest.Datapath.PathColumn)
+        * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+        * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+        * [.column](#ERMrest.Datapath.PathColumn+column) : [<code>Column</code>](#ERMrest.Column)
+    * [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+        * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+        * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+        * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+    * [.Operators()](#ERMrest.Datapath.Operators)
+
+<a name="ERMrest.Datapath.DataPath"></a>
+
+#### Datapath.DataPath
+**Kind**: static class of [<code>Datapath</code>](#ERMrest.Datapath)  
+
+* [.DataPath](#ERMrest.Datapath.DataPath)
+    * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
+    * [.catalog](#ERMrest.Datapath.DataPath+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
+    * [.context](#ERMrest.Datapath.DataPath+context) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+    * [.entity](#ERMrest.Datapath.DataPath+entity)
+        * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+        * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+    * [.filter(filter)](#ERMrest.Datapath.DataPath+filter) ⇒ [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+    * [.extend(table, context, link)](#ERMrest.Datapath.DataPath+extend) ⇒ [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+
+<a name="new_ERMrest.Datapath.DataPath_new"></a>
+
+##### new DataPath(table)
+
+| Param | Type |
+| --- | --- |
+| table | [<code>Table</code>](#ERMrest.Table) | 
+
+<a name="ERMrest.Datapath.DataPath+catalog"></a>
+
+##### dataPath.catalog : [<code>Catalog</code>](#ERMrest.Catalog)
+**Kind**: instance property of [<code>DataPath</code>](#ERMrest.Datapath.DataPath)  
+<a name="ERMrest.Datapath.DataPath+context"></a>
+
+##### dataPath.context : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+**Kind**: instance property of [<code>DataPath</code>](#ERMrest.Datapath.DataPath)  
+<a name="ERMrest.Datapath.DataPath+entity"></a>
+
+##### dataPath.entity
+entity container
+
+**Kind**: instance property of [<code>DataPath</code>](#ERMrest.Datapath.DataPath)  
+
+* [.entity](#ERMrest.Datapath.DataPath+entity)
+    * [.get()](#ERMrest.Datapath.DataPath+entity.get) ⇒ <code>Promise</code>
+    * [.delete(filter)](#ERMrest.Datapath.DataPath+entity.delete) ⇒ <code>Promise</code>
+
+<a name="ERMrest.Datapath.DataPath+entity.get"></a>
+
+###### entity.get() ⇒ <code>Promise</code>
+**Kind**: static method of [<code>entity</code>](#ERMrest.Datapath.DataPath+entity)  
+**Returns**: <code>Promise</code> - promise that returns a row data if resolved or
+    [ERMrest.Errors.TimedOutError](ERMrest.Errors.TimedOutError), [ERMrest.Errors.InternalServerError](ERMrest.Errors.InternalServerError), [ERMrest.Errors.ServiceUnavailableError](ERMrest.Errors.ServiceUnavailableError),
+    [ERMrest.Errors.ConflictError](ERMrest.Errors.ConflictError), [ERMrest.Errors.ForbiddenError](ERMrest.Errors.ForbiddenError) or [ERMrest.Errors.UnauthorizedError](ERMrest.Errors.UnauthorizedError) if rejected  
+<a name="ERMrest.Datapath.DataPath+entity.delete"></a>
+
+###### entity.delete(filter) ⇒ <code>Promise</code>
+delete entities
+
+**Kind**: static method of [<code>entity</code>](#ERMrest.Datapath.DataPath+entity)  
+**Returns**: <code>Promise</code> - promise that returns deleted entities if resolved or
+    [ERMrest.Errors.TimedOutError](ERMrest.Errors.TimedOutError), [ERMrest.Errors.InternalServerError](ERMrest.Errors.InternalServerError), [ERMrest.Errors.ServiceUnavailableError](ERMrest.Errors.ServiceUnavailableError),
+    [ERMrest.Errors.ConflictError](ERMrest.Errors.ConflictError), [ERMrest.Errors.ForbiddenError](ERMrest.Errors.ForbiddenError) or [ERMrest.Errors.UnauthorizedError](ERMrest.Errors.UnauthorizedError) if rejected  
+
+| Param | Type |
+| --- | --- |
+| filter | [<code>Negation</code>](#ERMrest.Filters.Negation) \| [<code>Conjunction</code>](#ERMrest.Filters.Conjunction) \| [<code>Disjunction</code>](#ERMrest.Filters.Disjunction) \| [<code>UnaryPredicate</code>](#ERMrest.Filters.UnaryPredicate) \| [<code>BinaryPredicate</code>](#ERMrest.Filters.BinaryPredicate) | 
+
+<a name="ERMrest.Datapath.DataPath+filter"></a>
+
+##### dataPath.filter(filter) ⇒ [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+this datapath is not modified
+
+**Kind**: instance method of [<code>DataPath</code>](#ERMrest.Datapath.DataPath)  
+**Returns**: [<code>DataPath</code>](#ERMrest.Datapath.DataPath) - a shallow copy of this datapath with filter  
+
+| Param | Type |
+| --- | --- |
+| filter | [<code>Negation</code>](#ERMrest.Filters.Negation) \| [<code>Conjunction</code>](#ERMrest.Filters.Conjunction) \| [<code>Disjunction</code>](#ERMrest.Filters.Disjunction) \| [<code>UnaryPredicate</code>](#ERMrest.Filters.UnaryPredicate) \| [<code>BinaryPredicate</code>](#ERMrest.Filters.BinaryPredicate) | 
+
+<a name="ERMrest.Datapath.DataPath+extend"></a>
+
+##### dataPath.extend(table, context, link) ⇒ [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+extend the Datapath with table
+
+**Kind**: instance method of [<code>DataPath</code>](#ERMrest.Datapath.DataPath)  
+
+| Param | Type |
+| --- | --- |
+| table | [<code>Table</code>](#ERMrest.Table) | 
+| context |  | 
+| link |  | 
+
+<a name="ERMrest.Datapath.PathTable"></a>
+
+#### Datapath.PathTable
+**Kind**: static class of [<code>Datapath</code>](#ERMrest.Datapath)  
+
+* [.PathTable](#ERMrest.Datapath.PathTable)
+    * [new PathTable(table, datapath, alias)](#new_ERMrest.Datapath.PathTable_new)
+    * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+    * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
+    * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
+    * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Datapath.PathTable_new"></a>
+
+##### new PathTable(table, datapath, alias)
+
+| Param | Type |
+| --- | --- |
+| table | [<code>Table</code>](#ERMrest.Table) | 
+| datapath | [<code>DataPath</code>](#ERMrest.Datapath.DataPath) | 
+| alias | <code>string</code> | 
+
+<a name="ERMrest.Datapath.PathTable+datapath"></a>
+
+##### pathTable.datapath : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
+**Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
+<a name="ERMrest.Datapath.PathTable+table"></a>
+
+##### pathTable.table : [<code>Table</code>](#ERMrest.Table)
+**Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
+<a name="ERMrest.Datapath.PathTable+alias"></a>
+
+##### pathTable.alias : <code>string</code>
+**Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
+<a name="ERMrest.Datapath.PathTable+columns"></a>
+
+##### pathTable.columns : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
+**Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
+<a name="ERMrest.Datapath.PathTable+toString"></a>
+
+##### pathTable.toString() ⇒ <code>string</code>
+**Kind**: instance method of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
+**Returns**: <code>string</code> - uri of the PathTable  
+<a name="ERMrest.Datapath.PathColumn"></a>
+
+#### Datapath.PathColumn
+**Kind**: static class of [<code>Datapath</code>](#ERMrest.Datapath)  
+
+* [.PathColumn](#ERMrest.Datapath.PathColumn)
+    * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
+    * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+    * [.column](#ERMrest.Datapath.PathColumn+column) : [<code>Column</code>](#ERMrest.Column)
+
+<a name="new_ERMrest.Datapath.PathColumn_new"></a>
+
+##### new PathColumn(column, pathtable)
+
+| Param | Type |
+| --- | --- |
+| column | [<code>Column</code>](#ERMrest.Column) | 
+| pathtable | [<code>PathTable</code>](#ERMrest.Datapath.PathTable) | 
+
+<a name="ERMrest.Datapath.PathColumn+pathtable"></a>
+
+##### pathColumn.pathtable : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
+**Kind**: instance property of [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)  
+<a name="ERMrest.Datapath.PathColumn+column"></a>
+
+##### pathColumn.column : [<code>Column</code>](#ERMrest.Column)
+**Kind**: instance property of [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)  
+<a name="ERMrest.Datapath.PathColumns"></a>
+
+#### Datapath.PathColumns(table, pathtable)
+**Kind**: static method of [<code>Datapath</code>](#ERMrest.Datapath)  
+
+| Param | Type |
+| --- | --- |
+| table | [<code>Table</code>](#ERMrest.Table) | 
+| pathtable | [<code>PathTable</code>](#ERMrest.Datapath.PathTable) | 
+
+
+* [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+    * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+    * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+
+<a name="ERMrest.Datapath.PathColumns+length"></a>
+
+##### pathColumns.length() ⇒ <code>Number</code>
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
+**Returns**: <code>Number</code> - number of path columns  
+<a name="ERMrest.Datapath.PathColumns+names"></a>
+
+##### pathColumns.names() ⇒ <code>Array.&lt;String&gt;</code>
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
+**Returns**: <code>Array.&lt;String&gt;</code> - a list of pathcolumn names  
+<a name="ERMrest.Datapath.PathColumns+get"></a>
+
+##### pathColumns.get(colName) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+get PathColumn object by column name
+
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
+**Returns**: [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn) - returns the PathColumn  
+**Throws**:
+
+- <code>ERMrest.Errors.NotFoundError</code> column not found
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| colName | <code>string</code> | column name |
+
+<a name="ERMrest.Datapath.Operators"></a>
+
+#### Datapath.Operators()
+**Kind**: static method of [<code>Datapath</code>](#ERMrest.Datapath)  
+<a name="ERMrest.Filters"></a>
+
+### ERMrest.Filters : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+
+* [.Filters](#ERMrest.Filters) : <code>object</code>
+    * [.Negation](#ERMrest.Filters.Negation)
+        * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+        * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+    * [.Conjunction](#ERMrest.Filters.Conjunction)
+        * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+        * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+    * [.Disjunction](#ERMrest.Filters.Disjunction)
+        * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+        * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+    * [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+        * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+        * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+    * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
+        * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+        * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+
+<a name="ERMrest.Filters.Negation"></a>
+
+#### Filters.Negation
+**Kind**: static class of [<code>Filters</code>](#ERMrest.Filters)  
+
+* [.Negation](#ERMrest.Filters.Negation)
+    * [new Negation(filter)](#new_ERMrest.Filters.Negation_new)
+    * [.toUri()](#ERMrest.Filters.Negation+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.Negation_new"></a>
+
+##### new Negation(filter)
+
+| Param |
+| --- |
+| filter | 
+
+<a name="ERMrest.Filters.Negation+toUri"></a>
+
+##### negation.toUri() ⇒ <code>string</code>
+**Kind**: instance method of [<code>Negation</code>](#ERMrest.Filters.Negation)  
+**Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Filters.Conjunction"></a>
+
+#### Filters.Conjunction
+**Kind**: static class of [<code>Filters</code>](#ERMrest.Filters)  
+
+* [.Conjunction](#ERMrest.Filters.Conjunction)
+    * [new Conjunction(filters)](#new_ERMrest.Filters.Conjunction_new)
+    * [.toUri()](#ERMrest.Filters.Conjunction+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.Conjunction_new"></a>
+
+##### new Conjunction(filters)
+
+| Param |
+| --- |
+| filters | 
+
+<a name="ERMrest.Filters.Conjunction+toUri"></a>
+
+##### conjunction.toUri() ⇒ <code>string</code>
+**Kind**: instance method of [<code>Conjunction</code>](#ERMrest.Filters.Conjunction)  
+**Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Filters.Disjunction"></a>
+
+#### Filters.Disjunction
+**Kind**: static class of [<code>Filters</code>](#ERMrest.Filters)  
+
+* [.Disjunction](#ERMrest.Filters.Disjunction)
+    * [new Disjunction(filters)](#new_ERMrest.Filters.Disjunction_new)
+    * [.toUri()](#ERMrest.Filters.Disjunction+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.Disjunction_new"></a>
+
+##### new Disjunction(filters)
+
+| Param |
+| --- |
+| filters | 
+
+<a name="ERMrest.Filters.Disjunction+toUri"></a>
+
+##### disjunction.toUri() ⇒ <code>string</code>
+**Kind**: instance method of [<code>Disjunction</code>](#ERMrest.Filters.Disjunction)  
+**Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Filters.UnaryPredicate"></a>
+
+#### Filters.UnaryPredicate
+**Kind**: static class of [<code>Filters</code>](#ERMrest.Filters)  
+
+* [.UnaryPredicate](#ERMrest.Filters.UnaryPredicate)
+    * [new UnaryPredicate(column, operator)](#new_ERMrest.Filters.UnaryPredicate_new)
+    * [.toUri()](#ERMrest.Filters.UnaryPredicate+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.UnaryPredicate_new"></a>
+
+##### new UnaryPredicate(column, operator)
+**Throws**:
+
+- <code>ERMrest.Errors.InvalidFilterOperatorError</code> invalid filter operator
+
+
+| Param | Type |
+| --- | --- |
+| column | [<code>Column</code>](#ERMrest.Column) | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+
+<a name="ERMrest.Filters.UnaryPredicate+toUri"></a>
+
+##### unaryPredicate.toUri() ⇒ <code>string</code>
+**Kind**: instance method of [<code>UnaryPredicate</code>](#ERMrest.Filters.UnaryPredicate)  
+**Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.Filters.BinaryPredicate"></a>
+
+#### Filters.BinaryPredicate
+**Kind**: static class of [<code>Filters</code>](#ERMrest.Filters)  
+
+* [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
+    * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
+    * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+
+<a name="new_ERMrest.Filters.BinaryPredicate_new"></a>
+
+##### new BinaryPredicate(column, operator, rvalue)
+**Throws**:
+
+- <code>ERMrest.Errors.InvalidFilterOperatorError</code> invalid filter operator
+
+
+| Param | Type |
+| --- | --- |
+| column | [<code>Column</code>](#ERMrest.Column) | 
+| operator | <code>ERMrest.Filters.OPERATOR</code> | 
+| rvalue | <code>String</code> \| <code>Number</code> | 
+
+<a name="ERMrest.Filters.BinaryPredicate+toUri"></a>
+
+##### binaryPredicate.toUri() ⇒ <code>string</code>
+**Kind**: instance method of [<code>BinaryPredicate</code>](#ERMrest.Filters.BinaryPredicate)  
+**Returns**: <code>string</code> - URI of the filter  
 <a name="ERMrest.configure"></a>
 
 ### ERMrest.configure(http, q)
