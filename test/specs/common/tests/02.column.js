@@ -1,7 +1,9 @@
 exports.execute = function(options) {
 
     describe('About the Column class, ', function() {
-        var schemaName2 = 'common_schema_2', table1_schema2;
+        var schemaName2 = 'common_schema_2', 
+            columnName = 'table_1_text',
+            table1_schema2;
 
         beforeAll(function(done) {
             table1_schema2 = options.catalog.schemas.get(schemaName2).tables.get('table_1_schema_2');
@@ -12,11 +14,29 @@ exports.execute = function(options) {
         describe('a column in Table class, ', function() {
             var column;
             beforeAll(function() {
-                column = table1_schema2.columns.get('table_1_text');
+                column = table1_schema2.columns.get(columnName);
             });
 
             it('should be defined.', function() {
                 expect(column).toBeDefined();
+            });
+
+            it('should have properties defined in the constructor.', function() {
+                expect(column.position).not.toBeDefined();
+                expect(column.table).toBeDefined();
+                expect(column.name).toBe(columnName);
+                expect(column.type).toEqual(jasmine.any(Object));
+                expect(column.nullok).toBeTruthy();
+                expect(column.comment).toBeNull();
+                expect(column.ignore).toBeFalsy();
+                expect(column.annotations).toEqual(jasmine.any(Object));
+                expect(column.displayname.isHTML).toBeFalsy();
+                expect(column.displayname.value).toBe(columnName);
+                expect(column.displayname.unformatted).toBe(columnName);
+                expect(column.memberOfKeys).toEqual(jasmine.any(Array));
+                expect(column.memberOfKeys.length).toBe(0);
+                expect(column.memberOfForeignKeys).toEqual(jasmine.any(Array));
+                expect(column.memberOfForeignKeys.length).toBe(0);
             });
 
             it('should have a .getInputDisabled method', function() {
@@ -90,7 +110,7 @@ exports.execute = function(options) {
 
                     beforeAll(function(done){
                         columnWithAnnotation = table1_schema2.columns.get('table_1_show_nulls_annotation');
-                        columnWithoutAnnotation = table1_schema2.columns.get('table_1_text');
+                        columnWithoutAnnotation = table1_schema2.columns.get(columnName);
                         done();
                     });
 
@@ -135,7 +155,7 @@ exports.execute = function(options) {
 
                     it('text columns correctly.', function() {
                         var spy = spyOn(formatUtils, 'printText').and.callThrough();
-                        var textCol = table1_schema2.columns.get('table_1_text');
+                        var textCol = table1_schema2.columns.get(columnName);
                         formattedValue = textCol.formatvalue('text value');
                         expect(spy).toHaveBeenCalledWith('text value', undefined);
                         expect(formattedValue).toBe('text value');
