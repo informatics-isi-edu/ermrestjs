@@ -2923,7 +2923,7 @@
          */
         this._isDomain = jsonType.is_domain;
 
-        if (this._isDomain || this._isArray) {
+        if (jsonType.base_type !== undefined) {
             /**
              * @type {ERMrest.Type}
              */
