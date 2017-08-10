@@ -3311,7 +3311,7 @@
          */
         get type() {
             if (this._type === undefined) {
-                this._type = (!this._simple || this.isPseudo) ? module._createType("markdown") : this._baseCols[0].type;
+                this._type = (!this._simple || this.isPseudo) ? new Type({typename: "markdown"}) : this._baseCols[0].type;
             }
             return this._type;
         },

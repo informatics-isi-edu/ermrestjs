@@ -1800,7 +1800,7 @@
          *
          * @type {ERMrest.Type}
          */
-        this.type = new Type(jsonColumn.type.typename);
+        this.type = new Type(jsonColumn.type);
 
         /**
          * @type {Boolean}
@@ -2905,25 +2905,32 @@
      * @param name
      * @constructor
      */
-    function Type(name) {
-        //.name
-        //.is_array : boolean
-        //.base_type
+    function Type(jsonType) {
+        /**
+         * @type {string}
+         */
+        this.name = jsonType.typename;
 
         /**
-         *
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
          */
-        this.name = name;
+        this._isArray = jsonType.is_array;
+
+        /**
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
+         */
+        this._isDomain = jsonType.is_domain;
+
+        if (this._isDomain || this._isArray) {
+            /**
+             * @type {ERMrest.Type}
+             */
+            this.baseType = new Type(jsonType.base_type);
+        }
     }
 
     Type.prototype = {
-        constructor: Type,
-
-        is_array: function () {
-
-        }
-    };
-
-    module._createType = function(name) {
-        return new Type(name);
+        constructor: Type
     };
