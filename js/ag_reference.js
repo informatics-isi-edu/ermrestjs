@@ -1,29 +1,17 @@
 /*
- * Column and Refernce has a lot of arguments, I don't know how to fix that
- * The same way we have the location object, we can have something like that here,
- * which has the service, catalog, path, sort, paging, and search in it. but should we?
+ * - Column and Refernce have a lot of arguments, I don't know how to fix that.
+ *   The same way we have the location object, we can have something like that here,
+ *   which has the service, catalog, path, sort, paging, and search in it. but should we?
+ *
+ * - Search is currently based on just one column. It's now a object of `column` and `term`,
+ *   to make it easier to pass and also be able to pass default search value.
+ *
+ * - chaise recordset is using the reference.location.searchTerm to get the search term. That's why
+ *   I added the location object.
+ *   
  */
 
-function AttributeGroupReference(service, catalog, path, keyColumns, aggregateColumns, sort, paging) {
-    
-    /**
-     * The uri to ermrest service
-     * @type {string}
-     */
-    this._service = service;
-    
-    /**
-     * id of the catalog
-     * @private
-     * @type {stirng}
-     */
-    this._catalogId = catalog;
-    
-    /**
-     * The path that will be used for generating the uri in read.
-     * @type {string}
-     */
-    this._path = path;
+function AttributeGroupReference(keyColumns, aggregateColumns, location) {
     
     /**
      * Array of AttributeGroupColumn that will be used as the key columns
@@ -37,26 +25,15 @@ function AttributeGroupReference(service, catalog, path, keyColumns, aggregateCo
      */
     this._aggregateColumns = aggregateColumns;
     
-    /**
-     * The sort object. It will be an array of object with the following format:
-     * {"column": columnname, "descending": true|false}
-     * 
-     * @type {?Object[]}
-     */
-    this._sortObject = sort;
-    
-    /**
-     * Represents the paging. It will be in the following format:
-     * {"before":boolean, "row":[v1, v2, v3...]}
-     * v1, v2, v3.. are in the same order of columns in the sortObject
-     * 
-     * @returns {Object}
-     */
-    this._pagingObject = paging;
+    this._location = location;
 }
 AttributeGroupReference.prototype = {
     
     constructor: AttributeGroupReference,
+    
+    get location () {
+        return this._location;
+    },
     
     /**
      * the displayname of the reference
@@ -101,25 +78,25 @@ AttributeGroupReference.prototype = {
     /* jshint ignore:end */
     
     sort: function (sort) {
-        //TODO same ref with different sort options
-        notimplemented();
+        // TODO verify sort
+        var newLocation = this._location.sort(sort);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
     },
     
     search: function (term) {
-        //TODO same ref but just with search filter (will change the path)
-        //TODO it should replace the search..
-        notimplemented();
+        // TODO verify term
+        var newLocation = this._location.search(term);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
     },
     
     read: function (limit) {
         //TODO
         /*
         This is how we should create the attributegroup url:
-        <service>/catalog/<_catalogId>/attributegroup/<path>/<_keyColumns>;<_aggregateColumns><sort><page>
+        <service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
          */
         notimplemented();
     }
-    
 };
 
 function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
@@ -195,7 +172,7 @@ function AttributeGroupColumn(alias, name, displayname, type, comment, sortable,
      * should we seperate those?
      * @type {string}
      */
-    this.name = name;
+    this._name = name;
     
     /**
      * TODO not sure if it's needed or not
@@ -230,6 +207,14 @@ function AttributeGroupColumn(alias, name, displayname, type, comment, sortable,
 AttributeGroupColumn.prototype = {
     constructor: AttributeGroupColumn,
     
+    // TODO or alias is required? 
+    get name() {
+        if (typeof this._alias === "string" && this._alias.length !== 0) {
+            return this._alias;
+        }
+        return this._name;
+    },
+    
     formatvalue: function (data, options) {
         //TODO should be the same as Column.formatvalue
         notimplemented();
@@ -238,5 +223,73 @@ AttributeGroupColumn.prototype = {
     formatPresentation: function (data, options) {
         //TODO take cares of markdown_pattern and all, is it needed?
         notimplemented();
+    }
+};
+
+function AttributeGroupLocation(service, catalog, path, search, sort, paging) {
+    /**
+     * The uri to ermrest service
+     * @type {string}
+     */
+    this._service = service;
+    
+    /**
+     * id of the catalog
+     * @private
+     * @type {stirng}
+     */
+    this._catalogId = catalog;
+    
+    /**
+     * The path that will be used for generating the uri in read.
+     * @type {string}
+     */
+    this._path = path;
+    
+    /**
+     * The search object with "column" and "term".
+     * @type {object}
+     */
+    this._searchObject = search;
+    
+    /**
+     * The sort object. It will be an array of object with the following format:
+     * {"column": columnname, "descending": true|false}
+     * 
+     * @type {?Object[]}
+     */
+    this._sortObject = sort;
+    
+    /**
+     * Represents the paging. It will be in the following format:
+     * {"before":boolean, "row":[v1, v2, v3...]}
+     * v1, v2, v3.. are in the same order of columns in the sortObject
+     * 
+     * @type {Object}
+     */
+    this._pagingObject = paging;
+}
+AttributeGroupLocation.prototype = {
+    constructor: AttributeGroupLocation,
+    
+    get searchTerm () {
+        return this._searchObject.term;
+    },
+    
+    get searchColumn () {
+        return this._searchObject.column;
+    },
+    
+    search: function (term) {
+        var newSearch = {"column": this._searchObject.column, "term": term};
+        return new AttributeGroupLocation(this._service, this._catalogId, this._path, newSearch, this._sortObject, this._pagingObject);
+    },
+    
+    sort: function (sort) {
+        return new AttributeGroupLocation(this._service, this._catalogId, this._path, this._searchObject, sort, this._pagingObject);
+    },
+    
+    changePage: function (paging) {
+        return new AttributeGroupLocation(this._service, this._catalogId, this._path, this._searchObject, this._sortObject, paging);
     }
 };
