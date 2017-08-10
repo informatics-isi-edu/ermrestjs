@@ -8,6 +8,10 @@
  *
  * - chaise recordset is using the reference.location.searchTerm to get the search term. That's why
  *   I added the location object.
+ *
+ * - read is going to create the uri, it should use the location, keyColumns and aggregateColumns to do so.
+ *   It's better if location could have functions to create the uri, like Location prototype in Reference.
+ *   but how?
  *   
  */
 
@@ -231,20 +235,20 @@ function AttributeGroupLocation(service, catalog, path, search, sort, paging) {
      * The uri to ermrest service
      * @type {string}
      */
-    this._service = service;
+    this.service = service;
     
     /**
      * id of the catalog
      * @private
      * @type {stirng}
      */
-    this._catalogId = catalog;
+    this.catalogId = catalog;
     
     /**
      * The path that will be used for generating the uri in read.
      * @type {string}
      */
-    this._path = path;
+    this.path = path;
     
     /**
      * The search object with "column" and "term".
@@ -258,16 +262,16 @@ function AttributeGroupLocation(service, catalog, path, search, sort, paging) {
      * 
      * @type {?Object[]}
      */
-    this._sortObject = sort;
+    this.sortObject = sort;
     
     /**
      * Represents the paging. It will be in the following format:
      * {"before":boolean, "row":[v1, v2, v3...]}
      * v1, v2, v3.. are in the same order of columns in the sortObject
      * 
-     * @type {Object}
+     * @type {?Object}
      */
-    this._pagingObject = paging;
+    this.pagingObject = paging;
 }
 AttributeGroupLocation.prototype = {
     constructor: AttributeGroupLocation,
