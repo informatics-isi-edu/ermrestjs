@@ -1,29 +1,3 @@
-/*
- * Copyright 2015 University of Southern California
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * The ERMrest module is a JavaScript client library for the ERMrest
- * service. Most clients should begin with {@link ERMrest.resolve}.
- *
- * IMPORTANT NOTE: This module is a work in progress.
- * It is likely to change several times before we have an interface we wish
- * to use for ERMrest JavaScript agents.
- * @namespace ERMrest
- */
-var ERMrest = (function (module) {
 
     module.configure = configure;
 
@@ -1695,52 +1669,10 @@ var ERMrest = (function (module) {
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
-                    return this._getNullValue(options ? options.context : undefined);
-                }
-            if (data === undefined) {
                 return this._getNullValue(options ? options.context : undefined);
             }
-            /* TODO format the raw value based on the column definition
-             * type, heuristics, annotations, etc.
-             */
-            var type = this.type.name;
-            var utils = module._formatUtils;
-            switch(type) {
-                case 'timestamptz':
-                    data = utils.printTimestamp(data, options);
-                    break;
-                case 'date':
-                    data = utils.printDate(data, options);
-                    break;
-                case 'numeric':
-                case 'float4':
-                case 'float8':
-                    data = utils.printFloat(data, options);
-                    break;
-                case 'int2':
-                case 'int4':
-                case 'int8':
-                    data = utils.printInteger(data, options);
-                    break;
-                case 'boolean':
-                    data = utils.printBoolean(data, options);
-                    break;
-                case 'markdown':
-                    // Do nothing as we will format markdown at the end of format
-                    break;
-                case 'gene_sequence':
-                    data = utils.printGeneSeq(data, options);
-                    break;
-                //Cases to support json and jsonb columns
-                case 'json':
-                case 'jsonb':
-                    data = utils.printJSON(data);
-                    break;
-                default: // includes 'text' and 'longtext' cases
-                    data = utils.printText(data, options);
-                    break;
-            }
-            return data.toString();
+
+            return _formatValueByType(this.type, data, options);
         };
 
         /**
@@ -1760,12 +1692,23 @@ var ERMrest = (function (module) {
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
-
-            // If column doesn't has column-display annotation and is not of type markdown
-            // then return data as it is
-            if (!display.isHTML) {
+             
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * but the column type is json then append <pre> tag and return the value
+              */
+            
+              if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+                return { isHTML: true, value: '<pre>' + data + '</pre>'};
+              }
+                
+             /* 
+              * If column doesn't has column-display annotation and is not of type markdown
+              * then return data as it is
+              */
+              if (!display.isHTML) {
                 return { isHTML: false, value: data };
-            }
+              }
 
             var value = data;
 
@@ -1786,15 +1729,18 @@ var ERMrest = (function (module) {
 
 
             // If value is null or empty, return value on basis of `show_nulls`
+            
             if (value === null || value.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context) };
             }
-
+            
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-            value = utils.printMarkdown(value, options);
-            return { isHTML: true, value: value };
+             value = utils.printMarkdown(value, options);
+             
+             return { isHTML: true, value: value };
+            
         };
 
         /**
@@ -1812,7 +1758,7 @@ var ERMrest = (function (module) {
          *
          * @type {ERMrest.Type}
          */
-        this.type = new Type(jsonColumn.type.typename);
+        this.type = new Type(jsonColumn.type);
 
         /**
          * @type {Boolean}
@@ -2917,28 +2863,32 @@ var ERMrest = (function (module) {
      * @param name
      * @constructor
      */
-    function Type(name) {
-        //.name
-        //.is_array : boolean
-        //.base_type
+    function Type(jsonType) {
+        /**
+         * @type {string}
+         */
+        this.name = jsonType.typename;
 
         /**
-         *
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
          */
-        this.name = name;
+        this._isArray = jsonType.is_array;
+
+        /**
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
+         */
+        this._isDomain = jsonType.is_domain;
+
+        if (jsonType.base_type !== undefined) {
+            /**
+             * @type {ERMrest.Type}
+             */
+            this.baseType = new Type(jsonType.base_type);
+        }
     }
 
     Type.prototype = {
-        constructor: Type,
-
-        is_array: function () {
-
-        }
+        constructor: Type
     };
-
-    module._createType = function(name) {
-        return new Type(name);
-    };
-
-    return module;
-})(ERMrest || {});

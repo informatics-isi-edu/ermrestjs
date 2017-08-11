@@ -1,20 +1,3 @@
-/*
- * Copyright 2016 University of Southern California
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-var ERMrest = (function(module) {
 
     module.ParsedFilter = ParsedFilter;
 
@@ -419,7 +402,7 @@ var ERMrest = (function(module) {
                 var uri = "";
                 
                 // add tableAlias
-                if (joinsLength == 0) {
+                if (joinsLength === 0) {
                     uri += tableAlias + ":=";
                 }
 
@@ -1187,7 +1170,7 @@ var ERMrest = (function(module) {
         // parse choices constraint
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
-                var res = prev += (i != 0 ? ";": "");
+                var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
                     res += column + "=" + curr;
                 } else {
@@ -1225,7 +1208,7 @@ var ERMrest = (function(module) {
         // parse search constraint
         var parseSearch = function (search, column) {
             return search.reduce(function (prev, curr, i) {
-                return prev + (i != 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
+                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
             }, "");
         };
         
@@ -1249,7 +1232,7 @@ var ERMrest = (function(module) {
                 fk = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
                 
                 // constraint name was not valid
-                if (fk == null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
                     return null;
                 }
                 
@@ -1270,7 +1253,7 @@ var ERMrest = (function(module) {
                     return null;
                 }
             }
-            return res.length == 0 ? null : res.join("/");
+            return res.length === 0 ? null : res.join("/");
         };
         
         // parse TERM (it will not do it recursively)
@@ -1314,7 +1297,7 @@ var ERMrest = (function(module) {
                 }
                 
                 if (constraints.length > 0) {
-                    res.push((path.length != 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                    res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
                 }
             }
             return res.join("/");
@@ -1339,7 +1322,3 @@ var ERMrest = (function(module) {
     module._FacetsLogicalOperators = Object.freeze({
         AND: "and"
     });
-
-    return module;
-
-}(ERMrest || {}));

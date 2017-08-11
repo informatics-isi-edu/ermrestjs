@@ -19,7 +19,13 @@ BIN=$(MODULES)/.bin
 JS=js
 
 # Project source files
-SOURCE=$(JS)/core.js \
+HEADER=$(JS)/header.js
+FOOTER=$(JS)/footer.js
+HEADER_FOOTER= $(HEADER) \
+			   $(FOOTER)
+			   
+SOURCE=$(HEADER) \
+	   $(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
@@ -27,6 +33,7 @@ SOURCE=$(JS)/core.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
+	   $(FOOTER) \
 	   $(JS)/hatrac.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
@@ -75,11 +82,11 @@ $(BUILD)/$(PKG): $(SOURCE)
 # Rule to build the minified package
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(SOURCE) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
+	$(BIN)/ccjs $(BUILD)/$(PKG) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $?, $(SOURCE))
+	$(BIN)/jshint $(filter $?, $(filter-out $(HEADER_FOOTER), $(SOURCE)))
 	@touch $(LINT)
 
 .PHONY: lint
@@ -91,12 +98,12 @@ $(DOC): $(API)
 # Rule for making API doc
 $(API): $(SOURCE) $(BIN)
 	mkdir -p $(DOC)
-	$(BIN)/jsdoc2md $(SOURCE) > $(API)
+	$(BIN)/jsdoc2md $(BUILD)/$(PKG) > $(API)
 
 # jsdoc: target for html docs produced (using 'jsdoc')
 $(JSDOC): $(SOURCE) $(BIN)
 	mkdir -p $(JSDOC)
-	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(SOURCE)
+	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(BUILD)/$(PKG)
 	@touch $(JSDOC)
 
 # Rule to ensure Node bin scripts are present

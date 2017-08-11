@@ -201,7 +201,10 @@ to use for ERMrest JavaScript agents.
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
-        * [.name](#ERMrest.Type+name)
+        * [.name](#ERMrest.Type+name) : <code>string</code>
+        * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+        * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
+        * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -289,6 +292,7 @@ to use for ERMrest JavaScript agents.
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+        * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -370,16 +374,16 @@ to use for ERMrest JavaScript agents.
             * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
             * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
             * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-            * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>Columns</code>](#ERMrest.Datapath.Columns)
+            * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
             * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
         * [.PathColumn](#ERMrest.Datapath.PathColumn)
             * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
             * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
             * [.column](#ERMrest.Datapath.PathColumn+column) : [<code>Column</code>](#ERMrest.Column)
-        * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-            * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-            * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-            * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+        * [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+            * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+            * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+            * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
         * [.Operators()](#ERMrest.Datapath.Operators)
     * [.Filters](#ERMrest.Filters) : <code>object</code>
         * [.Negation](#ERMrest.Filters.Negation)
@@ -1768,7 +1772,10 @@ returns string representation of ForeignKeyRef object
 
 * [.Type](#ERMrest.Type)
     * [new Type(name)](#new_ERMrest.Type_new)
-    * [.name](#ERMrest.Type+name)
+    * [.name](#ERMrest.Type+name) : <code>string</code>
+    * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+    * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
+    * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
 
 <a name="new_ERMrest.Type_new"></a>
 
@@ -1780,7 +1787,23 @@ returns string representation of ForeignKeyRef object
 
 <a name="ERMrest.Type+name"></a>
 
-#### type.name
+#### type.name : <code>string</code>
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+_isArray"></a>
+
+#### type._isArray : <code>boolean</code>
+Currently used to signal whether there is a base type for this column
+
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+_isDomain"></a>
+
+#### type._isDomain : <code>boolean</code>
+Currently used to signal whether there is a base type for this column
+
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+baseType"></a>
+
+#### type.baseType : [<code>Type</code>](#ERMrest.Type)
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
 <a name="ERMrest.TimedOutError"></a>
 
@@ -2689,6 +2712,7 @@ if (content) {
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+    * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2829,6 +2853,13 @@ Usage:
 ```
 console.log("This tuple has a displayable name of ", tuple.displayname.value);
 ```
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+uniqueId"></a>
+
+#### tuple.uniqueId : <code>string</code>
+The unique identifier for this tuple composed of the values for each
+of the shortest key columns concatenated together by an '_'
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+update"></a>
@@ -3458,16 +3489,16 @@ deletes the file metadata from the hatrac database and removes it from the names
         * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
         * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
         * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-        * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>Columns</code>](#ERMrest.Datapath.Columns)
+        * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
         * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
     * [.PathColumn](#ERMrest.Datapath.PathColumn)
         * [new PathColumn(column, pathtable)](#new_ERMrest.Datapath.PathColumn_new)
         * [.pathtable](#ERMrest.Datapath.PathColumn+pathtable) : [<code>PathTable</code>](#ERMrest.Datapath.PathTable)
         * [.column](#ERMrest.Datapath.PathColumn+column) : [<code>Column</code>](#ERMrest.Column)
-    * [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-        * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-        * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-        * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+    * [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+        * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+        * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+        * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
     * [.Operators()](#ERMrest.Datapath.Operators)
 
 <a name="ERMrest.Datapath.DataPath"></a>
@@ -3568,7 +3599,7 @@ extend the Datapath with table
     * [.datapath](#ERMrest.Datapath.PathTable+datapath) : [<code>DataPath</code>](#ERMrest.Datapath.DataPath)
     * [.table](#ERMrest.Datapath.PathTable+table) : [<code>Table</code>](#ERMrest.Table)
     * [.alias](#ERMrest.Datapath.PathTable+alias) : <code>string</code>
-    * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>Columns</code>](#ERMrest.Datapath.Columns)
+    * [.columns](#ERMrest.Datapath.PathTable+columns) : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
     * [.toString()](#ERMrest.Datapath.PathTable+toString) ⇒ <code>string</code>
 
 <a name="new_ERMrest.Datapath.PathTable_new"></a>
@@ -3595,7 +3626,7 @@ extend the Datapath with table
 **Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
 <a name="ERMrest.Datapath.PathTable+columns"></a>
 
-##### pathTable.columns : [<code>Columns</code>](#ERMrest.Datapath.Columns)
+##### pathTable.columns : [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)
 **Kind**: instance property of [<code>PathTable</code>](#ERMrest.Datapath.PathTable)  
 <a name="ERMrest.Datapath.PathTable+toString"></a>
 
@@ -3629,9 +3660,9 @@ extend the Datapath with table
 
 ##### pathColumn.column : [<code>Column</code>](#ERMrest.Column)
 **Kind**: instance property of [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)  
-<a name="ERMrest.Datapath.Columns"></a>
+<a name="ERMrest.Datapath.PathColumns"></a>
 
-#### Datapath.Columns(table, pathtable)
+#### Datapath.PathColumns(table, pathtable)
 **Kind**: static method of [<code>Datapath</code>](#ERMrest.Datapath)  
 
 | Param | Type |
@@ -3640,27 +3671,27 @@ extend the Datapath with table
 | pathtable | [<code>PathTable</code>](#ERMrest.Datapath.PathTable) | 
 
 
-* [.Columns(table, pathtable)](#ERMrest.Datapath.Columns)
-    * [.length()](#ERMrest.Datapath.Columns+length) ⇒ <code>Number</code>
-    * [.names()](#ERMrest.Datapath.Columns+names) ⇒ <code>Array.&lt;String&gt;</code>
-    * [.get(colName)](#ERMrest.Datapath.Columns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+* [.PathColumns(table, pathtable)](#ERMrest.Datapath.PathColumns)
+    * [.length()](#ERMrest.Datapath.PathColumns+length) ⇒ <code>Number</code>
+    * [.names()](#ERMrest.Datapath.PathColumns+names) ⇒ <code>Array.&lt;String&gt;</code>
+    * [.get(colName)](#ERMrest.Datapath.PathColumns+get) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
 
-<a name="ERMrest.Datapath.Columns+length"></a>
+<a name="ERMrest.Datapath.PathColumns+length"></a>
 
-##### columns.length() ⇒ <code>Number</code>
-**Kind**: instance method of [<code>Columns</code>](#ERMrest.Datapath.Columns)  
+##### pathColumns.length() ⇒ <code>Number</code>
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
 **Returns**: <code>Number</code> - number of path columns  
-<a name="ERMrest.Datapath.Columns+names"></a>
+<a name="ERMrest.Datapath.PathColumns+names"></a>
 
-##### columns.names() ⇒ <code>Array.&lt;String&gt;</code>
-**Kind**: instance method of [<code>Columns</code>](#ERMrest.Datapath.Columns)  
+##### pathColumns.names() ⇒ <code>Array.&lt;String&gt;</code>
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
 **Returns**: <code>Array.&lt;String&gt;</code> - a list of pathcolumn names  
-<a name="ERMrest.Datapath.Columns+get"></a>
+<a name="ERMrest.Datapath.PathColumns+get"></a>
 
-##### columns.get(colName) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
+##### pathColumns.get(colName) ⇒ [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn)
 get PathColumn object by column name
 
-**Kind**: instance method of [<code>Columns</code>](#ERMrest.Datapath.Columns)  
+**Kind**: instance method of [<code>PathColumns</code>](#ERMrest.Datapath.PathColumns)  
 **Returns**: [<code>PathColumn</code>](#ERMrest.Datapath.PathColumn) - returns the PathColumn  
 **Throws**:
 

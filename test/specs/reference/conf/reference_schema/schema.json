@@ -38,13 +38,13 @@
                     }
                 },
                 {
-                     "comment": null, 
-                     "name": "json_col_with_markdownpattern", 
-                     "default": null, 
-                     "nullok": true, 
+                     "comment": null,
+                     "name": "json_col_with_markdownpattern",
+                     "default": null,
+                     "nullok": true,
                      "type": {
                        "typename": "json"
-                     }, 
+                     },
                      "annotations": {
                        "tag:isrd.isi.edu,2016:column-display": {
                          "*": {
@@ -52,7 +52,23 @@
                          }
                        }
                    }
-               }
+               },
+               {
+                    "comment": null, 
+                    "name": "col_markdown_blankable", 
+                    "default": null, 
+                    "nullok": true, 
+                    "type": {
+                      "typename": "json"
+                    }, 
+                    "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display": {
+                        "*": {
+                          "markdown_pattern": "{{#_col_markdown_blankable}} [![{{{filename}}}]({{{url}}}){height=90}]({{{url}}}){target=_blank} {{/_col_markdown_blankable}}"
+                        }
+                      }
+                  }
+              }
 
             ]
         },
@@ -775,7 +791,7 @@
             "entityCount": 0,
             "foreign_keys": [],
             "table_name": "table_w_composite_key",
-            "schema_name": "columns_schema",
+            "schema_name": "reference_schema",
             "column_definitions": [
                 {
                     "name": "id",
@@ -784,6 +800,50 @@
                         "typename": "text"
                     }
                 },
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{id_1}} , {{id_2}}"
+                    }
+                },
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry/edit": [],
+                    "entry/create": []
+                }
+            }
+        },
+        "table_w_only_composite_key": {
+            "comment": "Table with composite key as the only key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_only_composite_key",
+            "schema_name": "reference_schema",
+            "column_definitions": [
                 {
                     "name": "id_1",
                     "nullok": false,

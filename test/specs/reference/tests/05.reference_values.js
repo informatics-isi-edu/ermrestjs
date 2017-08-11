@@ -246,14 +246,14 @@ exports.execute = function (options) {
 
     });
     
-    describe("Testing for JSON AND JSONB Values,", function() {
+    describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
-        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n"},
-        {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<p>Status is: “Activated”</p>\n"},
-        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_with_markdownpattern": "<p>Status is: “Analysed”</p>\n"},
-        {"id":"1004","json_col":false,"jsonb_col":false, "json_col_with_markdownpattern": "<p>Status is: “Shipped”</p>\n"},
-        {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_with_markdownpattern": "<p>Status is: “OnHold”</p>\n"},
-        {"id":"1006","json_col":null,"jsonb_col":null, "json_col_with_markdownpattern": "<p>Status is: “Complete”</p>\n"}];
+        var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n", "col_markdown_blankable": '<p><a href="https://madeby.google.com/static/images/google_g_logo.svg" target="_blank"><img src="https://madeby.google.com/static/images/google_g_logo.svg" alt="" height="90"></a></p>\n'},
+        {"id":"1002","json_col":{},"jsonb_col":{}, "json_col_with_markdownpattern": "<p>Status is: “Activated”</p>\n", "col_markdown_blankable": ""},
+        {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"}, "json_col_with_markdownpattern": "<p>Status is: “Analysed”</p>\n", "col_markdown_blankable": ""},
+        {"id":"1004","json_col":false,"jsonb_col":false, "json_col_with_markdownpattern": "<p>Status is: “Shipped”</p>\n", "col_markdown_blankable": '<p><a href="https://madeby.google.com/abc.jpeg" target="_blank"><img src="https://madeby.google.com/abc.jpeg" alt="" height="90"></a></p>\n'},
+        {"id":"1005","json_col":2.9,"jsonb_col":2.9, "json_col_with_markdownpattern": "<p>Status is: “OnHold”</p>\n", "col_markdown_blankable": ""},
+        {"id":"1006","json_col":null,"jsonb_col":null, "json_col_with_markdownpattern": "<p>Status is: “Complete”</p>\n", "col_markdown_blankable": '<p><a href="myurl" target="_blank"><img src="myurl" alt="" height="90"></a></p>\n'}];
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
@@ -331,7 +331,7 @@ exports.execute = function (options) {
             options.ermRest.appLinkFn(appLinkFn);
         });
         
-        it("JSON and JSONB column should return the expected values in Display Context", function() {
+        it("JSON column should display pre tags without markdown and should not append pre tag with markdown", function() {
             
             for( var i=0; i<limit; i++){
                 var values=tuples[i].values;
@@ -342,7 +342,9 @@ exports.execute = function (options) {
                 expect(values[1]).toBe(json, "Mismatch in tuple with index = "+ i +", column= json_col");
                 expect(values[2]).toBe(jsonb ,"Mismatch in tuple with index = "+ i +", column= jsonb_col");
                 expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern, "Mismatch in tuple with index = "+ i +", column= json_col_with_markdownpattern");
+                expect(values[4]).toBe(expectedValues[i].col_markdown_blankable, "Mismatch in tuple with index = "+ i +", column= col_markdown_blankable");
             }
         });
+
     });
 };

@@ -1,7 +1,7 @@
-[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern":"processed"},
-{"id":"1002","json_col":{},"jsonb_col":{},"json_col_with_markdownpattern":"Activated"},
-{"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"},"json_col_with_markdownpattern":"Analysed"},
-{"id":"1004","json_col":false,"jsonb_col":false,"json_col_with_markdownpattern":"Shipped"},
-{"id":"1005","json_col":2.9,"jsonb_col":2.9,"json_col_with_markdownpattern":"OnHold"},
-{"id":"1006","json_col":"","jsonb_col":"","json_col_with_markdownpattern":"Complete"}
+[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern":"processed", "col_markdown_blankable": {"url":"https://madeby.google.com/static/images/google_g_logo.svg"}},
+{"id":"1002","json_col":{},"jsonb_col":{},"json_col_with_markdownpattern":"Activated", "col_markdown_blankable": ""},
+{"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"},"json_col_with_markdownpattern":"Analysed", "col_markdown_blankable": null},
+{"id":"1004","json_col":false,"jsonb_col":false,"json_col_with_markdownpattern":"Shipped", "col_markdown_blankable": {"url":"https://madeby.google.com/abc.jpeg"}},
+{"id":"1005","json_col":2.9,"jsonb_col":2.9,"json_col_with_markdownpattern":"OnHold", "col_markdown_blankable": false},
+{"id":"1006","json_col":"","jsonb_col":"","json_col_with_markdownpattern":"Complete", "col_markdown_blankable": {"url": "myurl"}}
 ]

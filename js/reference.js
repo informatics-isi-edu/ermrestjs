@@ -1,20 +1,3 @@
-/*
- * Copyright 2016 University of Southern California
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-var ERMrest = (function(module) {
 
     /**
      * set callback function that converts app tag to app URL
@@ -70,23 +53,23 @@ var ERMrest = (function(module) {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
             var location;
-            
+
             // make sure all the dependencies are loaded
             module._onload().then(function () {
                 location = module.parse(uri);
                 var server = module.ermrestFactory.getServer(location.service, params);
-                
+
                 // find the catalog
                 return server.catalogs.get(location.catalog);
             }).then(function (catalog) {
-                
+
                 //create Reference
                 defer.resolve(new Reference(location, catalog));
             }, function (error) {
-                
+
                 throw error;
             }).catch(function(exception) {
-                
+
                 defer.reject(exception);
             });
 
@@ -143,7 +126,7 @@ var ERMrest = (function(module) {
             throw new module.InvalidInputError(message);
         }
     }
-    
+
     /**
      * Returns true if given value is defined and not null.
      * @param  {object}  v the object that we want to test
@@ -304,7 +287,7 @@ var ERMrest = (function(module) {
             }
             return this._referenceColumns;
         },
-        
+
         /**
          * Facets that should be represented to the user.
          * Heuristics:
@@ -323,18 +306,18 @@ var ERMrest = (function(module) {
          *    console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
          *  }
          * ```
-         * 
-         * @return {ERMrest.FacetColumn[]} 
+         *
+         * @return {ERMrest.FacetColumn[]}
          */
         get facetColumns() {
             if (this._facetColumns === undefined) {
                 this._facetColumns = [];
-                
+
                 // this reference should be only used for getting the list,
                 var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
                 var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
                 var self = this;
-                
+
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
@@ -394,7 +377,7 @@ var ERMrest = (function(module) {
                     if (!Array.isArray(source)) {
                         return source === filterSource;
                     }
-                    
+
                     if (source.length !== filterSource.length) {
                         return false;
                     }
@@ -424,7 +407,7 @@ var ERMrest = (function(module) {
                         if (source[i][key][0] !== filterSource[i][key][0] || source[i][key][1] != filterSource[i][key][1]) {
                             return false;
                         }
-                        
+
                     }
                     return true;
                 };
@@ -456,9 +439,9 @@ var ERMrest = (function(module) {
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
                 }
-                
+
                 var index = 0;
-                
+
                 // all the visible columns in compact context
                 var columns = compactRef.columns;
                 columns.forEach(function (col) {
@@ -466,7 +449,7 @@ var ERMrest = (function(module) {
                         addColumn(col, index++);
                     }
                 });
-                
+
                 // all the realted in detailed context
                 var related = detailedRef.related();
                 related.forEach(function (relRef) {
@@ -476,7 +459,7 @@ var ERMrest = (function(module) {
             }
             return this._facetColumns;
         },
-        
+
         /**
          * Remove all the fitlers from facets
          * @return {ERMrest.reference} A reference without facet filters
@@ -484,13 +467,13 @@ var ERMrest = (function(module) {
         removeAllFacetFilters: function () {
             var newReference = _referenceCopy(this);
             delete newReference._facetColumns;
-            
+
             newReference._location = this._location._clone();
             newReference._location.facets = null;
-            
+
             return newReference;
         },
-        
+
         /**
          * Location object that has uri of current reference
          * @return {ERMrest.Location}
@@ -933,7 +916,7 @@ var ERMrest = (function(module) {
                  *
                  * NOTE:
                  * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   0. 
+                 *   0.
                  *   1. There is no alias in url (more precisely `F1`, `F2`, `F3`, ...)
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
@@ -3172,12 +3155,7 @@ var ERMrest = (function(module) {
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            // If the column type is json or jsonB we will send the templated string with <pre> tag
-                            if((!values[i].isHTML) && (column.type.name === "json" || column.type.name === "jsonb")){
-                                values[i].value = "<pre>"+ values[i].value + "</pre>";
-                                values[i].isHTML = true;
-                            }
-
+                            
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -3211,7 +3189,7 @@ var ERMrest = (function(module) {
          */
         get isHTML() {
             // this._isHTML has not been populated then call this.values getter to populate values and isHTML array
-            if (!this._isHTML) {
+            if (this._isHTML === undefined) {
                 var value = this.values;
             }
 
@@ -3231,10 +3209,29 @@ var ERMrest = (function(module) {
          * @type {string}
          */
         get displayname() {
-            if (!this._displayname) {
+            if (this._displayname === undefined) {
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
             }
             return this._displayname;
+        },
+
+        /**
+         * The unique identifier for this tuple composed of the values for each
+         * of the shortest key columns concatenated together by an '_'
+         *
+         * @type {string}
+         */
+        get uniqueId() {
+            if (this._uniqueId === undefined) {
+                var key;
+                this._uniqueId = "";
+                for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
+                    keyName = this.reference.table.shortestKey[i].name;
+                    if (i != 0) this._uniqueId += "_";
+                    this._uniqueId += this.data[keyName];
+                }
+            }
+            return this._uniqueId;
         },
 
         /**
@@ -3390,7 +3387,7 @@ var ERMrest = (function(module) {
          */
         get type() {
             if (this._type === undefined) {
-                this._type = (!this._simple || this.isPseudo) ? module._createType("markdown") : this._baseCols[0].type;
+                this._type = (!this._simple || this.isPseudo) ? new Type({typename: "markdown"}) : this._baseCols[0].type;
             }
             return this._type;
         },
@@ -4420,7 +4417,7 @@ var ERMrest = (function(module) {
             throw new Error("can not use this type of column in entry mode.");
         }
     });
-        
+
     /**
      * Represent facet columns that are available.
      * NOTE:
@@ -4454,7 +4451,7 @@ var ERMrest = (function(module) {
          * @type {int}
          */
         this.index = index;
-        
+
         /**
          * A valid data-source path
          * @type {obj|string} 
@@ -4649,7 +4646,7 @@ var ERMrest = (function(module) {
             }
             return this._comment;
         },
-        
+
         /**
          * Return JSON presentation of the filters.
          * It will be in the following format:
@@ -4662,10 +4659,10 @@ var ERMrest = (function(module) {
          *    "search": [v, ...]
          * }
          * ```
-         * 
+         *
          * @return {Object}
          */
-        toJSON: function () {            
+        toJSON: function () {
             var res = { "source": this.dataSource};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
@@ -4674,10 +4671,10 @@ var ERMrest = (function(module) {
                 }
                 res[f.facetFilterKey].push(f.toJSON());
             }
-            
+
             return res;
         },
-        
+
         /**
          * Given an object will create list of filters.
          *
@@ -4690,13 +4687,13 @@ var ERMrest = (function(module) {
          *    "search": [v, ...]
          * }
          * ```
-         * 
+         *
          * @param  {Object} json JSON representation of filters
          */
         setFilters: function (json) {
             var self = this;
             self.filters = [];
-                        
+
             if (!isDefinedAndNotNull(json)) {
                 return;
             }
@@ -4707,14 +4704,14 @@ var ERMrest = (function(module) {
                     self.filters.push(new ChoiceFacetFilter(ch));
                 });
             }
-            
+
             // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
                     self.filters.push(new RangeFacetFilter(ch.min, ch.max));
                 });
             }
-            
+
             // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
@@ -4722,7 +4719,7 @@ var ERMrest = (function(module) {
                 });
             }
         },
-        
+
         /**
          * Create a new Reference with appending a new Search filter to current FacetColumn
          * @param  {String} term the term for search
@@ -4730,13 +4727,13 @@ var ERMrest = (function(module) {
          */
         addSearchFilter: function (term) {
             verify (isDefinedAndNotNull(term), "`term` is required.");
-            
+
             var filters = this.filters.slice();
             filters.push(new SearchFacetFilter(term));
-            
+
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Create a new Reference with appending a new choice filter to current FacetColumn
          * @param  {String|int} term the term for choice
@@ -4745,10 +4742,10 @@ var ERMrest = (function(module) {
         addChoiceFilter: function (term) {
             var filters = this.filters.slice();
             filters.push(new ChoiceFacetFilter(term));
-            
+
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Create a new Reference with appending a new range filter to current FacetColumn
          * @param  {String|int=} min minimum value. Can be null or undefined.
@@ -4757,13 +4754,13 @@ var ERMrest = (function(module) {
          */
         addRangeFilter: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
-            
+
             var filters = this.filters.slice();
             filters.push(new RangeFacetFilter(min, max));
-            
+
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Create a new Reference with appending a new entity filter to current FacetColumn
          * @param  {ERMrest.Tuple} tuple the tuple object that has the row values.
@@ -4781,25 +4778,25 @@ var ERMrest = (function(module) {
          * @return {ERMrest.Reference} the reference with the new filter
          */
         removeAllFilters: function() {
-            
+
             return this._applyFilters([]);
         },
-        
+
         /**
          * Create a new Reference by removing a filter from current facet.
-         * @param  {int} index index of element that we want to remove from list 
+         * @param  {int} index index of element that we want to remove from list
          * @return {ERMrest.Reference} the reference with the new filter
          */
         removeFilter: function (index) {
             var filters = this.filters.slice();
             filters.splice(index, 1);
-            
+
             return this._applyFilters(filters);
         },
-        
-        
+
+
         /**
-         * Given an array of {@link ERMrest.FacetFilter}, will return a new 
+         * Given an array of {@link ERMrest.FacetFilter}, will return a new
          * {@link ERMrest.Reference} with the applied filters to the current FacetColumn
          * @private
          * @param  {ERMrest.FacetFilter[]} filters array of filters
@@ -4837,18 +4834,18 @@ var ERMrest = (function(module) {
                     jsonFilters.push(fc.toJSON());
                 }
             });
-            
+
             // change the facets in location object
             if (jsonFilters.length > 0) {
                 newReference._location.facets = {"and": jsonFilters};
             } else {
                 newReference._location.facets = null;
             }
-            
+
             return newReference;
         }
     };
-    
+
     /**
      * Represent filters that can be applied to facet
      * @param       {String|int} term the valeu of filter
@@ -4859,7 +4856,7 @@ var ERMrest = (function(module) {
     }
     FacetFilter.prototype = {
         constructor: FacetFilter,
-        
+
         /**
          * String representation of filter
          * @return {string}
@@ -4867,7 +4864,7 @@ var ERMrest = (function(module) {
         toString: function () {
             return this.term;
         },
-        
+
         /**
          * JSON representation of filter
          * @return {string}
@@ -4876,12 +4873,12 @@ var ERMrest = (function(module) {
             return this.toString();
         }
     };
-    
+
     /**
      * Represent choice filters that can be applied to facet.
      * JSON representation of this filter:
      * "choices": [v1, ...]
-     * 
+     *
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
@@ -4891,12 +4888,12 @@ var ERMrest = (function(module) {
         this.facetFilterKey = "choices";
     }
     module._extends(ChoiceFacetFilter, FacetFilter);
-    
+
     /**
      * Represent search filters that can be applied to facet.
      * JSON representation of this filter:
      * "search": [v1, ...]
-     * 
+     *
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
@@ -4906,12 +4903,12 @@ var ERMrest = (function(module) {
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
-    
+
     /**
      * Represent range filters that can be applied to facet.
      * JSON representation of this filter:
      * "ranges": [{min: v1, max: v2}]
-     * 
+     *
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int=} min
      * @param       {String|int=} max
@@ -4923,14 +4920,14 @@ var ERMrest = (function(module) {
         this.facetFilterKey = "ranges";
     }
     module._extends(RangeFacetFilter, FacetFilter);
-    
+
     /**
      * String representation of range filter. With the format of:
      *
      * - both min and max defined: `{{min}}-{{max}}`
      * - only min defined: `> {{min}}`
      * - only max defined: `{{max}} <`
-     * 
+     *
      * @return {string}
      */
     RangeFacetFilter.prototype.toString = function () {
@@ -4943,7 +4940,7 @@ var ERMrest = (function(module) {
         }
         return this.min + " - " + this.max;
     };
-    
+
     /**
      * JSON representation of range filter.
      * @return {Object}
@@ -5059,8 +5056,3 @@ var ERMrest = (function(module) {
             return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         }
     };
-
-    
-    return module;
-
-}(ERMrest || {}));
