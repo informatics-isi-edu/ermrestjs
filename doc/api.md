@@ -284,7 +284,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
-        * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
+        * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
@@ -395,6 +395,7 @@ to use for ERMrest JavaScript agents.
         * [.BinaryPredicate](#ERMrest.Filters.BinaryPredicate)
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
+    * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
@@ -2659,7 +2660,7 @@ if (content) {
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
-    * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;string&gt;</code>
+    * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
@@ -2777,7 +2778,7 @@ console.log(tuple.displayname, "has a", column.displayname,
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+isHTML"></a>
 
-#### tuple.isHTML : <code>Array.&lt;string&gt;</code>
+#### tuple.isHTML : <code>Array.&lt;boolean&gt;</code>
 The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
 values in the array matches the ordering of the columns in the
 reference (see [columns](#ERMrest.Reference+columns)).
@@ -3798,6 +3799,10 @@ get PathColumn object by column name
 ##### binaryPredicate.toUri() ⇒ <code>string</code>
 **Kind**: instance method of [<code>BinaryPredicate</code>](#ERMrest.Filters.BinaryPredicate)  
 **Returns**: <code>string</code> - URI of the filter  
+<a name="ERMrest.AttributeGroupReference"></a>
+
+### ERMrest.AttributeGroupReference : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
 <a name="ERMrest.configure"></a>
 
 ### ERMrest.configure(http, q)

@@ -116,6 +116,15 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
+    
+    /**
+     * Returns true if given parameter is object and not null
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isObjectAndNotNull = function (obj) {
+        return typeof obj === "object" && obj !== null;
+    };
 
     /**
      * @private
@@ -464,7 +473,7 @@
         var annotation, col, template, keyValues, unformatted, unformattedAnnotation;
 
         // If table has table-display annotation then set it in annotation variable
-        if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+        if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
 
             // getting the defined unformatted value
