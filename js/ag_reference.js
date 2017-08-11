@@ -460,7 +460,7 @@ function AttributeGroupColumn(alias, term, displayname, type, comment, sortable,
      * creating the url.
      * @type {string}
      */
-    this.term = name;
+    this.term = term;
     
     if (typeof displayname === 'string') {
         this._displayname = {"value": displayname, "unformatted": displayname, "isHTML": false};
