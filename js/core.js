@@ -1669,52 +1669,10 @@
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
-                    return this._getNullValue(options ? options.context : undefined);
-                }
-            if (data === undefined) {
                 return this._getNullValue(options ? options.context : undefined);
             }
-            /* TODO format the raw value based on the column definition
-             * type, heuristics, annotations, etc.
-             */
-            var type = this.type.name;
-            var utils = module._formatUtils;
-            switch(type) {
-                case 'timestamptz':
-                    data = utils.printTimestamp(data, options);
-                    break;
-                case 'date':
-                    data = utils.printDate(data, options);
-                    break;
-                case 'numeric':
-                case 'float4':
-                case 'float8':
-                    data = utils.printFloat(data, options);
-                    break;
-                case 'int2':
-                case 'int4':
-                case 'int8':
-                    data = utils.printInteger(data, options);
-                    break;
-                case 'boolean':
-                    data = utils.printBoolean(data, options);
-                    break;
-                case 'markdown':
-                    // Do nothing as we will format markdown at the end of format
-                    break;
-                case 'gene_sequence':
-                    data = utils.printGeneSeq(data, options);
-                    break;
-                //Cases to support json and jsonb columns
-                case 'json':
-                case 'jsonb':
-                    data = utils.printJSON(data);
-                    break;
-                default: // includes 'text' and 'longtext' cases
-                    data = utils.printText(data, options);
-                    break;
-            }
-            return data.toString();
+
+            return _formatValueByType(this.type, data, options);
         };
 
         /**
@@ -1800,7 +1758,7 @@
          *
          * @type {ERMrest.Type}
          */
-        this.type = new Type(jsonColumn.type.typename);
+        this.type = new Type(jsonColumn.type);
 
         /**
          * @type {Boolean}
@@ -2905,25 +2863,32 @@
      * @param name
      * @constructor
      */
-    function Type(name) {
-        //.name
-        //.is_array : boolean
-        //.base_type
+    function Type(jsonType) {
+        /**
+         * @type {string}
+         */
+        this.name = jsonType.typename;
 
         /**
-         *
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
          */
-        this.name = name;
+        this._isArray = jsonType.is_array;
+
+        /**
+         * Currently used to signal whether there is a base type for this column
+         * @type {boolean}
+         */
+        this._isDomain = jsonType.is_domain;
+
+        if (jsonType.base_type !== undefined) {
+            /**
+             * @type {ERMrest.Type}
+             */
+            this.baseType = new Type(jsonType.base_type);
+        }
     }
 
     Type.prototype = {
-        constructor: Type,
-
-        is_array: function () {
-
-        }
-    };
-
-    module._createType = function(name) {
-        return new Type(name);
+        constructor: Type
     };

@@ -1,7 +1,9 @@
 exports.execute = function(options) {
 
     describe('About the Column class, ', function() {
-        var schemaName2 = 'common_schema_2', table1_schema2;
+        var schemaName2 = 'common_schema_2', 
+            columnName = 'table_1_text',
+            table1_schema2;
 
         beforeAll(function(done) {
             table1_schema2 = options.catalog.schemas.get(schemaName2).tables.get('table_1_schema_2');
@@ -12,11 +14,34 @@ exports.execute = function(options) {
         describe('a column in Table class, ', function() {
             var column;
             beforeAll(function() {
-                column = table1_schema2.columns.get('table_1_text');
+                column = table1_schema2.columns.get(columnName);
             });
 
             it('should be defined.', function() {
                 expect(column).toBeDefined();
+            });
+
+            it('should have properties defined in the constructor.', function() {
+                expect(column.position).not.toBeDefined();
+                expect(column.table).toBeDefined();
+                expect(column.name).toBe(columnName);
+
+                expect(column.type).toEqual(jasmine.any(Object));
+                expect(column.type.name).toBe("text");
+
+                expect(column.nullok).toBeTruthy();
+                expect(column.comment).toBeNull();
+                expect(column.ignore).toBeFalsy();
+                expect(column.annotations).toEqual(jasmine.any(Object));
+
+                expect(column.displayname.isHTML).toBeFalsy();
+                expect(column.displayname.value).toBe(columnName);
+                expect(column.displayname.unformatted).toBe(columnName);
+
+                expect(column.memberOfKeys).toEqual(jasmine.any(Array));
+                expect(column.memberOfKeys.length).toBe(0);
+                expect(column.memberOfForeignKeys).toEqual(jasmine.any(Array));
+                expect(column.memberOfForeignKeys.length).toBe(0);
             });
 
             it('should have a .getInputDisabled method', function() {
@@ -90,7 +115,7 @@ exports.execute = function(options) {
 
                     beforeAll(function(done){
                         columnWithAnnotation = table1_schema2.columns.get('table_1_show_nulls_annotation');
-                        columnWithoutAnnotation = table1_schema2.columns.get('table_1_text');
+                        columnWithoutAnnotation = table1_schema2.columns.get(columnName);
                         done();
                     });
 
@@ -134,19 +159,17 @@ exports.execute = function(options) {
                     var formattedValue = undefined;
 
                     it('text columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printText').and.callThrough();
-                        var textCol = table1_schema2.columns.get('table_1_text');
+                        var textCol = table1_schema2.columns.get(columnName);
                         formattedValue = textCol.formatvalue('text value');
-                        expect(spy).toHaveBeenCalledWith('text value', undefined);
+
                         expect(formattedValue).toBe('text value');
                     });
 
                     it('longtext columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printText').and.callThrough();
                         var longtextCol = table1_schema2.columns.get('table_1_longtext');
                         var longtext = 'asjdf;laksjdf;laj ;lkajsd;f lkajsdf;lakjs f;lakjs df;lasjd f;ladsjf;alskdjfa ;lskdjf a;lsdkjf a;lskdfjal;sdkfj as;ldfkj as;dlf kjasl;fkaj;lfkjasl;fjas;ldfkjals;dfkjas;dlkfja;sldkfjasl;dkfjas;dlfkjasl;dfkja; lsdjfk a;lskdjf a;lsdfj as;ldfja;sldkfja;lskjdfa;lskdjfa;lsdkfja;sldkfjas;ldfkjas;dlfkjas;lfkja;sldkjf a;lsjf ;laskj fa;slk jfa;sld fjas;l js;lfkajs;lfkasjf;alsja;lk ;l kja';
                         formattedValue = longtextCol.formatvalue(longtext);
-                        expect(spy).toHaveBeenCalledWith(longtext, undefined);
+
                         expect(formattedValue).toBe(longtext);
                     });
 
@@ -158,11 +181,10 @@ exports.execute = function(options) {
 
                 describe('should call printDate() to format,', function() {
                     it('date columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printDate').and.callThrough();
                         var testVal = '2016/05/02 13:00:00.00 PST';
                         var col = table1_schema2.columns.get('table_1_date');
                         var formattedValue = col.formatvalue(testVal);
-                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('2016-05-02');
                     });
@@ -170,30 +192,24 @@ exports.execute = function(options) {
 
                 describe('should call printBoolean() to format,', function() {
                     it('boolean columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printBoolean').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_boolean');
 
                         var trueBoolean = col.formatvalue(true);
-                        expect(spy).toHaveBeenCalledWith(true, undefined);
                         expect(trueBoolean).toEqual(jasmine.any(String));
                         expect(trueBoolean).toBe('true');
 
                         var falseBoolean = col.formatvalue(false);
-                        expect(spy).toHaveBeenCalledWith(false, undefined);
                         expect(falseBoolean).toEqual(jasmine.any(String));
                         expect(falseBoolean).toBe('false');
-
-                        expect(spy.calls.count()).toBe(2);
                     });
                 });
 
                 describe('should call printTimestamp() to format,', function() {
                     it('timestamptz columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printTimestamp').and.callThrough();
                         var testVal = '2011-05-06T08:25:25-07:00';
                         var col = table1_schema2.columns.get('table_1_timestamp');
                         var formattedValue = col.formatvalue(testVal);
-                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('2011-05-06 08:25:25');
                     });
@@ -203,28 +219,25 @@ exports.execute = function(options) {
                     var formattedValue = undefined;
 
                     it('float4 columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_float4');
                         formattedValue = col.formatvalue(11.1);
-                        expect(spy).toHaveBeenCalledWith(11.1, undefined);
+
                         expect(formattedValue).toBe('11.1000');
                     });
 
                     it('float8 columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_float8');
                         var options = {numFracDigits: 7};
                         formattedValue = col.formatvalue(234523523.023045230450245, options);
-                        expect(spy).toHaveBeenCalledWith(234523523.023045230450245, options);
+
                         expect(formattedValue).toBe('234,523,523.0230452');
                     });
 
                     it('numeric columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printFloat').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_numeric');
                         var options = {numFracDigits: 8};
                         formattedValue = col.formatvalue(456456.234682307474076, options);
-                        expect(spy).toHaveBeenCalledWith(456456.234682307474076, options);
+
                         expect(formattedValue).toBe('456,456.23468231');
                     })
 
@@ -238,30 +251,27 @@ exports.execute = function(options) {
                     var formattedValue = undefined;
 
                     it('int2 columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_int2');
                         var int2 = 32768;
                         formattedValue = col.formatvalue(int2);
-                        expect(spy).toHaveBeenCalledWith(int2, undefined);
+
                         expect(formattedValue).toBe('32,768');
                     });
 
                     it('int4 columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_int4');
                         var int4 = -2147483648;
                         formattedValue = col.formatvalue(int4);
-                        expect(spy).toHaveBeenCalledWith(int4, undefined);
+
                         expect(formattedValue).toBe('-2,147,483,648');
                     });
 
                     it('int8 columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printInteger').and.callThrough();
                         var col = table1_schema2.columns.get('table_1_int8');
                         var int8 = 9007199254740991; // Max safe integer in JS
                         var options = {numFracDigits: 7};
                         formattedValue = col.formatvalue(int8);
-                        expect(spy).toHaveBeenCalledWith(int8, undefined);
+
                         expect(formattedValue).toBe('9,007,199,254,740,991');
                     });
 
@@ -273,11 +283,10 @@ exports.execute = function(options) {
 
                 describe('should not call printMarkdown() to format,', function() {
                     it('Markdown columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printMarkdown').and.callThrough();
                         var testVal = '*taylor ^swift^*';
                         var col = table1_schema2.columns.get('table_1_markdown');
                         var formattedValue = col.formatvalue(testVal);
-                        expect(spy).not.toHaveBeenCalledWith(testVal, undefined);
+
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('*taylor ^swift^*');
                     });
@@ -285,11 +294,10 @@ exports.execute = function(options) {
 
                 describe('should call printGeneSeq() to format,', function() {
                     it('gene_sequence columns correctly.', function() {
-                        var spy = spyOn(formatUtils, 'printGeneSeq').and.callThrough();
                         var testVal = 'GATCGATCGCGTATT';
                         var col = table1_schema2.columns.get('table_1_gene_sequence');
                         var formattedValue = col.formatvalue(testVal);
-                        expect(spy).toHaveBeenCalledWith(testVal, undefined);
+
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('<code>GATCGATCGC GTATT</code>');
                     });

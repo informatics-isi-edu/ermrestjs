@@ -863,6 +863,54 @@
         }
     };
 
+    /** 
+     * format the raw value based on the column definition type, heuristics, annotations, etc.
+     * @param {ERMrest.Type} type - the type object of the column
+     * @param {Object} data - the 'raw' data value.
+     * @param {Object} options - the key value pair of possible options with all formatted values in '.formattedValues' key
+     * @returns {string} The formatted value.
+     */
+    _formatValueByType = function(type, data, options) {
+        var utils = module._formatUtils;
+        switch(type.name) {
+            case 'timestamptz':
+                data = utils.printTimestamp(data, options);
+                break;
+            case 'date':
+                data = utils.printDate(data, options);
+                break;
+            case 'numeric':
+            case 'float4':
+            case 'float8':
+                data = utils.printFloat(data, options);
+                break;
+            case 'int2':
+            case 'int4':
+            case 'int8':
+                data = utils.printInteger(data, options);
+                break;
+            case 'boolean':
+                data = utils.printBoolean(data, options);
+                break;
+            case 'markdown':
+                // Do nothing as we will format markdown at the end of format
+                data = data.toString();
+                break;
+            case 'gene_sequence':
+                data = utils.printGeneSeq(data, options);
+                break;
+            //Cases to support json and jsonb columns
+            case 'json':
+            case 'jsonb':
+                data = utils.printJSON(data);
+                break;
+            default: // includes 'text' and 'longtext' cases
+                data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
+                break;
+        }
+        return data;
+    };
+
     /**
      * @function
      * @param {Object} value The Markdown to transform
