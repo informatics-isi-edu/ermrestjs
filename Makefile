@@ -79,7 +79,7 @@ $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $(SOURCE), $?)
+	$(BIN)/jshint $(filter $?, $(SOURCE))
 	@touch $(LINT)
 
 .PHONY: lint

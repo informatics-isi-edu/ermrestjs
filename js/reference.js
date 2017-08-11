@@ -339,7 +339,57 @@ var ERMrest = (function(module) {
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
                 
-                // check if both sources are the same.
+                /**
+                 * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
+                 * will return {"dataSource": source list, "column": Column object}
+                 */
+                var generateDataSource = function (refCol) {
+                    if (refCol.isForeignKey) {
+                        var constraint = refCol.foreignKey.constraint_names[0];
+                        return {
+                            "dataSource": [
+                                {"outbound": constraint},
+                                refCol.foreignKey.key.colset.columns[0].name
+                            ],
+                            "column": refCol.foreignKey.key.colset.columns[0]
+                        };
+                    }
+                    
+                    if (refCol.isInboundForeignKey) {
+                        var res = [];
+                        var origFkR = refCol.foreignKey;
+                        var association = refCol.reference.derivedAssociationReference;
+                        var column;
+                        
+                        res.push({
+                            "inbound": origFkR.constraint_names[0]
+                        });
+                        
+                        if (association) {
+                            res.push({
+                                "outbound": association._secondFKR.constraint_names[0]
+                            });
+                            column = association._secondFKR.key.colset.columns[0];
+                        } else {
+                            column = origFkR.colset.columns[0];
+                        }
+                        res.push(column.name);
+                        return {"dataSource": res, "column": column};
+                    }
+                    
+                    return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
+                };
+                
+                /**
+                 * Given two source objects check if they are the same.
+                 * Source can be a string or array. If it's an array, the last element
+                 * must be an string and the other elements must have either `inbound`
+                 * or `outbound` key which its value will be the constraint name array.
+                 * example:
+                 * - '*'
+                 * - 'col_name'
+                 * - [{"inbound":['s', 'c']}, {"outbound": ['s', 'c2']}, 'col']
+                 */
                 var sameSource = function (source, filterSource) {
                     if (!Array.isArray(source)) {
                         return source === filterSource;
@@ -349,12 +399,29 @@ var ERMrest = (function(module) {
                         return false;
                     }
                     
+                    var key;
                     for (var i = 0; i < source.length; i++) {
-                        if (typeof source[i] === "string" && source[i] !== filterSource[i]) {
+                        if (typeof source[i] === "string") {
+                            return source[i] === filterSource[i];
+                        }
+                        
+                        if (typeof source[i] !== "object" || typeof filterSource[i] !== "object") {
                             return false;
                         }
                         
-                        if (source[i].schema !== filterSource[i].schema || source[i].constraint != filterSource[i].constraint) {
+                        if (typeof source[i].inbound === "object") {
+                            key = "inbound";
+                        } else if (typeof source[i].outbound == "object") {
+                            key = "outbound";
+                        } else {
+                            return false;
+                        }
+                        
+                        if (!Array.isArray(filterSource[i][key]) || filterSource[i][key].length !== 2) {
+                            return false;
+                        }
+                        
+                        if (source[i][key][0] !== filterSource[i][key][0] || source[i][key][1] != filterSource[i][key][1]) {
                             return false;
                         }
                         
@@ -362,7 +429,9 @@ var ERMrest = (function(module) {
                     return true;
                 };
                 
-                // find already applied filter to the face column.
+                /**
+                 * given a source, will return the filters that are already applied to it.
+                 */
                 var findFilter = function (source) {
                     for (var i = 0; i < andFilters.length; i++) {
                         if (sameSource(source, andFilters[i].source)) {
@@ -371,6 +440,17 @@ var ERMrest = (function(module) {
                     }
                     return null;
                 };
+                
+                /**
+                 * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
+                 */
+                var addColumn = function (col, i) {
+                    var source = generateDataSource(col);
+                    var newFacetColumn = new FacetColumn(self, i, source.dataSource, source.column);
+                    newFacetColumn.setFilters(findFilter(source.dataSource));
+                    self._facetColumns.push(newFacetColumn);
+                };
+            
                 
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
@@ -383,9 +463,7 @@ var ERMrest = (function(module) {
                 var columns = compactRef.columns;
                 columns.forEach(function (col) {
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
-                        var fc = new FacetColumn(self, col, index++);
-                        fc.setFilters(findFilter(fc.dataSource));
-                        self._facetColumns.push(fc);
+                        addColumn(col, index++);
                     }
                 });
                 
@@ -393,9 +471,7 @@ var ERMrest = (function(module) {
                 var related = detailedRef.related();
                 related.forEach(function (relRef) {
                     var col = new InboundForeignKeyPseudoColumn(self, relRef);
-                    var fc = new FacetColumn(self, col, index++);
-                    fc.setFilters(findFilter(fc.dataSource));
-                    self._facetColumns.push(fc);
+                    addColumn(col, index++);
                 });
             }
             return this._facetColumns;
@@ -1539,7 +1615,7 @@ var ERMrest = (function(module) {
          */
         related: function (tuple) {
             if (this._related === undefined) {
-                /**
+                /*
                  * The logic is as follows:
                  *
                  * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
@@ -3288,7 +3364,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * @type {string}
+         * @type {object}
          * @desc name of the column.
          */
         get displayname() {
@@ -4353,23 +4429,37 @@ var ERMrest = (function(module) {
      *
      * If the ReferenceColumn is not provided, then the FacetColumn is for reference
      *
-     * @param {ReferenceColumn=} refColumn reference column
+     * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
+     * @param {int} index The index of this FacetColumn in the list of facetColumns
+     * @param {obj|string} dataSource the data-source path
      * @constructor
      */
-    function FacetColumn (reference, refColumn, index) {
-        verify(!refColumn.isAsset && !refColumn.isKey, "Facet Column cannot be asset or key pseudo-column.");
-        verify(!refColumn.isForeignKey || refColumn.foreignKey.simple, "Facet Column does not support composite foreign keys.");
+    function FacetColumn (reference, index, dataSource, column) {
         
         /**
-         * The {@link ERMrest.ReferenceColumn} that this facet belongs to. If it is
-         * undefined, that means this facet belongs to the table and not column.
-         * @type {ERMrest.ReferenceColumn}
+         * The column object that the filters are based on
+         * @type {ERMrest.Column}
          */
-        this.column = refColumn;
+        this._column = column;
         
+        /**
+         * [reference description]
+         * @type {ERMrest.Reference}
+         */
         this.reference = reference;
         
+        /**
+         * The index of facetColumn in the list of facetColumns
+         * NOTE: Might not be needed
+         * @type {int}
+         */
         this.index = index;
+        
+        /**
+         * A valid data-source path
+         * @type {obj|string} 
+         */
+        this.dataSource = dataSource;
         
         /**
          * Filters that are applied to this facet.
@@ -4379,49 +4469,185 @@ var ERMrest = (function(module) {
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
-        /**
-         * data source of this facet. Can be used to find filters for this facet
-         * @return {String} [description]
-         */
-        get dataSource () {
-            if (this._source === undefined) {
-                if (!isDefinedAndNotNull(this.column)) {
-                    return "*";
-                }
-                
-                if (this.column.isForeignKey) {
-                    var constraint = this.column.foreignKey.constraint_names[0];
-                    return [
-                        {"schema": constraint[0], "constraint": constraint[1]},
-                        this.column.foreignKey.key.colset.columns[0].name
-                    ];
-                }
-                
-                if (this.column.isInboundForeignKey) {
-                    var res = [];
-                    var origFkR = this.column.foreignKey;
-                    var association = this.column.reference.derivedAssociationReference;
-                    
-                    res.push({
-                        "schema": origFkR.constraint_names[0][0], 
-                        "constraint": origFkR.constraint_names[0][1]
-                    });
-                    
-                    if (association) {
-                        res.push({
-                            "schema": association._secondFKR.constraint_names[0][0], 
-                            "constraint": association._secondFKR.constraint_names[0][1]
-                        });
-                        res.push(association._secondFKR.key.colset.columns[0].name);
-                    } else {
-                        res.push(origFkR.colset.columns[0].name);
-                    }
-                    return res;
-                }
-                
-                return this.column.name;
+        get _lastForeignKey() {
+            if (!Array.isArray(this.dataSource)) {
+                return null;
             }
-            return this._source;
+            
+            var lastJoin = this.dataSource[this.dataSource.length-1];
+            var isInbound = false, fk, constraint;
+            
+            if ("inbound" in lastJoin) {
+                isInbound = true;
+                constraint = lastJoin.inbound;
+            } else {
+                constraint = lastJoin.outbound;
+            }
+            
+            return module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object;
+        },
+        
+        /**
+         * Returns true if the source is on a key column.
+         * @type {Boolean}
+         */
+        get isEntityMode() {
+            if (this._isEntityMode === undefined) {
+                var currCol = this._column;
+                this._isEntityMode = currCol.table.keys.all().filter(function (k) {
+                    return key.simple && key.colset.columns[0] === currCol;
+                }).length > 0;
+            }
+            return this._isEntityMode;
+        },
+         
+        /**
+         * ReferenceColumn that this facetColumn is based on
+         * @type {ERMrest.ReferenceColumn}
+         */
+        get column () {
+            if (this._referenceColumn === undefined) {
+                this._referenceColumn = new ReferenceColumn(this.sourceReference, [this._column]);
+            }
+            return this._referenceColumn;
+        },
+        
+        /**
+         * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
+         * in the source with all the filters of other FacetColumns in the reference.
+         *
+         * NOTE: assumptions:
+         *  1. The reference has only facets, no join or filter
+         *
+         * @type {ERMrest.Reference}
+         */
+        get sourceReference () {
+            if (this._sourceReference === undefined) {
+                // I assume that the reference has only facets, there's no join or filter
+                var jsonFilters = [];
+                
+                
+                if (this.reference.location.facets !== null) {
+                    var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
+                        self = this;
+                    
+                    // create a path from this facetColumn to the base reference
+                    if (this._hasJoin) {
+                        this.dataSource.forEach(function (ds, index, arr) {
+                            // last elemenet is the column name
+                            if (index !== arr.length -1 ) {
+                                var node;
+                                if ("inbound" in ds) {
+                                    node = {"outbound": ds.inbound};
+                                } else {
+                                    node = {"inbound": ds.outbound};
+                                }
+                                pathFromSource.push(node);
+                            }
+                        });
+                    }
+                    
+                    // create new facet filters
+                    this.reference.facetColumns.forEach(function (fc, index) {
+                        if (index !== self.index && fc.filters.length !== 0) {
+                            var filter = fc.toJSON();
+                            if (pathFromSource.length > 0) {
+                                filter.source = pathFromSource.concat(filter.source);
+                            }
+                            jsonFilters.push(filter);
+                        }
+                    });
+                }
+                
+                var table = this._column.table;
+                var uri = [
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                ].join("/");
+                
+                this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
+                
+                if (jsonFilters.length > 0) {
+                    this._sourceReference._location.facets = {"and": jsonFilters};
+                } else {
+                    this._sourceReference._location.facets = null;
+                }
+            }
+            return this._sourceReference;
+        },
+        
+        /**
+         * Returns the displayname object that should be used for this facetColumn.
+         * 
+         * Heuristics are as follows (first applicable rule):
+         *  1. If column is part of the main table (there's no join), use the column's displayname.
+         *  2. If last foreignkey is outbound and has to_name, use it.
+         *  3. If last foreignkey is inbound and has from_name, use it.
+         *  4. Otherwise use the table name.
+         *    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
+         * 
+         * @type {object} Object with `value`, `unformatted`, and `isHTML` as its attributes.
+         */
+        get displayname() {
+            if (this._displayname === undefined) {
+                var displayname;
+                
+                var fk = this._lastForeignKey;
+                
+                // if is part of the main table, just return the column's displayname
+                if (fk === null) {
+                    this._displayname = this.column.displayname;
+                }
+                // Otherwise
+                else {      
+                          
+                    // use from_name of the last fk if it's inbound
+                    if (isInbound && fk.from_name !== "") {
+                        value = unformatted = fk.from_name;
+                    }
+                    // use to_name of the last fk if it's outbound
+                    else if (!isInbound && fk.to_name !== "") {
+                        value = unformatted = fk.to_name;
+                    }
+                    // use the table name if it was not defined
+                    else {
+                        value = this.column.table.displayname.value;
+                        unformatted = this.column.table.displayname.unformatted;
+                        isHTML = this.column.table.displayname.isHTML;
+                        
+                        // add the column name if in scalar mode
+                        if (!this.isEntityMode) {
+                            value += " (" + this.column.displayname.value + ")";
+                            unformatted += " (" + this.column.displayname.unformatted + ")";
+                            if (!isHTML) {
+                                isHTML = this.column.displayname.isHTML;
+                            }
+                        }
+                    }
+                    
+                    this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
+                }         
+            }
+            return this._displayname;
+        },
+        
+        /**
+         * Could be used as tooltip to provide more information about the facetColumn
+         * @type {string}
+         */
+        get comment () {
+            if (this._comment == undefined) {
+                var fk = this._lastForeignKey;
+                if (fk === null || !this.isEntityMode) {
+                    this._comment = this._column.comment;
+                } else if (fk.comment !== "") {
+                    this._comment = fk.comment;
+                } else {
+                    this._comment = this._column.table.comment;
+                }
+            }
+            return this._comment;
         },
         
         /**
@@ -4539,6 +4765,18 @@ var ERMrest = (function(module) {
         },
         
         /**
+         * Create a new Reference with appending a new entity filter to current FacetColumn
+         * @param  {ERMrest.Tuple} tuple the tuple object that has the row values.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        addEntityFilter: function (tuple) {
+            var filters = this.filters.slice();
+            filters.push(new EntityFacetFilter(tuple, this._column));
+            
+            return this._applyFilters(filters);
+        },
+        
+        /**
          * Create a new Reference by removing all the filters from current facet.
          * @return {ERMrest.Reference} the reference with the new filter
          */
@@ -4569,26 +4807,33 @@ var ERMrest = (function(module) {
          */
         _applyFilters: function (filters) {
             
-            // create a new FacetColumn so it doesn't reference to the current FacetColumn
-            var fc = new FacetColumn(this.reference, this.column, this.index);
-            fc.filters = filters;
+            // create a new FacetColumn so it doesn't reference to the current FacetColum
             
             var newReference = _referenceCopy(this.reference);
-            
-            // clone the location object
-            newReference._location = this.reference._location._clone();
-            
-            // make sure reference.facetColumns and newRef.facetColumns are not referencing the same thing
+            var self = this;
             delete newReference._facetColumns;
-            newReference._facetColumns = this.reference.facetColumns.slice();
-            newReference._facetColumns[this.index] = fc;
+            
+            // // clone the location object
+            // newReference._location = this.reference._location._clone();
+            // 
+            // // make sure reference.facetColumns and newRef.facetColumns are not referencing the same thing
+            // delete newReference._facetColumns;
+            // newReference._facetColumns = this.reference.facetColumns.slice();
+            // newReference._facetColumns[this.index] = fc;
             
             var jsonFilters = [];
+            if (filters.length !== 0) {
+                var ThisFC = new FacetColumn(this.reference, this.index, this.dataSource, this._column);
+                ThisFC.filters = filters;
+                
+                jsonFilters.push(ThisFC.toJSON());
+            }
             
+            // TODO
             // gather all the filters from the facetColumns
             // NOTE: this part can be improved so we just change one JSON element.
-            newReference._facetColumns.forEach(function (fc) {
-                if (fc.filters.length !== 0) {
+            this.reference.facetColumns.forEach(function (fc, index) {
+                if (fc.filters.length !== 0 && index !== self.index) {
                     jsonFilters.push(fc.toJSON());
                 }
             });
@@ -4712,6 +4957,29 @@ var ERMrest = (function(module) {
             res.min = this.min;
         }
         return res;
+    };
+    
+    /**
+     * Represents entity filters that can be applied to facet.
+     * 
+     * @param       {ERMrest.tuple} tuple the tuple object
+     * @constructor
+     */
+    function EntityFacetFilter(tuple, col) {
+        
+        ChoiceFacetFilter.superClass.call(this, tuple._data);
+        this.tuple = tuple;
+        this.facetFilterKey = "choices";
+    }
+    module._extends(EntityFacetFilter, FacetFilter);
+    /**
+     * String representation of entity filter. It will be the tuple displayname
+     * 
+     * @return {string}
+     */
+    EntityFacetFilter.prototype.toString = function () {
+        //NOTE: should it be unformatted or not?
+        return this.tuple.displayname.unformatted;
     };
 
     /**
