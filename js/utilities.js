@@ -894,6 +894,7 @@
                 break;
             case 'markdown':
                 // Do nothing as we will format markdown at the end of format
+                data = data.toString();
                 break;
             case 'gene_sequence':
                 data = utils.printGeneSeq(data, options);

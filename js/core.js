@@ -1672,7 +1672,7 @@
                 return this._getNullValue(options ? options.context : undefined);
             }
 
-            return _formatValueByType(this.type, data, options).toString();
+            return _formatValueByType(this.type, data, options);
         };
 
         /**
