@@ -4471,7 +4471,7 @@
                 return null;
             }
             
-            var lastJoin = this.dataSource[this.dataSource.length-1];
+            var lastJoin = this.dataSource[this.dataSource.length-2];
             var isInbound = false, fk, constraint;
             
             if ("inbound" in lastJoin) {
@@ -4481,7 +4481,10 @@
                 constraint = lastJoin.outbound;
             }
             
-            return module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object;
+            return {
+                "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
+                "isInbound": isInbound
+            };
         },
         
         /**
@@ -4491,7 +4494,7 @@
         get isEntityMode() {
             if (this._isEntityMode === undefined) {
                 var currCol = this._column;
-                this._isEntityMode = currCol.table.keys.all().filter(function (k) {
+                this._isEntityMode = currCol.table.keys.all().filter(function (key) {
                     return key.simple && key.colset.columns[0] === currCol;
                 }).length > 0;
             }
@@ -4598,13 +4601,13 @@
                 }
                 // Otherwise
                 else {      
-                          
+                    fk = fk.obj;
                     // use from_name of the last fk if it's inbound
-                    if (isInbound && fk.from_name !== "") {
+                    if (fk.isInbound && fk.from_name !== "") {
                         value = unformatted = fk.from_name;
                     }
                     // use to_name of the last fk if it's outbound
-                    else if (!isInbound && fk.to_name !== "") {
+                    else if (!fk.isInbound && fk.to_name !== "") {
                         value = unformatted = fk.to_name;
                     }
                     // use the table name if it was not defined
@@ -4635,7 +4638,7 @@
          */
         get comment () {
             if (this._comment == undefined) {
-                var fk = this._lastForeignKey;
+                var fk = this._lastForeignKey ? this._lastForeignKey.obj : null;
                 if (fk === null || !this.isEntityMode) {
                     this._comment = this._column.comment;
                 } else if (fk.comment !== "") {
