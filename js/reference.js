@@ -3185,7 +3185,7 @@
          *   console.log(tuple.displayname, tuple.isHTML[i] ? " has an HTML value" : " does not has an HTML value");
          * }
          * ```
-         * @type {string[]}
+         * @type {boolean[]}
          */
         get isHTML() {
             // this._isHTML has not been populated then call this.values getter to populate values and isHTML array
