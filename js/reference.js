@@ -3349,6 +3349,17 @@
             }
             return this._aggregate;
         },
+        
+        /**
+         * @desc Returns the aggregate group object
+         * @type {ERMrest.ColumnGroupAggregateFn}
+         */
+        get groupAggregate() {
+            if (this._groupAggregate === undefined) {
+                this._groupAggregate = !this.isPseudo ? new ColumnGroupAggregateFn(this) : null;
+            }
+            return this._groupAggregate;
+        },
 
         /**
          * @desc Documentation for this reference-column
@@ -4786,5 +4797,129 @@
          */
         get countDistinctAgg() {
             return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        }
+    };
+    
+    function ColumnGroupAggregateFn (column) {
+        this.column = column;
+        
+        this._ref = this.column._baseReference;
+    }
+
+    ColumnGroupAggregateFn.prototype = {
+        /**
+         * Will return an appropriate reference which can be used to show distinct values of an entity
+         * NOTE: Will create a new reference by each call.
+         * @type {ERMrest.AttributeGroupReference}
+         */
+        get entityValues() {
+            if(this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            // search will be on the table not the aggregated results, so the column name must be the column name in the database
+            var searchObj = {"column": this.column.name, "term": ""};
+            
+            // sort will be on the aggregated results.
+            var sortObj = [{"column": "c1", "descending": false}];
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
+                
+            // key columns
+            var keyColumns = [
+                new AttributeGroupColumn("c1", this.column.name, this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];            
+            
+            // the reference
+            return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog);
+        },
+        
+        /**
+         * Will return an appropriate reference which can be used to show distinct values and their counts
+         * NOTE: Will create a new reference by each call.
+         * @type {ERMrest.AttributeGroupReference}
+         */
+        get entityCounts() {
+            if (this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
+                throw new Error("Table must have a simple key.");
+            }
+                
+            // search will be on the table not the aggregated results, so the column name must be the column name in the database
+            var searchObj = {"column": this.column.name, "term": ""};
+            
+            // sort will be on the aggregated results.
+            var sortObj = [{"column": "c1", "descending": false}];
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
+            
+            // key columns
+            var keyColumns = [
+                new AttributeGroupColumn("c1", this.column.name, this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];
+            
+            var countName = "cnt(*)";
+            if (this._ref.location.hasJoin) {
+                countName = "cnt_d(" + this._ref.table.shortestKey[0].name + ")";
+            }
+            
+            var aggregateColumns = [
+                new AttributeGroupColumn("c2", countName, "Count", new Type({typename: "int"}), "", true, true)
+            ];
+
+            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
+        },
+        
+        /**
+         * Given number of buckets, min and max will return bin of results.
+         * @param  {int} bucketCount number of buckets
+         * @param  {int} min         minimum value
+         * @param  {int} max         maximum value
+         * @return {obj}
+         * //TODO What should be ther returned object?
+         */
+        histogram: function (bucketCount, min, max) {
+            verify(typeof bucketCount === "number", "Invalid bucket count type.");
+            verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            
+            if (this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            // TODO can be a global property
+            var supportedTypes = [
+                'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
+                'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
+            ];
+            
+            if (supportedTypes.indexOf(this.column.type.name) === -1) {
+                throw new Error("Binning is not supported on column type " + this.column.type.name);
+            }
+            
+            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
+                throw new Error("Table must have a simple key.");
+            }
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
+                
+            var binTerm = "bin(" + this.column.name + ";" + bucketCount + ";" + min + ";" + max + ")";
+            var keyColumns = [
+                new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];
+            
+            var countName = "cnt(*)";
+            if (this._ref.location.hasJoin) {
+                countName = "cnt_d(" + this._ref.table.shortestKey[0].name + ")";
+            }
+            
+            var aggregateColumns = [
+                new AttributeGroupColumn("c2", countName, "Count", new Type({typename: "int"}), "", true, true)
+            ];
+
+            //TODO this should just return the results, but I'm not sure about the datastructure.
+            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);    
         }
     };
