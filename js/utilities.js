@@ -116,6 +116,15 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
+    
+    /**
+     * Returns true if given parameter is object and not null
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isObjectAndNotNull = function (obj) {
+        return typeof obj === "object" && obj !== null;
+    };
 
     /**
      * @private
@@ -434,11 +443,18 @@
      */
     module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
-
+        
+        var findCol = function (colName) {
+            if (Array.isArray(columns)) {
+                return columns.filter(function (col) {return col.name === colName;})[0];
+            }
+            return columns.get(k);
+        };
+        
         for (var k in data) {
 
             try {
-                var col = columns.get(k);
+                var col = findCol(k);
                 keyValues[k] = col.formatvalue(data[k], { context: context });
             } catch(e) {
                 keyValues[k] = data[k];
@@ -464,7 +480,7 @@
         var annotation, col, template, keyValues, unformatted, unformattedAnnotation;
 
         // If table has table-display annotation then set it in annotation variable
-        if (table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+        if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
 
             // getting the defined unformatted value

@@ -33,6 +33,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
+	   $(JS)/ag_reference.js \
 	   $(FOOTER) \
 	   $(JS)/hatrac.js \
 	   $(JS)/node.js \
