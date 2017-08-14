@@ -2,23 +2,6 @@
  * @namespace ERMrest.AttributeGroupReference
  */
 
-/*
- * - Column and Refernce have a lot of arguments, I don't know how to fix that.
- *   The same way we have the location object, we can have something like that here,
- *   which has the service, catalog, path, sort, paging, and search in it. but should we?
- *
- * - Search is currently based on just one column. It's now a object of `column` and `term`,
- *   to make it easier to pass and also be able to pass default search value.
- *
- * - chaise recordset is using the reference.location.searchTerm to get the search term. That's why
- *   I added the location object.
- *
- * - read is going to create the uri, it should use the location, keyColumns and aggregateColumns to do so.
- *   It's better if location could have functions to create the uri, like Location prototype in Reference.
- *   but how?
- *   
- */
-
 /**
  * Constructs a Reference object.
  *
@@ -124,6 +107,8 @@ AttributeGroupReference.prototype = {
             verify(typeof term === "string", "Invalid argument");
             term = term.trim();
         }
+        
+        verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
         
         var newLocation = this.location.changeSearchTerm(term);
         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
