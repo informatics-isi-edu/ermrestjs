@@ -201,7 +201,10 @@ to use for ERMrest JavaScript agents.
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
-        * [.name](#ERMrest.Type+name)
+        * [.name](#ERMrest.Type+name) : <code>string</code>
+        * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+        * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
+        * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -1767,7 +1770,10 @@ returns string representation of ForeignKeyRef object
 
 * [.Type](#ERMrest.Type)
     * [new Type(name)](#new_ERMrest.Type_new)
-    * [.name](#ERMrest.Type+name)
+    * [.name](#ERMrest.Type+name) : <code>string</code>
+    * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+    * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
+    * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
 
 <a name="new_ERMrest.Type_new"></a>
 
@@ -1779,7 +1785,23 @@ returns string representation of ForeignKeyRef object
 
 <a name="ERMrest.Type+name"></a>
 
-#### type.name
+#### type.name : <code>string</code>
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+_isArray"></a>
+
+#### type._isArray : <code>boolean</code>
+Currently used to signal whether there is a base type for this column
+
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+_isDomain"></a>
+
+#### type._isDomain : <code>boolean</code>
+Currently used to signal whether there is a base type for this column
+
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+baseType"></a>
+
+#### type.baseType : [<code>Type</code>](#ERMrest.Type)
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
 <a name="ERMrest.TimedOutError"></a>
 
