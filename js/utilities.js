@@ -448,7 +448,7 @@
             if (Array.isArray(columns)) {
                 return columns.filter(function (col) {return col.name === colName;})[0];
             }
-            return columsn.get(k);
+            return columns.get(k);
         };
         
         for (var k in data) {
