@@ -52,7 +52,7 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
      */
     this._aggregateColumns = aggregateColumns;
     
-    this._location = location;
+    this.location = location;
     
     this._server = catalog.server;
     
@@ -61,11 +61,7 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
 AttributeGroupReference.prototype = {
     
     constructor: AttributeGroupReference,
-    
-    get location () {
-        return this._location;
-    },
-    
+
     /**
      * the displayname of the reference
      * TODO not sure if this sis needed
@@ -113,14 +109,23 @@ AttributeGroupReference.prototype = {
     /* jshint ignore:end */
     
     sort: function (sort) {
-        // TODO verify sort
-        var newLocation = this._location.sort(sort);
+        if (sort) {
+            verify((sort instanceof Array), "input should be an array");
+            verify(sort.every(module._isValidSortElement), "invalid arguments in array");
+        }
+        
+        // TODO doesn't support sort based on other columns.
+        var newLocation = this.location.changeSort(sort);
         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
     },
     
     search: function (term) {
-        // TODO verify term
-        var newLocation = this._location.search(term);
+        if (term) {
+            verify(typeof term === "string", "Invalid argument");
+            term = term.trim();
+        }
+        
+        var newLocation = this.location.changeSearchTerm(term);
         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
     },
     
@@ -144,8 +149,8 @@ AttributeGroupReference.prototype = {
                 loc.service, "catalog", loc.catalogId, "attributegroup", loc.path
             ];
             
-            if (typeof loc.searchTerm === "string") {
-                uri.push(_convertSearchTermToFilter(loc.searchTerm, loc.searchColumn));
+            if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+                uri.push(loc.searchFilter);
             }
             
             uri = uri.join("/") + "/";
@@ -167,12 +172,12 @@ AttributeGroupReference.prototype = {
             }
             
             // add sort
-            if (loc.sort) {
+            if (loc.sort && loc.sort.length > 0) {
                 uri += loc.sort;
             }
             
             // add page
-            if  (loc.paging) {
+            if (loc.paging && loc.paging.length > 0) {
                 uri += loc.paging;
             }
             
@@ -205,7 +210,7 @@ AttributeGroupReference.prototype = {
                     if (!currRef.location.paging) { // first page
                         hasPrevious = false;
                         hasNext = (response.data.length > limit);
-                    } else if (currRef.location._pagingObject.before) { // has @before()
+                    } else if (currRef.location.pagingObject.before) { // has @before()
                         hasPrevious = (response.data.length > limit);
                         hasNext = true;
                     } else { // has @after()
@@ -214,13 +219,24 @@ AttributeGroupReference.prototype = {
                     }
                 }
                 
+                // Because read() reads one extra row to determine whether the new page has previous or next
+                // We need to remove those extra row of data from the result
+                if (response.data.length > limit) {
+                    // if no paging or @after, remove last row
+                    if (!currRef.location.pagingObject || !currRef.location.pagingObject.before)
+                        response.data.splice(response.data.length-1);
+                   else // @before, remove first row
+                        response.data.splice(0, 1);
+
+                }
+                
                 // create a page using the data
                 var page = new AttributeGroupPage(currRef, response.data, hasPrevious, hasNext);
                 
                 // We are paging based on @before (user navigated backwards in the set of data)
                 // AND there is less data than limit implies (beginning of set) 
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                if ( (currRef.location._pagingObject && currRef.location._pagingObject.before) && (response.data.length < limit || !hasPrevious) ) {
+                if ( (currRef.location.pagingObject && currRef.location.pagingObject.before) && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging 
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog);
@@ -315,7 +331,7 @@ AttributeGroupPage.prototype = {
         var currRef = this.reference;
         var rows = [];
         
-        currRef.location._sortObject.forEach(function (so) {
+        currRef.location.sortObject.forEach(function (so) {
             // assumes that sortObject columns are valid
             rows.push(self._data[self._data.length-1][so.column]);
         });
@@ -324,7 +340,7 @@ AttributeGroupPage.prototype = {
             before: false,
             row: rows
         });
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation);
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     },
     
     /**
@@ -359,7 +375,7 @@ AttributeGroupPage.prototype = {
             before: false,
             row: rows
         });
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation);
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     }
 };
 
@@ -498,9 +514,9 @@ AttributeGroupColumn.prototype = {
     toString: function () {
         var res = "";
         if (typeof this._alias === "string" && this._alias.length !== 0) {
-            res += this._alias += ":=";
+            res += this._alias + ":=";
         }
-        res += this._term;
+        res += this.term;
         return res;
     },
     
@@ -561,23 +577,25 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     /**
      * The search object with "column" and "term".
      * @private
-     * @type {?object}
+     * @type {object}
      */
-    this._searchObject = searchObject;
+    this.searchObject = searchObject;
     
-    if (isObjectAndNotNull(this._searchObject)) {
+    if (isObjectAndNotNull(this.searchObject)) {
         /**
          * The search term
          * @type {?string}
          */
-        this.searchTerm = this._searchObject.term;
+        this.searchTerm = this.searchObject.term;
         
         /**
          * The colum name that has been used for searching.
-         * NOTE: currently only search on the same column, what about other columns?
+         * NOTE: 
+         * - Currently only search on one column, what about other columns?
+         * - Maybe this should be private
          * @type {?string}
          */
-        this.searchColumn = this._searchObject.column;
+        this.searchColumn = this.searchObject.column;
         
         /**
          * The search filter string which can be used for creating the uri
@@ -592,14 +610,14 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @private
      * @type {?Object[]}
      */
-    this._sortObject = sortObject;
-    
-    if (isObjectAndNotNull(this._sortObject)) {
+    this.sortObject = sortObject;
+
+    if (isObjectAndNotNull(this.sortObject)) {
         /**
          * The sort midifer string for creating the uri.
          * @type {?string}
          */
-        this.sort = _getSortModifier(this._sortObject);
+        this.sort = _getSortModifier(this.sortObject);
     }
     
     /**
@@ -609,28 +627,44 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @private
      * @type {?Object}
      */
-    this._pagingObject = pagingObject;
+    this.pagingObject = pagingObject;
     
-    if (isObjectAndNotNull(this._pagingObject)) {
+    if (isObjectAndNotNull(this.pagingObject)) {
         /**
          * The paging midifer string for creating the uri.
          * @type {?string}
          */
-        this.paging = _getPagingModifier(this._pagingObject);
+        this.paging = _getPagingModifier(this.pagingObject);
     }
 }
 AttributeGroupLocation.prototype = {
     constructor: AttributeGroupLocation,
     
-    changeSearch: function (searchObject) {
-        return new AttributeGroupLocation(this._service, this._catalogId, this._path, searchObject, this._sortObject, this._pagingObject);
+    /**
+     * Given a searchObject, return a new location object.
+     * @param  {string} term
+     * @return {ERMRest.AttributeGroupLocation}
+     */
+    changeSearchTerm: function (term) {
+        var searchObject = {"term": term, "column": this.searchColumn};
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, searchObject, this.sortObject, this.pagingObject);
     },
     
+    /**
+     * Given a sortObject, return a new location object.
+     * @param  {object} searchObject 
+     * @return {ERMRest.AttributeGroupLocation}
+     */
     changeSort: function (sort) {
-        return new AttributeGroupLocation(this._service, this._catalogId, this._path, this._searchObject, sort, this._pagingObject);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort, this.pagingObject);
     },
     
+    /**
+     * Given a pagingObject, return a new location object.
+     * @param  {object} searchObject 
+     * @return {ERMRest.AttributeGroupLocation}
+     */
     changePage: function (paging) {
-        return new AttributeGroupLocation(this._service, this._catalogId, this._path, this._searchObject, this._sortObject, paging);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, paging);
     }
 };

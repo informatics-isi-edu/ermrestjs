@@ -443,11 +443,18 @@
      */
     module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
-
+        
+        var findCol = function (colName) {
+            if (Array.isArray(columns)) {
+                return columns.filter(function (col) {return col.name === colName;})[0];
+            }
+            return columsn.get(k);
+        };
+        
         for (var k in data) {
 
             try {
-                var col = columns.get(k);
+                var col = findCol(k);
                 keyValues[k] = col.formatvalue(data[k], { context: context });
             } catch(e) {
                 keyValues[k] = data[k];
