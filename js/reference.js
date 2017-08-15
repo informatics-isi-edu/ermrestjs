@@ -429,9 +429,11 @@
                  */
                 var addColumn = function (col, i) {
                     var source = generateDataSource(col);
-                    var newFacetColumn = new FacetColumn(self, i, source.dataSource, source.column);
-                    newFacetColumn.setFilters(findFilter(source.dataSource));
-                    self._facetColumns.push(newFacetColumn);
+                    var filter = findFilter(source.dataSource);
+                    if (filter === null) {
+                        filter = {"source": source.dataSource};
+                    }
+                    self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
                 };
             
                 
@@ -4428,10 +4430,10 @@
      *
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
      * @param {int} index The index of this FacetColumn in the list of facetColumns
-     * @param {obj|string} dataSource the data-source path
+     * @param {obj|string} json the filter object
      * @constructor
      */
-    function FacetColumn (reference, index, dataSource, column) {
+    function FacetColumn (reference, index, column, json, filters) {
         
         /**
          * The column object that the filters are based on
@@ -4457,13 +4459,21 @@
          * NOTE: we're not validating this data-source, we assume that this is valid.
          * @type {obj|string} 
          */
-        this.dataSource = dataSource;
+        this.dataSource = json.source;
         
         /**
          * Filters that are applied to this facet.
          * @type{FacetFilter[]}
          */
         this.filters = [];
+        if (Array.isArray(filters)) {
+            this.filters = filters;
+        } else {
+            this.setFilters(json);
+        }
+        
+        // the whole filter object
+        this._json = json;
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
@@ -4494,7 +4504,31 @@
         },
         
         /**
+         * The Preferred ux mode.
+         * Any of:
+         * `choices`, `range`, or `search`
+         * This should be used if we're not in entity mode.
+         * TODO: what should be the default? This will eventually change,
+         * currently we are not using multi facet mode, so it won't be used.
+         * @type {string}
+         */
+        get preferredMode() {
+            if (this._preferredMode === undefined) {
+                var modes = ['choices', 'range', 'search'];
+                if (modes.indexOf(this._json['ux mode']) !== -1) {
+                    this._preferredMode = this._json['ux mode'];
+                } else {
+                    //TODO
+                    this._preferredMode = null;
+                }
+            }
+            return this._preferredMode;
+        },
+        
+        /**
          * Returns true if the source is on a key column.
+         * TODO right now it's using some heuristic, but eventually it should
+         * use json['entity facet'] to determine this.
          * @type {Boolean}
          */
         get isEntityMode() {
@@ -4817,11 +4851,10 @@
             delete newReference._facetColumns;
             
             // create a new FacetColumn so it doesn't reference to the current FacetColum
+            // TODO can be refactored
             var jsonFilters = [];
             if (filters.length !== 0) {
-                var ThisFC = new FacetColumn(this.reference, this.index, this.dataSource, this._column);
-                ThisFC.filters = filters;
-                
+                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._json, filters);
                 jsonFilters.push(ThisFC.toJSON());
             }
             
