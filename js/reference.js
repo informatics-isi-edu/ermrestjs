@@ -4514,6 +4514,12 @@
          * This should be used if we're not in entity mode.
          * TODO: what should be the default? This will eventually change,
          * currently we are not using multi facet mode, so it won't be used.
+         * NOTE:
+         * If we want to consider a default mode for facets for any column type, 
+         * we might want to keep it simple and have the default mode show as choices. 
+         * Search mode would imply that the user needs to be aware of the whole set of values they are searching through.
+         * Choices provides some of that information for them.
+         * 
          * @type {string}
          */
         get preferredMode() {
@@ -5012,7 +5018,8 @@
      * @return {string}
      */
     EntityFacetFilter.prototype.toString = function () {
-        //TODO: should it be unformatted or not?
+        //TODO: should it be unformatted or not?\
+        //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
         return this.tuple.displayname.unformatted;
     };
 
