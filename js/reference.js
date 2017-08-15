@@ -4426,11 +4426,15 @@
      * Based on facets JSON structure we can have joins that result in facets
      * on columns that are not part of reference column.
      *
+     * TODO This is just experimental, the arguments might change eventually.
+     * 
      * If the ReferenceColumn is not provided, then the FacetColumn is for reference
      *
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
      * @param {int} index The index of this FacetColumn in the list of facetColumns
-     * @param {obj|string} json the filter object
+     * @param {ERMrest.Column} column the column that filters will be based on.
+     * @param {object} json The filter object that this FacetColumn will be created based on
+     * @param {ERMrest.FacetFilter[]} filters Array of filters
      * @constructor
      */
     function FacetColumn (reference, index, column, json, filters) {
@@ -4571,7 +4575,7 @@
                         self = this;
                     
                     // create a path from this facetColumn to the base reference
-                    if (this._hasJoin) {
+                    if (Array.isArray(this.dataSource)) {
                         this.dataSource.forEach(function (ds, index, arr) {
                             // last elemenet is the column name
                             if (index !== arr.length -1 ) {
