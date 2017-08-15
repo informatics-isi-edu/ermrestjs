@@ -247,10 +247,6 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
-            * [~generateDataSource()](#ERMrest.Reference+facetColumns..generateDataSource)
-            * [~sameSource()](#ERMrest.Reference+facetColumns..sameSource)
-            * [~findFilter()](#ERMrest.Reference+facetColumns..findFilter)
-            * [~addColumn()](#ERMrest.Reference+facetColumns..addColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -2048,10 +2044,6 @@ Constructor for a ParsedFilter.
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
-        * [~generateDataSource()](#ERMrest.Reference+facetColumns..generateDataSource)
-        * [~sameSource()](#ERMrest.Reference+facetColumns..sameSource)
-        * [~findFilter()](#ERMrest.Reference+facetColumns..findFilter)
-        * [~addColumn()](#ERMrest.Reference+facetColumns..addColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -2194,45 +2186,6 @@ Usage:
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-
-* [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
-    * [~generateDataSource()](#ERMrest.Reference+facetColumns..generateDataSource)
-    * [~sameSource()](#ERMrest.Reference+facetColumns..sameSource)
-    * [~findFilter()](#ERMrest.Reference+facetColumns..findFilter)
-    * [~addColumn()](#ERMrest.Reference+facetColumns..addColumn)
-
-<a name="ERMrest.Reference+facetColumns..generateDataSource"></a>
-
-##### facetColumns~generateDataSource()
-Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
-will return {"dataSource": source list, "column": Column object}
-
-**Kind**: inner method of [<code>facetColumns</code>](#ERMrest.Reference+facetColumns)  
-<a name="ERMrest.Reference+facetColumns..sameSource"></a>
-
-##### facetColumns~sameSource()
-Given two source objects check if they are the same.
-Source can be a string or array. If it's an array, the last element
-must be an string and the other elements must have either `inbound`
-or `outbound` key which its value will be the constraint name array.
-example:
-- '*'
-- 'col_name'
-- [{"inbound":['s', 'c']}, {"outbound": ['s', 'c2']}, 'col']
-
-**Kind**: inner method of [<code>facetColumns</code>](#ERMrest.Reference+facetColumns)  
-<a name="ERMrest.Reference+facetColumns..findFilter"></a>
-
-##### facetColumns~findFilter()
-given a source, will return the filters that are already applied to it.
-
-**Kind**: inner method of [<code>facetColumns</code>](#ERMrest.Reference+facetColumns)  
-<a name="ERMrest.Reference+facetColumns..addColumn"></a>
-
-##### facetColumns~addColumn()
-Creates a FacetColumn for given ReferenceColumn and adds it to the list.
-
-**Kind**: inner method of [<code>facetColumns</code>](#ERMrest.Reference+facetColumns)  
 <a name="ERMrest.Reference+location"></a>
 
 #### reference.location ⇒ <code>ERMrest.Location</code>

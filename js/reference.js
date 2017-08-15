@@ -322,7 +322,7 @@
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
                 
-                /**
+                /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
                  * will return {"dataSource": source list, "column": Column object}
                  */
@@ -363,7 +363,7 @@
                     return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
                 };
                 
-                /**
+                /*
                  * Given two source objects check if they are the same.
                  * Source can be a string or array. If it's an array, the last element
                  * must be an string and the other elements must have either `inbound`
@@ -412,7 +412,7 @@
                     return true;
                 };
                 
-                /**
+                /*
                  * given a source, will return the filters that are already applied to it.
                  */
                 var findFilter = function (source) {
@@ -424,7 +424,7 @@
                     return null;
                 };
                 
-                /**
+                /*
                  * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
                  */
                 var addColumn = function (col, i) {
@@ -4454,37 +4454,43 @@
 
         /**
          * A valid data-source path
+         * NOTE: we're not validating this data-source, we assume that this is valid.
          * @type {obj|string} 
          */
         this.dataSource = dataSource;
         
         /**
          * Filters that are applied to this facet.
+         * @type{FacetFilter[]}
          */
         this.filters = [];
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
+        // returns the last foreignkey object in the path
         get _lastForeignKey() {
-            if (!Array.isArray(this.dataSource)) {
-                return null;
+            if (this._lastForeignKey_cached === undefined) {
+                if (!Array.isArray(this.dataSource)) {
+                    this._lastForeignKey_cached = null;
+                } else {
+                    var lastJoin = this.dataSource[this.dataSource.length-2];
+                    var isInbound = false, constraint;
+                    
+                    if ("inbound" in lastJoin) {
+                        isInbound = true;
+                        constraint = lastJoin.inbound;
+                    } else {
+                        constraint = lastJoin.outbound;
+                    }
+                    
+                    this._lastForeignKey_cached = {
+                        "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
+                        "isInbound": isInbound
+                    };
+                }
             }
-            
-            var lastJoin = this.dataSource[this.dataSource.length-2];
-            var isInbound = false, fk, constraint;
-            
-            if ("inbound" in lastJoin) {
-                isInbound = true;
-                constraint = lastJoin.inbound;
-            } else {
-                constraint = lastJoin.outbound;
-            }
-            
-            return {
-                "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
-                "isInbound": isInbound
-            };
+            return this._lastForeignKey_cached;
         },
         
         /**
@@ -4523,10 +4529,9 @@
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
-                // I assume that the reference has only facets, there's no join or filter
                 var jsonFilters = [];
                 
-                
+                // convert facets from main table to the current table.
                 if (this.reference.location.facets !== null) {
                     var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
                         self = this;
@@ -4548,6 +4553,7 @@
                     }
                     
                     // create new facet filters
+                    // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
                         if (index !== self.index && fc.filters.length !== 0) {
                             var filter = fc.toJSON();
@@ -4806,21 +4812,11 @@
          * @return {ERMrest.Reference} the reference with the new filter
          */
         _applyFilters: function (filters) {
-            
-            // create a new FacetColumn so it doesn't reference to the current FacetColum
-            
-            var newReference = _referenceCopy(this.reference);
             var self = this;
+            var newReference = _referenceCopy(this.reference);
             delete newReference._facetColumns;
             
-            // // clone the location object
-            // newReference._location = this.reference._location._clone();
-            // 
-            // // make sure reference.facetColumns and newRef.facetColumns are not referencing the same thing
-            // delete newReference._facetColumns;
-            // newReference._facetColumns = this.reference.facetColumns.slice();
-            // newReference._facetColumns[this.index] = fc;
-            
+            // create a new FacetColumn so it doesn't reference to the current FacetColum
             var jsonFilters = [];
             if (filters.length !== 0) {
                 var ThisFC = new FacetColumn(this.reference, this.index, this.dataSource, this._column);
@@ -4829,7 +4825,7 @@
                 jsonFilters.push(ThisFC.toJSON());
             }
             
-            // TODO
+            // TODO might be able to imporve this. Instead of recreating the whole json file.
             // gather all the filters from the facetColumns
             // NOTE: this part can be improved so we just change one JSON element.
             this.reference.facetColumns.forEach(function (fc, index) {
@@ -4972,13 +4968,14 @@
         this.facetFilterKey = "choices";
     }
     module._extends(EntityFacetFilter, FacetFilter);
+    
     /**
      * String representation of entity filter. It will be the tuple displayname
      * 
      * @return {string}
      */
     EntityFacetFilter.prototype.toString = function () {
-        //NOTE: should it be unformatted or not?
+        //TODO: should it be unformatted or not?
         return this.tuple.displayname.unformatted;
     };
 
