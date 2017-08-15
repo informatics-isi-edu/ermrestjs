@@ -254,7 +254,6 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
-        * [._related](#ERMrest.Reference+_related)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -299,7 +298,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-        * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
+        * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
@@ -2052,7 +2051,6 @@ Constructor for a ParsedFilter.
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
-    * [._related](#ERMrest.Reference+_related)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -2289,22 +2287,6 @@ if ( displayType === 'table') {
   // Use modulePath to render the rows
 }
 ```
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+_related"></a>
-
-#### reference._related
-The logic is as follows:
-
-1. Get the list of visible inbound foreign keys (if annotation is not defined,
-it will consider all the inbound foreign keys).
-
-2. Go through the list of visible inbound foreign keys
- 2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
-The logic for are sorted based on following attributes:
- 1. displayname
- 2. position of key columns that are involved in the foreignkey
- 3. position of columns that are involved in the foreignkey
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+unfilteredReference"></a>
@@ -2882,7 +2864,7 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-    * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>string</code>
+    * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
@@ -2923,7 +2905,7 @@ name of the column.
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+displayname"></a>
 
-#### referenceColumn.displayname : <code>string</code>
+#### referenceColumn.displayname : <code>object</code>
 name of the column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  

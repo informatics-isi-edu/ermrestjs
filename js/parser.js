@@ -1081,6 +1081,16 @@
      *  ]
      * }
      *
+     * <data-source> can be any of :
+     * * -> the filter is in table level (not column)
+     * string -> the filter is referring to a column (this is its name) 
+     * array -> the filter is referring to a column through a set of joins.
+     *  - each element shoud have
+     *      - An "inbound" or "outbound" key. Its value must be the constraint name array.
+     *  - last element must be a string, which is the column name.
+     *  for example:
+     *  [{"inbound": ["s1", "fk1"]}, {"outbound": ["s2", "fk2"]}, "col"]
+     *
      * For detailed explanation take a look at the following link:
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
@@ -1118,6 +1128,7 @@
          * @return      {string} string blob
          */
         _encodeJSON: function (obj) {
+            // return module._fixedEncodeURIComponent(JSON.stringify(obj,null,0));
             return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
         },
         
@@ -1130,7 +1141,12 @@
          */
         _decodeJSON: function (blob) {
             try {
-                return JSON.parse(module._LZString.decompressFromEncodedURIComponent(blob));
+                // return JSON.parse(decodeURIComponent(blob));
+                var str = module._LZString.decompressFromEncodedURIComponent(blob);
+                if (str === null) {
+                    throw new module.MalformedURIError("Given encoded string for facets is not valid.");
+                }
+                return JSON.parse(str);
             } catch (exception) {
                 console.log(exception);
                 throw new module.MalformedURIError("Given encoded string for facets is not valid.");
@@ -1202,10 +1218,22 @@
         
         // returns null if the path is invalid
         var parseDataSource = function (source, tableName, catalogId) {
-            var res = [], fk, i, table = tableName;
+            var res = [], fk, i, table = tableName, isInbound, constraint;
             // from 0 to source.length-1 we have paths
             for (i = 0; i < source.length - 1; i++) {
-                fk = module._getConstraintObject(catalogId, source[i].schema, source[i].constraint);
+                
+                if ("inbound" in source[i]) {
+                    constraint = source[i].inbound;
+                    isInbound = true;
+                } else if ("outbound" in source[i]) {
+                    constraint = source[i].outbound;
+                    isInbound = false;
+                } else {
+                    // given object was invalid
+                    return null;
+                }
+                
+                fk = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
                 
                 // constraint name was not valid
                 if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
@@ -1215,17 +1243,17 @@
                 fk = fk.object;
                 
                 // inbound
-                if (fk.key.table.name === table) {
+                if (isInbound && fk.key.table.name === table) {
                     res.push(fk.toString());
                     table = fk._table.name;
                 } 
                 // outbound
-                else if (fk._table.name === table) {
+                else if (!isInbound && fk._table.name === table) {
                     res.push(fk.toString(true));
                     table = fk.key.table.name;
                 }
                 else {
-                    // constraint name was not valid
+                    // the given object was not valid
                     return null;
                 }
             }

@@ -99,7 +99,7 @@ AttributeGroupReference.prototype = {
         
         // TODO doesn't support sort based on other columns.
         var newLocation = this.location.changeSort(sort);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
     },
     
     search: function (term) {
@@ -111,7 +111,7 @@ AttributeGroupReference.prototype = {
         verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
         
         var newLocation = this.location.changeSearchTerm(term);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
     },
     
     /**
@@ -236,8 +236,10 @@ AttributeGroupReference.prototype = {
                 
             }).catch(function (response) {
                 var error = module._responseToError(response);
-                return defer.reject(error);
+                defer.reject(error);
             });
+            
+            return defer.promise;
             
         } catch (e) {
             return module._q.reject(e);
@@ -351,7 +353,7 @@ AttributeGroupPage.prototype = {
         var currRef = this.reference;
         var rows = [];
         
-        currRef.location._sortObject.forEach(function (so) {
+        currRef.location.sortObject.forEach(function (so) {
             // assumes that sortObject columns are valid
             rows.push(self._data[0][so.column]);
         });
@@ -414,7 +416,8 @@ AttributeGroupTuple.prototype = {
      */
     get uniqueId() {
         if (this._uniqueId === undefined) {
-            this._uniqueId = this.reference.shortestKey.reduce(function (res, c, index) {
+            var data = this._data;
+            this._uniqueId = this._page.reference.shortestKey.reduce(function (res, c, index) {
                 return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name]);
             }, "");
         }
@@ -434,7 +437,8 @@ AttributeGroupTuple.prototype = {
      */
     get displayname() {
         if (this._displayname === undefined) {
-            var value = this.reference.shortestKey.reduce(function (res, c, index) {
+            var data = this._data;
+            var value = this._page.reference.shortestKey.reduce(function (res, c, index) {
                 return res + (index > 0 ? ":" : "") + c.formatvalue(data[c.name]);
             }, "");
             
