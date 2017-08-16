@@ -4593,18 +4593,16 @@
                     
                     // create a path from this facetColumn to the base reference
                     if (Array.isArray(this.dataSource)) {
-                        this.dataSource.forEach(function (ds, index, arr) {
-                            // last elemenet is the column name
-                            if (index !== arr.length -1 ) {
-                                var node;
-                                if ("inbound" in ds) {
-                                    node = {"outbound": ds.inbound};
-                                } else {
-                                    node = {"inbound": ds.outbound};
-                                }
-                                pathFromSource.push(node);
+                        var path = this.dataSource, node, ds;
+                        for (var i = path.length - 2; i >= 0; i--) {
+                            ds = path[i];
+                            if ("inbound" in ds) {
+                                node = {"outbound": ds.inbound};
+                            } else {
+                                node = {"inbound": ds.outbound};
                             }
-                        });
+                            pathFromSource.push(node);
+                        }
                     }
                     
                     // create new facet filters
