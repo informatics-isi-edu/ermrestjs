@@ -359,7 +359,7 @@ AttributeGroupPage.prototype = {
         });
         
         var newLocation = currRef.location.changePage({
-            before: false,
+            before: true,
             row: rows
         });
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
@@ -461,6 +461,7 @@ function AttributeGroupColumn(alias, term, displayname, type, comment, sortable,
     
     /**
      * This might include the aggregate functions. This is the right side of alias (alias:=term)
+     * NOTE: This MUST be url encoded
      * NOTE: We might want to seperate those, but right now this will only be used for 
      * creating the url.
      * @type {string}
@@ -503,7 +504,7 @@ AttributeGroupColumn.prototype = {
     toString: function () {
         var res = "";
         if (typeof this._alias === "string" && this._alias.length !== 0) {
-            res += this._alias + ":=";
+            res += module._fixedEncodeURIComponent(this._alias) + ":=";
         }
         res += this.term;
         return res;

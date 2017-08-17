@@ -1176,9 +1176,9 @@
             return choices.reduce(function (prev, curr, i) {
                 var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
-                    res += column + "=" + curr;
+                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(curr);
                 } else {
-                    res += column + "::null::";
+                    res += module._fixedEncodeURIComponent(column) + "::null::";
                 }
                 return res;
             }, "");
@@ -1194,7 +1194,7 @@
                 }
                 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += column + "::gt::" + range.min;
+                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(range.min);
                     hasFilter = true;
                 }
                 
@@ -1202,7 +1202,7 @@
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += column + "::lt::" + range.max;
+                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(range.max);
                     hasFilter = true;
                 }
             });

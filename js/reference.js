@@ -4484,7 +4484,7 @@
         if (Array.isArray(filters)) {
             this.filters = filters;
         } else {
-            this.setFilters(json);
+            this._setFilters(json);
         }
         
         // the whole filter object
@@ -4752,7 +4752,7 @@
          *
          * @param  {Object} json JSON representation of filters
          */
-        setFilters: function (json) {
+        _setFilters: function (json) {
             var self = this;
             self.filters = [];
 
@@ -4781,6 +4781,48 @@
                 });
             }
         },
+        
+        /**
+         * search filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.SearchFacetFilter[]}
+         */
+        get searchFilters() {
+            if (this._searchFilters === undefined) {
+                this._searchFilters = this.filters.filter(function (f) {
+                    return f instanceof SearchFacetFilter;
+                });
+            }
+            return this._searchFilters;
+        },
+        
+        /**
+         * choce filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.ChoiceFacetFilter[]}
+         */
+        get choiceFilters() {
+            if (this._choiceFilters === undefined) {
+                this._choiceFilters = this.filters.filter(function (f) {
+                    return f instanceof ChoiceFacetFilter;
+                });
+            }
+            return this._choiceFilters;
+        },
+        
+        /**
+         * range filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.RangeFacetFilter[]}
+         */
+        get rangeFilters() {
+            if (this._rangeFilters === undefined) {
+                this._rangeFilters = this.filters.filter(function (f) {
+                    return f instanceof RangeFacetFilter;
+                });
+            }
+            return this._rangeFilters;
+        },
 
         /**
          * Create a new Reference with appending a new Search filter to current FacetColumn
@@ -4798,13 +4840,30 @@
 
         /**
          * Create a new Reference with appending a new choice filter to current FacetColumn
-         * @param  {String|int} term the term for choice
+         * @param  {String[]|int[]} term array of terms
          * @return {ERMrest.Reference} the reference with the new filter
          */
-        addChoiceFilter: function (term) {
+        addChoiceFilters: function (terms) {
+            verify(Array.isArray(terms), "given argument must be an array");
+            
             var filters = this.filters.slice();
-            filters.push(new ChoiceFacetFilter(term));
+            terms.forEach(function (term) {
+                filters.push(new ChoiceFacetFilter(term));
+            });
 
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Given a term, it will remove any choice filter with that term (if any).
+         * @param  {String[]|int[]} terms array of terms
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeChoiceFilters: function (terms) {
+            verify(Array.isArray(terms), "given argument must be an array");
+            var filters = this.filters.splice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter) && (terms.indexOf(f.term) === -1);
+            });
             return this._applyFilters(filters);
         },
 
@@ -5137,7 +5196,7 @@
                 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("c1", this.column.name, this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn("c1", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];            
             
             // the reference
@@ -5159,7 +5218,7 @@
             }
                 
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": this.column.name, "term": ""};
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "c1", "descending": false}];
@@ -5168,12 +5227,12 @@
             
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("c1", this.column.name, this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn("c1", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
             
             var countName = "cnt(*)";
             if (this._ref.location.hasJoin) {
-                countName = "cnt_d(" + this._ref.table.shortestKey[0].name + ")";
+                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
             
             var aggregateColumns = [
@@ -5215,14 +5274,14 @@
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
                 
-            var binTerm = "bin(" + this.column.name + ";" + bucketCount + ";" + min + ";" + max + ")";
+            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
             
             var countName = "cnt(*)";
             if (this._ref.location.hasJoin) {
-                countName = "cnt_d(" + this._ref.table.shortestKey[0].name + ")";
+                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
             
             var aggregateColumns = [
