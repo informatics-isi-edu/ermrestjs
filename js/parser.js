@@ -870,7 +870,7 @@
      */
     _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
-        column = (typeof column !== 'string') ? "*": column;
+        column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
         
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount

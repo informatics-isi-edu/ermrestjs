@@ -4584,12 +4584,12 @@
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
-                var jsonFilters = [];
+                var jsonFilters = [],
+                    pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
+                    self = this;
                 
                 // convert facets from main table to the current table.
                 if (this.reference.location.facets !== null) {
-                    var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
-                        self = this;
                     
                     // create a path from this facetColumn to the base reference
                     if (Array.isArray(this.dataSource)) {
@@ -4616,6 +4616,13 @@
                             jsonFilters.push(filter);
                         }
                     });
+                }
+                
+                // convert the search into a facet
+                // TODO eventually the search must be changed to facet
+                if (typeof this.reference.location.searchTerm === "string") {
+                    var source = pathFromSource.length > 0 ? pathFromSource.concat("*") : "*";
+                    jsonFilters.push({"source": source, "search": [this.reference.location.searchTerm]});
                 }
                 
                 var table = this._column.table;
