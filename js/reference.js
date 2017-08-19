@@ -1730,6 +1730,7 @@
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
+            delete newReference._facetColumns;
 
             newReference._location = this._location._clone();
             newReference._location.pagingObject = null;
@@ -2348,6 +2349,7 @@
             var newRef = _referenceCopy(source);
             delete newRef._related;
             delete newRef._referenceColumns;
+            delete newRef._facetColumns;
 
             newRef._context = context;
 
@@ -4588,23 +4590,22 @@
                     pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
                     self = this;
                 
+                // create a path from this facetColumn to the base reference
+                if (Array.isArray(this.dataSource)) {
+                    var path = this.dataSource, node, ds;
+                    for (var i = path.length - 2; i >= 0; i--) {
+                        ds = path[i];
+                        if ("inbound" in ds) {
+                            node = {"outbound": ds.inbound};
+                        } else {
+                            node = {"inbound": ds.outbound};
+                        }
+                        pathFromSource.push(node);
+                    }
+                }
+                
                 // convert facets from main table to the current table.
                 if (this.reference.location.facets !== null) {
-                    
-                    // create a path from this facetColumn to the base reference
-                    if (Array.isArray(this.dataSource)) {
-                        var path = this.dataSource, node, ds;
-                        for (var i = path.length - 2; i >= 0; i--) {
-                            ds = path[i];
-                            if ("inbound" in ds) {
-                                node = {"outbound": ds.inbound};
-                            } else {
-                                node = {"inbound": ds.outbound};
-                            }
-                            pathFromSource.push(node);
-                        }
-                    }
-                    
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
