@@ -2176,7 +2176,7 @@ Heuristics:
 Usage:
 ```
  var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilter('value');
+ var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
