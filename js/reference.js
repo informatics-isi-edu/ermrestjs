@@ -5229,7 +5229,7 @@
             }
             
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": this.column.name, "term": ""};
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "c1", "descending": false}];
