@@ -297,7 +297,7 @@
          * Usage:
          * ```
          *  var facets = reference.facetColumns;
-         *  var newRef = reference.facetColumns[0].addChoiceFilter('value');
+         *  var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
          *  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
          *  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
          *  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
@@ -447,7 +447,9 @@
                 // all the visible columns in compact context
                 var columns = compactRef.columns;
                 columns.forEach(function (col) {
-                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
+                    // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
+                    // Since that key column will be counted.
+                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) &&  col.reference.table.shortestKey.length === 1) ) {
                         addColumn(col, index++);
                     }
                 });
@@ -455,8 +457,12 @@
                 // all the realted in detailed context
                 var related = detailedRef.related();
                 related.forEach(function (relRef) {
-                    var col = new InboundForeignKeyPseudoColumn(self, relRef);
-                    addColumn(col, index++);
+                    // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
+                    // Since that key column will be counted.
+                    if (relRef.table.shortestKey.length === 1) {
+                        addColumn(new InboundForeignKeyPseudoColumn(self, relRef), index++);
+                    }
+                    
                 });
             }
             return this._facetColumns;
@@ -4600,29 +4606,53 @@
          * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
          * in the source with all the filters of other FacetColumns in the reference.
          *
+         * TODO needs refactoring,
+         * This should return a reference that referes to the current column's table
+         * having filters from other facetcolumns.
+         * We should not use the absolute path for the table and it must be a path
+         * from main to this table. Because if we use the absolute path we're completely
+         * ignoring the constraints that the main table will add to this reference.
+         * (For example if maximum possible value for this column is 100 but there's 
+         * no data from the main that will leads to this maximum.)
+         * 
+         * TODO This is reducing very heavy joined links!
+         * main -> current + current -> main + main -> others + othersFilters
+         * We're doing this because parser cannot handle more complext urls.
+         * eventually it should be 
+         * main + main -> others + othersFilters + main -> current.
+         * 
          * NOTE: assumptions:
-         *  1. The reference has only facets, no join or filter
+         *  - The main reference has no filter and no join
          *
          * @type {ERMrest.Reference}
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
                 var jsonFilters = [],
-                    pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
-                    self = this;
+                    pathToSource = [], // the path from current table to the source table (will be used in the filters)
+                    pathToSourceStr = [], // the string of joins from current table to the source table (its reverse will be used for creating the url)
+                    self = this,
+                    table = this._column.table;
                 
                 // create a path from this facetColumn to the base reference
                 if (Array.isArray(this.dataSource)) {
-                    var path = this.dataSource, node, ds;
+                    var path = this.dataSource, node, ds, fk, isOutbound, constraint;
                     for (var i = path.length - 2; i >= 0; i--) {
                         ds = path[i];
                         if ("inbound" in ds) {
                             node = {"outbound": ds.inbound};
+                            constraint = ds.inbound;
+                            isOutbound = false;
                         } else {
                             node = {"inbound": ds.outbound};
+                            constraint = ds.outbound;
+                            isOutbound = true;
                         }
-                        pathFromSource.push(node);
+                        fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]).object;
+                        pathToSourceStr.push(fk.toString(isOutbound));
+                        pathToSource.push(node);
                     }
+                    pathToSourceStr.push(module._fixedEncodeURIComponent(this.reference.table.schema.name) + ":" + module._fixedEncodeURIComponent(this.reference.table.name));
                 }
                 
                 // convert facets from main table to the current table.
@@ -4632,8 +4662,8 @@
                     this.reference.facetColumns.forEach(function (fc, index) {
                         if (index !== self.index && fc.filters.length !== 0) {
                             var filter = fc.toJSON();
-                            if (pathFromSource.length > 0) {
-                                filter.source = pathFromSource.concat(filter.source);
+                            if (pathToSource.length > 0) {
+                                filter.source = pathToSource.concat(filter.source);
                             }
                             jsonFilters.push(filter);
                         }
@@ -4643,15 +4673,19 @@
                 // convert the search into a facet
                 // TODO eventually the search must be changed to facet
                 if (typeof this.reference.location.searchTerm === "string") {
-                    var source = pathFromSource.length > 0 ? pathFromSource.concat("*") : "*";
+                    var source = pathToSource.length > 0 ? pathToSource.concat("*") : "*";
                     jsonFilters.push({"source": source, "search": [this.reference.location.searchTerm]});
                 }
                 
-                var table = this._column.table;
+                // if path doesn't exist
+                if (pathToSourceStr.length === 0) {
+                    pathToSourceStr.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
+                }
+                
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
-                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                    pathToSourceStr.reverse().join("/"),
                 ].join("/");
                 
                 this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
@@ -4890,8 +4924,8 @@
          */
         removeChoiceFilters: function (terms) {
             verify(Array.isArray(terms), "given argument must be an array");
-            var filters = this.filters.splice().filter(function (f) {
-                return !(f instanceof ChoiceFacetFilter) && (terms.indexOf(f.term) === -1);
+            var filters = this.filters.slice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter) || (terms.indexOf(f.term) === -1);
             });
             return this._applyFilters(filters);
         },
@@ -5010,6 +5044,21 @@
          */
         toJSON: function () {
             return this.toString();
+        },
+        
+        /**
+         * The displayname of this fitler.
+         * Has isHTML, and value.
+         * @type {object}
+         */
+        get displayname() {
+            if (this._displayname === undefined) {
+                this._displayname = {
+                    isHTML: false,
+                    value: this.toString()
+                };
+            }
+            return this._displayname;
         }
     };
 
@@ -5119,7 +5168,15 @@
         //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
         return this.tuple.displayname.unformatted;
     };
-
+    Object.defineProperty(EntityFacetFilter.prototype, "displayname", {
+        get: function () {
+            if (this._displayname === undefined) {
+                this._displayname = this.tuple.displayname;
+            }
+            return this._displayname;
+        }
+    });
+    
     /**
      * Constructs an Aggregate Funciton object
      *
@@ -5216,7 +5273,7 @@
             }
             
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": this.column.name, "term": ""};
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "c1", "descending": false}];
@@ -5243,7 +5300,9 @@
             }
             
             if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
-                throw new Error("Table must have a simple key.");
+                console.log(this.column);
+                console.log(this._ref);
+                throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
             }
                 
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
