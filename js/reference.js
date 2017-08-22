@@ -4903,8 +4903,8 @@
          */
         removeChoiceFilters: function (terms) {
             verify(Array.isArray(terms), "given argument must be an array");
-            var filters = this.filters.splice().filter(function (f) {
-                return !(f instanceof ChoiceFacetFilter) && (terms.indexOf(f.term) === -1);
+            var filters = this.filters.slice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter) || (terms.indexOf(f.term) === -1);
             });
             return this._applyFilters(filters);
         },
@@ -5023,6 +5023,21 @@
          */
         toJSON: function () {
             return this.toString();
+        },
+        
+        /**
+         * The displayname of this fitler.
+         * Has isHTML, and value.
+         * @type {object}
+         */
+        get displayname() {
+            if (this._displayname === undefined) {
+                this._displayname = {
+                    isHTML: false,
+                    value: this.toString()
+                };
+            }
+            return this._displayname;
         }
     };
 
@@ -5132,7 +5147,15 @@
         //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
         return this.tuple.displayname.unformatted;
     };
-
+    Object.defineProperty(EntityFacetFilter.prototype, "displayname", {
+        get: function () {
+            if (this._displayname === undefined) {
+                this._displayname = this.tuple.displayname;
+            }
+            return this._displayname;
+        }
+    });
+    
     /**
      * Constructs an Aggregate Funciton object
      *
