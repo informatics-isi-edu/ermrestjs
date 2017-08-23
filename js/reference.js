@@ -4542,13 +4542,25 @@
          * @type {string}
          */
         get preferredMode() {
+            // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
+            function isRangeMode(column) {
+                console.log();
+                var typename = column.type.name;
+
+                // returns true is the typename includes the given string
+                function includesType(type) {
+                    return typename.indexOf(type) > -1;
+                }
+
+                return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
+            }
+
             if (this._preferredMode === undefined) {
                 var modes = ['choices', 'range', 'search'];
                 if (modes.indexOf(this._json['ux mode']) !== -1) {
                     this._preferredMode = this._json['ux mode'];
                 } else {
-                    //TODO
-                    this._preferredMode = null;
+                    this._preferredMode = (this.isEntityMode ? "entity" : (isRangeMode(this._column) ? "range" : "choices") );
                 }
             }
             return this._preferredMode;
