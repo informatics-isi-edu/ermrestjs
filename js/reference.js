@@ -4805,7 +4805,7 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    self.filters.push(new ChoiceFacetFilter(ch));
+                    self.filters.push(new ChoiceFacetFilter(ch.value, ch.displayvalue, ch.isHTML));
                 });
             }
 
@@ -4881,16 +4881,34 @@
         },
 
         /**
-         * Create a new Reference with appending a new choice filter to current FacetColumn
-         * @param  {String[]|int[]} term array of terms
+         * Create a new Reference with appending a list of choice filters to current FacetColumn
+         * @param  {object[]} values array of values with `value`, `displayvalue`, and `isHTML`.
          * @return {ERMrest.Reference} the reference with the new filter
          */
-        addChoiceFilters: function (terms) {
-            verify(Array.isArray(terms), "given argument must be an array");
+        addChoiceFilters: function (values) {
+            verify(Array.isArray(values), "given argument must be an array");
             
             var filters = this.filters.slice();
-            terms.forEach(function (term) {
-                filters.push(new ChoiceFacetFilter(term));
+            values.forEach(function (v) {
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML));
+            });
+
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with replacing choice facet filters by the given input
+         * @param  {object[]} values array of values with `value`, `displayvalue`, and `isHTML`.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        replaceAllChoiceFilters: function (values) {
+            verify(Array.isArray(values), "given argument must be an array");
+            
+            var filters = this.filters.slice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter);
+            });
+            values.forEach(function (v) {
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML));
             });
 
             return this._applyFilters(filters);
@@ -5000,11 +5018,16 @@
 
     /**
      * Represent filters that can be applied to facet
+     * 
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
     function FacetFilter(term) {
         this.term = term;
+        this.displayname = {
+            isHTML: false,
+            value: this.toString()
+        };
     }
     FacetFilter.prototype = {
         constructor: FacetFilter,
@@ -5023,39 +5046,8 @@
          */
         toJSON: function () {
             return this.toString();
-        },
-        
-        /**
-         * The displayname of this fitler.
-         * Has isHTML, and value.
-         * @type {object}
-         */
-        get displayname() {
-            if (this._displayname === undefined) {
-                this._displayname = {
-                    isHTML: false,
-                    value: this.toString()
-                };
-            }
-            return this._displayname;
         }
     };
-
-    /**
-     * Represent choice filters that can be applied to facet.
-     * JSON representation of this filter:
-     * "choices": [v1, ...]
-     *
-     * Extends {@link ERMrest.FacetFilter}.
-     * @param       {String|int} term the valeu of filter
-     * @constructor
-     */
-    function ChoiceFacetFilter(term) {
-        ChoiceFacetFilter.superClass.call(this, term);
-        this.facetFilterKey = "choices";
-    }
-    module._extends(ChoiceFacetFilter, FacetFilter);
-
     /**
      * Represent search filters that can be applied to facet.
      * JSON representation of this filter:
@@ -5070,7 +5062,38 @@
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
-
+    
+    /**
+     * Represent choice filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "choices": [v1, ...]
+     * where v1 has `value`, `displayvalue`, and `isHTML`.
+     *
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
+    function ChoiceFacetFilter(value, displayvalue, isHTML) {
+        ChoiceFacetFilter.superClass.call(this, value);
+        this.displayname = {
+            isHTML:  isHTML,
+            value: displayvalue
+        };
+        this.facetFilterKey = "choices";
+    }
+    module._extends(ChoiceFacetFilter, FacetFilter);
+    /**
+     * JSON representation of choice filter.
+     * @return {Object}
+     */
+    ChoiceFacetFilter.prototype.toJSON = function () {
+        return {
+            value: this.term,
+            displayvalue: this.displayname.value,
+            isHTML:this.displayname.isHTML
+        };
+    };
+    
     /**
      * Represent range filters that can be applied to facet.
      * JSON representation of this filter:
@@ -5122,39 +5145,6 @@
         }
         return res;
     };
-    
-    /**
-     * Represents entity filters that can be applied to facet.
-     * 
-     * @param       {ERMrest.tuple} tuple the tuple object
-     * @constructor
-     */
-    function EntityFacetFilter(tuple, col) {
-        
-        ChoiceFacetFilter.superClass.call(this, tuple._data);
-        this.tuple = tuple;
-        this.facetFilterKey = "choices";
-    }
-    module._extends(EntityFacetFilter, FacetFilter);
-    
-    /**
-     * String representation of entity filter. It will be the tuple displayname
-     * 
-     * @return {string}
-     */
-    EntityFacetFilter.prototype.toString = function () {
-        //TODO: should it be unformatted or not?\
-        //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
-        return this.tuple.displayname.unformatted;
-    };
-    Object.defineProperty(EntityFacetFilter.prototype, "displayname", {
-        get: function () {
-            if (this._displayname === undefined) {
-                this._displayname = this.tuple.displayname;
-            }
-            return this._displayname;
-        }
-    });
     
     /**
      * Constructs an Aggregate Funciton object
