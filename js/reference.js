@@ -4817,21 +4817,21 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    self.filters.push(new ChoiceFacetFilter(ch.value, ch.displayvalue, ch.isHTML));
+                    self.filters.push(new ChoiceFacetFilter(ch.value, ch.displayvalue, ch.isHTML, self._column.type));
                 });
             }
 
             // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
-                    self.filters.push(new RangeFacetFilter(ch.min, ch.max));
+                    self.filters.push(new RangeFacetFilter(ch.min, ch.max, self._column.type));
                 });
             }
 
             // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
-                    self.filters.push(new SearchFacetFilter(ch));
+                    self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
         },
@@ -4887,7 +4887,7 @@
             verify (isDefinedAndNotNull(term), "`term` is required.");
 
             var filters = this.filters.slice();
-            filters.push(new SearchFacetFilter(term));
+            filters.push(new SearchFacetFilter(term, this._column.type));
 
             return this._applyFilters(filters);
         },
@@ -4902,7 +4902,7 @@
             
             var filters = this.filters.slice();
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML));
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, this._column.type));
             });
 
             return this._applyFilters(filters);
@@ -4920,7 +4920,7 @@
                 return !(f instanceof ChoiceFacetFilter);
             });
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML));
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, this._column.type));
             });
 
             return this._applyFilters(filters);
@@ -4949,20 +4949,8 @@
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
 
             var filters = this.filters.slice();
-            filters.push(new RangeFacetFilter(min, max));
+            filters.push(new RangeFacetFilter(min, max, this._column.type));
 
-            return this._applyFilters(filters);
-        },
-
-        /**
-         * Create a new Reference with appending a new entity filter to current FacetColumn
-         * @param  {ERMrest.Tuple} tuple the tuple object that has the row values.
-         * @return {ERMrest.Reference} the reference with the new filter
-         */
-        addEntityFilter: function (tuple) {
-            var filters = this.filters.slice();
-            filters.push(new EntityFacetFilter(tuple, this._column));
-            
             return this._applyFilters(filters);
         },
         
@@ -5034,7 +5022,8 @@
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function FacetFilter(term) {
+    function FacetFilter(term, columnType) {
+        this._columnType = columnType;
         this.term = term;
         this.displayname = {
             isHTML: false,
@@ -5049,7 +5038,7 @@
          * @return {string}
          */
         toString: function () {
-            return this.term;
+            return _formatValueByType(this._columnType, this.term);
         },
 
         /**
@@ -5057,7 +5046,7 @@
          * @return {string}
          */
         toJSON: function () {
-            return this.toString();
+            return this.term;
         }
     };
     /**
@@ -5069,8 +5058,8 @@
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function SearchFacetFilter(term) {
-        ChoiceFacetFilter.superClass.call(this, term);
+    function SearchFacetFilter(term, columnType) {
+        ChoiceFacetFilter.superClass.call(this, term, columnType);
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
@@ -5085,8 +5074,8 @@
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function ChoiceFacetFilter(value, displayvalue, isHTML) {
-        ChoiceFacetFilter.superClass.call(this, value);
+    function ChoiceFacetFilter(value, displayvalue, isHTML, columnType) {
+        ChoiceFacetFilter.superClass.call(this, value, columnType);
         this.displayname = {
             isHTML:  isHTML,
             value: displayvalue
@@ -5116,10 +5105,15 @@
      * @param       {String|int=} max
      * @constructor
      */
-    function RangeFacetFilter(min, max) {
+    function RangeFacetFilter(min, max, columnType) {
+        this._columnType = columnType;
         this.min = min;
         this.max = max;
         this.facetFilterKey = "ranges";
+        this.displayname = {
+            isHTML: false,
+            value: this.toString()
+        };
     }
     module._extends(RangeFacetFilter, FacetFilter);
 
@@ -5135,12 +5129,12 @@
     RangeFacetFilter.prototype.toString = function () {
         // assumption: at least one of them is defined
         if (!isDefinedAndNotNull(this.max)) {
-            return "> " + this.min;
+            return "> " + _formatValueByType(this._columnType, this.min);
         }
         if (!isDefinedAndNotNull(this.min)) {
             return this.max + " <";
         }
-        return this.min + " - " + this.max;
+        return this.min + " to " + _formatValueByType(this._columnType, this.max);
     };
 
     /**
