@@ -4900,9 +4900,9 @@
         addChoiceFilters: function (values) {
             verify(Array.isArray(values), "given argument must be an array");
             
-            var filters = this.filters.slice();
+            var filters = this.filters.slice(), self = this;
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, this._column.type));
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, self._column.type));
             });
 
             return this._applyFilters(filters);
@@ -4915,12 +4915,12 @@
          */
         replaceAllChoiceFilters: function (values) {
             verify(Array.isArray(values), "given argument must be an array");
-            
+            var self = this;
             var filters = this.filters.slice().filter(function (f) {
                 return !(f instanceof ChoiceFacetFilter);
             });
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, this._column.type));
+                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, self._column.type));
             });
 
             return this._applyFilters(filters);
