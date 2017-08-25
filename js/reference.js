@@ -4542,9 +4542,8 @@
          * @type {string}
          */
         get preferredMode() {
-            // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
+            // a facet is in range mode if it's column's type is integer, float, numeric, date, timestamp, or serial
             function isRangeMode(column) {
-                console.log();
                 var typename = column.type.name;
 
                 // returns true is the typename includes the given string
@@ -4552,7 +4551,7 @@
                     return typename.indexOf(type) > -1;
                 }
 
-                return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
+                return (includesType("serial") || includesType("int") || includesType("float") || includesType("numeric") || includesType("date") || includesType("timestamp"));
             }
 
             if (this._preferredMode === undefined) {
