@@ -4560,7 +4560,7 @@
                 if (modes.indexOf(this._json['ux mode']) !== -1) {
                     this._preferredMode = this._json['ux mode'];
                 } else {
-                    this._preferredMode = (this.isEntityMode ? "entity" : (isRangeMode(this._column) ? "range" : "choices") );
+                    this._preferredMode = isRangeMode(this._column) ? "range" : "choices";
                 }
             }
             return this._preferredMode;
