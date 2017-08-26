@@ -4542,8 +4542,9 @@
          * @type {string}
          */
         get preferredMode() {
-            // a facet is in range mode if it's column's type is integer, float, numeric, date, timestamp, or serial
+            // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
             function isRangeMode(column) {
+                console.log();
                 var typename = column.type.name;
 
                 // returns true is the typename includes the given string
@@ -4551,7 +4552,7 @@
                     return typename.indexOf(type) > -1;
                 }
 
-                return (includesType("serial") || includesType("int") || includesType("float") || includesType("numeric") || includesType("date") || includesType("timestamp"));
+                return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
             }
 
             if (this._preferredMode === undefined) {
@@ -4946,11 +4947,34 @@
          */
         addRangeFilter: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            
+            var current = this.filters.filter(function (f) {
+                return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+            })[0];
+            
+            if (current !== undefined) {
+                return false;
+            }
 
             var filters = this.filters.slice();
-            filters.push(new RangeFacetFilter(min, max, this._column.type));
+            var newFilter = new RangeFacetFilter(min, max, this._column.type);
+            filters.push(newFilter);
 
-            return this._applyFilters(filters);
+            return {
+                reference: this._applyFilters(filters),
+                filter: newFilter
+            };
+        },
+        
+        removeRangeFilter: function (min, max) {
+            //TODO needs refactoring
+            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            var filters = this.filters.filter(function (f) {
+                return !(f instanceof RangeFacetFilter) || !(f.min === min && f.max === max);
+            });
+            return {
+                reference: this._applyFilters(filters)
+            };
         },
         
         /**
@@ -5024,6 +5048,7 @@
     function FacetFilter(term, columnType) {
         this._columnType = columnType;
         this.term = term;
+        this.uniqueId = term;
         this.displayname = {
             isHTML: false,
             value: this.toString()
@@ -5113,6 +5138,7 @@
             isHTML: false,
             value: this.toString()
         };
+        this.uniqueId = this.displayname.value;
     }
     module._extends(RangeFacetFilter, FacetFilter);
 
