@@ -5147,7 +5147,7 @@
      *
      * - both min and max defined: `{{min}}-{{max}}`
      * - only min defined: `> {{min}}`
-     * - only max defined: `{{max}} <`
+     * - only max defined: `< {{max}}`
      *
      * @return {string}
      */
@@ -5157,7 +5157,7 @@
             return "> " + _formatValueByType(this._columnType, this.min);
         }
         if (!isDefinedAndNotNull(this.min)) {
-            return this.max + " <";
+            return  "< " + this.max;
         }
         return this.min + " to " + _formatValueByType(this._columnType, this.max);
     };
