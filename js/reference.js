@@ -4575,8 +4575,9 @@
         get isEntityMode() {
             if (this._isEntityMode === undefined) {
                 var currCol = this._column;
+                // TODO unique and not noll!
                 this._isEntityMode = currCol.table.keys.all().filter(function (key) {
-                    return key.simple && key.colset.columns[0] === currCol;
+                    return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
                 }).length > 0;
             }
             return this._isEntityMode;
@@ -5159,7 +5160,7 @@
         if (!isDefinedAndNotNull(this.min)) {
             return  "< " + this.max;
         }
-        return this.min + " to " + _formatValueByType(this._columnType, this.max);
+        return _formatValueByType(this._columnType, this.min) + " to " + _formatValueByType(this._columnType, this.max);
     };
 
     /**
@@ -5309,7 +5310,7 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "c1", "descending": false}];
+            var sortObj = [{"column": "c2", "descending": true}, {"column": "c1", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
             
