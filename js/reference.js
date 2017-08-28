@@ -5277,13 +5277,13 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "c1", "descending": false}];
+            var sortObj = [{"column": "count", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
                 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("c1", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn("count", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];            
             
             // the reference
@@ -5310,13 +5310,13 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "c2", "descending": true}, {"column": "c1", "descending": false}];
+            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
             
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("c1", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
             
             var countName = "cnt(*)";
@@ -5325,7 +5325,7 @@
             }
             
             var aggregateColumns = [
-                new AttributeGroupColumn("c2", countName, "Count", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);

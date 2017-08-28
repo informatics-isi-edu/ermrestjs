@@ -408,6 +408,10 @@ AttributeGroupTuple.prototype = {
         return this._values;
     },
     
+    get data() {
+        return this._data;
+    },
+    
     /**
      * The unique identifier for this tuple composed of the values for each
      * of the shortest key columns concatenated together by an '_'
