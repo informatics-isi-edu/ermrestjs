@@ -428,6 +428,7 @@
                  * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
                  */
                 var addColumn = function (col, i) {
+                    //TODO some column types might not be allowed
                     var source = generateDataSource(col);
                     var filter = findFilter(source.dataSource);
                     if (filter === null) {
@@ -4500,6 +4501,21 @@
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
+        
+        get filtersString() {
+            if (this._filtersString === undefined) {
+                var isHTML = false, values = [];
+                values = this.filters.map(function (f) {
+                    isHTML = isHTML || f.displayname.isHTML;
+                    return f.displayname.value;
+                });
+                this._filtersString = {
+                    isHTML: isHTML,
+                    value: values.join(", ")
+                };
+            }
+            return this._filtersString;
+        },
         
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
