@@ -1262,6 +1262,84 @@
                 }
             }
         });
+        
+        md.use(mdContainer, 'video', {
+            /*
+             * Checks whether string matches format ":::video (LINK){ATTR=VALUE .CLASSNAME}"
+             * String inside '{}' is Optional, specifies attributes to be applied to prev element
+             */
+            validate: function(params) {
+                return params.trim().match(/video\s+(.*$)/i);
+            },
+            
+            render: function (tokens, idx) {
+                // Get token string after regeexp matching to determine actual internal markdown
+                var m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
+                
+                // If this is the opening tag i.e. starts with "::: video "
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+                    
+                    // Extract remaining string before closing tag and get its parsed markdown attributes
+                    var attrs = md.parseInline(m[1]), html = "";
+                    
+                    if (attrs && attrs.length == 1 && attrs[0].children) {
+                        // Check If the markdown is a link
+                        if (attrs[0].children[0].type == "link_open") {
+                            var videoHTML="<video controls ", openingLink = attrs[0].children[0];
+                            var srcHTML="", videoClass="", flag = true;
+                            
+                            // Add all attributes to the video
+                            openingLink.attrs.forEach(function(attr) {
+                                if (attr[0] == "href") {
+                                    if(attr[1] == ""){
+                                        flag= false;
+                                        return "";
+                                    }
+                                    srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
+                                } 
+                                else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
+                                    videoClass +=  attr[0]+ "="+ attr[1] +" ";
+                                }
+                                else if ( (attr[0] == "loop" || attr[0] == "preload" || attr[0] == "muted" || attr[0] == "autoload") && attr[1]=="") {
+                                    videoClass +=  attr[0]+ " ";
+                                }
+                            });
+                            
+                            var captionHTML="";
+                            // If the next attribute is not a closing link then iterate
+                            // over all the children until link_close is encountered rednering their markdown
+                            if (attrs[0].children[1].type != 'link_close') {
+                                for(var i=1; i<attrs[0].children.length; i++) {
+                                    // If there is a caption then add it as a "div" with "caption" class
+                                    if (attrs[0].children[i].type == "text") {
+                                       captionHTML += md.renderInline(attrs[0].children[i].content);
+                                    } else if (attrs[0].children[i].type !== 'link_close'){
+                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if(captionHTML.trim().length && flag){
+                                html +=  "<p>"+captionHTML+ "</p>" + videoHTML + videoClass +">"+ srcHTML +"</video>" ;
+                            } else if(flag)
+                                html += videoHTML + videoClass +">"+ srcHTML +"</video>";
+                            else
+                                return '';
+                        }
+                    }
+                    // if attrs was empty or it didn't find any link simply render the internal markdown
+                    if (html === "") {
+                        html = md.render(m[1]);
+                    }
+                    return html;
+                } else {
+                  // closing tag
+                  return '';
+                }    
+            }
+        });
     };
 
     // Characters to replace Markdown special characters
