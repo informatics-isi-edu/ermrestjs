@@ -86,9 +86,9 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues, expectedIsHTMLValues) {
 
-            it("should return 11 values for a tuple", function() {
+            it("should return 12 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                expect(values.length).toBe(11);
+                expect(values.length).toBe(12);
             });
             
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
@@ -100,151 +100,141 @@ exports.execute = function (options) {
             checkValueAndIsHTML("iframe", tupleIndex, 6, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues, expectedIsHTMLValues);  
             checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);  
-            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);        
+            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);    
+            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);       
         };
-
-
-
-        describe('for tuple 0 with row values {"id":4000, "some_markdown": "** date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT"},', function() {
-            var values = ['4000',
-                          '<h2>Hank</h2>\n',
-                          '<p><a href="https://www.google.com/Hank">link</a></p>\n',
-                          '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
-                          '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                          '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                          '<p><strong>date is :</strong></p>\n',
-                          '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
-                          '<code>GATCGATCGC GTATT</code>',
-                          'NA'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true, false];
-
-            testTupleValidity(0, values, isHTML);
-        });
-
-        describe('for tuple 1 with row values {"id":4001, "name":"Harold","some_invisible_column": "Junior"},', function() {
-
-            var values = ['4001',
-                          '<h2>Harold</h2>\n',
-                          '<p><a href="/Harold">link</a></p>\n',
-                          '<p><img src="http://example.com/4001.png" alt="image"></p>\n',
-                          '<p><img src="/4001.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="" download="">download link</a></p>\n',
-                          '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Harold caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '',
-                          '<p><a href="http://example.com/Junior">Junior</a></p>\n'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
-
-            testTupleValidity(1, values, isHTML);            
-        });
-
-        describe('for tuple 2 with row values {"id":4002, "url": "https://www.google.com"},', function() {
-
-            var values = ['4002',
-                          null,
-                          '',
-                          '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
-                          '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                          '',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '',
-                          '',
-                          'NA'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, false, false, true, true, true, false, true, false, true, false];
-
-            testTupleValidity(2, values, isHTML);
-        });
-
-        describe('for tuple 3 with row values {"id":4003 ,"some_invisible_column": "Freshmen"},', function() {
-
-            var values = ['4003',
-                          null,
-                          '',
-                          '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
-                          '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="" download="">download link</a></p>\n',
-                          '',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '',
-                          '',
-                          '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n'];
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, false, false, true, true, true, false, true, false, true, true];
-
-            testTupleValidity(3, values, isHTML);
-        });
-
-        describe('for tuple 4 with row values {"id":4004, "name": "weird & HTML < " },', function() {
-
-            var values = ['4004',
-                          '<h2>weird &amp; HTML &lt;</h2>\n',
-                          '<p>[link](/weird &amp; HTML &lt; )</p>\n',
-                          '<p><img src="http://example.com/4004.png" alt="image"></p>\n',
-                          '<p><img src="/4004.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="" download="">download link</a></p>\n',
-                          '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">weird &amp; HTML &lt;  caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '',
-                          'NA'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true, false];
-
-            testTupleValidity(4, values, isHTML);
-        });
-
-        describe('for tuple 5 with row values {"id":4005, "name": "<a href=\'javascript:alert();\'></a>" , "some_invisible_column": "Senior"},', function() {
-
-            var values = ['4005',
-                          '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
-                          '<p>[link](/&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;)</p>\n',
-                          '<p><img src="http://example.com/4005.png" alt="image"></p>\n',
-                          '<p><img src="/4005.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="" download="">download link</a></p>\n',
-                          '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '',
-                          '<p><a href="http://example.com/Senior">Senior</a></p>\n'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
-
-            testTupleValidity(5, values, isHTML);
-        });
-
-        describe('for tuple 6 with row values {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" , "some_invisible_column": "Sophomore"},', function() {
-
-            var values = ['4006',
-                          '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
-                          '<p><a href="/%3Cscript%3Ealert();%3C/script%3E">link</a></p>\n',
-                          '<p><img src="http://example.com/4006.png" alt="image"></p>\n',
-                          '<p><img src="/4006.png" alt="image with size" width="400" height="400"></p>\n',
-                          '<p><a href="" download="">download link</a></p>\n',
-                          '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                          '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                          '<code>GATCGATCGC GTATT</code>',
-                          '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n'];
-
-            // Change last false to true once gene_sequence type is added
-            var isHTML = [false, true, true, true, true, true, true, true, true, true, true];
-
-            testTupleValidity(6, values, isHTML);
-        });
         
+        describe("Testing tuples values", function() {
+            var rowValues= [["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
+             ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4003 ,some_invisible_column= Freshmen, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4004, name= weird & HTML < , video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior, video_col= http://techslides.com//small.mp4"],
+             ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore, video_col= http://techs.com/sample/small.mp4"]]
+
+            var expectedValues =[
+                                [ '4000',
+                                  '<h2>Hank</h2>\n',
+                                  '<p><a href="https://www.google.com/Hank">link</a></p>\n',
+                                  '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
+                                  '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
+                                  '<p><a href="https://www.google.com" download="">download link</a></p>\n',
+                                  '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                  '<p><strong>date is :</strong></p>\n',
+                                  '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
+                                  '<code>GATCGATCGC GTATT</code>',
+                                  'NA',
+                                  '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>'
+                                ],
+                                [
+                                    '4001',
+                                    '<h2>Harold</h2>\n',
+                                    '<p><a href="/Harold">link</a></p>\n',
+                                    '<p><img src="http://example.com/4001.png" alt="image"></p>\n',
+                                    '<p><img src="/4001.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="" download="">download link</a></p>\n',
+                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Harold caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '',
+                                    '<p><a href="http://example.com/Junior">Junior</a></p>\n',
+                                    ''
+                                ],
+                                [
+                                    '4002',
+                                    null,
+                                    '',
+                                    '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
+                                    '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="https://www.google.com" download="">download link</a></p>\n',
+                                    '',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '',
+                                    '',
+                                    'NA',
+                                    ''             
+                                ],
+                                [
+                                    '4003',
+                                    null,
+                                    '',
+                                    '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
+                                    '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="" download="">download link</a></p>\n',
+                                    '',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '',
+                                    '',
+                                    '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
+                                    ''             
+                                ],
+                                [
+                                    '4004',
+                                    '<h2>weird &amp; HTML &lt;</h2>\n',
+                                    '<p>[link](/weird &amp; HTML &lt; )</p>\n',
+                                    '<p><img src="http://example.com/4004.png" alt="image"></p>\n',
+                                    '<p><img src="/4004.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="" download="">download link</a></p>\n',
+                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">weird &amp; HTML &lt;  caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '',
+                                    'NA',
+                                    ''             
+                                ],
+                                [
+                                    '4005',
+                                    '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
+                                    '<p>[link](/&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;)</p>\n',
+                                    '<p><img src="http://example.com/4005.png" alt="image"></p>\n',
+                                    '<p><img src="/4005.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="" download="">download link</a></p>\n',
+                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '',
+                                    '<p><a href="http://example.com/Senior">Senior</a></p>\n',
+                                    ''             
+                                ],
+                                [
+                                    '4006',
+                                    '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
+                                    '<p><a href="/%3Cscript%3Ealert();%3C/script%3E">link</a></p>\n',
+                                    '<p><img src="http://example.com/4006.png" alt="image"></p>\n',
+                                    '<p><img src="/4006.png" alt="image with size" width="400" height="400"></p>\n',
+                                    '<p><a href="" download="">download link</a></p>\n',
+                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                    '<code>GATCGATCGC GTATT</code>',
+                                    '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
+                                    ''             
+                                ]
+                              ];
+            var isHTMLList = [  [false, true, true, true, true, true, true, true, true, true, false, true],
+                                [false, true, true, true, true, true, true, true, true, true, true, true],
+                                [false, false, false, true, true, true, false, true, false, true, false, true],
+                                [false, false, false, true, true, true, false, true, false, true, true, true],
+                                [false, true, true, true, true, true, true, true, true, true, false, true],
+                                [false, true, true, true, true, true, true, true, true, true, true, true],
+                                [false, true, true, true, true, true, true, true, true, true, true, true]
+                             ]
+
+            for(var i=0; i< expectedValues.length; i++){
+                var rowValue = rowValues[i];
+                var expectedValue = expectedValues[i];
+                var isHTML = isHTMLList[i];
+                describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
+                    testTupleValidity(i, expectedValue, isHTML);
+                })
+                    
+            }
+        });
 
     });
+    
+    
     
     describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()

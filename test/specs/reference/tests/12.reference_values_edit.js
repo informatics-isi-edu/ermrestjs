@@ -60,7 +60,7 @@ exports.execute = function (options) {
                 var expectedValue = expectedValues[valueIndex];
 
                 // Check value is same as expected
-                expect(value).toBe(expectedValue);
+                expect(value).toBe(expectedValue, columnName+" column value is "+ value+ " expected it to be "+expectedValue);
             });
 
 
@@ -69,7 +69,7 @@ exports.execute = function (options) {
                 var isHTML = tuple.isHTML[valueIndex];
 
                 // Check isHTML is same as expected; either true or false
-                expect(isHTML).toBe(false);
+                expect(isHTML).toBe(false, columnName + " column isHTML should be set to false but was found to be true" );
             });
 
         };
@@ -86,7 +86,7 @@ exports.execute = function (options) {
             it("should return 1 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
 
-                expect(values.length).toBe(11);
+                expect(values.length).toBe(12);
             });
 
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues);
@@ -99,140 +99,40 @@ exports.execute = function (options) {
             checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues);
             checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues);
             checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues);
+            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues);
+
         };
 
 
 
-        describe('for tuple 0 with row values {"id":4000, "some_markdown": "** date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT"},', function() {
-            var values = [
-                            "4000",
-                            "Hank",
-                            "https://www.google.com",
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**date is :**',
-                            '**Name is :**',
-                            "GATCGATCGCGTATT",
-                            null
-                          ];
+        
+        
+        describe("Testing tuples values", function() {
+            var rowValues= [["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
+             ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4003 ,some_invisible_column= Freshmen, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4004, name= weird & HTML < , video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+             ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior, video_col= http://techslides.com//small.mp4"],
+             ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore, video_col= http://techs.com/sample/small.mp4"]]
 
-            testTupleValidity(0, values);
-        });
+            var expectedValues =[ ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4"],
+                                  ["4001", "Harold", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null],
+                                  ["4002", null, "https://www.google.com", null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null],
+                                  ["4003", null, null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**',null, null, null],
+                                  ["4004", "weird & HTML < ", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null ],
+                                  ["4005", "<a href='javascript:alert();'></a>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null],
+                                  ["4006", "<script>alert();</script>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', "GATCGATCGCGTATT", null, null]
+                              ];
 
-        describe('for tuple 1 with row values {"id":4001, "name":"Harold","some_invisible_column": "Junior"},', function() {
-
-            var values = [
-                            "4001",
-                            "Harold",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            null,
-                            null
-                          ];
-
-            testTupleValidity(1, values);
-        });
-
-        describe('for tuple 2 with row values {"id":4002, "url": "https://www.google.com"},', function() {
-
-            var values =  [
-                            "4002",
-                            null,
-                            "https://www.google.com",
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            null,
-                            null
-                          ];
-
-            testTupleValidity(2, values);
-        });
-
-        describe('for tuple 3 with row values {"id":4003 ,"some_invisible_column": "Freshmen"},', function() {
-
-            var values = [
-                            "4003",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            null,
-                            null
-                          ];
-
-            testTupleValidity(3, values);
-        });
-
-        describe('for tuple 4 with row values {"id":4004, "name": "weird & HTML < " },', function() {
-
-            var values = [
-                            "4004",
-                            "weird & HTML < ",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            null,
-                            null
-                          ];
-
-            testTupleValidity(4, values);
-        });
-
-        describe('for tuple 5 with row values {"id":4005, "name": "<a href=\'javascript:alert();\'></a>" , "some_invisible_column": "Senior"},', function() {
-
-            var values = [
-                            "4005",
-                            "<a href='javascript:alert();'></a>",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            null,
-                            null
-                          ];
-
-            testTupleValidity(5, values);
-        });
-
-        describe('for tuple 6 with row values {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT" , "some_invisible_column": "Sophomore"},', function() {
-
-            var values = [
-                            "4006",
-                            "<script>alert();</script>",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            '**This is some markdown** with some `code` and a [link](http://www.example.com)',
-                            '**Name is :**',
-                            "GATCGATCGCGTATT",
-                            null
-                          ];
-
-            testTupleValidity(6, values);
+            for(var i=0; i< expectedValues.length; i++){
+                var rowValue = rowValues[i];
+                var expectedValue = expectedValues[i];
+                describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
+                    testTupleValidity(i, expectedValue);
+                })
+                    
+            }
         });
         
         
