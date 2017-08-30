@@ -141,6 +141,27 @@ exports.execute = function (options) {
             expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
 
             expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
+            
+            //Check for proper rendering of video tag with no attributes
+            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
+            var videoHTML = '<p>caption</p><video controls ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>';
+            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with no attributes ");
+            
+            //Check for proper rendering of video tag with height and width attributes
+            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
+            var videoHTML = '<p>caption</p><video controls width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>';
+            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with height and width attributes ");
+            
+            //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
+            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
+            var videoHTML = '<p>caption</p><video controls width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>';
+            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with boolean attributes ");
+            
+            //Check for proper rendering of video tag with some invalid attributes
+            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
+            var videoHTML = '<p>caption</p><video controls width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>';
+            console.log(printMarkdown(videoMarkDown));
+            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
 
         });
 
