@@ -343,6 +343,31 @@
                     "name": "id_from_inbound_related_table",
                     "nullok": false,
                     "type": {"typename":"text"}
+                },
+                {
+                    "name": "rid",
+                    "nullok": false,
+                    "type": {"typename":"int8"}
+                },
+                {
+                    "name": "rcb",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "rmb",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "rct",
+                    "nullok": false,
+                    "type": {"typename":"timestamptz"}
+                },
+                {
+                    "name": "rmt",
+                    "nullok": false,
+                    "type": {"typename":"timestamptz"}
                 }
             ],
             "annotations": {
