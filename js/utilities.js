@@ -39,7 +39,7 @@
         Object.defineProperty(Array.prototype, 'findIndex', {
             value: function(predicate) {
                 // 1. Let O be ? ToObject(this value).
-                if (this == null) {
+                if (this === null) {
                     throw new TypeError('"this" is null or not defined');
                 }
 
@@ -1664,3 +1664,5 @@
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
+
+    module._systemColumns = ['rid', 'rcb', 'rmb', 'rct', 'rmt'];
