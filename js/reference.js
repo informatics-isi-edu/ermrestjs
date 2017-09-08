@@ -5340,8 +5340,9 @@
                 countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
             
+            // sort based on count is disabled because of ermrset cnt bug
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", false, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
