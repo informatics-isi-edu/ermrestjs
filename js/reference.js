@@ -5088,12 +5088,6 @@
          * @return {string}
          */
         toString: function () {
-            if (!isDefinedAndNotNull(this.term)) {
-                return "--Not Set--";
-            }
-            if (this.term === "") {
-                return "--Empty--";
-            }
             return _formatValueByType(this._columnType, this.term);
         },
 
