@@ -430,11 +430,16 @@
                 var addColumn = function (col, i) {
                     //TODO some column types might not be allowed
                     var source = generateDataSource(col);
+                    if (module._facetSupportedTypes.indexOf(source.column.type.name) === -1) {
+                        return false;
+                    }
+                    
                     var filter = findFilter(source.dataSource);
                     if (filter === null) {
                         filter = {"source": source.dataSource};
                     }
                     self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
+                    return true;
                 };
             
                 
@@ -451,7 +456,9 @@
                     // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
                     // Since that key column will be counted.
                     if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) &&  col.reference.table.shortestKey.length === 1) ) {
-                        addColumn(col, index++);
+                        if(addColumn(col, index)) {
+                            index++;    
+                        }
                     }
                 });
 
@@ -461,7 +468,9 @@
                     // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
                     // Since that key column will be counted.
                     if (relRef.table.shortestKey.length === 1) {
-                        addColumn(new InboundForeignKeyPseudoColumn(self, relRef), index++);
+                        if(addColumn(new InboundForeignKeyPseudoColumn(self, relRef), index)) {
+                            index++;
+                        }
                     }
                     
                 });
@@ -5079,6 +5088,12 @@
          * @return {string}
          */
         toString: function () {
+            if (!isDefinedAndNotNull(this.term)) {
+                return "--Not Set--";
+            }
+            if (this.term === "") {
+                return "--Empty--";
+            }
             return _formatValueByType(this._columnType, this.term);
         },
 
@@ -5364,13 +5379,7 @@
                 throw new Error("Cannot use this API on pseudo-column.");
             }
             
-            // TODO can be a global property
-            var supportedTypes = [
-                'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
-                'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
-            ];
-            
-            if (supportedTypes.indexOf(this.column.type.name) === -1) {
+            if (module._histogramSupportedTypes.indexOf(this.column.type.name) === -1) {
                 throw new Error("Binning is not supported on column type " + this.column.type.name);
             }
             
