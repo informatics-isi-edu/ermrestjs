@@ -116,7 +116,7 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
-    
+
     /**
      * Returns true if given parameter is object and not null
      * @param  {*} obj
@@ -443,14 +443,14 @@
      */
     module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
-        
+
         var findCol = function (colName) {
             if (Array.isArray(columns)) {
                 return columns.filter(function (col) {return col.name === colName;})[0];
             }
             return columns.get(k);
         };
-        
+
         for (var k in data) {
 
             try {
@@ -879,7 +879,7 @@
         }
     };
 
-    /** 
+    /**
      * format the raw value based on the column definition type, heuristics, annotations, etc.
      * @param {ERMrest.Type} type - the type object of the column
      * @param {Object} data - the 'raw' data value.
@@ -1643,10 +1643,11 @@
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted"
+        ROWNAME_UNFORMATTED: "row_name/unformatted",
+        COMPACT_BRIEF_INLINE: 'compact/brief/inline'
     });
 
-    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
 

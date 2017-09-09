@@ -321,7 +321,7 @@
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
-                
+
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
                  * will return {"dataSource": source list, "column": Column object}
@@ -337,17 +337,17 @@
                             "column": refCol.foreignKey.key.colset.columns[0]
                         };
                     }
-                    
+
                     if (refCol.isInboundForeignKey) {
                         var res = [];
                         var origFkR = refCol.foreignKey;
                         var association = refCol.reference.derivedAssociationReference;
                         var column;
-                        
+
                         res.push({
                             "inbound": origFkR.constraint_names[0]
                         });
-                        
+
                         if (association) {
                             res.push({
                                 "outbound": association._secondFKR.constraint_names[0]
@@ -359,10 +359,10 @@
                         res.push(column.name);
                         return {"dataSource": res, "column": column};
                     }
-                    
+
                     return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
                 };
-                
+
                 /*
                  * Given two source objects check if they are the same.
                  * Source can be a string or array. If it's an array, the last element
@@ -381,17 +381,17 @@
                     if (source.length !== filterSource.length) {
                         return false;
                     }
-                    
+
                     var key;
                     for (var i = 0; i < source.length; i++) {
                         if (typeof source[i] === "string") {
                             return source[i] === filterSource[i];
                         }
-                        
+
                         if (typeof source[i] !== "object" || typeof filterSource[i] !== "object") {
                             return false;
                         }
-                        
+
                         if (typeof source[i].inbound === "object") {
                             key = "inbound";
                         } else if (typeof source[i].outbound == "object") {
@@ -399,11 +399,11 @@
                         } else {
                             return false;
                         }
-                        
+
                         if (!Array.isArray(filterSource[i][key]) || filterSource[i][key].length !== 2) {
                             return false;
                         }
-                        
+
                         if (source[i][key][0] !== filterSource[i][key][0] || source[i][key][1] != filterSource[i][key][1]) {
                             return false;
                         }
@@ -411,7 +411,7 @@
                     }
                     return true;
                 };
-                
+
                 /*
                  * given a source, will return the filters that are already applied to it.
                  */
@@ -423,7 +423,7 @@
                     }
                     return null;
                 };
-                
+
                 /*
                  * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
                  */
@@ -435,8 +435,8 @@
                     }
                     self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
                 };
-            
-                
+
+
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
@@ -1532,7 +1532,7 @@
          **/
         get display() {
             if (!this._display) {
-                this._display = { type: module._displayTypes.TABLE };
+                this._display = this_context== module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -2342,6 +2342,14 @@
             return this._contextualize(module._contexts.EDIT);
         },
 
+        /**
+         * get compactBriefInline - The compact brief inline context of the reference
+         * @return {ERMrest.Reference}
+         */
+        get compactBriefInline() {
+            return this._contextualize(module._context.COMPACT_BRIEF_INLINE);
+        },
+
         _contextualize: function(context) {
             var source = this._reference;
 
@@ -2877,6 +2885,7 @@
                     // Get the HTML generated using the markdown pattern generated above
                     this._content =  module._formatUtils.printMarkdown(pattern);
                 } else {
+                    //TODO Create an unordered list of tuples with [tuple.reference](tuple.displayname) format.
                     this._content = null;
                 }
             }
@@ -3157,7 +3166,7 @@
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            
+
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -4427,7 +4436,7 @@
      * on columns that are not part of reference column.
      *
      * TODO This is just experimental, the arguments might change eventually.
-     * 
+     *
      * If the ReferenceColumn is not provided, then the FacetColumn is for reference
      *
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
@@ -4438,19 +4447,19 @@
      * @constructor
      */
     function FacetColumn (reference, index, column, json, filters) {
-        
+
         /**
          * The column object that the filters are based on
          * @type {ERMrest.Column}
          */
         this._column = column;
-        
+
         /**
          * [reference description]
          * @type {ERMrest.Reference}
          */
         this.reference = reference;
-        
+
         /**
          * The index of facetColumn in the list of facetColumns
          * NOTE: Might not be needed
@@ -4461,10 +4470,10 @@
         /**
          * A valid data-source path
          * NOTE: we're not validating this data-source, we assume that this is valid.
-         * @type {obj|string} 
+         * @type {obj|string}
          */
         this.dataSource = json.source;
-        
+
         /**
          * Filters that are applied to this facet.
          * @type{FacetFilter[]}
@@ -4475,13 +4484,13 @@
         } else {
             this.setFilters(json);
         }
-        
+
         // the whole filter object
         this._json = json;
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
-        
+
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
             if (this._lastForeignKey_cached === undefined) {
@@ -4490,14 +4499,14 @@
                 } else {
                     var lastJoin = this.dataSource[this.dataSource.length-2];
                     var isInbound = false, constraint;
-                    
+
                     if ("inbound" in lastJoin) {
                         isInbound = true;
                         constraint = lastJoin.inbound;
                     } else {
                         constraint = lastJoin.outbound;
                     }
-                    
+
                     this._lastForeignKey_cached = {
                         "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
                         "isInbound": isInbound
@@ -4506,7 +4515,7 @@
             }
             return this._lastForeignKey_cached;
         },
-        
+
         /**
          * The Preferred ux mode.
          * Any of:
@@ -4515,11 +4524,11 @@
          * TODO: what should be the default? This will eventually change,
          * currently we are not using multi facet mode, so it won't be used.
          * NOTE:
-         * If we want to consider a default mode for facets for any column type, 
-         * we might want to keep it simple and have the default mode show as choices. 
+         * If we want to consider a default mode for facets for any column type,
+         * we might want to keep it simple and have the default mode show as choices.
          * Search mode would imply that the user needs to be aware of the whole set of values they are searching through.
          * Choices provides some of that information for them.
-         * 
+         *
          * @type {string}
          */
         get preferredMode() {
@@ -4534,7 +4543,7 @@
             }
             return this._preferredMode;
         },
-        
+
         /**
          * Returns true if the source is on a key column.
          * TODO right now it's using some heuristic, but eventually it should
@@ -4550,7 +4559,7 @@
             }
             return this._isEntityMode;
         },
-         
+
         /**
          * ReferenceColumn that this facetColumn is based on
          * @type {ERMrest.ReferenceColumn}
@@ -4561,9 +4570,9 @@
             }
             return this._referenceColumn;
         },
-        
+
         /**
-         * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
+         * uncontextualized {@link ERMrest.Reference} that has all the joins specified
          * in the source with all the filters of other FacetColumns in the reference.
          *
          * NOTE: assumptions:
@@ -4574,12 +4583,12 @@
         get sourceReference () {
             if (this._sourceReference === undefined) {
                 var jsonFilters = [];
-                
+
                 // convert facets from main table to the current table.
                 if (this.reference.location.facets !== null) {
                     var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
                         self = this;
-                    
+
                     // create a path from this facetColumn to the base reference
                     if (Array.isArray(this.dataSource)) {
                         this.dataSource.forEach(function (ds, index, arr) {
@@ -4595,7 +4604,7 @@
                             }
                         });
                     }
-                    
+
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
@@ -4608,16 +4617,16 @@
                         }
                     });
                 }
-                
+
                 var table = this._column.table;
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
                 ].join("/");
-                
+
                 this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
-                
+
                 if (jsonFilters.length > 0) {
                     this._sourceReference._location.facets = {"and": jsonFilters};
                 } else {
@@ -4626,31 +4635,31 @@
             }
             return this._sourceReference;
         },
-        
+
         /**
          * Returns the displayname object that should be used for this facetColumn.
-         * 
+         *
          * Heuristics are as follows (first applicable rule):
          *  1. If column is part of the main table (there's no join), use the column's displayname.
          *  2. If last foreignkey is outbound and has to_name, use it.
          *  3. If last foreignkey is inbound and has from_name, use it.
          *  4. Otherwise use the table name.
          *    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
-         * 
+         *
          * @type {object} Object with `value`, `unformatted`, and `isHTML` as its attributes.
          */
         get displayname() {
             if (this._displayname === undefined) {
                 var displayname;
-                
+
                 var fk = this._lastForeignKey;
-                
+
                 // if is part of the main table, just return the column's displayname
                 if (fk === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
-                else {      
+                else {
                     fk = fk.obj;
                     // use from_name of the last fk if it's inbound
                     if (fk.isInbound && fk.from_name !== "") {
@@ -4665,7 +4674,7 @@
                         value = this.column.table.displayname.value;
                         unformatted = this.column.table.displayname.unformatted;
                         isHTML = this.column.table.displayname.isHTML;
-                        
+
                         // add the column name if in scalar mode
                         if (!this.isEntityMode) {
                             value += " (" + this.column.displayname.value + ")";
@@ -4675,13 +4684,13 @@
                             }
                         }
                     }
-                    
+
                     this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
-                }         
+                }
             }
             return this._displayname;
         },
-        
+
         /**
          * Could be used as tooltip to provide more information about the facetColumn
          * @type {string}
@@ -4822,10 +4831,10 @@
         addEntityFilter: function (tuple) {
             var filters = this.filters.slice();
             filters.push(new EntityFacetFilter(tuple, this._column));
-            
+
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Create a new Reference by removing all the filters from current facet.
          * @return {ERMrest.Reference} the reference with the new filter
@@ -4859,7 +4868,7 @@
             var self = this;
             var newReference = _referenceCopy(this.reference);
             delete newReference._facetColumns;
-            
+
             // create a new FacetColumn so it doesn't reference to the current FacetColum
             // TODO can be refactored
             var jsonFilters = [];
@@ -4867,7 +4876,7 @@
                 var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._json, filters);
                 jsonFilters.push(ThisFC.toJSON());
             }
-            
+
             // TODO might be able to imporve this. Instead of recreating the whole json file.
             // gather all the filters from the facetColumns
             // NOTE: this part can be improved so we just change one JSON element.
@@ -4997,24 +5006,24 @@
         }
         return res;
     };
-    
+
     /**
      * Represents entity filters that can be applied to facet.
-     * 
+     *
      * @param       {ERMrest.tuple} tuple the tuple object
      * @constructor
      */
     function EntityFacetFilter(tuple, col) {
-        
+
         ChoiceFacetFilter.superClass.call(this, tuple._data);
         this.tuple = tuple;
         this.facetFilterKey = "choices";
     }
     module._extends(EntityFacetFilter, FacetFilter);
-    
+
     /**
      * String representation of entity filter. It will be the tuple displayname
-     * 
+     *
      * @return {string}
      */
     EntityFacetFilter.prototype.toString = function () {
