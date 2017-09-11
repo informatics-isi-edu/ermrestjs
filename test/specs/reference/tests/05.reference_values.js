@@ -105,29 +105,27 @@ exports.execute = function (options) {
         };
         
         describe("Testing tuples values", function() {
-            var rowValues= [["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
-             ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-             ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-             ["id=4003 ,some_invisible_column= Freshmen, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-             ["id=4004, name= weird & HTML < , video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-             ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior, video_col= http://techslides.com//small.mp4"],
-             ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore, video_col= http://techs.com/sample/small.mp4"]]
-
-            var expectedValues =[
-                                [ '4000',
-                                  '<h2>Hank</h2>\n',
-                                  '<p><a href="https://www.google.com/Hank">link</a></p>\n',
-                                  '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
-                                  '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
-                                  '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                                  '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                  '<p><strong>date is :</strong></p>\n',
-                                  '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
-                                  '<code>GATCGATCGC GTATT</code>',
-                                  'NA',
-                                  '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>'
-                                ],
-                                [
+            var testObjects ={ 
+                "test1": {
+                        "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
+                        "expectedValue" : [ '4000',
+                                            '<h2>Hank</h2>\n',
+                                            '<p><a href="https://www.google.com/Hank">link</a></p>\n',
+                                            '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
+                                            '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
+                                            '<p><a href="https://www.google.com" download="">download link</a></p>\n',
+                                            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                            '<p><strong>date is :</strong></p>\n',
+                                            '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
+                                            '<code>GATCGATCGC GTATT</code>',
+                                            'NA',
+                                            '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>'
+                                             ],
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true]              
+                        },
+                "test2": {
+                    "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
+                    "expectedValue" : [
                                     '4001',
                                     '<h2>Harold</h2>\n',
                                     '<p><a href="/Harold">link</a></p>\n',
@@ -141,7 +139,11 @@ exports.execute = function (options) {
                                     '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                     ''
                                 ],
-                                [
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                    },
+            "test3": {
+                    "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+                    "expectedValue" :[
                                     '4002',
                                     null,
                                     '',
@@ -154,8 +156,12 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     ''             
-                                ],
-                                [
+                                    ],
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true]
+                    },
+            "test4": {
+                    "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
+                    "expectedValue" : [
                                     '4003',
                                     null,
                                     '',
@@ -168,8 +174,12 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                     ''             
-                                ],
-                                [
+                                    ],
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true]
+                    },
+            "test5": {
+                    "rowValue" :  ["id=4004, name= weird & HTML < "],
+                    "expectedValue" : [
                                     '4004',
                                     '<h2>weird &amp; HTML &lt;</h2>\n',
                                     '<p>[link](/weird &amp; HTML &lt; )</p>\n',
@@ -182,8 +192,12 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     ''             
-                                ],
-                                [
+                                    ],
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true]
+                    },
+            "test6": {
+                    "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
+                    "expectedValue" : [
                                     '4005',
                                     '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
                                     '<p>[link](/&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;)</p>\n',
@@ -196,8 +210,12 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                     ''             
-                                ],
-                                [
+                                    ],
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                    },
+            "test7": {
+                    "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
+                    "expectedValue" : [
                                     '4006',
                                     '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
                                     '<p><a href="/%3Cscript%3Ealert();%3C/script%3E">link</a></p>\n',
@@ -210,25 +228,21 @@ exports.execute = function (options) {
                                     '<code>GATCGATCGC GTATT</code>',
                                     '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                     ''             
-                                ]
-                              ];
-            var isHTMLList = [  [false, true, true, true, true, true, true, true, true, true, false, true],
-                                [false, true, true, true, true, true, true, true, true, true, true, true],
-                                [false, false, false, true, true, true, false, true, false, true, false, true],
-                                [false, false, false, true, true, true, false, true, false, true, true, true],
-                                [false, true, true, true, true, true, true, true, true, true, false, true],
-                                [false, true, true, true, true, true, true, true, true, true, true, true],
-                                [false, true, true, true, true, true, true, true, true, true, true, true]
-                             ]
-
-            for(var i=0; i< expectedValues.length; i++){
-                var rowValue = rowValues[i];
-                var expectedValue = expectedValues[i];
-                var isHTML = isHTMLList[i];
+                                    ],
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                }
+                
+            }
+            
+            var i = 0;
+            for(var key in testObjects){
+                var rowValue = testObjects[key].rowValue;
+                var expectedValue = testObjects[key].expectedValue;
+                var isHTML = testObjects[key].isHTML;
                 describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
                     testTupleValidity(i, expectedValue, isHTML);
                 })
-                    
+                i++;    
             }
         });
 
