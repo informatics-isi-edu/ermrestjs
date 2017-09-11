@@ -23,6 +23,8 @@
  */
 function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
     
+    this.isAttributeGroup = true;
+    
     /**
      * Array of AttributeGroupColumn that will be used as the key columns
      * @type {ERMrest.AttributeGroupColumn[]}
