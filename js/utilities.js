@@ -1322,7 +1322,7 @@
                             }
                             
                             if(captionHTML.trim().length && flag){
-                                html +=  "<p>"+captionHTML+ "</p>" + videoHTML + videoClass +">"+ srcHTML +"</video>" ;
+                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             } else if(flag)
                                 html += videoHTML + videoClass +">"+ srcHTML +"</video>";
                             else
