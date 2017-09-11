@@ -1122,8 +1122,8 @@
                 return false; // not binary
             }
 
-            var nonKeyCols = this.columns.all().filter(function(col){
-                return col.memberOfKeys.length === 0;
+            var nonKeyCols = this.columns.all().filter(function(col) {
+            	return col.memberOfKeys.length === 0 && module._systemColumns.indexOf(col.name) === -1;
             }); // columns that are not part of any keys.
 
             return nonKeyCols.length === 0; // check for purity
