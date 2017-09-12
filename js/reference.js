@@ -1530,6 +1530,7 @@
          * @type {Object}
          *
          **/
+        
         get display() {
             if (!this._display) {
                 console.log(this._context);
