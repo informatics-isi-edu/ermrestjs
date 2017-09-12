@@ -2168,7 +2168,9 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple) {
-            var j, col, uri, subset;
+            var j, col, uri, source;
+            
+            var useFaceting = (typeof tuple === 'object');
 
             var newRef = _referenceCopy(this);
             delete newRef._context; // NOTE: related reference is not contextualized
@@ -2197,13 +2199,6 @@
                 newRef.parentDisplayname = this.displayname;
             }
 
-            // create the subset that will be added for visibility
-            if (typeof tuple !== 'undefined') {
-                subset = "?subset=" + module._fixedEncodeURIComponent(
-                    "for " + newRef.parentDisplayname.unformatted + " = " + tuple.displayname.unformatted
-                );
-            }
-
             var fkrTable = fkr.colset.columns[0].table;
             if (fkrTable._isPureBinaryAssociation()) { // Association Table
 
@@ -2227,11 +2222,14 @@
                 }
 
                 // uri and location
-                uri = this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true);
-                if (typeof subset !== 'undefined') {
-                    uri += subset;
+                if (!useFaceting) {
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+                } else {
+                    // build source
+                    source = [
+                        {"inbound": otherFK.constraint_names[0]}
+                    ];
                 }
-                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -2255,15 +2253,40 @@
                 }
 
                 // uri and location
-                uri = this._location.compactUri + "/" + fkr.toString();
-                if (typeof subset !== 'undefined') {
-                    uri += subset;
+                if (!useFaceting) {
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
+                } else {
+                    source = [];
                 }
-                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                 newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
+            }
+            
+            if (useFaceting) {
+                var table = newRef._table;
+                newRef._location = module.parse([
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
+                ].join("/"));
+                
+                //filters
+                var filters = [];
+                source.push({"outbound": fkr.constraint_names[0]});
+                fkr.key.colset.columns.forEach(function (col) {
+                    filters.push({
+                        "source": source.concat(col.name),
+                        "choices": [{
+                            'value': tuple.data[col.name],
+                            'displayvalue': fkr.simple ? tuple.displayname.value : value,
+                            'isHTML': fkr.simple ? tuple.displayname.isHTML : false,
+                        }]
+                    });
+                });
+                
+                newRef._location.facets = {"and": filters};
             }
 
             return newRef;
