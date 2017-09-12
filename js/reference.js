@@ -4511,6 +4511,14 @@
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
+        get isOpen() {
+            if (this._isOpen === undefined) {
+                var open = this._json.open;
+                this._isOpen = (typeof open === 'boolean') ? open : (this._filters.length > 0);
+            }
+            return this._isOpen;
+        },
+        
         get filtersString() {
             if (this._filtersString === undefined) {
                 var isHTML = false, values = [];
@@ -4600,10 +4608,14 @@
         get isEntityMode() {
             if (this._isEntityMode === undefined) {
                 var currCol = this._column;
-                // TODO unique and not noll!
-                this._isEntityMode = currCol.table.keys.all().filter(function (key) {
-                    return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
-                }).length > 0;
+                if (this._lastForeignKey === null) {
+                    // if from the same table, don't use entity picker
+                    this._isEntityMode = false;
+                } else {
+                    this._isEntityMode = currCol.table.keys.all().filter(function (key) {
+                        return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
+                    }).length > 0;
+                }
             }
             return this._isEntityMode;
         },
