@@ -1533,7 +1533,7 @@
         get display() {
             if (!this._display) {
                 console.log(this._context);
-                this._display = this._context== module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
+                this._display = this._context == module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
