@@ -1540,7 +1540,7 @@
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
-
+                
                 // If annotation is defined then parse it
                 if (annotation) {
 
