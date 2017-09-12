@@ -1532,7 +1532,8 @@
          **/
         get display() {
             if (!this._display) {
-                this._display = this_context== module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
+                console.log(this._context);
+                this._display = this._context== module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -2347,7 +2348,7 @@
          * @return {ERMrest.Reference}
          */
         get compactBriefInline() {
-            return this._contextualize(module._context.COMPACT_BRIEF_INLINE);
+            return this._contextualize(module._contexts.COMPACT_BRIEF_INLINE);
         },
 
         _contextualize: function(context) {
@@ -2851,6 +2852,7 @@
          * @type {string|null}
          */
         get content() {
+            //console.log(this._context);
             if (this._content !== null) {
                 // If display type is markdown which means row_markdown_pattern is set in table-display
                 if (this._ref.display.type === module._displayTypes.MARKDOWN) {
@@ -2859,14 +2861,23 @@
                     if (!this._data || !this._data.length) {
                         return null;
                     }
-
+                    var inbFKItems = false;
+                    if(this._ref.display._markdownPattern == " " || this._ref.display._markdownPattern == null)
+                        inbFKItems = true;
                     var values = [];
 
                     // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                     for (var i = 0; i < this._data.length; i++) {
-
+                        var value = [];
                         // render template
-                        var value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
+                        if(inbFKItems)
+                        {
+                            value = this.tuples[i].values.join(" ");
+                            value = "<li>" + value + "</li>";
+                        }
+                        else{
+                            value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
+                        }
 
                         // If value is null or empty, return value on basis of `show_nulls`
                         if (value === null || value.trim() === '') {
@@ -2883,13 +2894,11 @@
                     var pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
 
                     // Get the HTML generated using the markdown pattern generated above
-                    this._content =  module._formatUtils.printMarkdown(pattern);
+                    this._content =  inbFKItems?pattern:module._formatUtils.printMarkdown(pattern);
                 } else {
-                    //TODO Create an unordered list of tuples with [tuple.reference](tuple.displayname) format.
                     this._content = null;
                 }
             }
-
             return this._content;
         }
     };
