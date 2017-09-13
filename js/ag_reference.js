@@ -523,7 +523,7 @@ AttributeGroupColumn.prototype = {
     
     formatvalue: function (data, options) {
         //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
-        return _formatValueByType(this.type, data, options);
+        return module._formatValueByType(this.type, data, options);
     },
     
     formatPresentation: function (data, options) {

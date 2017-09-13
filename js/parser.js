@@ -806,7 +806,7 @@
      * @returns {Object} the query params object
      * @private
      */
-    _getQueryParams = function (params) {
+    var _getQueryParams = function (params) {
         var queryParams = {},
             parts = params.split("&"),
             part, i;
@@ -823,7 +823,7 @@
      * @return {string} string modifier @sort(...)
      * @private
      */
-    _getSortModifier = function(sort) {
+    var _getSortModifier = function(sort) {
 
         // if no sorting
         if (!sort || sort.length === 0) {
@@ -845,7 +845,7 @@
      * @return {string} string modifier @paging(...)
      * @private
      */
-    _getPagingModifier = function(paging) {
+    var _getPagingModifier = function(paging) {
 
         // no paging
         if (!paging) {
@@ -868,7 +868,7 @@
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term, column) {
+    var _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
         column = (typeof column !== 'string') ? "*": column;
         
@@ -915,7 +915,7 @@
      * @param  {string[]} linking the linking array
      * @return {object}
      */
-    _createJoin = function (linking) {
+    var _createJoin = function (linking) {
         var fromCols = linking[1].split(",");
         var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
         var toCols = toParts[3].split(",");
@@ -1166,7 +1166,7 @@
      * @constructor
      * @return      {string} A string representation of filters that is understanable by ermrest
      */
-    _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
+    var _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
         var isDefinedAndNotNull = function (v) {
             return v !== undefined && v !== null;
         };

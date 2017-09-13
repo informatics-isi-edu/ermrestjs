@@ -75,19 +75,20 @@ $(BUILD)/$(VER): $(SOURCE)
 	mkdir -p $(BUILD)
 	git log --pretty=format:'%H' -n 1 > $(BUILD)/$(VER)
 
-# Rule to build the un-minified library
+# Rule to build the un-minified library and convert es6 code to es5
 $(BUILD)/$(PKG): $(SOURCE)
 	mkdir -p $(BUILD)
 	cat $(SOURCE) > $(BUILD)/$(PKG)
+	$(BIN)/babel $(BUILD)/$(PKG) --out-file $(BUILD)/$(PKG)
 
 # Rule to build the minified package
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(BUILD)/$(PKG) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
+	$(BIN)/ccjs $(BUILD)/$(PKG) --language_in=ECMASCRIPT6_STRICT > $(BUILD)/$(MIN)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $?, $(filter-out $(HEADER_FOOTER), $(SOURCE)))
+	$(BIN)/jshint  $(filter $?, $(filter-out $(HEADER_FOOTER), $(SOURCE)))
 	@touch $(LINT)
 
 .PHONY: lint

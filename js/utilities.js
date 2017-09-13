@@ -886,7 +886,7 @@
      * @param {Object} options - the key value pair of possible options with all formatted values in '.formattedValues' key
      * @returns {string} The formatted value.
      */
-    _formatValueByType = function(type, data, options) {
+    module._formatValueByType = function(type, data, options) {
         var utils = module._formatUtils;
         switch(type.name) {
             case 'timestamptz':
@@ -921,7 +921,7 @@
                 data = utils.printJSON(data);
                 break;
             default: // includes 'text' and 'longtext' cases
-                data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
+                data = type.baseType ? module._formatValueByType(type.baseType, data, options) : utils.printText(data, options);
                 break;
         }
         return data;
