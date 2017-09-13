@@ -112,12 +112,12 @@ exports.execute = function(options) {
                         
                         checkUri(0, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
-                            "choices":[{"value":"9003","displayvalue":"Henry","isHTML":true}]
+                            "choices":["9003"]
                         }]);
                         
                         checkUri(1, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
-                            "choices":[{"value":"9003","displayvalue":"Henry","isHTML":true}]
+                            "choices":["9003"]
                         }]);
                     });
                 });

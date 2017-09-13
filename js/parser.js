@@ -1073,7 +1073,7 @@
      *  "and": [
      *      {
      *          "source": <data-source>,
-     *          "choices": [{'value':v1, 'displayvalue':v1,'isHTML';v1}, ...],
+     *          "choices": [v, ...],
      *          "ranges": [{"min": v1, "max": v2}, ...],
      *          "search": [v, ...]
      *      },
@@ -1175,8 +1175,8 @@
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
                 var res = prev += (i !== 0 ? ";": "");
-                if (isDefinedAndNotNull(curr.value)) {
-                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(curr.value);
+                if (isDefinedAndNotNull(curr)) {
+                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(curr);
                 } else {
                     res += module._fixedEncodeURIComponent(column) + "::null::";
                 }

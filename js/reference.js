@@ -2278,11 +2278,7 @@
                 fkr.key.colset.columns.forEach(function (col) {
                     filters.push({
                         "source": source.concat(col.name),
-                        "choices": [{
-                            'value': tuple.data[col.name],
-                            'displayvalue': fkr.simple ? tuple.displayname.value : value,
-                            'isHTML': fkr.simple ? tuple.displayname.isHTML : false,
-                        }]
+                        "choices": [tuple.data[col.name]]
                     });
                 });
                 
@@ -4537,24 +4533,9 @@
         get isOpen() {
             if (this._isOpen === undefined) {
                 var open = this._json.open;
-                this._isOpen = (typeof open === 'boolean') ? open : (this._filters.length > 0);
+                this._isOpen = (this.filters.length > 0) ? true : (open === true);
             }
             return this._isOpen;
-        },
-        
-        get filtersString() {
-            if (this._filtersString === undefined) {
-                var isHTML = false, values = [];
-                values = this.filters.map(function (f) {
-                    isHTML = isHTML || f.displayname.isHTML;
-                    return f.displayname.value;
-                });
-                this._filtersString = {
-                    isHTML: isHTML,
-                    value: values.join(", ")
-                };
-            }
-            return this._filtersString;
         },
         
         // returns the last foreignkey object in the path
@@ -4765,7 +4746,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var displayname;
+                var displayname, isInbound;
                 
                 var fk = this._lastForeignKey;
                 
@@ -4775,13 +4756,15 @@
                 }
                 // Otherwise
                 else {      
+                    isInbound = fk.isInbound;
                     fk = fk.obj;
+                    
                     // use from_name of the last fk if it's inbound
-                    if (fk.isInbound && fk.from_name !== "") {
+                    if (isInbound && fk.from_name !== "") {
                         value = unformatted = fk.from_name;
                     }
                     // use to_name of the last fk if it's outbound
-                    else if (!fk.isInbound && fk.to_name !== "") {
+                    else if (!isInbound && fk.to_name !== "") {
                         value = unformatted = fk.to_name;
                     }
                     // use the table name if it was not defined
@@ -4822,6 +4805,45 @@
                 }
             }
             return this._comment;
+        },
+        
+        getChoiceDisplaynames: function () {
+            var defer = module._q.defer();
+            var filters =  [];
+            if (!this.isEntityMode) {
+                this.choiceFilters.forEach(function (f) {
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
+                });
+                defer.resolve(filters);
+            } else {
+                // create a url
+                var table = this._column.table, columnName = this._column.name;
+                var fitlerStr = [];
+                this.choiceFilters.forEach(function (f) {
+                    fitlerStr.push(
+                        module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                    );
+                });
+                var uri = [
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                    fitlerStr.join(";")
+                ].join("/");
+                
+                var ref = new Reference(module.parse(uri), table.schema.catalog);
+                ref = ref.sort([{"column": columnName, "descending": false}]);
+                ref.read(this.choiceFilters.length).then(function (page) {
+                    page.tuples.forEach(function (t) {
+                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
+                    });
+                    defer.resolve(filters);
+                }).catch(function (err) {
+                    defer.reject(module._responseToError(err));
+                });
+                
+            }
+            return defer.promise;
         },
 
         /**
@@ -4878,7 +4900,7 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    self.filters.push(new ChoiceFacetFilter(ch.value, ch.displayvalue, ch.isHTML, self._column.type));
+                    self.filters.push(new ChoiceFacetFilter(ch, self._column.type));
                 });
             }
 
@@ -4955,7 +4977,6 @@
 
         /**
          * Create a new Reference with appending a list of choice filters to current FacetColumn
-         * @param  {object[]} values array of values with `value`, `displayvalue`, and `isHTML`.
          * @return {ERMrest.Reference} the reference with the new filter
          */
         addChoiceFilters: function (values) {
@@ -4963,7 +4984,7 @@
             
             var filters = this.filters.slice(), self = this;
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, self._column.type));
+                filters.push(new ChoiceFacetFilter(v, self._column.type));
             });
 
             return this._applyFilters(filters);
@@ -4971,7 +4992,6 @@
         
         /**
          * Create a new Reference with replacing choice facet filters by the given input
-         * @param  {object[]} values array of values with `value`, `displayvalue`, and `isHTML`.
          * @return {ERMrest.Reference} the reference with the new filter
          */
         replaceAllChoiceFilters: function (values) {
@@ -4981,7 +5001,7 @@
                 return !(f instanceof ChoiceFacetFilter);
             });
             values.forEach(function (v) {
-                filters.push(new ChoiceFacetFilter(v.value, v.displayvalue, v.isHTML, self._column.type));
+                filters.push(new ChoiceFacetFilter(v, self._column.type));
             });
 
             return this._applyFilters(filters);
@@ -5110,10 +5130,6 @@
         this._columnType = columnType;
         this.term = term;
         this.uniqueId = term;
-        this.displayname = {
-            isHTML: false,
-            value: this.toString()
-        };
     }
     FacetFilter.prototype = {
         constructor: FacetFilter,
@@ -5144,7 +5160,7 @@
      * @constructor
      */
     function SearchFacetFilter(term, columnType) {
-        ChoiceFacetFilter.superClass.call(this, term, columnType);
+        SearchFacetFilter.superClass.call(this, term, columnType);
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
@@ -5153,32 +5169,16 @@
      * Represent choice filters that can be applied to facet.
      * JSON representation of this filter:
      * "choices": [v1, ...]
-     * where v1 has `value`, `displayvalue`, and `isHTML`.
      *
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function ChoiceFacetFilter(value, displayvalue, isHTML, columnType) {
+    function ChoiceFacetFilter(value, columnType) {
         ChoiceFacetFilter.superClass.call(this, value, columnType);
-        this.displayname = {
-            isHTML:  isHTML,
-            value: displayvalue
-        };
         this.facetFilterKey = "choices";
     }
     module._extends(ChoiceFacetFilter, FacetFilter);
-    /**
-     * JSON representation of choice filter.
-     * @return {Object}
-     */
-    ChoiceFacetFilter.prototype.toJSON = function () {
-        return {
-            value: this.term,
-            displayvalue: this.displayname.value,
-            isHTML:this.displayname.isHTML
-        };
-    };
     
     /**
      * Represent range filters that can be applied to facet.
@@ -5195,11 +5195,7 @@
         this.min = min;
         this.max = max;
         this.facetFilterKey = "ranges";
-        this.displayname = {
-            isHTML: false,
-            value: this.toString()
-        };
-        this.uniqueId = this.displayname.value;
+        this.uniqueId = this.toString();
     }
     module._extends(RangeFacetFilter, FacetFilter);
 
