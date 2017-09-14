@@ -72,7 +72,7 @@
          * @returns {ERMrest.Datapath.PathTable}
          * @desc extend the Datapath with table
          */
-        extend: function (table, context, link) { // TODO context? link?
+        extend: function (table/*, context, link*/) { // TODO context? link?
             this.context = new PathTable(table, this, this._nextAlias);
             this._nextAlias = module._nextChar(this._nextAlias);
             this._pathtables.push(this.context);
@@ -265,7 +265,7 @@
             }
         },
 
-        getByPosition: function (pos) {
+        getByPosition: function (/*pos*/) {
 
         }
     };

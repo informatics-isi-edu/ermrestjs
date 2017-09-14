@@ -20,7 +20,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     isNode = true;
 }
 
-var ERMrest = (function(module) {
+(function() {
 
     var blobSlice, SparkMD5;
     
@@ -171,9 +171,9 @@ var ERMrest = (function(module) {
 
     return module;
 
-})(ERMrest || {});
+})();
 
-var ERMrest = (function(module) {
+(function() {
 
     var allowedHttpErrors = [500, 503, 408, 401];
 
@@ -445,7 +445,7 @@ var ERMrest = (function(module) {
             var index = 0;
             this.chunks = [];
             while (start < this.file.size) {
-                end = Math.min(start + this.PART_SIZE, this.file.size);
+                var end = Math.min(start + this.PART_SIZE, this.file.size);
                 var chunk = new Chunk(index++, start, end);
                 self.chunks.push(chunk);
                 start = end;
@@ -914,4 +914,4 @@ var ERMrest = (function(module) {
 
    return module;
 
-}(ERMrest || {}));
+}());

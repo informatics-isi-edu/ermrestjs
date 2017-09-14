@@ -118,15 +118,6 @@
     };
     
     /**
-     * Returns true if given parameter is object and not null
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isObjectAndNotNull = function (obj) {
-        return typeof obj === "object" && obj !== null;
-    };
-
-    /**
      * @private
      * @param {Object} child child class
      * @param {Object} parent parent class
@@ -140,7 +131,6 @@
      * *Must be called after defining parent prototype and child constructor*
      */
     module._extends = function (child, parent) {
-        var childFns = child.prototype;
         child.prototype = Object.create(parent.prototype);
         child.prototype.constructor = child;
         child.superClass = parent;
@@ -811,7 +801,7 @@
             *              A special case to show null if the value is blank string
         * @desc Formats a given json value into a string for display.
         */
-        printJSON: function printJSON(value, options) {
+        printJSON: function printJSON(value/*, options*/) {
             return value === "" ? JSON.stringify(null) : JSON.stringify(value, undefined, 2);
        },
 
@@ -965,7 +955,7 @@
         }
     };
 
-    module._isValidSortElement = function(element, index, array) {
+    module._isValidSortElement = function(element/*, index, array*/) {
         return (typeof element == 'object' &&
             typeof element.column == 'string' &&
             typeof element.descending == 'boolean');
@@ -1094,7 +1084,7 @@
 
             render: function (tokens, idx) {
 
-                var html = "";
+                var html = "", attr;
                 // Get token string after regeexp matching to determine caption and other links
                 var m = tokens[idx].info.trim().match(/dropdown\s+(.*)$/i);
 

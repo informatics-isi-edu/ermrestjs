@@ -1101,13 +1101,12 @@
                 var submissionData = [],        // the list of submission data for updating
                     columnProjections = [],     // the list of column names to use in the uri projection list
                     shortestKeyNames = [],      // list of shortest key names to use in the uri key list
-                    keyWasModified = false,
-                    tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
+                    oldData, allOldData = [], newData, allNewData = [], keyName, keyColumnName;
 
                 // for loop variables, NOTE: maybe we should name these better
                 var i, j, k, m, n, t;
 
-                var column, keyColumns, referenceColumn;
+                var column, keyColumns;
 
                 // add column name into list of column projections if not in column projections set and data has changed
                 var addProjection = function(colName) {
@@ -1478,7 +1477,7 @@
                  * github issue: #425
                  */
 
-                this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
+                this._server._http.delete(this.location.ermrestUri).then(function deleteReference() {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError));
@@ -1617,7 +1616,7 @@
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
-                    notSorted;
+                    notSorted, fkr;
                 if (visibleFKs === -1) {
                     notSorted = true;
                     visibleFKs = this._table.referredBy.all();
@@ -1890,7 +1889,6 @@
                 hiddenFKR = this.origFKR,
                 colAdded,
                 fkName,
-                colFks,
                 cols, col, fk, i, j;
 
             var context = this._context;
@@ -2000,6 +1998,7 @@
             }
             // heuristics
             else {
+                var colFKs;
 
                 //add the key
                 if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
@@ -2151,7 +2150,7 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple) {
-            var j, col, uri, subset;
+            var j, uri, subset;
 
             var newRef = _referenceCopy(this);
             delete newRef._context; // NOTE: related reference is not contextualized
@@ -2932,7 +2931,7 @@
                     // convert filter columns to base table columns using shared key
                     var fkey = this._pageRef._table._altForeignKey;
                     var self = this;
-                    fkey.mapping.domain().forEach(function(altColumn, index, array) {
+                    fkey.mapping.domain().forEach(function(altColumn, index) {
                         var baseCol = fkey.mapping.get(altColumn);
                         if (index === 0) {
                             uri = uri + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
@@ -3000,10 +2999,10 @@
          *
          * @param {Object} data - the data to be updated
          */
-        set data(data) {
+        /*set data() {
             // TODO needs to be implemented rather than modifying the values directly from UI
             notimplemented();
-        },
+        },*/
 
         /**
          * Indicates whether the client can update this tuple. Because
@@ -3109,7 +3108,7 @@
                 this._values = [];
                 this._isHTML = [];
 
-                var column, presentation;
+                var column, presentation, i;
 
                 // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
@@ -3225,7 +3224,7 @@
          */
         get uniqueId() {
             if (this._uniqueId === undefined) {
-                var key;
+                var keyName;
                 this._uniqueId = "";
                 for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
                     keyName = this.reference.table.shortestKey[i].name;
@@ -3565,7 +3564,7 @@
                 return this._baseCols[0].getInputDisabled(context);
             }
 
-            var cols = this._baseCols, generated, i;
+            var cols = this._baseCols, i;
 
             if (context == module._contexts.CREATE) {
                 // if one is not generated
@@ -3788,7 +3787,7 @@
         return {isHTML: true, value: value};
     };
     ForeignKeyPseudoColumn.prototype._determineSortable = function () {
-        var display = this._display, useColumn = false, baseCol;
+        var display = this._display, baseCol;
 
         this._sortColumns_cached = [];
         this._sortable = false;
@@ -4083,7 +4082,7 @@
          return {isHTML: true, value: value};
      };
     KeyPseudoColumn.prototype._determineSortable = function () {
-        var display = this._display, useColumn = false, baseCol;
+        var display = this._display, baseCol;
 
         this._sortColumns_cached = [];
         this._sortable = false;
@@ -4374,7 +4373,7 @@
     module._extends(InboundForeignKeyPseudoColumn, ReferenceColumn);
 
     // properties to be overriden:
-    InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, options) {
+    InboundForeignKeyPseudoColumn.prototype.formatPresentation = function() {
         // NOTE this property should not be used.
         return {isHTML: true, value: ""};
      };
@@ -4641,9 +4640,8 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var displayname;
                 
-                var fk = this._lastForeignKey;
+                var fk = this._lastForeignKey, value, unformatted, isHTML;
                 
                 // if is part of the main table, just return the column's displayname
                 if (fk === null) {
@@ -5004,7 +5002,7 @@
      * @param       {ERMrest.tuple} tuple the tuple object
      * @constructor
      */
-    function EntityFacetFilter(tuple, col) {
+    function EntityFacetFilter(tuple) {
         
         ChoiceFacetFilter.superClass.call(this, tuple._data);
         this.tuple = tuple;
@@ -5012,7 +5010,7 @@
     }
     module._extends(EntityFacetFilter, FacetFilter);
     
-    /**
+    /**s
      * String representation of entity filter. It will be the tuple displayname
      * 
      * @return {string}

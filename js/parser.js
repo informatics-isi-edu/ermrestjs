@@ -132,7 +132,7 @@
             this._searchFilter = parts[index];
             this._ermrestSearchFilter = "";
             
-            match.forEach(function(f, idx, array) {
+            match.forEach(function(f, idx) {
                 var term = decodeURIComponent(f.match(/\*::search::(.+)/)[1]);
                 
                 // make sure the ermrest url is correct
@@ -687,7 +687,6 @@
                 return;
 
             // null or undefined = remove sort
-            var oldSortString = (this._sort? this._sort : "");
             if (!so || so.length === 0) {
                 delete this._sort;
                 this._sortObject = null;
@@ -758,7 +757,6 @@
                 this._sortObject = null;
             }
 
-            var oldPagingString = (this._paging? this._paging : "");
             if (this._sort) {
                 this._pagingObject = po;
                 this._paging = _getPagingModifier(po);
@@ -889,7 +887,7 @@
 
             if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
-            terms.forEach(function(t, index, array) {
+            terms.forEach(function(t, index) {
                 var exp;
                 // matches an integer, aka just a number
                 if (t.match(/^[0-9]+$/)) {
@@ -1031,10 +1029,10 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterStrings + "' filter.");
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterStrings + "' filter.");
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
@@ -1187,7 +1185,7 @@
         // parse ranges constraint
         var parseRanges = function (ranges, column) {
             var res = "", hasFilter = false;
-            ranges.forEach(function (range, index) {
+            ranges.forEach(function (range) {
                 if (hasFilter) {
                     res += ";";
                     hasFilter = false;

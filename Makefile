@@ -34,8 +34,8 @@ SOURCE=$(HEADER) \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
 	   $(JS)/ag_reference.js \
-	   $(FOOTER) \
 	   $(JS)/hatrac.js \
+	   $(FOOTER) \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
 

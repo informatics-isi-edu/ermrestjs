@@ -772,7 +772,7 @@
                     var allSerialInt = function (key) {
                         return (key.colset.columns.map(function (column) {
                             return column.type.name;
-                        }).every(function (current, index, array) {
+                        }).every(function (current) {
                             return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
                         }) ? 1 : 0);
                     };

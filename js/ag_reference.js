@@ -526,7 +526,7 @@ AttributeGroupColumn.prototype = {
         return module._formatValueByType(this.type, data, options);
     },
     
-    formatPresentation: function (data, options) {
+    formatPresentation: function (data) {
         /*
          * NOTE: currently will only return the given data. This function exist 
          * so it will be the same pattern as Reference and Column apis.
@@ -537,7 +537,7 @@ AttributeGroupColumn.prototype = {
          * 
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(value)};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(data)};
         }
         return {isHTML: false, value: data};
     }
