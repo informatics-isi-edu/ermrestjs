@@ -312,28 +312,30 @@
         get facetColumns() {
             if (this._facetColumns === undefined) {
                 this._facetColumns = [];
-
-                // this reference should be only used for getting the list,
-                var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
-                var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
                 var self = this;
-
-                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
-                var andOperator = module._FacetsLogicalOperators.AND;
-                var andFilters = [];
                 
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
-                 * will return {"dataSource": source list, "column": Column object}
+                 * will return {"obj": facet object, "column": Column object}
                  */
-                var generateDataSource = function (refCol) {
+                var refColToFacetObject = function (refCol) {
+                    if (refCol.isKey) {
+                        return {
+                            "obj": {"source": refCol._baseCols[0].name},
+                            "column": refCol._baseCols[0].name
+                        };
+                    }
+                    
                     if (refCol.isForeignKey) {
                         var constraint = refCol.foreignKey.constraint_names[0];
                         return {
-                            "dataSource": [
-                                {"outbound": constraint},
-                                refCol.foreignKey.key.colset.columns[0].name
-                            ],
+                            "obj": {
+                                "source":[
+                                    {"outbound": constraint},
+                                    refCol.foreignKey.key.colset.columns[0].name
+                                ],
+                                "entity": true
+                            },
                             "column": refCol.foreignKey.key.colset.columns[0]
                         };
                     }
@@ -357,10 +359,84 @@
                             column = origFkR.colset.columns[0].table.shortestKey[0];
                         }
                         res.push(column.name);
-                        return {"dataSource": res, "column": column};
+                        return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
                     
-                    return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
+                    return { "obj": {"source": refCol.name}, "column": refCol._baseCols[0]};
+                };
+                
+                // will return column or false
+                var checkFacetObject = function (obj) {
+                    if (!obj.source) {
+                        return false;
+                    }
+                    
+                    var table = self.table, source = obj.source;
+                    var colName, col;
+                    
+                    // from 0 to source.length-1 we have paths
+                    if (Array.isArray(source)) {
+                        var fk, i, isInbound, constraint;
+                        for (i = 0; i < source.length - 1; i++) {
+                            
+                            if ("inbound" in source[i]) {
+                                constraint = source[i].inbound;
+                                isInbound = true;
+                            } else if ("outbound" in source[i]) {
+                                constraint = source[i].outbound;
+                                isInbound = false;
+                            } else {
+                                // given object was invalid
+                                return false;
+                            }
+                            
+                            fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
+                            
+                            // constraint name was not valid
+                            if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                return false;
+                            }
+                            
+                            fk = fk.object;
+                            
+                            // inbound
+                            if (isInbound && fk.key.table === table) {
+                                table = fk._table;
+                            } 
+                            // outbound
+                            else if (!isInbound && fk._table === table) {
+                                table = fk.key.table;
+                            }
+                            else {
+                                // the given object was not valid
+                                return false;
+                            }
+                        }
+                        colName = source[source.length-1];
+                    } else {
+                        colName = source;
+                    }
+                    
+                    try {
+                        col = table.columns.get(colName);
+                        return col;
+                    } catch(exp) {
+                        return false;
+                    }
+                };
+                
+                var checkRefColumn = function (col) {
+                    if (!col._simple || col.isAsset) {
+                        return false;
+                    }
+                    
+                    var fcObj = refColToFacetObject(col);
+                    
+                    if (!fcObj.obj.entity && module._facetSupportedTypes.indexOf(col.type.name) === -1) {
+                        return false;
+                    }
+                    
+                    return fcObj;
                 };
                 
                 /*
@@ -412,68 +488,128 @@
                     return true;
                 };
                 
-                /*
-                 * given a source, will return the filters that are already applied to it.
-                 */
-                var findFilter = function (source) {
-                    for (var i = 0; i < andFilters.length; i++) {
-                        if (sameSource(source, andFilters[i].source)) {
-                            return andFilters[i];
+                // only add choices, range, and search
+                var mergeFacetObjects = function (source, extra) {
+                    ['choices', 'range', 'search'].forEach(function (key) {
+                        if (!Array.isArray(extra[key])) {
+                            return;
                         }
-                    }
-                    return null;
-                };
-                
-                /*
-                 * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
-                 */
-                var addColumn = function (col, i) {
-                    //TODO some column types might not be allowed
-                    var source = generateDataSource(col);
-                    if (module._facetSupportedTypes.indexOf(source.column.type.name) === -1) {
-                        return false;
-                    }
+                        
+                        if (!Array.isArray(source[key])) {
+                            source[key] = [];
+                        }
+                        extra[key].forEach(function (ch) {
+                            // in choices we can have null
+                            if (key !== "choices" && ch == null) {
+                                return;
+                            }
+                            
+                            // in range we must have one of min, or max.
+                            if (key === 'range' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
+                                return;
+                            }
+                            
+                            source[key].push(ch);
+                        });
                     
-                    var filter = findFilter(source.dataSource);
-                    if (filter === null) {
-                        filter = {"source": source.dataSource};
-                    }
-                    self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
-                    return true;
+                    });
                 };
-            
                 
+                var annotationCols = -1;
+                var facetObjects = [];
+                
+                // get column orders from annotation
+                if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                    annotationCols = module._getRecursiveAnnotationValue(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
+                }
+                
+                // NOTE: current assumption: annotation is correct
+                if (annotationCols !== -1) {
+                    //TODO should check for :
+                    // 1. duplicates ?! (not sure)
+                    // 2. correct values for choices, range, search
+                    annotationCols.forEach(function (obj) {
+                        var col = checkFacetObject(obj);
+                        if (col) {
+                            facetObjects.push({"obj": obj, "column": col});
+                        }
+                    });
+                } else {
+                    // this reference should be only used for getting the list,
+                    var detailedRelated = (this._context === module._contexts.DETAILED) ? this.related() : this.contextualize.detailed.related();
+                    var compactCols = (this._context === module._contexts.COMPACT) ? this.columns : this.contextualize.compact.columns;
+
+                    // all the visible columns in compact context
+                    compactCols.forEach(function (col) {
+                        var fcObj = checkRefColumn(col);
+                        if (fcObj) {
+                            facetObjects.push(fcObj);
+                        }
+                    });
+
+                    // all the realted in detailed context
+                    detailedRelated.forEach(function (relRef) {
+                        var fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
+                        if (fcObj) {
+                            facetObjects.push(fcObj);
+                        }
+                    });    
+                }
+                
+                // we should have facetObjects untill here, now we should combine it with andFilters
+
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                var andOperator = module._FacetsLogicalOperators.AND;
+                var andFilters = [];
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
                 }
-
-                var index = 0;
-
-                // all the visible columns in compact context
-                var columns = compactRef.columns;
-                columns.forEach(function (col) {
-                    // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
-                    // Since that key column will be counted.
-                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) &&  col.reference.table.shortestKey.length === 1) ) {
-                        if(addColumn(col, index)) {
-                            index++;    
-                        }
-                    }
-                });
-
-                // all the realted in detailed context
-                var related = detailedRef.related();
-                related.forEach(function (relRef) {
-                    // the aggregate group functions expect the table to have simple keys, if there's a join in the path.
-                    // Since that key column will be counted.
-                    if (relRef.table.shortestKey.length === 1) {
-                        if(addColumn(new InboundForeignKeyPseudoColumn(self, relRef), index)) {
-                            index++;
+                
+                var checkedObjects = {};
+                for (var i = 0; i < andFilters.length; i++) {
+                    if (!andFilters[i].source) continue;
+                    
+                    found = false;
+                    for (var j = 0; j < facetObjects.length; j++) {
+                        // has matched with another facet (assumption: no duplicate facets in url)
+                        if (checkedObjects[j]) continue;
+                        
+                        if (sameSource(facetObjects[j].obj.source, andFilters[i].source)) {
+                            checkedObjects[j] = true;
+                            found = true;
+                            // merge facet objects
+                            mergeFacetObjects(facetObjects[j].obj, andFilters[i]);
                         }
                     }
                     
+                    if (!found) {
+                        var filterCol = checkFacetObject(andFilters[i]);
+                        if (filterCol) {
+                            facetObjects.push({"obj": andFilters[i], "column": filterCol});
+                        }
+                    }
+                }
+                
+                
+                // turn facetObjects into facetColumn
+                facetObjects.forEach(function(fo, index) {
+                    self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
                 });
+                
+                
+                // TODO change the url (facets and search!!!!!)
+                // var newFilters = [];
+                // self._facetColumns.forEach(function(fc) {
+                //     if (fc.filters.length !== 0) {
+                //         newFilters.push(fc.toJSON());
+                //     }
+                // });
+                // 
+                // if (newFilters.length > 0) {
+                //     this._location.facets = {"and": newFilters};
+                // }
+                
             }
             return this._facetColumns;
         },
@@ -4481,11 +4617,11 @@
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
      * @param {int} index The index of this FacetColumn in the list of facetColumns
      * @param {ERMrest.Column} column the column that filters will be based on.
-     * @param {object} json The filter object that this FacetColumn will be created based on
-     * @param {ERMrest.FacetFilter[]} filters Array of filters
+     * @param {?object} facetObject The filter object that this FacetColumn will be created based on
+     * @param {?ERMrest.FacetFilter[]} filters Array of filters
      * @constructor
      */
-    function FacetColumn (reference, index, column, json, filters) {
+    function FacetColumn (reference, index, column, facetObject, filters) {
         
         /**
          * The column object that the filters are based on
@@ -4511,7 +4647,7 @@
          * NOTE: we're not validating this data-source, we assume that this is valid.
          * @type {obj|string} 
          */
-        this.dataSource = json.source;
+        this.dataSource = facetObject.source;
         
         /**
          * Filters that are applied to this facet.
@@ -4521,18 +4657,23 @@
         if (Array.isArray(filters)) {
             this.filters = filters;
         } else {
-            this._setFilters(json);
+            this._setFilters(facetObject);
         }
         
         // the whole filter object
-        this._json = json;
+        this._facetObject = facetObject;
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
         
+        /**
+         * If has filters it will return true,
+         * otherwise returns facetObject['open']
+         * @type {Boolean}
+         */
         get isOpen() {
             if (this._isOpen === undefined) {
-                var open = this._json.open;
+                var open = this._facetObject.open;
                 this._isOpen = (this.filters.length > 0) ? true : (open === true);
             }
             return this._isOpen;
@@ -4568,13 +4709,10 @@
          * Any of:
          * `choices`, `range`, or `search`
          * This should be used if we're not in entity mode.
-         * TODO: what should be the default? This will eventually change,
-         * currently we are not using multi facet mode, so it won't be used.
-         * NOTE:
-         * If we want to consider a default mode for facets for any column type, 
-         * we might want to keep it simple and have the default mode show as choices. 
-         * Search mode would imply that the user needs to be aware of the whole set of values they are searching through.
-         * Choices provides some of that information for them.
+         *
+         * 1. use ux_mode if available
+         * 2. use choices if in entity mode
+         * 3. use range or chocies based on type.
          * 
          * @type {string}
          */
@@ -4594,8 +4732,8 @@
 
             if (this._preferredMode === undefined) {
                 var modes = ['choices', 'range', 'search'];
-                if (modes.indexOf(this._json['ux mode']) !== -1) {
-                    this._preferredMode = this._json['ux mode'];
+                if (modes.indexOf(this._facetObject.ux_mode) !== -1) {
+                    this._preferredMode = this._facetObject.ux_mode;
                 } else {
                     this._preferredMode = (this.isEntityMode ? "choices" : (isRangeMode(this._column) ? "range" : "choices") );
                 }
@@ -4606,7 +4744,7 @@
         /**
          * Returns true if the source is on a key column.
          * TODO right now it's using some heuristic, but eventually it should
-         * use json['entity facet'] to determine this.
+         * use facetObject['entity'] to determine this.
          * @type {Boolean}
          */
         get isEntityMode() {
@@ -4616,9 +4754,11 @@
                     // if from the same table, don't use entity picker
                     this._isEntityMode = false;
                 } else {
-                    this._isEntityMode = currCol.table.keys.all().filter(function (key) {
+                    var basedOnKey = currCol.table.keys.all().filter(function (key) {
                         return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
                     }).length > 0;
+                    
+                    this._isEntityMode = (this._facetObject.entity === true) && basedOnKey;
                 }
             }
             return this._isEntityMode;
@@ -4736,6 +4876,7 @@
          * Returns the displayname object that should be used for this facetColumn.
          * 
          * Heuristics are as follows (first applicable rule):
+         *  0. If markdown_name is defined, use it.
          *  1. If column is part of the main table (there's no join), use the column's displayname.
          *  2. If last foreignkey is outbound and has to_name, use it.
          *  3. If last foreignkey is inbound and has from_name, use it.
@@ -4746,16 +4887,24 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var displayname, isInbound;
-                
                 var fk = this._lastForeignKey;
                 
+                if (this._facetObject.markdown_name) {
+                    this._displayname = {
+                        value: module._formatUtils.printMarkdown(this._facetObject.markdown_name, {inline:true}),
+                        isHTML: true,
+                        unformatted: "" //TODO is it needed?
+                    };
+                }
                 // if is part of the main table, just return the column's displayname
-                if (fk === null) {
+                else if (fk === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
                 else {      
+                    var value, unformatted, isHTML;
+                    var displayname, isInbound;
+                    
                     isInbound = fk.isInbound;
                     fk = fk.obj;
                     
@@ -4847,7 +4996,8 @@
         },
 
         /**
-         * Return JSON presentation of the filters.
+         * Return JSON presentation of the filters. This will be used in the location.
+         * Anything that we want to leak to the url should be here.
          * It will be in the following format:
          *
          * ```
@@ -5096,7 +5246,7 @@
             // TODO can be refactored
             var jsonFilters = [];
             if (filters.length !== 0) {
-                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._json, filters);
+                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._facetObject, filters);
                 jsonFilters.push(ThisFC.toJSON());
             }
             
