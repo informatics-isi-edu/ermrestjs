@@ -241,6 +241,9 @@
             var self = this;
             return this.server._http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
+
+                self.rights = jsonSchemas.rights;
+
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
                 }
@@ -436,6 +439,12 @@
                 this.ignore = true;
             }
         }
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonSchema.rights;
 
         /**
          * whether schema is generated.
@@ -702,6 +711,12 @@
             var jsonKey = jsonTable.keys[i];
             this.keys._push(new Key(this, jsonKey));
         }
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonTable.rights;
 
         /**
          *
@@ -1748,6 +1763,14 @@
          * @type {ERMrest.Table}
          */
         this.table = table;
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonColumn.rights;
+
+        
 
         /**
          * @type {string}

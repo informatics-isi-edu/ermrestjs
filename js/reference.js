@@ -531,7 +531,7 @@
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("content_write_user");
+                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
 
                 if (this._canCreate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -551,7 +551,7 @@
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("content_read_user");
+                this._canRead = this._checkPermissions("select");
             }
             return this._canRead;
         },
@@ -572,7 +572,7 @@
             if (this._canUpdate === undefined) {
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
+                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("update");
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -596,7 +596,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("content_write_user");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("delete");
             }
             return this._canDelete;
         },
@@ -608,38 +608,9 @@
          * @private
          */
          _checkPermissions: function (permission) {
-            var editCatalog = false,
-                acl = [],
-                users = [];
-
-            // make sure this acl was defined in the _meta array before trying to work with it
-            if (this._meta[permission]) {
-                acl = this._meta[permission];
-            }
-
-            for (var i = 0; i < acl.length; i++) {
-                if (acl[i] === '*') {
-                    editCatalog = true;
-                } else {
-                    users.push(acl[i]);
-                }
-            }
-
-            if (users.length > 0) {
-                if(this._session) {
-                    var sessionAttributes = this._session.attributes.map(function(a) {
-                        return a.id;
-                    });
-
-                    for (var j = 0; j < users.length; j++) {
-                        if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
-                    }
-                } else {
-                    editCatalog = undefined;
-                }
-            }
-
-            return editCatalog;
+            // Return true if permission is null
+            if (this._table.rights[permission] === null) return true;
+            return this._table.rights[permission];
          },
 
         /**
