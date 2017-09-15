@@ -5493,13 +5493,13 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "count", "descending": false}];
+            var sortObj = [{"column": "value", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
                 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("count", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];            
             
             // the reference
@@ -5526,7 +5526,7 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
+            var sortObj = [{"column": "value", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
             
