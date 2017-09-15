@@ -352,9 +352,9 @@
                             res.push({
                                 "outbound": association._secondFKR.constraint_names[0]
                             });
-                            column = association._secondFKR.key.colset.columns[0];
+                            column = association._secondFKR.key.colset.columns[0].table.shortestKey[0];
                         } else {
-                            column = origFkR.colset.columns[0];
+                            column = origFkR.colset.columns[0].table.shortestKey[0];
                         }
                         res.push(column.name);
                         return {"dataSource": res, "column": column};
