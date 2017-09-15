@@ -515,7 +515,7 @@
                     });
                 };
                 
-                var annotationCols = -1;
+                var annotationCols = -1, usedAnnotation = false;
                 var facetObjects = [];
                 
                 // get column orders from annotation
@@ -525,6 +525,7 @@
                 
                 // NOTE: current assumption: annotation is correct
                 if (annotationCols !== -1) {
+                    usedAnnotation = true;
                     //TODO should check for :
                     // 1. duplicates ?! (not sure)
                     // 2. correct values for choices, range, search
@@ -598,17 +599,22 @@
                 });
                 
                 
-                // TODO change the url (facets and search!!!!!)
-                // var newFilters = [];
-                // self._facetColumns.forEach(function(fc) {
-                //     if (fc.filters.length !== 0) {
-                //         newFilters.push(fc.toJSON());
-                //     }
-                // });
-                // 
-                // if (newFilters.length > 0) {
-                //     this._location.facets = {"and": newFilters};
-                // }
+                // annotations might have extra fitlers that should be applied.
+                // TODO eventually this can be smarter
+                if (usedAnnotation) {
+                    var newFilters = [];
+                    self._facetColumns.forEach(function(fc) {
+                        if (fc.filters.length !== 0) {
+                            newFilters.push(fc.toJSON());
+                        }
+                    });
+                    
+                    if (newFilters.length > 0) {
+                        //TODO we should make sure this is being called before read.
+                        //TODO we're not supporting the `*` facet (we should mix the search with this facet)
+                        this._location.facets = {"and": newFilters};
+                    }
+                }
                 
             }
             return this._facetColumns;
