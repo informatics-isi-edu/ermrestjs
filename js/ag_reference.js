@@ -444,11 +444,13 @@ AttributeGroupTuple.prototype = {
     get displayname() {
         if (this._displayname === undefined) {
             var data = this._data;
+            var hasNull = false;
             var value = this._page.reference.shortestKey.reduce(function (res, c, index) {
+                hasNull = hasNull || data[c.name] == null;
                 return res + (index > 0 ? ":" : "") + c.formatvalue(data[c.name]);
             }, "");
             
-            this._displayname = { "value": value, "unformatted": value, "isHTML": false };
+            this._displayname = { "value": (hasNull ? null : value), "unformatted": (hasNull? null : value), "isHTML": false };
         }
         return this._displayname;
     }

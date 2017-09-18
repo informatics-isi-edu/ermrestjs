@@ -5295,6 +5295,9 @@
          * @return {string}
          */
         toString: function () {
+            if (this.term == null) {
+                return null;
+            }
             return _formatValueByType(this._columnType, this.term);
         },
 
