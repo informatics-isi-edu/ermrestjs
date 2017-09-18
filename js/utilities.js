@@ -1286,7 +1286,7 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var videoHTML="<video controls ", openingLink = attrs[0].children[0];
-                            var srcHTML="", videoClass="", flag = true;
+                            var srcHTML="", videoClass="", flag = true, posTop = true;
                             
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
@@ -1302,6 +1302,9 @@
                                 }
                                 else if ( (attr[0] == "loop" || attr[0] == "preload" || attr[0] == "muted" || attr[0] == "autoload") && attr[1]=="") {
                                     videoClass +=  attr[0]+ " ";
+                                }
+                                else if ( (attr[0] == "pos") && attr[1]!=="") {
+                                    posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
                                 }
                             });
                             
@@ -1321,8 +1324,10 @@
                                 }
                             }
                             
-                            if(captionHTML.trim().length && flag){
+                            if(captionHTML.trim().length && flag && posTop){
                                 html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
+                            }else if(captionHTML.trim().length && flag){
+                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption></figure>" ;
                             } else if(flag)
                                 html += videoHTML + videoClass +">"+ srcHTML +"</video>";
                             else
