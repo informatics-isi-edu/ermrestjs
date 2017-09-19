@@ -4749,8 +4749,9 @@
         
         /**
          * Returns true if the source is on a key column.
-         * TODO right now it's using some heuristic, but eventually it should
-         * use facetObject['entity'] to determine this.
+         * If facetObject['entity'] is defined as false, it will return false,
+         * otherwise it will true if filter is based on key.
+         * 
          * @type {Boolean}
          */
         get isEntityMode() {
@@ -4764,7 +4765,7 @@
                         return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
                     }).length > 0;
                     
-                    this._isEntityMode = (this._facetObject.entity === true) && basedOnKey;
+                    this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
                 }
             }
             return this._isEntityMode;
