@@ -4785,7 +4785,7 @@
          * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
          * in the source with all the filters of other FacetColumns in the reference.
          *
-         * TODO needs refactoring,
+         * NOTE needs refactoring,
          * This should return a reference that referes to the current column's table
          * having filters from other facetcolumns.
          * We should not use the absolute path for the table and it must be a path
@@ -4794,80 +4794,71 @@
          * (For example if maximum possible value for this column is 100 but there's 
          * no data from the main that will leads to this maximum.)
          * 
-         * TODO This is reducing very heavy joined links!
-         * main -> current + current -> main + main -> others + othersFilters
-         * We're doing this because parser cannot handle more complext urls.
-         * eventually it should be 
-         * main + main -> others + othersFilters + main -> current.
+         * Consider the following scenario:
+         * Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
+         * R1 has a fitler for term=1, and R2 has a filter for term=2
+         * Then the source reference for R3 will be the following:
+         * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
+         * As you can see it has all the filters of the main table + join to current table.
          * 
          * NOTE: assumptions:
-         *  - The main reference has no filter and no join
+         *  - The main reference has no join.
+         *  - The returned reference has problem with faceting (cannot show faceting).
          *
          * @type {ERMrest.Reference}
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
                 var jsonFilters = [],
-                    pathToSource = [], // the path from current table to the source table (will be used in the filters)
-                    pathToSourceStr = [], // the string of joins from current table to the source table (its reverse will be used for creating the url)
+                    pathFromSource = [], // the path from source reference to this facetColumn
                     self = this,
-                    table = this._column.table;
+                    table = this.reference.table;
+                    
+                pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
                 
-                // create a path from this facetColumn to the base reference
+                // create a path from reference to this facetColumn
                 if (Array.isArray(this.dataSource)) {
-                    var path = this.dataSource, node, ds, fk, isOutbound, constraint;
-                    for (var i = path.length - 2; i >= 0; i--) {
-                        ds = path[i];
+                    var constraint, isOutbound, fk;
+                    this.dataSource.forEach(function (ds, index) {
+                        // the last element is the column name
+                        if (index === self.dataSource.length - 1) return;
+                        
                         if ("inbound" in ds) {
-                            node = {"outbound": ds.inbound};
                             constraint = ds.inbound;
                             isOutbound = false;
                         } else {
-                            node = {"inbound": ds.outbound};
                             constraint = ds.outbound;
                             isOutbound = true;
                         }
                         fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]).object;
-                        pathToSourceStr.push(fk.toString(isOutbound));
-                        pathToSource.push(node);
-                    }
-                    pathToSourceStr.push(module._fixedEncodeURIComponent(this.reference.table.schema.name) + ":" + module._fixedEncodeURIComponent(this.reference.table.name));
+                        pathFromSource.push(fk.toString(isOutbound));
+                    });
                 }
-                
-                // convert facets from main table to the current table.
+
+                // get all the filters from other facetColumns
                 if (this.reference.location.facets !== null) {
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
                         if (index !== self.index && fc.filters.length !== 0) {
-                            var filter = fc.toJSON();
-                            if (pathToSource.length > 0) {
-                                filter.source = pathToSource.concat(filter.source);
-                            }
-                            jsonFilters.push(filter);
+                            jsonFilters.push(fc.toJSON());
                         }
                     });
                 }
-                
+
                 // convert the search into a facet
                 // TODO eventually the search must be changed to facet
                 if (typeof this.reference.location.searchTerm === "string") {
-                    var source = pathToSource.length > 0 ? pathToSource.concat("*") : "*";
-                    jsonFilters.push({"source": source, "search": [this.reference.location.searchTerm]});
+                    jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
                 }
-                
-                // if path doesn't exist
-                if (pathToSourceStr.length === 0) {
-                    pathToSourceStr.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
-                }
-                
+
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
-                    pathToSourceStr.reverse().join("/"),
+                    pathFromSource.join("/")
                 ].join("/");
                 
-                this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
+                this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
                 
                 if (jsonFilters.length > 0) {
                     this._sourceReference._location.facets = {"and": jsonFilters};
@@ -5499,7 +5490,7 @@
             }
             
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "value", "descending": false}];
@@ -5532,7 +5523,7 @@
             }
                 
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": ""};
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "value", "descending": false}];
