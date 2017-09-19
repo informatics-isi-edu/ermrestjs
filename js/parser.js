@@ -146,7 +146,7 @@
             endIndex -= 1;
         }
         
-        if (startIndex < endIndex) {
+        if (startIndex <= endIndex) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
                 this._facets = new ParsedFacets(match[1]);
