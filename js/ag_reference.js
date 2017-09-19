@@ -42,6 +42,11 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
     this._server = catalog.server;
     
     this._catalog = catalog;
+    
+    /**
+     * @type {ERMrest.ReferenceAggregateFn}
+     */
+    this.aggregate = new AttributeGroupReferenceAggregateFn(this);
 }
 AttributeGroupReference.prototype = {
     
@@ -247,6 +252,85 @@ AttributeGroupReference.prototype = {
             return module._q.reject(e);
         }
         
+    },
+    
+    getAggregates: function (aggregateList) {
+        var defer = module._q.defer();
+        var url;
+
+        var URL_LENGTH_LIMIT = 2048;
+
+        var urlSet = [];
+        var loc = this.location;
+        var baseUri = [
+            loc.service, "catalog", loc.catalogId, "aggregate", loc.path
+        ];
+        
+        if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+            baseUri.push(loc.searchFilter);
+        }
+        
+        baseUri = baseUri.join("/") + "/";
+
+        for (var i = 0; i < aggregateList.length; i++) {
+            var agg = aggregateList[i];
+
+            // if this is the first aggregate, begin with the baseUri
+            if (i === 0) {
+                url = baseUri;
+            } else {
+                url += ",";
+            }
+
+            // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+            if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                // strip off an extra ','
+                if (url.charAt(url.length-1) === ',') {
+                    url = url.substring(0, url.length-1);
+                }
+
+                urlSet.push(url);
+                url = baseUri;
+            }
+
+            // use i as the alias
+            url += i + ":=" + agg;
+
+            // We are at the end of the aggregate list
+            if (i+1 === aggregateList.length) {
+                urlSet.push(url);
+            }
+        }
+
+        var aggregatePromises = [];
+        var http = this._server._http;
+        for (var j = 0; j < urlSet.length; j++) {
+            aggregatePromises.push(http.get(urlSet[j]));
+        }
+
+        module._q.all(aggregatePromises).then(function getAggregates(response) {
+            // all response rows merged into one object
+            var singleResponse = {};
+
+            // collect all the data in one object so we can map it to an array
+            for (var k = 0; k < response.length; k++) {
+                Object.assign(singleResponse, response[k].data[0]);
+            }
+
+            var responseArray = [];
+            for (var m = 0; m < aggregateList.length; m++) {
+                responseArray.push(singleResponse[m]);
+            }
+
+            defer.resolve(responseArray);
+        }, function error(response) {
+            var error = module._responseToError(response);
+            return defer.reject(error);
+        }).catch(function (error) {
+            return defer.reject(error);
+        });
+
+        return defer.promise;
     }
 };
 
@@ -667,5 +751,24 @@ AttributeGroupLocation.prototype = {
      */
     changePage: function (paging) {
         return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, paging);
+    }
+};
+
+
+function AttributeGroupReferenceAggregateFn (reference) {
+    this._ref = reference;
+}
+
+AttributeGroupReferenceAggregateFn.prototype = {
+    /**
+     * @type {Object}
+     * @desc count aggregate representation
+     */
+    get countAgg() {
+        if (this._ref.shortestKey.length > 1) {
+            throw new Error("Cannot use count function, attribute group has more than one key column.");
+        }
+        
+        return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.shortestKey[0].term) + ")";
     }
 };
