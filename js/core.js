@@ -1623,7 +1623,7 @@
             if (result.length) {
                 return result[0];
             }
-            throw new module.NotFoundError("", "Column " + name + " not found in table " + this._table.name);
+            throw new module.NotFoundError("", "Column " + name + " not found in table " + this._table.name + ".");
         },
 
         /**

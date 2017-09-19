@@ -196,7 +196,7 @@ exports.execute = function (options) {
 
             it('should return an error if the sort column is invalid', function (done) {
                 colName = "invalid column";
-                checkError([{"column":colName, "descending": false}], "Column " + colName + " not found in table.", done);
+                checkError([{"column":colName, "descending": false}], "Column " + colName + " not found in table columns_table.", done);
             });
 
             it('should return an error if the sort column is not sortable', function (done) {
