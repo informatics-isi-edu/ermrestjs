@@ -345,27 +345,27 @@
                     "type": {"typename":"text"}
                 },
                 {
-                    "name": "rid",
+                    "name": "RID",
                     "nullok": false,
                     "type": {"typename":"int8"}
                 },
                 {
-                    "name": "rcb",
+                    "name": "RCB",
                     "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
-                    "name": "rmb",
+                    "name": "RMB",
                     "nullok": false,
                     "type": {"typename":"text"}
                 },
                 {
-                    "name": "rct",
+                    "name": "RCT",
                     "nullok": false,
                     "type": {"typename":"timestamptz"}
                 },
                 {
-                    "name": "rmt",
+                    "name": "RMT",
                     "nullok": false,
                     "type": {"typename":"timestamptz"}
                 }

@@ -1748,4 +1748,4 @@
         MODULE: 'module'
     });
 
-    module._systemColumns = ['rid', 'rcb', 'rmb', 'rct', 'rmt'];
+    module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
