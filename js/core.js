@@ -1115,7 +1115,7 @@
 
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
+                return !(keyCols.length == 1 && (serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
             if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
