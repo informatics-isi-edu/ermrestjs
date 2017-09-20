@@ -2542,11 +2542,21 @@
             *       2.1. source is base, newTable is alternative:
             *           - If the join is on the alternative shared key, swap the joins.
             *       2.2. otherwise: use join
-            *   3. doesn't have join
-            *       3.1. no filter: swap table and update location only
-            *       3.2. has filter
-            *           3.2.1. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
-            *           3.2.2. otherwise: use join
+            *   3. has facets
+            *       3.1. source is base, newTable is alternative, go through filters
+            *           3.1.1. If first foreign is from base to alternative, remove it.
+            *           3.1.2. otherwise add a fk from alternative to base.
+            *       3.2. source is alternative, newTable is base, go through filters
+            *           3.1.1. If first foreign is from alternative to base, remove it.
+            *           3.1.2. otherwise add a fk from base to alternative.
+            *       3.3. source is alternative, newTable is alternative, go through filters
+            *           3.1.1. If first foreign is to base, change the first foreignkey to be from the newTable to main.
+            *           3.1.2. otherwise add fk from newTable to main table, and from main table to source.
+            *   4. doesn't have join
+            *       4.1. no filter: swap table and update location only
+            *       4.2. has filter
+            *           4.2.1. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
+            *           4.2.2. otherwise: use join
             *
             * NOTE:
             * If switched to a new table (could be a base table or alternative table)
@@ -2558,7 +2568,7 @@
                 // swap to new table
                 newRef.setNewTable(newTable);
 
-                var newLocationString;
+                var newLocationString, newFacetFilters = [];
 
                 if (source._location.hasJoin) {
                     // returns true if join is on alternative shared key
@@ -2622,13 +2632,61 @@
                         newLocationString += generateJoin();
                     }
 
-                } else {
+                } 
+                else if (source._location.facets) {
+                    // go through all the facet columns with filter, and 
+                    // change the filter to be based on new table
+                    var modifyFacetFilters = function (funct) {
+                        source.facetColumns.forEach(function (fc) {
+                            if (fc.filters.length === 0) return;
+                            newFacetFilters.push(funct(fc.toJSON(), (fc.foreginKeys.length > 0 ? fc.foreginKeys[0].obj : null )));
+                        });
+                    };
+
+                    // source: main table newTable: alternative
+                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && firstFk.isInbound && firstFk._table === newTable) {
+                                facetFilter.source.shift();
+                            } else {
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]});
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    // source: alternative newTable: main table
+                    else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
+                                facetFilter.source.shift();
+                            } else {
+                                facetFilter.source.unshift({"inbound": newTable._altForeignKey.constraint_names[0]});  
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    // source: alternative newTable: alternative
+                    else {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable._baseTable) {
+                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.toString(true)};
+                            } else {
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source._altForeignKey.constraint_names[0]});
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    
+                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
+                }
+                else {
                     if (source._location.filter === undefined) {
-                        // 3.1 no filter
+                        // 4.1 no filter
                         newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
                                             source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                     } else {
-                        // 3.2.1 single entity key filter (without any join), swap table and switch to mapping key
+                        // 4.2.1 single entity key filter (without any join), swap table and switch to mapping key
                         // filter is single entity if it is binary filters using the shared key of the alternative tables
                         // or a conjunction of binary predicate that is a key of the alternative tables
 
@@ -2749,6 +2807,11 @@
                 }
 
                 newRef._location = module.parse(newLocationString);
+                
+                // change the face filters
+                if (newFacetFilters.length > 0) {
+                    newRef._location.facets = {"and": newFacetFilters};
+                }
             }
 
             return newRef;
@@ -4685,6 +4748,30 @@
             return this._isOpen;
         },
         
+        get foreginKeys() {
+            if (this._foreignKeys === undefined) {
+                this._foreignKeys = [];
+                if (Array.isArray(this.dataSource)) {
+                    var isInbound, constraint;
+                    for (var i = 0; i < this.dataSource.length - 1; i++) {
+                        if ("inbound" in this.dataSource[i]) {
+                            isInbound = true;
+                            constraint = this.dataSource[i].inbound;
+                        } else {
+                            isInbound = false;
+                            constraint = this.dataSource[i].outbound;
+                        }
+
+                        this._foreignKeys.push({
+                            "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
+                            "isInbound": isInbound
+                        });
+                    }
+                }
+            }
+            return this._foreignKeys;
+        },
+        
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
             if (this._lastForeignKey_cached === undefined) {
@@ -5010,7 +5097,7 @@
          * @return {Object}
          */
         toJSON: function () {
-            var res = { "source": this.dataSource};
+            var res = { "source": Array.isArray(this.dataSource) ? this.dataSource.slice() : this.dataSource};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
                 if (!(f.facetFilterKey in res)) {
