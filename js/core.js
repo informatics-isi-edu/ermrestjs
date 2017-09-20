@@ -1108,7 +1108,7 @@
                 return false; // not binary
             }
 
-            var serialTypes = ["serial2", "serial4", "serial8"];
+            var serialTypes = ["serial", "serial2", "serial4", "serial8"];
             var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
                 return res.concat(colset.columns);
             }, [])); // set of foreignkey columns
