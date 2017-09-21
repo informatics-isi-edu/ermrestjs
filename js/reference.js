@@ -3471,7 +3471,7 @@
                 this._uniqueId = "";
                 for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
                     keyName = this.reference.table.shortestKey[i].name;
-                    if (i != 0) this._uniqueId += "_";
+                    if (i !== 0) this._uniqueId += "_";
                     this._uniqueId += this.data[keyName];
                 }
             }
@@ -5028,7 +5028,7 @@
          * @type {string}
          */
         get comment () {
-            if (this._comment == undefined) {
+            if (this._comment === undefined) {
                 var fk = this._lastForeignKey ? this._lastForeignKey.obj : null;
                 if (fk === null || !this.isEntityMode) {
                     this._comment = this._column.comment;

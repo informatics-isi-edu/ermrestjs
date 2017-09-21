@@ -190,7 +190,7 @@ exports.execute = function(options) {
 
         });
 
-        describe('for pure and binray association foreign keys, ', function() {
+        describe('for pure and binary association foreign keys, ', function() {
             var pageWithToName, pageWithID;
 
             it('should have the correct catalog, schema, and table.', function (){
@@ -198,7 +198,7 @@ exports.execute = function(options) {
                 expect(related[2]._table.name).toBe(inboudTableName);
             });
 
-            describe('.displayname, ', function (){
+            describe('.displayname, ', function () {
                 it('should use to_name when annotation is present.', function() {
                   expect(related[2].displayname.value).toBe("to_name_value");
                 });
@@ -207,30 +207,7 @@ exports.execute = function(options) {
                   expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
                 });
             });
-
-            describe('.columns, ', function() {
-                it('should ignore all the foreign keys that create the connection for assocation.', function() {
-                    checkReferenceColumns([{
-                        ref: related[2],
-                        expected:[
-                            ["reference_schema", "inbound_related_reference_key"].join("_"), 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
-                    ]}]);
-                });
-                it('should ignore extra serial key columns in the assocation table', function() {
-                    checkReferenceColumns([{
-                        ref: related[3],
-                        expected:[
-                            ["reference_schema", "inbound_related_reference_key"].join("_"), 
-                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
-                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
-                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
-                    ]}]);
-                });
-            });
-
+            
             describe('.uri ', function () {
                 it('.uri should be properly defiend based on schema.', function() {
                     expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");

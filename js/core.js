@@ -1108,22 +1108,22 @@
                 return false; // not binary
             }
 
-            var serialTypes = ["serial2", "serial4", "serial8"];
+            var serialTypes = ["serial", "serial2", "serial4", "serial8"];
             var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
                 return res.concat(colset.columns);
             }, [])); // set of foreignkey columns
 
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && serialTypes.indexOf(keyCols[0].type.name) != -1  && !(keyCols[0] in fkColset.columns));
+                return !(keyCols.length == 1 && (serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
             }); // the key that should contain foreign key columns.
 
             if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
                 return false; // not binary
             }
 
-            var nonKeyCols = this.columns.all().filter(function(col){
-                return col.memberOfKeys.length === 0;
+            var nonKeyCols = this.columns.all().filter(function(col) {
+            	return col.memberOfKeys.length === 0 && module._systemColumns.indexOf(col.name) === -1;
             }); // columns that are not part of any keys.
 
             return nonKeyCols.length === 0; // check for purity
