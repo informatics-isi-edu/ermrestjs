@@ -313,6 +313,7 @@
             if (this._facetColumns === undefined) {
                 this._facetColumns = [];
                 var self = this;
+                var andOperator = module._FacetsLogicalOperators.AND;
                 
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
@@ -509,6 +510,13 @@
                                 return;
                             }
                             
+                            // don't add duplicates
+                            if (key !== 'ranges') {
+                                if (source[key].indexOf(ch) !== -1) return;
+                            } else {
+                                if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                            }
+                            
                             source[key].push(ch);
                         });
                     
@@ -521,6 +529,11 @@
                 // get column orders from annotation
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                     annotationCols = module._getRecursiveAnnotationValue(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
+                    if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
+                        annotationCols = annotationCols[andOperator];
+                    } else {
+                        annotationCols = -1;
+                    }
                 }
                 
                 // NOTE: current assumption: annotation is correct
@@ -560,7 +573,6 @@
                 // we should have facetObjects untill here, now we should combine it with andFilters
 
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
-                var andOperator = module._FacetsLogicalOperators.AND;
                 var andFilters = [];
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
@@ -5125,7 +5137,7 @@
          * @param  {Object} json JSON representation of filters
          */
         _setFilters: function (json) {
-            var self = this;
+            var self = this, current;
             self.filters = [];
 
             if (!isDefinedAndNotNull(json)) {
@@ -5135,6 +5147,14 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof ChoiceFacetFilter) && f.term === ch;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
                     self.filters.push(new ChoiceFacetFilter(ch, self._column.type));
                 });
             }
@@ -5142,6 +5162,14 @@
             // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
                     self.filters.push(new RangeFacetFilter(ch.min, ch.max, self._column.type));
                 });
             }
@@ -5149,6 +5177,14 @@
             // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof SearchFacetFilter) && f.term === ch;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
                     self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
