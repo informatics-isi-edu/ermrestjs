@@ -490,7 +490,7 @@
                 
                 // only add choices, range, and search
                 var mergeFacetObjects = function (source, extra) {
-                    ['choices', 'range', 'search'].forEach(function (key) {
+                    ['choices', 'ranges', 'search'].forEach(function (key) {
                         if (!Array.isArray(extra[key])) {
                             return;
                         }
@@ -505,7 +505,7 @@
                             }
                             
                             // in range we must have one of min, or max.
-                            if (key === 'range' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
+                            if (key === 'ranges' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
                                 return;
                             }
                             
@@ -4800,7 +4800,7 @@
         /**
          * The Preferred ux mode.
          * Any of:
-         * `choices`, `range`, or `search`
+         * `choices`, `ranges`, or `search`
          * This should be used if we're not in entity mode.
          *
          * 1. use ux_mode if available
@@ -4824,11 +4824,11 @@
             }
 
             if (this._preferredMode === undefined) {
-                var modes = ['choices', 'range', 'search'];
+                var modes = ['choices', 'ranges', 'search'];
                 if (modes.indexOf(this._facetObject.ux_mode) !== -1) {
                     this._preferredMode = this._facetObject.ux_mode;
                 } else {
-                    this._preferredMode = (this.isEntityMode ? "choices" : (isRangeMode(this._column) ? "range" : "choices") );
+                    this._preferredMode = (this.isEntityMode ? "choices" : (isRangeMode(this._column) ? "ranges" : "choices") );
                 }
             }
             return this._preferredMode;
