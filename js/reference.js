@@ -297,7 +297,7 @@
          * Usage:
          * ```
          *  var facets = reference.facetColumns;
-         *  var newRef = reference.facetColumns[0].addChoiceFilter('value');
+         *  var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
          *  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
          *  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
          *  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
@@ -312,28 +312,31 @@
         get facetColumns() {
             if (this._facetColumns === undefined) {
                 this._facetColumns = [];
-
-                // this reference should be only used for getting the list,
-                var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
-                var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
                 var self = this;
-
-                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 var andOperator = module._FacetsLogicalOperators.AND;
-                var andFilters = [];
                 
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
-                 * will return {"dataSource": source list, "column": Column object}
+                 * will return {"obj": facet object, "column": Column object}
                  */
-                var generateDataSource = function (refCol) {
+                var refColToFacetObject = function (refCol) {
+                    if (refCol.isKey) {
+                        return {
+                            "obj": {"source": refCol._baseCols[0].name},
+                            "column": refCol._baseCols[0].name
+                        };
+                    }
+                    
                     if (refCol.isForeignKey) {
                         var constraint = refCol.foreignKey.constraint_names[0];
                         return {
-                            "dataSource": [
-                                {"outbound": constraint},
-                                refCol.foreignKey.key.colset.columns[0].name
-                            ],
+                            "obj": {
+                                "source":[
+                                    {"outbound": constraint},
+                                    refCol.foreignKey.key.colset.columns[0].name
+                                ],
+                                "entity": true
+                            },
                             "column": refCol.foreignKey.key.colset.columns[0]
                         };
                     }
@@ -352,15 +355,89 @@
                             res.push({
                                 "outbound": association._secondFKR.constraint_names[0]
                             });
-                            column = association._secondFKR.key.colset.columns[0];
+                            column = association._secondFKR.key.colset.columns[0].table.shortestKey[0];
                         } else {
-                            column = origFkR.colset.columns[0];
+                            column = origFkR.colset.columns[0].table.shortestKey[0];
                         }
                         res.push(column.name);
-                        return {"dataSource": res, "column": column};
+                        return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
                     
-                    return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
+                    return { "obj": {"source": refCol.name}, "column": refCol._baseCols[0]};
+                };
+                
+                // will return column or false
+                var checkFacetObject = function (obj) {
+                    if (!obj.source) {
+                        return false;
+                    }
+                    
+                    var table = self.table, source = obj.source;
+                    var colName, col;
+                    
+                    // from 0 to source.length-1 we have paths
+                    if (Array.isArray(source)) {
+                        var fk, i, isInbound, constraint;
+                        for (i = 0; i < source.length - 1; i++) {
+                            
+                            if ("inbound" in source[i]) {
+                                constraint = source[i].inbound;
+                                isInbound = true;
+                            } else if ("outbound" in source[i]) {
+                                constraint = source[i].outbound;
+                                isInbound = false;
+                            } else {
+                                // given object was invalid
+                                return false;
+                            }
+                            
+                            fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
+                            
+                            // constraint name was not valid
+                            if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                return false;
+                            }
+                            
+                            fk = fk.object;
+                            
+                            // inbound
+                            if (isInbound && fk.key.table === table) {
+                                table = fk._table;
+                            } 
+                            // outbound
+                            else if (!isInbound && fk._table === table) {
+                                table = fk.key.table;
+                            }
+                            else {
+                                // the given object was not valid
+                                return false;
+                            }
+                        }
+                        colName = source[source.length-1];
+                    } else {
+                        colName = source;
+                    }
+                    
+                    try {
+                        col = table.columns.get(colName);
+                        return col;
+                    } catch(exp) {
+                        return false;
+                    }
+                };
+                
+                var checkRefColumn = function (col) {
+                    if (!col._simple || col.isAsset) {
+                        return false;
+                    }
+                    
+                    var fcObj = refColToFacetObject(col);
+                    
+                    if (!fcObj.obj.entity && module._facetSupportedTypes.indexOf(col.type.name) === -1) {
+                        return false;
+                    }
+                    
+                    return fcObj;
                 };
                 
                 /*
@@ -412,52 +489,145 @@
                     return true;
                 };
                 
-                /*
-                 * given a source, will return the filters that are already applied to it.
-                 */
-                var findFilter = function (source) {
-                    for (var i = 0; i < andFilters.length; i++) {
-                        if (sameSource(source, andFilters[i].source)) {
-                            return andFilters[i];
+                // only add choices, range, and search
+                var mergeFacetObjects = function (source, extra) {
+                    ['choices', 'ranges', 'search'].forEach(function (key) {
+                        if (!Array.isArray(extra[key])) {
+                            return;
                         }
-                    }
-                    return null;
+                        
+                        if (!Array.isArray(source[key])) {
+                            source[key] = [];
+                        }
+                        extra[key].forEach(function (ch) {
+                            // in choices we can have null
+                            if (key !== "choices" && ch == null) {
+                                return;
+                            }
+                            
+                            // in range we must have one of min, or max.
+                            if (key === 'ranges' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
+                                return;
+                            }
+                            
+                            // don't add duplicates
+                            if (key !== 'ranges') {
+                                if (source[key].indexOf(ch) !== -1) return;
+                            } else {
+                                if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                            }
+                            
+                            source[key].push(ch);
+                        });
+                    
+                    });
                 };
                 
-                /*
-                 * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
-                 */
-                var addColumn = function (col, i) {
-                    var source = generateDataSource(col);
-                    var filter = findFilter(source.dataSource);
-                    if (filter === null) {
-                        filter = {"source": source.dataSource};
-                    }
-                    self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
-                };
-            
+                var annotationCols = -1, usedAnnotation = false;
+                var facetObjects = [];
                 
+                // get column orders from annotation
+                if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                    annotationCols = module._getRecursiveAnnotationValue(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
+                    if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
+                        annotationCols = annotationCols[andOperator];
+                    } else {
+                        annotationCols = -1;
+                    }
+                }
+                
+                // NOTE: current assumption: annotation is correct
+                if (annotationCols !== -1) {
+                    usedAnnotation = true;
+                    //TODO should check for :
+                    // 1. duplicates ?! (not sure)
+                    // 2. correct values for choices, range, search
+                    annotationCols.forEach(function (obj) {
+                        var col = checkFacetObject(obj);
+                        if (col) {
+                            facetObjects.push({"obj": obj, "column": col});
+                        }
+                    });
+                } else {
+                    // this reference should be only used for getting the list,
+                    var detailedRelated = (this._context === module._contexts.DETAILED) ? this.related() : this.contextualize.detailed.related();
+                    var compactCols = (this._context === module._contexts.COMPACT) ? this.columns : this.contextualize.compact.columns;
+
+                    // all the visible columns in compact context
+                    compactCols.forEach(function (col) {
+                        var fcObj = checkRefColumn(col);
+                        if (fcObj) {
+                            facetObjects.push(fcObj);
+                        }
+                    });
+
+                    // all the realted in detailed context
+                    detailedRelated.forEach(function (relRef) {
+                        var fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
+                        if (fcObj) {
+                            facetObjects.push(fcObj);
+                        }
+                    });    
+                }
+                
+                // we should have facetObjects untill here, now we should combine it with andFilters
+
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                var andFilters = [];
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
                 }
-
-                var index = 0;
-
-                // all the visible columns in compact context
-                var columns = compactRef.columns;
-                columns.forEach(function (col) {
-                    if (!col.isPseudo || ((col.isForeignKey || col.isInboundForeignKey) && col.foreignKey.simple)) {
-                        addColumn(col, index++);
+                
+                var checkedObjects = {};
+                for (var i = 0; i < andFilters.length; i++) {
+                    if (!andFilters[i].source) continue;
+                    
+                    found = false;
+                    for (var j = 0; j < facetObjects.length; j++) {
+                        // has matched with another facet (assumption: no duplicate facets in url)
+                        if (checkedObjects[j]) continue;
+                        
+                        if (sameSource(facetObjects[j].obj.source, andFilters[i].source)) {
+                            checkedObjects[j] = true;
+                            found = true;
+                            // merge facet objects
+                            mergeFacetObjects(facetObjects[j].obj, andFilters[i]);
+                        }
                     }
+                    
+                    if (!found) {
+                        var filterCol = checkFacetObject(andFilters[i]);
+                        if (filterCol) {
+                            facetObjects.push({"obj": andFilters[i], "column": filterCol});
+                        }
+                    }
+                }
+                
+                
+                // turn facetObjects into facetColumn
+                facetObjects.forEach(function(fo, index) {
+                    self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
                 });
-
-                // all the realted in detailed context
-                var related = detailedRef.related();
-                related.forEach(function (relRef) {
-                    var col = new InboundForeignKeyPseudoColumn(self, relRef);
-                    addColumn(col, index++);
-                });
+                
+                
+                // annotations might have extra fitlers that should be applied.
+                // TODO eventually this can be smarter
+                if (usedAnnotation) {
+                    var newFilters = [];
+                    self._facetColumns.forEach(function(fc) {
+                        if (fc.filters.length !== 0) {
+                            newFilters.push(fc.toJSON());
+                        }
+                    });
+                    
+                    if (newFilters.length > 0) {
+                        //TODO we should make sure this is being called before read.
+                        //TODO we're not supporting the `*` facet (we should mix the search with this facet)
+                        this._location.facets = {"and": newFilters};
+                    }
+                }
+                
             }
             return this._facetColumns;
         },
@@ -1730,6 +1900,7 @@
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
+            delete newReference._facetColumns;
 
             newReference._location = this._location._clone();
             newReference._location.pagingObject = null;
@@ -2151,7 +2322,9 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple) {
-            var j, col, uri, subset;
+            var j, col, uri, source;
+            
+            var useFaceting = (typeof tuple === 'object');
 
             var newRef = _referenceCopy(this);
             delete newRef._context; // NOTE: related reference is not contextualized
@@ -2180,13 +2353,6 @@
                 newRef.parentDisplayname = this.displayname;
             }
 
-            // create the subset that will be added for visibility
-            if (typeof tuple !== 'undefined') {
-                subset = "?subset=" + module._fixedEncodeURIComponent(
-                    "for " + newRef.parentDisplayname.unformatted + " = " + tuple.displayname.unformatted
-                );
-            }
-
             var fkrTable = fkr.colset.columns[0].table;
             if (fkrTable._isPureBinaryAssociation()) { // Association Table
 
@@ -2210,11 +2376,14 @@
                 }
 
                 // uri and location
-                uri = this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true);
-                if (typeof subset !== 'undefined') {
-                    uri += subset;
+                if (!useFaceting) {
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+                } else {
+                    // build source
+                    source = [
+                        {"inbound": otherFK.constraint_names[0]}
+                    ];
                 }
-                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -2238,15 +2407,36 @@
                 }
 
                 // uri and location
-                uri = this._location.compactUri + "/" + fkr.toString();
-                if (typeof subset !== 'undefined') {
-                    uri += subset;
+                if (!useFaceting) {
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
+                } else {
+                    source = [];
                 }
-                newRef._location = module.parse(uri);
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                 newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
+            }
+            
+            if (useFaceting) {
+                var table = newRef._table;
+                newRef._location = module.parse([
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
+                ].join("/"));
+                
+                //filters
+                var filters = [];
+                source.push({"outbound": fkr.constraint_names[0]});
+                fkr.key.colset.columns.forEach(function (col) {
+                    filters.push({
+                        "source": source.concat(col.name),
+                        "choices": [tuple.data[col.name]]
+                    });
+                });
+                
+                newRef._location.facets = {"and": filters};
             }
 
             return newRef;
@@ -2348,6 +2538,7 @@
             var newRef = _referenceCopy(source);
             delete newRef._related;
             delete newRef._referenceColumns;
+            delete newRef._facetColumns;
 
             newRef._context = context;
 
@@ -2363,11 +2554,21 @@
             *       2.1. source is base, newTable is alternative:
             *           - If the join is on the alternative shared key, swap the joins.
             *       2.2. otherwise: use join
-            *   3. doesn't have join
-            *       3.1. no filter: swap table and update location only
-            *       3.2. has filter
-            *           3.2.1. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
-            *           3.2.2. otherwise: use join
+            *   3. has facets
+            *       3.1. source is base, newTable is alternative, go through filters
+            *           3.1.1. If first foreign is from base to alternative, remove it.
+            *           3.1.2. otherwise add a fk from alternative to base.
+            *       3.2. source is alternative, newTable is base, go through filters
+            *           3.1.1. If first foreign is from alternative to base, remove it.
+            *           3.1.2. otherwise add a fk from base to alternative.
+            *       3.3. source is alternative, newTable is alternative, go through filters
+            *           3.1.1. If first foreign is to base, change the first foreignkey to be from the newTable to main.
+            *           3.1.2. otherwise add fk from newTable to main table, and from main table to source.
+            *   4. doesn't have join
+            *       4.1. no filter: swap table and update location only
+            *       4.2. has filter
+            *           4.2.1. single entity filter using shared key: swap table and convert filter to mapped columns (TODO alt to alt)
+            *           4.2.2. otherwise: use join
             *
             * NOTE:
             * If switched to a new table (could be a base table or alternative table)
@@ -2379,7 +2580,7 @@
                 // swap to new table
                 newRef.setNewTable(newTable);
 
-                var newLocationString;
+                var newLocationString, newFacetFilters = [];
 
                 if (source._location.hasJoin) {
                     // returns true if join is on alternative shared key
@@ -2443,13 +2644,61 @@
                         newLocationString += generateJoin();
                     }
 
-                } else {
+                } 
+                else if (source._location.facets) {
+                    // go through all the facet columns with filter, and 
+                    // change the filter to be based on new table
+                    var modifyFacetFilters = function (funct) {
+                        source.facetColumns.forEach(function (fc) {
+                            if (fc.filters.length === 0) return;
+                            newFacetFilters.push(funct(fc.toJSON(), (fc.foreginKeys.length > 0 ? fc.foreginKeys[0].obj : null )));
+                        });
+                    };
+
+                    // source: main table newTable: alternative
+                    if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && firstFk.isInbound && firstFk._table === newTable) {
+                                facetFilter.source.shift();
+                            } else {
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]});
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    // source: alternative newTable: main table
+                    else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
+                                facetFilter.source.shift();
+                            } else {
+                                facetFilter.source.unshift({"inbound": newTable._altForeignKey.constraint_names[0]});  
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    // source: alternative newTable: alternative
+                    else {
+                        modifyFacetFilters(function (facetFilter, firstFk) {
+                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable._baseTable) {
+                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.toString(true)};
+                            } else {
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source._altForeignKey.constraint_names[0]});
+                            }
+                            return facetFilter;
+                        });
+                    }
+                    
+                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
+                }
+                else {
                     if (source._location.filter === undefined) {
-                        // 3.1 no filter
+                        // 4.1 no filter
                         newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
                                             source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                     } else {
-                        // 3.2.1 single entity key filter (without any join), swap table and switch to mapping key
+                        // 4.2.1 single entity key filter (without any join), swap table and switch to mapping key
                         // filter is single entity if it is binary filters using the shared key of the alternative tables
                         // or a conjunction of binary predicate that is a key of the alternative tables
 
@@ -2570,6 +2819,11 @@
                 }
 
                 newRef._location = module.parse(newLocationString);
+                
+                // change the face filters
+                if (newFacetFilters.length > 0) {
+                    newRef._location.facets = {"and": newFacetFilters};
+                }
             }
 
             return newRef;
@@ -3426,6 +3680,17 @@
                 this._aggregate = !this.isPseudo ? new ColumnAggregateFn(this) : null;
             }
             return this._aggregate;
+        },
+        
+        /**
+         * @desc Returns the aggregate group object
+         * @type {ERMrest.ColumnGroupAggregateFn}
+         */
+        get groupAggregate() {
+            if (this._groupAggregate === undefined) {
+                this._groupAggregate = !this.isPseudo ? new ColumnGroupAggregateFn(this) : null;
+            }
+            return this._groupAggregate;
         },
 
         /**
@@ -4433,11 +4698,11 @@
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
      * @param {int} index The index of this FacetColumn in the list of facetColumns
      * @param {ERMrest.Column} column the column that filters will be based on.
-     * @param {object} json The filter object that this FacetColumn will be created based on
-     * @param {ERMrest.FacetFilter[]} filters Array of filters
+     * @param {?object} facetObject The filter object that this FacetColumn will be created based on
+     * @param {?ERMrest.FacetFilter[]} filters Array of filters
      * @constructor
      */
-    function FacetColumn (reference, index, column, json, filters) {
+    function FacetColumn (reference, index, column, facetObject, filters) {
         
         /**
          * The column object that the filters are based on
@@ -4463,7 +4728,7 @@
          * NOTE: we're not validating this data-source, we assume that this is valid.
          * @type {obj|string} 
          */
-        this.dataSource = json.source;
+        this.dataSource = facetObject.source;
         
         /**
          * Filters that are applied to this facet.
@@ -4473,14 +4738,51 @@
         if (Array.isArray(filters)) {
             this.filters = filters;
         } else {
-            this.setFilters(json);
+            this._setFilters(facetObject);
         }
         
         // the whole filter object
-        this._json = json;
+        this._facetObject = facetObject;
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
+        
+        /**
+         * If has filters it will return true,
+         * otherwise returns facetObject['open']
+         * @type {Boolean}
+         */
+        get isOpen() {
+            if (this._isOpen === undefined) {
+                var open = this._facetObject.open;
+                this._isOpen = (this.filters.length > 0) ? true : (open === true);
+            }
+            return this._isOpen;
+        },
+        
+        get foreginKeys() {
+            if (this._foreignKeys === undefined) {
+                this._foreignKeys = [];
+                if (Array.isArray(this.dataSource)) {
+                    var isInbound, constraint;
+                    for (var i = 0; i < this.dataSource.length - 1; i++) {
+                        if ("inbound" in this.dataSource[i]) {
+                            isInbound = true;
+                            constraint = this.dataSource[i].inbound;
+                        } else {
+                            isInbound = false;
+                            constraint = this.dataSource[i].outbound;
+                        }
+
+                        this._foreignKeys.push({
+                            "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
+                            "isInbound": isInbound
+                        });
+                    }
+                }
+            }
+            return this._foreignKeys;
+        },
         
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
@@ -4510,26 +4812,35 @@
         /**
          * The Preferred ux mode.
          * Any of:
-         * `choices`, `range`, or `search`
+         * `choices`, `ranges`, or `search`
          * This should be used if we're not in entity mode.
-         * TODO: what should be the default? This will eventually change,
-         * currently we are not using multi facet mode, so it won't be used.
-         * NOTE:
-         * If we want to consider a default mode for facets for any column type, 
-         * we might want to keep it simple and have the default mode show as choices. 
-         * Search mode would imply that the user needs to be aware of the whole set of values they are searching through.
-         * Choices provides some of that information for them.
+         *
+         * 1. use ux_mode if available
+         * 2. use choices if in entity mode
+         * 3. use range or chocies based on type.
          * 
          * @type {string}
          */
         get preferredMode() {
+            // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
+            function isRangeMode(column) {
+                console.log();
+                var typename = column.type.name;
+
+                // returns true is the typename includes the given string
+                function includesType(type) {
+                    return typename.indexOf(type) > -1;
+                }
+
+                return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
+            }
+
             if (this._preferredMode === undefined) {
-                var modes = ['choices', 'range', 'search'];
-                if (modes.indexOf(this._json['ux mode']) !== -1) {
-                    this._preferredMode = this._json['ux mode'];
+                var modes = ['choices', 'ranges', 'search'];
+                if (modes.indexOf(this._facetObject.ux_mode) !== -1) {
+                    this._preferredMode = this._facetObject.ux_mode;
                 } else {
-                    //TODO
-                    this._preferredMode = null;
+                    this._preferredMode = (this.isEntityMode ? "choices" : (isRangeMode(this._column) ? "ranges" : "choices") );
                 }
             }
             return this._preferredMode;
@@ -4537,16 +4848,24 @@
         
         /**
          * Returns true if the source is on a key column.
-         * TODO right now it's using some heuristic, but eventually it should
-         * use json['entity facet'] to determine this.
+         * If facetObject['entity'] is defined as false, it will return false,
+         * otherwise it will true if filter is based on key.
+         * 
          * @type {Boolean}
          */
         get isEntityMode() {
             if (this._isEntityMode === undefined) {
                 var currCol = this._column;
-                this._isEntityMode = currCol.table.keys.all().filter(function (key) {
-                    return key.simple && key.colset.columns[0] === currCol;
-                }).length > 0;
+                if (this._lastForeignKey === null) {
+                    // if from the same table, don't use entity picker
+                    this._isEntityMode = false;
+                } else {
+                    var basedOnKey = currCol.table.keys.all().filter(function (key) {
+                        return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
+                    }).length > 0;
+                    
+                    this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
+                }
             }
             return this._isEntityMode;
         },
@@ -4566,57 +4885,80 @@
          * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
          * in the source with all the filters of other FacetColumns in the reference.
          *
+         * NOTE needs refactoring,
+         * This should return a reference that referes to the current column's table
+         * having filters from other facetcolumns.
+         * We should not use the absolute path for the table and it must be a path
+         * from main to this table. Because if we use the absolute path we're completely
+         * ignoring the constraints that the main table will add to this reference.
+         * (For example if maximum possible value for this column is 100 but there's 
+         * no data from the main that will leads to this maximum.)
+         * 
+         * Consider the following scenario:
+         * Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
+         * R1 has a fitler for term=1, and R2 has a filter for term=2
+         * Then the source reference for R3 will be the following:
+         * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
+         * As you can see it has all the filters of the main table + join to current table.
+         * 
          * NOTE: assumptions:
-         *  1. The reference has only facets, no join or filter
+         *  - The main reference has no join.
+         *  - The returned reference has problem with faceting (cannot show faceting).
          *
          * @type {ERMrest.Reference}
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
-                var jsonFilters = [];
+                var jsonFilters = [],
+                    pathFromSource = [], // the path from source reference to this facetColumn
+                    self = this,
+                    table = this.reference.table;
+                    
+                pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
                 
-                // convert facets from main table to the current table.
+                // create a path from reference to this facetColumn
+                if (Array.isArray(this.dataSource)) {
+                    var constraint, isOutbound, fk;
+                    this.dataSource.forEach(function (ds, index) {
+                        // the last element is the column name
+                        if (index === self.dataSource.length - 1) return;
+                        
+                        if ("inbound" in ds) {
+                            constraint = ds.inbound;
+                            isOutbound = false;
+                        } else {
+                            constraint = ds.outbound;
+                            isOutbound = true;
+                        }
+                        fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]).object;
+                        pathFromSource.push(fk.toString(isOutbound));
+                    });
+                }
+
+                // get all the filters from other facetColumns
                 if (this.reference.location.facets !== null) {
-                    var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
-                        self = this;
-                    
-                    // create a path from this facetColumn to the base reference
-                    if (Array.isArray(this.dataSource)) {
-                        this.dataSource.forEach(function (ds, index, arr) {
-                            // last elemenet is the column name
-                            if (index !== arr.length -1 ) {
-                                var node;
-                                if ("inbound" in ds) {
-                                    node = {"outbound": ds.inbound};
-                                } else {
-                                    node = {"inbound": ds.outbound};
-                                }
-                                pathFromSource.push(node);
-                            }
-                        });
-                    }
-                    
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
                         if (index !== self.index && fc.filters.length !== 0) {
-                            var filter = fc.toJSON();
-                            if (pathFromSource.length > 0) {
-                                filter.source = pathFromSource.concat(filter.source);
-                            }
-                            jsonFilters.push(filter);
+                            jsonFilters.push(fc.toJSON());
                         }
                     });
                 }
-                
-                var table = this._column.table;
+
+                // convert the search into a facet
+                // TODO eventually the search must be changed to facet
+                if (typeof this.reference.location.searchTerm === "string") {
+                    jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+                }
+
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
-                    [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                    pathFromSource.join("/")
                 ].join("/");
                 
-                this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
+                this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
                 
                 if (jsonFilters.length > 0) {
                     this._sourceReference._location.facets = {"and": jsonFilters};
@@ -4631,6 +4973,7 @@
          * Returns the displayname object that should be used for this facetColumn.
          * 
          * Heuristics are as follows (first applicable rule):
+         *  0. If markdown_name is defined, use it.
          *  1. If column is part of the main table (there's no join), use the column's displayname.
          *  2. If last foreignkey is outbound and has to_name, use it.
          *  3. If last foreignkey is inbound and has from_name, use it.
@@ -4641,23 +4984,33 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var displayname;
-                
                 var fk = this._lastForeignKey;
                 
+                if (this._facetObject.markdown_name) {
+                    this._displayname = {
+                        value: module._formatUtils.printMarkdown(this._facetObject.markdown_name, {inline:true}),
+                        isHTML: true,
+                        unformatted: "" //TODO is it needed?
+                    };
+                }
                 // if is part of the main table, just return the column's displayname
-                if (fk === null) {
+                else if (fk === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
                 else {      
+                    var value, unformatted, isHTML;
+                    var displayname, isInbound;
+                    
+                    isInbound = fk.isInbound;
                     fk = fk.obj;
+                    
                     // use from_name of the last fk if it's inbound
-                    if (fk.isInbound && fk.from_name !== "") {
+                    if (isInbound && fk.from_name !== "") {
                         value = unformatted = fk.from_name;
                     }
                     // use to_name of the last fk if it's outbound
-                    else if (!fk.isInbound && fk.to_name !== "") {
+                    else if (!isInbound && fk.to_name !== "") {
                         value = unformatted = fk.to_name;
                     }
                     // use the table name if it was not defined
@@ -4699,9 +5052,49 @@
             }
             return this._comment;
         },
+        
+        getChoiceDisplaynames: function () {
+            var defer = module._q.defer();
+            var filters =  [];
+            if (!this.isEntityMode) {
+                this.choiceFilters.forEach(function (f) {
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
+                });
+                defer.resolve(filters);
+            } else {
+                // create a url
+                var table = this._column.table, columnName = this._column.name;
+                var fitlerStr = [];
+                this.choiceFilters.forEach(function (f) {
+                    fitlerStr.push(
+                        module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                    );
+                });
+                var uri = [
+                    table.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                    fitlerStr.join(";")
+                ].join("/");
+                
+                var ref = new Reference(module.parse(uri), table.schema.catalog);
+                ref = ref.sort([{"column": columnName, "descending": false}]);
+                ref.read(this.choiceFilters.length).then(function (page) {
+                    page.tuples.forEach(function (t) {
+                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
+                    });
+                    defer.resolve(filters);
+                }).catch(function (err) {
+                    defer.reject(module._responseToError(err));
+                });
+                
+            }
+            return defer.promise;
+        },
 
         /**
-         * Return JSON presentation of the filters.
+         * Return JSON presentation of the filters. This will be used in the location.
+         * Anything that we want to leak to the url should be here.
          * It will be in the following format:
          *
          * ```
@@ -4716,7 +5109,7 @@
          * @return {Object}
          */
         toJSON: function () {
-            var res = { "source": this.dataSource};
+            var res = { "source": Array.isArray(this.dataSource) ? this.dataSource.slice() : this.dataSource};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
                 if (!(f.facetFilterKey in res)) {
@@ -4743,8 +5136,8 @@
          *
          * @param  {Object} json JSON representation of filters
          */
-        setFilters: function (json) {
-            var self = this;
+        _setFilters: function (json) {
+            var self = this, current;
             self.filters = [];
 
             if (!isDefinedAndNotNull(json)) {
@@ -4754,23 +5147,89 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    self.filters.push(new ChoiceFacetFilter(ch));
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof ChoiceFacetFilter) && f.term === ch;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
+                    self.filters.push(new ChoiceFacetFilter(ch, self._column.type));
                 });
             }
 
             // create range filters
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
-                    self.filters.push(new RangeFacetFilter(ch.min, ch.max));
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
+                    self.filters.push(new RangeFacetFilter(ch.min, ch.max, self._column.type));
                 });
             }
 
             // create search filters
             if (Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
-                    self.filters.push(new SearchFacetFilter(ch));
+                    current = self.filters.filter(function (f) {
+                        return (f instanceof SearchFacetFilter) && f.term === ch;
+                    })[0];
+                    
+                    if (current !== undefined) {
+                        return; // don't add duplicate
+                    }
+                    
+                    self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
+        },
+        
+        /**
+         * search filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.SearchFacetFilter[]}
+         */
+        get searchFilters() {
+            if (this._searchFilters === undefined) {
+                this._searchFilters = this.filters.filter(function (f) {
+                    return f instanceof SearchFacetFilter;
+                });
+            }
+            return this._searchFilters;
+        },
+        
+        /**
+         * choce filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.ChoiceFacetFilter[]}
+         */
+        get choiceFilters() {
+            if (this._choiceFilters === undefined) {
+                this._choiceFilters = this.filters.filter(function (f) {
+                    return f instanceof ChoiceFacetFilter;
+                });
+            }
+            return this._choiceFilters;
+        },
+        
+        /**
+         * range filters
+         * NOTE ASSUMES that filters is immutable
+         * @type {ERMREst.RangeFacetFilter[]}
+         */
+        get rangeFilters() {
+            if (this._rangeFilters === undefined) {
+                this._rangeFilters = this.filters.filter(function (f) {
+                    return f instanceof RangeFacetFilter;
+                });
+            }
+            return this._rangeFilters;
         },
 
         /**
@@ -4782,20 +5241,53 @@
             verify (isDefinedAndNotNull(term), "`term` is required.");
 
             var filters = this.filters.slice();
-            filters.push(new SearchFacetFilter(term));
+            filters.push(new SearchFacetFilter(term, this._column.type));
 
             return this._applyFilters(filters);
         },
 
         /**
-         * Create a new Reference with appending a new choice filter to current FacetColumn
-         * @param  {String|int} term the term for choice
+         * Create a new Reference with appending a list of choice filters to current FacetColumn
          * @return {ERMrest.Reference} the reference with the new filter
          */
-        addChoiceFilter: function (term) {
-            var filters = this.filters.slice();
-            filters.push(new ChoiceFacetFilter(term));
+        addChoiceFilters: function (values) {
+            verify(Array.isArray(values), "given argument must be an array");
+            
+            var filters = this.filters.slice(), self = this;
+            values.forEach(function (v) {
+                filters.push(new ChoiceFacetFilter(v, self._column.type));
+            });
 
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Create a new Reference with replacing choice facet filters by the given input
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        replaceAllChoiceFilters: function (values) {
+            verify(Array.isArray(values), "given argument must be an array");
+            var self = this;
+            var filters = this.filters.slice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter);
+            });
+            values.forEach(function (v) {
+                filters.push(new ChoiceFacetFilter(v, self._column.type));
+            });
+
+            return this._applyFilters(filters);
+        },
+        
+        /**
+         * Given a term, it will remove any choice filter with that term (if any).
+         * @param  {String[]|int[]} terms array of terms
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
+        removeChoiceFilters: function (terms) {
+            verify(Array.isArray(terms), "given argument must be an array");
+            var filters = this.filters.slice().filter(function (f) {
+                return !(f instanceof ChoiceFacetFilter) || (terms.indexOf(f.term) === -1);
+            });
             return this._applyFilters(filters);
         },
 
@@ -4807,23 +5299,34 @@
          */
         addRangeFilter: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
-
-            var filters = this.filters.slice();
-            filters.push(new RangeFacetFilter(min, max));
-
-            return this._applyFilters(filters);
-        },
-
-        /**
-         * Create a new Reference with appending a new entity filter to current FacetColumn
-         * @param  {ERMrest.Tuple} tuple the tuple object that has the row values.
-         * @return {ERMrest.Reference} the reference with the new filter
-         */
-        addEntityFilter: function (tuple) {
-            var filters = this.filters.slice();
-            filters.push(new EntityFacetFilter(tuple, this._column));
             
-            return this._applyFilters(filters);
+            var current = this.filters.filter(function (f) {
+                return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+            })[0];
+            
+            if (current !== undefined) {
+                return false;
+            }
+
+            var filters = this.filters.slice();
+            var newFilter = new RangeFacetFilter(min, max, this._column.type);
+            filters.push(newFilter);
+
+            return {
+                reference: this._applyFilters(filters),
+                filter: newFilter
+            };
+        },
+        
+        removeRangeFilter: function (min, max) {
+            //TODO needs refactoring
+            verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
+            var filters = this.filters.filter(function (f) {
+                return !(f instanceof RangeFacetFilter) || !(f.min === min && f.max === max);
+            });
+            return {
+                reference: this._applyFilters(filters)
+            };
         },
         
         /**
@@ -4864,7 +5367,7 @@
             // TODO can be refactored
             var jsonFilters = [];
             if (filters.length !== 0) {
-                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._json, filters);
+                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._facetObject, filters);
                 jsonFilters.push(ThisFC.toJSON());
             }
             
@@ -4890,11 +5393,14 @@
 
     /**
      * Represent filters that can be applied to facet
+     * 
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function FacetFilter(term) {
+    function FacetFilter(term, columnType) {
+        this._columnType = columnType;
         this.term = term;
+        this.uniqueId = term;
     }
     FacetFilter.prototype = {
         constructor: FacetFilter,
@@ -4904,7 +5410,10 @@
          * @return {string}
          */
         toString: function () {
-            return this.term;
+            if (this.term == null) {
+                return null;
+            }
+            return _formatValueByType(this._columnType, this.term);
         },
 
         /**
@@ -4912,25 +5421,9 @@
          * @return {string}
          */
         toJSON: function () {
-            return this.toString();
+            return this.term;
         }
     };
-
-    /**
-     * Represent choice filters that can be applied to facet.
-     * JSON representation of this filter:
-     * "choices": [v1, ...]
-     *
-     * Extends {@link ERMrest.FacetFilter}.
-     * @param       {String|int} term the valeu of filter
-     * @constructor
-     */
-    function ChoiceFacetFilter(term) {
-        ChoiceFacetFilter.superClass.call(this, term);
-        this.facetFilterKey = "choices";
-    }
-    module._extends(ChoiceFacetFilter, FacetFilter);
-
     /**
      * Represent search filters that can be applied to facet.
      * JSON representation of this filter:
@@ -4940,12 +5433,27 @@
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
-    function SearchFacetFilter(term) {
-        ChoiceFacetFilter.superClass.call(this, term);
+    function SearchFacetFilter(term, columnType) {
+        SearchFacetFilter.superClass.call(this, term, columnType);
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
-
+    
+    /**
+     * Represent choice filters that can be applied to facet.
+     * JSON representation of this filter:
+     * "choices": [v1, ...]
+     *
+     * Extends {@link ERMrest.FacetFilter}.
+     * @param       {String|int} term the valeu of filter
+     * @constructor
+     */
+    function ChoiceFacetFilter(value, columnType) {
+        ChoiceFacetFilter.superClass.call(this, value, columnType);
+        this.facetFilterKey = "choices";
+    }
+    module._extends(ChoiceFacetFilter, FacetFilter);
+    
     /**
      * Represent range filters that can be applied to facet.
      * JSON representation of this filter:
@@ -4956,10 +5464,12 @@
      * @param       {String|int=} max
      * @constructor
      */
-    function RangeFacetFilter(min, max) {
+    function RangeFacetFilter(min, max, columnType) {
+        this._columnType = columnType;
         this.min = min;
         this.max = max;
         this.facetFilterKey = "ranges";
+        this.uniqueId = this.toString();
     }
     module._extends(RangeFacetFilter, FacetFilter);
 
@@ -4968,19 +5478,19 @@
      *
      * - both min and max defined: `{{min}}-{{max}}`
      * - only min defined: `> {{min}}`
-     * - only max defined: `{{max}} <`
+     * - only max defined: `< {{max}}`
      *
      * @return {string}
      */
     RangeFacetFilter.prototype.toString = function () {
         // assumption: at least one of them is defined
         if (!isDefinedAndNotNull(this.max)) {
-            return "> " + this.min;
+            return "> " + _formatValueByType(this._columnType, this.min);
         }
         if (!isDefinedAndNotNull(this.min)) {
-            return this.max + " <";
+            return  "< " + this.max;
         }
-        return this.min + " - " + this.max;
+        return _formatValueByType(this._columnType, this.min) + " to " + _formatValueByType(this._columnType, this.max);
     };
 
     /**
@@ -4999,31 +5509,6 @@
     };
     
     /**
-     * Represents entity filters that can be applied to facet.
-     * 
-     * @param       {ERMrest.tuple} tuple the tuple object
-     * @constructor
-     */
-    function EntityFacetFilter(tuple, col) {
-        
-        ChoiceFacetFilter.superClass.call(this, tuple._data);
-        this.tuple = tuple;
-        this.facetFilterKey = "choices";
-    }
-    module._extends(EntityFacetFilter, FacetFilter);
-    
-    /**
-     * String representation of entity filter. It will be the tuple displayname
-     * 
-     * @return {string}
-     */
-    EntityFacetFilter.prototype.toString = function () {
-        //TODO: should it be unformatted or not?\
-        //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
-        return this.tuple.displayname.unformatted;
-    };
-
-    /**
      * Constructs an Aggregate Funciton object
      *
      * Reference Aggregate Functions is a collection of available aggregates for the
@@ -5036,7 +5521,9 @@
      * @memberof ERMrest
      * @class
      */
-    function ReferenceAggregateFn () {}
+    function ReferenceAggregateFn (reference) {
+        this._ref = reference;
+    }
 
     ReferenceAggregateFn.prototype = {
         /**
@@ -5044,7 +5531,15 @@
          * @desc count aggregate representation
          */
         get countAgg() {
-            return "cnt(*)";
+            if (!this._ref.location.hasJoin) {
+                return "cnt(*)";
+            }
+            
+            if (this._ref.table.shortestKey.length > 1) {
+                throw new Error("Since reference has a join, table must have a simple key.");
+            }
+            
+            return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
         }
     };
 
@@ -5098,5 +5593,126 @@
          */
         get countDistinctAgg() {
             return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        }
+    };
+    
+    function ColumnGroupAggregateFn (column) {
+        this.column = column;
+        
+        this._ref = this.column._baseReference;
+    }
+
+    ColumnGroupAggregateFn.prototype = {
+        /**
+         * Will return an appropriate reference which can be used to show distinct values of an entity
+         * NOTE: Will create a new reference by each call.
+         * @type {ERMrest.AttributeGroupReference}
+         */
+        get entityValues() {
+            if(this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            // search will be on the table not the aggregated results, so the column name must be the column name in the database
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            
+            // sort will be on the aggregated results.
+            var sortObj = [{"column": "value", "descending": false}];
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
+                
+            // key columns
+            var keyColumns = [
+                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];            
+            
+            // the reference
+            return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog);
+        },
+        
+        /**
+         * Will return an appropriate reference which can be used to show distinct values and their counts
+         * NOTE: Will create a new reference by each call.
+         * @type {ERMrest.AttributeGroupReference}
+         */
+        get entityCounts() {
+            if (this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
+                console.log(this.column);
+                console.log(this._ref);
+                throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
+            }
+                
+            // search will be on the table not the aggregated results, so the column name must be the column name in the database
+            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            
+            // sort will be on the aggregated results.
+            var sortObj = [{"column": "value", "descending": false}];
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
+            
+            // key columns
+            var keyColumns = [
+                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];
+            
+            var countName = "cnt(*)";
+            if (this._ref.location.hasJoin) {
+                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+            }
+            
+            // sort based on count is disabled because of ermrset cnt bug
+            var aggregateColumns = [
+                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", false, true)
+            ];
+
+            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
+        },
+        
+        /**
+         * Given number of buckets, min and max will return bin of results.
+         * @param  {int} bucketCount number of buckets
+         * @param  {int} min         minimum value
+         * @param  {int} max         maximum value
+         * @return {obj}
+         * //TODO What should be ther returned object?
+         */
+        histogram: function (bucketCount, min, max) {
+            verify(typeof bucketCount === "number", "Invalid bucket count type.");
+            verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            
+            if (this.column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+            
+            if (module._histogramSupportedTypes.indexOf(this.column.type.name) === -1) {
+                throw new Error("Binning is not supported on column type " + this.column.type.name);
+            }
+            
+            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
+                throw new Error("Table must have a simple key.");
+            }
+            
+            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
+                
+            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
+            var keyColumns = [
+                new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
+            ];
+            
+            var countName = "cnt(*)";
+            if (this._ref.location.hasJoin) {
+                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+            }
+            
+            var aggregateColumns = [
+                new AttributeGroupColumn("c2", countName, "Count", new Type({typename: "int"}), "", true, true)
+            ];
+
+            //TODO this should just return the results, but I'm not sure about the datastructure.
+            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);    
         }
     };

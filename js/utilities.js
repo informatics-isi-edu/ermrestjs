@@ -1747,5 +1747,15 @@
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
+    
+    module._histogramSupportedTypes = [
+        'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
+        'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
+    ];
+    
+    module._facetSupportedTypes = [
+        'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
+        'serial2', 'serial4', 'serial8', 'timestamptz', 'date', 'text', 'shorttext'
+    ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];

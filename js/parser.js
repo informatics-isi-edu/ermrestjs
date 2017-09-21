@@ -29,7 +29,7 @@
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/join(s)][/facets][/search][@sort(col...)][@before(...)/@after(...)][?]
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/facets][/join(s)][/search][@sort(col...)][@before(...)/@after(...)][?]
      * 
      * path =  <filters(s)>/<join(s)>/<facets>/<search>
      * 
@@ -121,15 +121,16 @@
         // Expected format: "<schema:table>/<filter(s)>/<joins(s)>/<search>"
         parts = this._compactPath.split('/');
 
-        var index = parts.length - 1;
+        // from start to end can be filter, facets, and joins
+        var endIndex = parts.length - 1, startIndex = 1;
         
         //<search>
         // search should be the last part of compact path
-        var match = parts[index].match(searchRegExp);
+        var match = parts[endIndex].match(searchRegExp);
         var that = this;
         if (match) { // this is a search filter
             
-            this._searchFilter = parts[index];
+            this._searchFilter = parts[endIndex];
             this._ermrestSearchFilter = "";
             
             match.forEach(function(f, idx, array) {
@@ -142,21 +143,22 @@
                 that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
             });
 
-            index -= 1;
+            endIndex -= 1;
         }
         
-        match = parts[index].match(facetsRegExp);
-        if (match) { // this is the facets blob
-            this._facets = new ParsedFacets(match[1]);
-            index -= 1;
+        if (startIndex <= endIndex) {
+            match = parts[startIndex].match(facetsRegExp);
+            if (match) { // this is the facets blob
+                this._facets = new ParsedFacets(match[1]);
+                startIndex++;
+            }
         }
-
         
         // <join(s)>
         this._joins = [];
-        // parts[1] to parts[index] might be joins
+        // parts[startIndex] to parts[endIndex] might be joins
         var linking;
-        for (var ji = 1; ji <= index; ji++) {
+        for (var ji = startIndex; ji <= endIndex; ji++) {
             linking = parts[ji].match(joinRegExp);
             if (!linking) continue;
             this._joins.push(_createJoin(linking));
@@ -304,7 +306,7 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <projectionSchema:projectionTable>/<filters>/<facets>/<joins>/<search>
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * 
          * @returns {String} Path without modifiers or queries
@@ -321,14 +323,14 @@
                     uri += "/" + this.filtersString;
                 }
                 
+                if (this.facets) {
+                    uri += "/*::facets::" + this.facets.encoded;
+                }
+                
                 if (this.joins.length > 0) {
                     uri += "/" + this.joins.reduce(function (prev, join, i) {
                         return prev + (i > 0 ? "/" : "") + join.str;
                     }, "");
-                }
-                
-                if (this.facets) {
-                    uri += "/*::facets::" + this.facets.encoded;
                 }
                 
                 if (this.searchFilter) {
@@ -387,7 +389,7 @@
 
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <projectionSchema:projectionTable>/<filters>/<facets>/<joins>/<search>
          *
          * NOTE: 
          *  1. returns a path that ermrest understands
@@ -396,15 +398,17 @@
          */
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
-                var tableAlias = "M";
+                var projectiontableAlias = "T", mainTableAlias = "M";
                 var joinsLength = this.joins.length;
                 
-                var uri = "";
+                
+                
+                if (joinsLength === 0) {
+                    projectiontableAlias = mainTableAlias;
+                }
                 
                 // add tableAlias
-                if (joinsLength === 0) {
-                    uri += tableAlias + ":=";
-                }
+                var uri = projectiontableAlias + ":=";
 
                 if (this.projectionSchemaName) {
                     uri += this.projectionSchemaName + ":";
@@ -415,14 +419,14 @@
                     uri += "/" + this.filtersString;
                 }
                 
-                if (joinsLength > 0) {
-                    uri += "/" + this.joins.reduce(function (prev, join, i) {
-                        return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? tableAlias + ":=" : "") + join.str;
-                    }, "");
+                if (this.facets) {
+                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, projectiontableAlias, this.projectionTableName, this.catalog);
                 }
                 
-                if (this.facets) {
-                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, tableAlias, this.tableName, this.catalog);
+                if (joinsLength > 0) {
+                    uri += "/" + this.joins.reduce(function (prev, join, i) {
+                        return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? mainTableAlias + ":=" : "") + join.str;
+                    }, "");
                 }
 
                 if (this.ermrestSearchFilter) {
@@ -870,7 +874,7 @@
      */
     _convertSearchTermToFilter = function (term, column) {
         var filterString = "";
-        column = (typeof column !== 'string') ? "*": column;
+        column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
         
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount
@@ -1176,9 +1180,9 @@
             return choices.reduce(function (prev, curr, i) {
                 var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
-                    res += column + "=" + curr;
+                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(curr);
                 } else {
-                    res += column + "::null::";
+                    res += module._fixedEncodeURIComponent(column) + "::null::";
                 }
                 return res;
             }, "");
@@ -1194,7 +1198,7 @@
                 }
                 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += column + "::gt::" + range.min;
+                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(range.min);
                     hasFilter = true;
                 }
                 
@@ -1202,7 +1206,7 @@
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += column + "::lt::" + range.max;
+                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(range.max);
                     hasFilter = true;
                 }
             });

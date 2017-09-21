@@ -303,6 +303,7 @@ to use for ERMrest JavaScript agents.
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
+        * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : <code>ERMrest.ColumnGroupAggregateFn</code>
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -2175,7 +2176,7 @@ Heuristics:
 Usage:
 ```
  var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilter('value');
+ var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
  var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
  var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
  var newRef4 = newRef3.facetColumns[3].removeAllFilters();
@@ -2869,6 +2870,7 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
+    * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : <code>ERMrest.ColumnGroupAggregateFn</code>
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -2927,6 +2929,12 @@ Returns the default value
 
 #### referenceColumn.aggregate : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
 Returns the aggregate function object
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+groupAggregate"></a>
+
+#### referenceColumn.groupAggregate : <code>ERMrest.ColumnGroupAggregateFn</code>
+Returns the aggregate group object
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+comment"></a>
