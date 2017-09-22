@@ -314,12 +314,7 @@
                 this._facetColumns = [];
                 var self = this;
                 var andOperator = module._FacetsLogicalOperators.AND;
-<<<<<<< HEAD
-                var andFilters = [];
-
-=======
                 
->>>>>>> master
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
                  * will return {"obj": facet object, "column": Column object}
@@ -422,10 +417,6 @@
                     } else {
                         colName = source;
                     }
-<<<<<<< HEAD
-
-                    return { "dataSource": refCol.name, "column": refCol._baseCols[0]};
-=======
                     
                     try {
                         col = table.columns.get(colName);
@@ -447,7 +438,6 @@
                     }
                     
                     return fcObj;
->>>>>>> master
                 };
 
                 /*
@@ -498,23 +488,12 @@
                     }
                     return true;
                 };
-<<<<<<< HEAD
-
-                /*
-                 * given a source, will return the filters that are already applied to it.
-                 */
-                var findFilter = function (source) {
-                    for (var i = 0; i < andFilters.length; i++) {
-                        if (sameSource(source, andFilters[i].source)) {
-                            return andFilters[i];
-=======
                 
                 // only add choices, range, and search
                 var mergeFacetObjects = function (source, extra) {
                     ['choices', 'ranges', 'search'].forEach(function (key) {
                         if (!Array.isArray(extra[key])) {
                             return;
->>>>>>> master
                         }
                         
                         if (!Array.isArray(source[key])) {
@@ -543,22 +522,6 @@
                     
                     });
                 };
-<<<<<<< HEAD
-
-                /*
-                 * Creates a FacetColumn for given ReferenceColumn and adds it to the list.
-                 */
-                var addColumn = function (col, i) {
-                    var source = generateDataSource(col);
-                    var filter = findFilter(source.dataSource);
-                    if (filter === null) {
-                        filter = {"source": source.dataSource};
-                    }
-                    self._facetColumns.push(new FacetColumn(self, i, source.column, filter));
-                };
-
-
-=======
                 
                 var annotationCols = -1, usedAnnotation = false;
                 var facetObjects = [];
@@ -611,7 +574,6 @@
 
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 var andFilters = [];
->>>>>>> master
                 // extract the filters
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
@@ -4760,13 +4722,8 @@
      * @param {?ERMrest.FacetFilter[]} filters Array of filters
      * @constructor
      */
-<<<<<<< HEAD
-    function FacetColumn (reference, index, column, json, filters) {
-
-=======
     function FacetColumn (reference, index, column, facetObject, filters) {
         
->>>>>>> master
         /**
          * The column object that the filters are based on
          * @type {ERMrest.Column}
@@ -4791,13 +4748,8 @@
          * NOTE: we're not validating this data-source, we assume that this is valid.
          * @type {obj|string}
          */
-<<<<<<< HEAD
-        this.dataSource = json.source;
-
-=======
         this.dataSource = facetObject.source;
         
->>>>>>> master
         /**
          * Filters that are applied to this facet.
          * @type{FacetFilter[]}
@@ -4814,9 +4766,6 @@
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
-<<<<<<< HEAD
-
-=======
         
         /**
          * If has filters it will return true,
@@ -4855,7 +4804,6 @@
             return this._foreignKeys;
         },
         
->>>>>>> master
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
             if (this._lastForeignKey_cached === undefined) {
@@ -4886,22 +4834,11 @@
          * Any of:
          * `choices`, `ranges`, or `search`
          * This should be used if we're not in entity mode.
-<<<<<<< HEAD
-         * TODO: what should be the default? This will eventually change,
-         * currently we are not using multi facet mode, so it won't be used.
-         * NOTE:
-         * If we want to consider a default mode for facets for any column type,
-         * we might want to keep it simple and have the default mode show as choices.
-         * Search mode would imply that the user needs to be aware of the whole set of values they are searching through.
-         * Choices provides some of that information for them.
-         *
-=======
          *
          * 1. use ux_mode if available
          * 2. use choices if in entity mode
          * 3. use range or chocies based on type.
          * 
->>>>>>> master
          * @type {string}
          */
         get preferredMode() {
@@ -4992,31 +4929,6 @@
          */
         get sourceReference () {
             if (this._sourceReference === undefined) {
-<<<<<<< HEAD
-                var jsonFilters = [];
-
-                // convert facets from main table to the current table.
-                if (this.reference.location.facets !== null) {
-                    var pathFromSource = [], // the oppisite direction of path from the main to this FacetColumn
-                        self = this;
-
-                    // create a path from this facetColumn to the base reference
-                    if (Array.isArray(this.dataSource)) {
-                        this.dataSource.forEach(function (ds, index, arr) {
-                            // last elemenet is the column name
-                            if (index !== arr.length -1 ) {
-                                var node;
-                                if ("inbound" in ds) {
-                                    node = {"outbound": ds.inbound};
-                                } else {
-                                    node = {"inbound": ds.outbound};
-                                }
-                                pathFromSource.push(node);
-                            }
-                        });
-                    }
-
-=======
                 var jsonFilters = [],
                     pathFromSource = [], // the path from source reference to this facetColumn
                     self = this,
@@ -5045,7 +4957,6 @@
 
                 // get all the filters from other facetColumns
                 if (this.reference.location.facets !== null) {
->>>>>>> master
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
                     this.reference.facetColumns.forEach(function (fc, index) {
@@ -5055,30 +4966,20 @@
                     });
                 }
 
-<<<<<<< HEAD
-                var table = this._column.table;
-=======
                 // convert the search into a facet
                 // TODO eventually the search must be changed to facet
                 if (typeof this.reference.location.searchTerm === "string") {
                     jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
                 }
 
->>>>>>> master
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     pathFromSource.join("/")
                 ].join("/");
-<<<<<<< HEAD
-
-                this._sourceReference = new Reference(module.parse(uri), this.reference.table.schema.catalog);
-
-=======
                 
                 this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
                 
->>>>>>> master
                 if (jsonFilters.length > 0) {
                     this._sourceReference._location.facets = {"and": jsonFilters};
                 } else {
@@ -5103,12 +5004,6 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-<<<<<<< HEAD
-                var displayname;
-
-                var fk = this._lastForeignKey;
-
-=======
                 var fk = this._lastForeignKey;
                 
                 if (this._facetObject.markdown_name) {
@@ -5118,21 +5013,16 @@
                         unformatted: "" //TODO is it needed?
                     };
                 }
->>>>>>> master
                 // if is part of the main table, just return the column's displayname
                 else if (fk === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
-<<<<<<< HEAD
-                else {
-=======
                 else {      
                     var value, unformatted, isHTML;
                     var displayname, isInbound;
                     
                     isInbound = fk.isInbound;
->>>>>>> master
                     fk = fk.obj;
                     
                     // use from_name of the last fk if it's inbound
@@ -5447,19 +5337,6 @@
                 filter: newFilter
             };
         },
-<<<<<<< HEAD
-
-        /**
-         * Create a new Reference with appending a new entity filter to current FacetColumn
-         * @param  {ERMrest.Tuple} tuple the tuple object that has the row values.
-         * @return {ERMrest.Reference} the reference with the new filter
-         */
-        addEntityFilter: function (tuple) {
-            var filters = this.filters.slice();
-            filters.push(new EntityFacetFilter(tuple, this._column));
-
-            return this._applyFilters(filters);
-=======
         
         removeRangeFilter: function (min, max) {
             //TODO needs refactoring
@@ -5470,7 +5347,6 @@
             return {
                 reference: this._applyFilters(filters)
             };
->>>>>>> master
         },
 
         /**
@@ -5653,34 +5529,6 @@
     };
 
     /**
-<<<<<<< HEAD
-     * Represents entity filters that can be applied to facet.
-     *
-     * @param       {ERMrest.tuple} tuple the tuple object
-     * @constructor
-     */
-    function EntityFacetFilter(tuple, col) {
-
-        ChoiceFacetFilter.superClass.call(this, tuple._data);
-        this.tuple = tuple;
-        this.facetFilterKey = "choices";
-    }
-    module._extends(EntityFacetFilter, FacetFilter);
-
-    /**
-     * String representation of entity filter. It will be the tuple displayname
-     *
-     * @return {string}
-     */
-    EntityFacetFilter.prototype.toString = function () {
-        //TODO: should it be unformatted or not?\
-        //TODO: This will depend on what the toString is going to be used for. If it's for display purposes then yes it should be formatted.
-        return this.tuple.displayname.unformatted;
-    };
-
-    /**
-=======
->>>>>>> master
      * Constructs an Aggregate Funciton object
      *
      * Reference Aggregate Functions is a collection of available aggregates for the
