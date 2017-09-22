@@ -1533,8 +1533,11 @@
         
         get display() {
             if (!this._display) {
-                console.log(this._context);
-                this._display = this._context == module._contexts.COMPACT_BRIEF_INLINE?{ type: module._displayTypes.MARKDOWN }:{ type: module._displayTypes.TABLE };
+                if( this._context == module._contexts.COMPACT_BRIEF_INLINE){
+                    this._display = { type: module._displayTypes.MARKDOWN };
+                }else{
+                    this._display = { type: module._displayTypes.TABLE };
+                }
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -2853,54 +2856,52 @@
          * @type {string|null}
          */
         get content() {
-            //console.log(this._context);
-            if (this._content !== null) {
-                // If display type is markdown which means row_markdown_pattern is set in table-display
-                if (this._ref.display.type === module._displayTypes.MARKDOWN) {
-
-                    // If the number of records are zero then simply return null
+                if (this._content === undefined) {
                     if (!this._data || !this._data.length) {
-                        return null;
-                    }
-                    var inbFKItems = false;
-                    if(this._ref.display._markdownPattern == " " || this._ref.display._markdownPattern == null)
-                        inbFKItems = true;
-                    var values = [];
-
-                    // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
-                    for (var i = 0; i < this._data.length; i++) {
-                        var value = [];
-                        // render template
-                        if(inbFKItems)
-                        {
-                            value = this.tuples[i].values.join(" ");
-                            value = "<li>" + value + "</li>";
-                        }
-                        else{
-                            value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
-                        }
-
-                        // If value is null or empty, return value on basis of `show_nulls`
-                        if (value === null || value.trim() === '') {
-                            value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
-                        }
-
-                        // If final value is not null then push it in values array
-                        if (value !== null) {
-                            values.push(value);
-                        }
-                    }
-
-                    // Join the values array using the separator and prepend it with the prefix and append suffix to it.
-                    var pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
-
-                    // Get the HTML generated using the markdown pattern generated above
-                    this._content =  inbFKItems?pattern:module._formatUtils.printMarkdown(pattern);
-                } else {
                     this._content = null;
-                }
-            }
-            return this._content;
+                }else {
+                    var i, value, pattern, values = [];
+                    if (typeof this._ref.display._markdownPattern === 'string') {
+                       // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
+                       for (i = 0; i < this._data.length; i++) {
+                           // render template
+                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
+
+                           // If value is null or empty, return value on basis of `show_nulls`
+                           if (value === null || value.trim() === '') {
+                               value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
+                           }
+                           // If final value is not null then push it in values array
+                           if (value !== null) {
+                               values.push(value);
+                           }
+                       }
+
+                       // Join the values array using the separator and prepend it with the prefix and append suffix to it.
+                       pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+                   }else{
+                       if(this._ref.display._separator === undefined){
+                           this._ref.display._separator = "";
+                       }
+                       if(this._ref.display._prefix === undefined){
+                           this._ref.display._prefix = "";
+                       }
+                       if(this._ref.display._suffix === undefined){
+                           this._ref.display._suffix = "";
+                       }
+                      // the new logic that you should have added
+                      for ( i = 0; i < this.tuples.length; i++) {
+                         var tuple = this.tuples[i];
+                         var url = tuple.reference.contextualize.detailed.appLink;
+                        
+                         values.push("* ["+ tuple.displayname.value +"](" + url + ") " + this._ref.display._separator);
+                      }
+                      pattern = this._ref.display._prefix + values.join(" \n") + this._ref.display._suffix;
+                   }
+                   this._content =  module._formatUtils.printMarkdown(pattern);
+              }
+           } 
+           return this._content;
         }
     };
 
