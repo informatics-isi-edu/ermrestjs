@@ -103,22 +103,24 @@ exports.execute = function(options) {
                 describe("with tuple defined, ", function () {
                     it('should create the link using faceting.', function() {
                         
-                        var checkUri = function (index, expectedTable, expectedFacets) {
+                        var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
                             var loc = relatedWithTuple[index].location;
                             expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
                             expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
                             expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
+                            expect(loc.queryParams['subset']).toBeDefined();
+                            expect(loc.queryParams['subset']).toBe(expectedQueryParam);
                         }
                         
                         checkUri(0, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
-                        }]);
+                        }], "to_name_value: 9003 and Henry");
                         
                         checkUri(1, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
-                        }]);
+                        }], "reference_table: 9003 and Henry");
                     });
                 });
             });

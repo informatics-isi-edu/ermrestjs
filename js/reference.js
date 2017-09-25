@@ -2322,7 +2322,7 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple) {
-            var j, col, uri, source;
+            var j, col, uri, source, subset = "";
             
             var useFaceting = (typeof tuple === 'object');
 
@@ -2352,6 +2352,13 @@
             } else {
                 newRef.parentDisplayname = this.displayname;
             }
+            
+            // create the subset that will be added for visibility
+            if (typeof tuple !== 'undefined') {
+                subset = "?subset=" + module._fixedEncodeURIComponent(
+                    newRef.parentDisplayname.unformatted + ": " + tuple.displayname.unformatted
+                );
+            }
 
             var fkrTable = fkr.colset.columns[0].table;
             if (fkrTable._isPureBinaryAssociation()) { // Association Table
@@ -2377,7 +2384,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true) + subset);
                 } else {
                     // build source
                     source = [
@@ -2408,7 +2415,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + subset);
                 } else {
                     source = [];
                 }
@@ -2424,7 +2431,7 @@
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
-                ].join("/"));
+                ].join("/") + subset);
                 
                 //filters
                 var filters = [];
