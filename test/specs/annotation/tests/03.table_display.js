@@ -400,5 +400,22 @@ exports.execute = function (options) {
             });
 
         });
+        describe('markdown display in case of no annotation is defined', function() {
+            it('when no annotation is defiend; content should appear in unordered list format.', function(done){
+                var content_without_annotation = '<ul>\n<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20001">20,001</a></li>\n</ul>\n';
+                options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
+                    return response;
+                }).then(function (reference){ 
+                    return reference.read(1);
+                }).then(function (page){
+                    expect(page.content).toBe(content_without_annotation);
+                    done();
+                }).catch(function(err) {
+                    console.log(err);
+                    done.fail();
+                });
+                
+            })
+        });
     });
 };
