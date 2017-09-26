@@ -1702,12 +1702,18 @@
          **/
         
         get display() {
-            if (!this._display) {
-                if( this._context == module._contexts.COMPACT_BRIEF_INLINE){
-                    this._display = { type: module._displayTypes.MARKDOWN };
-                }else{
-                    this._display = { type: module._displayTypes.TABLE };
+            if (this._display === undefined) {
+                var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
+                
+                // if Separator, prefix and suffix are initialized alongwith "type"
+                
+                this._display = {
+                     type: displayType,
+                    _separator: "\n",
+                    _prefix: "",
+                    _suffix: ""
                 }
+
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -1751,18 +1757,8 @@
 
                     }
                 }              
-                // if Separator, prefix or suffix is undeifned then it is replaced by fillers to avoid 'undefined'
-                // term appearing on the page.      
-                    if(this._display._separator === undefined){
-                        this._display._separator = "\n";
-                    }
-                    if(this._display._prefix === undefined){
-                        this._display._prefix = "";
-                    }
-                    if(this._display._suffix === undefined){
-                        this._display._suffix = "";
-                    }
-                }
+                    
+            }
 
             return this._display;
         },
