@@ -1750,8 +1750,19 @@
                         this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
 
                     }
+                }              
+                // if Separator, prefix or suffix is undeifned then it is replaced by fillers to avoid 'undefined'
+                // term appearing on the page.      
+                    if(this._display._separator === undefined){
+                        this._display._separator = "\n";
+                    }
+                    if(this._display._prefix === undefined){
+                        this._display._prefix = "";
+                    }
+                    if(this._display._suffix === undefined){
+                        this._display._suffix = "";
+                    }
                 }
-            }
 
             return this._display;
         },
@@ -3098,6 +3109,9 @@
 
         /**
          * HTML representation of the whole page which uses table-display annotation.
+         * If markdownPattern is defined then renderTemplate is called to get the correct display.
+         * In case of no such markdownPattern is defined output is displayed in form of 
+         * unordered list with displayname as text content of the list. 
          * For more info you can refer {ERM.reference.display}
          *
          * Usage:
@@ -3133,17 +3147,9 @@
 
                        // Join the values array using the separator and prepend it with the prefix and append suffix to it.
                        pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+                       
                    }else{
-                       if(this._ref.display._separator === undefined){
-                           this._ref.display._separator = "";
-                       }
-                       if(this._ref.display._prefix === undefined){
-                           this._ref.display._prefix = "";
-                       }
-                       if(this._ref.display._suffix === undefined){
-                           this._ref.display._suffix = "";
-                       }
-                      // the new logic that you should have added
+                     
                       for ( i = 0; i < this.tuples.length; i++) {
                          var tuple = this.tuples[i];
                          var url = tuple.reference.contextualize.detailed.appLink;
