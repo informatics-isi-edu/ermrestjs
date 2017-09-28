@@ -786,11 +786,25 @@
                     "type" : {
                         "typename": "text"
                     }
+                },
+                {
+                  "comment": null,
+                  "name": "video_col",
+                  "type": {
+                    "typename": "text"
+                  },
+                  "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display": {
+                          "*": {
+                            "markdown_pattern": "::: video []({{{video_col}}}){height=500 width=600 loop} \n:::"
+                          }  
+                      }
+                  }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column"]
+                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col"]
                 }
             }
         },

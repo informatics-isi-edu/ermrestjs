@@ -91,7 +91,7 @@ exports.execute = function(options) {
                 var uri2 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)";
 
                 describe("without tuple, ", function() {
-                    it('should be properly defiend based on schema and not include subset query parameter.', function() {
+                    it('should be properly defiend based on schema and not include faceting.', function() {
                         expect(related[0].location.uri).toBe(uri1);
                     });
                     
@@ -99,13 +99,28 @@ exports.execute = function(options) {
                         expect(related[1].location.uri).toBe(uri2);
                     });
                 });
+                
                 describe("with tuple defined, ", function () {
-                    it('should include a `subset` query parameter in form of `for "to_name" = tuple.displayname` using the unformatted displayname.', function() {
-                        expect(relatedWithTuple[0].location.uri).toBe(uri1 + "?subset=for%20to_name_value%20%3D%209003%20and%20Henry");
-                    });
-
-                    it('`subset` query parameter should use the table name if `to_name` is not defiend.', function() {
-                        expect(relatedWithTuple[1].location.uri).toBe(uri2 + "?subset=for%20reference_table%20%3D%209003%20and%20Henry");
+                    it('should create the link using faceting.', function() {
+                        
+                        var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
+                            var loc = relatedWithTuple[index].location;
+                            expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
+                            expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
+                            expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
+                            expect(loc.queryParams['subset']).toBeDefined();
+                            expect(loc.queryParams['subset']).toBe(expectedQueryParam);
+                        }
+                        
+                        checkUri(0, "inbound_related_reference_table", [{
+                            "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
+                            "choices":["9003"]
+                        }], "to_name_value: 9003 and Henry");
+                        
+                        checkUri(1, "inbound_related_reference_table", [{
+                            "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
+                            "choices":["9003"]
+                        }], "reference_table: 9003 and Henry");
                     });
                 });
             });

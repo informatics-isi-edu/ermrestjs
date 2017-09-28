@@ -23,6 +23,8 @@
  */
 function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
     
+    this.isAttributeGroup = true;
+    
     /**
      * Array of AttributeGroupColumn that will be used as the key columns
      * @type {ERMrest.AttributeGroupColumn[]}
@@ -40,6 +42,11 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
     this._server = catalog.server;
     
     this._catalog = catalog;
+    
+    /**
+     * @type {ERMrest.ReferenceAggregateFn}
+     */
+    this.aggregate = new AttributeGroupReferenceAggregateFn(this);
 }
 AttributeGroupReference.prototype = {
     
@@ -245,6 +252,85 @@ AttributeGroupReference.prototype = {
             return module._q.reject(e);
         }
         
+    },
+    
+    getAggregates: function (aggregateList) {
+        var defer = module._q.defer();
+        var url;
+
+        var URL_LENGTH_LIMIT = 2048;
+
+        var urlSet = [];
+        var loc = this.location;
+        var baseUri = [
+            loc.service, "catalog", loc.catalogId, "aggregate", loc.path
+        ];
+        
+        if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+            baseUri.push(loc.searchFilter);
+        }
+        
+        baseUri = baseUri.join("/") + "/";
+
+        for (var i = 0; i < aggregateList.length; i++) {
+            var agg = aggregateList[i];
+
+            // if this is the first aggregate, begin with the baseUri
+            if (i === 0) {
+                url = baseUri;
+            } else {
+                url += ",";
+            }
+
+            // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
+            if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                // strip off an extra ','
+                if (url.charAt(url.length-1) === ',') {
+                    url = url.substring(0, url.length-1);
+                }
+
+                urlSet.push(url);
+                url = baseUri;
+            }
+
+            // use i as the alias
+            url += i + ":=" + agg;
+
+            // We are at the end of the aggregate list
+            if (i+1 === aggregateList.length) {
+                urlSet.push(url);
+            }
+        }
+
+        var aggregatePromises = [];
+        var http = this._server._http;
+        for (var j = 0; j < urlSet.length; j++) {
+            aggregatePromises.push(http.get(urlSet[j]));
+        }
+
+        module._q.all(aggregatePromises).then(function getAggregates(response) {
+            // all response rows merged into one object
+            var singleResponse = {};
+
+            // collect all the data in one object so we can map it to an array
+            for (var k = 0; k < response.length; k++) {
+                Object.assign(singleResponse, response[k].data[0]);
+            }
+
+            var responseArray = [];
+            for (var m = 0; m < aggregateList.length; m++) {
+                responseArray.push(singleResponse[m]);
+            }
+
+            defer.resolve(responseArray);
+        }, function error(response) {
+            var error = module._responseToError(response);
+            return defer.reject(error);
+        }).catch(function (error) {
+            return defer.reject(error);
+        });
+
+        return defer.promise;
     }
 };
 
@@ -359,7 +445,7 @@ AttributeGroupPage.prototype = {
         });
         
         var newLocation = currRef.location.changePage({
-            before: false,
+            before: true,
             row: rows
         });
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
@@ -408,6 +494,10 @@ AttributeGroupTuple.prototype = {
         return this._values;
     },
     
+    get data() {
+        return this._data;
+    },
+    
     /**
      * The unique identifier for this tuple composed of the values for each
      * of the shortest key columns concatenated together by an '_'
@@ -438,11 +528,13 @@ AttributeGroupTuple.prototype = {
     get displayname() {
         if (this._displayname === undefined) {
             var data = this._data;
+            var hasNull = false;
             var value = this._page.reference.shortestKey.reduce(function (res, c, index) {
+                hasNull = hasNull || data[c.name] == null;
                 return res + (index > 0 ? ":" : "") + c.formatvalue(data[c.name]);
             }, "");
             
-            this._displayname = { "value": value, "unformatted": value, "isHTML": false };
+            this._displayname = { "value": (hasNull ? null : value), "unformatted": (hasNull? null : value), "isHTML": false };
         }
         return this._displayname;
     }
@@ -461,6 +553,7 @@ function AttributeGroupColumn(alias, term, displayname, type, comment, sortable,
     
     /**
      * This might include the aggregate functions. This is the right side of alias (alias:=term)
+     * NOTE: This MUST be url encoded
      * NOTE: We might want to seperate those, but right now this will only be used for 
      * creating the url.
      * @type {string}
@@ -503,7 +596,7 @@ AttributeGroupColumn.prototype = {
     toString: function () {
         var res = "";
         if (typeof this._alias === "string" && this._alias.length !== 0) {
-            res += this._alias + ":=";
+            res += module._fixedEncodeURIComponent(this._alias) + ":=";
         }
         res += this.term;
         return res;
@@ -523,6 +616,9 @@ AttributeGroupColumn.prototype = {
     
     formatvalue: function (data, options) {
         //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
+        if (data === null || data === undefined) {
+            return "";
+        }
         return _formatValueByType(this.type, data, options);
     },
     
@@ -655,5 +751,24 @@ AttributeGroupLocation.prototype = {
      */
     changePage: function (paging) {
         return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, paging);
+    }
+};
+
+
+function AttributeGroupReferenceAggregateFn (reference) {
+    this._ref = reference;
+}
+
+AttributeGroupReferenceAggregateFn.prototype = {
+    /**
+     * @type {Object}
+     * @desc count aggregate representation
+     */
+    get countAgg() {
+        if (this._ref.shortestKey.length > 1) {
+            throw new Error("Cannot use count function, attribute group has more than one key column.");
+        }
+        
+        return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.shortestKey[0].term) + ")";
     }
 };
