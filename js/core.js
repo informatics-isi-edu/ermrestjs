@@ -1681,6 +1681,9 @@
          * @returns {string} The formatted value.
          */
         this.formatvalue = function (data, options) {
+
+             if (this.isHidden) return module._HIDDEN_TEXT;
+
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
@@ -1698,6 +1701,8 @@
          */
         this.formatPresentation = function(data, options) {
 
+            if (this.isHidden) return { isHTML: false, value: module._HIDDEN_TEXT };
+
             var context = options ? options.context : undefined,
                 utils = module._formatUtils;
 
@@ -1708,22 +1713,22 @@
              * TODO: Add code to handle `pre_format` in the annotation
              */
              
-             /* 
-              * If column doesn't has column-display annotation and is not of type markdown
-              * but the column type is json then append <pre> tag and return the value
-              */
+            /* 
+             * If column doesn't has column-display annotation and is not of type markdown
+             * but the column type is json then append <pre> tag and return the value
+             */
             
-              if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + data + '</pre>'};
-              }
+            }
                 
-             /* 
-              * If column doesn't has column-display annotation and is not of type markdown
-              * then return data as it is
-              */
-              if (!display.isHTML) {
+            /* 
+             * If column doesn't has column-display annotation and is not of type markdown
+             * then return data as it is
+             */
+            if (!display.isHTML) {
                 return { isHTML: false, value: data };
-              }
+            }
 
             var value = data;
 
@@ -1770,7 +1775,23 @@
          */
         this.rights = jsonColumn.rights;
 
-        
+        /**
+         * Mentions whether we should hide the value for this column
+         * @type {Boolean}
+         */
+        this.isHidden = this.rights.select === false;
+
+        /**
+         * Mentions whether this column is generated depending on insert rights
+         * @type {Boolean}
+         */
+        this.generated = this.rights.insert === false;
+
+        /**
+         * Mentions whether this column is immutable depending on update rights
+         * @type {Boolean}
+         */
+        this.immutable = this.rights.update === false;
 
         /**
          * @type {string}
@@ -1937,13 +1958,13 @@
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (isGenerated || isSerial) {
+                if (this.isGenerated || isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };
                 }
             } else if (context == module._contexts.EDIT) {
-                if (isGenerated || isImmutable || isSerial) {
+                if (this.isImmutable || isGenerated || isImmutable || isSerial) {
                     return true;
                 }
             } else {
@@ -2715,6 +2736,12 @@
          * @type {ERMrest.Key}
          */
         this.key = refTable.keys.get(new ColSet(referencedCols));
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonFKR.rights;
 
         /**
          * @type {ERMrest.Mapping}

@@ -1666,3 +1666,5 @@
     });
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+
+    module._HIDDEN_TEXT = "--hidden--";

@@ -3680,6 +3680,8 @@
         var context = options ? options.context : undefined;
         var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
+        if (this._baseCols[0].isHidden) return { isHTML: false, value: module._HIDDEN_TEXT };
+
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return nullValue;
@@ -3737,8 +3739,8 @@
             }
         }
 
-        // if caption has a link, or context is EDIT: don't add the link.
-        if (caption.match(/<a/) || module._isEntryContext(context) ) {
+        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        if (caption.match(/<a/) || module._isEntryContext(context)) {
             value = caption;
         }
         // create the link using reference.
@@ -3961,97 +3963,100 @@
 
     // properties to be overriden:
     KeyPseudoColumn.prototype.formatPresentation = function(data, options) {
-         var context = options ? options.context : undefined;
-         var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
-         // if data is empty
-         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-             return nullValue;
-         }
+        if (this._baseCols[0].isHidden) return { isHTML: false, value: module._HIDDEN_TEXT };
 
-         // used to create key pairs in uri
-         var createKeyPair = function (cols) {
-              var keyPair = "", col;
-             for (i = 0; i < cols.length; i++) {
-                 col = cols[i].name;
-                 keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                 if (i != cols.length - 1) {
-                     keyPair +="&";
-                 }
-             }
-             return keyPair;
-         };
+        var context = options ? options.context : undefined;
+        var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
-         // check if we have data for the given columns
-         var hasData = function (kCols) {
-             for (var i = 0; i < kCols.length; i++) {
-                 if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                     return false;
-                 }
-             }
-             return true;
-         };
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return nullValue;
+        }
 
-         var value, caption, i;
-         var cols = this.key.colset.columns,
-             addLink = true;
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+            var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+         return keyPair;
+        };
 
-         // if any of key columns don't have data, this link is not valid.
-         if (!hasData(cols)) {
-             return nullValue;
-         }
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+         return true;
+        };
 
-         // use the markdown_pattern that is defiend in key-display annotation
-         var display = this.key.getDisplay(context);
-         if (display.isMarkdownPattern) {
+        var value, caption, i;
+        var cols = this.key.colset.columns,
+            addLink = true;
 
-             // make sure that formattedValues is defined
-             if (options === undefined || options.formattedValues === undefined) {
-                options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
-             }
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(cols)) {
+            return nullValue;
+        }
 
-             caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
-             caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
-             addLink = false;
-         } else {
-             var values = [];
+        // use the markdown_pattern that is defiend in key-display annotation
+        var display = this.key.getDisplay(context);
+        if (display.isMarkdownPattern) {
 
-             // create the caption
-             var presentation;
-             for (i = 0; i < cols.length; i++) {
-                 try {
-                     presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
-                     values.push(presentation.value);
-                     // if one of the values isHTMl, should not add link
-                     addLink = addLink ? !presentation.isHTML : false;
-                 } catch (exception) {
-                     // the value doesn't exist
-                     return nullValue;
-                 }
-             }
-             caption = values.join(":");
+            // make sure that formattedValues is defined
+            if (options === undefined || options.formattedValues === undefined) {
+               options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
+            }
 
-             // if the caption is empty we cannot add any link to that.
-             if (caption.trim() === '') {
-                 return nullValue;
-             }
-         }
+            caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
+            caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+            addLink = false;
+        } else {
+            var values = [];
 
-         if (addLink) {
-             var table = this.key.table;
-             var refURI = [
-                 table.schema.catalog.server.uri ,"catalog" ,
-                 module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
-                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-                 createKeyPair(cols)
-             ].join("/");
-             var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
-             value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
-         } else {
-             value = caption;
-         }
+            // create the caption
+            var presentation;
+            for (i = 0; i < cols.length; i++) {
+                try {
+                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                    values.push(presentation.value);
+                    // if one of the values isHTMl, should not add link
+                    addLink = addLink ? !presentation.isHTML : false;
+                } catch (exception) {
+                    // the value doesn't exist
+                    return nullValue;
+                }
+            }
+            caption = values.join(":");
 
-         return {isHTML: true, value: value};
+            // if the caption is empty we cannot add any link to that.
+            if (caption.trim() === '') {
+                return nullValue;
+            }
+        }
+
+        if (addLink) {
+            var table = this.key.table;
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                createKeyPair(cols)
+            ].join("/");
+            var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
+            value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+        } else {
+            value = caption;
+        }
+
+        return {isHTML: true, value: value};
      };
     KeyPseudoColumn.prototype._determineSortable = function () {
         var display = this._display, useColumn = false, baseCol;
@@ -4175,6 +4180,8 @@
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
         var context = options ? options.context : undefined;
+
+        if (this._baseCol.isHidden) return module._HIDDEN_TEXT;
 
         // in edit return the original data
         if (module._isEntryContext(context)) {
