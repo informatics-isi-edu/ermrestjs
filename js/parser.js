@@ -420,7 +420,10 @@
                 }
                 
                 if (this.facets) {
-                    uri += "/" + _JSONToErmrestFilter(this.facets.decoded, projectiontableAlias, this.projectionTableName, this.catalog);
+                    var facetFilter = _JSONToErmrestFilter(this.facets.decoded, projectiontableAlias, this.projectionTableName, this.catalog);
+                    if (facetFilter) {
+                        uri += "/" + facetFilter ;
+                    }
                 }
                 
                 if (joinsLength > 0) {

@@ -5657,7 +5657,7 @@
             var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
             
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "value", "descending": false}];
+            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
             
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
             
@@ -5671,9 +5671,8 @@
                 countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
             
-            // sort based on count is disabled because of ermrset cnt bug
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", false, true)
+                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
