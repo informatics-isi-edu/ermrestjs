@@ -335,6 +335,9 @@
                                     {"outbound": constraint},
                                     refCol.foreignKey.key.colset.columns[0].name
                                 ],
+                                // TODO here I am passing unformatted, because we are going to pass it through the markdown
+                                // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
+                                "markdown_name": refCol.displayname.unformatted, 
                                 "entity": true
                             },
                             "column": refCol.foreignKey.key.colset.columns[0]
@@ -360,6 +363,8 @@
                             column = origFkR.colset.columns[0].table.shortestKey[0];
                         }
                         res.push(column.name);
+                        // TODO here I am passing unformatted, because we are going to pass it through the markdown
+                        // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                         return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
                     
