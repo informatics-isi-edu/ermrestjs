@@ -5175,7 +5175,7 @@
             if (Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
                     current = self.filters.filter(function (f) {
-                        return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+                        return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
                     })[0];
                     
                     if (current !== undefined) {
