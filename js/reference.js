@@ -1712,7 +1712,7 @@
                     _separator: "\n",
                     _prefix: "",
                     _suffix: ""
-                }
+                };
 
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
