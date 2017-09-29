@@ -550,7 +550,7 @@
                     annotationCols.forEach(function (obj) {
                         var col = checkFacetObject(obj);
                         if (col) {
-                            facetObjects.push({"obj": obj, "column": col});
+                            facetObjects.push({"obj": JSON.parse(JSON.stringify(obj)), "column": col});
                         }
                     });
                 } else {
