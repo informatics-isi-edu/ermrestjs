@@ -398,17 +398,11 @@
          */
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
-                var projectiontableAlias = "T", mainTableAlias = "M";
                 var joinsLength = this.joins.length;
-                
-                
-                
-                if (joinsLength === 0) {
-                    projectiontableAlias = mainTableAlias;
-                }
+                var mainTableAlias = this.mainTableAlias;
                 
                 // add tableAlias
-                var uri = projectiontableAlias + ":=";
+                var uri = this.projectionTableAlias + ":=";
 
                 if (this.projectionSchemaName) {
                     uri += this.projectionSchemaName + ":";
@@ -420,7 +414,7 @@
                 }
                 
                 if (this.facets) {
-                    var facetFilter = _JSONToErmrestFilter(this.facets.decoded, projectiontableAlias, this.projectionTableName, this.catalog);
+                    var facetFilter = _JSONToErmrestFilter(this.facets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
                     if (facetFilter) {
                         uri += "/" + facetFilter ;
                     }
@@ -439,6 +433,17 @@
                 this._ermrestCompactPath = uri;
             }
             return this._ermrestCompactPath;
+        },
+        
+        get projectionTableAlias () {
+            if (this._projectionTableAlias === undefined) {
+                this._projectionTableAlias = (this.joins.length === 0) ? this.mainTableAlias : "T";
+            }
+            return this._projectionTableAlias;
+        },
+        
+        get mainTableAlias() {
+            return "M";
         },
 
         /**

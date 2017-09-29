@@ -311,6 +311,36 @@
         // subject can be one of module._constraintTypes
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
+        },
+        
+        /**
+         * Given tableName, and schemaName find the table
+         * @param  {string} tableName  name of the table
+         * @param  {string} schemaName name of the schema. Can be undefined.
+         * @return {ERMrest.Table}
+         */
+        getTable: function (tableName, schemaName) {
+            var schema;
+            
+            if (!schemaName) {
+                var schemas = this.schemas.all();
+                for (var i = 0; i < schemas.length; i++) {
+                    if (schemas[i].tables.names().indexOf(location.tableName) !== -1) {
+                        if (!schema){
+                            schema = schemas[i];
+                        } else{
+                            throw new module.MalformedURIError("Ambiguous table name " + location.tableName + ". Schema name is required.");
+                        }
+                    }
+                }
+                if (!schema) {
+                    throw new module.MalformedURIError("Table " + location.tableName + " not found");
+                }
+            } else {
+                schema = this.schemas.get(schemaName);
+            }
+            
+            return schema.tables.get(tableName);
         }
     };
 
