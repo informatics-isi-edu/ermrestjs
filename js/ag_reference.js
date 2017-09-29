@@ -527,14 +527,28 @@ AttributeGroupTuple.prototype = {
      */
     get displayname() {
         if (this._displayname === undefined) {
-            var data = this._data;
-            var hasNull = false;
-            var value = this._page.reference.shortestKey.reduce(function (res, c, index) {
+            var keyColumns = this._page.reference.shortestKey,
+                data = this._data,
+                hasNull = false,
+                hasMarkdown = false,
+                values = [],
+                value;
+                
+            keyColumns.forEach(function (c) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? ":" : "") + c.formatvalue(data[c.name]);
-            }, "");
+                if (hasNull) return;
+                
+                hasMarkdown = hasMarkdown || c.type.name === "markdown";
+                values.push(c.formatvalue(data[c.name]));
+            });
             
-            this._displayname = { "value": (hasNull ? null : value), "unformatted": (hasNull? null : value), "isHTML": false };
+            value = values.join(":");
+            
+            this._displayname = { 
+                "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value, 
+                "unformatted": value, 
+                "isHTML": hasMarkdown 
+            };
         }
         return this._displayname;
     }
@@ -633,7 +647,7 @@ AttributeGroupColumn.prototype = {
          * 
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(value)};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(data)};
         }
         return {isHTML: false, value: data};
     }
