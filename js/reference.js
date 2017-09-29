@@ -343,17 +343,17 @@
                             "column": refCol.foreignKey.key.colset.columns[0]
                         };
                     }
-                    
+
                     if (refCol.isInboundForeignKey) {
                         var res = [];
                         var origFkR = refCol.foreignKey;
                         var association = refCol.reference.derivedAssociationReference;
                         var column;
-                        
+
                         res.push({
                             "inbound": origFkR.constraint_names[0]
                         });
-                        
+
                         if (association) {
                             res.push({
                                 "outbound": association._secondFKR.constraint_names[0]
@@ -444,7 +444,7 @@
                     
                     return fcObj;
                 };
-                
+
                 /*
                  * Given two source objects check if they are the same.
                  * Source can be a string or array. If it's an array, the last element
@@ -463,17 +463,17 @@
                     if (source.length !== filterSource.length) {
                         return false;
                     }
-                    
+
                     var key;
                     for (var i = 0; i < source.length; i++) {
                         if (typeof source[i] === "string") {
                             return source[i] === filterSource[i];
                         }
-                        
+
                         if (typeof source[i] !== "object" || typeof filterSource[i] !== "object") {
                             return false;
                         }
-                        
+
                         if (typeof source[i].inbound === "object") {
                             key = "inbound";
                         } else if (typeof source[i].outbound == "object") {
@@ -481,11 +481,11 @@
                         } else {
                             return false;
                         }
-                        
+
                         if (!Array.isArray(filterSource[i][key]) || filterSource[i][key].length !== 2) {
                             return false;
                         }
-                        
+
                         if (source[i][key][0] !== filterSource[i][key][0] || source[i][key][1] != filterSource[i][key][1]) {
                             return false;
                         }
@@ -1705,15 +1705,26 @@
          * @type {Object}
          *
          **/
+        
         get display() {
-            if (!this._display) {
-                this._display = { type: module._displayTypes.TABLE };
+            if (this._display === undefined) {
+                var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
+                
+                // if Separator, prefix and suffix are initialized alongwith "type"
+                
+                this._display = {
+                     type: displayType,
+                    _separator: "\n",
+                    _prefix: "",
+                    _suffix: ""
+                };
+
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
-
+                
                 // If annotation is defined then parse it
                 if (annotation) {
 
@@ -1750,7 +1761,8 @@
                         this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
 
                     }
-                }
+                }              
+                    
             }
 
             return this._display;
@@ -2544,6 +2556,14 @@
             return this._contextualize(module._contexts.EDIT);
         },
 
+        /**
+         * get compactBriefInline - The compact brief inline context of the reference
+         * @return {ERMrest.Reference}
+         */
+        get compactBriefInline() {
+            return this._contextualize(module._contexts.COMPACT_BRIEF_INLINE);
+        },
+
         _contextualize: function(context) {
             var source = this._reference;
 
@@ -3097,6 +3117,9 @@
 
         /**
          * HTML representation of the whole page which uses table-display annotation.
+         * If markdownPattern is defined then renderTemplate is called to get the correct display.
+         * In case of no such markdownPattern is defined output is displayed in form of 
+         * unordered list with displayname as text content of the list. 
          * For more info you can refer {ERM.reference.display}
          *
          * Usage:
@@ -3109,45 +3132,44 @@
          * @type {string|null}
          */
         get content() {
-            if (this._content !== null) {
-                // If display type is markdown which means row_markdown_pattern is set in table-display
-                if (this._ref.display.type === module._displayTypes.MARKDOWN) {
-
-                    // If the number of records are zero then simply return null
+                if (this._content === undefined) {
                     if (!this._data || !this._data.length) {
-                        return null;
-                    }
-
-                    var values = [];
-
-                    // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
-                    for (var i = 0; i < this._data.length; i++) {
-
-                        // render template
-                        var value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
-
-                        // If value is null or empty, return value on basis of `show_nulls`
-                        if (value === null || value.trim() === '') {
-                            value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
-                        }
-
-                        // If final value is not null then push it in values array
-                        if (value !== null) {
-                            values.push(value);
-                        }
-                    }
-
-                    // Join the values array using the separator and prepend it with the prefix and append suffix to it.
-                    var pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
-
-                    // Get the HTML generated using the markdown pattern generated above
-                    this._content =  module._formatUtils.printMarkdown(pattern);
-                } else {
                     this._content = null;
-                }
-            }
+                }else {
+                    var i, value, pattern, values = [];
+                    if (typeof this._ref.display._markdownPattern === 'string') {
+                       // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
+                       for (i = 0; i < this._data.length; i++) {
+                           // render template
+                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
 
-            return this._content;
+                           // If value is null or empty, return value on basis of `show_nulls`
+                           if (value === null || value.trim() === '') {
+                               value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
+                           }
+                           // If final value is not null then push it in values array
+                           if (value !== null) {
+                               values.push(value);
+                           }
+                       }
+
+                       // Join the values array using the separator and prepend it with the prefix and append suffix to it.
+                       pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+                       
+                   }else{
+                     
+                      for ( i = 0; i < this.tuples.length; i++) {
+                         var tuple = this.tuples[i];
+                         var url = tuple.reference.contextualize.detailed.appLink;
+                        
+                         values.push("* ["+ tuple.displayname.value +"](" + url + ") " + this._ref.display._separator);
+                      }
+                      pattern = this._ref.display._prefix + values.join(" \n") + this._ref.display._suffix;
+                   }
+                   this._content =  module._formatUtils.printMarkdown(pattern);
+              }
+           } 
+           return this._content;
         }
     };
 
@@ -3423,7 +3445,7 @@
                             }
                         } else {
                             values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
-                            
+
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
                             }
@@ -4704,7 +4726,7 @@
      * on columns that are not part of reference column.
      *
      * TODO This is just experimental, the arguments might change eventually.
-     * 
+     *
      * If the ReferenceColumn is not provided, then the FacetColumn is for reference
      *
      * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
@@ -4721,13 +4743,13 @@
          * @type {ERMrest.Column}
          */
         this._column = column;
-        
+
         /**
          * [reference description]
          * @type {ERMrest.Reference}
          */
         this.reference = reference;
-        
+
         /**
          * The index of facetColumn in the list of facetColumns
          * NOTE: Might not be needed
@@ -4738,7 +4760,7 @@
         /**
          * A valid data-source path
          * NOTE: we're not validating this data-source, we assume that this is valid.
-         * @type {obj|string} 
+         * @type {obj|string}
          */
         this.dataSource = facetObject.source;
         
@@ -4752,7 +4774,7 @@
         } else {
             this._setFilters(facetObject);
         }
-        
+
         // the whole filter object
         this._facetObject = facetObject;
     }
@@ -4804,14 +4826,14 @@
                 } else {
                     var lastJoin = this.dataSource[this.dataSource.length-2];
                     var isInbound = false, constraint;
-                    
+
                     if ("inbound" in lastJoin) {
                         isInbound = true;
                         constraint = lastJoin.inbound;
                     } else {
                         constraint = lastJoin.outbound;
                     }
-                    
+
                     this._lastForeignKey_cached = {
                         "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
                         "isInbound": isInbound
@@ -4820,7 +4842,7 @@
             }
             return this._lastForeignKey_cached;
         },
-        
+
         /**
          * The Preferred ux mode.
          * Any of:
@@ -4857,7 +4879,7 @@
             }
             return this._preferredMode;
         },
-        
+
         /**
          * Returns true if the source is on a key column.
          * If facetObject['entity'] is defined as false, it will return false,
@@ -4881,7 +4903,7 @@
             }
             return this._isEntityMode;
         },
-         
+
         /**
          * ReferenceColumn that this facetColumn is based on
          * @type {ERMrest.ReferenceColumn}
@@ -4892,9 +4914,9 @@
             }
             return this._referenceColumn;
         },
-        
+
         /**
-         * uncontextualized {@link ERMrest.Reference} that has all the joins specified 
+         * uncontextualized {@link ERMrest.Reference} that has all the joins specified
          * in the source with all the filters of other FacetColumns in the reference.
          *
          * NOTE needs refactoring,
@@ -4980,10 +5002,10 @@
             }
             return this._sourceReference;
         },
-        
+
         /**
          * Returns the displayname object that should be used for this facetColumn.
-         * 
+         *
          * Heuristics are as follows (first applicable rule):
          *  0. If markdown_name is defined, use it.
          *  1. If column is part of the main table (there's no join), use the column's displayname.
@@ -4991,7 +5013,7 @@
          *  3. If last foreignkey is inbound and has from_name, use it.
          *  4. Otherwise use the table name.
          *    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
-         * 
+         *
          * @type {object} Object with `value`, `unformatted`, and `isHTML` as its attributes.
          */
         get displayname() {
@@ -5030,7 +5052,7 @@
                         value = this.column.table.displayname.value;
                         unformatted = this.column.table.displayname.unformatted;
                         isHTML = this.column.table.displayname.isHTML;
-                        
+
                         // add the column name if in scalar mode
                         if (!this.isEntityMode) {
                             value += " (" + this.column.displayname.value + ")";
@@ -5040,13 +5062,13 @@
                             }
                         }
                     }
-                    
+
                     this._displayname = {"value": value, "isHTML": isHTML, "unformatted": unformatted};
-                }         
+                }
             }
             return this._displayname;
         },
-        
+
         /**
          * Could be used as tooltip to provide more information about the facetColumn
          * @type {string}
@@ -5340,7 +5362,7 @@
                 reference: this._applyFilters(filters)
             };
         },
-        
+
         /**
          * Create a new Reference by removing all the filters from current facet.
          * @return {ERMrest.Reference} the reference with the new filter
@@ -5374,7 +5396,7 @@
             var self = this;
             var newReference = _referenceCopy(this.reference);
             delete newReference._facetColumns;
-            
+
             // create a new FacetColumn so it doesn't reference to the current FacetColum
             // TODO can be refactored
             var jsonFilters = [];
@@ -5382,7 +5404,7 @@
                 var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._facetObject, filters);
                 jsonFilters.push(ThisFC.toJSON());
             }
-            
+
             // TODO might be able to imporve this. Instead of recreating the whole json file.
             // gather all the filters from the facetColumns
             // NOTE: this part can be improved so we just change one JSON element.
@@ -5519,7 +5541,7 @@
         }
         return res;
     };
-    
+
     /**
      * Constructs an Aggregate Funciton object
      *
