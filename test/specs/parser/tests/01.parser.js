@@ -280,6 +280,37 @@ exports.execute = function (options) {
             expect(location.queryParams.limit).toBe("2", "limit mismatch.");
         });
     });
+    
+    describe("Facets, ", function () {
+        // var uri = options.url = "/catalog/" + catalogId + "/entity/" + path;
+        it ("parser should throw an error when facet blob is not valid.", function () {
+            
+        });
+        
+        it ("parser should understand the facets pseudo operator", function () {
+            
+        });
+        
+        describe('related APIs, ', function () {
+            var uri = options.uri + "/catalog/" +  catalogId + "/entity" + schemaName + ":" + tableName;
+            
+            it ("Location.facets should return null/undefined when facets was not defined", function () {
+                
+            });
+            
+            it ("Location.facets.decoded should return the facets object.", function () {
+                
+            });
+            
+            it ("Location.facets.encoded should return the facets blob.", function () {
+                
+            });
+            
+            it ("Location.facets setter should be able to change the facet and update other APIs.", function () {
+                
+            });
+        })
+    });
 
     // NOTE: search test cases are in refererence/13.search.js
 }
