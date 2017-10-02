@@ -643,10 +643,19 @@
          */
         removeAllFacetFilters: function () {
             var newReference = _referenceCopy(this);
-            delete newReference._facetColumns;
+            
+            // update the facetColumns list
+            newReference._facetColumns = [];
+            this.facetColumns.forEach(function (fc) {
+                newReference._facetColumns.push(
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, [])
+                );
+            });
 
+            // update the location objectcd
             newReference._location = this._location._clone();
             newReference._location.facets = null;
+            
 
             return newReference;
         },
@@ -5395,22 +5404,27 @@
         _applyFilters: function (filters) {
             var self = this;
             var newReference = _referenceCopy(this.reference);
-            delete newReference._facetColumns;
+            newReference._facetColumns = [];
 
             // create a new FacetColumn so it doesn't reference to the current FacetColum
             // TODO can be refactored
             var jsonFilters = [];
-            if (filters.length !== 0) {
-                var ThisFC = new FacetColumn(this.reference, this.index, this._column, this._facetObject, filters);
-                jsonFilters.push(ThisFC.toJSON());
-            }
 
             // TODO might be able to imporve this. Instead of recreating the whole json file.
             // gather all the filters from the facetColumns
             // NOTE: this part can be improved so we just change one JSON element.
-            this.reference.facetColumns.forEach(function (fc, index) {
-                if (fc.filters.length !== 0 && index !== self.index) {
-                    jsonFilters.push(fc.toJSON());
+            var newFc;
+            this.reference.facetColumns.forEach(function (fc) {
+                if (fc.index !== self.index) {
+                    newFc = new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, fc.filters.slice());
+                } else {
+                    newFc = new FacetColumn(newReference, self.index, self._column, self._facetObject, filters);
+                }
+                
+                newReference._facetColumns.push(newFc);
+                
+                if (newFc.filters.length !== 0) {
+                    jsonFilters.push(newFc.toJSON());
                 }
             });
 

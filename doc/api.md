@@ -2654,6 +2654,9 @@ if (reference.next) {
 
 #### page.content : <code>string</code> \| <code>null</code>
 HTML representation of the whole page which uses table-display annotation.
+If markdownPattern is defined then renderTemplate is called to get the correct display.
+In case of no such markdownPattern is defined output is displayed in form of 
+unordered list with displayname as text content of the list. 
 For more info you can refer {ERM.reference.display}
 
 Usage:
