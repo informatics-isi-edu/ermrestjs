@@ -315,9 +315,9 @@
             if (this._compactPath === undefined) {
                 var uri = "";
                 if (this.projectionSchemaName) {
-                    uri += this.projectionSchemaName + ":";
+                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
                 }
-                uri += this.projectionTableName;
+                uri += module._fixedEncodeURIComponent(this.projectionTableName);
                 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
@@ -405,9 +405,9 @@
                 var uri = this.projectionTableAlias + ":=";
 
                 if (this.projectionSchemaName) {
-                    uri += this.projectionSchemaName + ":";
+                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
                 }
-                uri += this.projectionTableName;
+                uri += module._fixedEncodeURIComponent(this.projectionTableName);
                 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
