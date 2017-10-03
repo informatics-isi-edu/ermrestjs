@@ -671,6 +671,7 @@
 
             // update the location objectcd
             newReference._location = this._location._clone();
+            newReference._location.pagingObject = null;
             newReference._location.facets = null;
             
 
@@ -5444,7 +5445,10 @@
                     jsonFilters.push(newFc.toJSON());
                 }
             });
-
+            
+            newReference._location = this.reference._location._clone();
+            newReference._location.pagingObject = null;
+            
             // change the facets in location object
             if (jsonFilters.length > 0) {
                 newReference._location.facets = {"and": jsonFilters};
