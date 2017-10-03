@@ -1079,7 +1079,7 @@
          *
          */
         _getAlternativeTable: function (context) {
-            var altTable = module._getAnnotationValueByContext(context, this._alternatives);
+            var altTable = module._getRecursiveAnnotationValue(context, this._alternatives);
             return altTable !== -1 ? altTable : this;
         },
 
