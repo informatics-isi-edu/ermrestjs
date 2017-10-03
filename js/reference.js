@@ -549,46 +549,46 @@
                     // 2. correct values for choices, range, search
                     annotationCols.forEach(function (obj) {
                         var col = checkFacetObject(obj);
-                        if (col) {
-                            facetObjects.push({"obj": JSON.parse(JSON.stringify(obj)), "column": col});
-                        }
+                        if (!col) return;
+
+                        facetObjects.push({"obj": JSON.parse(JSON.stringify(obj)), "column": col});
                     });
                 } else {
                     // this reference should be only used for getting the list,
                     var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
                     var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
-                                    
+            
 
                     // all the visible columns in compact context
                     compactRef.columns.forEach(function (col) {
                         var fcObj = checkRefColumn(col);
-                        if (fcObj) {
-                            facetObjects.push(fcObj);
-                        }
+                        if (!fcObj) return;
+
+                        facetObjects.push(fcObj);
                     });
 
                     // all the realted in detailed context
                     detailedRef.related().forEach(function (relRef) {
                         var fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
-                        if (fcObj) {
-                            /*
-                             * Because of alternative logic, the table that detailed is referring to
-                             * might be different than compact.
-                             * Since we're using the detailed just for its related entities api,
-                             * if detailed is actually an alternative table, it won't have any 
-                             * related entities. Therefore we don't need to handle that case.
-                             * The only case we need to cover are:
-                             * deatiled is main, compact is alternative
-                             *    - Add the linkage from main to alternative to all the detailed related entities.
-                             * NOTE: If we change the related logic, to return the 
-                             * related entities to the main table instead of alternative, this should be changed.
-                             */
-                            if (detailedRef.table !== compactRef.table &&
-                                !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
-                                fcObj.obj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
-                            }
-                            facetObjects.push(fcObj);
+                        if (!fcObj) return;
+
+                        /*
+                         * Because of alternative logic, the table that detailed is referring to
+                         * might be different than compact.
+                         * Since we're using the detailed just for its related entities api,
+                         * if detailed is actually an alternative table, it won't have any 
+                         * related entities. Therefore we don't need to handle that case.
+                         * The only case we need to cover are:
+                         * deatiled is main, compact is alternative
+                         *    - Add the linkage from main to alternative to all the detailed related entities.
+                         * NOTE: If we change the related logic, to return the 
+                         * related entities to the main table instead of alternative, this should be changed.
+                         */
+                        if (detailedRef.table !== compactRef.table &&
+                            !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
+                            fcObj.obj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
                         }
+                        facetObjects.push(fcObj);
                     });    
                 }
                 
@@ -2730,7 +2730,7 @@
                             if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
                                 facetFilter.source.shift();
                             } else {
-                                facetFilter.source.unshift({"inbound": newTable._altForeignKey.constraint_names[0]});  
+                                facetFilter.source.unshift({"inbound": source._table._altForeignKey.constraint_names[0]});  
                             }
                             return facetFilter;
                         });
