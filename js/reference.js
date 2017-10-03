@@ -1735,9 +1735,10 @@
         
         get display() {
             if (this._display === undefined) {
-                var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
+                var self = this;
                 
-                // if Separator, prefix and suffix are initialized alongwith "type"
+                // displaytype default valeu for compact/breif/inline should be markdown. otherwise table
+                var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
                 
                 this._display = {
                      type: displayType,
@@ -1756,7 +1757,20 @@
                 if (annotation) {
 
                     // Set row_order value
-                    this._display._rowOrder = annotation.row_order;
+                    if (Array.isArray(annotation.row_order)) {
+                        var rowOrder = [];
+                        annotation.row_order.forEach(function (ro) {
+                            // make sure column exists
+                            if (!self.table.columns.has(ro.column)) return;
+                            
+                            rowOrder.push({
+                                "column": ro.column,
+                                "descending": (ro.descending === true) ? true : false
+                            });
+                        });
+                        this._display._rowOrder = rowOrder;
+                    }
+                    
 
                     // Set default page size value
                     if (typeof annotation.page_size === 'number') {
