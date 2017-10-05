@@ -528,6 +528,54 @@
                     });
                 };
                 
+                // make sure that facetObject is pointing to the correct table.
+                // NOTE: facetColumns MUST be only used in COMPACT_SELECT context
+                // It doesn't feel right that I am doing contextualization in here,
+                // it's something that should be in client.
+                var checkForAlternative = function (facetObject) {
+                    var currTable = facetObject.column.table;
+                    var compactSelectTable = currTable._baseTable._getAlternativeTable(module._contexts.COMPACT_SELECT);
+                    
+                    // there's no alternative table
+                    if (currTable === compactSelectTable) {
+                        return true;
+                    }
+                    
+                    var basedOnKey = currCol.table.keys.all().filter(function (key) {
+                        return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
+                    }).length > 0;
+                    
+                    if (!basedOnKey || facetObject.obj.entity === false) {
+                        // it's not entity mode
+                        return false;
+                    }
+                    
+                    // filter is based on alternative for another context, but we have to move to another table
+                    // we're not supporting this and we should just ignore it.
+                    if (currTable._isAlternativeTable()) {
+                        return false;
+                    }
+                    
+                    // filter is based on main, but we have to move to the alternative
+                    // we should add the join, if the filter is based on the key 
+                    if (!currTable._isAlternativeTable() && compactSelectTable._isAlternativeTable()) {
+                        var fk = compactSelectTable._altForeignKey;
+                        if (!fk.simple || facetObject.column !== fk.key.colset.columns[0]) {
+                            return false;
+                        }
+                        facetObject.column = fk.colset.columns[0];
+                        facetObject.obj.source[facetObject.obj.source.length-1] = {"inbound": fk.constraint_names[0]};
+                        facetObject.obj.source.push(facetObject.column.name);
+                        
+                        // the makrdown_name came from the heuristics
+                        if (!usedAnnotation && facetObject.obj.markdown_name) {
+                            delete facetObject.obj.markdown_name;
+                        }
+                    }
+                    
+                    return true;
+                };
+                
                 var annotationCols = -1, usedAnnotation = false;
                 var facetObjects = [];
                 
@@ -629,25 +677,35 @@
                 
                 // turn facetObjects into facetColumn
                 facetObjects.forEach(function(fo, index) {
+                    // if the function returns false, it couldn't handle that case,
+                    // and therefore we are ignoring it.
+                    // It might also change fo.obj and fo.column
+                    if (!checkForAlternative(fo, usedAnnotation)) return;
                     self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
                 });
                 
                 
-                // annotations might have extra fitlers that should be applied.
-                // TODO eventually this can be smarter
-                if (usedAnnotation) {
-                    var newFilters = [];
-                    self._facetColumns.forEach(function(fc) {
-                        if (fc.filters.length !== 0) {
-                            newFilters.push(fc.toJSON());
-                        }
-                    });
-                    
-                    if (newFilters.length > 0) {
-                        //TODO we should make sure this is being called before read.
-                        //TODO we're not supporting the `*` facet (we should mix the search with this facet)
-                        this._location.facets = {"and": newFilters};
+                
+                /*
+                 * In some cases we are updating the given sources and therefore the 
+                 * filter will change, so we must make sure that we update the url
+                 * to reflect those changes. These chagnes are 
+                 * 1. When annotation is used and we have preselected filters.
+                 * 2. When the main table has an alternative table.
+                 * 3. When facet tables have alternative table
+                 * This is just to make sure the facet filters and url are in sync.
+                 */
+                var newFilters = [];
+                self._facetColumns.forEach(function(fc) {
+                    if (fc.filters.length !== 0) {
+                        newFilters.push(fc.toJSON());
                     }
+                });
+                
+                if (newFilters.length > 0) {
+                    //TODO we should make sure this is being called before read.
+                    //TODO we're not supporting the `*` facet (we should mix the search with this facet)
+                    this._location.facets = {"and": newFilters};
                 }
                 
             }
