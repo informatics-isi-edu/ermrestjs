@@ -314,6 +314,36 @@
         // subject can be one of module._constraintTypes
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
+        },
+        
+        /**
+         * Given tableName, and schemaName find the table
+         * @param  {string} tableName  name of the table
+         * @param  {string} schemaName name of the schema. Can be undefined.
+         * @return {ERMrest.Table}
+         */
+        getTable: function (tableName, schemaName) {
+            var schema;
+            
+            if (!schemaName) {
+                var schemas = this.schemas.all();
+                for (var i = 0; i < schemas.length; i++) {
+                    if (schemas[i].tables.names().indexOf(location.tableName) !== -1) {
+                        if (!schema){
+                            schema = schemas[i];
+                        } else{
+                            throw new module.MalformedURIError("Ambiguous table name " + location.tableName + ". Schema name is required.");
+                        }
+                    }
+                }
+                if (!schema) {
+                    throw new module.MalformedURIError("Table " + location.tableName + " not found");
+                }
+            } else {
+                schema = this.schemas.get(schemaName);
+            }
+            
+            return schema.tables.get(tableName);
         }
     };
 
@@ -1064,7 +1094,7 @@
          *
          */
         _getAlternativeTable: function (context) {
-            var altTable = module._getAnnotationValueByContext(context, this._alternatives);
+            var altTable = module._getRecursiveAnnotationValue(context, this._alternatives);
             return altTable !== -1 ? altTable : this;
         },
 
@@ -1682,8 +1712,6 @@
          */
         this.formatvalue = function (data, options) {
 
-             if (this.isHidden) return module._HIDDEN_TEXT;
-
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
@@ -1700,8 +1728,6 @@
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
          */
         this.formatPresentation = function(data, options) {
-
-            if (this.isHidden) return { isHTML: false, value: module._HIDDEN_TEXT };
 
             var context = options ? options.context : undefined,
                 utils = module._formatUtils;
