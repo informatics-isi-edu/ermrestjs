@@ -541,8 +541,8 @@
                         return true;
                     }
                     
-                    var basedOnKey = currCol.table.keys.all().filter(function (key) {
-                        return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
+                    var basedOnKey = facetObject.column.table.keys.all().filter(function (key) {
+                        return !facetObject.column.nullok && key.simple && key.colset.columns[0] === facetObject.column;
                     }).length > 0;
                     
                     if (!basedOnKey || facetObject.obj.entity === false) {
