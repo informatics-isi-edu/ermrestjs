@@ -116,6 +116,26 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
+    
+    
+    module.encodeFacet = function (obj) {
+        return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
+    };
+    
+    module.decodeFacet = function (blob) {
+        var err = new module.MalformedURIError("Given encoded string for facets is not valid.");
+        
+        try {
+            var str = module._LZString.decompressFromEncodedURIComponent(blob);
+            if (str === null) {
+                throw err;
+            }
+            return JSON.parse(str);
+        } catch (exception) {
+            console.log(exception);
+            throw err;
+        }
+    };
 
     /**
      * Returns true if given parameter is object and not null
