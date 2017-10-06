@@ -29,7 +29,7 @@
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/facets][/join(s)][/search][@sort(col...)][@before(...)/@after(...)][?]
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/facets][/join(s)][@sort(col...)][@before(...)/@after(...)][?]
      * 
      * path =  <filters(s)>/<join(s)>/<facets>/<search>
      * 
@@ -51,8 +51,7 @@
         this._uri = uri;
 
         var parts;
-        
-        var searchRegExp = /\*::search::[^&]+/g;
+
         var joinRegExp = /\((.*)\)=\((.*:.*:.*)\)/;
         var facetsRegExp = /\*::facets::(.+)/;
 
@@ -118,51 +117,9 @@
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter(s)>/<joins(s)>/<search>"
+        // Expected format: "<schema:table>/<filter(s)>/<facets>/<joins(s)>/<facets>"
         parts = this._compactPath.split('/');
-
-        // from start to end can be filter, facets, and joins
-        var endIndex = parts.length - 1, startIndex = 1;
         
-        //<search>
-        // search should be the last part of compact path
-        var match = parts[endIndex].match(searchRegExp);
-        var that = this;
-        if (match) { // this is a search filter
-            
-            this._searchFilter = parts[endIndex];
-            this._ermrestSearchFilter = "";
-            
-            match.forEach(function(f, idx, array) {
-                var term = decodeURIComponent(f.match(/\*::search::(.+)/)[1]);
-                
-                // make sure the ermrest url is correct
-                var ermrestFilter = _convertSearchTermToFilter(term);
-                that._ermrestSearchFilter += (idx === 0 ? "" : "&") + ermrestFilter;
-
-                that._searchTerm = (idx === 0? term : that._searchTerm + " " + term);
-            });
-
-            endIndex -= 1;
-        }
-        
-        if (startIndex <= endIndex) {
-            match = parts[startIndex].match(facetsRegExp);
-            if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1]);
-                startIndex++;
-            }
-        }
-        
-        // <join(s)>
-        this._joins = [];
-        // parts[startIndex] to parts[endIndex] might be joins
-        var linking;
-        for (var ji = startIndex; ji <= endIndex; ji++) {
-            linking = parts[ji].match(joinRegExp);
-            if (!linking) continue;
-            this._joins.push(_createJoin(linking));
-        }
         
         //<schema:table>
         // first schema name and first table name
@@ -179,18 +136,50 @@
             }
         }
 
+        // from start to end can be filter, facets, and joins
+        var endIndex = parts.length - 1, startIndex = 1;
+        var searchTerm = null;
+        
+        //<facets>
+        if (startIndex <= endIndex) {
+            match = parts[endIndex].match(facetsRegExp);
+            if (match) { // this is the facets blob
+                this._facets = new ParsedFacets(match[1]);
+                
+                // extract the search term
+                searchTerm = _getSearchTerm(this._facets.decoded);
+                endIndex--;
+            }
+        }
+        this._searchTerm = searchTerm;
+        
+        // <projectionFacets>/<join(s)>
+        this._joins = [];
+        // parts[startIndex] to parts[endIndex] might be joins
+        var linking;
+        for (var ji = startIndex; ji <= endIndex; ji++) {
+            linking = parts[ji].match(joinRegExp);
+            if (!linking) continue;
+            this._joins.push(_createJoin(linking));
+        }
+        
+        if (this._joins.length > 0) {
+            match = parts[startIndex].match(facetsRegExp);
+            if (match) { // this is the facets blob
+                this._projectionFacets = new ParsedFacets(match[1]);
+                startIndex++;
+            }
+        }
+
         //<filter(s)>
         // If there are filters appended after projection table
         // modify the columns to the linked table
         this._filtersString = '';
-        if (parts[1]) {
+        if (parts[1] && !this._facets) {
             // TODO should refactor these checks into one match statement
-            linking = parts[1].match(searchRegExp);
-            var isSearch = parts[1].match(joinRegExp);
-            var isFacets = parts[1].match(facetsRegExp);
-            
+            var isJoin = parts[1].match(joinRegExp);
             // parts[1] could be linking or search
-            if (!linking && !isSearch && !isFacets) {
+            if (!isJoin) {
                 this._filtersString = parts[1];
                 
                 // split by ';' and '&'
@@ -265,8 +254,8 @@
 
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>?<queryParams>
-         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<sort>/<page>?<queryParams>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          * 
          * @returns {String} The full URI of the location
          */
@@ -306,8 +295,8 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<facets>/<joins>/<search>
-         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
+         * <projectionSchema:projectionTable>/<filters>/<<projectionFacets>>/<joins>/<<facets>>
+         * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          * 
          * @returns {String} Path without modifiers or queries
          */
@@ -323,8 +312,8 @@
                     uri += "/" + this.filtersString;
                 }
                 
-                if (this.facets) {
-                    uri += "/*::facets::" + this.facets.encoded;
+                if (this.projectionFacets) {
+                    uri += "/*::facets::" + this.projectionFacets.encoded;
                 }
                 
                 if (this.joins.length > 0) {
@@ -333,8 +322,8 @@
                     }, "");
                 }
                 
-                if (this.searchFilter) {
-                    uri += "/" + this.searchFilter;
+                if (this.facets) {
+                    uri += "/*::facets::" + this.facets.encoded;
                 }
                 
                 this._compactPath = uri;
@@ -347,7 +336,7 @@
          * should only be used for internal usage and sending request to ermrest
          * NOTE: returns a uri that ermrest understands
          * 
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
+         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
          * @returns {String} The full URI of the location for ermrest
          */
         get ermrestUri() {
@@ -374,7 +363,7 @@
         
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
+         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
          * 
          * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
@@ -389,7 +378,7 @@
 
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<facets>/<joins>/<search>
+         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<projectionFacets>
          *
          * NOTE: 
          *  1. returns a path that ermrest understands
@@ -398,8 +387,10 @@
          */
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
-                var joinsLength = this.joins.length;
-                var mainTableAlias = this.mainTableAlias;
+                var joinsLength = this.joins.length,
+                    mainTableAlias = this.mainTableAlias, 
+                    mainTableName = this.tableName,
+                    facetFilter;
                 
                 // add tableAlias
                 var uri = this.projectionTableAlias + ":=";
@@ -413,10 +404,10 @@
                     uri += "/" + this.filtersString;
                 }
                 
-                if (this.facets) {
-                    var facetFilter = _JSONToErmrestFilter(this.facets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
+                if (this.projectionFacets) {
+                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
                     if (facetFilter) {
-                        uri += "/" + facetFilter ;
+                        uri += "/" + facetFilter;
                     }
                 }
                 
@@ -425,11 +416,14 @@
                         return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? mainTableAlias + ":=" : "") + join.str;
                     }, "");
                 }
-
-                if (this.ermrestSearchFilter) {
-                    uri += "/" + this.ermrestSearchFilter;
-                }
                 
+                if (this.facets) {
+                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog);
+                    if (facetFilter) {
+                        uri += "/" + facetFilter;
+                    }
+                }
+
                 this._ermrestCompactPath = uri;
             }
             return this._ermrestCompactPath;
@@ -548,22 +542,6 @@
         },
 
         /**
-         * string of the search filter in the URI
-         * @returns {string}
-         */
-        get searchFilter() {
-            return this._searchFilter;
-        },
-        
-        /**
-         * string that search understands for search filter
-         * @return {string}
-         */
-        get ermrestSearchFilter() {
-            return this._ermrestSearchFilter;
-        },
-        
-        /**
          * Array of joins that are in the given uri.
          * Each join has the following attributes:
          *  `fromCols`: array of column names.
@@ -606,8 +584,11 @@
          */
         set facets(json) {
             delete this._facets;
+            this._searchTerm = null;
             if (typeof json === 'object' && json !== null) {
                 this._facets = new ParsedFacets(json);
+                
+                this._searchTerm = _getSearchTerm(this._facets.decoded);
             }
             this._setDirty();
         },
@@ -618,6 +599,26 @@
          */
         get facets() {
             return this._facets;
+        },
+        
+        /**
+         * set the facet on the projection table
+         * @param  {object} json the json object of facets
+         */
+        set projectionFacets(json) {
+            delete this._projectionFacets;
+            if (typeof json === 'object' && json !== null) {
+                this._projectionFacets = new ParsedFacets(json);
+            }
+            this._setDirty();
+        },
+        
+        /**
+         * facet on the projection table
+         * @return {ParsedFacets} facets object
+         */
+        get projectionFacets() {
+            return this._projectionFacets;
         },
         
         /**
@@ -633,22 +634,57 @@
          * @param {string} term - optional, set or clear search
          */
         search: function(term) {
+            term = (term == null || term === "") ? null : term;
             
-            var searchFilter = ""; // will be shown in chaise
-            var filterString = _convertSearchTermToFilter(term); // ermrest uses this for http request
-
-            if (filterString !== "") {
-                this._searchTerm = term;
-                searchFilter = "*::search::" + module._fixedEncodeURIComponent(term);
+            if (term === this._searchTerm) {
+                return;
+            }
+            
+            var newSearchFacet = {"source": "*", "search": [term]};
+            var hasSearch = this._searchTerm != null;
+            var hasFacets = this._facets != null;
+            var andOperator = module._FacetsLogicalOperators.AND;
+            
+            var facetObject;
+            if (term === null) {
+                // hasSearch must be true, if not there's something wrong with logic.
+                // if term === null, that means the searchTerm is not null, therefore has search
+                facetObject = [];
+                this._facets.decoded[andOperator].forEach(function (f) {
+                    if (f.source !== "*") {
+                        facetObject.push(f);
+                    }
+                });
+                
+                if (facetObject.length !== 0) {
+                    facetObject = {"and": facetObject};
+                }
             } else {
-                this._searchTerm = null;
+                if (hasFacets) {
+                    facetObject = JSON.parse(JSON.stringify(this.facets.decoded));
+                    if (!hasSearch) {
+                        facetObject[andOperator].unshift(newSearchFacet);
+                    } else {
+                        facetObject[andOperator].forEach(function (filter) {
+                            if (filter.source === "*") {
+                                filter.search = [term];
+                            }
+                        });
+                    }
+                } else {
+                    facetObject = {"and": [newSearchFacet]};
+                }
+            }
+            
+            this._searchTerm = term;
+            if (facetObject && facetObject.and) {
+                this._facets = new ParsedFacets(facetObject);
+            } else {
+                delete this._facets;
             }
             
             // enforce updating uri
             this._setDirty();
-            
-            this._searchFilter = (searchFilter? searchFilter: undefined);
-            this._ermrestSearchFilter = filterString;
         },
 
         /**
@@ -942,6 +978,16 @@
             "str": linking[0]
         };
     };
+    
+    _getSearchTerm = function (facetObject) {
+        var searchTerm = "";
+        facetObject[module._FacetsLogicalOperators.AND].forEach(function (filter) {
+            if (filter.source === "*" && Array.isArray(filter.search)) {
+                searchTerm += filter.search.join(" ");
+            }
+        });
+        return searchTerm.length === 0 ? null : searchTerm;
+    };
 
     /**
      *
@@ -1127,6 +1173,12 @@
             this.encoded = str;
             this.decoded = this._decodeJSON(str);
         }
+        
+        var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
+        if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
+            throw new module.MalformedURIError("Invalid Facet Object: " + obj);
+        }
+        
     }
     
     ParsedFacets.prototype = {
@@ -1140,8 +1192,7 @@
          * @return      {string} string blob
          */
         _encodeJSON: function (obj) {
-            // return module._fixedEncodeURIComponent(JSON.stringify(obj,null,0));
-            return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
+            return module.encodeFacet(obj);
         },
         
         /**
@@ -1152,17 +1203,7 @@
          * @return      {object} decoded JSON object.
          */
         _decodeJSON: function (blob) {
-            try {
-                // return JSON.parse(decodeURIComponent(blob));
-                var str = module._LZString.decompressFromEncodedURIComponent(blob);
-                if (str === null) {
-                    throw new module.MalformedURIError("Given encoded string for facets is not valid.");
-                }
-                return JSON.parse(str);
-            } catch (exception) {
-                console.log(exception);
-                throw new module.MalformedURIError("Given encoded string for facets is not valid.");
-            }
+            return module.decodeFacet(blob);
         }    
     };
     
@@ -1224,7 +1265,7 @@
         // parse search constraint
         var parseSearch = function (search, column) {
             return search.reduce(function (prev, curr, i) {
-                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr, column);
+                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
             }, "");
         };
         

@@ -652,6 +652,7 @@
                 var checkedObjects = {};
                 for (var i = 0; i < andFilters.length; i++) {
                     if (!andFilters[i].source) continue;
+                    if (andFilters[i].source === "*") continue;
                     
                     found = false;
                     for (var j = 0; j < facetObjects.length; j++) {
@@ -704,7 +705,7 @@
                 
                 if (newFilters.length > 0) {
                     //TODO we should make sure this is being called before read.
-                    //TODO we're not supporting the `*` facet (we should mix the search with this facet)
+                    newFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
                     this._location.facets = {"and": newFilters};
                 }
                 
@@ -2762,11 +2763,6 @@
                     if (!source._table._isAlternativeTable() && newTable._isAlternativeTable() && joinOnAlternativeKey(source)) {
                         // change to-columns of the join
                         newLocationString =  source._location.compactUri;
-
-                        // remove the search
-                        if (source._location.searchFilter) {
-                            newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/"));
-                        }
 
                         // remove the last join
                         newLocationString = newLocationString.substring(0, newLocationString.lastIndexOf("/") + 1);
@@ -5067,8 +5063,13 @@
                         pathFromSource.push(fk.toString(isOutbound));
                     });
                 }
+                    
+                // TODO might be able to improve this
+                if (typeof this.reference.location.searchTerm === "string") {
+                    jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+                }
 
-                // get all the filters from other facetColumns
+                //get all the filters from other facetColumns
                 if (this.reference.location.facets !== null) {
                     // create new facet filters
                     // TODO might be able to imporve this. Instead of recreating the whole json file.
@@ -5078,13 +5079,7 @@
                         }
                     });
                 }
-
-                // convert the search into a facet
-                // TODO eventually the search must be changed to facet
-                if (typeof this.reference.location.searchTerm === "string") {
-                    jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
-                }
-
+                
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
@@ -5094,9 +5089,9 @@
                 this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
                 
                 if (jsonFilters.length > 0) {
-                    this._sourceReference._location.facets = {"and": jsonFilters};
+                    this._sourceReference._location.projectionFacets = {"and": jsonFilters};
                 } else {
-                    this._sourceReference._location.facets = null;
+                    this._sourceReference._location.projectionFacets = null;
                 }
             }
             return this._sourceReference;
@@ -5520,6 +5515,11 @@
             
             newReference._location = this.reference._location._clone();
             newReference._location.pagingObject = null;
+            
+            // TODO might be able to improve this
+            if (typeof this.reference.location.searchTerm === "string") {
+                jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+            }
             
             // change the facets in location object
             if (jsonFilters.length > 0) {
