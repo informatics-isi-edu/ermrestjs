@@ -26,6 +26,27 @@
         return new Location(uri);
 
     };
+    
+    /**
+     * Given tableName, schemaName, and facets will generate a path in the following format:
+     * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>
+     * @param  {string} schemaName Name of schema, can be null
+     * @param  {string} tableName  Name of table
+     * @param  {object} facets     an object 
+     * @return {string}            a path that ermrestjs understands and can parse
+     */
+    module.createPath = function (catalogId, schemaName, tableName, facets) {
+        verify(typeof catalogId === "string", "catalogId must be an string.");
+        verify(typeof tableName === "string", "tableName must be an string.");
+        verify(facets && typeof facets === "object", "facets must be an object.");
+        
+        var compactPath = "#" + catalogId + "/";
+        if (schemaName) {
+            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+        }
+        compactPath += module._fixedEncodeURIComponent(tableName);
+        return compactPath + "/*::facets::" + module.encodeFacet(facets);
+    };
 
     /**
      * The parse handles URI in this format
