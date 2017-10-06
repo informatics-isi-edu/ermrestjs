@@ -645,7 +645,7 @@
             var hasFacets = this._facets != null;
             var andOperator = module._FacetsLogicalOperators.AND;
             
-            var facetObject;
+            var facetObject, andFilters;
             if (term === null) {
                 // hasSearch must be true, if not there's something wrong with logic.
                 // if term === null, that means the searchTerm is not null, therefore has search
@@ -665,11 +665,15 @@
                     if (!hasSearch) {
                         facetObject[andOperator].unshift(newSearchFacet);
                     } else {
-                        facetObject[andOperator].forEach(function (filter) {
-                            if (filter.source === "*") {
-                                filter.search = [term];
+                        andFilters  = facetObject[andOperator];
+                        for (var i = 0; i < andFilters.length; i++) {
+                            if (andFilters[i].source === "*") {
+                                if (Array.isArray(andFilters[i].search)) {
+                                    andFilters[i].search = [term];
+                                }
+                                break;
                             }
-                        });
+                        }
                     }
                 } else {
                     facetObject = {"and": [newSearchFacet]};
@@ -978,13 +982,25 @@
         };
     };
     
+    /**
+     * Given the facetObject, find the `*` facet and extract the search term.
+     * Should be called whenever we're changing the facet object
+     * Will only consider the first `source`: `*`.
+     * @param  {object} facetObject the facet object
+     * @return {string}             search term
+     */
     _getSearchTerm = function (facetObject) {
-        var searchTerm = "";
-        facetObject[module._FacetsLogicalOperators.AND].forEach(function (filter) {
-            if (filter.source === "*" && Array.isArray(filter.search)) {
-                searchTerm += filter.search.join(" ");
+        var andFilters = facetObject[module._FacetsLogicalOperators.AND],
+            searchTerm = "";
+
+        for (var i = 0; i < andFilters.length; i++) {
+            if (andFilters[i].source === "*") {
+                if (Array.isArray(andFilters[i].search)) {
+                    searchTerm = andFilters[i].search.join("|");
+                }
+                break;
             }
-        });
+        }
         return searchTerm.length === 0 ? null : searchTerm;
     };
 
