@@ -1811,13 +1811,13 @@
          * Mentions whether this column is generated depending on insert rights
          * @type {Boolean}
          */
-        this.generated = this.rights.insert === false;
+        this.isGenerated = this.rights.insert === false;
 
         /**
          * Mentions whether this column is immutable depending on update rights
          * @type {Boolean}
          */
-        this.immutable = this.rights.update === false;
+        this.isImmutable = this.rights.update === false;
 
         /**
          * @type {string}

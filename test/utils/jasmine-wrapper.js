@@ -8,7 +8,7 @@ var runSpecs = function(config) {
 
 var setRestrictedUserId = function(config) {
 	var authCookieEnvName = 'RESTRICTED_AUTH_COOKIE';
-	if (process.env.authCookieEnvName) {
+	if (process.env[authCookieEnvName]) {
 		require('request')({
 			url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 			method: 'GET',
@@ -19,7 +19,7 @@ var setRestrictedUserId = function(config) {
 			if (!error && response.statusCode == 200) {
 				var info = JSON.parse(body);
 				process.env[authCookieEnvName + '_ID'] = info.client.id;
-				console.log(process.env[authCookieEnvName + '_ID']);
+				console.log('Cookie: ' + process.env[authCookieEnvName] + " \nUserid: "  + process.env[authCookieEnvName + '_ID']);
 				runSpecs(config);
 			} else {
 				throw new Error('Unable to retreive userinfo for restricted user');
@@ -44,7 +44,7 @@ exports.run = function(config) {
 				require('request')({
 					url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 					method: 'POST',
-					body: 'username=test1&password=dummypassword'
+					body: 'username=' + username + '&password=' + password
 				}, function(error, response, body) {
 					if (!error && response.statusCode == 200) {
 						var cookies = require('set-cookie-parser').parse(response);
@@ -71,8 +71,8 @@ exports.run = function(config) {
 	    	var success = function() {
 	    		if (++done == 2) setRestrictedUserId(config);
 	    	}
-	    	setCookieAndId('test1', 'dummypassword', 'AUTH_COOKIE', success);
-	    	setCookieAndId('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
+	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
+	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
 	} else {
 	    setRestrictedUserId(config);

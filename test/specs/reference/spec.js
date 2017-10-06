@@ -32,6 +32,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/delete.conf.json",
         "/reference/conf/default_value.conf.json",
         "/reference/conf/columns.conf.json",
-        "/reference/conf/aggregate.conf.json"
+        "/reference/conf/aggregate.conf.json",
+        "/reference/conf/permission.conf.json"
     ]
 });

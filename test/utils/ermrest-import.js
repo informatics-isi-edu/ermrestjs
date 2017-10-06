@@ -43,18 +43,18 @@ exports.importSchemas = function(configFilePaths, catalogId) {
 	return defer.promise;
 };
 
-exports.importAcls = function(options) {
+exports.importAcls = function(params) {
 	var defer = q.defer();
 	ermrestUtils.importACLS({
 		url: includes.url,
         authCookie: includes.authCookie,
-        setup: options
+        setup: params
 	}).then(function() {
 		defer.resolve();
 	}, function(err) {
 		defer.reject(err);
 	});
-	return defer.promise();
+	return defer.promise;
 };
 
 var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {

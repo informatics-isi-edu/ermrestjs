@@ -409,11 +409,11 @@ exports.execute = function (options) {
                 }).then(function (reference){ 
                     return reference.read(2);
                 }).then(function (page){
-                    if (process.env.TRAVIS){
+                    //if (process.env.TRAVIS){
                         expect(page.content).toBe(content_without_annotation_w_para);
-                    }else{
-                        expect(page.content).toBe(content_without_annotation);
-                    }
+                    //} else{
+                    //    expect(page.content).toBe(content_without_annotation);
+                    //}
                         
                     done();
                 }).catch(function(err) {
