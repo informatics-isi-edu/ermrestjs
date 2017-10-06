@@ -633,8 +633,8 @@
          * Apply, replace, clear filter term on the location
          * @param {string} term - optional, set or clear search
          */
-        search: function(term) {
-            term = (term == null || term === "") ? null : term;
+        search: function(t) {
+            var term = (t == null || t === "") ? null : t;
             
             if (term === this._searchTerm) {
                 return;
@@ -677,10 +677,9 @@
             }
             
             this._searchTerm = term;
+            delete this._facets;
             if (facetObject && facetObject.and) {
                 this._facets = new ParsedFacets(facetObject);
-            } else {
-                delete this._facets;
             }
             
             // enforce updating uri

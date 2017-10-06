@@ -705,7 +705,9 @@
                 
                 if (newFilters.length > 0) {
                     //TODO we should make sure this is being called before read.
-                    newFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+                    if (typeof this.location.searchTerm === "string") {
+                        newFilters.push({"source": "*", "search": [this.location.searchTerm]});
+                    }
                     this._location.facets = {"and": newFilters};
                 }
                 
@@ -2788,6 +2790,9 @@
                             if (firstFk && firstFk.isInbound && firstFk._table === newTable) {
                                 facetFilter.source.shift();
                             } else {
+                                if (!Array.isArray(facetFilter.source)) {
+                                    facetFilter.source = [facetFilter.source];
+                                }
                                 facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]});
                             }
                             return facetFilter;
@@ -2799,6 +2804,9 @@
                             if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
                                 facetFilter.source.shift();
                             } else {
+                                if (!Array.isArray(facetFilter.source)) {
+                                    facetFilter.source = [facetFilter.source];
+                                }
                                 facetFilter.source.unshift({"inbound": source._table._altForeignKey.constraint_names[0]});  
                             }
                             return facetFilter;
@@ -2810,6 +2818,9 @@
                             if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable._baseTable) {
                                 facetFilter.source[0] = {"outbound": newTable._altForeignKey.toString(true)};
                             } else {
+                                if (!Array.isArray(facetFilter.source)) {
+                                    facetFilter.source = [facetFilter.source];
+                                }
                                 facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source._altForeignKey.constraint_names[0]});
                             }
                             return facetFilter;
