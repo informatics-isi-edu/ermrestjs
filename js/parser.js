@@ -33,19 +33,23 @@
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object 
-     * @return {string}            a path that ermrestjs understands and can parse
+     * @return {string}            a path that ermrestjs understands and can parse, can be undefined
      */
     module.createPath = function (catalogId, schemaName, tableName, facets) {
-        verify(typeof catalogId === "string", "catalogId must be an string.");
-        verify(typeof tableName === "string", "tableName must be an string.");
-        verify(facets && typeof facets === "object", "facets must be an object.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
         
-        var compactPath = "#" + catalogId + "/";
+        var compactPath = "#" + module._fixedEncodeURIComponent(catalogId) + "/";
         if (schemaName) {
             compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
         }
         compactPath += module._fixedEncodeURIComponent(tableName);
-        return compactPath + "/*::facets::" + module.encodeFacet(facets);
+        
+        if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
+            compactPath += "/*::facets::" + module.encodeFacet(facets);
+        }
+        
+        return compactPath;
     };
 
     /**
