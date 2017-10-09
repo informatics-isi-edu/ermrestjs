@@ -117,6 +117,26 @@
         this.length = 0;
     };
     
+    
+    module.encodeFacet = function (obj) {
+        return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
+    };
+    
+    module.decodeFacet = function (blob) {
+        var err = new module.MalformedURIError("Given encoded string for facets is not valid.");
+        
+        try {
+            var str = module._LZString.decompressFromEncodedURIComponent(blob);
+            if (str === null) {
+                throw err;
+            }
+            return JSON.parse(str);
+        } catch (exception) {
+            console.log(exception);
+            throw err;
+        }
+    };
+
     /**
      * Returns true if given parameter is object and not null
      * @param  {*} obj
@@ -443,14 +463,14 @@
      */
     module._getFormattedKeyValues = function(columns, context, data) {
         var keyValues = {};
-        
+
         var findCol = function (colName) {
             if (Array.isArray(columns)) {
                 return columns.filter(function (col) {return col.name === colName;})[0];
             }
             return columns.get(k);
         };
-        
+
         for (var k in data) {
 
             try {
@@ -879,7 +899,7 @@
         }
     };
 
-    /** 
+    /**
      * format the raw value based on the column definition type, heuristics, annotations, etc.
      * @param {ERMrest.Type} type - the type object of the column
      * @param {Object} data - the 'raw' data value.
@@ -1726,10 +1746,11 @@
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted"
+        ROWNAME_UNFORMATTED: "row_name/unformatted",
+        COMPACT_BRIEF_INLINE: 'compact/brief/inline'
     });
 
-    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name"];
+    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
 
@@ -1753,9 +1774,8 @@
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
     
-    module._facetSupportedTypes = [
-        'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
-        'serial2', 'serial4', 'serial8', 'timestamptz', 'date', 'text', 'shorttext'
+    module._facetUnsupportedTypes = [
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid'
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];

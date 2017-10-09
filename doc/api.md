@@ -51,6 +51,7 @@ to use for ERMrest JavaScript agents.
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
+        * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
     * [.Schemas](#ERMrest.Schemas)
         * [new Schemas()](#new_ERMrest.Schemas_new)
         * [.length()](#ERMrest.Schemas+length) ⇒ <code>Number</code>
@@ -487,6 +488,7 @@ Get a catalog by id. This call does catalog introspection.
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
+    * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
 
 <a name="new_ERMrest.Catalog_new"></a>
 
@@ -525,6 +527,18 @@ returns the constraint object for the pair.
 | --- | --- | --- |
 | pair | <code>Array.&lt;string&gt;</code> | constraint name array. Its length must be two. |
 | subject | <code>string</code> | the retuned must have the same object, otherwise return null. |
+
+<a name="ERMrest.Catalog+getTable"></a>
+
+#### catalog.getTable(tableName, schemaName) ⇒ [<code>Table</code>](#ERMrest.Table)
+Given tableName, and schemaName find the table
+
+**Kind**: instance method of [<code>Catalog</code>](#ERMrest.Catalog)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tableName | <code>string</code> | name of the table |
+| schemaName | <code>string</code> | name of the schema. Can be undefined. |
 
 <a name="ERMrest.Schemas"></a>
 
@@ -2640,6 +2654,9 @@ if (reference.next) {
 
 #### page.content : <code>string</code> \| <code>null</code>
 HTML representation of the whole page which uses table-display annotation.
+If markdownPattern is defined then renderTemplate is called to get the correct display.
+In case of no such markdownPattern is defined output is displayed in form of 
+unordered list with displayname as text content of the list. 
 For more info you can refer {ERM.reference.display}
 
 Usage:
