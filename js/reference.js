@@ -438,7 +438,8 @@
                     
                     var fcObj = refColToFacetObject(col);
                     
-                    if (!fcObj.obj.entity && module._facetSupportedTypes.indexOf(col.type.name) === -1) {
+                    // if in scalar, and is one of unsupported types
+                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
                         return false;
                     }
                     
@@ -581,7 +582,7 @@
                 
                 // get column orders from annotation
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                    annotationCols = module._getRecursiveAnnotationValue(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
+                    annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
                     if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
                         annotationCols = annotationCols[andOperator];
                     } else {
