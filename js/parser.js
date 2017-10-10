@@ -203,8 +203,10 @@
         if (parts[1] && !this._facets) {
             // TODO should refactor these checks into one match statement
             var isJoin = parts[1].match(joinRegExp);
+            var isFacet = parts[1].match(facetsRegExp);
+            
             // parts[1] could be linking or search
-            if (!isJoin) {
+            if (!isJoin && !isFacet) {
                 this._filtersString = parts[1];
                 
                 // split by ';' and '&'
