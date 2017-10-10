@@ -123,7 +123,7 @@
     };
     
     module.decodeFacet = function (blob) {
-        var err = new module.MalformedURIError("Given encoded string for facets is not valid.");
+        var err = new module.InvalidFacetOperatorError();
         
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);

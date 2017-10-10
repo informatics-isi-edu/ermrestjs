@@ -433,9 +433,8 @@
                 
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
-                    if (facetFilter) {
-                        uri += "/" + facetFilter;
-                    }
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    uri += "/" + facetFilter;
                 }
                 
                 if (joinsLength > 0) {
@@ -446,9 +445,8 @@
                 
                 if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog);
-                    if (facetFilter) {
-                        uri += "/" + facetFilter;
-                    }
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    uri += "/" + facetFilter;
                 }
 
                 this._ermrestCompactPath = uri;
@@ -1218,7 +1216,9 @@
         
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
-            throw new module.MalformedURIError("Invalid Facet Object: " + obj);
+            // we cannot actually parse the facet now, because we haven't 
+            // introspected the whole catalog yet, and don't have access to the constraint objects.
+            throw new module.InvalidFacetOperatorError();
         }
         
     }
@@ -1253,8 +1253,9 @@
      * For the structure of JSON, take a look at ParsedFacets documentation.
      * 
      * NOTE: 
-     * If the data-path or the strucure is not as expected, it will just ignore facets
-     * (won't throw any errros)
+     * If any part of the facet is not as expected, it will throw emtpy string.
+     * Any part of the code that is using this function should guard against the result
+     * being empty, and throw error in that case.
      * 
      * @param       {object} json  JSON representation of filters
      * @param       {string} alias the table alias
@@ -1306,9 +1307,17 @@
         
         // parse search constraint
         var parseSearch = function (search, column) {
-            return search.reduce(function (prev, curr, i) {
-                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
+            var res, invalid = false;
+            res = search.reduce(function (prev, curr, i) {
+                if (curr == null) {
+                    invalid = true;
+                    return "";
+                } else {
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
+                }
             }, "");
+            
+            return res;
         };
         
         // returns null if the path is invalid
@@ -1356,62 +1365,78 @@
         };
         
         // parse TERM (it will not do it recursively)
+        // returns null if it's not valid
         var parseAnd = function (and) {
-            var res = [], i, term, col, path, constraints;
+            var res = [], i, term, col, path, constraints, parsed;
             
             for (i = 0; i < and.length; i++) {
                 path = ""; // the source path if there are some joins
                 constraints = []; // the current constraints for this source
                 term = and[i];
                 
-                // ignore the facet, if there's no source in it.
-                if (!term.hasOwnProperty('source')) {
-                    continue;
+                if (typeof term !== "object") {
+                    return "";
                 }
                 
                 // parse the source
                 if (Array.isArray(term.source)) {
                     path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
-                } else {
+                } else if (typeof term.source === "string"){
                     col = term.source;
+                } else {
+                    return "";
                 }
                 
                 // if the data-path was invalid, ignore this facet
                 if (path === null) {
-                    continue;
+                    return "";
                 }
                 
                 // parse the constraints
                 if (Array.isArray(term.choices)) {
-                    constraints.push(parseChoices(term.choices, col));
+                    parsed = parseChoices(term.choices, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
                 if (Array.isArray(term.ranges)) {
-                    constraints.push(parseRanges(term.ranges, col));
+                    parsed = parseRanges(term.ranges, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
                 if (Array.isArray(term.search)) {
-                    constraints.push(parseSearch(term.search, col));
+                    parsed = parseSearch(term.search, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
-                if (constraints.length > 0) {
-                    res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                if (constraints.length == 0) {
+                    return "";
                 }
+
+                res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
             }
             return res.join("/");
         };
         
-        var ermrestFilter = "";
-        
         var andOperator = module._FacetsLogicalOperators.AND;
         
         // NOTE we only support and at the moment.
-        if (json.hasOwnProperty(andOperator) && Array.isArray(json[andOperator])) {
-            ermrestFilter += parseAnd(json[andOperator]);
+        if (!json.hasOwnProperty(andOperator) || !Array.isArray(json[andOperator])) {
+            return "";
         }
         
-        return ermrestFilter;
+        var ermrestFilter = parseAnd(json[andOperator]);
+        
+        return !ermrestFilter ? "" : ermrestFilter;
     };
     
     /**
