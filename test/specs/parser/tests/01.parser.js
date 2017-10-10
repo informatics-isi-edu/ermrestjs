@@ -300,6 +300,7 @@ exports.execute = function(options) {
         
         
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+        var facetError = "Given encoded string for facets is not valid.";
         var location, uri;
 
         describe("when uri doesn't have any facets, ", function() {
@@ -313,7 +314,7 @@ exports.execute = function(options) {
             it("parser should throw an error.", function() {
                 expect(function () {
                     options.ermRest.parse(baseUri + "/*::facets::invalidblob");
-                }).toThrow("Given encoded string for facets is not valid.");
+                }).toThrow(facetError);
             });
         });
 
@@ -337,14 +338,7 @@ exports.execute = function(options) {
                 expect(location.facets.encoded).toEqual(validBlob);
             });
         });
-
-        it("Location.facets setter should be able to change the facet and update other APIs.", function() {
-            location.facets = facetObj2;
-            expect(location.uri).toBe(baseUri + "/*::facets::"+ validBlob2, "uri missmatch.");
-            
-            expect(location.searchTerm).toEqual("test2", "searchTerm missmatch.");
-        });
-
+        
         describe("when uri has joins, ", function() {
             it("parser should handle having facet before join.", function() {
                 uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)";
@@ -397,6 +391,208 @@ exports.execute = function(options) {
                     "T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M", 
                     "ermrestCompactPath missmatch"
                 );
+            });
+        });
+
+        describe("for changing facets in location, ", function () {
+            it("Location.facets setter should be able to change the facet and update other APIs.", function() {
+                location.facets = facetObj;
+                
+                uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
+                expect(location.uri).toBe(uri, "uri missmatch.");
+                
+                expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
+            });
+            
+            it("Location.projectionFacets setter should be able to change the facet and update other APIs.", function() {
+                location.projectionFacets = facetObj2;
+                
+                uri = baseUri + "/*::facets::" + validBlob2 + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
+                expect(location.uri).toBe(uri, "uri missmatch.");
+                
+                expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
+            });
+        });
+        
+        describe("regarding handling different facets syntaxes, ", function () {
+            var facet, blob;
+            var unicodeSample =  "ɐ ɔ", encodedUnicodeSample = "%C9%90%20%C9%94";
+            
+            var expectError = function (blob) {
+                expect(function () {
+                    var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob);
+                    var ermrestURL = loc.ermrestUri;
+                }).toThrow(facetError);
+            };
+            
+            var expectLocation = function (blob, facetObject, path) {
+                var url = baseUri + "/*::facets::" + blob;
+                
+                var loc = options.ermRest.parse(url);
+                
+                expect(loc).toBeDefined("location is not defined.");
+                
+                expect(loc.uri).toBe(url, "uri missmatch");
+                
+                expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch.");
+                expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch.");
+                
+                expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch");
+            };
+
+            describe("regarding source attribute, ", function () {
+                it("should throw an error when `and` is not available.", function () {
+                    expectError("N4Igzg9grgTgxgUxALhARhAGhHAFhAS0TBQG10QBdAXyA");
+                });
+                
+                it("should throw an error when `and` value is not an array.", function () {
+                    expectError("N4IghgdgJiBcoGcD2BXATgYwKZwIwBoQMALJAS2wTgG0RcQBdAXyaA");
+                });
+                
+                it ("should throw an error when source is not available.", function () {
+                    // {"and": [{"choices": ["1"]} ] }
+                    expectError("N4IghgdgJiBcDaoDGALA9gSyQUwM53hAEYQBdAXwqA");
+                    
+                });
+                
+                it ("should throw an error when source is not string.", function () {
+                    // {"and": [ {"source": 1, "choices": ["1"]} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4EYAaELACxQEtck54R8QBdAXxaA");
+                });
+                
+                it ("should accept string as source.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEYQAaELACxQEtck55CQBdAX1aA",
+                        {"and": [ {"source": "1", "choices": ["1"]} ]},
+                        "1=1/$M"
+                    );
+                });
+                
+                // array for source test cases are in faceting spec.
+            });
+            
+            describe("regarding choices attribute, ", function () {
+                it("should throw an error if its value is not an array.", function () {
+                    //{"and": [ {"source": "c", "choices": "1"} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yXwEYQBfAXQaA");
+                });
+                
+                it ("should handle null values.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdAXzaA",
+                        {"and": [ {"source": "c", "choices": [null]} ]},
+                        "c::null::/$M"
+                    );
+                });
+                
+                it ("should handle unicode characters.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCwAsUBLXJOeQ0kAXQF8ug",
+                        {"and": [ {"source": unicodeSample, "choices": [unicodeSample]} ]},
+                        encodedUnicodeSample + "=" + encodedUnicodeSample + "/$M"
+                    );
+                });
+                
+                it ("should handle multiple values.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTnhAEZiAmIgZgF0BfLoA",
+                        {"and": [ {"source": "c", "choices": ["1", 2, 3]} ]},
+                        "c=1;c=2;c=3/$M"
+                    );
+                });
+            });
+            
+            describe("regarding search attribute, ", function () {
+                
+                it("should throw an error if its value is not an array.", function () {
+                    //{"and": [ {"source": "c", "search": "1"} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALfARhAF8BdeoA");
+                });
+                
+                it ("should throw an error if search value is null/undefined.", function () {
+                    // {"and": [ {"source": "c", "search": [null]} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeCNAG3oF0BfVoA");
+                });
+                
+                it ('should create correct regex search filter.', function () {
+                    var intRegexPrefix = "^(.*[^0-9.])?0*";
+                    var intRegexSuffix = "([^0-9].*|$)";
+                    
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeARgF0BfJoA",
+                        {"and": [ {"source": "c", "search": [1]} ]},
+                        "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M"
+                    );
+                    
+                    expect(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
+                        {"and": [ {"source": "c", "search": ["a b"]} ]},
+                        "c::ciregexp::a&c::ciregexp::b/$M"
+                    );
+                });
+                
+                it("should handle unicode characters.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCRzGwAs55wQBdAX3aA",
+                        {"and": [ {"source": unicodeSample, "search": ["a"] } ]},
+                        encodedUnicodeSample + "::ciregexp::a/$M"
+                    );
+                });
+                
+                it ("should handle multiple values.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecYkAIxAF0BfNoA",
+                        {"and": [ {"source": "c", "search": ["a", "b"]} ]},
+                        "c::ciregexp::a;c::ciregexp::b/$M"
+                    );
+                });
+            });
+            
+            describe("regarding `ranges` attribute, ", function () {
+                it("should throw an error if its value is not an array.", function () {
+                    //{"and": [ {"source": "c", "ranges": "1"} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJfARhAF8BdeoA");
+                });
+                
+                it ("should throw an error if max and min are not defined.", function () {
+                    // {"and": [ {"source": "c", "ranges": ["1"]} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOeEARhAF0BfFoA");
+                });
+                
+                it ('should handle half ranges.', function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXwF1O2g",
+                        {"and": [ {"source": "c", "ranges": [{"min":1}]} ]},
+                        "c::gt::1/$M"
+                    );
+                    
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA98AXEAXwF0v2g",
+                        {"and": [ {"source": "c", "ranges": [{"max":"t"}]} ]},
+                        "c::lt::t/$M"
+                    );
+                });
+                
+                it("should handle unicode characters.", function () {
+                    expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhA0gHMck5EQBbASwn2LMubAA9OpEAF8AumOFA",
+                            {"and": [ {"source": unicodeSample, "ranges": [{"min": unicodeSample, "max": unicodeSample}] } ]},
+                            encodedUnicodeSample + "::gt::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::lt::" + encodedUnicodeSample + "/$M"
+                    );
+                });
+                
+                it("should handle multiple values.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXyNDrAA98AXEBy5M4AWhYlufWAFY2AXUVsgA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1}, {"max":"t"}, {"min": -1, "max": 5}]} ]},
+                        "c::gt::1;c::lt::t;c::gt::-1&c::lt::5/$M"
+                    );
+                });
+            });
+            
+            it ("should throw an error if one of the facets don't have any constraints.", function () {
+                // {"and": [ {"source": "*"} ]}
+                expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4gCoQBfAXWKA");
             });
         });
     });
