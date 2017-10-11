@@ -4,8 +4,9 @@ exports.execute = function (options) {
         var reference;
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "aggregate_schema",
-            tableName = "aggregate_table";
-            tableNameWithCompKey = "table_w_only_composite_key";
+            tableName = "aggregate_table",
+            tableNameWithCompKey = "table_w_only_composite_key",
+            tableNameWithSimpleKey = "table_w_simple_key";
 
         // Columns in aggregate table are as follows:
         // [id, int_agg, float_agg, text_agg, date_agg, timestamp_agg]
@@ -16,8 +17,15 @@ exports.execute = function (options) {
         var attrGroupUri = options.url + "/catalog/" + catalog_id + "/attributegroup/M:=" +
             schemaName + ":" + tableName;
         
-        var compositeTableUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+        var compositeTableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithCompKey + ":col)";
+            
+        var tableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithSimpleKey + ":simple_id)";
+        
+        var tableWithJoinAttrGroupUri = options.url + "/catalog/" + catalog_id + "/attributegroup/T:=" + 
+            schemaName + ":" + tableName + "/M:=(id)=(" + schemaName + ":" + tableNameWithSimpleKey + ":simple_id)";
+            
 
         beforeAll(function (done) {
             options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
@@ -183,12 +191,22 @@ exports.execute = function (options) {
                 };
                 
                 
-                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(shortestKey) for count.", function (done) {
-                    options.ermRest.resolve(compositeTableUri, {cid: "test"}).then(function (reference) {
+                it ("if there's a join in the path should and table doesn't have single keys, should throw an error.", function (done) {
+                    options.ermRest.resolve(compositeTableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expect(function () {
                             var ec = reference.columns[0].groupAggregate.entityCounts;
                         }).toThrow("Table must have a simple key for entity counts: table_w_only_composite_key");
 
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+                
+                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(shortestKey) for count.", function (done) {
+                    options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
+                        expectAttrGroupRef(reference.columns[0].groupAggregate.entityCounts, tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(simple_id)@sort(count::desc::,value)");
                         done();
                     }).catch(function (error) {
                         console.dir(error);

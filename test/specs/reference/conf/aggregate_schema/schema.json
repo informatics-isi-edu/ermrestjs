@@ -89,8 +89,6 @@
                     }]
                 }
             ],
-            "entityCount": 0,
-            "foreign_keys": [],
             "table_name": "table_w_only_composite_key",
             "schema_name": "aggregate_schema",
             "column_definitions": [
@@ -111,6 +109,55 @@
                 {
                     "name": "col",
                     "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": ["col"]
+                }
+            }
+        },
+        "table_w_simple_key": {
+            "comment": "Table with single key and a fk to aggregate_table",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "simple_id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "foreign_key_columns": [{
+                        "table_name": "table_w_simple_key",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "simple_id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "aggregate_table",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "table_name": "table_w_simple_key",
+            "schema_name": "aggregate_schema",
+            "column_definitions": [
+                {
+                    "name": "simple_id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col",
                     "type": {
                         "typename": "text"
                     }
