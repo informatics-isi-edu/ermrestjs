@@ -2374,6 +2374,30 @@
                 }
             }
 
+            // If not in edit context i.e in read context remove the hidden columns which cannot be selected.
+            if (!module._isEntryContext(this._context)) {
+                
+                // Iterate over all reference columns
+                for (i = 0; i < this._referenceColumns.length; i++) {
+                    var refCol = this._referenceColumns[i];
+                    var isHidden = false;
+
+                    // Iterate over the base columns. If any of them are hidden then hide the column
+                    for (var k=0; k< refCol._baseCols.length; k++) {
+                        if (refCol._baseCols[k].isHidden) {
+                            isHidden = true;
+                            break;
+                        }
+                    }
+
+                    // If isHidden flag is true then remove the column at ith index
+                    if (isHidden) {
+                        this._referenceColumns.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
             return this._referenceColumns;
         },
 
