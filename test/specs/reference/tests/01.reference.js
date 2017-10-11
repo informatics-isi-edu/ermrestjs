@@ -97,7 +97,7 @@ exports.execute = function (options) {
                     var page = response.successful;
 
                     expect(page).toEqual(jasmine.any(Object));
-                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
+                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.");
                     expect(page._data.length).toBe(rows.length);
                     expect(page._data[0].id).toBe((rows[0].id).toString());
                     expect(page._data[0].name).toBe(rows[0].name);

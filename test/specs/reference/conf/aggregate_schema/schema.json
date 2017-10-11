@@ -62,6 +62,65 @@
                 }
             ],
             "annotations": {}
+        },
+        "table_w_only_composite_key": {
+            "comment": "Table with composite key as the only key",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "foreign_key_columns": [{
+                        "table_name": "table_w_only_composite_key",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "col"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "aggregate_table",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_w_only_composite_key",
+            "schema_name": "aggregate_schema",
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": ["col"]
+                }
+            }
         }
     },
     "annotations": {},

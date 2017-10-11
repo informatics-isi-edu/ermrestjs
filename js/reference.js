@@ -5794,8 +5794,6 @@
             }
             
             if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
-                console.log(this.column);
-                console.log(this._ref);
                 throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
             }
                 
