@@ -80,6 +80,8 @@ install:
 before_script:
   - sudo -H -u webauthn webauthn2-manage adduser test1
   - sudo -H -u webauthn webauthn2-manage passwd test1 dummypassword
+  - sudo -H -u webauthn webauthn2-manage adduser test2
+  - sudo -H -u webauthn webauthn2-manage passwd test2 dummypassword
   - sudo -H -u webauthn webauthn2-manage addattr admin
   - sudo -H -u webauthn webauthn2-manage assign test1 admin
 

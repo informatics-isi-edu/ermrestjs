@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "permission_schema",
+        "createNew": true,
+        "path": "test/specs/reference/conf/permission_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

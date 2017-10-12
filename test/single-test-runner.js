@@ -1,4 +1,4 @@
-var jasmineUtils = require('./utils/jasmine-runner-utils.js');
+var jasmineWrapper = require('./utils/jasmine-wrapper.js');
 
 var config = {
   "spec_dir": "test",
@@ -14,36 +14,4 @@ var config = {
 config["spec_files"] = ["support/*.spec.js"];
 
 // function to run all test specs
-var runSpecs = function() {
-	// Load the configuration file
-	jasmineUtils.run(config);
-};
-
-runSpecs();
-
-// Catch unhandled exceptions and show the stack trace. This is most
-// useful when running the jasmine specs.
-process.on('uncaughtException', function(e) {
-	console.log('Caught unhandled exception: ');
-	console.log(e);
-	console.log(e.stack);
-	if (!process.catalogDeleted) {
-		process.catalogDeleted = true;
-		jasmineUtils.deleteCatalog();
-	} else {
-		process.exit(1);
-	}
-});
-
-process.on('SIGINT', function(code) {
-	if (!process.catalogDeleted) {
-	    process.catalogDeleted = true;
-	    console.log('About to exit because of SIGINT (ctrl + c)');
-	    jasmineUtils.deleteCatalog().done(function() {
-	    	process.exit(1);
-	    });
-	} else {
-		process.exit(1);
-	}
-});
-
+jasmineWrapper.run(config);

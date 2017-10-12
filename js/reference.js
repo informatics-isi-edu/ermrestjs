@@ -795,7 +795,7 @@
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("content_write_user");
+                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
 
                 if (this._canCreate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -815,7 +815,7 @@
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("content_read_user");
+                this._canRead = this._checkPermissions("select");
             }
             return this._canRead;
         },
@@ -836,7 +836,7 @@
             if (this._canUpdate === undefined) {
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("content_write_user");
+                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("update");
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
@@ -860,7 +860,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("content_write_user");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("delete");
             }
             return this._canDelete;
         },
@@ -872,38 +872,9 @@
          * @private
          */
          _checkPermissions: function (permission) {
-            var editCatalog = false,
-                acl = [],
-                users = [];
-
-            // make sure this acl was defined in the _meta array before trying to work with it
-            if (this._meta[permission]) {
-                acl = this._meta[permission];
-            }
-
-            for (var i = 0; i < acl.length; i++) {
-                if (acl[i] === '*') {
-                    editCatalog = true;
-                } else {
-                    users.push(acl[i]);
-                }
-            }
-
-            if (users.length > 0) {
-                if(this._session) {
-                    var sessionAttributes = this._session.attributes.map(function(a) {
-                        return a.id;
-                    });
-
-                    for (var j = 0; j < users.length; j++) {
-                        if (sessionAttributes.indexOf(users[j]) != -1) editCatalog = true;
-                    }
-                } else {
-                    editCatalog = undefined;
-                }
-            }
-
-            return editCatalog;
+            // Return true if permission is null
+            if (this._table.rights[permission] === null) return true;
+            return this._table.rights[permission];
          },
 
         /**
@@ -2401,6 +2372,30 @@
                     removeCol(assetColumns[i].byteCountColumn);
                     removeCol(assetColumns[i].md5);
                     removeCol(assetColumns[i].sha256);
+                }
+            }
+
+            // If not in edit context i.e in read context remove the hidden columns which cannot be selected.
+            if (!module._isEntryContext(this._context)) {
+                
+                // Iterate over all reference columns
+                for (i = 0; i < this._referenceColumns.length; i++) {
+                    var refCol = this._referenceColumns[i];
+                    var isHidden = false;
+
+                    // Iterate over the base columns. If any of them are hidden then hide the column
+                    for (var k=0; k< refCol._baseCols.length; k++) {
+                        if (refCol._baseCols[k].isHidden) {
+                            isHidden = true;
+                            break;
+                        }
+                    }
+
+                    // If isHidden flag is true then remove the column at ith index
+                    if (isHidden) {
+                        this._referenceColumns.splice(i, 1);
+                        i--;
+                    }
                 }
             }
 
@@ -4172,8 +4167,8 @@
             }
         }
 
-        // if caption has a link, or context is EDIT: don't add the link.
-        if (caption.match(/<a/) || module._isEntryContext(context) ) {
+        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        if (caption.match(/<a/) || module._isEntryContext(context)) {
             value = caption;
         }
         // create the link using reference.
@@ -4396,97 +4391,98 @@
 
     // properties to be overriden:
     KeyPseudoColumn.prototype.formatPresentation = function(data, options) {
-         var context = options ? options.context : undefined;
-         var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
-         // if data is empty
-         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-             return nullValue;
-         }
+        var context = options ? options.context : undefined;
+        var nullValue = {isHTML: false, value: this._getNullValue(context)};
 
-         // used to create key pairs in uri
-         var createKeyPair = function (cols) {
-              var keyPair = "", col;
-             for (i = 0; i < cols.length; i++) {
-                 col = cols[i].name;
-                 keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                 if (i != cols.length - 1) {
-                     keyPair +="&";
-                 }
-             }
-             return keyPair;
-         };
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return nullValue;
+        }
 
-         // check if we have data for the given columns
-         var hasData = function (kCols) {
-             for (var i = 0; i < kCols.length; i++) {
-                 if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                     return false;
-                 }
-             }
-             return true;
-         };
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+            var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+         return keyPair;
+        };
 
-         var value, caption, i;
-         var cols = this.key.colset.columns,
-             addLink = true;
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+         return true;
+        };
 
-         // if any of key columns don't have data, this link is not valid.
-         if (!hasData(cols)) {
-             return nullValue;
-         }
+        var value, caption, i;
+        var cols = this.key.colset.columns,
+            addLink = true;
 
-         // use the markdown_pattern that is defiend in key-display annotation
-         var display = this.key.getDisplay(context);
-         if (display.isMarkdownPattern) {
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(cols)) {
+            return nullValue;
+        }
 
-             // make sure that formattedValues is defined
-             if (options === undefined || options.formattedValues === undefined) {
-                options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
-             }
+        // use the markdown_pattern that is defiend in key-display annotation
+        var display = this.key.getDisplay(context);
+        if (display.isMarkdownPattern) {
 
-             caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
-             caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
-             addLink = false;
-         } else {
-             var values = [];
+            // make sure that formattedValues is defined
+            if (options === undefined || options.formattedValues === undefined) {
+               options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
+            }
 
-             // create the caption
-             var presentation;
-             for (i = 0; i < cols.length; i++) {
-                 try {
-                     presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
-                     values.push(presentation.value);
-                     // if one of the values isHTMl, should not add link
-                     addLink = addLink ? !presentation.isHTML : false;
-                 } catch (exception) {
-                     // the value doesn't exist
-                     return nullValue;
-                 }
-             }
-             caption = values.join(":");
+            caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
+            caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+            addLink = false;
+        } else {
+            var values = [];
 
-             // if the caption is empty we cannot add any link to that.
-             if (caption.trim() === '') {
-                 return nullValue;
-             }
-         }
+            // create the caption
+            var presentation;
+            for (i = 0; i < cols.length; i++) {
+                try {
+                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                    values.push(presentation.value);
+                    // if one of the values isHTMl, should not add link
+                    addLink = addLink ? !presentation.isHTML : false;
+                } catch (exception) {
+                    // the value doesn't exist
+                    return nullValue;
+                }
+            }
+            caption = values.join(":");
 
-         if (addLink) {
-             var table = this.key.table;
-             var refURI = [
-                 table.schema.catalog.server.uri ,"catalog" ,
-                 module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
-                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-                 createKeyPair(cols)
-             ].join("/");
-             var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
-             value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
-         } else {
-             value = caption;
-         }
+            // if the caption is empty we cannot add any link to that.
+            if (caption.trim() === '') {
+                return nullValue;
+            }
+        }
 
-         return {isHTML: true, value: value};
+        if (addLink) {
+            var table = this.key.table;
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                createKeyPair(cols)
+            ].join("/");
+            var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
+            value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+        } else {
+            value = caption;
+        }
+
+        return {isHTML: true, value: value};
      };
     KeyPseudoColumn.prototype._determineSortable = function () {
         var display = this._display, useColumn = false, baseCol;

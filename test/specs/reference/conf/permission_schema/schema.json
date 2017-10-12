@@ -1,0 +1,50 @@
+{
+    "schema_name": "permission_schema",
+    "tables": {
+        "perm_table": {
+            "comment": "Table to check acls",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "perm_table",
+            "schema_name": "permission_schema",
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "name",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "term",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "perm_table"
+    ],
+    "comment": null,
+    "annotations": {}
+}

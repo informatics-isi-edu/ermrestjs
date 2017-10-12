@@ -409,7 +409,6 @@ exports.execute = function (options) {
                     return reference.read(2);
                 }).then(function (page){
                     expect(page.content).toBe(content_without_annotation_w_para);
-
                     done();
                 }).catch(function(err) {
                     console.log(err);
