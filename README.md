@@ -119,7 +119,7 @@ $ make doc
 Before running the test cases you need to set the environment variables.
 - `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
 - `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service. See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/chaise/wiki/E2E-tests-guide#how-to-get-your-auth_cookie).
-- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.  See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.  See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/).
 
 ```
 export ERMREST_URL=https://hostname/ermrest
