@@ -902,13 +902,14 @@
     _getSortModifier = function(sort) {
 
         // if no sorting
-        if (!sort || sort.length === 0) {
+        if (!sort || !Array.isArray(sort) || sort.length === 0) {
             return "";
         }
 
         var modifier = "@sort(";
         for (var i = 0; i < sort.length; i++) {
             if (i !== 0) modifier = modifier + ",";
+            if (!sort[i].column) throw new module.InvalidInputError("Invalid sort object.");
             modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
         }
         modifier = modifier + ")";

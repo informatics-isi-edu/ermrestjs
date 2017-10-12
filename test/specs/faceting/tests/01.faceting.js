@@ -7,5 +7,21 @@ exports.execute = function (options) {
             done();
         });
         
+        describe("Reference.facetColumns, ", function () {
+            describe ("when `filter` annotation is not defined, ", function () {
+                
+                
+                
+            });
+            
+            describe("when `filter` annotation is defined, ", function () {
+                it ("if it's not in the valid format, should use heuristics.", function () {
+                    
+                });
+                
+                
+            });
+        });
+        
     });
 };

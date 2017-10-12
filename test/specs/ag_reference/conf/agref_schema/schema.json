@@ -1,0 +1,33 @@
+{
+    "schema_name": "agref_schema",
+    "tables": {
+        "main": {
+            "kind": "table",
+            "table_name": "main",
+            "schema_name": "agref_schema",
+            "comment": "main table for the attributegroup",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "markdown"
+                    }
+                },
+                {
+                    "name": "invis_col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        }
+    }
+}

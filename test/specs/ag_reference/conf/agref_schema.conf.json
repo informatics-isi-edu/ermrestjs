@@ -1,0 +1,19 @@
+{
+    "catalog": {
+        "acls": {
+            "write": ["*"]
+        }
+    },
+    "schema": {
+        "name": "agref_schema",
+        "createNew": true,
+        "path": "test/specs/ag_reference/conf/agref_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/ag_reference/conf/agref_schema/data"
+    }
+}

@@ -1,3 +1,7 @@
+module.AttributeGroupReference = AttributeGroupReference;
+module.AttributeGroupLocation = AttributeGroupLocation;
+module.AttributeGroupColumn = AttributeGroupColumn;
+
 /**
  * @namespace ERMrest.AttributeGroupReference
  */
@@ -554,7 +558,7 @@ AttributeGroupTuple.prototype = {
     }
 };
 
-function AttributeGroupColumn(alias, term, displayname, type, comment, sortable, visible) {
+function AttributeGroupColumn(alias, term, displayname, colType, comment, sortable, visible) {
     /**
      * The alias for the column.
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
@@ -580,11 +584,16 @@ function AttributeGroupColumn(alias, term, displayname, type, comment, sortable,
         this._displayname = displayname;
     }
     
-    /**
-     * Type object
-     * @type {ERMrest.Type}
-     */
-    this.type = type;
+    if (typeof colType === 'string') {
+        this.type = new Type({typename: colType});
+    } else {
+        
+        /**
+         * Type object
+         * @type {ERMrest.Type}
+         */
+        this.type = colType;
+    }
     
     /**
      * tooltip
@@ -621,7 +630,7 @@ AttributeGroupColumn.prototype = {
         if (typeof this._alias === "string" && this._alias.length !== 0) {
             return this._alias;
         }
-        return this._name;
+        return this.term;
     },
     
     get displayname() {
@@ -647,7 +656,7 @@ AttributeGroupColumn.prototype = {
          * 
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(data)};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true })};
         }
         return {isHTML: false, value: data};
     }
