@@ -5183,7 +5183,7 @@
                 var fk = this._lastForeignKey ? this._lastForeignKey.obj : null;
                 if (fk === null || !this.isEntityMode) {
                     this._comment = this._column.comment;
-                } else if (fk.comment !== "") {
+                } else if (typeof fk.comment === "string" && fk.comment !== "") {
                     this._comment = fk.comment;
                 } else {
                     this._comment = this._column.table.comment;
@@ -5618,8 +5618,8 @@
      */
     function RangeFacetFilter(min, max, columnType) {
         this._columnType = columnType;
-        this.min = min;
-        this.max = max;
+        this.min = !isDefinedAndNotNull(min) ? null : min;
+        this.max = !isDefinedAndNotNull(max) ? null : max;
         this.facetFilterKey = "ranges";
         this.uniqueId = this.toString();
     }

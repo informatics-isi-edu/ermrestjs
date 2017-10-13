@@ -4,6 +4,6 @@ require('./../../utils/starter.spec.js').runTests({
         "/faceting/tests/01.faceting.js"
     ],
     schemaConfigurations: [
-        "/reference/conf/faceting.conf.json",
+        "/faceting/conf/faceting.conf.json",
     ]
 });

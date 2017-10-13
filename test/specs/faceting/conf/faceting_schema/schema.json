@@ -149,6 +149,11 @@
                                 {"inbound": ["faceting_schema", "longpath_4_fk1"]},
                                 {"inbound": ["faceting_schema", "longpath_5_fk1"]},
                                 "col"
+                            ]},
+                            {"source": [
+                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                "id"
                             ]}
                         ]
                     }
@@ -749,6 +754,72 @@
                             "from_name": "from_name"
                         }
                     }
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "secondpath_1": {
+            "kind": "table",
+            "table_name": "secondpath_1",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "secondpath_1_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "secondpath_1",
+                        "schema_name": "faceting_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "main",
+                        "schema_name": "faceting_schema"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ]
+        },
+        "secondpath_2": {
+            "kind": "table",
+            "table_name": "secondpath_2",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "secondpath_2_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "secondpath_2",
+                        "schema_name": "faceting_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "secondpath_1",
+                        "schema_name": "faceting_schema"
+                    }]
                 }
             ],
             "column_definitions": [
