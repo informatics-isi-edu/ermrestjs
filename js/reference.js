@@ -323,7 +323,7 @@
                     if (refCol.isKey) {
                         return {
                             "obj": {"source": refCol._baseCols[0].name},
-                            "column": refCol._baseCols[0].name
+                            "column": refCol._baseCols[0]
                         };
                     }
                     
@@ -439,7 +439,7 @@
                     var fcObj = refColToFacetObject(col);
                     
                     // if in scalar, and is one of unsupported types
-                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
+                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(fcObj.column.type.name) !== -1) {
                         return false;
                     }
                     
@@ -4965,7 +4965,6 @@
         get preferredMode() {
             // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
             function isRangeMode(column) {
-                console.log();
                 var typename = column.type.name;
 
                 // returns true is the typename includes the given string
@@ -5139,7 +5138,7 @@
                 }
                 // Otherwise
                 else {      
-                    var value, unformatted, isHTML;
+                    var value, unformatted, isHTML = false;
                     var displayname, isInbound;
                     
                     isInbound = fk.isInbound;

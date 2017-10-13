@@ -1,15 +1,19 @@
 {
-  "catalog": {},
+  "catalog": {
+      "acls": {
+          "write": ["*"]
+      }
+  },
   "schema": {
     "name": "faceting_schema",
     "createNew": true,
-    "path": "test/specs/errors/conf/faceting_schema/schema.json"
+    "path": "test/specs/faceting/conf/faceting_schema/schema.json"
   },
   "tables": {
     "createNew": true
   },
   "entities": {
     "createNew": true,
-    "path": "test/specs/errors/conf/faceting_schema/data"
+    "path": "test/specs/faceting/conf/faceting_schema/data"
   }
 }
