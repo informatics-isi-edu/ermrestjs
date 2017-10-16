@@ -9,6 +9,14 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      */
     ERMrest.configure(require('request-q'), require('q'));
 
+    /*
+     * Expose authCookie function, to reset ermrest cookie
+     */
+    ERMrest.resetUserCookie = function() {
+        ERMrest._http.setDefaults({
+            json: true
+        });
+    };
 
     /*
      * Expose authCookie function, to set ermrest cookie

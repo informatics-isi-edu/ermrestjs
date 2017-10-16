@@ -12,7 +12,7 @@ var createCatalog = function() {
 
 	// make http request to create a catalog to be used across all specs
 	ermrestUtils.importData({
-        setup: { catalog: {} },
+        setup: { catalog: { acls: { 'enumerate': ['*'] } } },
         url: process.env.ERMREST_URL,
         authCookie: process.env.AUTH_COOKIE
     }).then(function (data) {

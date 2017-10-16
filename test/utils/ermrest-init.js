@@ -19,6 +19,7 @@ exports.init = function (options) {
 		server: server,
 		url: url,
 		authCookie: authCookie,
+		restrictedAuthCookie: process.env.RESTRICTED_AUTH_COOKIE,
 		importUtils: require("./ermrest-import.js")
 	};
 };

@@ -6,7 +6,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/03.reference_sort.js",
         "/reference/tests/04.paging.js",
         "/reference/tests/05.reference_values.js",
-        "/reference/tests/06.permissions.js",
+        "/reference/tests/06_1.permissions_acls.js",
+        "/reference/tests/06_2.permissions_annotations.js",
         "/reference/tests/07.contextualize.js",
         "/reference/tests/08.alternative_tables.js",
         "/reference/tests/09.app_linking.js",
@@ -32,6 +33,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/delete.conf.json",
         "/reference/conf/default_value.conf.json",
         "/reference/conf/columns.conf.json",
-        "/reference/conf/aggregate.conf.json"
+        "/reference/conf/aggregate.conf.json",
+        "/reference/conf/permission.conf.json"
     ]
 });

@@ -241,6 +241,9 @@
             var self = this;
             return this.server._http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
+
+                self.rights = jsonSchemas.rights;
+
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
                 }
@@ -466,6 +469,12 @@
                 this.ignore = true;
             }
         }
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonSchema.rights;
 
         /**
          * whether schema is generated.
@@ -732,6 +741,12 @@
             var jsonKey = jsonTable.keys[i];
             this.keys._push(new Key(this, jsonKey));
         }
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonTable.rights;
 
         /**
          *
@@ -1696,6 +1711,7 @@
          * @returns {string} The formatted value.
          */
         this.formatvalue = function (data, options) {
+
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
@@ -1723,22 +1739,22 @@
              * TODO: Add code to handle `pre_format` in the annotation
              */
              
-             /* 
-              * If column doesn't has column-display annotation and is not of type markdown
-              * but the column type is json then append <pre> tag and return the value
-              */
+            /* 
+             * If column doesn't has column-display annotation and is not of type markdown
+             * but the column type is json then append <pre> tag and return the value
+             */
             
-              if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + data + '</pre>'};
-              }
+            }
                 
-             /* 
-              * If column doesn't has column-display annotation and is not of type markdown
-              * then return data as it is
-              */
-              if (!display.isHTML) {
+            /* 
+             * If column doesn't has column-display annotation and is not of type markdown
+             * then return data as it is
+             */
+            if (!display.isHTML) {
                 return { isHTML: false, value: data };
-              }
+            }
 
             var value = data;
 
@@ -1778,6 +1794,30 @@
          * @type {ERMrest.Table}
          */
         this.table = table;
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonColumn.rights;
+
+        /**
+         * Mentions whether we should hide the value for this column
+         * @type {Boolean}
+         */
+        this.isHidden = this.rights.select === false;
+
+        /**
+         * Mentions whether this column is generated depending on insert rights
+         * @type {Boolean}
+         */
+        this.isGenerated = this.rights.insert === false;
+
+        /**
+         * Mentions whether this column is immutable depending on update rights
+         * @type {Boolean}
+         */
+        this.isImmutable = this.rights.update === false;
 
         /**
          * @type {string}
@@ -1944,13 +1984,13 @@
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (isGenerated || isSerial) {
+                if (this.isGenerated || isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };
                 }
             } else if (context == module._contexts.EDIT) {
-                if (isGenerated || isImmutable || isSerial) {
+                if (this.isImmutable || isGenerated || isImmutable || isSerial) {
                     return true;
                 }
             } else {
@@ -2722,6 +2762,12 @@
          * @type {ERMrest.Key}
          */
         this.key = refTable.keys.get(new ColSet(referencedCols));
+
+        /**
+         *
+         * @type {Object}
+         */
+        this.rights = jsonFKR.rights;
 
         /**
          * @type {ERMrest.Mapping}
