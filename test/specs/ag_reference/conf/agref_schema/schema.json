@@ -7,6 +7,7 @@
             "schema_name": "agref_schema",
             "comment": "main table for the attributegroup",
             "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
             "column_definitions": [
                 {
                     "name": "id",

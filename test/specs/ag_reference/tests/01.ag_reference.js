@@ -15,13 +15,6 @@ exports.execute = function (options) {
         var loc, locWithModifiers;
         var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible;
         
-        // reference: columns uri search read sort 
-        // column: term, type, comment, sortable, formatvalue, formatPresentation
-        // location: service, catalogId, path, searchObject, searchColumn, searchTerm, searchFilter, sort, paging
-        // page: next previous tuples 
-        // tuple: values data uniqueId displayname
-        // aggregate -> countAgg
-        
         describe("AttributeGroupLocation, ", function () {
             var checkLocation = function (obj, objName, path) {
                 expect(loc).toBeDefined(objName + " was not defined.");
@@ -332,7 +325,6 @@ exports.execute = function (options) {
                     describe("tuple, ", function () {
                         it ("values should return an array of valeus.", function () {
                             var values = tuples[0].values;
-                            // TODO
                             expect(values).toEqual([
                                 '<strong>test2</strong>', '2'
                             ]);
@@ -340,7 +332,6 @@ exports.execute = function (options) {
                         
                         it ("isHTML should return an array of valeus.", function () {
                             var isHTML = tuples[0].isHTML;
-                            // TODO
                             expect(isHTML).toEqual([
                                 true, false
                             ]);
@@ -370,5 +361,5 @@ exports.execute = function (options) {
         });
         
     });
-    
+
 };

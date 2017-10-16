@@ -39,8 +39,8 @@ exports.execute = function (options) {
      *  - has longtext, markdown, and serial columns.
      */
     
-    
     describe('for testing faceting features, ', function () {
+
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "faceting_schema",
             tableF1 = "f1", 
@@ -96,7 +96,7 @@ exports.execute = function (options) {
 
              return url;
          };
-        
+
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             
@@ -124,12 +124,12 @@ exports.execute = function (options) {
                 console.log(err);
                 done.fail();
             });
+            
         });
-        
+
         describe("Reference.facetColumns, ", function () {
             describe ("when `filter` annotation is not defined, ", function () {
                 describe("when visible columns for `compact` and related entities for `detailed` are wellformed.", function () {
-                    // f4
                     it ("it should use the visible columns from `compact` and related entities from `detailed`", function () {
                         expect(refF4.facetColumns.length).toBe(4, "length missmatch.");
                     });
@@ -175,7 +175,7 @@ exports.execute = function (options) {
                         });
                     });
                 });
-                
+
                 it ("it should ignore asset columns, and any inbound or outbound composite foreign keys, or composite keys.", function () {
                     // main_wo_faceting_annot_1
                     expect(refWOAnnot1.facetColumns.length).toBe(0);
@@ -188,7 +188,7 @@ exports.execute = function (options) {
                 
                 // TODO alternative table
             });
-            
+
             describe("when `filter` annotation is defined, ", function () {
                 it ("if it's not in the valid format, should use heuristics.", function () {
                     expect(refF1.facetColumns.length).toBe(2, "length missmatch.");
@@ -293,7 +293,7 @@ exports.execute = function (options) {
                 });
                 
             });
-            
+
         });
         
         it("Reference.removeAllFacetFilters, should return a new reference without any filters.", function () {
@@ -348,7 +348,7 @@ exports.execute = function (options) {
                     }
                 });
             });
-            
+
             describe("preferredMode, ", function () {
                 it ('if ux_mode is defined and is valid, should return it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
@@ -418,7 +418,7 @@ exports.execute = function (options) {
                     });
                 });
             });
-            
+                
             describe("comment", function () {
                 it ('if in scalar mode, return column\'s comment', function () {
                     expect(mainFacets[5].comment).toBe("text comment");
@@ -432,237 +432,238 @@ exports.execute = function (options) {
                     expect(mainFacets[9].comment).toBe("has fk to main table + has rowname");
                 });
             });
-            
-            /*
-            describe("sourceReference, ", function () {
-                it ("should have the search term from the reference.", function () {
+
+            describe('filter related APIs, ', function () {
+                describe("addSearchFilter, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[5].addSearchFilter(null);
+                        }).toThrow("`term` is required.");
+                    });
                     
+                    it ("should return a new reference with the applied filter.", function () {
+                        var newRef = refMain.facetColumns[5].addSearchFilter("test");
+                        expect(newRef).not.toBe(refMain, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/text_col::ciregexp::test/$M", 
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[5].filters.length).toBe(1, "filters length missmatch.");
+                        expect(newRef.facetColumns[5].filters[0].term).toBe("test", "filter term missmatch.");
+                    });
                 });
                 
-                it ("should have filters of other facet columns.", function () {
+                describe("addChoiceFilters, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[0].addChoiceFilters("2");
+                        }).toThrow("given argument must be an array");
+                    });
                     
+                    it ("should return a new reference with the applied filter.", function () {
+                        var newRef = refMain.facetColumns[0].addChoiceFilters(["2", "3"]);
+                        expect(newRef).not.toBe(refMain, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1;id=2;id=3/$M/int_col::gt::-2/$M", 
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[0].filters.length).toBe(3, "filters length missmatch.");
+                        expect(newRef.facetColumns[0].filters.map(function (f) {
+                            return f.term;
+                        })).toEqual(["1", "2", "3"], "filter terms missmatch.");
+                    });
                 });
-            });
-            
-            describe("column, ", function () {
-                it ("should be based on sourceReference.", function () {
+                
+                describe("replaceAllChoiceFilters, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[0].replaceAllChoiceFilters("2");
+                        }).toThrow("given argument must be an array");
+                    });
                     
+                    it ("should return a new reference with the applied filter.", function () {
+                        var newRef = refMain.facetColumns[0].replaceAllChoiceFilters(["2", "3"]);
+                        expect(newRef).not.toBe(refMain, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=2;id=3/$M/int_col::gt::-2/$M", 
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
+                        expect(newRef.facetColumns[0].filters.map(function (f) {
+                            return f.term;
+                        })).toEqual(["2", "3"], "filter terms missmatch.");
+                    });
                 });
                 
-                it ('should point to the last column in path.', function () {
+                describe("removeChoiceFilters, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[0].removeChoiceFilters("2");
+                        }).toThrow("given argument must be an array");
+                    });
                     
-                });
-            });
-            */
-            
-            // describe ("getChoiceDisplaynames, ", function (done) {
-            //     done(); // TODO
-            // });
-            
-            describe("addSearchFilter, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[5].addSearchFilter(null);
-                    }).toThrow("`term` is required.");
+                    it ("should return a new reference with the applied filter.", function () {
+                        var newRef = refMain.facetColumns[0].removeChoiceFilters(["1", "3"]);
+                        expect(newRef).not.toBe(refMain, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/int_col::gt::-2/$M", 
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[0].filters.length).toBe(0, "filters length missmatch.");
+                    });
                 });
                 
-                it ("should return a new reference with the applied filter.", function () {
-                    var newRef = refMain.facetColumns[5].addSearchFilter("test");
-                    expect(newRef).not.toBe(refMain, "reference didn't change.");
-                    expect(newRef.location.ermrestCompactPath).toBe(
-                        "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/text_col::ciregexp::test/$M", 
-                        "path missmatch."
-                    );
-                    expect(newRef.facetColumns[5].filters.length).toBe(1, "filters length missmatch.");
-                    expect(newRef.facetColumns[5].filters[0].term).toBe("test", "filter term missmatch.");
-                });
-            });
-            
-            describe("addChoiceFilters, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[0].addChoiceFilters("2");
-                    }).toThrow("given argument must be an array");
-                });
-                
-                it ("should return a new reference with the applied filter.", function () {
-                    var newRef = refMain.facetColumns[0].addChoiceFilters(["2", "3"]);
-                    expect(newRef).not.toBe(refMain, "reference didn't change.");
-                    expect(newRef.location.ermrestCompactPath).toBe(
-                        "M:=faceting_schema:main/id=1;id=2;id=3/$M/int_col::gt::-2/$M", 
-                        "path missmatch."
-                    );
-                    expect(newRef.facetColumns[0].filters.length).toBe(3, "filters length missmatch.");
-                    expect(newRef.facetColumns[0].filters.map(function (f) {
-                        return f.term;
-                    })).toEqual(["1", "2", "3"], "filter terms missmatch.");
-                });
-            });
-            
-            describe("replaceAllChoiceFilters, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[0].replaceAllChoiceFilters("2");
-                    }).toThrow("given argument must be an array");
+                describe("addRangeFilter, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[0].addRangeFilter();
+                        }).toThrow("One of min and max must be defined.");
+                    });
+                    
+                    describe ("should return a new reference with the applied filter.", function () {
+                        var testAddRange = function (min, max, path) {
+                            var res = refMain.facetColumns[0].addRangeFilter(min, max);
+                            expect(res.reference).not.toBe(refMain, "reference didn't change.");
+                            expect(res.reference.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/id=1;" + path + "/$M/int_col::gt::-2/$M",
+                                "path missmatch."
+                            );
+                            expect(res.reference.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
+                        };
+                        
+                        it ("when passing only min.", function () {
+                            testAddRange("1", null, "id::gt::1");
+                        });
+                        
+                        it ("when passing only max.", function () {
+                            testAddRange(null, "1", "id::lt::1");
+                        });
+                        
+                        it ("when passing both min, and max.", function () {
+                            testAddRange("1", "2", "id::gt::1&id::lt::2");
+                        });
+                        
+                    });
                 });
                 
-                it ("should return a new reference with the applied filter.", function () {
-                    var newRef = refMain.facetColumns[0].replaceAllChoiceFilters(["2", "3"]);
-                    expect(newRef).not.toBe(refMain, "reference didn't change.");
-                    expect(newRef.location.ermrestCompactPath).toBe(
-                        "M:=faceting_schema:main/id=2;id=3/$M/int_col::gt::-2/$M", 
-                        "path missmatch."
-                    );
-                    expect(newRef.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
-                    expect(newRef.facetColumns[0].filters.map(function (f) {
-                        return f.term;
-                    })).toEqual(["2", "3"], "filter terms missmatch.");
-                });
-            });
-            
-            describe("removeChoiceFilters, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[0].removeChoiceFilters("2");
-                    }).toThrow("given argument must be an array");
+                describe("removeRangeFilter, ", function () {
+                    it ("should verify the input.", function () {
+                        expect(function () {
+                            var newRef = refMain.facetColumns[1].removeRangeFilter();
+                        }).toThrow("One of min and max must be defined.");
+                    });
+                    
+                    it ("should return a new reference with the new filter.", function () {
+                        var res = refMain.facetColumns[1].removeRangeFilter("-2", null);
+                        expect(res.reference).not.toBe(refMain, "reference didn't change.");
+                        expect(res.reference.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M", 
+                            "path missmatch."
+                        );
+                        expect(res.reference.facetColumns[1].filters.length).toBe(0, "filters length missmatch.");
+                    });
                 });
                 
-                it ("should return a new reference with the applied filter.", function () {
-                    var newRef = refMain.facetColumns[0].removeChoiceFilters(["1", "3"]);
+                it("removeAllFilters, should return a reference without filters of the given facet.", function () {
+                    var newRef = refMain.facetColumns[0].removeAllFilters();
                     expect(newRef).not.toBe(refMain, "reference didn't change.");
                     expect(newRef.location.ermrestCompactPath).toBe(
                         "M:=faceting_schema:main/int_col::gt::-2/$M", 
                         "path missmatch."
                     );
-                    expect(newRef.facetColumns[0].filters.length).toBe(0, "filters length missmatch.");
-                });
-            });
-            
-            describe("addRangeFilter, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[0].addRangeFilter();
-                    }).toThrow("One of min and max must be defined.");
+                    expect(newRef.facetColumns[0].filters.length).toBe(0, "filters length missmatch for index=0.");
+                    expect(newRef.facetColumns[1].filters.length).toBe(1, "filters length missmatch for index=1.");
                 });
                 
-                describe ("should return a new reference with the applied filter.", function () {
-                    var testAddRange = function (min, max, path) {
-                        var res = refMain.facetColumns[0].addRangeFilter(min, max);
-                        expect(res.reference).not.toBe(refMain, "reference didn't change.");
-                        expect(res.reference.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1;" + path + "/$M/int_col::gt::-2/$M",
-                            "path missmatch."
-                        );
-                        expect(res.reference.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
-                    };
+                it ("filters, should return all the filters available on the facetColumn.", function () {
+                    for (i = 0; i < 2; i ++) {
+                        expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index="+ i);
+                    }
+                    expect(mainFacets[0].filters.map(function (f) {
+                        return f.term;
+                    })).toEqual(["1"], "filter missmatch for facet index=0");
                     
-                    it ("when passing only min.", function () {
-                        testAddRange("1", null, "id::gt::1");
+                    for (i = 2; i < 14; i ++) {
+                        expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
+                    }
+                });
+                
+                it ("searchFilters, should return the search filters.", function () {
+                    var filters = refMainMoreFilters.facetColumns[5].searchFilters;
+                    expect(filters.length).toBe(2, "length missmatch.");
+                    expect(filters[0].term).toBe("a", "term index=0 missmatch.");
+                    expect(filters[1].term).toBe("b", "term index=0 missmatch.");
+                });
+                
+                it ("choiceFilters, should return the choice filters.", function () {
+                    var filters = refMainMoreFilters.facetColumns[5].choiceFilters;
+                    expect(filters.length).toBe(2, "length missmatch.");
+                    expect(filters[0].term).toBe("a", "term index=0 missmatch.");
+                    expect(filters[1].term).toBe("b", "term index=0 missmatch.");
+                });
+                
+                it ("rangeFilters, should return the range filters.", function () {
+                    var filters = refMainMoreFilters.facetColumns[5].rangeFilters;
+                    expect(filters.length).toBe(2, "length missmatch.");
+                    expect(filters[0].toString()).toBe("> a", "term index=0 missmatch.");
+                    expect(filters[1].toString()).toBe("< b", "term index=0 missmatch.");
+                });
+                
+                describe("FacetFilter attributes, ", function () {
+                    it("toString should return the appropriate value.", function () {
+                        expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].toString()).toBe("a", "missmatch for choices");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("> a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].searchFilters[0].toString()).toBe("a", "missmatch for search");
+                        
                     });
                     
-                    it ("when passing only max.", function () {
-                        testAddRange(null, "1", "id::lt::1");
+                    it("uniqueId should return the appropriate value.", function () {
+                        expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].uniqueId).toBe("a", "missmatch for choices");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("> a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].searchFilters[0].uniqueId).toBe("a", "missmatch for search");
                     });
                     
-                    it ("when passing both min, and max.", function () {
-                        testAddRange("1", "2", "id::gt::1&id::lt::2");
+                    it("term should return the appropriate value for search and choices.", function () {
+                        expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].term).toBe("a", "missmatch for choices");
+                        expect(refMainMoreFilters.facetColumns[5].searchFilters[0].term).toBe("a", "missmatch for search");
                     });
                     
+                    it("min and max should return the appropriate value for ranges.", function () {
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].min).toBe("a", "missmatch for min index=0");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].max).toBe(null, "missmatch for max index=0");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].min).toBe(null, "missmatch for min index=1");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].max).toBe("b", "missmatch for max index=1");
+                    });
                 });
             });
             
-            describe("removeRangeFilter, ", function () {
-                it ("should verify the input.", function () {
-                    expect(function () {
-                        var newRef = refMain.facetColumns[1].removeRangeFilter();
-                    }).toThrow("One of min and max must be defined.");
-                });
-                
-                it ("should return a new reference with the new filter.", function () {
-                    var res = refMain.facetColumns[1].removeRangeFilter("-2", null);
-                    expect(res.reference).not.toBe(refMain, "reference didn't change.");
-                    expect(res.reference.location.ermrestCompactPath).toBe(
-                        "M:=faceting_schema:main/id=1/$M", 
-                        "path missmatch."
-                    );
-                    expect(res.reference.facetColumns[1].filters.length).toBe(0, "filters length missmatch.");
-                });
-            });
+            // describe("sourceReference, ", function () {
+            //     it ("should have the search term from the reference.", function () {
+            //         
+            //     });
+            //     
+            //     it ("should have filters of other facet columns.", function () {
+            //         
+            //     });
+            // });
+            // 
+            // describe("column, ", function () {
+            //     it ("should be based on sourceReference.", function () {
+            //         
+            //     });
+            //     
+            //     it ('should point to the last column in path.', function () {
+            //         
+            //     });
+            // });
             
-            it("removeAllFilters, should return a reference without filters of the given facet.", function () {
-                var newRef = refMain.facetColumns[0].removeAllFilters();
-                expect(newRef).not.toBe(refMain, "reference didn't change.");
-                expect(newRef.location.ermrestCompactPath).toBe(
-                    "M:=faceting_schema:main/int_col::gt::-2/$M", 
-                    "path missmatch."
-                );
-                expect(newRef.facetColumns[0].filters.length).toBe(0, "filters length missmatch for index=0.");
-                expect(newRef.facetColumns[1].filters.length).toBe(1, "filters length missmatch for index=1.");
-            });
-            
-            it ("filters, should return all the filters available on the facetColumn.", function () {
-                for (i = 0; i < 2; i ++) {
-                    expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index="+ i);
-                }
-                expect(mainFacets[0].filters.map(function (f) {
-                    return f.term;
-                })).toEqual(["1"], "filter missmatch for facet index=0");
-                
-                for (i = 2; i < 14; i ++) {
-                    expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
-                }
-            });
-            
-            it ("searchFilters, should return the search filters.", function () {
-                var filters = refMainMoreFilters.facetColumns[5].searchFilters;
-                expect(filters.length).toBe(2, "length missmatch.");
-                expect(filters[0].term).toBe("a", "term index=0 missmatch.");
-                expect(filters[1].term).toBe("b", "term index=0 missmatch.");
-            });
-            
-            it ("choiceFilters, should return the choice filters.", function () {
-                var filters = refMainMoreFilters.facetColumns[5].choiceFilters;
-                expect(filters.length).toBe(2, "length missmatch.");
-                expect(filters[0].term).toBe("a", "term index=0 missmatch.");
-                expect(filters[1].term).toBe("b", "term index=0 missmatch.");
-            });
-            
-            it ("rangeFilters, should return the range filters.", function () {
-                var filters = refMainMoreFilters.facetColumns[5].rangeFilters;
-                expect(filters.length).toBe(2, "length missmatch.");
-                expect(filters[0].toString()).toBe("> a", "term index=0 missmatch.");
-                expect(filters[1].toString()).toBe("< b", "term index=0 missmatch.");
-            });
-            
-            describe("FacetFilter attributes, ", function () {
-                it("toString should return the appropriate value.", function () {
-                    expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].toString()).toBe("a", "missmatch for choices");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("> a", "missmatch for range");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("< b", "missmatch for range");
-                    expect(refMainMoreFilters.facetColumns[5].searchFilters[0].toString()).toBe("a", "missmatch for search");
-                    
-                });
-                
-                it("uniqueId should return the appropriate value.", function () {
-                    expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].uniqueId).toBe("a", "missmatch for choices");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("> a", "missmatch for range");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("< b", "missmatch for range");
-                    expect(refMainMoreFilters.facetColumns[5].searchFilters[0].uniqueId).toBe("a", "missmatch for search");
-                });
-                
-                it("term should return the appropriate value for search and choices.", function () {
-                    expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].term).toBe("a", "missmatch for choices");
-                    expect(refMainMoreFilters.facetColumns[5].searchFilters[0].term).toBe("a", "missmatch for search");
-                });
-                
-                it("min and max should return the appropriate value for ranges.", function () {
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].min).toBe("a", "missmatch for min index=0");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].max).toBe(null, "missmatch for max index=0");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].min).toBe(null, "missmatch for min index=1");
-                    expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].max).toBe("b", "missmatch for max index=1");
-                });
-            });
+            // describe ("getChoiceDisplaynames, ", function (done) {
+            //     done(); // TODO
+            // });
             
         });
+
     });
 };

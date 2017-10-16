@@ -169,6 +169,7 @@
                 {"unique_columns": ["id"]},
                 {"unique_columns": ["term"]}
             ],
+            "foreign_keys": [],
             "column_definitions": [
                 {
                     "name": "id",
@@ -199,6 +200,7 @@
                 {"unique_columns": ["id"]},
                 {"unique_columns": ["term"]}
             ],
+            "foreign_keys": [],
             "column_definitions": [
                 {
                     "name": "id", 
@@ -300,6 +302,7 @@
             "keys": [
                 {"unique_columns":["id"]}
             ],
+            "foreign_keys": [],
             "column_definitions": [
                 {
                     "name": "id", 
