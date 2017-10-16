@@ -1687,16 +1687,12 @@
 
         /**
          * Deletes the referenced resources.
-         * @param {Array} tuples array of tuple objects used to detect differences with data in the DB
-         *
+         * 
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
-         * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function(tuples) {
+        delete: function() {
             try {
-                verify(tuples, "'tuples' must be specified");
-                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 var defer = module._q.defer();
 

@@ -65,6 +65,7 @@ to use for ERMrest JavaScript agents.
         * [.name](#ERMrest.Schema+name)
         * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+        * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
         * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
         * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
         * [.comment](#ERMrest.Schema+comment) : <code>string</code>
@@ -86,6 +87,7 @@ to use for ERMrest JavaScript agents.
             * [.displayname](#ERMrest.Table+displayname) : <code>object</code>
             * [.columns](#ERMrest.Table+columns) : [<code>Columns</code>](#ERMrest.Columns)
             * [.keys](#ERMrest.Table+keys) : [<code>Keys</code>](#ERMrest.Keys)
+            * [.rights](#ERMrest.Table+rights) : <code>Object</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
@@ -126,6 +128,10 @@ to use for ERMrest JavaScript agents.
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.rights](#ERMrest.Column+rights) : <code>Object</code>
+        * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
+        * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+        * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
@@ -190,6 +196,7 @@ to use for ERMrest JavaScript agents.
         * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
         * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
+        * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
         * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
@@ -264,7 +271,7 @@ to use for ERMrest JavaScript agents.
         * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -612,6 +619,7 @@ check for schema name existence
     * [.name](#ERMrest.Schema+name)
     * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+    * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
     * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
     * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
     * [.comment](#ERMrest.Schema+comment) : <code>string</code>
@@ -642,6 +650,10 @@ Constructor for the Catalog.
 <a name="ERMrest.Schema+annotations"></a>
 
 #### schema.annotations : [<code>Annotations</code>](#ERMrest.Annotations)
+**Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
+<a name="ERMrest.Schema+rights"></a>
+
+#### schema.rights : <code>Object</code>
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+displayname"></a>
 
@@ -726,6 +738,7 @@ get table by table name
         * [.displayname](#ERMrest.Table+displayname) : <code>object</code>
         * [.columns](#ERMrest.Table+columns) : [<code>Columns</code>](#ERMrest.Columns)
         * [.keys](#ERMrest.Table+keys) : [<code>Keys</code>](#ERMrest.Keys)
+        * [.rights](#ERMrest.Table+rights) : <code>Object</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
@@ -796,6 +809,10 @@ this.displayname.value has the value
 <a name="ERMrest.Table+keys"></a>
 
 #### table.keys : [<code>Keys</code>](#ERMrest.Keys)
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+rights"></a>
+
+#### table.rights : <code>Object</code>
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+foreignKeys"></a>
 
@@ -1154,6 +1171,10 @@ Constructor for Columns.
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
     * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.rights](#ERMrest.Column+rights) : <code>Object</code>
+    * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
+    * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+    * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
@@ -1195,6 +1216,28 @@ TODO: to be implemented
 <a name="ERMrest.Column+table"></a>
 
 #### column.table : [<code>Table</code>](#ERMrest.Table)
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+rights"></a>
+
+#### column.rights : <code>Object</code>
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isHidden"></a>
+
+#### column.isHidden : <code>Boolean</code>
+Mentions whether we should hide the value for this column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isGenerated"></a>
+
+#### column.isGenerated : <code>Boolean</code>
+Mentions whether this column is generated depending on insert rights
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isImmutable"></a>
+
+#### column.isImmutable : <code>Boolean</code>
+Mentions whether this column is immutable depending on update rights
+
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+name"></a>
 
@@ -1683,6 +1726,7 @@ get the foreign key of the given column set
     * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
     * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
+    * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
     * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
@@ -1713,6 +1757,10 @@ get the foreign key of the given column set
 find key from referencedCols
 use index 0 since all refCols should be of the same schema:table
 
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+rights"></a>
+
+#### foreignKeyRef.rights : <code>Object</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+mapping"></a>
 
@@ -2075,7 +2123,7 @@ Constructor for a ParsedFilter.
     * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete(tuples)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2433,18 +2481,12 @@ or rejected with any of these errors:
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete(tuples) ⇒ <code>Promise</code>
+#### reference.delete() ⇒ <code>Promise</code>
 Deletes the referenced resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
-- [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| tuples | <code>Array</code> | array of tuple objects used to detect differences with data in the DB |
-
 <a name="ERMrest.Reference+related"></a>
 
 #### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)

@@ -23,10 +23,7 @@ exports.execute = function (options) {
 
             it("should properly delete the referenced entity from the table.", function (done) {
                 // need to read to have the etag
-                reference.read(1).then(function (response) {
-                    tuples = response.tuples;
-                    return reference.delete(tuples);
-                }).then(function (response) {
+                reference.delete().then(function (response) {
                     // response should be empty
                     expect(response).not.toBeDefined();
 
@@ -44,7 +41,7 @@ exports.execute = function (options) {
 
             // entity with key_col = 1 deleted previously
             it("should return a positive error code when trying to delete an already deleted entity.", function (done) {
-                reference.delete(tuples).then(function (response) {
+                reference.delete().then(function (response) {
                     // response should be a positive status code triggering the success calback
                     // response object should be undefined
                     expect(response).not.toBeDefined();
@@ -162,6 +159,6 @@ exports.execute = function (options) {
                     done.fail();
                 });
             }).pend("412 support has been dropped from ermestjs.");
-        })
+        });
     });
 };
