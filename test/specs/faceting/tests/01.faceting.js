@@ -58,12 +58,13 @@ exports.execute = function (options) {
             tableWOAnnot2 = "main_wo_faceting_annot_2",
             tableLongPath5 = "longpath_5",
             tableSecondPath2 = "secondpath_2",
-            tableMain = "main";
+            tableMain = "main",
+            tableWAlt = "table_w_alt";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
-        var refMainMoreFilters, refMainFilterOnFK;
+        var refMainMoreFilters;
         var mainFacets;
-        var i;
+        var i, facetObj;
         
         var createURL = function (tableName, facet) {
             var res =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
@@ -76,6 +77,16 @@ exports.execute = function (options) {
          var createReference = function (url) {
              var ref = options.ermRest._createReference(options.ermRest.parse(url), options.catalog);
              return ref.contextualize.compact;
+         };
+         
+         var checkFacetSource = function (fcName, fc, source) {
+             expect(JSON.stringify(fc.dataSource)).toEqual(JSON.stringify(source), fcName + ": source missmatch.");
+         };
+         
+         var checkMainFacetDisplayname = function (index, value, isHTML) {
+             var disp = mainFacets[index].displayname;
+             expect(disp.value).toBe(value, "value missmatch for index="+ index);
+             expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);    
          };
          
          var chaiseURL = "https://dev.isrd.isi.edu/chaise",
@@ -117,6 +128,9 @@ exports.execute = function (options) {
             
             refMain = createReference(createURL(tableMain));
             mainFacets = refMain.facetColumns;
+            
+            facetObj = { "and": [ {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "choices": ["2"]} ] };
+            refMainFilterOnFK = createReference(createURL(tableMain, facetObj));
             
             refF4 = createReference(createURL(tableF4));
             refLP5 = createReference(createURL(tableLongPath5));
@@ -211,8 +225,6 @@ exports.execute = function (options) {
                         done.fail();
                     });
                 });
-                
-                
             });
 
             describe("when `filter` annotation is defined, ", function () {
@@ -276,9 +288,7 @@ exports.execute = function (options) {
                 });
             });
             
-            
             describe("if reference already has facets applied, ", function () {
-                var facetObj;
                 it ("if it's not part of visible facets, should be appended to list of facets.", function (done) {
                     facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
@@ -362,7 +372,55 @@ exports.execute = function (options) {
                 });
                 
             });
-
+            
+            describe("regarding alternative tables for main table, ", function () {                
+                it ("if main table has an alternative for compact and not fot detailed, we should add linkage from main to alternative to all the detailed related entities.", function (done) {
+                    options.ermRest.resolve(createURL(tableWAlt)).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        var facetColumns = ref.facetColumns;
+                        expect(facetColumns.length).toBe(2, "length missmatch.");
+                        checkFacetSource("index=0, ", facetColumns[0], [{"outbound": ["faceting_schema", "alt_compact_fk2"]}, "id_f5"]);
+                        checkFacetSource("index=1, ", facetColumns[1], [{"outbound": ["faceting_schema", "alt_compact_fk1"]}, {"inbound": ["faceting_schema", "f6_fk1"]}, "id_f6"]);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+            });
+            
+            describe("regarding alternative tables for any of facets, ", function () {
+                describe ("if facet is based on main table, but it has an alternative table for compact/select.", function () {
+                    it ("if filter is based on the key, add the join to path.", function (done) {
+                        facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "id_f7"], "choices": ["1"]} ] };
+                        options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                            ref = ref.contextualize.compact;
+                            expect(ref.facetColumns.length).toBe(15, "length missmatch.");
+                            checkFacetSource(
+                                "",
+                                ref.facetColumns[14],
+                                [{"inbound": ["faceting_schema", "f7_fk1"]}, {"inbound": ["faceting_schema", "f7_compact_alt_fk1"]}, "id"]
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+                });
+                
+                it("in othercases, it should just discard the facet.", function (done) {
+                    facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_8"], "choices": ["1"]} ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        expect(ref.facetColumns.length).toBe(14);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+            });
         });
         
         it("Reference.removeAllFacetFilters, should return a new reference without any filters.", function () {
@@ -446,43 +504,37 @@ exports.execute = function (options) {
             });
             
             describe("displayname, ", function () {
-                var checkDisplayname = function (index, value, isHTML) {
-                    var disp = mainFacets[index].displayname;
-                    expect(disp.value).toBe(value, "value missmatch for index="+ index);
-                    expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);
-                    
-                };
                 
                 it ("if `markdown_name` is defined, should return it.", function () {
-                    checkDisplayname(8, "<strong>F1</strong>", true);
+                    checkMainFacetDisplayname(8, "<strong>F1</strong>", true);
                 });
                 
                 it ("if source is not an array, should return the column's displayname.", function () {
-                    checkDisplayname(0, "id", false);
-                    checkDisplayname(1, "int_col", false);
-                    checkDisplayname(2, "float_col", false);
-                    checkDisplayname(3, "date_col", false);
-                    checkDisplayname(4, "timestamp_col", false);
-                    checkDisplayname(5, "text_col", false);
-                    checkDisplayname(6, "longtext_col", false);
-                    checkDisplayname(7, "markdown_col", false);
+                    checkMainFacetDisplayname(0, "id", false);
+                    checkMainFacetDisplayname(1, "int_col", false);
+                    checkMainFacetDisplayname(2, "float_col", false);
+                    checkMainFacetDisplayname(3, "date_col", false);
+                    checkMainFacetDisplayname(4, "timestamp_col", false);
+                    checkMainFacetDisplayname(5, "text_col", false);
+                    checkMainFacetDisplayname(6, "longtext_col", false);
+                    checkMainFacetDisplayname(7, "markdown_col", false);
                 });
                 
                 describe('otherwise (source is an array), ', function () {
                     it ('if the last foreignKey in path is inbound, and from_name is defined, should return it.', function () {
-                        checkDisplayname(12, "from_name", false);
+                        checkMainFacetDisplayname(12, "from_name", false);
                     });
                     
                     it ('if the last foreignKey in path is outbound, and to_name is defined, should return it.', function () {
-                        checkDisplayname(9, "to_name", false);
+                        checkMainFacetDisplayname(9, "to_name", false);
                     });
                     
                     describe("otherwise, ", function () {
                         it ('in entity mode should return the table\'s name.', function () {
-                            checkDisplayname(13, "secondpath_2", false);
+                            checkMainFacetDisplayname(13, "secondpath_2", false);
                         });
                         it ('in scalar mode, should return the table\'s name and column\'s name.', function () {
-                            checkDisplayname(10, "f3 (term)", false);
+                            checkMainFacetDisplayname(10, "f3 (term)", false);
                         });
                     });
                 });
@@ -541,20 +593,6 @@ exports.execute = function (options) {
                             return f.term;
                         })).toEqual(["1", "2", "3"], "filter terms missmatch.");
                     });
-                    
-                    xit("should handle facets with path.", function () {
-                        refMainFilterOnFK = mainFacets[8].addChoiceFilters(["1", "2"]);
-                        expect(refMainFilterOnFK).not.toBe(refMain, "reference didn't change.");
-                        expect(refMainFilterOnFK.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/", 
-                            "path missmatch."
-                        );
-                        expect(refMainFilterOnFK.facetColumns[8].filters.length).toBe(2, "filters length missmatch.");
-                        expect(refMainFilterOnFK.facetColumns[8].filters.map(function (f) {
-                            return f.term;
-                        })).toEqual(["2", "3"], "filter terms missmatch.");
-                    }).pend("there is something wrong with the test framework, it's removing the ermest object");
-                    //TODO fix this
                 });
                 
                 describe("replaceAllChoiceFilters, ", function () {
@@ -831,12 +869,18 @@ exports.execute = function (options) {
                         "id"
                     );
                 }).pend("there is something wrong with the test framework, it's removing the ermest object");
-                //TODO fix this;
+                //TODO fix this
             });
             
-            describe ("getChoiceDisplaynames, ", function (done) {
+            describe ("getChoiceDisplaynames, ", function () {
+                var checkChoiceDisplayname = function (objName, obj, uniqueId, value, isHTML) {
+                        expect(obj.uniqueId).toEqual(uniqueId, objName + ": uniqueId missmatch.");
+                        expect(obj.displayname.value).toEqual(value, objName + ": value missmatch.");
+                        expect(obj.displayname.isHTML).toEqual(isHTML, objName + ": isHTMl missmatch.");
+                };
+                
                 it ("should return an empty list, if there are no choice filters.", function (done) {
-                    refMain[5].getChoiceDisplaynames().then(function (res){
+                    refMain.facetColumns[5].getChoiceDisplaynames().then(function (res){
                         expect(res.length).toEqual(0);
                         done();
                     }).catch(function (err) {
@@ -846,9 +890,10 @@ exports.execute = function (options) {
                 });
                 
                 it ("should return the list of toStrings in scalar mode.", function (done) {
-                    refMainMoreFilters[5].getChoiceDisplaynames().then(function (res){
-                        expect(res.length).toEqual(2);
-                        expect(res).toEqual(["a", "b"]);
+                    refMainMoreFilters.facetColumns[5].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(2, "length missmatch.");
+                        checkChoiceDisplayname("index=0", res[0], "a", "a", false);
+                        checkChoiceDisplayname("index=1", res[1], "b", "b", false);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -856,9 +901,10 @@ exports.execute = function (options) {
                     });
                 });
                 
-                it ("should return the list of rownames in entity-mode.", function (done) {
+                xit ("should return the list of rownames in entity-mode.", function () {
                     //TODO requies filter on join!!!!!!!
-                });
+                }).pend("there is something wrong with the test framework, it's removing the ermest object");
+                //TODO fix this
             });
             
         });
