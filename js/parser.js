@@ -1323,7 +1323,7 @@
         
         // returns null if the path is invalid
         var parseDataSource = function (source, tableName, catalogId) {
-            var res = [], fk, i, table = tableName, isInbound, constraint;
+            var res = [], fk, fkObj, i, table = tableName, isInbound, constraint;
             // from 0 to source.length-1 we have paths
             for (i = 0; i < source.length - 1; i++) {
                 
@@ -1338,14 +1338,15 @@
                     return null;
                 }
                 
-                fk = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
+                fkObj = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
                 
                 // constraint name was not valid
-                if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    console.log("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
                     return null;
                 }
                 
-                fk = fk.object;
+                fk = fkObj.object;
                 
                 // inbound
                 if (isInbound && fk.key.table.name === table) {

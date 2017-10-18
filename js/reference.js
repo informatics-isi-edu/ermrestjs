@@ -314,6 +314,7 @@
                 this._facetColumns = [];
                 var self = this;
                 var andOperator = module._FacetsLogicalOperators.AND;
+                var searchTerm =  this.location.searchTerm;
                 
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
@@ -382,7 +383,7 @@
                     
                     // from 0 to source.length-1 we have paths
                     if (Array.isArray(source)) {
-                        var fk, i, isInbound, constraint;
+                        var fk, i, isInbound, constraint, fkObj;
                         for (i = 0; i < source.length - 1; i++) {
                             
                             if ("inbound" in source[i]) {
@@ -396,14 +397,14 @@
                                 return false;
                             }
                             
-                            fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
+                            fkObj = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
                             
                             // constraint name was not valid
-                            if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                                 return false;
                             }
                             
-                            fk = fk.object;
+                            fk = fkObj.object;
                             
                             // inbound
                             if (isInbound && fk.key.table === table) {
@@ -597,6 +598,13 @@
                     // 1. duplicates ?! (not sure)
                     // 2. correct values for choices, range, search
                     annotationCols.forEach(function (obj) {
+                        if (obj.source === "*") {
+                            if (!searchTerm) {
+                                searchTerm = _getSearchTerm({"and": [obj]});
+                            }
+                            return;
+                        }
+                        
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
@@ -704,11 +712,13 @@
                     }
                 });
                 
+                // add the search term
+                if (typeof searchTerm === "string") {
+                    newFilters.push({"source": "*", "search": [searchTerm]});
+                }
+                
                 if (newFilters.length > 0) {
                     //TODO we should make sure this is being called before read.
-                    if (typeof this.location.searchTerm === "string") {
-                        newFilters.push({"source": "*", "search": [this.location.searchTerm]});
-                    }
                     this._location.facets = {"and": newFilters};
                 }
                 
@@ -1987,11 +1997,19 @@
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
-            delete newReference._facetColumns;
 
             newReference._location = this._location._clone();
             newReference._location.pagingObject = null;
             newReference._location.search(term);
+            
+            // update facet columns list
+            // TODO can be refactored
+            newReference._facetColumns = [];
+            this.facetColumns.forEach(function (fc) {
+                newReference._facetColumns.push(
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, fc.filters.slice())
+                );
+            });
 
             return newReference;
         },
@@ -5115,7 +5133,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var fk = this._lastForeignKey;
+                var fkObj = this._lastForeignKey, fk;
                 
                 if (this._facetObject.markdown_name) {
                     this._displayname = {
@@ -5125,7 +5143,7 @@
                     };
                 }
                 // if is part of the main table, just return the column's displayname
-                else if (fk === null) {
+                else if (fkObj === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
@@ -5133,8 +5151,8 @@
                     var value, unformatted, isHTML = false;
                     var displayname, isInbound;
                     
-                    isInbound = fk.isInbound;
-                    fk = fk.obj;
+                    isInbound = fkObj.isInbound;
+                    fk = fkObj.obj;
                     
                     // use from_name of the last fk if it's inbound
                     if (isInbound && fk.from_name !== "") {
@@ -5184,23 +5202,46 @@
             return this._comment;
         },
         
+        /**
+         * When presenting the applied choice filters, the displayname might be differnt from the value.
+         * This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
+         * In case of entity-picker, we should get the displayname of the choices.
+         * Therefore heuristic is as follows:
+         *  - If no fitler -> resolve with empty list.
+         *  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
+         *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+         * 
+         * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
+         */
         getChoiceDisplaynames: function () {
             var defer = module._q.defer();
             var filters =  [];
-            if (!this.isEntityMode) {
+            
+            // if no filter, just resolve with empty list.
+            if (this.choiceFilters.length === 0) {
+                defer.resolve(filters);
+            } 
+            // in scalar mode, use the their toString as displayname.
+            else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
                     filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
                 });
                 defer.resolve(filters);
-            } else {
-                // create a url
+            } 
+            // otherwise generate an ermrest request to get the displaynames.
+            else {
+                
                 var table = this._column.table, columnName = this._column.name;
                 var fitlerStr = [];
+                
+                // list of fitlers that we want their displaynames.
                 this.choiceFilters.forEach(function (f) {
                     fitlerStr.push(
                         module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
                     );
                 });
+                
+                // create a url
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
@@ -5209,9 +5250,13 @@
                 ].join("/");
                 
                 var ref = new Reference(module.parse(uri), table.schema.catalog);
+                
                 ref = ref.sort([{"column": columnName, "descending": false}]);
+                
                 ref.read(this.choiceFilters.length).then(function (page) {
                     page.tuples.forEach(function (t) {
+                        
+                        // create the response
                         filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
                     });
                     defer.resolve(filters);

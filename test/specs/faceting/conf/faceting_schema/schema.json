@@ -130,6 +130,7 @@
                     "compact": ["id"],
                     "filter": {
                         "and": [
+                            {"source": "*", "choices": ["test"]},
                             {"source": "id", "ux_mode": "choices", "choices": ["1"]},
                             {"source": "int_col", "ranges": [{"min": "-2"}]},
                             {"source": "float_col", "ux_mode": "invalid mode"},
@@ -773,7 +774,17 @@
                         "typename": "text"
                     }
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "filter": {
+                        "and": [
+                            {"source": "*", "choices": ["ignore"]},
+                            {"source": "id"}
+                        ]
+                    }
+                }
+            }
         },
         "secondpath_1": {
             "kind": "table",
@@ -839,7 +850,18 @@
                         "typename": "text"
                     }
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "filter": {
+                        "and": [
+                            {"source": "id"},
+                            {"source": "*", "search": ["term"]},
+                            {"source": "*", "search": ["second term"]}
+                        ]
+                    }
+                }
+            }
         }
     }
 }
