@@ -368,7 +368,7 @@
     module._getAnnotationValueByContext = function (context, annotation) {
 
         // check annotation is an object
-        if (typeof annotation !== "object") {
+        if (typeof annotation !== "object" || annotation == null) {
             return -1;
         }
 
