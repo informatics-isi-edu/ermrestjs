@@ -77,12 +77,12 @@ exports.execute = (options) => {
             });
 
             describe("should return true for ,", () => {
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBeTruthy();
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBeTruthy();
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBeTruthy();
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBeTruthy();
                 });
 
                 it("canUpdate.", () => {
@@ -122,8 +122,8 @@ exports.execute = (options) => {
             });
 
             describe("should return false for ", () => {
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBeFalsy();
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBeFalsy();
                 });
 
                 it("canUpdate.", () => {
@@ -135,8 +135,8 @@ exports.execute = (options) => {
                 });
             });
 
-            it("should return true for canRead.", () => {
-                expect(reference.canRead).toBeTruthy();
+            it("should return true for canSelect.", () => {
+                expect(reference.canSelect).toBeTruthy();
             });
 
             afterAll((done) => {
@@ -181,12 +181,12 @@ exports.execute = (options) => {
 
             describe("Table with allowed user context should return true for insert, select, update and delete,", () => {
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -213,12 +213,12 @@ exports.execute = (options) => {
                     });
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(false);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(false);
                 });
 
                 it("canUpdate.", () => {
@@ -284,12 +284,12 @@ exports.execute = (options) => {
 
             describe("Table with allowed user context should return true for insert, select, update and false for delete,", () => {
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -316,12 +316,12 @@ exports.execute = (options) => {
                     });
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(false);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(false);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {

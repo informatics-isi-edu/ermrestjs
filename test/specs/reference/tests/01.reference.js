@@ -168,7 +168,7 @@ exports.execute = function (options) {
                 expect(reference.uri).toBe(reference._location.uri);
                 expect(reference.displayname.value).toBe(reference._table.name);
                 expect(reference.table).toBe(reference._table);
-                expect(reference.canCreate).toBeDefined();
+                expect(reference.canInsert).toBeDefined();
                 expect(reference.canUpdate).toBeDefined();
                 expect(reference.create()).toBeDefined();
                 expect(reference.read()).toBeDefined();
