@@ -1510,6 +1510,54 @@
         };
     };
 
+    /**
+     * @function
+     * @desc
+     * Gets currDate object once the page loads for future access in templates
+     * @return {Object} A date object that contains all properties
+     */
+    var getCurrDate = function() {
+        var date = new Date();
+
+        var dateObj = {};
+        
+        // Set date properties
+        dateObj.day = date.getDay();
+        dateObj.date = date.getDate();
+        dateObj.month = date.getMonth() + 1;
+        dateObj.year = date.getFullYear();
+        dateObj.dateString = date.toDateString();
+
+        // Set Time porperties
+        dateObj.hours = date.getHours();
+        dateObj.minutes = date.getMinutes();
+        dateObj.seconds = date.getSeconds();
+        dateObj.milliseconds = date.getMilliseconds();
+        dateObj.timestamp = date.getTime();
+        dateObj.timeString = date.toTimeString();
+
+        dateObj.ISOString = date.toISOString();
+        dateObj.GMTString = date.toGMTString();
+        dateObj.UTCString = date.toUTCString();
+        
+        dateObj.localeDateString = date.toLocaleDateString();
+        dateObj.localeTimeString = date.toLocaleTimeString();
+        dateObj.localeString = date.toLocaleString();
+
+        return dateObj;
+    };
+    module._currDate = getCurrDate();
+
+    /**
+     * @function
+     * @desc
+     * Add utility objects such as date (Computed value) to mustache data obj 
+     * so that they can be accessed in the template
+     */
+    module._addErmrestVarsToTemplate = function(obj) {
+        obj.$moment = module._currDate;
+    };
+
     /*
      * @function
      * @private
@@ -1520,22 +1568,14 @@
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
     module._renderMustacheTemplate = function(template, keyValues, options) {
+        if (typeof template !== 'string') return null;
+
         options = options || {};
 
         var obj = {};
 
-        if (keyValues) {
-            for (var k in keyValues) {
-                // Replace "." with "_" to avoid problems with templating
-                var newKey = k.replace(/\./g,"_");
-
-                obj[newKey] = keyValues[k];
-            }
-
-        }
-
-
-        if (typeof template !== 'string') return null;
+        // Inject ermrest internal utility objects such as date
+        module._addErmrestVarsToTemplate(obj);
 
         // Inject the encode function in the keyValues object
         obj.encode = module._encodeForTemplate;
@@ -1551,6 +1591,19 @@
                 };
             });
         }
+
+        if (keyValues) {
+            for (var k in keyValues) {
+                // Replace "." with "_" to avoid problems with templating
+                var newKey = k.replace(/\./g,"_");
+
+                obj[newKey] = keyValues[k];
+            }
+
+        }
+
+
+        
 
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
