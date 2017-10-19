@@ -411,7 +411,7 @@
         for (var i=0; i < elements.length; i++) {
             if (elements[i].annotations.contains(displayAnnot)) {
                 var annotation = elements[i].annotations.get(displayAnnot);
-                if(annotation.content.show_nulls){
+                if(annotation && annotation.content && annotation.content.show_nulls){
                     value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
                     if (value !== -1) break; //found the value
                 }
