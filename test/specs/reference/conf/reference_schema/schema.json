@@ -1018,6 +1018,57 @@
                     ]
                 }
             }
+        },
+        "table_with_system_columns":{
+            "comment": "Table with system columns",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "table_with_system_columns",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "RID",
+                    "nullok": false,
+                    "type": {"typename":"int8"}
+                },
+                {
+                    "name": "RCB",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "RMB",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "RCT",
+                    "nullok": false,
+                    "type": {"typename":"timestamptz"}
+                },
+                {
+                    "name": "RMT",
+                    "nullok": false,
+                    "type": {"typename":"timestamptz"}
+                }
+            ]
         }
     },
     "comment": null,
