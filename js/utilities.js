@@ -79,6 +79,30 @@
         });
     }
 
+    //Polyfill for Array.find
+    if (!Array.prototype.find) {
+        Array.prototype.find = function(predicate) {
+
+            // 1. Let O be ? ToObject(this value).
+            if (this === null) {
+                throw new TypeError('Array.prototype.find called on null or undefined');
+            }
+
+            var O = Object(this);
+
+            // 2. Find index of value
+            var index = O.findIndex(predicate);
+
+            // 3. If index is not -1 then value  at that index
+            if (index !== -1) {
+                return O[index];
+            }
+
+            // 7. Return undefined.
+            return undefined;
+        };
+    }
+
     // Polyfill for string.endswith
     if (!String.prototype.endsWith) {
         String.prototype.endsWith = function(searchString, position) {
