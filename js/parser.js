@@ -432,7 +432,7 @@
                 }
                 
                 if (this.projectionFacets) {
-                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
+                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
                     if (!facetFilter) throw new module.InvalidFacetOperatorError();
                     uri += "/" + facetFilter;
                 }
@@ -444,7 +444,7 @@
                 }
                 
                 if (this.facets) {
-                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog);
+                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
                     if (!facetFilter) throw new module.InvalidFacetOperatorError();
                     uri += "/" + facetFilter;
                 }
@@ -1263,7 +1263,16 @@
      * @constructor
      * @return      {string} A string representation of filters that is understanable by ermrest
      */
-    _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
+    _JSONToErmrestFilter = function(json, alias, tableName, catalogId, consNames) {
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+        
+        
         var isDefinedAndNotNull = function (v) {
             return v !== undefined && v !== null;
         };
@@ -1338,10 +1347,10 @@
                     return null;
                 }
                 
-                fkObj = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
+                fkObj = findConsName(catalogId, constraint[0], constraint[1]);
                 
                 // constraint name was not valid
-                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                     console.log("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
                     return null;
                 }

@@ -74,11 +74,6 @@ exports.execute = function (options) {
             return res;
          };
          
-         var createReference = function (url) {
-             var ref = options.ermRest._createReference(options.ermRest.parse(url), options.catalog);
-             return ref.contextualize.compact;
-         };
-         
          var checkFacetSource = function (fcName, fc, source) {
              expect(JSON.stringify(fc.dataSource)).toEqual(JSON.stringify(source), fcName + ": source missmatch.");
          };
@@ -87,6 +82,21 @@ exports.execute = function (options) {
              var disp = mainFacets[index].displayname;
              expect(disp.value).toBe(value, "value missmatch for index="+ index);
              expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);    
+         };
+         
+         var checkSourceReference = function (fcName, fc, compactPath, projectionFacets, colName) {
+             var sr = fc.sourceReference;
+             var col = fc.column;
+             
+             expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
+             expect(sr.location.facets).toBeUndefined(fcName + ": facets was defined.");
+             expect(sr.location.projectionFacets).toBeDefined(fcName + ": didn't have projection facets.");
+             expect(JSON.stringify(sr.location.projectionFacets.decoded)).toEqual(
+                 JSON.stringify(projectionFacets),
+                 fcName + ": projectionFacets missmatch."
+             );
+             expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
+             expect(col.name).toBe(colName, fcName + ": colname missmatch.");
          };
          
          var chaiseURL = "https://dev.isrd.isi.edu/chaise",
@@ -123,37 +133,32 @@ exports.execute = function (options) {
              return url;
          };
 
-        beforeAll(function () {
+        beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
-            
-            refMain = createReference(createURL(tableMain));
-            mainFacets = refMain.facetColumns;
-            
-            facetObj = { "and": [ {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "choices": ["2"]} ] };
-            refMainFilterOnFK = createReference(createURL(tableMain, facetObj));
-            
-            refF4 = createReference(createURL(tableF4));
-            refLP5 = createReference(createURL(tableLongPath5));
-            refSP2 = createReference(createURL(tableSecondPath2));
-            
-            //get all the references needed for the test cases
-            // options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
-            //     refMain = ref.contextualize.compact;
-            //     mainFacets = refMain.facetColumns;
-            //     return options.ermRest.resolve(createURL(tableF4), {cid: "test"});
-            // }).then(function (ref) {
-            //     refF4 = ref.contextualize.compact;
-            //     return options.ermRest.resolve(createURL(tableLongPath5), {cid: "test"});
-            // }).then(function (ref) {
-            //     refLP5 = ref.contextualize.compact;
-            //     return options.ermRest.resolve(createURL(tableSecondPath2), {cid: "test"});
-            // }).then(function (ref) {
-            //     refSP2 = ref.contextualize.compact;
-            //     done();
-            // }).catch(function (err) {
-            //     console.log(err);
-            //     done.fail();
-            // });
+
+            // get all the references needed for the test cases
+            options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
+                refMain = ref.contextualize.compact;
+                mainFacets = refMain.facetColumns;
+                
+                facetObj = { "and": [ {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "choices": ["2", "3"]} ] };
+                return options.ermRest.resolve(createURL(tableMain, facetObj));
+            }).then(function (ref) {
+                refMainFilterOnFK = ref;
+                return options.ermRest.resolve(createURL(tableF4), {cid: "test"});
+            }).then(function (ref) {
+                refF4 = ref.contextualize.compact;
+                return options.ermRest.resolve(createURL(tableLongPath5), {cid: "test"});
+            }).then(function (ref) {
+                refLP5 = ref.contextualize.compact;
+                return options.ermRest.resolve(createURL(tableSecondPath2), {cid: "test"});
+            }).then(function (ref) {
+                refSP2 = ref.contextualize.compact;
+                done();
+            }).catch(function (err) {
+                console.log(err);
+                done.fail();
+            });
             
         });
 
@@ -593,6 +598,20 @@ exports.execute = function (options) {
                             return f.term;
                         })).toEqual(["1", "2", "3"], "filter terms missmatch.");
                     });
+                    
+                    it("should handle facets with path.", function () {
+                        var ref = mainFacets[8].addChoiceFilters(["1", "2"]);
+                        expect(ref).not.toBe(refMain, "reference didn't change.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M", 
+                            "path missmatch."
+                        );
+                        expect(ref.facetColumns[8].filters.length).toBe(2, "filters length missmatch.");
+                        expect(ref.facetColumns[8].filters.map(function (f) {
+                            return f.term;
+                        })).toEqual(["1", "2"], "filter terms missmatch.");
+                    });
+
                 });
                 
                 describe("replaceAllChoiceFilters, ", function () {
@@ -665,6 +684,17 @@ exports.execute = function (options) {
                         });
                         
                     });
+                    
+                    it("should handle facets with path.", function () {
+                        var ref = mainFacets[3].addRangeFilter("2014-03-03", "2016-07-11").reference;
+                        expect(ref).not.toBe(refMain, "reference didn't change.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/date_col::gt::2014-03-03&date_col::lt::2016-07-11/$M", 
+                            "path missmatch."
+                        );
+                        expect(ref.facetColumns[3].filters.length).toBe(1, "filters length missmatch.");
+                        expect(ref.facetColumns[3].filters[0].toString()).toBe("2014-03-03 to 2016-07-11", "toString missmatch.");
+                    });
                 });
                 
                 describe("removeRangeFilter, ", function () {
@@ -675,7 +705,7 @@ exports.execute = function (options) {
                     });
                     
                     it ("should return a new reference with the new filter.", function () {
-                        var res = refMain.facetColumns[1].removeRangeFilter("-2", null);
+                        var res = refMain.facetColumns[1].removeRangeFilter(-2, null);
                         expect(res.reference).not.toBe(refMain, "reference didn't change.");
                         expect(res.reference.location.ermrestCompactPath).toBe(
                             "M:=faceting_schema:main/id=1/$M", 
@@ -761,36 +791,21 @@ exports.execute = function (options) {
             });
             
             describe("sourceReference and column APIs, ", function () {
-                var checkSR = function (fcName, fc, compactPath, projectionFacets, colName) {
-                    var sr = fc.sourceReference;
-                    var col = fc.column;
-                    
-                    expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
-                    expect(sr.location.facets).toBeUndefined(fcName + ": facets was defined.");
-                    expect(sr.location.projectionFacets).toBeDefined(fcName + ": didn't have projection facets.");
-                    expect(JSON.stringify(sr.location.projectionFacets.decoded)).toEqual(
-                        JSON.stringify(projectionFacets),
-                        fcName + ": projectionFacets missmatch."
-                    );
-                    expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
-                    expect(col.name).toBe(colName, fcName + ": colname missmatch.");
-                };
-                
                 it ("should have filters of other facet columns, and not filters of itself.", function () {
-                    checkSR(
+                    checkSourceReference(
                         "mainTable, index=0", 
                         refMainMoreFilters.facetColumns[0], 
                         "M:=faceting_schema:main/int_col::gt::-2/$M/text_col=a;text_col=b;text_col::gt::a;text_col::lt::b;text_col::ciregexp::a;text_col::ciregexp::b/$M", 
                         {
                             "and":[
-                                {"source": "int_col", "ranges": [{"min":"-2"}]},
+                                {"source": "int_col", "ranges": [{"min":-2}]},
                                 {"source": "text_col", "choices": ["a","b"], "ranges": [ {"min":"a"},{"max":"b"}], "search": ["a","b"]}
                             ]
                         },
                         "id"
                     );
                     
-                    checkSR(
+                    checkSourceReference(
                         "mainTable, index=1", 
                         refMainMoreFilters.facetColumns[1], 
                         "M:=faceting_schema:main/id=1/$M/text_col=a;text_col=b;text_col::gt::a;text_col::lt::b;text_col::ciregexp::a;text_col::ciregexp::b/$M", 
@@ -803,14 +818,14 @@ exports.execute = function (options) {
                         "int_col"
                     );
                     
-                    checkSR(
+                    checkSourceReference(
                         "mainTable, index =5",
                         refMainMoreFilters.facetColumns[5], 
                         "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M", 
                         {
                             "and":[
                                 {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":"-2"}]}
+                                {"source": "int_col", "ranges": [{"min":-2}]}
                             ]
                         },
                         "text_col"
@@ -818,7 +833,7 @@ exports.execute = function (options) {
                 });
                 
                 it ("should have the search term from the reference.", function () {
-                    checkSR(
+                    checkSourceReference(
                         "secondpath_2, index=0",
                         refSP2.facetColumns[0],
                         "M:=faceting_schema:secondpath_2/*::ciregexp::term/$M",
@@ -827,7 +842,7 @@ exports.execute = function (options) {
                     );
                     
                     var ref = refMain.search("sometext");
-                    checkSR(
+                    checkSourceReference(
                         "mainTable, index=0, with search",
                         ref.facetColumns[5],
                         "M:=faceting_schema:main/*::ciregexp::sometext/$M/id=1/$M/int_col::gt::-2/$M",
@@ -835,7 +850,7 @@ exports.execute = function (options) {
                             "and":[
                                 {"source":"*","search":["sometext"]},
                                 {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":"-2"}]}
+                                {"source": "int_col", "ranges": [{"min":-2}]}
                             ]
                         },
                         "text_col"
@@ -843,33 +858,32 @@ exports.execute = function (options) {
                 });
                 
                 it('should handle filters on columns with path.', function () {
-                    checkSR(
-                        "mainTable with filter on FK, index = 8",
-                        refMainFilterOnFK.facetColumns[8],
-                        "T:=faceting_schema:main/id=1/$T/int_col::gt::-2/$T/M:=(fk_to_f1)=(faceting_schema:f1:id)",
+                    checkSourceReference(
+                        "mainTable with filter on FK, index = 9",
+                        refMainFilterOnFK.facetColumns[9],
+                        "T:=faceting_schema:main/id=1/$T/int_col::gt::-2/$T/M:=(fk_to_f2)=(faceting_schema:f2:id)",
                         {
                             "and":[
                                 {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":"-2"}]}
+                                {"source": "int_col", "ranges": [{"min":-2}]}
                             ]
                         },
                         "id"
                     );
                     
-                    checkSR(
+                    checkSourceReference(
                         "mainTable with filter on FK, index = 0",
                         refMainFilterOnFK.facetColumns[0],
-                        "",
+                        "M:=faceting_schema:main/int_col::gt::-2/$M/(fk_to_f2)=(faceting_schema:f2:id)/id=2;id=3/$M",
                         {
                             "and":[
-                                {"source": "int_col", "ranges": [{"min":"-2"}]},
-                                {"source": "text_col", "choices": ["a","b"], "ranges": [ {"min":"a"},{"max":"b"}], "search": ["a","b"]}
+                                {"source": "int_col", "ranges": [{"min":-2}]},
+                                {"source": [{ "outbound":["faceting_schema", "main_fk2"]}, "id"], "choices":["2", "3"]}
                             ]
                         },
                         "id"
                     );
-                }).pend("there is something wrong with the test framework, it's removing the ermest object");
-                //TODO fix this
+                });
             });
             
             describe ("getChoiceDisplaynames, ", function () {
@@ -901,17 +915,145 @@ exports.execute = function (options) {
                     });
                 });
                 
-                xit ("should return the list of rownames in entity-mode.", function () {
-                    //TODO requies filter on join!!!!!!!
-                }).pend("there is something wrong with the test framework, it's removing the ermest object");
-                //TODO fix this
+                it ("should return the list of rownames in entity-mode.", function (done) {
+                    refMainFilterOnFK.facetColumns[9].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(2, "length missmatch.");
+                        checkChoiceDisplayname("index=0", res[0], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=0", res[1], 3, "<strong>three</strong>", true);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
             });
             
         });
-        // 
-        // describe("should be able to handle facets with long paths.", function () {
-        //     //TODO has the same problem as the other guys!
-        // });
-
+        
+        // TODO change the value accordingly
+        describe("should be able to handle facets with long paths.", function () {
+            var ref;
+            it ("should be able to construct a reference with multiple filters.", function () {
+                // refMain has -> id=1, int_col>-2
+                ref = refMain.facetColumns[12].addChoiceFilters(["a", "test"]);
+                ref = ref.facetColumns[9].addChoiceFilters(["1", "2"]);
+                ref = ref.facetColumns[10].addSearchFilter("t");
+                ref = ref.facetColumns[2].addRangeFilter(-1, 20.2).reference;
+                
+                uri = "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/float_col::gt::-1&float_col::lt::20.2/$M/" +
+                      "(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$M/" +
+                      "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
+                      "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M";
+                  
+                facetObj = {
+                    "and": [
+                        {"source": "id", "choices":["1"]},
+                        {"source":"int_col","ranges":[{"min":-2}]},
+                        {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                        {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                        {
+                            "source": [
+                                {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
+                                {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
+                                "term"
+                            ],
+                            "search": ["t"]
+                        },
+                        {
+                            "source": [
+                                {"inbound": ["faceting_schema","longpath_1_fk1"]},
+                                {"inbound": ["faceting_schema","longpath_2_fk1"]},
+                                {"inbound": ["faceting_schema","longpath_3_fk1"]},
+                                {"inbound": ["faceting_schema","longpath_4_fk1"]},
+                                {"inbound": ["faceting_schema","longpath_5_fk1"]},
+                                "col"
+                            ],
+                            "choices":["a","test"]
+                        }
+                    ]
+                };
+                
+                expect(ref.location.ermrestCompactPath).toEqual(uri, "uri missmatch.");
+                expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facetObj), "facets missmatch.");
+            });
+            
+            it ("sourceReference should return the correct reference.", function () {
+                checkSourceReference(
+                    "new refernece, index = 0",
+                    ref.facetColumns[0],
+                    "M:=faceting_schema:main/int_col::gt::-2/$M/float_col::gt::-1&float_col::lt::20.2/$M/" +
+                    "(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$M/" +
+                    "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
+                    "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M",
+                    {
+                        "and": [
+                            {"source":"int_col","ranges":[{"min":-2}]},
+                            {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                            {
+                                "source": [
+                                    {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
+                                    {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
+                                    "term"
+                                ],
+                                "search": ["t"]
+                            },
+                            {
+                                "source": [
+                                    {"inbound": ["faceting_schema","longpath_1_fk1"]},
+                                    {"inbound": ["faceting_schema","longpath_2_fk1"]},
+                                    {"inbound": ["faceting_schema","longpath_3_fk1"]},
+                                    {"inbound": ["faceting_schema","longpath_4_fk1"]},
+                                    {"inbound": ["faceting_schema","longpath_5_fk1"]},
+                                    "col"
+                                ],
+                                "choices":["a","test"]
+                            }
+                        ]
+                    },
+                    "id"
+                );
+                
+                checkSourceReference(
+                    "new refernece, index = 13",
+                    ref.facetColumns[12],
+                    "T:=faceting_schema:main/id=1/$T/int_col::gt::-2/$T/float_col::gt::-1&float_col::lt::20.2/$T/" +
+                    "(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$T/" +
+                    "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$T/" +
+                    "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/M:=(id)=(faceting_schema:longpath_5:id)",
+                    {
+                        "and": [
+                            {"source": "id", "choices":["1"]},
+                            {"source":"int_col","ranges":[{"min":-2}]},
+                            {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                            {
+                                "source": [
+                                    {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
+                                    {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
+                                    "term"
+                                ],
+                                "search": ["t"]
+                            }
+                        ]
+                    },
+                    "col"
+                );
+            });
+            
+            it ("read on sourceReference should return the expected values.", function (done) {
+                ref.facetColumns[0].sourceReference.read(25).then(function (p) {
+                    expect(p._data[0].id).toEqual(1, "data missmatch for index = 0");
+                    return ref.facetColumns[12].sourceReference.read(25);
+                }).then(function (p){
+                    expect(p._data[0].col).toEqual("test", "col missmatch for index = 13");
+                    expect(p._data[0].id).toEqual(1, "id missmatch for index = 13");
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+        });
     });
 };

@@ -2785,20 +2785,52 @@
 
                 } 
                 else if (source._location.facets) {
-                    // go through all the facet columns with filter, and 
-                    // change the filter to be based on new table
+                    //TODO needs refactoring
+                    var currentFacets = JSON.parse(JSON.stringify(source._location.facets.decoded[module._FacetsLogicalOperators.AND]));
+                    
+                    // facetColumns is applying extra logic for alternative, and it only
+                    // makes sense in the context of facetColumns list. not here.
+                    // Therefore we should go based on the facets on the location object, not facetColumns.
                     var modifyFacetFilters = function (funct) {
-                        source.facetColumns.forEach(function (fc) {
-                            if (fc.filters.length === 0) return;
-                            newFacetFilters.push(funct(fc.toJSON(), (fc.foreginKeys.length > 0 ? fc.foreginKeys[0].obj : null )));
+                        currentFacets.forEach(function (f) {
+                            // TODO parse might need to run this first, to avoid checking for invalid input
+                            if (!f.source) return;
+                            
+                            var fk = null;
+                            
+                            //TODO needs refactoring, can be a method in parser
+                            if (Array.isArray(f.source)) {
+                                var cons, isInbound = false, fkObj;
+                                
+                                if ("inbound" in f.source[0]) {
+                                    cons = f.source[0].inbound;
+                                    isInbound = true;
+                                } else if ("outbound" in f.source[0]) {
+                                    cons = f.source[0].outbound;
+                                } else {
+                                    return;
+                                }
+                                
+                                fkObj = module._getConstraintObject(source._location.catalog, cons[0], cons[1]);
+                                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                    return;
+                                }
+                                
+                                fk = {"obj": fkObj.object, "isInbound": isInbound};
+                            }
+                            
+                            newFacetFilters.push(funct(f, fk));
                         });
                     };
 
                     // source: main table newTable: alternative
                     if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && firstFk.isInbound && firstFk._table === newTable) {
+                            if (firstFk && firstFk.isInbound && firstFk.obj._table === newTable) {
                                 facetFilter.source.shift();
+                                if (facetFilter.source.length === 1) {
+                                    facetFilter.source = facetFilter.source[0];
+                                }
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
@@ -2811,8 +2843,11 @@
                     // source: alternative newTable: main table
                     else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
+                            if (firstFk && !firstFk.isInbound && firstFk.obj.key.table === newTable) {
                                 facetFilter.source.shift();
+                                if (facetFilter.source.length == 1) {
+                                    facetFilter.source = facetFilter.source[0];
+                                }
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
@@ -2825,13 +2860,13 @@
                     // source: alternative newTable: alternative
                     else {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable._baseTable) {
-                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.toString(true)};
+                            if (firstFk && !firstFk.isInbound && firstFk.obj.key.table === newTable._baseTable) {
+                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.constraint_names[0]};
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
                                 }
-                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source._altForeignKey.constraint_names[0]});
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source.table._altForeignKey.constraint_names[0]});
                             }
                             return facetFilter;
                         });

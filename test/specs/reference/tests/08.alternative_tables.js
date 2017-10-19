@@ -80,51 +80,87 @@ exports.execute = function (options) {
          *      a. contextualize entry/create (base_table)
          *      b. contextualize detailed (alt_table_detailed)
          *      c. contextualize compact (alt_table_compact)
+         * 15) start from base_table with facets
+         *      a. contextualize entry/create (base_table)
+         *      b. contextualize detailed (alt_table_detailed)
+         * 16) start from alt_table_detailed with facets
+         *      a. contextualize entry/create (base_table)
+         *      b. contextualize compact (alt_table_compact)
          */
 
-        var uri1 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + baseTable1Encoded;
+        var uri1 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + baseTable1Encoded;
 
-        var uri2 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId;
+        var uri2 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId;
 
-        var uri3 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value;
+        var uri3 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value;
 
-        var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
+        var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
+            baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
 
-        var uri5 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altDetailedTable1Encoded;
+        var uri5 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altDetailedTable1Encoded;
 
-        var uri6 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
+        var uri6 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
 
-        var uri7 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value;
+        var uri7 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value;
 
-        var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
+        var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
+            altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
 
-        var uri9 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altCompactTable1Encoded;
+        var uri9 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altCompactTable1Encoded;
 
-        var uri10 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId;
+        var uri10 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId;
 
-        var uri11 = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value;
+        var uri11 = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value;
 
-        var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
+        var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
+            altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
 
-        var uri13 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)";
+        var uri13 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
+            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)";
 
-        var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":"
-            + relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=("
-            + schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
-
+        var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
+            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=(" +
+            schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
+        
+        var facetObject15 = {
+            "and": [
+                {"source": [{"inbound": ["reference schema altTables", "alt_detailed_fk"]}, "details"], "search": ["H"]},
+                {"source": "name", "search": ["H"]},
+                {"source": [
+                    {"inbound": ["reference schema altTables", "association_table_fk2"]},
+                    {"outbound": ["reference schema altTables", "association_table_fk1"]},
+                    "name"
+                ], "choices": ["two"]}
+            ]
+        };
+        
+        var uri15 = options.url + "/catalog/" + catalog_id + "/entity/" + 
+            schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15);
+            
+        var facetObject16 = {
+            "and": [
+                {"source": [{"outbound": ["reference schema altTables", "alt_detailed_fk"]}, "name"], "search": ["H"]},
+                {"source": "details", "search": ["H"]},
+                {"source": [
+                    {"outbound": ["reference schema altTables", "alt_detailed_fk"]},
+                    {"inbound": ["reference schema altTables", "association_table_fk2"]},
+                    {"outbound": ["reference schema altTables", "association_table_fk1"]},
+                    "name"
+                ], "choices": ["two"]}
+            ]
+        };
+        
+        var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" + 
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16);
 
         describe('1. base table with no entity filters,', function() {
             var reference, reference2, page, tuple;
@@ -321,7 +357,6 @@ exports.execute = function (options) {
             });
         });
 
-
         describe('2. base table with single entity filter (single col key),', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -517,8 +552,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
-
 
         describe('3. base table with single entity filter (multi col key),', function() {
             var reference, reference2, page, tuple;
@@ -721,7 +754,6 @@ exports.execute = function (options) {
             });
         });
 
-
         describe('4. base table with multiple entity filters,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -917,15 +949,6 @@ exports.execute = function (options) {
             });
         });
 
-
-
-
-
-
-
-
-
-
         describe('5. alternative detailed table with no entity filters,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -1118,7 +1141,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
 
         describe('6. alternative detail table with single entity filter (single col key),', function() {
             var reference, reference2, page, tuple;
@@ -1313,8 +1335,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
-
 
         describe('7. alternative detail table with single entity filter (multi col key),', function() {
             var reference, reference2, page, tuple;
@@ -1514,8 +1534,7 @@ exports.execute = function (options) {
                 });
             });
         });
-
-
+        
         describe('8. alternative detail table with multiple entity filters,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -1708,15 +1727,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
-
-
-
-
-
-
-
-
 
         describe('9. alternative compact table with no entity filters,', function() {
             var reference, reference2, page, tuple;
@@ -1911,7 +1921,6 @@ exports.execute = function (options) {
             });
         });
 
-
         describe('10. alternative compact table with single entity filter (single col key),', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -2105,8 +2114,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
-
 
         describe('11. alternative compact table with single entity filter (multi col key),', function() {
             var reference, reference2, page, tuple;
@@ -2306,7 +2313,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
 
         describe('12. alternative compact table with multiple entity filters,', function() {
             var reference, reference2, page, tuple;
@@ -2944,6 +2950,331 @@ exports.execute = function (options) {
             });
         });
 
+        describe("15. base table with facets, ", function () {
+            var reference, reference2, page, tuple, newFacetObject;
+            var limit = 25;
+
+            it('15.1 resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(uri15, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    expect(reference).toEqual(jasmine.any(Object), "reference is not an object.");
+                    expect(reference._table.name).toBe(baseTable1, "table name missmatch.");
+                    expect(reference._table._baseTable.name).toBe(baseTable1, "baseTable missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+            
+            it('15.2 base table should be properly defined', function() {
+                expect(reference._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1, "detailed alternative table missmatch.");
+                expect(reference._table._alternatives.compact.name).toBe(altCompactTable1, "compact alternative table missmatch.");
+                expect(reference._table._baseTable.name).toBe(baseTable1, "base table name missmatch.");
+            });
+
+            it('15.3. reference should be properly defined', function() {
+                expect(reference._location.uri).toBe(uri15, "uri missmatch.");
+                expect(reference._location.schemaName).toBe(schemaName, "schema missmatch.");
+                expect(reference._location.tableName).toBe(baseTable1, "table name missmatch");
+            });
+
+            it('15.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
+                expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
+                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
+            });
+            
+            it("15.A.0 returned reference should have correct facets.", function () {
+                expect(reference2.location.facets).toBeDefined("facets was not defined.");
+                expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(facetObject15), "facets missmatch.");
+            });
+            
+            it('15.A.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('15.A.2 page data should be the values from base table.', function() {
+                expect(page._ref).toBe(reference2);
+                expect(page._data.length).toBe(1, "page length missmatch.");
+
+                tuple = page.tuples[0];
+                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._data.id).toBe("00002", "first data missmatch.");
+                expect(tuple._data.name).toBe("Harold", "first name missmatch.");
+                expect(tuple._data.value).toBe(17, "first value missmatch.");
+            });
+
+            it('15.A.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined("reference not defined.");
+                expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+            });
+
+            it('15.A.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
+                    expect(page.tuples.length).toBe(1, "length missmatch.");
+                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('15.B contextualize detailed should return a new reference with alternative table.', function() {
+                reference2 = reference.contextualize.detailed;
+                expect(reference2._table.name).toBe(altDetailedTable1, "table missmatch.");
+                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
+                expect(reference2._shortestKey[0].name).toBe("id x", "shortestkey name missmatch.");
+                expect(reference2.displayname.value).toBe(altDetailedTable1, "displayname missmatch.");
+            });
+            
+            it("15.B.0 returned reference should have correct facets.", function () {
+                newFacetObject = {
+                    "and": [
+                        {"source": "details", "search": ["H"]},
+                        {"source": [{"outbound": ["reference schema altTables", "alt_detailed_fk"]}, "name"], "search": ["H"]},
+                        {"source": [
+                            {"outbound": ["reference schema altTables", "alt_detailed_fk"]},
+                            {"inbound": ["reference schema altTables", "association_table_fk2"]},
+                            {"outbound": ["reference schema altTables", "association_table_fk1"]},
+                            "name"
+                        ], "choices": ["two"]}
+                    ]
+                };
+                expect(reference2.location.facets).toBeDefined("facets was not defined.");
+                expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
+            });
+            
+            it('15.B.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('15.B.2 page data should be the values from alternative table.', function() {
+                expect(page._data.length).toBe(1, "page length missmatch.");
+
+                tuple = page.tuples[0];
+                expect(tuple._data['id x']).toBe("00002", "id x missmatch.");
+                expect(tuple._data.details).toBe("Harold, Male 67", "details missmatch.");
+            });
+
+            it('15.B.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined("reference not defined.");
+                expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+            });
+
+            it('15.B.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
+                    expect(page.tuples.length).toBe(1, "length missmatch.");
+                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("16. alternative detailed table with facets,", function () {
+            var reference, reference2, page, tuple, newFacetObject;
+            var limit = 25;
+
+            it('16.1 resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(uri16, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    reference.session = { attributes: [] };
+
+                    expect(reference).toEqual(jasmine.any(Object), "reference is not an object.");
+                    expect(reference._table.name).toBe(altDetailedTable1, "table name missmatch.");
+                    expect(reference._table._baseTable.name).toBe(baseTable1, "baseTable missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+            
+            it('16.2 alternative table should be properly defined', function() {
+                expect(reference._location.uri).toBe(uri16, "uri missmatch.");
+                expect(reference._table.name).toBe(altDetailedTable1, "table name missmatch.");
+                expect(reference._table._baseTable.name).toBe(baseTable1, "base table name missmatch.");
+            });
+
+            it('16.3. reference should be properly defined', function() {
+                expect(reference._location.schemaName).toBe(schemaName, "schema missmatch.");
+                expect(reference._location.tableName).toBe(altDetailedTable1, "table name missmatch");
+            });
+
+            it('16.A contextualize entry/create should return a new reference with base table', function() {
+                reference2 = reference.contextualize.entryCreate;
+                expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
+                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
+            });
+            
+            it("16.A.0 returned reference should have correct facets.", function () {
+                newFacetObject = {
+                    "and": [
+                        {"source": "name", "search": ["H"]},
+                        {"source": [{"inbound": ["reference schema altTables", "alt_detailed_fk"]}, "details"], "search": ["H"]},
+                        {"source": [
+                            {"inbound": ["reference schema altTables", "association_table_fk2"]},
+                            {"outbound": ["reference schema altTables", "association_table_fk1"]},
+                            "name"
+                        ], "choices": ["two"]}
+                    ]
+                };
+                expect(reference2.location.facets).toBeDefined("facets was not defined.");
+                expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
+            });
+            
+            it('16.A.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('16.A.2 page data should be the values from base table.', function() {
+                expect(page._data.length).toBe(1, "page length missmatch.");
+
+                tuple = page.tuples[0];
+                expect(tuple._data.id).toBe("00002", "first data missmatch.");
+                expect(tuple._data.name).toBe("Harold", "first name missmatch.");
+                expect(tuple._data.value).toBe(17, "first value missmatch.");
+            });
+
+            it('16.A.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined("reference not defined.");
+                expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+            });
+
+            it('16.A.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
+                    expect(page.tuples.length).toBe(1, "length missmatch.");
+                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('16.B contextualize compact should return a new reference with alternative table.', function() {
+                reference2 = reference.contextualize.compact;
+                expect(reference2._table.name).toBe(altCompactTable1, "table missmatch.");
+                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
+                expect(reference2._shortestKey[0].name).toBe("id y", "shortestkey name missmatch.");
+            });
+            
+            it("16.B.0 returned reference should have correct facets.", function () {
+                newFacetObject = {
+                    "and": [
+                        {"source": [{"outbound": ["reference schema altTables", "alt_compact_fk"]}, "name"], "search": ["H"]},
+                        {"source": [
+                            {"outbound": ["reference schema altTables", "alt_compact_fk"]},
+                            {"inbound": ["reference schema altTables", "alt_detailed_fk"]},
+                            "details"
+                        ], "search": ["H"]},
+                        {"source": [
+                            {"outbound": ["reference schema altTables", "alt_compact_fk"]},
+                            {"inbound": ["reference schema altTables", "association_table_fk2"]},
+                            {"outbound": ["reference schema altTables", "association_table_fk1"]},
+                            "name"
+                        ], "choices": ["two"]}
+                    ]
+                };
+                expect(reference2.location.facets).toBeDefined("facets was not defined.");
+                expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
+            });
+            
+            it('16.B.1 read should return a Page object that is defined.', function(done) {
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('16.B.2 page data should be the values from base table.', function() {
+                expect(page._data.length).toBe(1, "page length missmatch.");
+
+                tuple = page.tuples[0];
+                expect(tuple._data['id y']).toBe("00002", "id y missmatch.");
+                expect(tuple._data.summary).toBe("Harold 67", "summary missmatch.");
+            });
+
+            it('16.B.3 tuple reference should be on the base table with correct filter', function() {
+                expect(tuple.reference).toBeDefined("reference not defined.");
+                expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+            });
+
+            it('16.B.4 tuple read should return correct data from base table', function(done) {
+                tuple.reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
+                    expect(page.tuples.length).toBe(1, "length missmatch.");
+                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+        });
     });
 
 };
