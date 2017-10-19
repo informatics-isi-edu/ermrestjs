@@ -79,6 +79,30 @@
         });
     }
 
+    //Polyfill for Array.find
+    if (!Array.prototype.find) {
+        Array.prototype.find = function(predicate) {
+
+            // 1. Let O be ? ToObject(this value).
+            if (this === null) {
+                throw new TypeError('Array.prototype.find called on null or undefined');
+            }
+
+            var O = Object(this);
+
+            // 2. Find index of value
+            var index = O.findIndex(predicate);
+
+            // 3. If index is not -1 then value  at that index
+            if (index !== -1) {
+                return O[index];
+            }
+
+            // 7. Return undefined.
+            return undefined;
+        };
+    }
+
     // Polyfill for string.endswith
     if (!String.prototype.endsWith) {
         String.prototype.endsWith = function(searchString, position) {
@@ -368,7 +392,7 @@
     module._getAnnotationValueByContext = function (context, annotation) {
 
         // check annotation is an object
-        if (typeof annotation !== "object") {
+        if (typeof annotation !== "object" || annotation == null) {
             return -1;
         }
 
@@ -411,7 +435,7 @@
         for (var i=0; i < elements.length; i++) {
             if (elements[i].annotations.contains(displayAnnot)) {
                 var annotation = elements[i].annotations.get(displayAnnot);
-                if(annotation.content.show_nulls){
+                if(annotation && annotation.content && annotation.content.show_nulls){
                     value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
                     if (value !== -1) break; //found the value
                 }

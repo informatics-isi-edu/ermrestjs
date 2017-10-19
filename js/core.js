@@ -1809,9 +1809,16 @@
 
         /**
          * Mentions whether this column is generated depending on insert rights
+         * or if column is system generated then return true so that it is disabled.
          * @type {Boolean}
          */
         this.isGenerated = this.rights.insert === false;
+
+        /**
+         * If column is system generated then this should true so that it is disabled during create and update.
+         * @type {Boolean}
+         */
+        this.isSystemColumn = module._systemColumns.find(function(c) { return c === jsonColumn.name; }) !== undefined;
 
         /**
          * Mentions whether this column is immutable depending on update rights
@@ -1984,13 +1991,13 @@
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (this.isGenerated || isGenerated || isSerial) {
+                if (this.isSystemColumn || this.isGenerated || isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };
                 }
             } else if (context == module._contexts.EDIT) {
-                if (this.isImmutable || isGenerated || isImmutable || isSerial) {
+                if (this.isSystemColumn || this.isImmutable || isGenerated || isImmutable || isSerial) {
                     return true;
                 }
             } else {
