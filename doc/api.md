@@ -257,8 +257,8 @@ to use for ERMrest JavaScript agents.
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-        * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
+        * [.canInsert](#ERMrest.Reference+canInsert) : <code>boolean</code> \| <code>undefined</code>
+        * [.canSelect](#ERMrest.Reference+canSelect) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
@@ -2109,8 +2109,8 @@ Constructor for a ParsedFilter.
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
+    * [.canInsert](#ERMrest.Reference+canInsert) : <code>boolean</code> \| <code>undefined</code>
+    * [.canSelect](#ERMrest.Reference+canSelect) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
@@ -2282,17 +2282,17 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+canCreate"></a>
+<a name="ERMrest.Reference+canInsert"></a>
 
-#### reference.canCreate : <code>boolean</code> \| <code>undefined</code>
+#### reference.canInsert : <code>boolean</code> \| <code>undefined</code>
 Indicates whether the client has the permission to _create_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+canRead"></a>
+<a name="ERMrest.Reference+canSelect"></a>
 
-#### reference.canRead : <code>boolean</code> \| <code>undefined</code>
+#### reference.canSelect : <code>boolean</code> \| <code>undefined</code>
 Indicates whether the client has the permission to _read_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.

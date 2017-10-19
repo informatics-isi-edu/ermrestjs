@@ -80,12 +80,12 @@ exports.execute = (options) => {
                     expect(reference._table._isGenerated).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(false);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(false);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -119,12 +119,12 @@ exports.execute = (options) => {
                     expect(reference._table._isGenerated).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(false);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(false);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -159,12 +159,12 @@ exports.execute = (options) => {
                     expect(reference._table._isGenerated).toBe(false);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(false);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(false);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -198,12 +198,12 @@ exports.execute = (options) => {
                     expect(reference._table._isGenerated).toBe(false);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -237,12 +237,12 @@ exports.execute = (options) => {
                     expect(reference._table._isImmutable).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -276,12 +276,12 @@ exports.execute = (options) => {
                     expect(reference._table._isImmutable).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -315,12 +315,12 @@ exports.execute = (options) => {
                     expect(reference._table._isImmutable).toBe(false);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -353,12 +353,12 @@ exports.execute = (options) => {
                     expect(reference._table._isImmutable).toBe(false);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -392,12 +392,12 @@ exports.execute = (options) => {
                     expect(reference._table._isNonDeletable).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -431,12 +431,12 @@ exports.execute = (options) => {
                     expect(reference._table._isNonDeletable).toBe(true);
                 });
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(true);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {
@@ -466,12 +466,12 @@ exports.execute = (options) => {
 
             describe("Table whose visible columns are empty for create and edit context should return false for create and update, and true for read and delete for undefined in other contexts,", () => {
 
-                it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(false);
+                it("canInsert.", () => {
+                    expect(reference.canInsert).toBe(false);
                 });
 
-                it("canRead.", () => {
-                    expect(reference.canRead).toBe(true);
+                it("canSelect.", () => {
+                    expect(reference.canSelect).toBe(true);
                 });
 
                 it("canUpdate.", () => {

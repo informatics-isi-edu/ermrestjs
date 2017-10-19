@@ -786,8 +786,8 @@
          * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
-        get canCreate() {
-            if (this._canCreate === undefined) {
+        get canInsert() {
+            if (this._canInsert === undefined) {
 
                 // can create if all are true
                 // 1) user has write permission
@@ -795,16 +795,16 @@
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
+                this._canInsert = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
 
-                if (this._canCreate) {
+                if (this._canInsert) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
-                    this._canCreate = !allColumnsDisabled;
+                    this._canInsert = !allColumnsDisabled;
                 }
             }
-            return this._canCreate;
+            return this._canInsert;
         },
 
         /**
@@ -813,11 +813,11 @@
          * be determined and the value will be `undefined`.
          * @type {(boolean|undefined)}
          */
-        get canRead() {
-            if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("select");
+        get canSelect() {
+            if (this._canSelect === undefined) {
+                this._canSelect = this._checkPermissions("select");
             }
-            return this._canRead;
+            return this._canSelect;
         },
 
         /**
@@ -867,7 +867,7 @@
 
         /**
          * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
-         * Sets a property on the reference object used by canCreate/canUpdate/canDelete
+         * Sets a property on the reference object used by canInsert/canUpdate/canDelete
          * @memberof ERMrest
          * @private
          */
@@ -2077,8 +2077,8 @@
             this._displayname = table.displayname;
             delete this._referenceColumns;
             delete this._related;
-            delete this._canCreate;
-            delete this._canRead;
+            delete this._canInsert;
+            delete this._canSelect;
             delete this._canUpdate;
             delete this._canDelete;
         },
@@ -2446,8 +2446,8 @@
             delete newRef._display;
 
             // delete permissions
-            delete newRef._canCreate;
-            delete newRef._canRead;
+            delete newRef._canInsert;
+            delete newRef._canSelect;
             delete newRef._canUpdate;
             delete newRef._canDelete;
 
