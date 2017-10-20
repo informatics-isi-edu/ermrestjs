@@ -5,6 +5,8 @@
     "parser/spec.js",
     "annotation/spec.js",
     "reference/spec.js",
+    "ag_reference/spec.js",
+    "faceting/spec.js",
     "comment/spec.js",
     "print_utils/spec.js",
     "errors/spec.js",

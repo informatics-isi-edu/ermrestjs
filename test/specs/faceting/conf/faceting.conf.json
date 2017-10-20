@@ -1,0 +1,15 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "faceting_schema",
+    "createNew": true,
+    "path": "test/specs/faceting/conf/faceting_schema/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/faceting/conf/faceting_schema/data"
+  }
+}

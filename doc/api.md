@@ -233,6 +233,8 @@ to use for ERMrest JavaScript agents.
         * [new InternalServerError(status, message)](#new_ERMrest.InternalServerError_new)
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
+    * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
+        * [new InvalidFacetOperatorError(message)](#new_ERMrest.InvalidFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
@@ -1998,6 +2000,20 @@ will be a type understandable by database.
 | Param | Type | Description |
 | --- | --- | --- |
 | status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.InvalidFacetOperatorError"></a>
+
+### ERMrest.InvalidFacetOperatorError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
+
+#### new InvalidFacetOperatorError(message)
+An invalid facet operator
+
+
+| Param | Type | Description |
+| --- | --- | --- |
 | message | <code>string</code> | error message |
 
 <a name="ERMrest.InvalidFilterOperatorError"></a>

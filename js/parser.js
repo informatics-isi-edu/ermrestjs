@@ -432,10 +432,9 @@
                 }
                 
                 if (this.projectionFacets) {
-                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog);
-                    if (facetFilter) {
-                        uri += "/" + facetFilter;
-                    }
+                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    uri += "/" + facetFilter;
                 }
                 
                 if (joinsLength > 0) {
@@ -445,10 +444,9 @@
                 }
                 
                 if (this.facets) {
-                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog);
-                    if (facetFilter) {
-                        uri += "/" + facetFilter;
-                    }
+                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    uri += "/" + facetFilter;
                 }
 
                 this._ermrestCompactPath = uri;
@@ -904,13 +902,14 @@
     _getSortModifier = function(sort) {
 
         // if no sorting
-        if (!sort || sort.length === 0) {
+        if (!sort || !Array.isArray(sort) || sort.length === 0) {
             return "";
         }
 
         var modifier = "@sort(";
         for (var i = 0; i < sort.length; i++) {
             if (i !== 0) modifier = modifier + ",";
+            if (!sort[i].column) throw new module.InvalidInputError("Invalid sort object.");
             modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
         }
         modifier = modifier + ")";
@@ -1218,7 +1217,9 @@
         
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
-            throw new module.MalformedURIError("Invalid Facet Object: " + obj);
+            // we cannot actually parse the facet now, because we haven't 
+            // introspected the whole catalog yet, and don't have access to the constraint objects.
+            throw new module.InvalidFacetOperatorError();
         }
         
     }
@@ -1253,15 +1254,25 @@
      * For the structure of JSON, take a look at ParsedFacets documentation.
      * 
      * NOTE: 
-     * If the data-path or the strucure is not as expected, it will just ignore facets
-     * (won't throw any errros)
+     * If any part of the facet is not as expected, it will throw emtpy string.
+     * Any part of the code that is using this function should guard against the result
+     * being empty, and throw error in that case.
      * 
      * @param       {object} json  JSON representation of filters
      * @param       {string} alias the table alias
      * @constructor
      * @return      {string} A string representation of filters that is understanable by ermrest
      */
-    _JSONToErmrestFilter = function(json, alias, tableName, catalogId) {
+    _JSONToErmrestFilter = function(json, alias, tableName, catalogId, consNames) {
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+        
+        
         var isDefinedAndNotNull = function (v) {
             return v !== undefined && v !== null;
         };
@@ -1306,14 +1317,22 @@
         
         // parse search constraint
         var parseSearch = function (search, column) {
-            return search.reduce(function (prev, curr, i) {
-                return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
+            var res, invalid = false;
+            res = search.reduce(function (prev, curr, i) {
+                if (curr == null) {
+                    invalid = true;
+                    return "";
+                } else {
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
+                }
             }, "");
+            
+            return res;
         };
         
         // returns null if the path is invalid
         var parseDataSource = function (source, tableName, catalogId) {
-            var res = [], fk, i, table = tableName, isInbound, constraint;
+            var res = [], fk, fkObj, i, table = tableName, isInbound, constraint;
             // from 0 to source.length-1 we have paths
             for (i = 0; i < source.length - 1; i++) {
                 
@@ -1328,14 +1347,15 @@
                     return null;
                 }
                 
-                fk = module._getConstraintObject(catalogId, constraint[0], constraint[1]);
+                fkObj = findConsName(catalogId, constraint[0], constraint[1]);
                 
                 // constraint name was not valid
-                if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    console.log("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
                     return null;
                 }
                 
-                fk = fk.object;
+                fk = fkObj.object;
                 
                 // inbound
                 if (isInbound && fk.key.table.name === table) {
@@ -1356,62 +1376,78 @@
         };
         
         // parse TERM (it will not do it recursively)
+        // returns null if it's not valid
         var parseAnd = function (and) {
-            var res = [], i, term, col, path, constraints;
+            var res = [], i, term, col, path, constraints, parsed;
             
             for (i = 0; i < and.length; i++) {
                 path = ""; // the source path if there are some joins
                 constraints = []; // the current constraints for this source
                 term = and[i];
                 
-                // ignore the facet, if there's no source in it.
-                if (!term.hasOwnProperty('source')) {
-                    continue;
+                if (typeof term !== "object") {
+                    return "";
                 }
                 
                 // parse the source
                 if (Array.isArray(term.source)) {
                     path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
-                } else {
+                } else if (typeof term.source === "string"){
                     col = term.source;
+                } else {
+                    return "";
                 }
                 
                 // if the data-path was invalid, ignore this facet
                 if (path === null) {
-                    continue;
+                    return "";
                 }
                 
                 // parse the constraints
                 if (Array.isArray(term.choices)) {
-                    constraints.push(parseChoices(term.choices, col));
+                    parsed = parseChoices(term.choices, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
                 if (Array.isArray(term.ranges)) {
-                    constraints.push(parseRanges(term.ranges, col));
+                    parsed = parseRanges(term.ranges, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
                 if (Array.isArray(term.search)) {
-                    constraints.push(parseSearch(term.search, col));
+                    parsed = parseSearch(term.search, col);
+                    if (!parsed) {
+                        return "";
+                    }
+                    constraints.push(parsed);
                 }
                 
-                if (constraints.length > 0) {
-                    res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                if (constraints.length == 0) {
+                    return "";
                 }
+
+                res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
             }
             return res.join("/");
         };
         
-        var ermrestFilter = "";
-        
         var andOperator = module._FacetsLogicalOperators.AND;
         
         // NOTE we only support and at the moment.
-        if (json.hasOwnProperty(andOperator) && Array.isArray(json[andOperator])) {
-            ermrestFilter += parseAnd(json[andOperator]);
+        if (!json.hasOwnProperty(andOperator) || !Array.isArray(json[andOperator])) {
+            return "";
         }
         
-        return ermrestFilter;
+        var ermrestFilter = parseAnd(json[andOperator]);
+        
+        return !ermrestFilter ? "" : ermrestFilter;
     };
     
     /**

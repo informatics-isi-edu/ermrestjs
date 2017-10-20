@@ -89,7 +89,7 @@
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference schema altTables", "base table fk"]],
+          "names": [["reference schema altTables", "alt_detailed_fk"]],
           "foreign_key_columns": [{
             "table_name": "alt table detailed",
             "schema_name": "reference schema altTables",
@@ -130,7 +130,7 @@
       "foreign_keys": [
         {
           "comment": null,
-          "names": [["reference schema altTables", "base table fk"]],
+          "names": [["reference schema altTables", "alt_compact_fk"]],
           "foreign_key_columns": [{
             "table_name": "alt table compact",
             "schema_name": "reference schema altTables",
@@ -368,6 +368,7 @@
       ],
       "foreign_keys": [
           {
+              "names": [["reference schema altTables", "association_table_fk1"]],
               "comment": "",
               "foreign_key_columns": [{
                   "table_name": "association_table",
@@ -382,6 +383,7 @@
               "annotations": {}
           },
           {
+              "names": [["reference schema altTables", "association_table_fk2"]],
               "comment": "",
               "foreign_key_columns": [{
                   "table_name": "association_table",

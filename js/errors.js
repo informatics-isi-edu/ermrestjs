@@ -8,6 +8,7 @@
     module.PreconditionFailedError = PreconditionFailedError;
     module.InternalServerError = InternalServerError;
     module.ServiceUnavailableError = ServiceUnavailableError;
+    module.InvalidFacetOperatorError = InvalidFacetOperatorError;
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
@@ -161,6 +162,19 @@
 
     // Errors not associated with http status codes
     // these are errors that we defined to manage errors in the API
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc An invalid facet operator
+     */
+    function InvalidFacetOperatorError(message) {
+        this.message = message ? message : "Given encoded string for facets is not valid.";
+    }
+
+    InvalidFacetOperatorError.prototype = Object.create(Error.prototype);
+    InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
+    
     /**
      * @memberof ERMrest
      * @param {string} message error message

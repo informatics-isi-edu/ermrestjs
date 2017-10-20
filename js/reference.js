@@ -314,6 +314,7 @@
                 this._facetColumns = [];
                 var self = this;
                 var andOperator = module._FacetsLogicalOperators.AND;
+                var searchTerm =  this.location.searchTerm;
                 
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
@@ -323,7 +324,7 @@
                     if (refCol.isKey) {
                         return {
                             "obj": {"source": refCol._baseCols[0].name},
-                            "column": refCol._baseCols[0].name
+                            "column": refCol._baseCols[0]
                         };
                     }
                     
@@ -382,7 +383,7 @@
                     
                     // from 0 to source.length-1 we have paths
                     if (Array.isArray(source)) {
-                        var fk, i, isInbound, constraint;
+                        var fk, i, isInbound, constraint, fkObj;
                         for (i = 0; i < source.length - 1; i++) {
                             
                             if ("inbound" in source[i]) {
@@ -396,14 +397,14 @@
                                 return false;
                             }
                             
-                            fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
+                            fkObj = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
                             
                             // constraint name was not valid
-                            if (fk === null || fk.subject !== module._constraintTypes.FOREIGN_KEY) {
+                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                                 return false;
                             }
                             
-                            fk = fk.object;
+                            fk = fkObj.object;
                             
                             // inbound
                             if (isInbound && fk.key.table === table) {
@@ -439,7 +440,7 @@
                     var fcObj = refColToFacetObject(col);
                     
                     // if in scalar, and is one of unsupported types
-                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
+                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(fcObj.column.type.name) !== -1) {
                         return false;
                     }
                     
@@ -597,6 +598,13 @@
                     // 1. duplicates ?! (not sure)
                     // 2. correct values for choices, range, search
                     annotationCols.forEach(function (obj) {
+                        if (obj.source === "*") {
+                            if (!searchTerm) {
+                                searchTerm = _getSearchTerm({"and": [obj]});
+                            }
+                            return;
+                        }
+                        
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
@@ -704,11 +712,13 @@
                     }
                 });
                 
+                // add the search term
+                if (typeof searchTerm === "string") {
+                    newFilters.push({"source": "*", "search": [searchTerm]});
+                }
+                
                 if (newFilters.length > 0) {
                     //TODO we should make sure this is being called before read.
-                    if (typeof this.location.searchTerm === "string") {
-                        newFilters.push({"source": "*", "search": [this.location.searchTerm]});
-                    }
                     this._location.facets = {"and": newFilters};
                 }
                 
@@ -1987,11 +1997,19 @@
 
             // make a Reference copy
             var newReference = _referenceCopy(this);
-            delete newReference._facetColumns;
 
             newReference._location = this._location._clone();
             newReference._location.pagingObject = null;
             newReference._location.search(term);
+            
+            // update facet columns list
+            // TODO can be refactored
+            newReference._facetColumns = [];
+            this.facetColumns.forEach(function (fc) {
+                newReference._facetColumns.push(
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, fc.filters.slice())
+                );
+            });
 
             return newReference;
         },
@@ -2767,20 +2785,52 @@
 
                 } 
                 else if (source._location.facets) {
-                    // go through all the facet columns with filter, and 
-                    // change the filter to be based on new table
+                    //TODO needs refactoring
+                    var currentFacets = JSON.parse(JSON.stringify(source._location.facets.decoded[module._FacetsLogicalOperators.AND]));
+                    
+                    // facetColumns is applying extra logic for alternative, and it only
+                    // makes sense in the context of facetColumns list. not here.
+                    // Therefore we should go based on the facets on the location object, not facetColumns.
                     var modifyFacetFilters = function (funct) {
-                        source.facetColumns.forEach(function (fc) {
-                            if (fc.filters.length === 0) return;
-                            newFacetFilters.push(funct(fc.toJSON(), (fc.foreginKeys.length > 0 ? fc.foreginKeys[0].obj : null )));
+                        currentFacets.forEach(function (f) {
+                            // TODO parse might need to run this first, to avoid checking for invalid input
+                            if (!f.source) return;
+                            
+                            var fk = null;
+                            
+                            //TODO needs refactoring, can be a method in parser
+                            if (Array.isArray(f.source)) {
+                                var cons, isInbound = false, fkObj;
+                                
+                                if ("inbound" in f.source[0]) {
+                                    cons = f.source[0].inbound;
+                                    isInbound = true;
+                                } else if ("outbound" in f.source[0]) {
+                                    cons = f.source[0].outbound;
+                                } else {
+                                    return;
+                                }
+                                
+                                fkObj = module._getConstraintObject(source._location.catalog, cons[0], cons[1]);
+                                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                    return;
+                                }
+                                
+                                fk = {"obj": fkObj.object, "isInbound": isInbound};
+                            }
+                            
+                            newFacetFilters.push(funct(f, fk));
                         });
                     };
 
                     // source: main table newTable: alternative
                     if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && firstFk.isInbound && firstFk._table === newTable) {
+                            if (firstFk && firstFk.isInbound && firstFk.obj._table === newTable) {
                                 facetFilter.source.shift();
+                                if (facetFilter.source.length === 1) {
+                                    facetFilter.source = facetFilter.source[0];
+                                }
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
@@ -2793,8 +2843,11 @@
                     // source: alternative newTable: main table
                     else if (source._table._isAlternativeTable() && !newTable._isAlternativeTable()) {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable) {
+                            if (firstFk && !firstFk.isInbound && firstFk.obj.key.table === newTable) {
                                 facetFilter.source.shift();
+                                if (facetFilter.source.length == 1) {
+                                    facetFilter.source = facetFilter.source[0];
+                                }
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
@@ -2807,13 +2860,13 @@
                     // source: alternative newTable: alternative
                     else {
                         modifyFacetFilters(function (facetFilter, firstFk) {
-                            if (firstFk && !firstFk.isInbound && firstFk.key.table === newTable._baseTable) {
-                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.toString(true)};
+                            if (firstFk && !firstFk.isInbound && firstFk.obj.key.table === newTable._baseTable) {
+                                facetFilter.source[0] = {"outbound": newTable._altForeignKey.constraint_names[0]};
                             } else {
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
                                 }
-                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source._altForeignKey.constraint_names[0]});
+                                facetFilter.source.unshift({"outbound": newTable._altForeignKey.constraint_names[0]}, {"inbound": source.table._altForeignKey.constraint_names[0]});
                             }
                             return facetFilter;
                         });
@@ -5115,7 +5168,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                var fk = this._lastForeignKey;
+                var fkObj = this._lastForeignKey, fk;
                 
                 if (this._facetObject.markdown_name) {
                     this._displayname = {
@@ -5125,16 +5178,16 @@
                     };
                 }
                 // if is part of the main table, just return the column's displayname
-                else if (fk === null) {
+                else if (fkObj === null) {
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
                 else {      
-                    var value, unformatted, isHTML;
+                    var value, unformatted, isHTML = false;
                     var displayname, isInbound;
                     
-                    isInbound = fk.isInbound;
-                    fk = fk.obj;
+                    isInbound = fkObj.isInbound;
+                    fk = fkObj.obj;
                     
                     // use from_name of the last fk if it's inbound
                     if (isInbound && fk.from_name !== "") {
@@ -5175,7 +5228,7 @@
                 var fk = this._lastForeignKey ? this._lastForeignKey.obj : null;
                 if (fk === null || !this.isEntityMode) {
                     this._comment = this._column.comment;
-                } else if (fk.comment !== "") {
+                } else if (typeof fk.comment === "string" && fk.comment !== "") {
                     this._comment = fk.comment;
                 } else {
                     this._comment = this._column.table.comment;
@@ -5184,23 +5237,46 @@
             return this._comment;
         },
         
+        /**
+         * When presenting the applied choice filters, the displayname might be differnt from the value.
+         * This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
+         * In case of entity-picker, we should get the displayname of the choices.
+         * Therefore heuristic is as follows:
+         *  - If no fitler -> resolve with empty list.
+         *  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
+         *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+         * 
+         * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
+         */
         getChoiceDisplaynames: function () {
             var defer = module._q.defer();
             var filters =  [];
-            if (!this.isEntityMode) {
+            
+            // if no filter, just resolve with empty list.
+            if (this.choiceFilters.length === 0) {
+                defer.resolve(filters);
+            } 
+            // in scalar mode, use the their toString as displayname.
+            else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
                     filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
                 });
                 defer.resolve(filters);
-            } else {
-                // create a url
+            } 
+            // otherwise generate an ermrest request to get the displaynames.
+            else {
+                
                 var table = this._column.table, columnName = this._column.name;
                 var fitlerStr = [];
+                
+                // list of fitlers that we want their displaynames.
                 this.choiceFilters.forEach(function (f) {
                     fitlerStr.push(
                         module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
                     );
                 });
+                
+                // create a url
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
@@ -5209,9 +5285,13 @@
                 ].join("/");
                 
                 var ref = new Reference(module.parse(uri), table.schema.catalog);
+                
                 ref = ref.sort([{"column": columnName, "descending": false}]);
+                
                 ref.read(this.choiceFilters.length).then(function (page) {
                     page.tuples.forEach(function (t) {
+                        
+                        // create the response
                         filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
                     });
                     defer.resolve(filters);
@@ -5610,8 +5690,8 @@
      */
     function RangeFacetFilter(min, max, columnType) {
         this._columnType = columnType;
-        this.min = min;
-        this.max = max;
+        this.min = !isDefinedAndNotNull(min) ? null : min;
+        this.max = !isDefinedAndNotNull(max) ? null : max;
         this.facetFilterKey = "ranges";
         this.uniqueId = this.toString();
     }
@@ -5785,8 +5865,6 @@
             }
             
             if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
-                console.log(this.column);
-                console.log(this._ref);
                 throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
             }
                 

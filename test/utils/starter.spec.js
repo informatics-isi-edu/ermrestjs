@@ -45,19 +45,5 @@ exports.runTests = function (options) {
         testCases.forEach(function (el) {
             require(process.env.PWD + "/test/specs" + el).execute(testOptions);
         });
-
-        // Delete the schemas
-        afterAll(function (done) {
-            importUtils.tear(schemaConfs, process.env.DEFAULT_CATALOG).then(function () {
-                done();
-            }, function (err) {
-                if (options.considerTearError) done.fail(err);
-                else done();
-            }).catch(function(err) {
-                console.log(err);
-                if (options.considerTearError) done.fail(err);
-                else done();
-            });
-        })
     });
 };
