@@ -131,6 +131,7 @@ to use for ERMrest JavaScript agents.
         * [.rights](#ERMrest.Column+rights) : <code>Object</code>
         * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
         * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+        * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
         * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
@@ -213,6 +214,7 @@ to use for ERMrest JavaScript agents.
         * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
         * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
+        * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -1176,6 +1178,7 @@ Constructor for Columns.
     * [.rights](#ERMrest.Column+rights) : <code>Object</code>
     * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
     * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+    * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
     * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
@@ -1233,6 +1236,13 @@ Mentions whether we should hide the value for this column
 
 #### column.isGenerated : <code>Boolean</code>
 Mentions whether this column is generated depending on insert rights
+or if column is system generated then return true so that it is disabled.
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isSystemColumn"></a>
+
+#### column.isSystemColumn : <code>Boolean</code>
+If column is system generated then this should true so that it is disabled during create and update.
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+isImmutable"></a>
@@ -1838,6 +1848,7 @@ returns string representation of ForeignKeyRef object
     * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
     * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
     * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
+    * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
 
 <a name="new_ERMrest.Type_new"></a>
 
@@ -1866,6 +1877,13 @@ Currently used to signal whether there is a base type for this column
 <a name="ERMrest.Type+baseType"></a>
 
 #### type.baseType : [<code>Type</code>](#ERMrest.Type)
+**Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.Type+rootName"></a>
+
+#### type.rootName : <code>string</code>
+The column name of the base. This goes to the first level which
+will be a type understandable by database.
+
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
 <a name="ERMrest.TimedOutError"></a>
 

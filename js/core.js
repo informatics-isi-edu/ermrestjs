@@ -2973,5 +2973,20 @@
     }
 
     Type.prototype = {
-        constructor: Type
+        constructor: Type,
+        
+        /**
+         * The column name of the base. This goes to the first level which
+         * will be a type understandable by database.
+         * @type {string} type name
+         */
+        get rootName() {
+            if (this._rootName === undefined) {
+                var getName = function (type) {
+                    return (type.baseType) ? getName(type.baseType) : type.name;
+                };
+                this._rootName = getName(this);
+            }
+            return this._rootName;
+        }
     };
