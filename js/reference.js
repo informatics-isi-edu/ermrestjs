@@ -4957,8 +4957,7 @@
         get preferredMode() {
             // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
             function isRangeMode(column) {
-                console.log();
-                var typename = column.type.name;
+                var typename = column.type.rootName;
 
                 // returns true is the typename includes the given string
                 function includesType(type) {
