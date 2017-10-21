@@ -521,7 +521,7 @@
      * @desc Returns the row name (html) using annotation or heuristics.
      */
     module._generateRowName = function (table, context, data) {
-        var annotation, col, template, keyValues, unformatted, unformattedAnnotation;
+        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern;
 
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -546,8 +546,14 @@
             if (typeof keyValues === 'undefined') {
                 keyValues = module._getFormattedKeyValues(table.columns, context, data);
             }
-
-        } else {
+            
+            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
+            
+        }
+        
+        
+        // annotation was not defined, or it's producing empty string.
+        if ( !pattern || pattern.trim() === '') {
 
             // no row_name annotation, use column with title, name, term
             var result, closest;
@@ -613,10 +619,10 @@
 
             template = "{{{name}}}";
             keyValues = {"name": result};
+            
+            // get templated patten after replacing the values using Mustache
+            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
         }
-
-        // get templated patten after replacing the values using Mustache
-        var pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
 
         // Render markdown content for the pattern
         if (pattern === null || pattern.trim() === '') {
