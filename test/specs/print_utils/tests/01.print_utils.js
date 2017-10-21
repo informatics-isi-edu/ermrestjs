@@ -200,6 +200,22 @@ exports.execute = function (options) {
             expect(module._renderMustacheTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
         });
 
+        it('module._renderMustacheTemplate() should inject $moment obj', function() {
+            var moment = module._currDate;
+            expect(moment).toBeDefined();
+            expect(module._renderMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
+            expect(module._renderMustacheTemplate("Todays date is {{$moment.dateString}}", {})).toBe("Todays date is " + moment.dateString);
+            
+            expect(module._renderMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
+            expect(module._renderMustacheTemplate("Current time is {{$moment.timeString}}", {})).toBe("Current time is " + moment.timeString);
+
+            expect(module._renderMustacheTemplate("ISO string is {{$moment.ISOString}}", {})).toBe("ISO string is " + moment.ISOString);
+            expect(module._renderMustacheTemplate("GMT string is {{$moment.GMTString}}", {})).toBe("GMT string is " + moment.GMTString);
+            expect(module._renderMustacheTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
+
+            expect(module._renderMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
+        });
+
         var obj = {
             "str.witha.": "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
             "m1": "[a markdown link](http://example.com/foo)",
