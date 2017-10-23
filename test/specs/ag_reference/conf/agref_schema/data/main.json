@@ -15,5 +15,6 @@
     {"id": "14", "col": "**test4**", "invis_col": "20"},
     {"id": "15", "col": "**test4**", "invis_col": "20"},
     {"id": "16", "col": "**test5**", "invis_col": "21"},
-    {"id": "17", "col": "**test6**", "invis_col": "22"}
+    {"id": "17", "col": "**test6**", "invis_col": "22"},
+    {"id": "18", "col": "**test55**", "invis_col": null}
 ]

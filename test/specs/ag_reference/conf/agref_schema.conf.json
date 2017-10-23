@@ -1,5 +1,9 @@
 {
-    "catalog": {},
+    "catalog": {
+        "acls": {
+            "write": ["*"]
+        }
+    },
     "schema": {
         "name": "agref_schema",
         "createNew": true,

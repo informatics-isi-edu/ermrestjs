@@ -510,10 +510,17 @@ AttributeGroupTuple.prototype = {
      */
     get uniqueId() {
         if (this._uniqueId === undefined) {
-            var data = this._data;
+            var data = this._data, hasNull;
             this._uniqueId = this._page.reference.shortestKey.reduce(function (res, c, index) {
+                hasNull = hasNull || data[c.name] == null;
                 return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name]);
             }, "");
+            
+            //TODO should be evaluated for composite keys
+            // might need to change, but for the current usecase it's fine.
+            if (hasNull) {
+                this._uniqueId = null;
+            }
         }
         return this._uniqueId;
     },
@@ -546,9 +553,9 @@ AttributeGroupTuple.prototype = {
                 values.push(c.formatvalue(data[c.name]));
             });
             
-            value = values.join(":");
+            value = hasNull ? null: values.join(":");
             
-            this._displayname = { 
+            this._displayname = {
                 "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value, 
                 "unformatted": value, 
                 "isHTML": hasMarkdown 

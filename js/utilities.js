@@ -553,7 +553,7 @@
         
         
         // annotation was not defined, or it's producing empty string.
-        if ( !pattern || pattern.trim() === '') {
+        if (pattern == null || pattern.trim() === '') {
 
             // no row_name annotation, use column with title, name, term
             var result, closest;
@@ -625,7 +625,7 @@
         }
 
         // Render markdown content for the pattern
-        if (pattern === null || pattern.trim() === '') {
+        if (pattern == null || pattern.trim() === '') {
             return {"value": "", "unformatted": ""};
         }
 

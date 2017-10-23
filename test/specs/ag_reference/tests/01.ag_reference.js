@@ -280,7 +280,7 @@ exports.execute = function (options) {
                     var aggList = [newRef.aggregate.countAgg];
                     newRef.getAggregates(aggList).then(function (response) {
                         // TODO change this based on data
-                        expect(response[0]).toBe(13);
+                        expect(response[0]).toBe(14);
                         done();
                     }).catch(function (err) {
                         consoel.log(err);
@@ -352,8 +352,21 @@ exports.execute = function (options) {
                             expect(disp.isHTML).toBe(true, "isHTML missmatch.");
                         });
                         
-                        it ("uniqueId should return an id based on shortest key.", function () {
-                            expect(tuples[0].uniqueId).toBe("**test2**_18");
+                        describe("uniqueId, ", function () {
+                            it ("should return an string based on shortest key values.", function () {
+                                expect(tuples[0].uniqueId).toBe("**test2**_18");
+                            });
+                            
+                            it ("should return null if any of the key columns are null.", function (done) {
+                                refWithModifiers.sort([{"column": "alias", "descending": false}]).read(7).then(function (page) {
+                                    expect(page).toBeDefined("page was not defined.");
+                                    expect(page.tuples[6].uniqueId).toBe(null, "uniqueId missmatch.");
+                                    done();
+                                }).catch(function (err) {
+                                    consoel.log(err);
+                                    done.fail();
+                                });
+                            });
                         });
                     });
                 });
