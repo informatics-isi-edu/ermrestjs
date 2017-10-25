@@ -230,16 +230,6 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-
-            it('tuple displayname should return "description:id" column.', function() {
-                var tuples = page.tuples;
-                for(var i = 0; i < limit; i++) {
-                    var tuple = tuples[i];
-                    var expected = tuple.values[1] + ":" + tuple.values[0];
-                    expect(tuple.displayname.value).toBe(expected);
-                    expect(tuple.displayname.unformatted).toBe(expected);
-                }
-            });
         });
 
         describe('table entities with table-display.row-name annotation, without table-display.row-name/unformatted annotation, ', function() {

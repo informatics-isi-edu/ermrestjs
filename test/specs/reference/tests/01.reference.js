@@ -71,7 +71,6 @@ exports.execute = function (options) {
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     createReference = response.contextualize.entryCreate;
-
                     done();
                 }).catch(function (error) {
                     console.dir(error);
@@ -299,26 +298,6 @@ exports.execute = function (options) {
                 expect(values[2]).toBe(tuple._data.value.toString());
             });
 
-            it('uniqueId for an entity with a composite key should be set properly.', function(done) {
-                var reference, page, tuple;
-
-                options.ermRest.resolve(entityWithCompositeKey, {cid: "test"}).then(function (response) {
-                    reference = response;
-                    reference.session = { attributes: [] };
-
-                    return reference.read(limit);
-                }).then(function (response) {
-                    page = response;
-                    tuple = page.tuples[0];
-
-                    expect(tuple.uniqueId).toBe("comp-part-1_comp-part-2", "tuple.uniqueId with composite key is incorrect");
-
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
         });
 
         describe('for multiple entities with limit less than the number of referenced entities,', function() {

@@ -190,20 +190,6 @@ exports.execute = function (options) {
                     expect(ag_ref.uri).toBe(uri, "invalid URI");
                 };
                 
-                
-                it ("if there's a join in the path should and table doesn't have single keys, should throw an error.", function (done) {
-                    options.ermRest.resolve(compositeTableWithJoinUri, {cid: "test"}).then(function (reference) {
-                        expect(function () {
-                            var ec = reference.columns[0].groupAggregate.entityCounts;
-                        }).toThrow("Table must have a simple key for entity counts: table_w_only_composite_key");
-
-                        done();
-                    }).catch(function (error) {
-                        console.dir(error);
-                        done.fail();
-                    });
-                });
-                
                 it ("if there's a join in the path should return an attributegroup reference, using cnt_d(shortestKey) for count.", function (done) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(reference.columns[0].groupAggregate.entityCounts, tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(simple_id)@sort(count::desc::,value)");

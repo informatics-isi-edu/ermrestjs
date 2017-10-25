@@ -13,7 +13,7 @@
     "upload/spec.js",
     "sample/spec.js"
   ],
-  "helpers": [],
+  "helpers": ["../../node_modules/jasmine-expect/index.js"],
   "stopSpecOnExpectationFailure": false,
   "random": false
 }

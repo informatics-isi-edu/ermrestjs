@@ -68,7 +68,7 @@ exports.run = function(config) {
 	jrunner.addReporter(new SpecReporter());   
 
 	// Set timeout to a large value 
-	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 180000;
 
 	jrunner.onComplete(function(passed) {
 		console.log("Test suite " + (passed ? "passed" : "failed"));

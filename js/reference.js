@@ -995,7 +995,10 @@
                     if (notSet) defaults.push(columnName);
                 });
 
-                return defaults;
+                // Remove system columns from defaults list and return
+                return defaults.filter(function(c) {
+                    return module._systemColumns.indexOf(c) === -1;
+                });
             }
 
             /**
