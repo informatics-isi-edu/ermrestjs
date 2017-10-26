@@ -1922,7 +1922,7 @@
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
-                    switch (this.type.name) {
+                    switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
                                 throw new Error();
