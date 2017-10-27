@@ -1458,6 +1458,92 @@
                     }
                 }
             ]
+        },
+        "table_w_diff_col_types": {
+            "comment": "has columns of different supported types",
+            "table_name": "table_w_diff_col_types",
+            "schema_name": "columns_schema",
+            "kind": "table",
+            "keys": [
+                {
+                    "unique_columns": ["id"]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "tag:isrd.isi.edu,2016:column-display": {
+                        "*": {
+                            "column_order": ["id", "jsonb_col", "json_col"]
+                        }
+                    }
+                },
+                {
+                    "name": "text_col",
+                    "comment": "text comment",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "longtext_col",
+                    "type": {
+                        "typename": "longtext"
+                    }
+                },
+                {
+                    "name": "markdown_col",
+                    "type": {
+                        "typename": "markdown"
+                    }
+                },
+                {
+                    "name": "int_col",
+                    "type": {
+                        "typename": "int4"
+                    }
+                },
+                {
+                    "name": "float_col",
+                    "type": {
+                        "typename": "float4"
+                    }
+                },
+                {
+                    "name": "date_col",
+                    "type": {
+                        "typename": "date"
+                    }
+                },
+                {
+                    "name": "timestamp_col",
+                    "type": {
+                        "typename": "timestamptz"
+                    }
+                },
+                {
+                    "name": "json_col",
+                    "type": { 
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "jsonb_col",
+                    "type": { 
+                        "typename": "jsonb"
+                    }
+                }
+            ],
+            "tag:isrd.isi.edu,2016:visible-columns" : {
+                "*": [
+                    "id", "text_col", "longtext_col", "markdown_col", "int_col", "float_col", "date_col", "timestamp_col", "json_col", "jsonb_col"
+                ]
+            }
         }
     }
 }

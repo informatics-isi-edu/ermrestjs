@@ -2020,9 +2020,17 @@
                 }
 
                 if (Array.isArray(annotation.column_order)) {
+                    var col;
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
-                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                            col = this.table.columns.get(annotation.column_order[i]);
+                            
+                            // json and jsonb are not sortable.
+                            if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            columnOrder.push(col);
                         } catch(exception) {}
                     }
                 } else {
@@ -2050,6 +2058,10 @@
 
             if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                 return display.columnOrder;
+            }
+            
+            if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
+                return undefined;
             }
 
             return [this];

@@ -8,6 +8,7 @@ exports.execute = function (options) {
             schemaName = "columns_schema",
             tableName = "columns_table", // the structure of this table is explained in 14.pseudo_columns.js
             tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 14.pseudo_columns.js
+            tableWithDiffColTypes = "table_w_diff_col_types",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -20,6 +21,9 @@ exports.execute = function (options) {
 
         var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithAsset + "/id=" + entityId;
+            
+        var singleEnitityUriDiffColTypes = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWithDiffColTypes + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -64,7 +68,7 @@ exports.execute = function (options) {
 
 
         var reference, compactRef, entryCreateRef, entryEditRef, compactSelectRef, compactBriefRef, compactColumns;
-        var assetRef, assetRefCompactCols, assetRefEntryCols, detailedRef, detailedColumns;
+        var assetRef, assetRefCompactCols, assetRefEntryCols, detailedRef, detailedColumns, diffColTypeColumns;
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
@@ -90,6 +94,10 @@ exports.execute = function (options) {
                 assetRef = ref;
                 assetRefCompactCols = ref.contextualize.compact.columns;
                 assetRefEntryCols = ref.contextualize.entry.columns;
+                return options.ermRest.resolve(singleEnitityUriDiffColTypes, {cid: "test"});
+            }).then(function (ref) {
+                diffColTypeColumns = ref.contextualize.compact.columns;
+                
                 done();
             }).catch(function (err){
                 console.dir(err);
@@ -730,6 +738,12 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
+                
+                it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
+                    expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
+                    expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
+                    expect(compactColumns[0]._sortColumns[0].name).toBe("id", "sort column name missmatch.");
+                });
 
                 it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
                     // columns_schema_outbound_fk_7
@@ -738,6 +752,13 @@ exports.execute = function (options) {
                     expect(compactColumns[10]._sortColumns.map(function (col) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
+                });
+                
+                it ("when column doesn't have `column_order ` annotation, should return false if it's json or jsonb.", function () {
+                    expect(diffColTypeColumns[8].sortable).toBe(false, "sortable missmatch, index=8.");
+                    expect(diffColTypeColumns[8]._sortColumns.length).toBe(0, "sort column length missmatch, index=8.");
+                    expect(diffColTypeColumns[9].sortable).toBe(false, "sortable missmatch, index=9.");
+                    expect(diffColTypeColumns[9]._sortColumns.length).toBe(0, "sort column length missmatch, index=9.");
                 });
             });
         });
