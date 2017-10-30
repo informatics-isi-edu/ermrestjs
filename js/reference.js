@@ -1161,7 +1161,6 @@
                 /** Change api to attributegroup for retrieving extra information
                  * These information include:
                  * - Values for the foreignkeys.
-                 * - In case of domain reference, values for the base table.
                  * 
                  * This will just affect the http request and not this._location
                  *
@@ -1172,7 +1171,7 @@
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
-                if (this._table.foreignKeys.length() > 0 || this.isDomainReference) {
+                if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.ermrestCompactPath,
                         mainTableAlias = this._location.mainTableAlias,
                         projectionTableAlias = this._location.projectionTableAlias,
@@ -1190,11 +1189,6 @@
 
                         // F2:array(F2:*),F1:array(F1:*)
                         aggList.push("F" + (k+1) + ":=array(F" + (k+1) + ":*)");
-                    }
-                    
-                    // add the main reference values for the domainReference
-                    if (this.isDomainReference) {
-                        aggList.push(projectionTableAlias + ":=array(" + projectionTableAlias + ":*)");
                     }
 
                     // add sort columns (it will include the key)
@@ -2548,15 +2542,6 @@
                     [module._fixedEncodeURIComponent(fkrTable.schema.name),module._fixedEncodeURIComponent(fkrTable.name)].join(":"),
                     "right" + otherFK.toString(true)
                 ].join("/");
-                
-                // will be used for choosing new values
-                newRef.domainReference = new Reference(module.parse(domainUri), fkrTable.schema.catalog);
-                
-                // will be used to find out the connection
-                newRef.domainReference.origFKR = newRef.origFKR;
-                
-                // will be used for other apis to make sure that it's domain reference.
-                newRef.domainReference.isDomainReference = true; // TODO this should be refactored, should be able to just add extra projections
 
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
@@ -3075,7 +3060,7 @@
         this._linkedData = [];
 
         // linkedData will include foreign key data
-        if (this._ref._table.foreignKeys.length() > 0 || this._ref.isDomainReference) {
+        if (this._ref._table.foreignKeys.length() > 0) {
 
             var fks = reference._table.foreignKeys.all(), i, j;
             var mTableAlias = this._ref.location.mainTableAlias,
@@ -3091,10 +3076,7 @@
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
                     }
-                    
-                    if (this._ref.isDomainReference && data[i][pTabeAlias]) {
-                        this._linkedData[i][pTabeAlias] = data[i][pTabeAlias];
-                    }
+
                 }
             }
             // could not find the expected aliases
@@ -3766,52 +3748,6 @@
             reference.session = associationRef._session;
             return reference;
 
-        },
-        
-        hasAssociationRef: function (origTableData) {
-            verify(Object.keys(origTableData).length !== 0 && origTableData.constructor === Object, "origTableData must be a non-empty object.");
-            
-            if (!this._pageRef.isDomainReference) {
-                return false;
-            }
-            
-            var data = this._linkedData[this._pageRef.location.projectionTableAlias],
-                fkCols = this._pageRef.origFKR.colset.columns,
-                mapping = this._pageRef.origFKR.mapping,
-                missmatch = false, 
-                keyCol,
-                col, i, j;
-            
-            if (!Array.isArray(data) || data.length === 0) {
-                return false;
-            }
-            
-            // go through the association data
-            for (i = 0; i < data.length; i++) {
-                if (!data[i] || Object.keys(data[i]).length === 0) {
-                    continue;
-                }
-                
-                // make sure that it has the same that as the origTableData
-                missmatch = false;
-                for (j = 0; j < fkCols.length && !missmatch; j++) {
-                    col = fkCols[j];
-                    keyCol = mapping.get(col);
-                    
-                    // same data didn't exist or didn't match, it's not a match.
-                    if (data[i][col.name] != origTableData[keyCol.name]) {
-                        missmatch = true;
-                        break;
-                    }
-                }
-                
-                // all the key columns were found, it's a match.
-                if (!missmatch) {
-                    return true;
-                }
-            }
-            
-            return false;
         },
 
         /**
