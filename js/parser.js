@@ -77,7 +77,7 @@
 
         var parts;
 
-        var joinRegExp = /\((.*)\)=\((.*:.*:.*)\)/;
+        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/;
         var facetsRegExp = /\*::facets::(.+)/;
 
         // extract the query params

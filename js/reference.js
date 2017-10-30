@@ -1158,32 +1158,43 @@
 
                 var uri = this._location.ermrestCompactUri; // used for the http request
 
-                /** Change api to attributegroup for retrieving the foreign key data
+                /** Change api to attributegroup for retrieving extra information
+                 * These information include:
+                 * - Values for the foreignkeys.
+                 * - In case of domain reference, values for the base table.
+                 * 
                  * This will just affect the http request and not this._location
                  *
                  * NOTE:
                  * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   0.
+                 *   0. There is no table called `T`, `M`, `F1`, `F2`, ...
                  *   1. There is no alias in url (more precisely `F1`, `F2`, `F3`, ...)
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
-                if (this._table.foreignKeys.length() > 0) {
+                if (this._table.foreignKeys.length() > 0 || this.isDomainReference) {
                     var compactPath = this._location.ermrestCompactPath,
-                        fkList = "",
+                        mainTableAlias = this._location.mainTableAlias,
+                        projectionTableAlias = this._location.projectionTableAlias,
+                        aggList = [],
                         sortColumn,
                         addedCols;
 
                     // create the uri with attributegroup and alias
-                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
+                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/") + "/";
 
                     // add joins for foreign keys
                     for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
                         // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
+                        uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
 
                         // F2:array(F2:*),F1:array(F1:*)
-                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
+                        aggList.push("F" + (k+1) + ":=array(F" + (k+1) + ":*)");
+                    }
+                    
+                    // add the main reference values for the domainReference
+                    if (this.isDomainReference) {
+                        aggList.push(projectionTableAlias + ":=array(" + projectionTableAlias + ":*)");
                     }
 
                     // add sort columns (it will include the key)
@@ -1208,7 +1219,7 @@
                         }
                     }
 
-                    uri += Object.keys(addedCols).join(",") + ";M:=array(M:*)," + fkList;
+                    uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=array("+mainTableAlias+":*)," + aggList.join(",");
                 }
 
                 // insert @sort()
@@ -2530,6 +2541,22 @@
                 newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
+                
+                var domainUri = [
+                    fkrTable.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(fkrTable.schema.catalog.id), this.location.api,
+                    [module._fixedEncodeURIComponent(fkrTable.schema.name),module._fixedEncodeURIComponent(fkrTable.name)].join(":"),
+                    "right" + otherFK.toString(true)
+                ].join("/");
+                
+                // will be used for choosing new values
+                newRef.domainReference = new Reference(module.parse(domainUri), fkrTable.schema.catalog);
+                
+                // will be used to find out the connection
+                newRef.domainReference.origFKR = newRef.origFKR;
+                
+                // will be used for other apis to make sure that it's domain reference.
+                newRef.domainReference.isDomainReference = true; // TODO this should be refactored, should be able to just add extra projections
 
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
@@ -3048,19 +3075,25 @@
         this._linkedData = [];
 
         // linkedData will include foreign key data
-        if (this._ref._table.foreignKeys.length() > 0) {
+        if (this._ref._table.foreignKeys.length() > 0 || this._ref.isDomainReference) {
 
             var fks = reference._table.foreignKeys.all(), i, j;
+            var mTableAlias = this._ref.location.mainTableAlias,
+                pTabeAlias = this._ref.location.projectionTableAlias;
 
             try {
                 // the attributegroup output
                 this._data = [];
                 for (i = 0; i < data.length; i++) {
-                    this._data.push(data[i].M[0]);
+                    this._data.push(data[i][mTableAlias][0]);
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
+                    }
+                    
+                    if (this._ref.isDomainReference && data[i][pTabeAlias]) {
+                        this._linkedData[i][pTabeAlias] = data[i][pTabeAlias];
                     }
                 }
             }
@@ -3689,52 +3722,96 @@
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef.derivedAssociationReference) {
-                var associationRef = this._pageRef.derivedAssociationReference,
-                    encoder = module._fixedEncodeURIComponent,
-                    newFilter = [],
-                    missingData = false;
-
-                var addFilter = function(fkr, data) {
-                    var keyCols = fkr.colset.columns,
-                        mapping = fkr.mapping, d, i;
-
-                    for (i = 0; i < keyCols.length; i++) {
-                        try {
-                            d = data[mapping.get(keyCols[i]).name];
-                            if (d === undefined || d === null) return false;
-
-                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
-                        } catch(exception) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-                // filter based on the first key
-                missingData = !addFilter(associationRef.origFKR, origTableData);
-                //filter based on the second key
-                missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
-
-                if (missingData) {
-                    return null;
-                } else {
-                    var loc = associationRef._location;
-                    var uri = [
-                        loc.service, "catalog", encoder(loc.catalog), loc.api,
-                        encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
-                        newFilter.join("&")
-                    ].join("/");
-
-                    var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
-                    reference.session = associationRef._session;
-                    return reference;
-                }
-
-            } else {
+            if (!this._pageRef.derivedAssociationReference) {
                 return null;
             }
 
+            var associationRef = this._pageRef.derivedAssociationReference,
+                encoder = module._fixedEncodeURIComponent,
+                newFilter = [],
+                missingData = false;
+
+            var addFilter = function(fkr, data) {
+                var keyCols = fkr.colset.columns,
+                    mapping = fkr.mapping, d, i;
+
+                for (i = 0; i < keyCols.length; i++) {
+                    try {
+                        d = data[mapping.get(keyCols[i]).name];
+                        if (d === undefined || d === null) return false;
+
+                        newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
+                    } catch(exception) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+            // filter based on the first key
+            missingData = !addFilter(associationRef.origFKR, origTableData);
+            //filter based on the second key
+            missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+
+            if (missingData) {
+                return null;
+            }
+            var loc = associationRef._location;
+            var uri = [
+                loc.service, "catalog", encoder(loc.catalog), loc.api,
+                encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
+                newFilter.join("&")
+            ].join("/");
+
+            var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
+            reference.session = associationRef._session;
+            return reference;
+
+        },
+        
+        hasAssociationRef: function (origTableData) {
+            verify(Object.keys(origTableData).length !== 0 && origTableData.constructor === Object, "origTableData must be a non-empty object.");
+            
+            if (!this._pageRef.isDomainReference) {
+                return false;
+            }
+            
+            var data = this._linkedData[this._pageRef.location.projectionTableAlias],
+                fkCols = this._pageRef.origFKR.colset.columns,
+                mapping = this._pageRef.origFKR.mapping,
+                missmatch = false, 
+                keyCol,
+                col, i, j;
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                return false;
+            }
+            
+            // go through the association data
+            for (i = 0; i < data.length; i++) {
+                if (!data[i] || Object.keys(data[i]).length === 0) {
+                    continue;
+                }
+                
+                // make sure that it has the same that as the origTableData
+                missmatch = false;
+                for (j = 0; j < fkCols.length && !missmatch; j++) {
+                    col = fkCols[j];
+                    keyCol = mapping.get(col);
+                    
+                    // same data didn't exist or didn't match, it's not a match.
+                    if (data[i][col.name] != origTableData[keyCol.name]) {
+                        missmatch = true;
+                        break;
+                    }
+                }
+                
+                // all the key columns were found, it's a match.
+                if (!missmatch) {
+                    return true;
+                }
+            }
+            
+            return false;
         },
 
         /**
