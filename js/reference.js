@@ -3776,7 +3776,7 @@
 
         /**
          * @type {boolean}
-         * @desc indicates this represents is a PseudoColumn or a Column.
+         * @desc indicates that this object represents a Column.
          */
         this.isPseudo = false;
 
@@ -4094,7 +4094,7 @@
 
         /**
          * @type {boolean}
-         * @desc indicates this represents is a PseudoColumn or a Column.
+         * @desc indicates that this object represents a PseudoColumn.
          */
         this.isPseudo = true;
 
@@ -4416,7 +4416,7 @@
 
         /**
          * @type {boolean}
-         * @desc indicates this represents is a PseudoColumn or a Column.
+         * @desc indicates that this object represents a PseudoColumn.
          */
         this.isPseudo = true;
 
@@ -4640,7 +4640,7 @@
 
         /**
          * @type {boolean}
-         * @desc indicates this represents is a PseudoColumn or a Column.
+         * @desc indicates that this object represents a PseudoColumn.
          */
         this.isPseudo = true;
 
@@ -4806,7 +4806,7 @@
 
         /**
          * @type {boolean}
-         * @desc indicates this represents is a PseudoColumn or a Column.
+         * @desc indicates that this object represents a PseudoColumn.
          */
         this.isPseudo = true;
 
