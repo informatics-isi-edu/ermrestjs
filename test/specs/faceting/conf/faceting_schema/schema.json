@@ -990,6 +990,34 @@
             ],
             "annotations": {}
         },
+        "main_w_facets_w_alt": {
+            "comment": "has facets that have alternative table",
+            "kind": "table",
+            "table_name": "main_w_facets_w_alt",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "compact": ["id"],
+                    "filter": {
+                        "and": [
+                            {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"], "entity": false},
+                            {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "col"]}
+                        ]
+                    }
+                }
+            }
+        },
         "f7_w_alt": {
             "comment": "has alternative, and fk to id on the same id",
             "kind": "table",
@@ -1006,7 +1034,7 @@
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
-                        "table_name": "main",
+                        "table_name": "main_w_facets_w_alt",
                         "schema_name": "faceting_schema"
                     }]
                 }
@@ -1017,6 +1045,12 @@
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
                     }
                 }
             ],
@@ -1076,7 +1110,7 @@
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
-                        "table_name": "main",
+                        "table_name": "main_w_facets_w_alt",
                         "schema_name": "faceting_schema"
                     }]
                 }

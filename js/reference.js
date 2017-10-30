@@ -530,6 +530,7 @@
                     });
                 };
                 
+                // this is only valid in entity mode.
                 // make sure that facetObject is pointing to the correct table.
                 // NOTE: facetColumns MUST be only used in COMPACT_SELECT context
                 // It doesn't feel right that I am doing contextualization in here,
@@ -549,7 +550,7 @@
                     
                     if (!basedOnKey || facetObject.obj.entity === false) {
                         // it's not entity mode
-                        return false;
+                        return true;
                     }
                     
                     // filter is based on alternative for another context, but we have to move to another table

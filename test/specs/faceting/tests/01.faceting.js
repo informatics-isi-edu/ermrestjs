@@ -38,6 +38,9 @@ exports.execute = function (options) {
      *  - Doesn't have facet annotation
      *  - has longtext, markdown, and serial columns.
      *
+     * main_w_facets_w_alt:
+     *  - two tables have fk to this table, both have alternative
+     *
      * refLP5: 
      * - has facet annotation
      * - has * facet with choices (should be ignored)
@@ -59,7 +62,8 @@ exports.execute = function (options) {
             tableLongPath5 = "longpath_5",
             tableSecondPath2 = "secondpath_2",
             tableMain = "main",
-            tableWAlt = "table_w_alt";
+            tableWAlt = "table_w_alt",
+            tableWFacetAlt = "main_w_facets_w_alt";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
         var refMainMoreFilters;
@@ -379,7 +383,7 @@ exports.execute = function (options) {
             });
             
             describe("regarding alternative tables for main table, ", function () {                
-                it ("if main table has an alternative for compact and not fot detailed, we should add linkage from main to alternative to all the detailed related entities.", function (done) {
+                it ("if main table has an alternative for compact and not for detailed, we should add linkage from main to alternative to all the detailed related entities.", function (done) {
                     options.ermRest.resolve(createURL(tableWAlt)).then(function (ref) {
                         ref = ref.contextualize.compact;
                         var facetColumns = ref.facetColumns;
@@ -394,16 +398,37 @@ exports.execute = function (options) {
                 });
             });
             
-            describe("regarding alternative tables for any of facets, ", function () {
-                describe ("if facet is based on main table, but it has an alternative table for compact/select.", function () {
+            describe("regarding alternative tables for any of facets (table used in faceting is not what we should display for compact/select), ", function () {
+                it ("if facet is in scalar mode, should not change the facet and just add it.", function (done) {
+                    options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        expect(ref.facetColumns.length).toBe(2, "length missmatch.");
+                        checkFacetSource(
+                            "index=0",
+                            ref.facetColumns[0],
+                            [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"]
+                        );
+                        checkFacetSource(
+                            "index=1",
+                            ref.facetColumns[1],
+                            [{"inbound": ["faceting_schema", "f7_fk1"]}, "col"]
+                        );
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+                
+                describe ("if facet is based on main table and has alternative table for compact/select.", function () {
                     it ("if filter is based on the key, add the join to path.", function (done) {
                         facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "id_f7"], "choices": ["1"]} ] };
-                        options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
                             ref = ref.contextualize.compact;
-                            expect(ref.facetColumns.length).toBe(15, "length missmatch.");
+                            expect(ref.facetColumns.length).toBe(3, "length missmatch.");
                             checkFacetSource(
                                 "",
-                                ref.facetColumns[14],
+                                ref.facetColumns[2],
                                 [{"inbound": ["faceting_schema", "f7_fk1"]}, {"inbound": ["faceting_schema", "f7_compact_alt_fk1"]}, "id"]
                             );
                             done();
@@ -415,10 +440,10 @@ exports.execute = function (options) {
                 });
                 
                 it("in othercases, it should just discard the facet.", function (done) {
-                    facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_8"], "choices": ["1"]} ] };
-                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                    facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"], "choices": ["1"]} ] };
+                    options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
                         ref = ref.contextualize.compact;
-                        expect(ref.facetColumns.length).toBe(14);
+                        expect(ref.facetColumns.length).toBe(2);
                         done();
                     }).catch(function (err) {
                         console.log(err);
