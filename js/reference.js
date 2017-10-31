@@ -426,6 +426,11 @@
                     
                     try {
                         col = table.columns.get(colName);
+                        
+                        // if column is a type that we don't support
+                        if (module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
+                            return false;
+                        }
                         return col;
                     } catch(exp) {
                         return false;
@@ -440,7 +445,7 @@
                     var fcObj = refColToFacetObject(col);
                     
                     // if in scalar, and is one of unsupported types
-                    if (!fcObj.obj.entity && module._facetUnsupportedTypes.indexOf(fcObj.column.type.name) !== -1) {
+                    if (!fcObj.obj.entity && module._facetHeuristicIgnoredTypes.indexOf(fcObj.column.type.name) !== -1) {
                         return false;
                     }
                     
@@ -5322,12 +5327,29 @@
          */
         toJSON: function () {
             var res = { "source": Array.isArray(this.dataSource) ? this.dataSource.slice() : this.dataSource};
+            // to avoid adding more than one null for json.
+            var hasJSONNull = {};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
                 if (!(f.facetFilterKey in res)) {
                     res[f.facetFilterKey] = [];
                 }
-                res[f.facetFilterKey].push(f.toJSON());
+                
+                /* 
+                 * We cannot distinguish between json `null` in sql and actual `null`,
+                 * therefore in other parts of code we're treating them the same.
+                 * But to generate the filters, we have to add these two cases,
+                 * that's why we're adding two values for null.
+                 */
+                if ((this._column.type.name === "json" || this._column.type.name === "jsonb") && 
+                    (f.term === null || f.term === "null") && f.facetFilterKey === "choices") {
+                    if (!hasJSONNull[f.facetFilterKey]) {
+                        res[f.facetFilterKey].push(null, "null");
+                    }
+                    hasJSONNull[f.facetFilterKey] = true;
+                } else {
+                    res[f.facetFilterKey].push(f.toJSON());
+                }
             }
 
             return res;
@@ -5359,6 +5381,17 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
+                    
+                    /*
+                     * We cannot distinguish between json `null` in sql and actual `null`,
+                     * therefore we should treat them the same.
+                     */
+                    if (self._column.type.name === "json" || self._column.type.name === "jsonb") {
+                        if (ch === null || ch === "null") {
+                            ch = null;
+                        }
+                    }
+                    
                     current = self.filters.filter(function (f) {
                         return (f instanceof ChoiceFacetFilter) && f.term === ch;
                     })[0];
@@ -5713,7 +5746,7 @@
             return "> " + _formatValueByType(this._columnType, this.min);
         }
         if (!isDefinedAndNotNull(this.min)) {
-            return  "< " + this.max;
+            return  "< " + _formatValueByType(this._columnType, this.max);
         }
         return _formatValueByType(this._columnType, this.min) + " to " + _formatValueByType(this._columnType, this.max);
     };

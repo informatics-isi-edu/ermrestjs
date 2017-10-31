@@ -1887,8 +1887,14 @@
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
     
+    // these types should be ignored for usage in heuristic for facet
+    module._facetHeuristicIgnoredTypes = [
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid', 'jsonb', 'json'
+    ];
+    
+    // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
-        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid'
+        "json"
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
