@@ -743,7 +743,8 @@
 
             // update the location objectcd
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             newReference._location.facets = null;
             
 
@@ -1245,7 +1246,7 @@
                     if (!ownReference._location.paging) { // first page
                         hasPrevious = false;
                         hasNext = (response.data.length > limit);
-                    } else if (ownReference._location.pagingObject.before) { // has @before()
+                    } else if (ownReference._location.beforeObject) { // has @before()
                         hasPrevious = (response.data.length > limit);
                         hasNext = true;
                     } else { // has @after()
@@ -1255,23 +1256,24 @@
 
                     // Because read() reads one extra row to determine whether the new page has previous or next
                     // We need to remove those extra row of data from the result
+                    var extraData = {};
                     if (response.data.length > limit) {
                         // if no paging or @after, remove last row
-                        if (!ownReference._location.pagingObject || !ownReference._location.pagingObject.before)
+                        if (!ownReference._location.beforeObject) {
+                            extraData = response.data[response.data.length-1];
                             response.data.splice(response.data.length-1);
-                       else // @before, remove first row
+                        } else { // @before, remove first row
+                            extraData = response.data[0];
                             response.data.splice(0, 1);
-
+                        }
                     }
-                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
+                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext, extraData);
 
                     // we are paging based on @before (user navigated backwards in the set of data)
                     // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                    if ( (ownReference.location.pagingObject && ownReference.location.pagingObject.before) && (page.tuples.length < limit || !page.hasPrevious) ) {
+                    if ( ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
                         var referenceWithoutPaging = _referenceCopy(ownReference);
-                        // set the private values to null because the public functions rely on these
-                        referenceWithoutPaging.location._pagingObject = null;
-                        referenceWithoutPaging.location._paging = null;
+                        referenceWithoutPaging.location.beforeObject = null;
 
                         referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
                             defer.resolve(rereadPage);
@@ -1318,8 +1320,9 @@
             }
 
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
             newReference._location.sortObject = sort;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
 
             return newReference;
         },
@@ -2004,7 +2007,8 @@
             var newReference = _referenceCopy(this);
 
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             newReference._location.search(term);
             
             // update facet columns list
@@ -3044,9 +3048,10 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasNext Whether there is more data before this Page
      * @param {boolean} hasPrevious Whether there is more data after this Page
+     * @param {!Object} extraData if 
      *
      */
-    function Page(reference, etag, data, hasPrevious, hasNext) {
+    function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
         this._ref = reference;
         this._etag = etag;
 
@@ -3109,6 +3114,7 @@
 
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
+        this._extraData = extraData;
     }
 
     Page.prototype = {
@@ -3174,9 +3180,7 @@
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
 
                 // update paging by creating a new location
-                var paging = {};
-                paging.before = true;
-                paging.row = [];
+                var values = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
 
@@ -3184,7 +3188,7 @@
                     var data = this._data[0][colName];
                     if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data);
+                        values.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -3201,13 +3205,14 @@
                             } else {
                                 data = this._data[0][pseudoCol._sortColumns[j].name];
                             }
-                            paging.row.push(data);
+                            values.push(data);
                         }
                     }
                 }
 
                 newReference._location = this._ref._location._clone();
-                newReference._location.pagingObject = paging;
+                newReference._location.beforeObject = values;
+                newReference._location.afterObject = null;
                 return newReference;
             }
             return null;
@@ -3242,9 +3247,7 @@
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
 
                 // update paging by creating a new location
-                var paging = {};
-                paging.before = false;
-                paging.row = [];
+                var values = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
 
@@ -3252,7 +3255,7 @@
                     var data = this._data[this._data.length-1][colName];
                     if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data);
+                        values.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -3268,14 +3271,15 @@
                             } else {
                                 data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
                             }
-                            paging.row.push(data);
+                            values.push(data);
                         }
                     }
 
                 }
 
                 newReference._location = this._ref._location._clone();
-                newReference._location.pagingObject = paging;
+                newReference._location.beforeObject = null;
+                newReference._location.afterObject = values;
                 return newReference;
             }
             return null;
@@ -3336,7 +3340,7 @@
               }
            } 
            return this._content;
-        }
+       }
     };
 
 
@@ -5610,7 +5614,8 @@
             });
             
             newReference._location = this.reference._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             
             // TODO might be able to improve this
             if (typeof this.reference.location.searchTerm === "string") {

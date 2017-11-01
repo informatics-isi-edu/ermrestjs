@@ -281,7 +281,7 @@ to use for ERMrest JavaScript agents.
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+        * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2629,7 +2629,7 @@ NOTE:
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+    * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2640,7 +2640,7 @@ NOTE:
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, etag, data, hasNext, hasPrevious)
+#### new Page(reference, etag, data, hasNext, hasPrevious, extraData)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2660,6 +2660,7 @@ Usage:
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
 | hasNext | <code>boolean</code> | Whether there is more data before this Page |
 | hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
+| extraData | <code>Object</code> | if |
 
 <a name="ERMrest.Page+reference"></a>
 
