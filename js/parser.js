@@ -1277,12 +1277,16 @@
             return v !== undefined && v !== null;
         };
         
+        var valueToString = function (v) {
+            return (typeof v === "string") ? v :JSON.stringify(v);
+        };
+        
         // parse choices constraint
         var parseChoices = function (choices, column) {
             return choices.reduce(function (prev, curr, i) {
                 var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
-                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(curr);
+                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(valueToString(curr));
                 } else {
                     res += module._fixedEncodeURIComponent(column) + "::null::";
                 }
@@ -1300,7 +1304,7 @@
                 }
                 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(range.min);
+                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(valueToString(range.min));
                     hasFilter = true;
                 }
                 
@@ -1308,7 +1312,7 @@
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(range.max);
+                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(valueToString(range.max));
                     hasFilter = true;
                 }
             });
@@ -1323,7 +1327,7 @@
                     invalid = true;
                     return "";
                 } else {
-                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(curr.toString(), column);
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(valueToString(curr), column);
                 }
             }, "");
             

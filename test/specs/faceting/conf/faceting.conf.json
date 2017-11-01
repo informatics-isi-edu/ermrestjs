@@ -1,5 +1,9 @@
 {
-  "catalog": {},
+  "catalog": {
+      "acls": {
+          "write": ["*"]
+      }
+  },
   "schema": {
     "name": "faceting_schema",
     "createNew": true,

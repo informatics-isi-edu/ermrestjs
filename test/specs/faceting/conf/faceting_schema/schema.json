@@ -106,6 +106,24 @@
                     }
                 },
                 {
+                    "name": "boolean_col",
+                    "type": {
+                        "typename": "boolean"
+                    }
+                },
+                {
+                    "name": "json_col",
+                    "type": {
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "jsonb_col",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                },
+                {
                     "name": "fk_to_f1",
                     "comment": "comment",
                     "type": {
@@ -139,6 +157,9 @@
                             {"source": "text_col", "ux_mode": "invalid mode"},
                             {"source": "longtext_col"},
                             {"source": "markdown_col"},
+                            {"source": "boolean_col"},
+                            {"source": "json_col"},
+                            {"source": "jsonb_col"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "open": true},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "term"]},
@@ -574,6 +595,18 @@
                     }
                 },
                 {
+                    "name": "col_json",
+                    "type": {
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "col_jsonb",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                },
+                {
                     "name": "col_markdown",
                     "type": {
                         "typename": "markdown"
@@ -990,6 +1023,34 @@
             ],
             "annotations": {}
         },
+        "main_w_facets_w_alt": {
+            "comment": "has facets that have alternative table",
+            "kind": "table",
+            "table_name": "main_w_facets_w_alt",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "compact": ["id"],
+                    "filter": {
+                        "and": [
+                            {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"], "entity": false},
+                            {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "col"]}
+                        ]
+                    }
+                }
+            }
+        },
         "f7_w_alt": {
             "comment": "has alternative, and fk to id on the same id",
             "kind": "table",
@@ -1006,7 +1067,7 @@
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
-                        "table_name": "main",
+                        "table_name": "main_w_facets_w_alt",
                         "schema_name": "faceting_schema"
                     }]
                 }
@@ -1017,6 +1078,12 @@
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
                     }
                 }
             ],
@@ -1076,7 +1143,7 @@
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
-                        "table_name": "main",
+                        "table_name": "main_w_facets_w_alt",
                         "schema_name": "faceting_schema"
                     }]
                 }

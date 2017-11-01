@@ -88,11 +88,9 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     tuples = page.tuples;
-                    expect(tuples.length).toBe(1);
-                    for(var i = 0; i < tuples.length; i++) {
-                        expect(tuples[i]._data["name x"]).toMatch("Hank");
-                        expect(tuples[i]._data["id x"]).toMatch("11");
-                    }
+                    
+                    expect(tuples[0]._data["name x"]).toMatch("Hank");
+                    expect(tuples[0]._data["id x"]).toMatch("11");
 
                     done();
                 }, function (err) {
@@ -451,11 +449,8 @@ exports.execute = function (options) {
 
             it('tuples should have correct row values. ', function() {
                 tuples = page.tuples;
-                expect(tuples.length).toBe(1);
-                for(var i = 0; i < tuples.length; i++) {
-                    expect(tuples[i]._data["name x"]).toMatch("Hank");
-                    expect(tuples[i]._data["id x"]).toMatch("11");
-                }
+                expect(tuples[0]._data["name x"]).toMatch("Hank");
+                expect(tuples[0]._data["id x"]).toMatch("11");  
             });
 
             it('clear search. ', function() {
