@@ -808,6 +808,8 @@ AttributeGroupReferenceAggregateFn.prototype = {
     /**
      * @type {Object}
      * @desc count aggregate representation
+     * This does not count null values for the key since we're using `count distinct`.
+     * Therefore the returned count might not be exactly the same as number of returned values.
      */
     get countAgg() {
         if (this._ref.shortestKey.length > 1) {

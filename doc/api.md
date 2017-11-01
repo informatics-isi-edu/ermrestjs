@@ -2986,7 +2986,7 @@ Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.C
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
 
 #### referenceColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a Column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+table"></a>
@@ -3121,7 +3121,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.ForeignKeyPseudoColumn+isPseudo"></a>
 
 #### foreignKeyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+isForeignKey"></a>
@@ -3184,7 +3184,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.KeyPseudoColumn+isPseudo"></a>
 
 #### keyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
 <a name="ERMrest.KeyPseudoColumn+isKey"></a>
@@ -3236,7 +3236,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.AssetPseudoColumn+isPseudo"></a>
 
 #### assetPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+isAsset"></a>
@@ -3294,7 +3294,7 @@ The [ForeignKeyRef](#ERMrest.ForeignKeyRef) that this pseudo-column is based on.
 <a name="ERMrest.InboundForeignKeyPseudoColumn+isPseudo"></a>
 
 #### inboundForeignKeyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey"></a>
