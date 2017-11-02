@@ -1277,7 +1277,7 @@
 
                     // we are paging based on @before (user navigated backwards in the set of data)
                     // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                    if ( ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
+                    if (!ownReference.location.afterObject && ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
                         var referenceWithoutPaging = _referenceCopy(ownReference);
                         referenceWithoutPaging.location.beforeObject = null;
 
@@ -2102,6 +2102,83 @@
             });
 
             return defer.promise;
+        },
+        
+        
+        setSamePaging: function (page) {
+            var pageRef = page._ref;
+            
+            /*
+             * This case is not possible in the current implementation,
+             * page object is being created from read, and therefore always the 
+             * attached reference will have sortObject.
+             */
+            if (!pageRef._location.sortObject) {
+                throw new module.InvalidInputError("Given page doesn't have a reference with sort.");
+            }
+            
+            var newRef = _referenceCopy(this);
+            newRef._location = this._location._clone();
+            
+            // same search
+            if (typeof pageRef.location.searchTerm === "string") {
+                newRef._location.search(pageRef.location.searchTerm);
+            }
+            
+            // same sort
+            newRef._location.sortObject =  module._simpleDeepCopy(pageRef._location.sortObject);
+            
+            // same pagination
+            if (pageRef._location.afterObject) {
+                newRef._location.afterObject =  module._simpleDeepCopy(pageRef._location.afterObject);
+            }
+            if (pageRef._location.beforeObject) {
+                newRef._location.beforeObject =  module._simpleDeepCopy(pageRef._location.beforeObject);
+            }
+            
+            
+            // if we have extra data, and one of before/after is not available
+            if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
+                var pageValues = [], colName, data, pseudoCol, j, i;
+                
+                // get list of values based on sort list
+                for (i = 0; i < newRef._location.sortObject.length; i++) {
+                    colName = newRef._location.sortObject[i].column;
+
+                    // last row
+                    data = page._extraData[colName];
+                    if (typeof data !== 'undefined') {
+                        // normal column
+                        pageValues.push(data);
+                    } else {
+                        // pseudo column
+                        for (j = 0; j < newRef.columns.length; j++) {
+                            if (this.columns[j].name == colName) {
+                                pseudoCol = newRef.columns[j];
+                                break;
+                            }
+                        }
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            if (pseudoCol.isForeignKey) {
+                                data = page._extraLinkedData[colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = page._extraData[pseudoCol._sortColumns[j].name];
+                            }
+                            pageValues.push(data);
+                        }
+                    }
+                }
+                
+                // add before based on extra data    
+                if (!pageRef._location.beforeObject) {
+                    newRef._location.beforeObject = pageValues;
+                }
+                // add after based on extra data
+                else if (!pageRef._location.afterObject) {
+                    newRef._location.afterObject = pageValues;
+                }
+            }
+            return newRef;
         },
 
         setNewTable: function(table) {
@@ -3058,6 +3135,9 @@
      *
      */
     function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
+        
+        var hasExtraData = typeof extraData === "object" && Object.keys(extraData).length !== 0;
+        
         this._ref = reference;
         this._etag = etag;
 
@@ -3069,6 +3149,8 @@
          * var fkData = this._linkedData[i][foreignKey._name];
          */
         this._linkedData = [];
+        
+        
 
         // linkedData will include foreign key data
         if (this._ref._table.foreignKeys.length() > 0) {
@@ -3087,8 +3169,17 @@
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
                     }
-
                 }
+                
+                //extra data
+                if (hasExtraData) {
+                    this._extraData = extraData[mTableAlias][0];
+                    this._extraLinkedData = {};
+                    for (j = fks.length - 1; j >= 0 ; j--) {
+                        this._extraLinkedData[fks[j]._name] = extraData["F"+(j+1)][0];
+                    }
+                }
+                
             }
             // could not find the expected aliases
             catch(exception) {
@@ -3111,16 +3202,32 @@
                     }
                     this._linkedData.push(tempData);
                 }
+                
+                // extra data
+                if (hasExtraData) {
+                    this._extraData = extraData;
+                    tempData = {};
+                    for (j = 0; j < fks.length; j++) {
+                        fkName = fks[j]._name;
+                        tempData[fkName] = {};
+
+                        for (k = 0; k < fks[j].colset.columns.length; k++) {
+                            col = fks[j].colset.columns[k];
+                            tempData[fkName][fks[j].mapping.get(col).name] = extraData[col.name];
+                        }
+                    }
+                    this._extraLinkedData = tempData;
+                }
             }
         }
         // entity output (linkedData is empty)
         else {
             this._data = data;
+            this._extraData = hasExtraData ? extraData : undefined;
         }
 
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
-        this._extraData = extraData;
     }
 
     Page.prototype = {
