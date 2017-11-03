@@ -767,8 +767,8 @@ exports.execute = function (options) {
 
             describe('.urlPattern', function() {
                 it('otherwise should return the defined url_pattern in annotation.', function () {
-                    expect(assetRefCompactCols[9].urlPattern).toBe("{{col_asset_2}}");
-                    expect(assetRefCompactCols[10].urlPattern).toBe("{{col_asset_3}}");
+                    expect(assetRefCompactCols[9].urlPattern).toBe("/hatrac/{{col_asset_2}}");
+                    expect(assetRefCompactCols[10].urlPattern).toBe("/hatrac/{{col_asset_3}}");
                 });
             });
 
