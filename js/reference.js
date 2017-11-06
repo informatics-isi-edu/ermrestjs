@@ -2105,37 +2105,55 @@
         },
         
         
+        /**
+         * Given a page, will change the reference paging options (before, and after)
+         * to match the page.
+         * NOTE: Limitations:
+         * - Current reference's table and page's table must be the same.
+         * - page's reference cannot have any facets (apart from search).
+         * @param  {ERMrest.Page} page
+         * @return {ERMrest.Reference} reference with new page settings.
+         */
         setSamePaging: function (page) {
+            
             var pageRef = page._ref;
             
             /*
-             * This case is not possible in the current implementation,
-             * page object is being created from read, and therefore always the 
-             * attached reference will have sortObject.
-             */
-            if (!pageRef._location.sortObject) {
-                throw new module.InvalidInputError("Given page doesn't have a reference with sort.");
+            * It only works when page's table and current table are the same.
+            */
+            if (pageRef.table !== this.table) {
+                throw new module.InvalidInputError("Given page is not from the same table.");
             }
+            
             
             var newRef = _referenceCopy(this);
             newRef._location = this._location._clone();
             
             // same search
+            // TODO this should be eventually facets and not just search
+            // Current requirement only needs search.
+            // If we change it to facet, we have to merge the facets
             if (typeof pageRef.location.searchTerm === "string") {
                 newRef._location.search(pageRef.location.searchTerm);
+            }
+            
+            
+            /*
+             * This case is not possible in the current implementation,
+             * page object is being created from read, and therefore always the 
+             * attached reference will have sortObject.
+             * But if it didn't have any sort, we should just return the reference.
+             */
+            if (!pageRef._location.sortObject) {
+                return newRef;
             }
             
             // same sort
             newRef._location.sortObject =  module._simpleDeepCopy(pageRef._location.sortObject);
             
             // same pagination
-            if (pageRef._location.afterObject) {
-                newRef._location.afterObject =  module._simpleDeepCopy(pageRef._location.afterObject);
-            }
-            if (pageRef._location.beforeObject) {
-                newRef._location.beforeObject =  module._simpleDeepCopy(pageRef._location.beforeObject);
-            }
-            
+            newRef._location.afterObject =  pageRef._location.afterObject ? module._simpleDeepCopy(pageRef._location.afterObject) : null;
+            newRef._location.beforeObject =  pageRef._location.beforeObject ? module._simpleDeepCopy(pageRef._location.beforeObject) : null;
             
             // if we have extra data, and one of before/after is not available
             if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
@@ -2145,19 +2163,21 @@
                 for (i = 0; i < newRef._location.sortObject.length; i++) {
                     colName = newRef._location.sortObject[i].column;
 
-                    // last row
+                    // if data is from a non-pseudo column
                     data = page._extraData[colName];
-                    if (typeof data !== 'undefined') {
-                        // normal column
+                    if (typeof data !== 'undefined') { // normal column
                         pageValues.push(data);
-                    } else {
-                        // pseudo column
+                    } else { // pseudo column
+                        
+                        // find the column
                         for (j = 0; j < newRef.columns.length; j++) {
                             if (this.columns[j].name == colName) {
                                 pseudoCol = newRef.columns[j];
                                 break;
                             }
                         }
+                        
+                        // find the values from the sortColumn
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol.isForeignKey) {
                                 data = page._extraLinkedData[colName][pseudoCol._sortColumns[j].name];
@@ -2174,7 +2194,7 @@
                     newRef._location.beforeObject = pageValues;
                 }
                 // add after based on extra data
-                else if (!pageRef._location.afterObject) {
+                else {
                     newRef._location.afterObject = pageValues;
                 }
             }

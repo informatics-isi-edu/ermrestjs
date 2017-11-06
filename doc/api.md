@@ -279,6 +279,7 @@ to use for ERMrest JavaScript agents.
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
+        * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
@@ -2161,6 +2162,7 @@ Constructor for a ParsedFilter.
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
+    * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -2573,6 +2575,22 @@ c) use space for conjunction of terms
 | Param | Type | Description |
 | --- | --- | --- |
 | aggregateList | [<code>Array.&lt;ColumnAggregateFn&gt;</code>](#ERMrest.ColumnAggregateFn) | list of aggregate functions to apply to GET uri |
+
+<a name="ERMrest.Reference+setSamePaging"></a>
+
+#### reference.setSamePaging(page) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a page, will change the reference paging options (before, and after)
+to match the page.
+NOTE: Limitations:
+- Current reference's table and page's table must be the same.
+- page's reference cannot have any facets (apart from search).
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - reference with new page settings.  
+
+| Param | Type |
+| --- | --- |
+| page | [<code>Page</code>](#ERMrest.Page) | 
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
