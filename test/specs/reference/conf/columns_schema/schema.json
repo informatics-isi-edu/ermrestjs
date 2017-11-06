@@ -799,7 +799,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "{{id}}"
+                            "url_pattern": "/hatrac/{{id}}"
                         }
                     }
                 },
@@ -811,7 +811,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "{{col_fk}}"
+                            "url_pattern": "/hatrac/{{col_fk}}"
                         }
                     }
                 },
@@ -877,7 +877,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "{{col_asset_2}}",
+                            "url_pattern": "/hatrac/{{col_asset_2}}",
                             "filename_column": "no col",
                             "byte_count_column": "no col",
                             "md5": true,
@@ -898,7 +898,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "{{col_asset_3}}",
+                            "url_pattern": "/hatrac/{{col_asset_3}}",
                             "filename_column": "col_filename",
                             "byte_count_column": "col_byte",
                             "md5": "col_md5",
@@ -915,7 +915,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "{{col_asset_4}}"
+                            "url_pattern": "/hatrac/{{col_asset_4}}"
                         }
                     }
                 }
@@ -1544,6 +1544,89 @@
                     "id", "text_col", "longtext_col", "markdown_col", "int_col", "float_col", "date_col", "timestamp_col", "json_col", "jsonb_col"
                 ]
             }
+        },
+        "table_with_invalid_url_pattern": {
+            "comment": null,
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "table_name": "table_with_invalid_url_pattern",
+            "schema_name": "columns_schema",
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "comment": null,
+                    "name": "id",
+                    "default": null,
+                    "nullok": false,
+                    "type": {
+                        "typename": "int8"
+                    },
+                    "annotations": {}
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "uri1",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {}
+                    }
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "uri2",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern" : "/js/ermrestjs/{{{_uri.md5_hex}}}"
+                        }
+                    }
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "uri3",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                        }
+                    }
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "uri4",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern" : "https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                        }
+                    }
+                }
+            ],
+            "annotations" : {}
         }
     }
 }

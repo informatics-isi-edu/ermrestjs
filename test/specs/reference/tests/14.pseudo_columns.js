@@ -12,12 +12,14 @@ exports.execute = function (options) {
             tableWithCompositeKey3 = "table_w_composite_key_3",
             tableWithSlash = "table_w_slash",
             tableWithAsset = "table_w_asset",
+            tableWithInvalidUrlPattern = "table_with_invalid_url_pattern",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
             createContext = "entry/create",
             editContext = "entry/edit",
             detailedContext = "detailed";
+
 
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/id=" + entityId;
@@ -39,6 +41,9 @@ exports.execute = function (options) {
 
         var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithAsset + "/id=" + entityId;
+
+        var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/" 
+            + schemaName + ':' + tableWithInvalidUrlPattern;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -439,6 +444,45 @@ exports.execute = function (options) {
                                     "col_asset_3", "col_filename","col_byte","col_md5","col_sha256"
                                 ]
                             }]);
+                        });
+                    });
+
+
+                    describe("for checking table which has an asset column with invalid url pattern in entry context, ", function() {
+
+                        var assetRef1;
+
+                        beforeAll(function (done) {
+                            options.ermRest.resolve(tableWithInvalidUrlPatternURI, { cid: "test" }).then(function (response) {
+                                assetRef1 = response;
+                                assetRef1 = assetRef1.contextualize.entryCreate;
+                                done();
+                            }, function (err) {
+                                console.dir(err);
+                                done.fail();
+                            });
+                        });
+
+                        it("'uri1' column should not be returned in visible-columns as it has no url_pattern property", function() {
+                            var column = assetRef1.columns.find(function(c) { return c.name === "uri1" });
+                            expect(column).toBeUndefined();
+                        });
+
+                        it("'uri2' column should not be returned in visible-columns as it doesn't has 'hatrac' in url_pattern (/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
+                            var column = assetRef1.columns.find(function(c) { return c.name === "uri2" });
+                            expect(column).toBeUndefined();
+                        });
+
+                        it("'uri3' column should be returned in visible-columns and should be of asset type as it has 'hatrac' in url_pattern (/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
+                            var column = assetRef1.columns.find(function(c) { return c.name === "uri3" });
+                            expect(column).toBeDefined();
+                            expect(column.isAsset).toBe(true);
+                        });
+
+                        it("'uri3' column should be returned in visible-columns and should be of asset type as it has 'hatrac' in url_pattern (https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
+                            var column = assetRef1.columns.find(function(c) { return c.name === "uri4" });
+                            expect(column).toBeDefined();
+                            expect(column.isAsset).toBe(true);
                         });
                     });
                 });

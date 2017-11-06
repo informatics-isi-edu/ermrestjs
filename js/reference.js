@@ -2295,15 +2295,29 @@
 
             // this function will take care of adding column and asset column
             var addColumn = function (col) {
-                if(col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
+                if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
+
                     if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
-                        // add asset annotation
-                        var assetCol = new AssetPseudoColumn(self, col);
-                        assetColumns.push(assetCol);
-                        self._referenceColumns.push(assetCol);
-                        return;
+                        
+                        var urlPattern = col.annotations.get(module._annotations.ASSET).content.url_pattern;
+                        
+                        // If url_pattenr doesn't has hatrac in it then consider the column as a plain text column and proceed
+                        if ((typeof urlPattern !== 'string') || (module._parseUrl(urlPattern).pathname.indexOf('/hatrac/') !== 0)) {
+                            // ignore the column
+                            console.log("url_pattern '" + urlPattern + "' for column '" + col.name + "' doesn't has hatrac");
+                            if (module._isEntryContext(self._context)) {
+                                return;
+                            }
+                        } else {
+                            // add asset annotation
+                            var assetCol = new AssetPseudoColumn(self, col);
+                            assetColumns.push(assetCol);
+                            self._referenceColumns.push(assetCol);
+                            return;
+                        }
                     } else if (module._isEntryContext(self._context)) {
                         // ignore the column
+                        console.log("Column " + col.name + " doesn't contains url_pattern");
                         return;
                     }
                 }
