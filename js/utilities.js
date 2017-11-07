@@ -237,6 +237,25 @@
             }
         }
     };
+    
+    /**
+     * @private
+     * @function
+     * @param  {Object} source the object that you want to be copied
+     * @desc
+     * Creat a deep copy of the given object.
+     * NOTE: This is very limited and only works for simple objects.
+     * Some of its limitations are:
+     * 1. Cannot copy functions.
+     * 2. Cannot work on circular references.
+     * 3. Will convert date objects back to UTC in the string representation in the ISO8601 format.
+     * 4. It will fail to copy anything that is not in the JSON spec.
+     *
+     * ONLY USE THIS FUNCTION IF IT IS NOT ANY OF THE GIVEN LIMIATIONS.
+     */
+    module._simpleDeepCopy = function (source) {
+        return JSON.parse(JSON.stringify(source));
+    };
 
     /**
      * @function

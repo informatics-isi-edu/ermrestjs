@@ -10,13 +10,15 @@ exports.execute = function (options) {
     //   3. Previous with more data
     //   4. Previous with no more data
 
-    describe("For paging with previous and next,", function () {
+    describe("Paging and Sorting Options,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableNameNoSort = "paging%20table%20no%20sort",
-            tableNameWSort = "paging%20table%20w%20sort";
+            tableNameWSort = "paging%20table%20w%20sort",
+            tableNameReference = "reference_table",
+            tableNameInboundRelated = "inbound_related_reference_table";
 
-
+/*
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                 + tableNameNoSort;
@@ -676,9 +678,101 @@ exports.execute = function (options) {
             });
 
         });
+*/
 
+        describe("setSamePaging, ", function () {
+            var baseUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
+            var refUri = baseUri + tableNameInboundRelated + "@sort(id)",
+                refUriJoin = baseUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
 
-
+            var currRef, newRef;
+            
+            var testUri = function (done, uri, limit, afterObject, beforeObject) {
+                options.ermRest.resolve(uri).then(function (ref) {
+                    return ref.read(limit);
+                }).then(function (page) {
+                    newRef = currRef.setSamePaging(page);
+                    expect(newRef.location.beforeObject).toEqual(beforeObject, "beforeObject missmatch.");
+                    expect(newRef.location.afterObject).toEqual(afterObject, "afterObject missmatch.");
+                    done();
+                }).catch(function (err) {
+                    done.fail();
+                    console.log(err);
+                });
+            };
+            
+            beforeAll(function (done) {
+                options.ermRest.resolve(refUriJoin + "/@sort(id)@after(5)@before(20)").then(function (ref) {
+                    currRef = ref;
+                    done();
+                }).catch(function (err) {
+                    done.fail();
+                    console.log(err);
+                });
+            });
+            
+            it ("should throw an error if reference's table and page's table are not the same.", function (done) {
+                options.ermRest.resolve(baseUri + tableNameReference).then(function (ref) {
+                    return ref.read(2);
+                }).then(function (page) {
+                    expect(function () {
+                        newRef = currRef.setSamePaging(page);
+                    }).toThrow("Given page is not from the same table.");
+                    done();
+                }).catch(function (err) {
+                    done.fail();
+                    console.log(err);
+                });
+            });
+            
+            describe("if page didn't have any extra data, ", function () {
+                it ("if page didn't have any paging options should return a reference without any page setting.", function (done) {
+                    testUri(done, refUri, 25, null, null);
+                });
+                
+                it ("if page had before, should return a reference with before.", function (done) {
+                    testUri(done, refUri + "@before(6)", 5, null, ["6"]);
+                });
+                
+                it ("if page had after, should return a reference with after.", function (done) {
+                    testUri(done, refUri + "@after(96)", 5, ["96"], null);
+                });
+                
+                // NOTE: based on current implementation, page cannot have both before and after
+            });
+            
+            describe("if page had extra data, ", function () {
+                it ("if page didn't have any paging options should return a reference with before.", function (done) {
+                    testUri(done, refUri, 5, null, ["6"]);
+                });
+                
+                it ("if page had before, should return a reference with same before and new after.", function (done) {
+                    testUri(done, refUri + "@before(7)", 5, ["1"], ["7"]);
+                });
+                
+                it ("if page had after, should return a reference with same after and new before.", function (done) {
+                    testUri(done, refUri + "@after(5)", 5, ["5"], ["92"]);
+                });
+                
+                // NOTE: based on current implementation, page cannot have both before and after
+            });
+            
+            it ("if page had search, it should change the search accordingly.", function (done) {
+                options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
+                    ref = ref.search("9");
+                    return ref.read(5);
+                }).then(function (page) {
+                    newRef = currRef.setSamePaging(page);
+                    expect(newRef.location.beforeObject).toEqual(null, "beforeObject missmatch.");
+                    expect(newRef.location.afterObject).toEqual(null, "afterObject missmatch.");
+                    expect(newRef.location.searchTerm).toEqual("9", "searchTerm missmatch.");
+                    done();
+                }).catch(function (err) {
+                    done.fail();
+                    console.log(err);
+                });
+            });
+        });
 
     });
 };

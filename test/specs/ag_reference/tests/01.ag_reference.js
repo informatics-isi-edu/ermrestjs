@@ -31,7 +31,8 @@ exports.execute = function (options) {
                     schemaName + ":" + mainTable,
                     {"column": "col", "term": "test"}, // search
                     [{"column": "alias"}], // sort
-                    {"before": true, "row": ["20"]} // paging
+                    null, //after
+                    ["20"] // before
                 );
             });
             
@@ -60,7 +61,8 @@ exports.execute = function (options) {
             });
             
             it ("paging related attributes are correct.", function () {
-                expect(loc.pagingObject).toBeUndefined("sortObject was defined.");
+                expect(loc.beforeObject).toBeUndefined("beforeObject was defined.");
+                expect(loc.afterObject).toBeUndefined("afterObject was defined.");
                 expect(loc.paging).toBeUndefined("sort was defined.");
                 
                 expect(locWithModifiers.paging).toBe("@before(20)");
@@ -82,10 +84,11 @@ exports.execute = function (options) {
             });
             
             it ("changePage returns a new object with new paging attributes.", function () {
-                var newLoc = loc.changePage({"before": false, "row":["1"]});
+                var newLoc = loc.changePage(["1"], null);
                 expect(loc).not.toBe(newLoc, "Didn't return a new object.");
-                expect(loc.pagingObject).toBeUndefined("changed original object.");
-                expect(newLoc.paging).toBe("@after(1)");
+                expect(loc.afterObject).toBeUndefined("changed oridingal object sort.");
+                expect(newLoc.paging).toBe("@after(1)", "paging missmatch.");
+                expect(newLoc.afterObject).toEqual(["1"], "afterObject missmatch.");
             });
         });
         

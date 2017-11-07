@@ -77,7 +77,7 @@
 
         var parts;
 
-        var joinRegExp = /\((.*)\)=\((.*:.*:.*)\)/;
+        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/;
         var facetsRegExp = /\*::facets::(.+)/;
 
         // extract the query params
@@ -128,13 +128,15 @@
             // sort must specified to use @before and @after
             if (modifiers.indexOf("@before(") !== -1) {
                 if (this._sort) {
-                    this._paging = modifiers.match(/(@before\([^\)]*\))/)[1];
+                    this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
                     throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
                 }
-            } else if (modifiers.indexOf("@after(") !== -1) {
+            } 
+            
+            if (modifiers.indexOf("@after(") !== -1) {
                 if (this._sort) {
-                    this._paging = modifiers.match(/(@after\([^\)]*\))/)[1];
+                    this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
                     throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
                 }
@@ -775,71 +777,129 @@
             // enforce updating uri
             this._setDirty();
         },
+        
+        /**
+         * String representation of before 
+         * @before(..)
+         * @type {string}
+         */
+        get before () {
+          return this._before;
+        },
+        
+        /**
+         * String representation of before 
+         * @after(..)
+         * @type {string}
+         */
+        get after () {
+          return this._after;
+        },
 
         /**
          *
-         * @returns {String} The string format of the paging modifier in the form of @before(..) or @after(...)
+         * @returns {String} The string format of the paging modifier in the form of @before(..)@after(...)
          */
         get paging() {
-            return this._paging;
+            if (this.after || this.before) {
+                return (this.after ? this.after : "") + (this.before ? this.before : "");
+            }
         },
 
         /**
-         * get paging object, null if no paging
-         * @returns {Object} in this format {"before":boolean, "row":[v1, v2, v3...]} where v is in same column order as in sort
+         * array of values that is used for before
+         * @return {Object[]}
          */
-        get pagingObject() {
-            var row, i, value;
-            if (this._pagingObject === undefined) {
-                if (this._paging) {
-                    if (this._paging.indexOf("@before") !== -1) {
-                        this._pagingObject = {};
-                        this._pagingObject.before = true;
-                        this._pagingObject.row = [];
-                        row = this._paging.match(/@before\(([^\)]*)\)/)[1].split(",");
-                        for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
-                            // ::null:: to null, empty string to "", otherwise decode value
-                            value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
-                            this._pagingObject.row.push(value);
-                        }
-                    } else if (this._paging.indexOf("@after(") !== -1) {
-                        this._pagingObject = {};
-                        this._pagingObject.before = false;
-                        this._pagingObject.row = [];
-                        row = this._paging.match(/@after\(([^\)]*)\)/)[1].split(",");
-                        for (i = 0; i < this.sortObject.length; i++) { // use getter to force sortobject to be created, it could be undefined
-                            // ::null:: to null, empty string to "", otherwise decode value
-                            value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
-                            this._pagingObject.row.push(value);
-                        }
+        get beforeObject () {
+            if (this._beforeObject === undefined) {
+                var row, i, value;
+                if (this._before) {
+                    this._beforeObject = [];
+                    row = this._before.match(/@before\(([^\)]*)\)/)[1].split(",");
+                    
+                    if (row.length !== this.sortObject.length) {
+                        //TODO test this
+                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.");
+                    }
+                    
+                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        this._beforeObject.push(value);
                     }
                 } else {
-                    this._pagingObject = null;
+                    this._beforeObject = null;
                 }
             }
-            return this._pagingObject;
+            return this._beforeObject;
         },
 
         /**
-         * change the paging with new pagingObject
-         * @param {Object} po in this format {"before":boolean, "row":[v1, v2, v3...]} where v is in same column order as in sort
+         * change the beforeObject with new values
+         * @param {Object[]} Array of values that you want to page with.
          */
-        set pagingObject(po) {
-            if ((!po && !this._paging) || (po === this._paging))
-                return;
-
-            // null or undefined = remove paing
-            if (!po || po === {}) {
-                delete this._paging;
-                this._sortObject = null;
+        set beforeObject(values) {
+            // invalid argument, or empty string -> remove before
+            if (!Array.isArray(values) || values.length === 0) {
+                this._beforeObject = null;
+                delete this._before;
+            } else {
+                if (this._sort) {
+                    this._beforeObject = values;
+                    this._before = _getPagingModifier(values, true);
+                } else {
+                    throw new module.MalformedURIError("Error setting before: Paging not allowed without sort");
+                }
             }
 
-            var oldPagingString = (this._paging? this._paging : "");
-            if (this._sort) {
-                this._pagingObject = po;
-                this._paging = _getPagingModifier(po);
+            // enforce updating uri
+            this._setDirty();
+        },
+        
+        /**
+         * array of values that is used for after
+         * @return {Object[]}
+         */
+        get afterObject () {
+            if (this._afterObject === undefined) {
+                var row, i, value;
+                if (this._after) {
+                    this._afterObject = [];
+                    row = this._after.match(/@after\(([^\)]*)\)/)[1].split(",");
+                    
+                    if (row.length !== this.sortObject.length) {
+                        //TODO test this
+                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.");
+                    }
+                    
+                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                        // ::null:: to null, empty string to "", otherwise decode value
+                        value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
+                        this._afterObject.push(value);
+                    }
+                } else {
+                    this._afterObject = null;
+                }
+            }
+            return this._afterObject;
+        },
+
+        /**
+         * change the paging with new afterObject
+         * @param {Object[]} Array of values that you want to page with.
+         */
+        set afterObject(values) {
+            // invalid argument, or empty string -> remove after
+            if (!Array.isArray(values) || values.length === 0) {
+                this._afterObject = null;
+                delete this._after;
             } else {
-                throw new module.MalformedURIError("Error setPagingObject: Paging not allowed without sort");
+                if (this._sort) {
+                    this._afterObject = values;
+                    this._after = _getPagingModifier(values, false);
+                } else {
+                    throw new module.MalformedURIError("Error setting after: Paging not allowed without sort");
+                }
             }
 
             // enforce updating uri
@@ -918,21 +978,22 @@
 
     /**
      * given paging object, get the paging modifier
-     * @param {Object} paging {"before":boolean, "row":[c1,c2,c3..]}
-     * @return {string} string modifier @paging(...)
+     * @param {Object} values the values
+     * @param {boolean} indicates whether its before or after
+     * @return {string} string modifier @after/before(...)
      * @private
      */
-    _getPagingModifier = function(paging) {
+    _getPagingModifier = function(values, isBefore) {
 
         // no paging
-        if (!paging) {
+        if (!Array.isArray(values) || values.length === 0) {
             return "";
         }
 
-        var modifier = (paging.before ? "@before(" : "@after(");
-        for (var i = 0; i < paging.row.length; i++) {
+        var modifier = (isBefore ? "@before(" : "@after(");
+        for (var i = 0; i < values.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + ((paging.row[i] === null || paging.row[i] === undefined ) ? "::null::" : module._fixedEncodeURIComponent(paging.row[i]));
+            modifier = modifier + ((values[i] === null || values[i] === undefined ) ? "::null::" : module._fixedEncodeURIComponent(values[i]));
         }
         modifier = modifier + ")";
         return modifier;

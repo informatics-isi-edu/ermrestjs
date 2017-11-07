@@ -749,7 +749,8 @@
 
             // update the location objectcd
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             newReference._location.facets = null;
             
 
@@ -1164,32 +1165,37 @@
 
                 var uri = this._location.ermrestCompactUri; // used for the http request
 
-                /** Change api to attributegroup for retrieving the foreign key data
+                /** Change api to attributegroup for retrieving extra information
+                 * These information include:
+                 * - Values for the foreignkeys.
+                 * 
                  * This will just affect the http request and not this._location
                  *
                  * NOTE:
                  * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   0.
+                 *   0. There is no table called `T`, `M`, `F1`, `F2`, ...
                  *   1. There is no alias in url (more precisely `F1`, `F2`, `F3`, ...)
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
                 if (this._table.foreignKeys.length() > 0) {
                     var compactPath = this._location.ermrestCompactPath,
-                        fkList = "",
+                        mainTableAlias = this._location.mainTableAlias,
+                        projectionTableAlias = this._location.projectionTableAlias,
+                        aggList = [],
                         sortColumn,
                         addedCols;
 
                     // create the uri with attributegroup and alias
-                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/");
+                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/") + "/";
 
                     // add joins for foreign keys
                     for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
                         // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                        uri += "/F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$M" + (k === 0 ? "/" : "");
+                        uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
 
                         // F2:array(F2:*),F1:array(F1:*)
-                        fkList += "F" + (k+1) + ":=array(F" + (k+1) + ":*)" + (k !== 0 ? "," : "");
+                        aggList.push("F" + (k+1) + ":=array(F" + (k+1) + ":*)");
                     }
 
                     // add sort columns (it will include the key)
@@ -1214,7 +1220,7 @@
                         }
                     }
 
-                    uri += Object.keys(addedCols).join(",") + ";M:=array(M:*)," + fkList;
+                    uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=array("+mainTableAlias+":*)," + aggList.join(",");
                 }
 
                 // insert @sort()
@@ -1246,7 +1252,7 @@
                     if (!ownReference._location.paging) { // first page
                         hasPrevious = false;
                         hasNext = (response.data.length > limit);
-                    } else if (ownReference._location.pagingObject.before) { // has @before()
+                    } else if (ownReference._location.beforeObject) { // has @before()
                         hasPrevious = (response.data.length > limit);
                         hasNext = true;
                     } else { // has @after()
@@ -1256,23 +1262,24 @@
 
                     // Because read() reads one extra row to determine whether the new page has previous or next
                     // We need to remove those extra row of data from the result
+                    var extraData = {};
                     if (response.data.length > limit) {
                         // if no paging or @after, remove last row
-                        if (!ownReference._location.pagingObject || !ownReference._location.pagingObject.before)
+                        if (!ownReference._location.beforeObject) {
+                            extraData = response.data[response.data.length-1];
                             response.data.splice(response.data.length-1);
-                       else // @before, remove first row
+                        } else { // @before, remove first row
+                            extraData = response.data[0];
                             response.data.splice(0, 1);
-
+                        }
                     }
-                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext);
+                    var page = new Page(ownReference, etag, response.data, hasPrevious, hasNext, extraData);
 
                     // we are paging based on @before (user navigated backwards in the set of data)
                     // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                    if ( (ownReference.location.pagingObject && ownReference.location.pagingObject.before) && (page.tuples.length < limit || !page.hasPrevious) ) {
+                    if (!ownReference.location.afterObject && ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
                         var referenceWithoutPaging = _referenceCopy(ownReference);
-                        // set the private values to null because the public functions rely on these
-                        referenceWithoutPaging.location._pagingObject = null;
-                        referenceWithoutPaging.location._paging = null;
+                        referenceWithoutPaging.location.beforeObject = null;
 
                         referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
                             defer.resolve(rereadPage);
@@ -1319,8 +1326,9 @@
             }
 
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
             newReference._location.sortObject = sort;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
 
             return newReference;
         },
@@ -2005,7 +2013,8 @@
             var newReference = _referenceCopy(this);
 
             newReference._location = this._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             newReference._location.search(term);
             
             // update facet columns list
@@ -2093,6 +2102,103 @@
             });
 
             return defer.promise;
+        },
+        
+        
+        /**
+         * Given a page, will change the reference paging options (before, and after)
+         * to match the page.
+         * NOTE: Limitations:
+         * - Current reference's table and page's table must be the same.
+         * - page's reference cannot have any facets (apart from search).
+         * @param  {ERMrest.Page} page
+         * @return {ERMrest.Reference} reference with new page settings.
+         */
+        setSamePaging: function (page) {
+            
+            var pageRef = page._ref;
+            
+            /*
+            * It only works when page's table and current table are the same.
+            */
+            if (pageRef.table !== this.table) {
+                throw new module.InvalidInputError("Given page is not from the same table.");
+            }
+            
+            
+            var newRef = _referenceCopy(this);
+            newRef._location = this._location._clone();
+            
+            // same search
+            // TODO this should be eventually facets and not just search
+            // Current requirement only needs search.
+            // If we change it to facet, we have to merge the facets
+            if (typeof pageRef.location.searchTerm === "string") {
+                newRef._location.search(pageRef.location.searchTerm);
+            }
+            
+            
+            /*
+             * This case is not possible in the current implementation,
+             * page object is being created from read, and therefore always the 
+             * attached reference will have sortObject.
+             * But if it didn't have any sort, we should just return the reference.
+             */
+            if (!pageRef._location.sortObject) {
+                return newRef;
+            }
+            
+            // same sort
+            newRef._location.sortObject =  module._simpleDeepCopy(pageRef._location.sortObject);
+            
+            // same pagination
+            newRef._location.afterObject =  pageRef._location.afterObject ? module._simpleDeepCopy(pageRef._location.afterObject) : null;
+            newRef._location.beforeObject =  pageRef._location.beforeObject ? module._simpleDeepCopy(pageRef._location.beforeObject) : null;
+            
+            // if we have extra data, and one of before/after is not available
+            if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
+                var pageValues = [], colName, data, pseudoCol, j, i;
+                
+                // get list of values based on sort list
+                for (i = 0; i < newRef._location.sortObject.length; i++) {
+                    colName = newRef._location.sortObject[i].column;
+
+                    // if data is from a non-pseudo column
+                    data = page._extraData[colName];
+                    if (typeof data !== 'undefined') { // normal column
+                        pageValues.push(data);
+                    } else { // pseudo column
+                        
+                        // find the column
+                        for (j = 0; j < newRef.columns.length; j++) {
+                            if (this.columns[j].name == colName) {
+                                pseudoCol = newRef.columns[j];
+                                break;
+                            }
+                        }
+                        
+                        // find the values from the sortColumn
+                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                            if (pseudoCol.isForeignKey) {
+                                data = page._extraLinkedData[colName][pseudoCol._sortColumns[j].name];
+                            } else {
+                                data = page._extraData[pseudoCol._sortColumns[j].name];
+                            }
+                            pageValues.push(data);
+                        }
+                    }
+                }
+                
+                // add before based on extra data    
+                if (!pageRef._location.beforeObject) {
+                    newRef._location.beforeObject = pageValues;
+                }
+                // add after based on extra data
+                else {
+                    newRef._location.afterObject = pageValues;
+                }
+            }
+            return newRef;
         },
 
         setNewTable: function(table) {
@@ -2550,6 +2656,13 @@
                 newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
+                
+                var domainUri = [
+                    fkrTable.schema.catalog.server.uri ,"catalog" ,
+                    module._fixedEncodeURIComponent(fkrTable.schema.catalog.id), this.location.api,
+                    [module._fixedEncodeURIComponent(fkrTable.schema.name),module._fixedEncodeURIComponent(fkrTable.name)].join(":"),
+                    "right" + otherFK.toString(true)
+                ].join("/");
 
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
@@ -3052,9 +3165,13 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasNext Whether there is more data before this Page
      * @param {boolean} hasPrevious Whether there is more data after this Page
+     * @param {!Object} extraData if 
      *
      */
-    function Page(reference, etag, data, hasPrevious, hasNext) {
+    function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
+        
+        var hasExtraData = typeof extraData === "object" && Object.keys(extraData).length !== 0;
+        
         this._ref = reference;
         this._etag = etag;
 
@@ -3066,23 +3183,37 @@
          * var fkData = this._linkedData[i][foreignKey._name];
          */
         this._linkedData = [];
+        
+        
 
         // linkedData will include foreign key data
         if (this._ref._table.foreignKeys.length() > 0) {
 
             var fks = reference._table.foreignKeys.all(), i, j;
+            var mTableAlias = this._ref.location.mainTableAlias,
+                pTabeAlias = this._ref.location.projectionTableAlias;
 
             try {
                 // the attributegroup output
                 this._data = [];
                 for (i = 0; i < data.length; i++) {
-                    this._data.push(data[i].M[0]);
+                    this._data.push(data[i][mTableAlias][0]);
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
                     }
                 }
+                
+                //extra data
+                if (hasExtraData) {
+                    this._extraData = extraData[mTableAlias][0];
+                    this._extraLinkedData = {};
+                    for (j = fks.length - 1; j >= 0 ; j--) {
+                        this._extraLinkedData[fks[j]._name] = extraData["F"+(j+1)][0];
+                    }
+                }
+                
             }
             // could not find the expected aliases
             catch(exception) {
@@ -3105,11 +3236,28 @@
                     }
                     this._linkedData.push(tempData);
                 }
+                
+                // extra data
+                if (hasExtraData) {
+                    this._extraData = extraData;
+                    tempData = {};
+                    for (j = 0; j < fks.length; j++) {
+                        fkName = fks[j]._name;
+                        tempData[fkName] = {};
+
+                        for (k = 0; k < fks[j].colset.columns.length; k++) {
+                            col = fks[j].colset.columns[k];
+                            tempData[fkName][fks[j].mapping.get(col).name] = extraData[col.name];
+                        }
+                    }
+                    this._extraLinkedData = tempData;
+                }
             }
         }
         // entity output (linkedData is empty)
         else {
             this._data = data;
+            this._extraData = hasExtraData ? extraData : undefined;
         }
 
         this._hasNext = hasNext;
@@ -3179,9 +3327,7 @@
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
 
                 // update paging by creating a new location
-                var paging = {};
-                paging.before = true;
-                paging.row = [];
+                var values = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
 
@@ -3189,7 +3335,7 @@
                     var data = this._data[0][colName];
                     if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data);
+                        values.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -3206,13 +3352,14 @@
                             } else {
                                 data = this._data[0][pseudoCol._sortColumns[j].name];
                             }
-                            paging.row.push(data);
+                            values.push(data);
                         }
                     }
                 }
 
                 newReference._location = this._ref._location._clone();
-                newReference._location.pagingObject = paging;
+                newReference._location.beforeObject = values;
+                newReference._location.afterObject = null;
                 return newReference;
             }
             return null;
@@ -3247,9 +3394,7 @@
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
 
                 // update paging by creating a new location
-                var paging = {};
-                paging.before = false;
-                paging.row = [];
+                var values = [];
                 for (var i = 0; i < newReference._location.sortObject.length; i++) {
                     var colName = newReference._location.sortObject[i].column;
 
@@ -3257,7 +3402,7 @@
                     var data = this._data[this._data.length-1][colName];
                     if (typeof data !== 'undefined') {
                         // normal column
-                        paging.row.push(data);
+                        values.push(data);
                     } else {
                         // pseudo column
                         var pseudoCol, j;
@@ -3273,14 +3418,15 @@
                             } else {
                                 data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
                             }
-                            paging.row.push(data);
+                            values.push(data);
                         }
                     }
 
                 }
 
                 newReference._location = this._ref._location._clone();
-                newReference._location.pagingObject = paging;
+                newReference._location.beforeObject = null;
+                newReference._location.afterObject = values;
                 return newReference;
             }
             return null;
@@ -3341,7 +3487,7 @@
               }
            } 
            return this._content;
-        }
+       }
     };
 
 
@@ -3709,51 +3855,49 @@
          * @type {ERMrest.Reference}
          */
         getAssociationRef: function(origTableData){
-            if (this._pageRef.derivedAssociationReference) {
-                var associationRef = this._pageRef.derivedAssociationReference,
-                    encoder = module._fixedEncodeURIComponent,
-                    newFilter = [],
-                    missingData = false;
-
-                var addFilter = function(fkr, data) {
-                    var keyCols = fkr.colset.columns,
-                        mapping = fkr.mapping, d, i;
-
-                    for (i = 0; i < keyCols.length; i++) {
-                        try {
-                            d = data[mapping.get(keyCols[i]).name];
-                            if (d === undefined || d === null) return false;
-
-                            newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
-                        } catch(exception) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-                // filter based on the first key
-                missingData = !addFilter(associationRef.origFKR, origTableData);
-                //filter based on the second key
-                missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
-
-                if (missingData) {
-                    return null;
-                } else {
-                    var loc = associationRef._location;
-                    var uri = [
-                        loc.service, "catalog", encoder(loc.catalog), loc.api,
-                        encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
-                        newFilter.join("&")
-                    ].join("/");
-
-                    var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
-                    reference.session = associationRef._session;
-                    return reference;
-                }
-
-            } else {
+            if (!this._pageRef.derivedAssociationReference) {
                 return null;
             }
+
+            var associationRef = this._pageRef.derivedAssociationReference,
+                encoder = module._fixedEncodeURIComponent,
+                newFilter = [],
+                missingData = false;
+
+            var addFilter = function(fkr, data) {
+                var keyCols = fkr.colset.columns,
+                    mapping = fkr.mapping, d, i;
+
+                for (i = 0; i < keyCols.length; i++) {
+                    try {
+                        d = data[mapping.get(keyCols[i]).name];
+                        if (d === undefined || d === null) return false;
+
+                        newFilter.push(encoder(keyCols[i].name) + "=" + encoder(d));
+                    } catch(exception) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+            // filter based on the first key
+            missingData = !addFilter(associationRef.origFKR, origTableData);
+            //filter based on the second key
+            missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+
+            if (missingData) {
+                return null;
+            }
+            var loc = associationRef._location;
+            var uri = [
+                loc.service, "catalog", encoder(loc.catalog), loc.api,
+                encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
+                newFilter.join("&")
+            ].join("/");
+
+            var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
+            reference.session = associationRef._session;
+            return reference;
 
         },
 
@@ -5645,7 +5789,8 @@
             });
             
             newReference._location = this.reference._location._clone();
-            newReference._location.pagingObject = null;
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
             
             // TODO might be able to improve this
             if (typeof this.reference.location.searchTerm === "string") {
