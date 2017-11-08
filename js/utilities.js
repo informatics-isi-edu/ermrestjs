@@ -700,7 +700,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return new module.IntegrityConflictError(response.statusText, response.data);
+                return new module.IntegrityConflictError(module._errorMapping(response.statusText, response.data));
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:

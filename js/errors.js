@@ -14,6 +14,7 @@
     module.MalformedURIError = MalformedURIError;
     module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
+    module.IntegrityConflictError = IntegrityConflictError;
 
     /**
      * @memberof ERMrest
