@@ -110,6 +110,11 @@
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
 
+    function IntegrityConflictError(status, message) {
+        ConflictError.call(this, status, message)
+    }
+    IntegrityConflictError.prototype = Object.create(ConflictError.prototype);
+    IntegrityConflictError.prototype.constructor = IntegrityConflictError;
 
     /**
      * @memberof ERMrest
@@ -174,7 +179,7 @@
 
     InvalidFacetOperatorError.prototype = Object.create(Error.prototype);
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
-    
+
     /**
      * @memberof ERMrest
      * @param {string} message error message

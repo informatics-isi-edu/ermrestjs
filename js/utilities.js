@@ -123,7 +123,7 @@
             return this.substr(position, searchString.length) === searchString;
         };
     }
-    
+
     if (typeof Object.assign != 'function') {
   // Must be writable: true, enumerable: false, configurable: true
   Object.defineProperty(Object, "assign", {
@@ -170,15 +170,15 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
-    
-    
+
+
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
-    
+
     module.decodeFacet = function (blob) {
         var err = new module.InvalidFacetOperatorError();
-        
+
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
             if (str === null) {
@@ -576,12 +576,12 @@
             if (typeof keyValues === 'undefined') {
                 keyValues = module._getFormattedKeyValues(table.columns, context, data);
             }
-            
+
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
-            
+
         }
-        
-        
+
+
         // annotation was not defined, or it's producing empty string.
         if (pattern == null || pattern.trim() === '') {
 
@@ -649,7 +649,7 @@
 
             template = "{{{name}}}";
             keyValues = {"name": result};
-            
+
             // get templated patten after replacing the values using Mustache
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
         }
@@ -665,6 +665,15 @@
             "isHTML": true
         };
 
+    };
+    module._errorMapping = function(errorCode, errorGeneratedText) {
+      var re = /(?:^|\W)dataset(\w+)(?!\w)/g, errorMapped, msgStart;
+      if(errorGeneratedText.indexOf("violates foreign key constraint") > -1){
+          errorMapped = "The entry cannot be deleted.";
+          msgStart = errorGeneratedText.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
+      }
+
+      return msgStart;
     };
 
     /**
@@ -691,7 +700,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return new module.ConflictError(response.statusText, response.data);
+                return new module.IntegrityConflictError(response.statusText, response.data);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
@@ -1342,7 +1351,7 @@
                 }
             }
         });
-        
+
         md.use(mdContainer, 'video', {
             /*
              * Checks whether string matches format ":::video (LINK){ATTR=VALUE .CLASSNAME}"
@@ -1351,23 +1360,23 @@
             validate: function(params) {
                 return params.trim().match(/video\s+(.*$)/i);
             },
-            
+
             render: function (tokens, idx) {
                 // Get token string after regeexp matching to determine actual internal markdown
                 var m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
-                
+
                 // If this is the opening tag i.e. starts with "::: video "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
-                    
+
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
-                    
+
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var videoHTML="<video controls ", openingLink = attrs[0].children[0];
                             var srcHTML="", videoClass="", flag = true, posTop = true;
-                            
+
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
@@ -1376,7 +1385,7 @@
                                         return "";
                                     }
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
-                                } 
+                                }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
                                     videoClass +=  attr[0]+ "="+ attr[1] +" ";
                                 }
@@ -1387,7 +1396,7 @@
                                     posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
                                 }
                             });
-                            
+
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
                             // over all the children until link_close is encountered rednering their markdown
@@ -1403,7 +1412,7 @@
                                     }
                                 }
                             }
-                            
+
                             if(captionHTML.trim().length && flag && posTop){
                                 html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
@@ -1422,7 +1431,7 @@
                 } else {
                   // closing tag
                   return '';
-                }    
+                }
             }
         });
     };
@@ -1556,7 +1565,7 @@
         var date = new Date();
 
         var dateObj = {};
-        
+
         // Set date properties
         dateObj.day = date.getDay();
         dateObj.date = date.getDate();
@@ -1575,7 +1584,7 @@
         dateObj.ISOString = date.toISOString();
         dateObj.GMTString = date.toGMTString();
         dateObj.UTCString = date.toUTCString();
-        
+
         dateObj.localeDateString = date.toLocaleDateString();
         dateObj.localeTimeString = date.toLocaleTimeString();
         dateObj.localeString = date.toLocaleString();
@@ -1587,7 +1596,7 @@
     /**
      * @function
      * @desc
-     * Add utility objects such as date (Computed value) to mustache data obj 
+     * Add utility objects such as date (Computed value) to mustache data obj
      * so that they can be accessed in the template
      */
     module._addErmrestVarsToTemplate = function(obj) {
@@ -1639,7 +1648,7 @@
         }
 
 
-        
+
 
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
@@ -1881,12 +1890,12 @@
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-    
+
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
-    
+
     module._facetUnsupportedTypes = [
         'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid'
     ];
