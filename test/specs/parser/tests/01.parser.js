@@ -25,7 +25,8 @@ exports.execute = function(options) {
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
-                expect(location.pagingObject).toBe(null);
+                expect(location.beforeObject).toBe(null);
+                expect(location.afterObject).toBe(null);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
                 expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
@@ -63,7 +64,8 @@ exports.execute = function(options) {
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
-                expect(location.pagingObject).toBe(null);
+                expect(location.beforeObject).toBe(null);
+                expect(location.afterObject).toBe(null);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
                 expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
@@ -108,9 +110,8 @@ exports.execute = function(options) {
                 expect(location.sortObject[0].column).toBe("summary");
                 expect(location.sortObject[0].descending).toBe(false);
                 expect(location.paging).toBe("@after(" + text + ")");
-                expect(location.pagingObject.before).toBe(false);
-                expect(location.pagingObject.row.length).toBe(1);
-                expect(location.pagingObject.row[0]).toBe("some random text");
+                expect(location.afterObject.length).toBe(1);
+                expect(location.afterObject[0]).toBe("some random text");
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
@@ -160,7 +161,8 @@ exports.execute = function(options) {
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
-                expect(location.pagingObject).toBe(null);
+                expect(location.beforeObject).toBe(null);
+                expect(location.afterObject).toBe(null);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
                 expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
@@ -192,7 +194,7 @@ exports.execute = function(options) {
         var lowerLimit = 1,
             upperLimit = 10,
             sort = "id,summary",
-            text = "some%20random%20text",
+            text = "2,some%20random%20text",
             tableName2 = "parse_table_2";
         var complexPath = "/catalog/" + catalogId + "/entity/" + schemaName + ":" +
             tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/(id)=(" + schemaName + ":" + tableName2 + ":id2)" +
@@ -218,9 +220,9 @@ exports.execute = function(options) {
             expect(location.sortObject[1].column).toBe("summary");
             expect(location.sortObject[1].descending).toBe(false);
             expect(location.paging).toBe("@after(" + text + ")");
-            expect(location.pagingObject.before).toBe(false);
-            expect(location.pagingObject.row.length).toBe(2);
-            expect(location.pagingObject.row[0]).toBe("some random text");
+            expect(location.afterObject).toEqual(["2", "some random text"]);
+            expect(location.afterObject.length).toBe(2);
+            expect(location.afterObject[1]).toBe("some random text");
             expect(location.catalog).toBe(catalogId.toString());
             expect(location.projectionSchemaName).toBe(schemaName);
             expect(location.projectionTableName).toBe(tableName);
