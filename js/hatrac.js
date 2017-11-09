@@ -646,6 +646,7 @@ var ERMrest = (function(module) {
 
         row[this.column.name].filename = this.file.name;
         row[this.column.name].size = this.file.size;
+        row[this.column.name].mimetype = this.file.type;
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
