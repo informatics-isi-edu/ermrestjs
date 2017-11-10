@@ -15,6 +15,8 @@
     module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
+    module.DuplicateConflictError = DuplicateConflictError;
+    module.CustomConstraintConflictError = CustomConstraintConflictError;
 
     /**
      * @memberof ERMrest
@@ -111,11 +113,39 @@
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
 
-    function IntegrityConflictError(status, message) {
-        ConflictError.call(this, status, message)
+
+    /**
+     * IntegrityConflictError - description
+     *
+     * @param  {type} status     description
+     * @param  {type} message    description
+     * @param  {type} subMessage description
+     * @return {type}            description
+     */
+    function IntegrityConflictError(status, message, subMessage) {
+        ConflictError.call(this, status, message);
+        this.subMessage = subMessage;
     }
+
     IntegrityConflictError.prototype = Object.create(ConflictError.prototype);
     IntegrityConflictError.prototype.constructor = IntegrityConflictError;
+
+
+    function DuplicateConflictError(status, message, subMessage) {
+        ConflictError.call(this, status, message);
+        this.subMessage = subMessage;
+    }
+
+    DuplicateConflictError.prototype = Object.create(ConflictError.prototype);
+    DuplicateConflictError.prototype.constructor = DuplicateConflictError;
+
+    function CustomConstraintConflictError(status, message, subMessage) {
+        ConflictError.call(this, status, message);
+        this.subMessage = subMessage;
+    }
+
+    CustomConstraintConflictError.prototype = Object.create(ConflictError.prototype);
+    CustomConstraintConflictError.prototype.constructor = CustomConstraintConflictError;
 
     /**
      * @memberof ERMrest
