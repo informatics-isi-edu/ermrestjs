@@ -450,11 +450,17 @@ var ERMrest = (function(module) {
             var blob;
             var index = 0;
             this.chunks = [];
-            while (start < this.file.size) {
-                end = Math.min(start + this.PART_SIZE, this.file.size);
-                var chunk = new Chunk(index++, start, end);
-                self.chunks.push(chunk);
-                start = end;
+
+            if (this.file.size === 0) {
+                deferred.resolve(this.url);
+                return deferred.promise;
+            } else {
+                while (start < this.file.size) {
+                    end = Math.min(start + this.PART_SIZE, this.file.size);
+                    var chunk = new Chunk(index++, start, end);
+                    this.chunks.push(chunk);
+                    start = end;
+                }
             }
         }
 

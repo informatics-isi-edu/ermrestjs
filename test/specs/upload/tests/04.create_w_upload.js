@@ -14,12 +14,13 @@ exports.execute = function (options) {
             var reference, file1_column, file2_column,
                 file1_columnName = "file1_uri",
                 file2_columnName = "file2_uri",
+                file3_columnName = "file3_uri",
                 tableName = "file_update_table",
                 sortBy = "key",
                 baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
 
             // For update data
-            var file1_url, file1_validRow, file2_url, file2_validRow, uploadObj1, uploadObj2, time1, time2;
+            var file1_url, file1_validRow, file2_url, file2_validRow,file3_url, file3_validRow, uploadObj1, uploadObj2, uploadObj3, time1, time2, time3;
 
             var files = [{
                     name: "testfile500kb.png",
@@ -35,6 +36,13 @@ exports.execute = function (options) {
                     type: "text/plain",
                     hash: "08b46181d7094b5ece88bb389c7499af",
                     hash_64: "CLRhgdcJS17OiLs4nHSZrw=="
+                }, {
+                    name: "testfile0MB.txt",
+                    size: 0,
+                    displaySize: "0MB",
+                    type: "text/plain",
+                    hash: "d41d8cd98f00b204e9800998ecf8427e",
+                    hash_64: "1B2M2Y8AsgTpgAmY7PhCfg=="
                 }
             ];
 
@@ -55,6 +63,7 @@ exports.execute = function (options) {
 
                     file1_column = reference.columns.find(function(c) { return c.name == file1_columnName;  });
                     file2_column = reference.columns.find(function(c) { return c.name == file2_columnName;  });
+                    file3_column = reference.columns.find(function(c) { return c.name == file3_columnName;  });
 
                     if (!file1_column) {
                         console.log("Unable to find column " + file1_columnName);
@@ -64,7 +73,11 @@ exports.execute = function (options) {
                         console.log("Unable to find column " + file2_columnName);
                         done.fail();
                         return;
-                    }
+                    } else if(!file3_column) {
+                        console.log("Unable to find column " + file3_columnName);
+                        done.fail();
+                        return;
+                    } 
 
                     done();
                 }, function (err) {
@@ -102,7 +115,7 @@ exports.execute = function (options) {
                 time2 = Date.now();
 
                 file2_validRow = {
-                    timestamp: time1,
+                    timestamp: time2,
                     file2_uri: { md5_hex: files[1].hash }
                  };
 
@@ -115,6 +128,31 @@ exports.execute = function (options) {
                 uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, uploadObj2, options).then(function(response) {
                     file2_url = response.url;
                     file2_validRow = response.validRow;
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it("should upload file 3 properly.", function(done) {
+                time3 = Date.now();
+
+                file3_validRow = {
+                    timestamp: time3,
+                    file3_uri: { md5_hex: files[2].hash }
+                 };
+
+                uploadObj3 = new options.ermRest.Upload(files[2].file, {
+                    column: file3_column,
+                    reference: reference,
+                    chunkSize: 5 * 1024 * 1024
+                });
+                // File 2
+                uploadUtils.uploadFileForTests(files[2], 3, file3_validRow, uploadObj3, options).then(function(response) {
+                    file3_url = response.url;
+                    file3_validRow = response.validRow;
 
                     done();
                 }, function (err) {
@@ -136,7 +174,11 @@ exports.execute = function (options) {
                     file2_uri: file2_url,
                     file2_bytes: file2_validRow.file2_bytes,
                     file2_MD5: file2_validRow.file2_MD5,
-                    file2_name: file2_validRow.file2_name
+                    file2_name: file2_validRow.file2_name,
+                    file3_uri: file3_url,
+                    file3_bytes: file3_validRow.file3_bytes,
+                    file3_MD5: file3_validRow.file3_MD5,
+                    file3_name: file3_validRow.file3_name
                 }];
 
                 reference.create(createDataset).then(function (response) {
@@ -176,6 +218,12 @@ exports.execute = function (options) {
                     expect(pageData.file2_MD5).toBe(createData.file2_MD5, "Entity file2 md5 does not match created file2 md5");
                     expect(pageData.file2_name).toBe(createData.file2_name, "Entity file2 name does not match created file2 name");
 
+                    // file 3
+                    expect(pageData.file3_uri).toBe(createData.file3_uri, "Entity file3 uri does not match created file2 uri");
+                    expect(pageData.file3_bytes).toBe(createData.file3_bytes, "Entity file3 bytes does not match created file2 bytes");
+                    expect(pageData.file3_MD5).toBe(createData.file3_MD5, "Entity file3 md5 does not match created file2 md5");
+                    expect(pageData.file3_name).toBe(createData.file3_name, "Entity file3 name does not match created file2 name");
+
                     done();
                 }).catch(function (error) {
                     console.dir(error);
@@ -192,10 +240,10 @@ exports.execute = function (options) {
 
                 // delete the files from hatrac
                 uploadObj1.deleteFile().then(function() {
-
                     return uploadObj2.deleteFile();
                 }).then(function() {
-
+                    return uploadObj3.deleteFile();
+                }).then(function() {
                     done();
                 }).catch(function(err) {
                     console.dir(err);
