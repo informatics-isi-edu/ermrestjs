@@ -102,12 +102,14 @@
      * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
+     * @param  {type} subMessage technical message returned by http request
      * @constructor
      */
-    function ConflictError(status, message) {
+    function ConflictError(status, message, subMessage) {
         this.code = 409;
         this.status = status;
         this.message = message;
+        this.subMessage = subMessage;
     }
 
     ConflictError.prototype = Object.create(Error.prototype);
@@ -115,33 +117,45 @@
 
 
     /**
-     * IntegrityConflictError - description
+     * IntegrityConflictError - Return error pertaining to integrity violoation
      *
-     * @param  {type} status     description
-     * @param  {type} message    description
-     * @param  {type} subMessage description
-     * @return {type}            description
+     * @param  {type} status     the network error code
+     * @param  {type} message    error message
+     * @param  {type} subMessage technical message returned by http request
+     * @constructor
      */
     function IntegrityConflictError(status, message, subMessage) {
-        ConflictError.call(this, status, message);
-        this.subMessage = subMessage;
+        ConflictError.call(this, status, message, subMessage);
     }
 
     IntegrityConflictError.prototype = Object.create(ConflictError.prototype);
     IntegrityConflictError.prototype.constructor = IntegrityConflictError;
 
-
+    /**
+     * DuplicateConflictError - Return error pertaining to Duplicate entried
+     *
+     * @param  {type} status      the network error code
+     * @param  {type} message     error message
+     * @param  {type} subMessage  technical message returned by http request
+     * @constructor
+     */
     function DuplicateConflictError(status, message, subMessage) {
-        ConflictError.call(this, status, message);
-        this.subMessage = subMessage;
+        ConflictError.call(this, status, message, subMessage);
     }
 
     DuplicateConflictError.prototype = Object.create(ConflictError.prototype);
     DuplicateConflictError.prototype.constructor = DuplicateConflictError;
 
+    /**
+     * CustomConstraintConflictError - Return error pertaining to custom constraints
+     *
+     * @param  {type} status     the network error code
+     * @param  {type} message    error message
+     * @param  {type} subMessage technical message returned by http request
+     * @constructor
+     */
     function CustomConstraintConflictError(status, message, subMessage) {
-        ConflictError.call(this, status, message);
-        this.subMessage = subMessage;
+        ConflictError.call(this, status, message, subMessage);
     }
 
     CustomConstraintConflictError.prototype = Object.create(ConflictError.prototype);

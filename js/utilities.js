@@ -667,33 +667,35 @@
 
     };
 
-    module._conflictErrorMapping = function(errorCode, errorGeneratedText) {
-      var errorInformation = {}, errorMapped;
-      var re = /(?:^|\W)dataset(\w+)(?!\w)/g, errorMapped, msgStart;
-      if(errorGeneratedText.indexOf("violates foreign key constraint") > -1){
-          referenceTable = errorGeneratedText.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
-          errorMapped = "The entry cannot be deleted. Make sure to delete "+ referenceTable[1] +" beofre proceeding.";
-          errorInformation.subCode = '409a';
-          errorInformation.message = errorMapped;
+    /**
+     * @function
+     * @param  {string} errorStatusText    http error status text
+     * @param  {string} generatedErrMessage response data returned by http request
+     * @return {object}                    error object
+     */
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
+      var mappedErrMessage;
+
+      if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
+          referenceTable = generatedErrMessage.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from "+ referenceTable[1].slice(1) +" table. \n All dependent entries must be removed before this item can be deleted.";
+          return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
-      else if(errorGeneratedText.indexOf("violates unique constraint") > -1){
-          detail = errorGeneratedText.search(/DETAIL:/g);
-          errorMapped = "The entry cannot be created." + errorGeneratedText.substring(detail + 7, errorGeneratedText.length - 3) +" in the database. Try creating record with a different ID.";
-          errorInformation.subCode = '409b';
-          errorInformation.message = errorMapped;
+      else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
+          detail = generatedErrMessage.search(/DETAIL:/g);
+          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(detail + 7, generatedErrMessage.length - 3) +" in the database. Please use a different ID to create new record.";
+          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
-      else if (errorGeneratedText.indexOf("not consistent with your login profile") > -1){
-          errStart = errorGeneratedText.search(/ERROR:/g);
-          errEnd = errorGeneratedText.search(/CONTEXT:/g);
-          errorMapped = "The entry cannot be created." + errorGeneratedText.substring(errStart + 6, errEnd - 1);
-          errorInformation.subCode = '409c';
-          errorInformation.message = errorMapped;
+      else if (generatedErrMessage.indexOf("not consistent with your login profile") > -1){
+          errStart = generatedErrMessage.search(/ERROR:/g);
+          errEnd = generatedErrMessage.search(/CONTEXT:/g);
+          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(errStart + 6, errEnd - 1);
+          return new module.CustomConstraintConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else{
-        errorInformation.message = "An unexpected error has occurred. Please report this problem to your system administrators.";
+          mappedErrMessage = "An unexpected error has occurred. Please report this problem to your system administrators.";
+          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
-
-      return errorInformation;
     };
 
     /**
@@ -720,18 +722,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                var errorInfo = module._conflictErrorMapping(response.statusText, response.data);
-                switch(errorInfo.subCode){
-                  case '409a':
-                      return new module.IntegrityConflictError(response.statusText, errorInfo.message, response.data);
-                  case '409b':
-                      return new module.DuplicateConflictError(response.statusText, errorInfo.message, response.data);
-                  case '409c':
-                      return new module.CustomConstraintConflictError(response.statusText, errorInfo.message, response.data);
-                  default:
-                      return new module.ConflictError(response.statusText, errorInfo.message, response.data);
-                }
-
+                return module._conflictErrorMapping(response.statusText, response.data);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
