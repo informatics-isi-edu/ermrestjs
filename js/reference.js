@@ -6041,7 +6041,7 @@
             }
             
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            var searchObj = {"column": this.column.name, "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "value", "descending": false}];
@@ -6072,7 +6072,7 @@
             }
                 
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            var searchObj = {"column": this.column.name, "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];

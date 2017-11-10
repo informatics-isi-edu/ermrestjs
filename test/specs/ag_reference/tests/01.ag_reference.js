@@ -4,25 +4,52 @@ exports.execute = function (options) {
         var catID = process.env.DEFAULT_CATALOG,
             schemaName = "agref_schema",
             mainTable = "main",
+            unicodeTable = "uᴉɐɯ",
             relatedTable = "related_table";
+            
+        var encodedMain = "u%E1%B4%89%C9%90%C9%AF",
+            decodedMain = "uᴉɐɯ",
+            encodedCol = "lo%C9%94",
+            decodedCol = "loɔ",
+            encodedID = "p%E1%B4%89";
+            decodedID = "pᴉ";
             
         var mainTableBaseUri = [
             options.url, "catalog", catID, "attributegroup", 
             schemaName + ":" + mainTable
         ].join("/");
         
-        var ref, refWithModifiers;
-        var loc, locWithModifiers;
-        var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible;
+        var unicodeTableBaseUri = [
+            options.url, "catalog", catID, "attributegroup", 
+            schemaName + ":" + unicodeTable
+        ].join("/");
+        
+        var ref, refWithModifiers, unicodeRef;
+        var loc, locWithModifiers, unicodeLoc;
+        var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible, unicodeID, unicodeCol;
+        
+        var checkLocation = function (objName, obj, path) {
+            expect(obj).toBeDefined(objName + " was not defined.");
+            expect(obj.service).toBe(options.url, objName + " service missmatch.");
+            expect(obj.catalogId).toBe(catID, objName + " catalogId missmatch.");
+            expect(obj.path).toBe(path, objName + " path missmatch.");
+        };
+        
+        var checkColumn = function (objName, obj, term, displayname, typeName, comment, sortable) {
+            expect(obj).toBeDefined(objName + " column was undefined.");
+            expect(obj.term).toBe(term, objName + " term missmatch");
+            expect(obj.displayname.value).toBe(displayname, objName + " displayname missmatch");
+            expect(obj.type.name).toBe(typeName, objName + " type missmatch");
+            expect(obj.comment).toBe(comment, objName + " comment missmatch");
+            expect(obj.sortable).toBe(sortable, objName + " sortable missmatch");    
+        };
+        
+        var checkReference = function (objName, obj, location) {
+            expect(obj).toBeDefined(objName + " is not defined.");
+            expect(obj.location).toBe(location, objName + " location missmatch.");
+        };
         
         describe("AttributeGroupLocation, ", function () {
-            var checkLocation = function (obj, objName, path) {
-                expect(loc).toBeDefined(objName + " was not defined.");
-                expect(loc.service).toBe(options.url, objName + " service missmatch.");
-                expect(loc.catalogId).toBe(catID, objName + " catalogId missmatch.");
-                expect(loc.path).toBe(path, objName + " path missmatch.");
-            };
-            
             beforeAll(function () {
                 loc = new options.ermRest.AttributeGroupLocation(options.url, catID, schemaName + ":" + mainTable);
                 locWithModifiers = new options.ermRest.AttributeGroupLocation(
@@ -37,9 +64,9 @@ exports.execute = function (options) {
             });
             
             it ("can create a location object passing the values.", function () {
-                checkLocation(loc, "loc", schemaName + ":" + mainTable);
+                checkLocation("loc", loc, schemaName + ":" + mainTable);
                 
-                checkLocation(locWithModifiers, "locWithModifiers", schemaName + ":" + mainTable);
+                checkLocation("locWithModifiers", locWithModifiers, schemaName + ":" + mainTable);
             });
             
             it ("search related attributes are correct.", function () {
@@ -106,15 +133,6 @@ exports.execute = function (options) {
         });
         
         describe("AttributeGroupColumn, ", function () {
-            var checkColumn = function (objTitle, obj, term, displayname, typeName, comment, sortable) {
-                expect(obj).toBeDefined(objTitle + " column was undefined.");
-                expect(obj.term).toBe(term, objTitle + " term missmatch");
-                expect(obj.displayname.value).toBe(displayname, objTitle + " displayname missmatch");
-                expect(obj.type.name).toBe(typeName, objTitle + " type missmatch");
-                expect(obj.comment).toBe(comment, objTitle + " comment missmatch");
-                expect(obj.sortable).toBe(sortable, objTitle + " sortable missmatch");
-                
-            };
             
             beforeAll(function () {
                 keyColVisible = new options.ermRest.AttributeGroupColumn(
@@ -194,10 +212,6 @@ exports.execute = function (options) {
         });
         
         describe("AttributeGroupReference, ", function () {
-            var checkReference = function (objName, obj, location) {
-                expect(obj).toBeDefined(objName + " is not defined.");
-                expect(obj.location).toBe(location, objName + " location missmatch.");
-            };
             
             beforeAll(function () {
                 ref = new options.ermRest.AttributeGroupReference(
@@ -389,6 +403,69 @@ exports.execute = function (options) {
             });
         });
         
+        describe ("regarding table and columns with unicode characters, ", function () {
+            it ("Location should handle it.", function () {
+                unicodeLoc = new options.ermRest.AttributeGroupLocation(
+                    options.url, 
+                    catID, 
+                    schemaName + ":" + unicodeTable,
+                    {"column": decodedCol, "term": "test"}, // search
+                    [{"column": decodedCol}], // sort
+                    ["1"], //after
+                    ["20"] // before
+                );
+                
+                checkLocation("Location: ", unicodeLoc, schemaName + ":" + unicodeTable);
+            });
+            
+            it ("Column should handle it.", function () {
+                unicodeID = new options.ermRest.AttributeGroupColumn(
+                    null, decodedID, decodedID, "serial4", "comment", true, true
+                );
+                
+                unicodeCol = new options.ermRest.AttributeGroupColumn(
+                    null, decodedCol, decodedCol, "text", "comment", true, true
+                );
+                
+                
+                checkColumn("Column: id", unicodeID, decodedID, decodedID, "serial4", "comment", true);
+                
+                checkColumn("Column: col", unicodeCol, decodedCol, decodedCol, "text", "comment", true);
+            });
+            
+            describe ("Reference, ", function () {
+                beforeAll(function () {
+                    unicodeRef = new options.ermRest.AttributeGroupReference(
+                        [unicodeID],
+                        [unicodeCol],
+                        unicodeLoc,
+                        options.catalog
+                    );
+                });
+                
+                it ("reference should have the correct attributes.", function () {
+                    checkReference("Refrence: ", unicodeRef, unicodeLoc);
+                });
+
+                it ("uri should be correct.", function () {
+                    expect(unicodeRef.uri).toBe(
+                        unicodeTableBaseUri + "/" + encodedCol + "::ciregexp::test/" + decodedID + ";" + decodedCol + "@sort(" + encodedCol + ")@after(1)@before(20)"
+                    );
+                });
+                
+                it ("sort, should return a new reference with new sort.", function () {
+                    var newRef = refWithModifiers.sort([{"column": decodedCol, "descending": true}]);
+                    expect(newRef.location.sort).toBe("@sort("+encodedCol+"::desc::)");
+                });
+                
+                it ("search, should return a new reference with new searchTerm.", function () {
+                    var newRef = unicodeRef.search("new search");
+                    expect(newRef).not.toBe(unicodeRef, "reference didn't change");
+                    expect(unicodeRef.location.searchTerm).toBe("test", "main reference changed.");
+                    expect(newRef.location.searchTerm).toBe("new search", "searchTerm didn't change.");
+                });
+            });                
+        });
     });
 
 };
