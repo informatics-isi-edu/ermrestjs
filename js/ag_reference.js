@@ -781,11 +781,12 @@ AttributeGroupLocation.prototype = {
     
     /**
      * Given a sortObject, return a new location object.
+     * This is removing the before and after (paging).
      * @param  {object} searchObject 
      * @return {ERMRest.AttributeGroupLocation}
      */
     changeSort: function (sort) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort, this.afterObject, this.beforeObject);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort);
     },
     
     /**

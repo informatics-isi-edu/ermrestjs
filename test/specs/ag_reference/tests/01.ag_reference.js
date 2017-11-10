@@ -76,11 +76,24 @@ exports.execute = function (options) {
                 expect(newLoc.searchColumn).toBe(loc.searchColumn, "searchColumn missmatch");
             });
             
-            it ("changeSort returns a new object with new sorting attributes.", function () {
-                var newLoc = loc.changeSort([{"column": "col", "descending": true}]);
-                expect(loc).not.toBe(newLoc, "Didn't return a new object.");
-                expect(loc.sortObject).toBeUndefined("changed original object.");
-                expect(newLoc.sort).toBe("@sort(col::desc::)");
+            describe ("changeSort, ", function () {
+                it ("returns a new object with new sorting attributes.", function () {
+                    var newLoc = loc.changeSort([{"column": "col", "descending": true}]);
+                    expect(loc).not.toBe(newLoc, "Didn't return a new object.");
+                    expect(loc.sortObject).toBeUndefined("changed original object.");
+                    expect(newLoc.sort).toBe("@sort(col::desc::)");                    
+                });
+                
+                it ("should remove all the pagings.", function () {
+                    var newLoc = locWithModifiers.changeSort([{"column": "col", "descending": true}]);
+                    expect(locWithModifiers).not.toBe(newLoc, "Didn't return a new object.");
+                    expect(locWithModifiers.sort).toBe("@sort(alias)","changed original object.");
+                    expect(locWithModifiers.beforeObject).toBeDefined("changed original before.");
+                    expect(locWithModifiers.afterObject).toBeDefined("changed original after.");
+                    expect(newLoc.sort).toBe("@sort(col::desc::)");
+                    expect(newLoc.beforeObject).toBeUndefined("didn't remove before.");
+                    expect(newLoc.afterObject).toBeUndefined("didn't remove after.");
+                });
             });
             
             it ("changePage returns a new object with new paging attributes.", function () {
