@@ -261,10 +261,12 @@ var ERMrest = (function(module) {
             ignoredColumns.push("md5_base64");
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
+            ignoredColumns.push("mimetype");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
+            ignoredColumns.push(this.column.name + ".mimetype");
 
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
         }
