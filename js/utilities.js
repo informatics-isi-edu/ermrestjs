@@ -682,8 +682,16 @@
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
+          var regExp = /\(([^)]+)\)/;
           detail = generatedErrMessage.search(/DETAIL:/g);
+          matches = regExp.exec(generatedErrMessage);
           mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(detail + 7, generatedErrMessage.length - 3) +" in the database. Please use a different ID to create new record.";
+          // run loop on matche to create message
+          // if(matches.length > 1){
+          //   for(int i=0; i<matches.length;i++){
+          //       primaryColumns =
+          //   }
+          // }
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("not consistent with your login profile") > -1){
