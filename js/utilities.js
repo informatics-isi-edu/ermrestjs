@@ -669,11 +669,11 @@
 
     String.prototype.transformToDisplay = function() {
       return this.split('_').
-            splice(1).map((word) =>
+            splice(1).map(function(word)
               {
-                return word[0].toUpperCase() + word.slice(1)
+                return word[0].toUpperCase() + word.slice(1);
               }).join(' ');
-    }
+    };
     /**
      * @function
      * @param  {string} errorStatusText    http error status text
