@@ -686,7 +686,7 @@
       if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
           referenceTable = generatedErrMessage.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
           dependentTableName =  referenceTable[1].slice(1);
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from "+ dependentTableName.transformToDisplay() +" table. \n All dependent entries must be removed before this item can be deleted.";
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ dependentTableName.transformToDisplay() +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
