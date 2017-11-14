@@ -667,6 +667,13 @@
 
     };
 
+    String.prototype.transformToDisplay = function() {
+      return this.split('_').
+            splice(1).map((word) =>
+              {
+                return word[0].toUpperCase() + word.slice(1)
+              }).join(' ');
+    }
     /**
      * @function
      * @param  {string} errorStatusText    http error status text
@@ -678,20 +685,25 @@
 
       if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
           referenceTable = generatedErrMessage.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from "+ referenceTable[1].slice(1) +" table. \n All dependent entries must be removed before this item can be deleted.";
+          dependentTableName =  referenceTable[1].slice(1);
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from "+ dependentTableName.transformToDisplay() +" table. \n All dependent entries must be removed before this item can be deleted.";
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
-          var regExp = /\(([^)]+)\)/;
-          detail = generatedErrMessage.search(/DETAIL:/g);
-          matches = regExp.exec(generatedErrMessage);
-          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(detail + 7, generatedErrMessage.length - 3) +" in the database. Please use a different ID to create new record.";
-          // run loop on matche to create message
-          // if(matches.length > 1){
-          //   for(int i=0; i<matches.length;i++){
-          //       primaryColumns =
-          //   }
-          // }
+          var regExp = /\(([^)]+)\)/,
+          detail = generatedErrMessage.search(/DETAIL:/g),
+          matches = regExp.exec(generatedErrMessage), msgTail;
+
+          var primaryColumns =  matches[1].toUpperCase().split(','),
+              numberOfKeys = primaryColumns.length;
+
+          if( numberOfKeys > 1){
+            msgTail = " combination of "+ primaryColumns;
+          } else{
+            msgTail = primaryColumns;
+          }
+
+          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(detail + 7, generatedErrMessage.length - 3) +" in the database. Please use a different "+ msgTail +" to create new record.";
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("not consistent with your login profile") > -1){
