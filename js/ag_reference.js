@@ -657,9 +657,9 @@ AttributeGroupColumn.prototype = {
          * 
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true })};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true }), unformatted: data};
         }
-        return {isHTML: false, value: data};
+        return {isHTML: false, value: data, unformatted: data};
     }
 };
 

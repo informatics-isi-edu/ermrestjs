@@ -1,7 +1,7 @@
 [{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT", "video_col": "http://techslides.com/demos/sample-videos/small.mp4" },
- {"id":4001, "name":"Harold","some_invisible_column": "Junior"},
- {"id":4002, "url": "https://www.google.com"},
- {"id":4003 ,"some_invisible_column": "Freshmen"},
- {"id":4004, "name": "weird & HTML < "},
- {"id":4005, "name": "<a href='javascript:alert();'></a>", "some_invisible_column": "Senior"},
- {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT", "some_invisible_column": "Sophomore"}]
+ {"id":4001, "name":"Harold","some_invisible_column": "Junior", "fk_to_reference": 9000},
+ {"id":4002, "url": "https://www.google.com", "fk_to_reference": 9001},
+ {"id":4003 ,"some_invisible_column": "Freshmen", "fk_to_reference": 9002},
+ {"id":4004, "name": "weird & HTML < ", "fk_to_reference": 9003},
+ {"id":4005, "name": "<a href='javascript:alert();'></a>", "some_invisible_column": "Senior", "fk_to_reference": 9004},
+ {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT", "some_invisible_column": "Sophomore", "fk_to_reference": 9005}]

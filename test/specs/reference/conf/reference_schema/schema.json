@@ -69,8 +69,14 @@
                       }
                   }
               }
-
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "json_col", "jsonb_col", "json_col_with_markdownpattern", "col_markdown_blankable"
+                    ]
+                }
+            }
         },
         "reference_table": {
             "comment": "Table to represent a testable reference object",
@@ -648,7 +654,21 @@
                 }
             ],
             "entityCount": 0,
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "reference_values_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_to_reference",
+                        "table_name": "reference_values",
+                        "schema_name": "reference_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "reference_table",
+                        "schema_name": "reference_schema"
+                    }]
+                }
+            ],
             "table_name": "reference_values",
             "schema_name": "reference_schema",
             "column_definitions": [
@@ -800,11 +820,31 @@
                           }  
                       }
                   }
-                }
+              },
+              {
+                    "name": "fk_to_reference",
+                    "type": {
+                        "typename": "text"
+                    } 
+              },
+              {
+                  "comment": null,
+                  "name": "fkeys_col",
+                  "type": {
+                      "typename": "text"
+                  },
+                  "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display": {
+                          "*": {
+                            "markdown_pattern": "[{{{$fkeys.reference_schema.reference_values_fk1.rowName}}}]({{$fkeys.reference_schema.reference_values_fk1.uri.detailed}}){.class-{{{$fkeys.reference_schema.reference_values_fk1.values.id}}}} \n"
+                          }  
+                      }
+                  }
+              }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col"]
+                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col", "fkeys_col"]
                 }
             }
         },
