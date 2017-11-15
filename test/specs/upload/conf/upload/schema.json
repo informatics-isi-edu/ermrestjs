@@ -206,9 +206,6 @@
                             "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file1_MD5}}}",
                             "md5": "file1_MD5",
                             "filename_column": "file1_name"
-                        },
-                        "tag:isrd.isi.edu,2016:visible-columns" : {
-                            "*" : ["key", "file1_uri"]
                         }
                     }
                 },
@@ -267,13 +264,73 @@
                             "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file2_MD5}}}",
                             "md5": "file2_MD5",
                             "filename_column": "file2_name"
-                        },
-                        "tag:isrd.isi.edu,2016:visible-columns" : {
-                            "*" : ["key", "file1_uri", "file2_uri"]
+                        }
+                    }
+                },
+                {
+                    "comment": null,
+                    "name": "file3_bytes",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "int4"
+                    },
+                    "annotations": {}
+                },
+                {
+                    "comment": null,
+                    "name": "file3_MD5",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {}
+                },
+                {
+                    "comment": null,
+                    "name": "file3_name",
+                    "default": null,
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "comment": [
+                            "hidden"
+                        ],
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "Thumbnail"
+                        }
+                    }
+                },
+                {
+                    "comment": "asset/reference",
+                    "name": "file3_uri",
+                    "default": null,
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "comment": [
+                            "thumbnail",
+                            "download"
+                        ],
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "byte_count_column": "file3_bytes",
+                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file3_MD5}}}",
+                            "md5": "file3_MD5",
+                            "filename_column": "file3_name"
                         }
                     }
                 }
-            ]
+            ],
+            "annotations" : {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*" : ["key", "file1_uri", "file2_uri", "file3_uri"]
+                }
+            }
         },
         "referee": {
             "comment": null,

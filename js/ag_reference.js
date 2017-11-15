@@ -572,9 +572,14 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
     
     /**
      * This might include the aggregate functions. This is the right side of alias (alias:=term)
-     * NOTE: This MUST be url encoded
-     * NOTE: We might want to seperate those, but right now this will only be used for 
+     * NOTE: 
+     * - This MUST be url encoded. We're not going to encode this.
+     * - We might want to seperate the aggreagte function and column, but right now this will only be used for 
      * creating the url.
+     * - Since it can include characters like `*`, we cannot encode this. We assume that 
+     * this has been encoded before and we're just passing it to the ermrest.
+     *   We might want to apply the same rule to every other places that we're passing the column names.
+     * 
      * @type {string}
      */
     this.term = term;
@@ -626,12 +631,16 @@ AttributeGroupColumn.prototype = {
         return res;
     },
     
-    // TODO or alias is required?
+    /**
+     * name of the column that is being used in projection list.
+     * If alias exists, it will return alias, otherwise the decoded version of term.
+     * @type {string} 
+     */
     get name() {
         if (typeof this._alias === "string" && this._alias.length !== 0) {
             return this._alias;
         }
-        return this.term;
+        return decodeURIComponent(this.term);
     },
     
     get displayname() {
@@ -700,6 +709,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
         /**
          * The colum name that has been used for searching.
          * NOTE: 
+         * - we're going to encode this name. You don't have to encode it.
          * - Currently only search on one column, what about other columns?
          * - Maybe this should be private
          * @type {?string}
@@ -781,11 +791,12 @@ AttributeGroupLocation.prototype = {
     
     /**
      * Given a sortObject, return a new location object.
+     * This is removing the before and after (paging).
      * @param  {object} searchObject 
      * @return {ERMRest.AttributeGroupLocation}
      */
     changeSort: function (sort) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort, this.afterObject, this.beforeObject);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort);
     },
     
     /**
@@ -816,6 +827,6 @@ AttributeGroupReferenceAggregateFn.prototype = {
             throw new Error("Cannot use count function, attribute group has more than one key column.");
         }
         
-        return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.shortestKey[0].term) + ")";
+        return "cnt_d(" + this._ref.shortestKey[0].term + ")";
     }
 };

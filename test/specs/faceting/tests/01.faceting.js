@@ -217,9 +217,26 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("it should ignore asset columns, and any inbound or outbound composite foreign keys, or composite keys.", function (done) {
+                it ("it should ignore asset columns, and composite keys. But create a facet for composite inbound and outbound foreignKeys based on shortestKey.", function (done) {
                     options.ermRest.resolve(createURL(tableWOAnnot1), {cid: "test"}).then(function (ref) {
-                        expect(ref.facetColumns.length).toBe(0);
+                        expect(ref.facetColumns.length).toBe(2, "length missmatch.");
+                        expect(ref.facetColumns[0]._column.name).toBe("id", "column name missmatch for outbound.");
+                        expect(ref.facetColumns[0]._column.table.name).toBe("main_wo_faceting_annot_2", "table name missmatch for outbound.");
+                        expect(JSON.stringify(ref.facetColumns[0].dataSource)).toBe(
+                            '[{"outbound":["faceting_schema","main_wo_annot_1_fkey2"]},"id"]', 
+                            "dataSource missmatch for outbound."
+                        );
+                        expect(ref.facetColumns[0].isEntityMode).toBe(true, "entityMode missmatch for outbound.");
+                        
+                        
+                        expect(ref.facetColumns[1]._column.name).toBe("id", "column name missmatch for inbound.");
+                        expect(ref.facetColumns[1]._column.table.name).toBe("main_wo_faceting_annot_2", "table name missmatch for inbound.");
+                        expect(JSON.stringify(ref.facetColumns[1].dataSource)).toBe(
+                            '[{"inbound":["faceting_schema","main_wo_annot_2_fkey1"]},"id"]', 
+                            "dataSource missmatch for inbound."
+                        );
+                        expect(ref.facetColumns[1].isEntityMode).toBe(true, "entityMode missmatch for inbound.");
+                        
                         done();
                     }).catch(function (err) {
                         console.log(err);

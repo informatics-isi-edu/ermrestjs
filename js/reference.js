@@ -319,6 +319,9 @@
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
                  * will return {"obj": facet object, "column": Column object}
+                 * The returned facet will always be entity, if we cannot show
+                 * entity picker (table didn't have simple key), we're ignoring it.
+                 * 
                  */
                 var refColToFacetObject = function (refCol) {
                     if (refCol.isKey) {
@@ -328,20 +331,25 @@
                         };
                     }
                     
+                    // if the pseudo-column table doesn't have simple key
+                    if (refCol.isPseudo && refCol.table.shortestKey.length > 1) {
+                        return null;
+                    }
+                    
                     if (refCol.isForeignKey) {
                         var constraint = refCol.foreignKey.constraint_names[0];
                         return {
                             "obj": {
                                 "source":[
                                     {"outbound": constraint},
-                                    refCol.foreignKey.key.colset.columns[0].name
+                                    refCol.table.shortestKey[0].name
                                 ],
                                 // TODO here I am passing unformatted, because we are going to pass it through the markdown
                                 // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                                 "markdown_name": refCol.displayname.unformatted, 
                                 "entity": true
                             },
-                            "column": refCol.foreignKey.key.colset.columns[0]
+                            "column": refCol.table.shortestKey[0]
                         };
                     }
 
@@ -349,21 +357,16 @@
                         var res = [];
                         var origFkR = refCol.foreignKey;
                         var association = refCol.reference.derivedAssociationReference;
-                        var column;
+                        var column = refCol.table.shortestKey[0];
 
-                        res.push({
-                            "inbound": origFkR.constraint_names[0]
-                        });
-
+                        res.push({"inbound": origFkR.constraint_names[0]});
                         if (association) {
                             res.push({
                                 "outbound": association._secondFKR.constraint_names[0]
                             });
-                            column = association._secondFKR.key.colset.columns[0].table.shortestKey[0];
-                        } else {
-                            column = origFkR.colset.columns[0].table.shortestKey[0];
                         }
                         res.push(column.name);
+                        
                         // TODO here I am passing unformatted, because we are going to pass it through the markdown
                         // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                         return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
@@ -438,11 +441,18 @@
                 };
                 
                 var checkRefColumn = function (col) {
-                    if (!col._simple || col.isAsset) {
+                    // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
+                    if ((col.isKey && !col._simple) || col.isAsset) {
                         return false;
                     }
                     
                     var fcObj = refColToFacetObject(col);
+                    
+                    // this filters the following unsupported cases:
+                    //  - foreignKeys in a table that only has composite keys.
+                    if (!fcObj) {
+                        return false;
+                    }
                     
                     // if in scalar, and is one of unsupported types
                     if (!fcObj.obj.entity && module._facetHeuristicIgnoredTypes.indexOf(fcObj.column.type.name) !== -1) {
@@ -5978,7 +5988,7 @@
             }
             
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            var searchObj = {"column": this.column.name, "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "value", "descending": false}];
@@ -6009,7 +6019,7 @@
             }
                 
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
-            var searchObj = {"column": module._fixedEncodeURIComponent(this.column.name), "term": null};
+            var searchObj = {"column": this.column.name, "term": null};
             
             // sort will be on the aggregated results.
             var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];

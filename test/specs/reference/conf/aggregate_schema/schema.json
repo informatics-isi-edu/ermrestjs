@@ -168,9 +168,47 @@
                     "*": ["col"]
                 }
             }
+        },
+        "uᴉɐɯ": {
+            "kind": "table",
+            "table_name": "uᴉɐɯ",
+            "schema_name": "aggregate_schema",
+            "comment": "has unicode characters",
+            "keys": [{"unique_columns": ["pᴉ"]}],
+            "foreign_keys": [
+                {
+                    "foreign_key_columns": [{
+                        "table_name": "uᴉɐɯ",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "pᴉ"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "aggregate_table",
+                        "schema_name": "aggregate_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [{
+                "name": "pᴉ",
+                "nullok": false,
+                "type": {
+                    "typename": "serial4"
+                }
+            },
+            {
+                "name": "loɔ",
+                "type": {
+                    "typename": "text"
+                }
+            }],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": ["pᴉ", "loɔ"]
+                }
+            }
         }
     },
-    "annotations": {},
     "table_names": [
         "aggregate_table"
     ]
