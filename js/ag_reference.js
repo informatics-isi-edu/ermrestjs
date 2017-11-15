@@ -206,7 +206,7 @@ AttributeGroupReference.prototype = {
                     if (!currRef.location.paging) { // first page
                         hasPrevious = false;
                         hasNext = (response.data.length > limit);
-                    } else if (currRef.location.pagingObject.before) { // has @before()
+                    } else if (currRef.location.beforeObject) { // has @before()
                         hasPrevious = (response.data.length > limit);
                         hasNext = true;
                     } else { // has @after()
@@ -219,7 +219,7 @@ AttributeGroupReference.prototype = {
                 // We need to remove those extra row of data from the result
                 if (response.data.length > limit) {
                     // if no paging or @after, remove last row
-                    if (!currRef.location.pagingObject || !currRef.location.pagingObject.before)
+                    if (!currRef.location.beforeObject)
                         response.data.splice(response.data.length-1);
                    else // @before, remove first row
                         response.data.splice(0, 1);
@@ -232,7 +232,7 @@ AttributeGroupReference.prototype = {
                 // We are paging based on @before (user navigated backwards in the set of data)
                 // AND there is less data than limit implies (beginning of set) 
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                if ( (currRef.location.pagingObject && currRef.location.pagingObject.before) && (response.data.length < limit || !hasPrevious) ) {
+                if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging 
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog);
@@ -413,10 +413,7 @@ AttributeGroupPage.prototype = {
             rows.push(self._data[self._data.length-1][so.column]);
         });
         
-        var newLocation = currRef.location.changePage({
-            before: false,
-            row: rows
-        });
+        var newLocation = currRef.location.changePage(rows, null);
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     },
     
@@ -448,10 +445,7 @@ AttributeGroupPage.prototype = {
             rows.push(self._data[0][so.column]);
         });
         
-        var newLocation = currRef.location.changePage({
-            before: true,
-            row: rows
-        });
+        var newLocation = currRef.location.changePage(null, rows);
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     }
 };
@@ -669,7 +663,7 @@ AttributeGroupColumn.prototype = {
     }
 };
 
-function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, pagingObject) {
+function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, afterObject, beforeObject) {
     /**
      * The uri to ermrest service
      * @type {string}
@@ -736,21 +730,41 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     }
     
     /**
-     * Represents the paging. It will be in the following format:
-     * {"before":boolean, "row":[v1, v2, v3...]}
+     * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
      * @private
-     * @type {?Object}
+     * @type {?Object[]}
      */
-    this.pagingObject = pagingObject;
+    this.beforeObject = beforeObject;
     
-    if (isObjectAndNotNull(this.pagingObject)) {
+    if (isObjectAndNotNull(this.beforeObject)) {
         /**
          * The paging midifer string for creating the uri.
          * @type {?string}
          */
-        this.paging = _getPagingModifier(this.pagingObject);
+        this.before = _getPagingModifier(this.beforeObject, true);
     }
+    
+    /**
+     * Represents the paging. It will be an array of values.
+     * v1, v2, v3.. are in the same order of columns in the sortObject
+     * @private
+     * @type {?Object[]}
+     */
+    this.afterObject = afterObject;
+    
+    if (isObjectAndNotNull(this.afterObject)) {
+        /**
+         * The paging midifer string for creating the uri.
+         * @type {?string}
+         */
+        this.after = _getPagingModifier(this.afterObject, false);
+    }
+    
+    if (this.after || this.before) {
+        this.paging = (this.after ? this.after : "") + (this.before ? this.before : "");
+    }
+    
 }
 AttributeGroupLocation.prototype = {
     constructor: AttributeGroupLocation,
@@ -762,25 +776,27 @@ AttributeGroupLocation.prototype = {
      */
     changeSearchTerm: function (term) {
         var searchObject = {"term": term, "column": this.searchColumn};
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, searchObject, this.sortObject, this.pagingObject);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, searchObject, this.sortObject, this.afterObject, this.beforeObject);
     },
     
     /**
      * Given a sortObject, return a new location object.
+     * This is removing the before and after (paging).
      * @param  {object} searchObject 
      * @return {ERMRest.AttributeGroupLocation}
      */
     changeSort: function (sort) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort, this.pagingObject);
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort);
     },
     
     /**
-     * Given a pagingObject, return a new location object.
-     * @param  {object} searchObject 
+     * Given afterObject and beforeObject, return a new location object.
+     * @param  {object} afterObject
+     * @param  {object} beforeObject
      * @return {ERMRest.AttributeGroupLocation}
      */
-    changePage: function (paging) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, paging);
+    changePage: function (afterObject, beforeObject) {
+        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, afterObject, beforeObject);
     }
 };
 
@@ -793,6 +809,8 @@ AttributeGroupReferenceAggregateFn.prototype = {
     /**
      * @type {Object}
      * @desc count aggregate representation
+     * This does not count null values for the key since we're using `count distinct`.
+     * Therefore the returned count might not be exactly the same as number of returned values.
      */
     get countAgg() {
         if (this._ref.shortestKey.length > 1) {

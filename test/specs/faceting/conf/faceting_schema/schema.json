@@ -106,6 +106,24 @@
                     }
                 },
                 {
+                    "name": "boolean_col",
+                    "type": {
+                        "typename": "boolean"
+                    }
+                },
+                {
+                    "name": "json_col",
+                    "type": {
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "jsonb_col",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                },
+                {
                     "name": "fk_to_f1",
                     "comment": "comment",
                     "type": {
@@ -139,6 +157,9 @@
                             {"source": "text_col", "ux_mode": "invalid mode"},
                             {"source": "longtext_col"},
                             {"source": "markdown_col"},
+                            {"source": "boolean_col"},
+                            {"source": "json_col"},
+                            {"source": "jsonb_col"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "open": true},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "term"]},
@@ -524,7 +545,7 @@
             ],
             "foreign_keys": [
                 {
-                    "name": [["faceting_schema", "main_wo_faceting_annot_2_fkey1"]],
+                    "names": [["faceting_schema", "main_wo_annot_2_fkey1"]],
                     "foreign_key_columns": [
                         {
                             "column_name": "id1",
@@ -571,6 +592,18 @@
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col_json",
+                    "type": {
+                        "typename": "json"
+                    }
+                },
+                {
+                    "name": "col_jsonb",
+                    "type": {
+                        "typename": "jsonb"
                     }
                 },
                 {

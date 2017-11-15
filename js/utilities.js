@@ -239,6 +239,25 @@
     };
 
     /**
+     * @private
+     * @function
+     * @param  {Object} source the object that you want to be copied
+     * @desc
+     * Creat a deep copy of the given object.
+     * NOTE: This is very limited and only works for simple objects.
+     * Some of its limitations are:
+     * 1. Cannot copy functions.
+     * 2. Cannot work on circular references.
+     * 3. Will convert date objects back to UTC in the string representation in the ISO8601 format.
+     * 4. It will fail to copy anything that is not in the JSON spec.
+     *
+     * ONLY USE THIS FUNCTION IF IT IS NOT ANY OF THE GIVEN LIMIATIONS.
+     */
+    module._simpleDeepCopy = function (source) {
+        return JSON.parse(JSON.stringify(source));
+    };
+
+    /**
      * @function
      * @param {String} str string to be converted.
      * @desc
@@ -1863,6 +1882,33 @@
         return (result === undefined || (subject !== undefined && result.subject !== subject)) ? null : result;
     };
 
+    /**
+     * Return an object containing window.location properties ('host', 'hostname', 'hash', 'href', 'port', 'protocol', 'search').
+     *
+     * @private
+     * @param  {string} url     URL to be parsed
+     * @return {object}         The location object
+     */
+    module._parseUrl = function(url) {
+        var m = url.match(/^(([^:\/?#]+:)?(?:\/\/(([^\/?#:]*)(?::([^\/?#:]*))?)))?([^?#]*)(\?[^#]*)?(#.*)?$/),
+            r = {
+                hash: m[8] || "",                    // #asd
+                host: m[3] || "",                    // localhost:257
+                hostname: m[4] || "",                // localhost
+                href: m[0] || "",                    // http://localhost:257/deploy/?asd=asd#asd
+                origin: m[1] || "",                  // http://localhost:257
+                pathname: m[6] || (m[1] ? "/" : ""), // /deploy/
+                port: m[5] || "",                    // 257
+                protocol: m[2] || "",                // http:
+                search: m[7] || ""                   // ?asd=asd
+            };
+        if (r.protocol.length == 2) {
+            r.protocol = "file:///" + r.protocol.toUpperCase();
+            r.origin = r.protocol + "//" + r.host;
+        }
+        r.href = r.origin + r.pathname + r.search + r.hash;
+        return m && r;
+    };
 
     module._constraintTypes = Object.freeze({
         KEY: "k",
@@ -1938,8 +1984,14 @@
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
 
+    // these types should be ignored for usage in heuristic for facet
+    module._facetHeuristicIgnoredTypes = [
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid', 'jsonb', 'json'
+    ];
+
+    // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
-        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid'
+        "json"
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];

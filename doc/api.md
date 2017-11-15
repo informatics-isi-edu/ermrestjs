@@ -279,9 +279,10 @@ to use for ERMrest JavaScript agents.
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
+        * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+        * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2161,6 +2162,7 @@ Constructor for a ParsedFilter.
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
+    * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -2574,6 +2576,22 @@ c) use space for conjunction of terms
 | --- | --- | --- |
 | aggregateList | [<code>Array.&lt;ColumnAggregateFn&gt;</code>](#ERMrest.ColumnAggregateFn) | list of aggregate functions to apply to GET uri |
 
+<a name="ERMrest.Reference+setSamePaging"></a>
+
+#### reference.setSamePaging(page) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a page, will change the reference paging options (before, and after)
+to match the page.
+NOTE: Limitations:
+- Current reference's table and page's table must be the same.
+- page's reference cannot have any facets (apart from search).
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - reference with new page settings.  
+
+| Param | Type |
+| --- | --- |
+| page | [<code>Page</code>](#ERMrest.Page) | 
+
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
 #### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
@@ -2629,7 +2647,7 @@ NOTE:
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, etag, data, hasNext, hasPrevious)](#new_ERMrest.Page_new)
+    * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2640,7 +2658,7 @@ NOTE:
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, etag, data, hasNext, hasPrevious)
+#### new Page(reference, etag, data, hasNext, hasPrevious, extraData)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2660,6 +2678,7 @@ Usage:
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
 | hasNext | <code>boolean</code> | Whether there is more data before this Page |
 | hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
+| extraData | <code>Object</code> | if |
 
 <a name="ERMrest.Page+reference"></a>
 
@@ -2985,7 +3004,7 @@ Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.C
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
 
 #### referenceColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a Column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+table"></a>
@@ -3120,7 +3139,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.ForeignKeyPseudoColumn+isPseudo"></a>
 
 #### foreignKeyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+isForeignKey"></a>
@@ -3183,7 +3202,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.KeyPseudoColumn+isPseudo"></a>
 
 #### keyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
 <a name="ERMrest.KeyPseudoColumn+isKey"></a>
@@ -3235,7 +3254,7 @@ This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 <a name="ERMrest.AssetPseudoColumn+isPseudo"></a>
 
 #### assetPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+isAsset"></a>
@@ -3293,7 +3312,7 @@ The [ForeignKeyRef](#ERMrest.ForeignKeyRef) that this pseudo-column is based on.
 <a name="ERMrest.InboundForeignKeyPseudoColumn+isPseudo"></a>
 
 #### inboundForeignKeyPseudoColumn.isPseudo : <code>boolean</code>
-indicates this represents is a PseudoColumn or a Column.
+indicates that this object represents a PseudoColumn.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey"></a>
