@@ -156,9 +156,9 @@ exports.execute = function (options) {
                                             '<code>GATCGATCGC GTATT</code>',
                                             'NA',
                                             '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
-                                            'TODO'
+                                            ''
                                              ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true]              
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false]              
                         },
                 "test2": {
                     "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],

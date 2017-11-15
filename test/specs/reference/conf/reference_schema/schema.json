@@ -836,7 +836,7 @@
                   "annotations": {
                       "tag:isrd.isi.edu,2016:column-display": {
                           "*": {
-                            "markdown_pattern": "[{{{$fkeys.reference_schema.reference_values_fk1.rowName}}}]({{$fkeys.reference_schema.reference_values_fk1.uri.detailed}}){.class-{{{$fkeys.reference_schema.reference_values_fk1.values.id}}}} \n"
+                            "markdown_pattern": "{{#$fkeys.reference_schema.reference_values_fk1}} \n [{{{rowName}}}]({{uri.detailed}}){.class-{{{values.id}}}} \n {{/$fkeys.reference_schema.reference_values_fk1}}"
                           }  
                       }
                   }

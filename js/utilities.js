@@ -1777,9 +1777,6 @@
 
         }
 
-
-        
-
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
             return null;
@@ -1810,13 +1807,16 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
-        var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
+        
+        // the logic is very simple and cannot deal with objects.
+        var hasObjectNotaion = /\{\{(.+[\.].+)\}\}/;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
-        if (!conditionalRegex.exec(template)) {
+        if (!conditionalRegex.exec(template) && !hasObjectNotaion.exec(template)) {
 
             // Grab all placeholders ({{PROP_NAME}}) in the template
-            var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
+            var placeholders = template.match(/\{\{([^\{\}]+)\}\}/ig);
 
             // If there are any placeholders
             if (placeholders && placeholders.length) {
