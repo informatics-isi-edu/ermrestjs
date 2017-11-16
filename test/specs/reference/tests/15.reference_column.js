@@ -587,29 +587,29 @@ exports.execute = function (options) {
 
                 describe('for keys, ', function () {
                     it('should return null-value if any of the key columns are null.', function () {
-                        val = compactColumns[0].formatPresentation({"id_2":1}, {context: "detailed"}).value;
+                        val = compactColumns[0].formatPresentation({"id_2":1}, "detailed").value;
                         expect(val).toBe(null);
 
-                        val = compactBriefRef.columns[0].formatPresentation({"col_3":"3"}, {context: "compact/brief"}).value;
+                        val = compactBriefRef.columns[0].formatPresentation({"col_3":"3"}, "compact/brief").value;
                         expect(val).toBe('');
                     });
 
                     it('should use `markdown_pattern` from key display annotation.', function () {
-                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, {context: "compact/brief", "formattedValues": {"col_4":"value"}}).value;
+                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"formattedValues": {"col_4":"value"}}).value;
                         expect(val).toEqual('<strong>value</strong>');
                     });
 
                     describe('otherwise, ', function () {
                         it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
-                            val = compactColumns[0].formatPresentation({"id":2}, {context: "detailed", "formattedValues": {"id":2}}).value;
+                            val = compactColumns[0].formatPresentation({"id":2}, "detailed", {"formattedValues": {"id":2}}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=2">2</a>');
 
-                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, {context: "compact/brief", "formattedValues": {"col_3":"3", "col_6":"6"}}).value;
+                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, "compact/brief", {"formattedValues": {"col_3":"3", "col_6":"6"}}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns are html.', function () {
-                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
+                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, "compact/brief", {"formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
                             expect(val).toEqual('<p>value</p>\n');
                         })
                     });
@@ -617,15 +617,15 @@ exports.execute = function (options) {
 
                 describe('for assets, ', function() {
                     it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
-                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
                         
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"entry", "formattedValues":{"col_filename": "filename"}}).value;
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("value");
                     });
                     
                     it('if coulmn has column-display annotation, use it.', function () {
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"compact", "formattedValues":{"col_filename": "filename"}}).value;
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 
@@ -636,9 +636,7 @@ exports.execute = function (options) {
                  });
 
                 it('should use the show-nulls annotation, when the data is null.', function () {
-                    val = compactColumns[14].formatPresentation({}, {
-                        context: "detailed"
-                    }).value;
+                    val = compactColumns[14].formatPresentation({}, "detailed").value;
                     expect(val).toBe(null);
                     val = entryEditRef.columns[7].formatPresentation({}).value;
                     expect(val).toBe("");

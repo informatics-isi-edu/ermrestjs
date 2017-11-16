@@ -110,7 +110,6 @@
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
 
-
     /**
      * @memberof ERMrest
      * @param {string} status the network error code

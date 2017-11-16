@@ -121,7 +121,7 @@ exports.execute = function(options) {
 
                     function runShowNullTestCases (column, testCases){
                         for(key in testCases){
-                            expect(column.formatvalue(null, {context:key})).toBe(testCases[key]);
+                            expect(column.formatvalue(null, key)).toBe(testCases[key]);
                         }
                     }
                     it('should return the value that is defined in its `show_nulls` display annotation based on context.', function() {
@@ -228,7 +228,7 @@ exports.execute = function(options) {
                     it('float8 columns correctly.', function() {
                         var col = table1_schema2.columns.get('table_1_float8');
                         var options = {numFracDigits: 7};
-                        formattedValue = col.formatvalue(234523523.023045230450245, options);
+                        formattedValue = col.formatvalue(234523523.023045230450245, null, options);
 
                         expect(formattedValue).toBe('234,523,523.0230452');
                     });
@@ -236,7 +236,7 @@ exports.execute = function(options) {
                     it('numeric columns correctly.', function() {
                         var col = table1_schema2.columns.get('table_1_numeric');
                         var options = {numFracDigits: 8};
-                        formattedValue = col.formatvalue(456456.234682307474076, options);
+                        formattedValue = col.formatvalue(456456.234682307474076, null, options);
 
                         expect(formattedValue).toBe('456,456.23468231');
                     })
