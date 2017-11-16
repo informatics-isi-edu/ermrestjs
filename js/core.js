@@ -1708,14 +1708,15 @@
         /**
          * Formats a value corresponding to this column definition.
          * @param {Object} data The 'raw' data value.
+         * @param {String} context the app context
          * @returns {string} The formatted value.
          */
-        this.formatvalue = function (data, options) {
+        this.formatvalue = function (data, context, options) {
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
-                return this._getNullValue(options ? options.context : undefined);
+                return this._getNullValue(context);
             }
 
             return _formatValueByType(this.type, data, options);
@@ -1724,13 +1725,13 @@
         /**
          * Formats the presentation value corresponding to this column definition.
          * @param {String} data The 'formatted' data value.
+         * @param {String} context the app context
          * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
-         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
-        this.formatPresentation = function(data, options) {
+        this.formatPresentation = function(data, context, options) {
 
-            var context = options ? options.context : undefined,
-                utils = module._formatUtils;
+            var utils = module._formatUtils;
 
             var display = this.getDisplay(context);
 
@@ -1745,7 +1746,7 @@
              */
             
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
-                return { isHTML: true, value: '<pre>' + data + '</pre>'};
+                return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
             }
                 
             /* 
@@ -1753,10 +1754,10 @@
              * then return data as it is
              */
             if (!display.isHTML) {
-                return { isHTML: false, value: data };
+                return { isHTML: false, value: data, unformatted: data };
             }
 
-            var value = data;
+            var unformatted = data;
 
             // If there is any markdown pattern then evaluate it
             if (display.isMarkdownPattern) {
@@ -1766,26 +1767,26 @@
 
                 // Code to do template/string replacement using keyValues
                 if (options === undefined || options.formattedValues === undefined) {
-                    options.formattedValues = module._getFormattedKeyValues(this.table.columns, context, data);
+                    options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 
                 options.formatted = true; // to avoid creating formattedValues again
-                value = module._renderTemplate(template, options.formattedValues, this.table, context, options);
+                unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
             }
 
 
             // If value is null or empty, return value on basis of `show_nulls`
             
-            if (value === null || value.trim() === '') {
-                return { isHTML: false, value: this._getNullValue(context) };
+            if (unformatted === null || unformatted.trim() === '') {
+                return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
             
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-             value = utils.printMarkdown(value, options);
+             value = utils.printMarkdown(unformatted, options);
              
-             return { isHTML: true, value: value };
+             return { isHTML: true, value: value, unformatted: unformatted };
             
         };
 
@@ -2816,6 +2817,8 @@
         // we can assume that this can be used as a unique identifier for fk.
         // NOTE: currently ermrest only returns the first constraint name,
         // so using the first one is sufficient
+        // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
+        // They will produce the same name. Is there any better way to generate this?
         this._name = this.constraint_names[0].join("_");
 
 
