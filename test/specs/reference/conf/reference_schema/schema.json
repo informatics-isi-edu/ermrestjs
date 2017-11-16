@@ -840,11 +840,25 @@
                           }  
                       }
                   }
+              },
+              {
+                  "comment": null,
+                  "name": "moment_col",
+                  "type": {
+                      "typename": "text"
+                  },
+                  "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display": {
+                          "*": {
+                            "markdown_pattern": "{{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}"
+                          }  
+                      }
+                  }
               }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col", "fkeys_col"]
+                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col", "fkeys_col", "moment_col"]
                 }
             }
         },

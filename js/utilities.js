@@ -170,8 +170,7 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
-    
-    
+
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
@@ -255,6 +254,36 @@
      */
     module._simpleDeepCopy = function (source) {
         return JSON.parse(JSON.stringify(source));
+    };
+    
+    /**
+     * Given a string, will return the existing value in the object.
+     * It will return undefined if the key doesn't exist or invalid input.
+     * @param  {Object} obj  The object that we want the value from
+     * @param  {String} path the string path (`a.b.c`)
+     * @return {Object}      value
+     */
+    module._getPath = function (obj, path) {
+        var pathNodes;
+        
+        if (typeof path === "string") {
+            if (path.length === 0) {
+                return this[""];
+            }
+            pathNodes = path.split(".");
+        } else if (Array.isArray(path)) {
+            pathNodes = path;
+        } else {
+            return undefined;
+        }
+
+        for (var i = 0; i < pathNodes.length; i++) {
+            if (!obj.hasOwnProperty(pathNodes[i])) {
+                return undefined;
+            }
+            obj = obj[pathNodes[i]];
+        }
+        return obj;
     };
 
     /**
@@ -1808,12 +1837,9 @@
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
         var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
-        
-        // the logic is very simple and cannot deal with objects.
-        var hasObjectNotaion = /\{\{(.+[\.].+)\}\}/;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
-        if (!conditionalRegex.exec(template) && !hasObjectNotaion.exec(template)) {
+        if (!conditionalRegex.exec(template)) {
 
             // Grab all placeholders ({{PROP_NAME}}) in the template
             var placeholders = template.match(/\{\{([^\{\}]+)\}\}/ig);
@@ -1834,9 +1860,14 @@
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
-
+                    
+                    // find the value.
+                    var value = module._getPath(keyValues, key);
+                    
+                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
+                    // it was a hack that was added for asset columns.
                     // If key is not in ingored columns value for the key is null or undefined then return null
-                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (keyValues[key] === null || keyValues[key] === undefined)) {
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
                        return false;
                     }
                 }

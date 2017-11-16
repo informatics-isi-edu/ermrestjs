@@ -121,9 +121,9 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues, expectedIsHTMLValues) {
 
-            it("should return 13 values for a tuple", function() {
+            it("should return 14 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                expect(values.length).toBe(13);
+                expect(values.length).toBe(14);
             });
             
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
@@ -138,9 +138,13 @@ exports.execute = function (options) {
             checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);    
             checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);       
             checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("moment_col", tupleIndex, 13, expectedValues, expectedIsHTMLValues);
         };
         
         describe("Testing tuples values", function() {
+            var moment = options.ermRest._currDate;
+            var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
+
             var testObjects ={ 
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
@@ -156,9 +160,10 @@ exports.execute = function (options) {
                                             '<code>GATCGATCGC GTATT</code>',
                                             'NA',
                                             '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
-                                            ''
+                                            '',
+                                            expectedMomentValue
                                              ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false]              
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]              
                         },
                 "test2": {
                     "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -175,9 +180,10 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000" class="class-9000">9000 and Hank</a></p>\n'
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000" class="class-9000">9000 and Hank</a></p>\n',
+                                    expectedMomentValue
                                 ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                     },
             "test3": {
                     "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -194,9 +200,10 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001" class="class-9001">9001 and Harold</a></p>\n'         
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001" class="class-9001">9001 and Harold</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true]
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
                     },
             "test4": {
                     "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -213,9 +220,10 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9002" class="class-9002">9002 and Heather</a></p>\n'         
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9002" class="class-9002">9002 and Heather</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true]
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
                     },
             "test5": {
                     "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -232,9 +240,10 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9003" class="class-9003">9003 and Henry</a></p>\n'          
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9003" class="class-9003">9003 and Henry</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
                     },
             "test6": {
                     "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -251,9 +260,10 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9004" class="class-9004">9004 and Helga</a></p>\n'          
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9004" class="class-9004">9004 and Helga</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                     },
             "test7": {
                     "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -270,9 +280,10 @@ exports.execute = function (options) {
                                     '<code>GATCGATCGC GTATT</code>',
                                     '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9005" class="class-9005">9005 and Harry</a></p>\n'           
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9005" class="class-9005">9005 and Harry</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                 }
                 
             }
