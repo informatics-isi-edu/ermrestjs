@@ -315,7 +315,7 @@
         "annotations": {
           "tag:isrd.isi.edu,2016:table-display": {
             "row_name": {
-              "row_markdown_pattern": "[{{{$fkeys.schema_table_display.table_w_rowname_fkeys1_fk1.rowName}}}]({{{$fkeys.schema_table_display.table_w_rowname_fkeys1_fk1.uri.detailed}}})"
+              "row_markdown_pattern": "[{{{ $fkeys.schema_table_display.table_w_rowname_fkeys1_fk1.rowName}}}]({{{$fkeys.schema_table_display.table_w_rowname_fkeys1_fk1.uri.detailed }}})"
             }
           }
         }
@@ -364,7 +364,7 @@
         "annotations": {
           "tag:isrd.isi.edu,2016:table-display": {
             "row_name": {
-              "row_markdown_pattern": "{{$fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values.id}}: {{$fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values._id}}"
+              "row_markdown_pattern": "{{ $fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values.id }}: {{$fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values._id}}"
             }
           }
         }

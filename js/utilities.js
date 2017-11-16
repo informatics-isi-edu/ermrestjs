@@ -1862,7 +1862,7 @@
                     if (key[0] == "{") key = key.substring(1, key.length -1);
                     
                     // find the value.
-                    var value = module._getPath(keyValues, key);
+                    var value = module._getPath(keyValues, key.trim());
                     
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
