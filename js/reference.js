@@ -6037,7 +6037,7 @@
             }
             
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Count", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn("count", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
@@ -6080,7 +6080,7 @@
             }
             
             var aggregateColumns = [
-                new AttributeGroupColumn("c2", countName, "Count", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             //TODO this should just return the results, but I'm not sure about the datastructure.
