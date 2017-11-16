@@ -170,8 +170,7 @@
     Array.prototype.clear = function() {
         this.length = 0;
     };
-    
-    
+
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
@@ -255,6 +254,36 @@
      */
     module._simpleDeepCopy = function (source) {
         return JSON.parse(JSON.stringify(source));
+    };
+    
+    /**
+     * Given a string, will return the existing value in the object.
+     * It will return undefined if the key doesn't exist or invalid input.
+     * @param  {Object} obj  The object that we want the value from
+     * @param  {String} path the string path (`a.b.c`)
+     * @return {Object}      value
+     */
+    module._getPath = function (obj, path) {
+        var pathNodes;
+        
+        if (typeof path === "string") {
+            if (path.length === 0) {
+                return this[""];
+            }
+            pathNodes = path.split(".");
+        } else if (Array.isArray(path)) {
+            pathNodes = path;
+        } else {
+            return undefined;
+        }
+
+        for (var i = 0; i < pathNodes.length; i++) {
+            if (!obj.hasOwnProperty(pathNodes[i])) {
+                return undefined;
+            }
+            obj = obj[pathNodes[i]];
+        }
+        return obj;
     };
 
     /**
@@ -525,42 +554,72 @@
         return name;
     };
 
-    /*
+    /**
      * @function
      * @private
-     * @param {ERMrest.Columns} columns The object that we want the formatted values for.
+     * @param {ERMrest.Table} table The object that we want the formatted values for. 
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
+     * @param {object} linkedData The object which contains key value paris of foreign key data.
      * @return {object} A formatted keyvalue pair of object
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
      */
-    module._getFormattedKeyValues = function(columns, context, data) {
-        var keyValues = {};
-
-        var findCol = function (colName) {
-            if (Array.isArray(columns)) {
-                return columns.filter(function (col) {return col.name === colName;})[0];
+    module._getFormattedKeyValues = function(table, context, data, linkedData) {
+        var keyValues, k, fkData, col, cons, rowname;
+        
+        var findCol = function (colName, currTable) {
+            if (Array.isArray(currTable)) {
+                return currTable.filter(function (col) {return col.name === colName;})[0];
             }
-            return columns.get(k);
+            return currTable.columns.get(k);
         };
-
-        for (var k in data) {
-
-            try {
-                var col = findCol(k);
-                keyValues[k] = col.formatvalue(data[k], { context: context });
-            } catch(e) {
-                keyValues[k] = data[k];
+        
+        var getTableValues = function (d, currTable) {
+            var res = {};
+            for (k in d) {
+                try {
+                    col = findCol(k, currTable);
+                    res[k] = col.formatvalue(d[k], context);
+                } catch(e) {
+                    res[k] = d[k];
+                }
+                // Inject raw data in the keyvalues object prefixed with an '_'
+                res["_" + k] = d[k];
             }
-
-            // Inject raw data in the keyvalues object prefixed with an '_'
-            keyValues["_" + k] = data[k];
+            return res;
+        };
+        
+        // get the data from current table
+        keyValues = getTableValues(data, table);
+        
+        //get foreignkey data if available
+        if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
+            keyValues.$fkeys = {};
+            table.foreignKeys.all().forEach(function (fk) {
+                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk._name]);
+                if (!presentation) return;
+                
+                cons = fk.constraint_names[0];
+                if (!keyValues.$fkeys[cons[0]]) {
+                    keyValues.$fkeys[cons[0]] = {};
+                }
+                
+                keyValues.$fkeys[cons[0]][cons[1]] = {
+                    "values": getTableValues(linkedData[fk._name], fk.key.table),
+                    "rowName": presentation.unformatted,
+                    "uri": {
+                        "detailed": presentation.reference.contextualize.detailed.appLink
+                    }
+                }; 
+                
+                 
+            });
         }
-
+        
         return keyValues;
     };
 
-    /*
+    /**
      * @function
      * @private
      * @param {ERMrest.Table} table The table that we want the row name for.
@@ -569,7 +628,7 @@
      * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
      */
-    module._generateRowName = function (table, context, data) {
+    module._generateRowName = function (table, context, data, linkedData) {
         var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern;
 
         // If table has table-display annotation then set it in annotation variable
@@ -580,7 +639,7 @@
             unformattedAnnotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME_UNFORMATTED, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
                 // Get formatted keyValues for a table for the data
-                keyValues = module._getFormattedKeyValues(table.columns, context, data);
+                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
 
                 // get templated patten after replacing the values using Mustache
                 unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues, table, context, {formatted: true});
@@ -593,7 +652,7 @@
 
             // Get formatted keyValues for a table for the data
             if (typeof keyValues === 'undefined') {
-                keyValues = module._getFormattedKeyValues(table.columns, context, data);
+                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
             }
             
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
@@ -610,7 +669,7 @@
                 closest = module._getClosest(data, name);
                 if (closest !== undefined && (typeof closest.data === 'string')) {
                     col = table.columns.get(closest.key);
-                    result = col.formatvalue(closest.data, {context: context});
+                    result = col.formatvalue(closest.data, context);
                     return true;
                 }
                 return false;
@@ -637,7 +696,7 @@
                 // If id column exists
                 if (idCol.length && typeof data[idCol[0].name] === 'string') {
 
-                    result = idCol[0].formatvalue(data[idCol[0].name], {context: context});
+                    result = idCol[0].formatvalue(data[idCol[0].name], context);
 
                 } else {
 
@@ -653,7 +712,7 @@
 
                     // Iterate over the keycolumns to get their formatted values for `row_name` context
                     keyColumns.forEach(function (c) {
-                        var value = c.formatvalue(data[c.name], {context: context});
+                        var value = c.formatvalue(data[c.name], context);
                         values.push(value);
                     });
 
@@ -684,6 +743,97 @@
             "isHTML": true
         };
 
+    };
+    
+    /**
+     * @function
+     * @private
+     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object 
+     * @param  {String} context    Current context
+     * @param  {object} data       Data for the table that this foreignKey is referring to.
+     * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
+     */
+    module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return null;
+        }
+
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+             var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+            return keyPair;
+        };
+
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        var value, rowname, i, caption, unformatted;
+
+        var fkey = foreignKey.key; // the key that creates this PseudoColumn
+        var table = fkey.table;
+
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(fkey.colset.columns)) {
+            return null;
+        }
+
+        // use row name as the caption
+        rowname = module._generateRowName(table, context, data);
+        caption = rowname.value;
+        unformatted = rowname.unformatted;
+
+        // use key for displayname: "col_1:col_2:col_3"
+        if (caption.trim() === '') {
+            var formattedValues = module._getFormattedKeyValues(table, context, data),
+                formattedKeyCols = [],
+                unformattedKeyCols = [],
+                pres, col;
+
+            for (i = 0; i < fkey.colset.columns.length; i++) {
+                col = fkey.colset.columns[i];
+                pres = col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues});
+                formattedKeyCols.push(pres.value);
+                unformattedKeyCols.push(pres.unformatted);
+            }
+            caption = formattedKeyCols.join(":");
+            unformatted = unformattedKeyCols.join(":");
+
+            if (caption.trim() === '') {
+                return null;
+            }
+        }
+
+        // use the shortest key if it has data (for shorter url).
+        var uriKey = hasData(table.shortestKey) ? table.shortestKey: fkey.colset.columns;
+
+        // create a url that points to the current ReferenceColumn
+        var ermrestUri = [
+            table.schema.catalog.server.uri ,"catalog" ,
+            module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+            [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+            createKeyPair(uriKey)
+        ].join("/");
+
+        return {
+            unformatted: unformatted,
+            caption: caption,
+            reference:  new Reference(module.parse(ermrestUri), table.schema.catalog)
+        };
     };
 
     /**
@@ -982,7 +1132,6 @@
      * format the raw value based on the column definition type, heuristics, annotations, etc.
      * @param {ERMrest.Type} type - the type object of the column
      * @param {Object} data - the 'raw' data value.
-     * @param {Object} options - the key value pair of possible options with all formatted values in '.formattedValues' key
      * @returns {string} The formatted value.
      */
     _formatValueByType = function(type, data, options) {
@@ -1017,7 +1166,7 @@
             //Cases to support json and jsonb columns
             case 'json':
             case 'jsonb':
-                data = utils.printJSON(data);
+                data = utils.printJSON(data, options);
                 break;
             default: // includes 'text' and 'longtext' cases
                 data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
@@ -1657,9 +1806,6 @@
 
         }
 
-
-        
-
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
             return null;
@@ -1690,13 +1836,13 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
-        var conditionalRegex = /\{\{(#|\^)([\w\d-_. ]+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
             // Grab all placeholders ({{PROP_NAME}}) in the template
-            var placeholders = template.match(/\{\{([\w\d-_. ]+)\}\}/ig);
+            var placeholders = template.match(/\{\{([^\{\}]+)\}\}/ig);
 
             // If there are any placeholders
             if (placeholders && placeholders.length) {
@@ -1714,9 +1860,14 @@
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
-
+                    
+                    // find the value.
+                    var value = module._getPath(keyValues, key.trim());
+                    
+                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
+                    // it was a hack that was added for asset columns.
                     // If key is not in ingored columns value for the key is null or undefined then return null
-                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (keyValues[key] === null || keyValues[key] === undefined)) {
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
                        return false;
                     }
                 }
@@ -1742,7 +1893,7 @@
 
         // to avoid computing data mutliple times, or if we don't want the formatted values
         if (options === undefined || !options.formatted) {
-            data = module._getFormattedKeyValues(table.columns, context, data);
+            data = module._getFormattedKeyValues(table, context, data);
         }
 
         // render the template using Mustache
@@ -1778,7 +1929,7 @@
                 });
             }
 
-            data = module._getFormattedKeyValues(table.columns, context, data);
+            data = module._getFormattedKeyValues(table, context, data);
         }
 
         // call the actual mustache validator

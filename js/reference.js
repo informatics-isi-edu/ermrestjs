@@ -3727,7 +3727,7 @@
                 var column, presentation;
 
                 // key value pair of formmated values, to be used in formatPresentation
-                var keyValues = module._getFormattedKeyValues(this._pageRef._table.columns, this._pageRef._context, this._data);
+                var keyValues = module._getFormattedKeyValues(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {
@@ -3737,9 +3737,9 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
-                                presentation = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                                presentation = column.formatPresentation(this._linkedData[column._constraintName], this._pageRef._context);
                             } else {
-                                presentation = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
+                                presentation = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -3766,12 +3766,12 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
-                                values[i] = column.formatPresentation(this._linkedData[column._constraintName], {context: this._pageRef._context});
+                                values[i] = column.formatPresentation(this._linkedData[column._constraintName], this._pageRef._context);
                             } else {
-                                values[i] = column.formatPresentation(this._data, { formattedValues: keyValues, context: this._pageRef._context});
+                                values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
                         } else {
-                            values[i] = column.formatPresentation(keyValues[column.name], { formattedValues: keyValues , context: this._pageRef._context });
+                            values[i] = column.formatPresentation(keyValues[column.name], this._pageRef._context, { formattedValues: keyValues});
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
@@ -3827,7 +3827,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data);
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
             }
             return this._displayname;
         },
@@ -4140,35 +4140,38 @@
         /**
          * Formats a value corresponding to this reference-column definition.
          * @param {Object} data The 'raw' data value.
+         * @param {String} context the context of app
          * @returns {string} The formatted value.
          */
-        formatvalue: function(data, options) {
+        formatvalue: function(data, context, options) {
             if (this._simple) {
-                return this._baseCols[0].formatvalue(data, options);
+                return this._baseCols[0].formatvalue(data, context, options);
             }
             return data.toString();
         },
 
         /**
          * Formats the presentation value corresponding to this reference-column definition.
-         * @param {String} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {Object} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+         * @param {String} context the app context
          * @param {Object} options includes `context` and `formattedValues`
-         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
-        formatPresentation: function(data, options) {
+        formatPresentation: function(data, context, options) {
             if (this._simple) {
-                return this._baseCols[0].formatPresentation(data, options);
+                return this._baseCols[0].formatPresentation(data, context, options);
             }
 
-            var isHTML = false, value = "", curr;
+            var isHTML = false, value = "", unformatted = "", curr;
             for (var i = 0; i < this._baseCols.length; i++) {
-                curr = this._baseCols[i].formatPresentation(data, options);
+                curr = this._baseCols[i].formatPresentation(data, context, options);
                 if (!isHTML && curr.isHTML) {
                     isHTML = true;
                 }
                 value += (i>0 ? ":" : "") + curr.value;
+                unformatted += (i>0 ? ":" : "") + curr.unformatted;
             }
-            return {isHTML: isHTML, value: value};
+            return {isHTML: isHTML, value: value, unformatted: unformatted};
         },
 
         /**
@@ -4329,87 +4332,27 @@
         filteredRef = module._createReference(module.parse(uri), this.table.schema.catalog);
         return filteredRef;
     };
-    ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, options) {
-        var context = options ? options.context : undefined;
-        var nullValue = {isHTML: false, value: this._getNullValue(context)};
-
-        // if data is empty
-        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-            return nullValue;
+    ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+        var presentation = module._generateForeignKeyPresentation(this.foreignKey, context, data);
+        
+        if (!presentation) {
+            return {isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context)};
         }
-
-        // used to create key pairs in uri
-        var createKeyPair = function (cols) {
-             var keyPair = "", col;
-            for (i = 0; i < cols.length; i++) {
-                col = cols[i].name;
-                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                if (i != cols.length - 1) {
-                    keyPair +="&";
-                }
-            }
-            return keyPair;
-        };
-
-        // check if we have data for the given columns
-        var hasData = function (kCols) {
-            for (var i = 0; i < kCols.length; i++) {
-                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        var value, caption, i;
-
-        var fkey = this.foreignKey.key; // the key that creates this PseudoColumn
-
-        // if any of key columns don't have data, this link is not valid.
-        if (!hasData(fkey.colset.columns)) {
-            return nullValue;
-        }
-
-        // use row name as the caption
-        caption = module._generateRowName(this.table, context, data).value;
-
-        // use key for displayname: "col_1:col_2:col_3"
-        if (caption.trim() === '') {
-            var formattedValues = module._getFormattedKeyValues(fkey.table.columns, context, data),
-                keyCols = [],
-                col;
-
-            for (i = 0; i < fkey.colset.columns.length; i++) {
-                col = fkey.colset.columns[i];
-                keyCols.push(col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues}).value);
-            }
-            caption = keyCols.join(":");
-
-            if (caption.trim() === '') {
-                return nullValue;
-            }
-        }
+        
+        var value, unformatted, appLink;
 
         // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
-        if (caption.match(/<a/) || module._isEntryContext(context)) {
-            value = caption;
-        }
         // create the link using reference.
-        else {
-
-            // use the shortest key if it has data (for shorter url).
-            var uriKey = hasData(this.table.shortestKey) ? this.table.shortestKey: fkey.colset.columns;
-
-            // create a url that points to the current ReferenceColumn
-            var uri = [this.reference.location.compactUri, createKeyPair(uriKey)].join("/");
-
-            // create a reference to just this PseudoColumn to use for url
-            var ref = new Reference(module.parse(uri), this.table.schema.catalog);
-
-            value = '<a href="' + ref.contextualize.detailed.appLink +'">' + caption + '</a>';
+        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+            value = presentation.caption;
+            unformatted = presentation.unformatted;
+        } else {
+            appLink = presentation.reference.contextualize.detailed.appLink;
+            value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
+            unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
         }
 
-        return {isHTML: true, value: value};
+        return {isHTML: true, value: value, unformatted: unformatted};
     };
     ForeignKeyPseudoColumn.prototype._determineSortable = function () {
         var display = this._display, useColumn = false, baseCol;
@@ -4544,7 +4487,7 @@
                     if (caption.trim() === '') {
                         var keyValues = [];
                         for (i = 0; i < keyColumns.length; i++) {
-                            keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], {context: this._context}));
+                            keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], this._context));
                         }
                         caption = keyValues.join(":");
                     }
@@ -4613,10 +4556,10 @@
     module._extends(KeyPseudoColumn, ReferenceColumn);
 
     // properties to be overriden:
-    KeyPseudoColumn.prototype.formatPresentation = function(data, options) {
+    KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
 
-        var context = options ? options.context : undefined;
-        var nullValue = {isHTML: false, value: this._getNullValue(context)};
+        var nullValue = this._getNullValue(context);
+        nullValue = {isHTML: false, value: nullValue, unformatted: nullValue};
 
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -4646,7 +4589,7 @@
          return true;
         };
 
-        var value, caption, i;
+        var value, caption, unformatted, i;
         var cols = this.key.colset.columns,
             addLink = true;
 
@@ -4661,21 +4604,23 @@
 
             // make sure that formattedValues is defined
             if (options === undefined || options.formattedValues === undefined) {
-               options.formattedValues = module._getFormattedKeyValues(this.table.columns, this._context, data);
+               options.formattedValues = module._getFormattedKeyValues(this.table, this._context, data);
             }
 
-            caption = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
-            caption = caption === null || caption.trim() === '' ? "" : module._formatUtils.printMarkdown(caption, { inline: true });
+            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
+            unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
+            caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
             addLink = false;
         } else {
-            var values = [];
+            var values = [], unformattedValues = [];
 
             // create the caption
             var presentation;
             for (i = 0; i < cols.length; i++) {
                 try {
-                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], {context: context, formattedValues: options.formattedValues});
+                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], context, {formattedValues: options.formattedValues});
                     values.push(presentation.value);
+                    unformattedValues.push(presentation.unformatted);
                     // if one of the values isHTMl, should not add link
                     addLink = addLink ? !presentation.isHTML : false;
                 } catch (exception) {
@@ -4684,6 +4629,7 @@
                 }
             }
             caption = values.join(":");
+            unformatted = unformattedValues.join(":");
 
             // if the caption is empty we cannot add any link to that.
             if (caption.trim() === '') {
@@ -4700,12 +4646,14 @@
                 createKeyPair(cols)
             ].join("/");
             var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
-            value = '<a href="' + keyRef.contextualize.detailed.appLink +'">' + caption + '</a>';
+            var appLink = keyRef.contextualize.detailed.appLink;
+            value = '<a href="' + appLink +'">' + caption + '</a>';
+            unformatted = "[" + unformatted + "](" + appLink + ")";
         } else {
             value = caption;
         }
 
-        return {isHTML: true, value: value};
+        return {isHTML: true, value: value, unformatted: unformatted};
      };
     KeyPseudoColumn.prototype._determineSortable = function () {
         var display = this._display, useColumn = false, baseCol;
@@ -4827,32 +4775,31 @@
     module._extends(AssetPseudoColumn, ReferenceColumn);
 
     // properties to be overriden:
-    AssetPseudoColumn.prototype.formatPresentation = function(data, options) {
-        var context = options ? options.context : undefined;
-
+    AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
         // in edit return the original data
         if (module._isEntryContext(context)) {
-            return { isHTML: false, value: data[this._baseCol.name] };
+            return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name]};
         }
 
         // if has column-display annotation, use it
         if (this._baseCol.getDisplay(context).isMarkdownPattern) {
-            return this._baseCol.formatPresentation(data, options);
+            return this._baseCol.formatPresentation(data, context, options);
         }
 
         // if null, return null value
         if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
-            return { isHTML: false, value: this._getNullValue(context) };
+            return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
         }
 
         // otherwise return a download link
         var template = "[{{{caption}}}]({{{url}}}){download .btn .btn-primary}";
+        var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
         var keyValues = {
-            "caption": this.filenameColumn ? this.filenameColumn.formatvalue(data[this.filenameColumn.name],options) : this._baseCol.formatvalue(data[this._baseCol.name],options),
+            "caption": col.formatvalue(data[col.name], context, options),
             "url": data[this._baseCol.name]
         };
-        var pattern = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
-        return {isHTML: true, value: module._formatUtils.printMarkdown(pattern, {inline:true})};
+        var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
+        return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
     };
 
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
@@ -4999,9 +4946,9 @@
     module._extends(InboundForeignKeyPseudoColumn, ReferenceColumn);
 
     // properties to be overriden:
-    InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, options) {
+    InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
         // NOTE this property should not be used.
-        return {isHTML: true, value: ""};
+        return {isHTML: true, value: "", unformatted: ""};
      };
     InboundForeignKeyPseudoColumn.prototype._determineSortable = function () {
         this._sortColumns_cached = [];

@@ -5,33 +5,42 @@ exports.execute = function (options) {
             schemaName = "schema_table_display",
             tableName1 = "table_wo_title_wo_annotation",
             tableName2 = "table_w_title_wo_annotation",
-            tableName3 = "table_w_accession_id_wo_annotation"
+            tableName3 = "table_w_accession_id_wo_annotation",
             tableName4 = "table_w_composite_key_wo_annotation",
             tableName5 = "table_w_table_display_annotation",
             tableName6 = "table_w_table_display_annotation_w_unformatted",
-            tableName7 = "table_w_table_display_annotation_w_markdown_pattern";
+            tableName7 = "table_w_table_display_annotation_w_markdown_pattern",
+            tableName8 = "table_w_rowname_fkeys1",
+            tableName9 = "table_w_rowname_fkeys2";
 
-        var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/"
-            + schemaName + ":" + tableName1;
+        var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableName1;
 
-        var table2EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName2;
+        var table2EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName2;
         
-        var table3EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName3;
+        var table3EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName3;
 
-        var table4EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName4;
+        var table4EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName4;
 
     
-        var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName5;
+        var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName5;
 
-        var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName6;
+        var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName6;
 
-        var table7EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName7;
+        var table7EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName7;
+        
+        var table8EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName8;
+            
+        var table9EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName9;
+            
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -336,7 +345,6 @@ exports.execute = function (options) {
             });
         });
 
-
         describe('table entities with table-display.row_markdown_pattern annotation', function() {
             var reference, page, tuple;
             var limit = 20;
@@ -400,6 +408,7 @@ exports.execute = function (options) {
             });
 
         });
+        
         describe('markdown display in case of no annotation is defined', function() {
             it('when no annotation is defiend; content should appear in unordered list format.', function(done){
                 var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20001">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20002">20,002</a></p>\n</li>\n</ul>\n';
@@ -416,6 +425,60 @@ exports.execute = function (options) {
                 });
                 
             })
+        });
+
+        describe("table entities with $fkeys in their row_markdown_pattern.", function () {
+            it ('should be able to access row-name and detailed uri of outbound foreign keys in annotation.', function (done) {
+                options.ermRest.resolve(table8EntityUri, {cid: "test"}).then(function (ref) {
+                    return ref.read(5);
+                }).then(function (page) {
+                    var expected = [ 
+                        {id: "10001", rowName: "<strong>William Shakespeare</strong>"},
+                        {id: "10002", rowName: "<strong>Mark Twain</strong>"},
+                        {id: "10003", rowName: "<strong>Lewis Carroll</strong>"},
+                        {id: "10004", rowName: "<strong>Jane Austen</strong>"},
+                        {id: "10005", rowName: "<strong>Charles Dickens</strong>"},
+                        ""
+                    ];
+                    
+                    var val;
+                    page.tuples.forEach(function (t, index) {
+                        if (typeof expected[i] === "string") {
+                            val = expected[i];
+                        } else {
+                            val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/id=' + 
+                                  expected[index].id + '">' + expected[index].rowName + '</a>';
+                        }
+                        expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
+                    });
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+            
+            it ("should be able to access referred table unformatted and formatted data in annotation.", function (done) {
+                options.ermRest.resolve(table9EntityUri, {cid: "test"}).then(function (ref) {
+                    return ref.read(5);
+                }).then(function (page) {
+                    var expected = [ 
+                        "10,001: 10001",
+                        "10,002: 10002",
+                        "10,003: 10003",
+                        "10,004: 10004",
+                        "10,005: 10005",
+                        ""
+                    ];
+                    page.tuples.forEach(function (t, index) {
+                        expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
+                    });
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
         });
     });
 };
