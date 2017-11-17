@@ -616,11 +616,10 @@
                         annotationCols = -1;
                     }
                 }
-                
-                // NOTE: current assumption: annotation is correct
+
                 if (annotationCols !== -1) {
                     usedAnnotation = true;
-                    //TODO should we check for duplciates? we're allowing having same sources but with differnt ux_modes
+                    //NOTE We're allowing duplicates in annotation.
                     annotationCols.forEach(function (obj) {
                         // if we have filters in the url, we will get the filters only from url
                         if (obj.source === "*" && andFilters.length === 0) {
