@@ -143,8 +143,8 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-        * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
     * [.Annotations](#ERMrest.Annotations)
@@ -320,8 +320,8 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
-        * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
         * [new ForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.ForeignKeyPseudoColumn_new)
@@ -1191,8 +1191,8 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-    * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+    * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
 
@@ -1306,7 +1306,7 @@ return the default value for a column after checking whether it's a primitive th
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>
 
-#### column.formatvalue(data) ⇒ <code>string</code>
+#### column.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this column definition.
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
@@ -1315,18 +1315,20 @@ Formats a value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+| context | <code>String</code> | the app context |
 
 <a name="ERMrest.Column+formatPresentation"></a>
 
-#### column.formatPresentation(data, options) ⇒ <code>Object</code>
+#### column.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
-**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>String</code> | The 'formatted' data value. |
+| context | <code>String</code> | the app context |
 | options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
 <a name="ERMrest.Column+toString"></a>
@@ -2986,8 +2988,8 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
-    * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
@@ -3078,7 +3080,7 @@ Heuristics are as follows:
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
-#### referenceColumn.formatvalue(data) ⇒ <code>string</code>
+#### referenceColumn.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this reference-column definition.
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -3087,18 +3089,20 @@ Formats a value corresponding to this reference-column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+| context | <code>String</code> | the context of app |
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
-#### referenceColumn.formatPresentation(data, options) ⇒ <code>Object</code>
+#### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| context | <code>String</code> | the app context |
 | options | <code>Object</code> | includes `context` and `formattedValues` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>

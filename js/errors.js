@@ -115,7 +115,6 @@
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
 
-
     /**
      * IntegrityConflictError - Return error pertaining to integrity violoation
      *

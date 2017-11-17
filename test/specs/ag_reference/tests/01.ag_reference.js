@@ -5,6 +5,7 @@ exports.execute = function (options) {
             schemaName = "agref_schema",
             mainTable = "main",
             unicodeTable = "uᴉɐɯ",
+            unicodeTableEncoded = "u%E1%B4%89%C9%90%C9%AF",
             relatedTable = "related_table";
             
         var encodedMain = "u%E1%B4%89%C9%90%C9%AF",
@@ -21,7 +22,7 @@ exports.execute = function (options) {
         
         var unicodeTableBaseUri = [
             options.url, "catalog", catID, "attributegroup", 
-            schemaName + ":" + unicodeTable
+            schemaName + ":" + unicodeTableEncoded
         ].join("/");
         
         var ref, refWithModifiers, unicodeRef;
@@ -408,29 +409,32 @@ exports.execute = function (options) {
                 unicodeLoc = new options.ermRest.AttributeGroupLocation(
                     options.url, 
                     catID, 
-                    schemaName + ":" + unicodeTable,
+                    schemaName + ":" + unicodeTableEncoded,
                     {"column": decodedCol, "term": "test"}, // search
                     [{"column": decodedCol}], // sort
-                    ["1"], //after
-                    ["20"] // before
+                    ["c"], //after
+                    ["z"] // before
                 );
                 
-                checkLocation("Location: ", unicodeLoc, schemaName + ":" + unicodeTable);
+                checkLocation("Location: ", unicodeLoc, schemaName + ":" + unicodeTableEncoded);
             });
             
             it ("Column should handle it.", function () {
                 unicodeID = new options.ermRest.AttributeGroupColumn(
-                    null, decodedID, decodedID, "serial4", "comment", true, true
+                    null, encodedID, decodedID, "serial4", "comment", true, true
                 );
                 
                 unicodeCol = new options.ermRest.AttributeGroupColumn(
-                    null, decodedCol, decodedCol, "text", "comment", true, true
+                    null, encodedCol, decodedCol, "text", "comment", true, true
                 );
                 
                 
-                checkColumn("Column: id", unicodeID, decodedID, decodedID, "serial4", "comment", true);
+                checkColumn("Column: id", unicodeID, encodedID, decodedID, "serial4", "comment", true);
                 
-                checkColumn("Column: col", unicodeCol, decodedCol, decodedCol, "text", "comment", true);
+                checkColumn("Column: col", unicodeCol, encodedCol, decodedCol, "text", "comment", true);
+                
+                expect(unicodeID.name).toBe(decodedID, "unicodeID name missmatch.");
+                expect(unicodeCol.name).toBe(decodedCol, "unicodeCol name missmatch.");
             });
             
             describe ("Reference, ", function () {
@@ -449,7 +453,7 @@ exports.execute = function (options) {
 
                 it ("uri should be correct.", function () {
                     expect(unicodeRef.uri).toBe(
-                        unicodeTableBaseUri + "/" + encodedCol + "::ciregexp::test/" + decodedID + ";" + decodedCol + "@sort(" + encodedCol + ")@after(1)@before(20)"
+                        unicodeTableBaseUri + "/" + encodedCol + "::ciregexp::test/" + encodedID + ";" + encodedCol + "@sort(" + encodedCol + ")@after(c)@before(z)"
                     );
                 });
                 
@@ -463,6 +467,30 @@ exports.execute = function (options) {
                     expect(newRef).not.toBe(unicodeRef, "reference didn't change");
                     expect(unicodeRef.location.searchTerm).toBe("test", "main reference changed.");
                     expect(newRef.location.searchTerm).toBe("new search", "searchTerm didn't change.");
+                });
+                
+                it ("read should return the correct values.", function (done) {
+                    unicodeRef.read(1).then(function (page) {
+                        expect(page).toBeDefined("page was not defined.");
+                        expect(page.tuples[0].values).toEqual(["4", "val test 4"], "value missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        consoel.log(err);
+                        done.fail();
+                    });
+                });
+                
+                describe("getAggregates, ", function () {
+                    it ("countAgg should return the count and not any errors.", function (done) {
+                        var aggList = [unicodeRef.aggregate.countAgg];
+                        unicodeRef.getAggregates(aggList).then(function (response) {
+                            expect(response[0]).toBe(2);
+                            done();
+                        }).catch(function (err) {
+                            consoel.log(err);
+                            done.fail();
+                        });
+                    });
                 });
             });                
         });
