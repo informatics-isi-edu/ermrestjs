@@ -147,7 +147,13 @@ exports.execute = function (options) {
                 refMain = ref.contextualize.compact;
                 mainFacets = refMain.facetColumns;
                 
-                facetObj = { "and": [ {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "choices": ["2", "3"]} ] };
+                facetObj = { 
+                    "and": [
+                        {"source": "id", "choices": ["1"]},
+                        {"source": "int_col", "ranges": [{"min": -2}]},
+                        {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "choices": ["2", "3"]} 
+                    ]
+                };
                 return options.ermRest.resolve(createURL(tableMain, facetObj));
             }).then(function (ref) {
                 refMainFilterOnFK = ref;
@@ -318,7 +324,7 @@ exports.execute = function (options) {
             });
             
             describe("if reference already has facets applied, ", function () {
-                it ("if it's not part of visible facets, should be appended to list of facets.", function (done) {
+                it ("should merge the facet lists, but get the filters from uri.", function (done) {
                     facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         var facetColumns = ref.facetColumns;
@@ -326,7 +332,7 @@ exports.execute = function (options) {
                         expect(ref.facetColumns[16]._column.name).toBe("unfaceted_column", "column name missmatch.");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toEqual(
-                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M/unfaceted_column::ciregexp::test/$M", 
+                            "M:=faceting_schema:main/unfaceted_column::ciregexp::test/$M", 
                             "path missmatch."
                         );
                         done();
@@ -336,29 +342,13 @@ exports.execute = function (options) {
                     });
                 });
                 
-                it ("it it's part of applied filters in annotation, should not add it (avoid duplicates),", function (done) {
-                    facetObj = { "and": [ {"source": "id", "choices": ["1"]} ] };
-                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                        expect(ref.facetColumns.length).toBe(16, "length missmatch.");
-                        expect(ref.location.facets).toBeDefined("facets is undefined.");
-                        expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M", 
-                            "path missmatch."
-                        );
-                        done();
-                    }).catch(function (err) {
-                        console.log(err);
-                        done.fail();
-                    });
-                });
-                
-                it ("if it's part of visible facets, should add the filter.", function (done) {
+                it ("If the facet exisits in the annotation should only add the filter to that facet from uri.", function (done) {
                     facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(16, "length missmatch.");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1;id=2/$M/int_col::gt::-2/$M", 
+                            "M:=faceting_schema:main/id=2/$M", 
                             "path missmatch."
                         );
                         done();
@@ -369,7 +359,13 @@ exports.execute = function (options) {
                 });
                 
                 it ("should be able to handle multiple types of filter.", function (done) {
-                    facetObj = {"and": [{"source": "text_col", "ranges": [{"min":"a"}, {"max": "b"}], "search": ["a", "b"], "choices": ["a", "b"]}]};
+                    facetObj = {
+                        "and": [
+                            {"source": "id", "choices": ["1"]},
+                            {"source": "int_col", "ranges": [{"min": -2}]},
+                            {"source": "text_col", "ranges": [{"min":"a"}, {"max": "b"}], "search": ["a", "b"], "choices": ["a", "b"]},
+                        ]
+                    };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         refMainMoreFilters = ref;
                         expect(ref.facetColumns.length).toBe(16, "length missmatch.");

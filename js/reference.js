@@ -533,12 +533,14 @@
                             }
                             
                             // don't add duplicates
-                            if (key !== 'ranges') {
-                                if (source[key].indexOf(ch) !== -1) return;
-                            } else {
-                                if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                            if (source[key].length > 0) {
+                                if (key !== 'ranges') {
+                                    if (source[key].indexOf(ch) !== -1) return;
+                                } else {
+                                    if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                                }
                             }
-                            
+
                             source[key].push(ch);
                         });
                     
@@ -594,6 +596,14 @@
                     return true;
                 };
                 
+                
+                // extract the filters from the url
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                var andFilters = [];
+                if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
+                    andFilters = jsonFilters[andOperator];
+                }
+                
                 var annotationCols = -1, usedAnnotation = false;
                 var facetObjects = [];
                 
@@ -606,15 +616,13 @@
                         annotationCols = -1;
                     }
                 }
-                
-                // NOTE: current assumption: annotation is correct
+
                 if (annotationCols !== -1) {
                     usedAnnotation = true;
-                    //TODO should check for :
-                    // 1. duplicates ?! (not sure)
-                    // 2. correct values for choices, range, search
+                    //NOTE We're allowing duplicates in annotation.
                     annotationCols.forEach(function (obj) {
-                        if (obj.source === "*") {
+                        // if we have filters in the url, we will get the filters only from url
+                        if (obj.source === "*" && andFilters.length === 0) {
                             if (!searchTerm) {
                                 searchTerm = _getSearchTerm({"and": [obj]});
                             }
@@ -624,7 +632,17 @@
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
-                        facetObjects.push({"obj": JSON.parse(JSON.stringify(obj)), "column": col});
+                        // make sure their not referring to the annotation object.
+                        obj = module._simpleDeepCopy(obj);
+                        
+                        // if we have filters in the url, we will get the filters only from url
+                        if (andFilters.length > 0) {
+                            delete obj.choices;
+                            delete obj.search;
+                            delete obj.ranges;
+                        }
+
+                        facetObjects.push({"obj": obj, "column": col});
                     });
                 } else {
                     // this reference should be only used for getting the list,
@@ -666,15 +684,9 @@
                 }
                 
                 // we should have facetObjects untill here, now we should combine it with andFilters
-
-                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
-                var andFilters = [];
-                // extract the filters
-                if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
-                    andFilters = jsonFilters[andOperator];
-                }
-                
                 var checkedObjects = {};
+                
+                // if we have filters in the url, we should just get the structure from annotation
                 for (var i = 0; i < andFilters.length; i++) {
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].source === "*") continue;
