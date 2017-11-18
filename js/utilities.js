@@ -836,8 +836,13 @@
         };
     };
 
-    String.prototype.transformToDisplay = function() {
-      return this.split('_').
+    module._transformToDisplay = function(strToTransform) {
+      if(!strToTransform || strToTransform == "undefined"){
+        return "*";
+      }
+      
+      strToTransform = strToTransform.slice(0,-4);
+      return strToTransform.split('_').
             splice(1).map(function(word)
               {
                 return word[0].toUpperCase() + word.slice(1);
@@ -853,14 +858,22 @@
       var mappedErrMessage;
 
       if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
-          referenceTable = generatedErrMessage.match(/(?:^|\W)dataset(\w+)(?!\w)/g);
-          dependentTableName =  referenceTable[1].slice(1);
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ dependentTableName.transformToDisplay() +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
+
+          detail= generatedErrMessage.search(/DETAIL:/g);
+          if(detail > -1){
+            detailMessage = generatedErrMessage.substring(detail, generatedErrMessage.length);
+            referenceTable = detailMessage.search(/table/g);
+            if(referenceTable > -1){
+                dependentTableName =  detailMessage.substring(referenceTable+7, detailMessage.length )
+            }
+          }
+
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ module._transformToDisplay(dependentTableName) +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
-          detail = generatedErrMessage.search(/DETAIL:/g),
+          // detail = generatedErrMessage.search(/DETAIL:/g),
           matches = regExp.exec(generatedErrMessage), msgTail;
 
           var primaryColumns =  matches[1].toUpperCase().split(','),
@@ -872,13 +885,19 @@
             msgTail = primaryColumns;
           }
 
-          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(detail + 7, generatedErrMessage.length - 3) +" in the database. Please use a different "+ msgTail +" to create new record.";
+          mappedErrMessage = "The entry cannot be created. Please use a different "+ msgTail +" to create new record.";
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("not consistent with your login profile") > -1){
           errStart = generatedErrMessage.search(/ERROR:/g);
           errEnd = generatedErrMessage.search(/CONTEXT:/g);
-          mappedErrMessage = "The entry cannot be created." + generatedErrMessage.substring(errStart + 6, errEnd - 1);
+          if(errStart == "undefined" || errEnd == "undefined"){
+              mappedErrMessage = "This entry cannot be created. Please check your login profile!";
+          }
+          else {
+              mappedErrMessage = "The entry cannot be created, " + generatedErrMessage.substring(errStart + 6, errEnd - 1);
+          }
+
           return new module.CustomConstraintConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else{
