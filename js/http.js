@@ -119,30 +119,45 @@
             scope = scope || window;
             var cfg_idx = _method_to_config_idx[method];
             return function() {
-                // if no default params, then just call the fn
                 var args;
-                if (this.params) {
-                    // not allowed to alter 'arguments' so you must make a shallow
-                    // copy. it is also an 'array-like' object but not an actual
-                    // array, therefore arguments.slice() does not work.
-                    args = [];
-                    for (var i=0, len=arguments.length; i<len; i++) {
-                        args[i] = arguments[i];
-                    }
 
-                    // make sure arguments has a config, and config has a params
-                    var config = args[cfg_idx] = args[cfg_idx] || {};
-                    config.params = config.params || {};
+                // not allowed to alter 'arguments' so you must make a shallow
+                // copy. it is also an 'array-like' object but not an actual
+                // array, therefore arguments.slice() does not work.
+                args = [];
+                for (var i=0, len=arguments.length; i<len; i++) {
+                    args[i] = arguments[i];
+                }
 
-                    // now add default params iff they do not collide
-                    for (var key in this.params) {
-                        if (!(key in config.params)) {
-                            config.params[key] = this.params[key];
+                // make sure arguments has a config, and config has a headers
+                var config = args[cfg_idx] = args[cfg_idx] || {};
+            
+                // now add default headers i
+                config.headers = config.headers || {};
+
+                // if no default contextHeaderParams, then just call the fn
+                if (this.contextHeaderParams) {
+                    // Iterate over headers iff they do not collide
+                    var contextHeader = config.headers[module._contextHeaderName] = config.headers[module._contextHeaderName] ||  {};
+                    for (var key in this.contextHeaderParams) {
+                        if (!(key in contextHeader)) {
+                            contextHeader[key] = this.contextHeaderParams[key];
                         }
                     }
-                }
-                else {
+                } else {
                     args = arguments;
+                }
+
+                /** 
+                  * If context header is found in header then encode the stringified value of the header and unescape to keep some of them same
+                  *     JSON and HTTP safe reserved chars: {, }, ", ,, :
+                  *     non-reserved punctuation: -, _, ., ~
+                  *     digit: 0 - 9
+                  *     alpha: A - Z and a - z
+                  * 
+                  **/
+                if (typeof config.headers[module._contextHeaderName] === 'object') {
+                    config.headers[module._contextHeaderName] = unescape(module._fixedEncodeURIComponent(JSON.stringify(config.headers[module._contextHeaderName])));
                 }
 
                 // now call the fn, with retry logic
@@ -167,24 +182,24 @@
                             }, delay);
                             delay *= 2;
                         } else if (method == 'delete' && response.status == _http_status_codes.not_found) {
-                            /* SPECIAL CASE: "retried delete"
-                             * This indicates that a 'delete' was attempted, but
-                             * failed due to a transient error. It was retried
-                             * at least one more time and at some point
-                             * succeeded.
-                             *
-                             * Both of the currently supported delete operations
-                             * (entity/ and attribute/) return 204 No Content.
-                             */
+                            /** SPECIAL CASE: "retried delete"
+                              * This indicates that a 'delete' was attempted, but
+                              * failed due to a transient error. It was retried
+                              * at least one more time and at some point
+                              * succeeded.
+                              *
+                              * Both of the currently supported delete operations
+                              * (entity/ and attribute/) return 204 No Content.
+                              */
 
-                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
-                             // Ermrest never produces HTML errors, so this was produced by the server itself
-                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
-                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
-                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
-                             } else {
-                                 response.status = response.statusCode = _http_status_codes.no_content;
-                             }
+                            // If we get an HTTP error with HTML in it, this means something the server returned as an error.
+                            // Ermrest never produces HTML errors, so this was produced by the server itself
+                            if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
+                                response.status = response.statusCode = _http_status_codes.internal_server_error;
+                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                            } else {
+                                response.status = response.statusCode = _http_status_codes.no_content;
+                            }
 
                             module._onload().then(function() {
                                 deferred.resolve(response);

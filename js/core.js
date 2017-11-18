@@ -48,7 +48,7 @@
      * @memberof ERMrest
      * @function
      * @param {string} uri URI of the ERMrest service.
-     * @param {Object} [params={cid:'null'}] An optional server query parameter
+     * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
      * @return {ERMrest.Server} Returns a server instance.
      * @throws {ERMrest.InvalidInputError} URI is missing
@@ -57,21 +57,21 @@
      * URI should be to the ERMrest _service_. For example,
      * `https://www.example.org/ermrest`.
      */
-    function getServer(uri, params) {
+    function getServer(uri, contextHeaderParams) {
 
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
-        if (typeof params === 'undefined' || params === null) {
+        if (typeof contextHeaderParams === 'undefined' || contextHeaderParams === null) {
             // Set default cid to a truthy string because a true null will not
             // appear as a query parameter but we want to track cid even when cid
             // isn't provided
-            params = {'cid': 'null'};
+            contextHeaderParams = {'cid': 'null'};
         }
 
-        var server = _servers[uri]; // TODO this lookup should factor in params
+        var server = _servers[uri];
         if (!server) {
-            server = new Server(uri, params);
+            server = new Server(uri, contextHeaderParams);
 
             server.catalogs = new Catalogs(server);
             _servers[uri] = server;
@@ -86,7 +86,7 @@
      * @param {string} uri URI of the ERMrest service.
      * @constructor
      */
-    function Server(uri, params) {
+    function Server(uri, contextHeaderParams) {
 
         /**
          * The URI of the ERMrest service
@@ -100,8 +100,8 @@
          * @type {Object}
          */
         this._http = module._wrap_http(module._http);
-        this._http.params = params || {};
-        this._http.params.cid = this._http.params.cid || null;
+        this._http.contextHeaderParams = contextHeaderParams || {};
+        this._http.contextHeaderParams.cid = this._http.contextHeaderParams.cid || null;
 
         /**
          *

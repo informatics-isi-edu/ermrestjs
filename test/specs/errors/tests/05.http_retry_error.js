@@ -33,7 +33,7 @@ exports.execute = function (options) {
         	delay += server._http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema?cid=null")
+	          .get("/ermrest/catalog/" + id + "/schema")
 	          .reply(503, 'Service Unavailable')
 	          .persist();
 
@@ -62,7 +62,7 @@ exports.execute = function (options) {
         	delay += server._http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema?cid=null")
+	          .get("/ermrest/catalog/" + id + "/schema")
 	          .reply(500, 'Internal Server Error')
 	          .persist();
 
@@ -91,7 +91,7 @@ exports.execute = function (options) {
         	}
         	delay += server._http.initial_delay;
 
-        	var uri = "/ermrest/catalog/" + catalog.id + "/entity/a:=error_schema:valid_table_name/id=8001?cid=null"
+        	var uri = "/ermrest/catalog/" + catalog.id + "/entity/a:=error_schema:valid_table_name/id=8001"
 
 	        nock(url, ops)
               .filteringPath(function(path){ return uri; })

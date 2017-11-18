@@ -23,7 +23,7 @@ exports.execute = function (options) {
         it("should have no httpUnauthorizedFn handler and make a Get Catalog call and receive an exception with error code 401", function (done) {
             
             nock(url, ops)
-              .get("/ermrest/catalog/" + id + "/schema?cid=null")
+              .get("/ermrest/catalog/" + id + "/schema")
               .reply(401, 'Service Unavailable');
 
             server.catalogs.get(id).then(null, function(err) {
@@ -39,7 +39,7 @@ exports.execute = function (options) {
         it("should have httpUnauthorizedFn handler and make a Get Catalog call, for which the handler should be called and catalog call should fail with 404", function(done) {
             
             nock(url, ops)
-              .get("/ermrest/catalog/" + id + "/schema?cid=null")
+              .get("/ermrest/catalog/" + id + "/schema")
               .reply(401, 'Unauthorized Error');
 
             ermRest.setHttpUnauthorizedFn(function() {
