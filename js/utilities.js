@@ -840,7 +840,7 @@
       if(!strToTransform || strToTransform == "undefined"){
         return "*";
       }
-      
+
       strToTransform = strToTransform.slice(0,-4);
       return strToTransform.split('_').
             splice(1).map(function(word)
@@ -853,6 +853,12 @@
      * @param  {string} errorStatusText    http error status text
      * @param  {string} generatedErrMessage response data returned by http request
      * @return {object}                    error object
+     *  Description
+     *  Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
+     *                           All dependent entries must be removed before this item can be deleted.
+     *  Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
+     *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
+     *  Custom Contsraint:       ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site
      */
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
       var mappedErrMessage;
@@ -864,7 +870,7 @@
             detailMessage = generatedErrMessage.substring(detail, generatedErrMessage.length);
             referenceTable = detailMessage.search(/table/g);
             if(referenceTable > -1){
-                dependentTableName =  detailMessage.substring(referenceTable+7, detailMessage.length )
+                dependentTableName =  detailMessage.substring(referenceTable+7, detailMessage.length );
             }
           }
 
@@ -885,24 +891,20 @@
             msgTail = primaryColumns;
           }
 
-          mappedErrMessage = "The entry cannot be created. Please use a different "+ msgTail +" to create new record.";
+          mappedErrMessage = "The entry cannot be created/updated. Please use a different "+ msgTail +" for this record.";
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
-      else if (generatedErrMessage.indexOf("not consistent with your login profile") > -1){
+      else{
           errStart = generatedErrMessage.search(/ERROR:/g);
           errEnd = generatedErrMessage.search(/CONTEXT:/g);
           if(errStart == "undefined" || errEnd == "undefined"){
-              mappedErrMessage = "This entry cannot be created. Please check your login profile!";
+              mappedErrMessage = "This entry cannot be modified. Please check your login profile!";
           }
           else {
-              mappedErrMessage = "The entry cannot be created, " + generatedErrMessage.substring(errStart + 6, errEnd - 1);
+              mappedErrMessage = generatedErrMessage.substring(errStart, errEnd - 1);
           }
 
           return new module.CustomConstraintConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-      else{
-          mappedErrMessage = "An unexpected error has occurred. Please report this problem to your system administrators.";
-          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
     };
 

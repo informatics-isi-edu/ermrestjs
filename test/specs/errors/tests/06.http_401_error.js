@@ -2,7 +2,7 @@ var nock = require('nock');
 
 exports.execute = function (options) {
 
-  describe('For determining http 401 and 409 error behaviour, ', function () {
+  describe('For determining http 401 error behaviour, ', function () {
 
         var server, ermRest, url, ops = {allowUnmocked: true}, catalog, schema, table, id = "3423423";
 
@@ -28,6 +28,7 @@ exports.execute = function (options) {
               .reply(401, 'Service Unavailable');
 
             server.catalogs.get(id).then(null, function(err) {
+
                 expect(err instanceof ermRest.UnauthorizedError).toBe(true);
                 done();
             }).catch(function() {
@@ -54,7 +55,6 @@ exports.execute = function (options) {
                 return defer.promise;
             });
 
-
             server.catalogs.get(id).then(null, function(err) {
                 expect(err instanceof ermRest.NotFoundError).toBe(true);
                 done();
@@ -66,53 +66,6 @@ exports.execute = function (options) {
 
         });
       });
-
-      describe("For determining http 409 Conflict error behaviour,", function(){
-
-          it("should have duplicate conflict error and 409 type exception should be thrown.", function(done) {
-              nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, 'DuplicateConflictError');
-
-              server.catalogs.get(id).then(null, function(err) {
-                  expect(err instanceof ermRest.ConflictError).toBe(true);
-                  done();
-              }).catch(function(err) {
-                  console.log(err);
-                  expect(false).toBe(true);
-                  done();
-              });
-          });
-          it("should have integrity conflict error and 409 type exception should be thrown.", function(done) {
-              nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, 'IntegrityConflictError');
-
-              server.catalogs.get(id).then(null, function(err) {
-                  expect(err instanceof ermRest.ConflictError).toBe(true);
-                  done();
-              }).catch(function(err) {
-                  console.log(err);
-                  expect(false).toBe(true);
-                  done();
-              });
-          });
-          it("should have custom constraint conflict error and 409 type exception should be thrown.", function(done) {
-              nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, 'CustomConstraintConflictError');
-
-              server.catalogs.get(id).then(null, function(err) {
-                  expect(err instanceof ermRest.ConflictError).toBe(true);
-                  done();
-              }).catch(function(err) {
-                  console.log(err);
-                  expect(false).toBe(true);
-                  done();
-              });
-          });
-        })
-
 
 
         afterEach(function() {
