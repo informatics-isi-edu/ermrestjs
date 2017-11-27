@@ -900,7 +900,7 @@
           }
 
           errEnd = generatedErrMessage.search(/CONTEXT:/g);
-          if(errEnd != "undefined"){
+          if(errEnd > -1){
             generatedErrMessage = generatedErrMessage.substring(0, errEnd - 1);
           }
           mappedErrMessage = generatedErrMessage;

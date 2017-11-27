@@ -40,22 +40,13 @@ exports.execute = function (options) {
                     + '</body>'
                 + '</html>';
 
-            var htmlCustomConstraintResponseMessage = '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'
-                + '<html>'
-                    + '<head>'
-                        + '<title>409 Conflict</title>'
-                    + '</head>'
-                    + '<body>'
-                        + '<h1>Conflict</h1>'
-                        + '<p>Error 409 Conflict The request conflicts with the state of the server. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE</p>'
-                    + '</body>'
-                + '</html>';
-
 
         var terminalErrorMessage = "An unexpected error has occurred. Please report this problem to your system administrators.",
             deleteConflict = "This entry cannot be deleted as it is still referenced from the <code>Human Age\".</p></body></h</code> table. \n All dependent entries must be removed before this item can be deleted.",
             uniqueConstraint = "The entry cannot be created/updated. Please use a different ID for this record.",
-            customConstraint = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site";
+            constraintErr = "Error 409 Conflict The request conflicts with the state of the server. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE",
+            mappedConstraintErr = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site",
+            generalError ="Error 409 Conflict occurred. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site. Error shou be handled";
 
         beforeAll(function () {
             server = options.server;
@@ -94,7 +85,7 @@ exports.execute = function (options) {
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
-                done();
+                done.fail();
             });
         });
 
@@ -111,9 +102,42 @@ exports.execute = function (options) {
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
-                done();
+                done.fail();
             });
         });
+
+        it("should be returned as a 409 custom error.", function (done) {
+            nock(url, ops)
+                .get("/ermrest/catalog/" + id + "/schema?cid=null")
+                .reply(409, constraintErr);
+
+            server.catalogs.get(id).then(null, function(err) {
+
+                expect(err.code).toBe(409);
+                expect(err.message).toBe(mappedConstraintErr);
+                done();
+            }).catch(function() {
+                expect(false).toBe(true);
+                done.fail();
+            });
+        });
+
+        it("should be returned as a 409 general error without modification.", function (done) {
+            nock(url, ops)
+                .get("/ermrest/catalog/" + id + "/schema?cid=null")
+                .reply(409, generalError);
+
+            server.catalogs.get(id).then(null, function(err) {
+
+                expect(err.code).toBe(409);
+                expect(err.message).toBe(generalError);
+                done();
+            }).catch(function() {
+                expect(false).toBe(true);
+                done.fail();
+            });
+        });
+
 
 	    afterAll(function() {
             nock.cleanAll();
