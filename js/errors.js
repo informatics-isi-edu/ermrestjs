@@ -16,7 +16,6 @@
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
-    module.CustomConstraintConflictError = CustomConstraintConflictError;
 
     /**
      * @memberof ERMrest
@@ -144,21 +143,6 @@
 
     DuplicateConflictError.prototype = Object.create(ConflictError.prototype);
     DuplicateConflictError.prototype.constructor = DuplicateConflictError;
-
-    /**
-     * CustomConstraintConflictError - Return error pertaining to custom constraints
-     *
-     * @param  {type} status     the network error code
-     * @param  {type} message    error message
-     * @param  {type} subMessage technical message returned by http request
-     * @constructor
-     */
-    function CustomConstraintConflictError(status, message, subMessage) {
-        ConflictError.call(this, status, message, subMessage);
-    }
-
-    CustomConstraintConflictError.prototype = Object.create(ConflictError.prototype);
-    CustomConstraintConflictError.prototype.constructor = CustomConstraintConflictError;
 
     /**
      * @memberof ERMrest

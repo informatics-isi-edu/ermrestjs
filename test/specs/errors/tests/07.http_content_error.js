@@ -47,7 +47,7 @@ exports.execute = function (options) {
                     + '</head>'
                     + '<body>'
                         + '<h1>Conflict</h1>'
-                        + '<p>4Error 409 Conflict The request conflicts with the state of the server. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE</p>'
+                        + '<p>Error 409 Conflict The request conflicts with the state of the server. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE</p>'
                     + '</body>'
                 + '</html>';
 
@@ -64,7 +64,7 @@ exports.execute = function (options) {
 
             server._http.max_retries = 0;
         });
-  
+
         it("should be returned as a 503 error.", function (done) {
             nock(url, ops)
                 .get("/ermrest/catalog/" + id + "/schema?cid=null")
@@ -108,22 +108,6 @@ exports.execute = function (options) {
                 expect(err.code).toBe(409);
                 expect(err.message).toBe(uniqueConstraint);
 
-                done();
-            }).catch(function() {
-                expect(false).toBe(true);
-                done();
-            });
-        });
-
-        it("should be returned as a 409 error with custom constraint error.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, htmlCustomConstraintResponseMessage);
-
-            server.catalogs.get(id).then(null, function(err) {
-
-                expect(err.code).toBe(409);
-                expect(err.message).toBe(customConstraint);
                 done();
             }).catch(function() {
                 expect(false).toBe(true);

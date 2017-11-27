@@ -858,11 +858,10 @@
      *                           All dependent entries must be removed before this item can be deleted.
      *  Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
      *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
-     *  Custom Contsraint:       ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site
      */
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
-      var mappedErrMessage;
-
+      var mappedErrMessage,
+            serverStatePrefix = "Error 409 Conflict The request conflicts with the state of the server. ";
       if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
 
           detail= generatedErrMessage.search(/DETAIL:/g);
@@ -895,16 +894,18 @@
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else{
-          errStart = generatedErrMessage.search(/ERROR:/g);
-          errEnd = generatedErrMessage.search(/CONTEXT:/g);
-          if(errStart == "undefined" || errEnd == "undefined"){
-              mappedErrMessage = "This entry cannot be modified. Please check your login profile!";
-          }
-          else {
-              mappedErrMessage = generatedErrMessage.substring(errStart, errEnd - 1);
+
+          if(generatedErrMessage.startsWith(serverStatePrefix)){
+            generatedErrMessage = generatedErrMessage.slice(serverStatePrefix.length);
           }
 
-          return new module.CustomConstraintConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+          errEnd = generatedErrMessage.search(/CONTEXT:/g);
+          if(errEnd != "undefined"){
+            generatedErrMessage = generatedErrMessage.substring(0, errEnd - 1);
+          }
+          mappedErrMessage = generatedErrMessage;
+
+          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
     };
 
