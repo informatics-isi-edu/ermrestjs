@@ -11,7 +11,8 @@ exports.execute = function (options) {
             tableName6 = "table_w_table_display_annotation_w_unformatted",
             tableName7 = "table_w_table_display_annotation_w_markdown_pattern",
             tableName8 = "table_w_rowname_fkeys1",
-            tableName9 = "table_w_rowname_fkeys2";
+            tableName9 = "table_w_rowname_fkeys2",
+            tableName10 = "table_w_rowname_fkeys3";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1;
@@ -41,6 +42,8 @@ exports.execute = function (options) {
         var table9EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName9;
             
+        var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName10;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -468,6 +471,28 @@ exports.execute = function (options) {
                         "10,003: 10003",
                         "10,004: 10004",
                         "10,005: 10005",
+                        ""
+                    ];
+                    page.tuples.forEach(function (t, index) {
+                        expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
+                    });
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+            
+            it ("should be able to access columns with `.` in their names.", function (done) {
+                options.ermRest.resolve(table10EntityUri, {cid: "test"}).then(function (ref) {
+                    return ref.read(5);
+                }).then(function (page) {
+                    var expected = [ 
+                        "20,001: 20001",
+                        "20,002: 20002",
+                        "20,003: 20003",
+                        "20,004: 20004",
+                        "20,005: 20005",
                         ""
                     ];
                     page.tuples.forEach(function (t, index) {
