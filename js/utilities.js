@@ -2168,3 +2168,5 @@
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+
+    module._contextHeaderName = 'Deriva-Client-Context';

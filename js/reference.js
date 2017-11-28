@@ -35,7 +35,7 @@
      * @function resolve
      * @param {string} uri -  An ERMrest resource URI, such as
      * `https://example.org/ermrest/catalog/1/entity/s:t/k=123`.
-     * @param {Object} [params] - An optional parameters object. The (key, value)
+     * @param {Object} [contextHeaderParams] - An optional context header parameters object. The (key, value)
      * pairs from the object are converted to URL `key=value` query parameters
      * and appended to every request to the ERMrest service.
      * @return {Promise} Promise when resolved passes the
@@ -48,7 +48,7 @@
      * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
      */
-    module.resolve = function (uri, params) {
+    module.resolve = function (uri, contextHeaderParams) {
         try {
             verify(uri, "'uri' must be specified");
             var defer = module._q.defer();
@@ -57,7 +57,7 @@
             // make sure all the dependencies are loaded
             module._onload().then(function () {
                 location = module.parse(uri);
-                var server = module.ermrestFactory.getServer(location.service, params);
+                var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
                 return server.catalogs.get(location.catalog);
