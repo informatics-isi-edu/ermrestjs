@@ -675,7 +675,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {

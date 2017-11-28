@@ -31,6 +31,38 @@
         }
       ]
     },
+    "table_w_rid_wo_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_rid_wo_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "RID",
+          "nullok": false,
+          "type": {
+              "typename": "text"
+          }
+        }
+      ]
+    },
     "table_w_title_wo_annotation": {
       "kind": "table",
       "keys": [
