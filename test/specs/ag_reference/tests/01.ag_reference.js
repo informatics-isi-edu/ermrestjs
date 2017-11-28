@@ -189,9 +189,9 @@ exports.execute = function (options) {
             
             describe ("formatvalue, ", function () {
                 var val;
-                it ("if data is null or undefined should return empty string.", function () {
-                    expect(keyColVisible.formatvalue(undefined)).toBe("", "undefined missmatch.");
-                    expect(keyColVisible.formatvalue(null)).toBe("", "null missmatch.");
+                it ("if data is null or undefined should return `null`.", function () {
+                    expect(keyColVisible.formatvalue(undefined)).toBe(null, "undefined missmatch.");
+                    expect(keyColVisible.formatvalue(null)).toBe(null, "null missmatch.");
                 });
                 
                 it ("otherwise should format the value.", function () {

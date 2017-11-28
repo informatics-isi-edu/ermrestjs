@@ -650,7 +650,7 @@ AttributeGroupColumn.prototype = {
     formatvalue: function (data, options) {
         //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
         if (data === null || data === undefined) {
-            return "";
+            return null;
         }
         return _formatValueByType(this.type, data, options);
     },
