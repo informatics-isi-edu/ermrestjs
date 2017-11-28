@@ -180,7 +180,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9000" class="class-9000">9000 and Hank</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1" class="class-10">4000 , 4001</a></p>\n',
                                     expectedMomentValue
                                 ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -200,7 +200,7 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9001" class="class-9001">9001 and Harold</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2" class="class-20">4000 , 4002</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
@@ -220,7 +220,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9002" class="class-9002">9002 and Heather</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=3" class="class-30">4000 , 4003</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
@@ -240,7 +240,7 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9003" class="class-9003">9003 and Henry</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4" class="class-40">4001 , 4002</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
@@ -260,7 +260,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9004" class="class-9004">9004 and Helga</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5" class="class-50">4002 , 4000</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -280,7 +280,7 @@ exports.execute = function (options) {
                                     '<code>GATCGATCGC GTATT</code>',
                                     '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/id=9005" class="class-9005">9005 and Harry</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=6" class="class-60">4000 , 4000</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]

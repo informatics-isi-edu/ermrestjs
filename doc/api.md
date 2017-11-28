@@ -413,9 +413,9 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
-    * [.resolve(uri, [params])](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -3945,7 +3945,7 @@ This function is used to configure the module
 
 <a name="ERMrest.getServer"></a>
 
-### ERMrest.getServer(uri, [params]) ⇒ [<code>Server</code>](#ERMrest.Server)
+### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ [<code>Server</code>](#ERMrest.Server)
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
@@ -3960,7 +3960,7 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
-| [params] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server query parameter appended to the end of any request to the server. |
+| [contextHeaderParams] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server header parameters for context logging appended to the end of any request to the server. |
 
 <a name="ERMrest.parse"></a>
 
@@ -3981,7 +3981,7 @@ service name.
 
 <a name="ERMrest.resolve"></a>
 
-### ERMrest.resolve(uri, [params]) ⇒ <code>Promise</code>
+### ERMrest.resolve(uri, [contextHeaderParams]) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a
@@ -4019,7 +4019,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
-| [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+| [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
 <a name="httpUnauthorizedFn"></a>
 
