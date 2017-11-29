@@ -46,6 +46,7 @@ exports.execute = function (options) {
             uniqueConstraint = "The entry cannot be created/updated. Please use a different ID for this record.",
             constraintErr = "Error 409 Conflict The request conflicts with the state of the server. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE",
             mappedConstraintErr = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site",
+            notFound = '404 Not Found\nThe requested catalog 7345274 could not be found.\n',
             generalError ="Error 409 Conflict occurred. ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site. Error shou be handled";
 
         beforeAll(function () {
@@ -64,7 +65,6 @@ exports.execute = function (options) {
             server.catalogs.get(id).then(null, function(err) {
                 expect(err.code).toBe(500);
                 expect(err.message).toBe(terminalErrorMessage);
-
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
@@ -72,16 +72,26 @@ exports.execute = function (options) {
             });
         });
 
-        it("should be returned as a 409 error with deletion conflict.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, htmlConflictResponseMessage);
-
+        it("should be returned as a 'Not found' 404 error.", function (done) {
             server.catalogs.get(id).then(null, function(err) {
+              nock(url, ops)
+                  .get("/ermrest/catalog/" + id + "/schema")
+                  .reply(409, htmlConflictResponseMessage);
+                  expect(err.message).toBe(notFound);
+                done();
+            }).catch(function() {
+                expect(false).toBe(true);
+                done.fail();
+            });
+        });
 
+        it("should be returned as a 409 error with deletion conflict.", function (done) {
+            server.catalogs.get(id).then(null, function(err) {
+              nock(url, ops)
+                  .get("/ermrest/catalog/" + id + "/schema")
+                  .reply(409, htmlUniqueResponseMessage);
                 expect(err.code).toBe(409);
                 expect(err.message).toBe(deleteConflict);
-
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
@@ -90,15 +100,12 @@ exports.execute = function (options) {
         });
 
         it("should be returned as a 409 error with unique constraint error.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, htmlUniqueResponseMessage);
-
             server.catalogs.get(id).then(null, function(err) {
-
+              nock(url, ops)
+                  .get("/ermrest/catalog/" + id + "/schema")
+                  .reply(409, constraintErr);
                 expect(err.code).toBe(409);
                 expect(err.message).toBe(uniqueConstraint);
-
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
@@ -107,12 +114,11 @@ exports.execute = function (options) {
         });
 
         it("should be returned as a 409 custom error.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, constraintErr);
 
             server.catalogs.get(id).then(null, function(err) {
-
+              nock(url, ops)
+                  .get("/ermrest/catalog/" + id + "/schema")
+                  .reply(409, generalError);
                 expect(err.code).toBe(409);
                 expect(err.message).toBe(mappedConstraintErr);
                 done();
@@ -123,12 +129,11 @@ exports.execute = function (options) {
         });
 
         it("should be returned as a 409 general error without modification.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema?cid=null")
-                .reply(409, generalError);
 
             server.catalogs.get(id).then(null, function(err) {
-
+              nock(url, ops)
+                  .get("/ermrest/catalog/" + id + "/schema")
+                  .reply(409, generalError);
                 expect(err.code).toBe(409);
                 expect(err.message).toBe(generalError);
                 done();
