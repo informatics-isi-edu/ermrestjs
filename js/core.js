@@ -814,13 +814,11 @@
                     }
 
                     var ridKey = keys.filter(function (key) {
-                        return (key.colset.columns.filter(function (col) {
-                            return col.name.toUpperCase() == "RID";
-                        }).length == 1);
-                    });
+                        return key.colset.columns.length == 1 && key.colset.columns[0].name.toUpperCase() == "RID";
+                    })[0];
 
-                    if (ridKey && ridKey.length == 1) {
-                        this._shortestKey = ridKey[0].colset.columns;
+                    if (ridKey) {
+                        this._shortestKey = ridKey.colset.columns;
                     } else {
                         // returns 1 if all the columns are serial/int, 0 otherwise
                         var allSerialInt = function (key) {
