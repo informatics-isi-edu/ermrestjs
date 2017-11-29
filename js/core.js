@@ -814,12 +814,12 @@
                     }
 
                     var ridKey = keys.filter(function (key) {
-                        return key.colset.columns.filter(function (col) {
+                        return (key.colset.columns.filter(function (col) {
                             return col.name.toUpperCase() == "RID";
                         }).length == 1);
                     });
 
-                    if (ridKey && ridKey.length == 0) {
+                    if (ridKey && ridKey.length == 1) {
                         this._shortestKey = ridKey[0].colset.columns;
                     } else {
                         // returns 1 if all the columns are serial/int, 0 otherwise
