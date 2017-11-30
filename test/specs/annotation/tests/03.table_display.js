@@ -12,7 +12,8 @@ exports.execute = function (options) {
             tableName7 = "table_w_table_display_annotation_w_markdown_pattern",
             tableName8 = "table_w_rowname_fkeys1",
             tableName9 = "table_w_rowname_fkeys2",
-            tableName10 = "table_w_rowname_fkeys3";
+            tableName10 = "table_w_rowname_fkeys3",
+            tableNameRid = "table_w_rid_wo_annotation";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1;
@@ -44,6 +45,9 @@ exports.execute = function (options) {
             
         var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName10;
+            
+        var tableRidEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableNameRid;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -130,6 +134,30 @@ exports.execute = function (options) {
                     expect(tuple.displayname.value).toBe(expected[i]);
                     expect(tuple.displayname.unformatted).toBe(expected[i]);
                 }
+            });
+        });
+
+        describe('table entities with rid without table-display:row_name annotation, ', function() {
+            var limit = 2;
+
+            it('tuple displayname should return RID column.', function(done) {
+                options.ermRest.resolve(tableRidEntityUri, {cid: "test"}).then(function (reference) {
+                    expect(reference.table.name).toBe(tableNameRid);
+
+                    return reference.read(limit)
+                }).then(function (page) {
+                    var tuples = page.tuples;
+                    for(var i = 0; i < limit; i++) {
+                        var tuple = tuples[i];
+                        expect(tuple.displayname.value).toBe(tuple.values[1]);
+                        expect(tuple.displayname.unformatted).toBe(tuple.values[1]);
+                    }
+                    
+                    done();
+                }).catch(function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
             });
         });
 
