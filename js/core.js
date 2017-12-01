@@ -1707,6 +1707,9 @@
 
         /**
          * Formats a value corresponding to this column definition.
+         * If a column display annotation with preformat property is available then use prvided format string
+         * else use the default formatValue function
+         *
          * @param {Object} data The 'raw' data value.
          * @param {String} context the app context
          * @returns {string} The formatted value.
@@ -1717,6 +1720,16 @@
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
             if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
                 return this._getNullValue(context);
+            }
+
+            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
+                annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+            }
+
+            var display = this.getDisplay(context);
+
+            if (display.isPreformat) {
+                return module._printf(display.preformatConfig, data);
             }
 
             return _formatValueByType(this.type, data, options);
@@ -1735,11 +1748,6 @@
 
             var display = this.getDisplay(context);
 
-
-            /*
-             * TODO: Add code to handle `pre_format` in the annotation
-             */
-             
             /* 
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
@@ -2039,6 +2047,8 @@
                 }
 
                 this._display[context] = {
+                    "isPreformat": (typeof annotation.pre_format === 'string'),
+                    "preformatConfig": (typeof annotation.pre_format === 'object') ? ((typeof annotation.pre_format.format === 'string') ? annotation.pre_format : null ) : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
