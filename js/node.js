@@ -29,9 +29,9 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     };
 
     /*
-     * Inject _moment module in ERMrest
+     * Inject _momentTz module in ERMrest
      */
-     ERMrest._moment = require('moment');
+    ERMrest._moment = require('moment-timezone');
 
     /*
      * Inject _mustache module in ERMrest
@@ -110,8 +110,10 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         // lz-string script
         ermrestJsPath + "vendor/lz-string.min.js",
         
-        // Moment.js script
+        // Moment.js script required for moment-timezone
         ermrestJsPath + "vendor/moment.min.js",
+        // Moment-Timezone.js and dependent plugin scripts
+        ermrestJsPath + "vendor/moment-timezone-with-data.min.js",
         // Mustache script
         ermrestJsPath + "vendor/mustache.min.js",
 
@@ -124,7 +126,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         ermrestJsPath + "vendor/markdown-it-container.min.js"],
         function() {
             /*
-             * Inject _moment module in ERMrest
+             * Inject _moment-timezone module in ERMrest as moment
              */
             ERMrest._moment = window.moment;
             
