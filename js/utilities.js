@@ -198,6 +198,15 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
+    
+    /**
+     * Returns true if given paramter is object.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isObject = function (obj) {
+        return obj === Object(obj) && !Array.isArray(obj);
+    };
 
     /**
      * @private
@@ -334,7 +343,30 @@
         }
         return undefined;
     };
+    
+    /**
+     * Given an object recursively replace all the dots in the keys with underscore.
+     * @param  {Object} obj
+     * @return {Object} 
+     */
+    module._replaceDotWithUnderscore = function (obj) {
+        if (isObject(obj)) {
+            Object.keys(obj).forEach(function (k) {
+                var val = obj[k];
+                if (k.includes(".")) {
+                    // replace dots with `_`
+                    obj[k.replace(/\./g,"_")] = val;
+                    // remove the old object
+                    delete obj[k];
+                }
 
+                if (isObject(val)) {
+                    return module._replaceDotWithUnderscore(val);
+                }
+            });
+        }
+        return obj;
+    };
 
     /**
      * @function
@@ -675,7 +707,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {
@@ -1841,7 +1873,12 @@
 
         options = options || {};
 
-        var obj = {};
+        var obj = {};            
+        if (keyValues) {
+            // recursively replace dot with underscore in column names.
+            obj = module._replaceDotWithUnderscore(keyValues);
+        }
+
 
         // Inject ermrest internal utility objects such as date
         module._addErmrestVarsToTemplate(obj);
@@ -1859,16 +1896,6 @@
                     return f.fn;
                 };
             });
-        }
-
-        if (keyValues) {
-            for (var k in keyValues) {
-                // Replace "." with "_" to avoid problems with templating
-                var newKey = k.replace(/\./g,"_");
-
-                obj[newKey] = keyValues[k];
-            }
-
         }
 
         // If we should validate, validate the template and if returns false, return null.
@@ -2151,7 +2178,7 @@
 
     // these types should be ignored for usage in heuristic for facet
     module._facetHeuristicIgnoredTypes = [
-        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid', 'jsonb', 'json'
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
 
     // these types are not allowed for faceting (heuristic or annotation)
