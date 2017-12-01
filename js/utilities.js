@@ -976,17 +976,13 @@
                 value = value.toString();
             } catch (exception) {
                 // Is this the right error?
-                console.log("makes 0 sense");
                 throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
             }
 
             if (!moment(value).isValid()) {
-                console.log("makes sense I guess");
                 // Invalid timestamp
                 throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
             }
-            console.log(moment(value));
-            console.log(moment(value).format('YYYY-MM-DD HH:mm:ss'));
 
             return moment(value).format('YYYY-MM-DD HH:mm:ss');
         },
