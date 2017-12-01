@@ -104,6 +104,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
     /*
      * Call this function to load all dependent scripts in order
+     * NOTE: This function does not always preserve the order of loading scripts
      */
     loadScripts([
         
@@ -111,9 +112,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         ermrestJsPath + "vendor/lz-string.min.js",
         
         // Moment.js script required for moment-timezone
+        // NOTE: Moment-Timezone.js and dependent plugin scripts are attached to the bottom of vendor/moment.min.js because of the above note
         ermrestJsPath + "vendor/moment.min.js",
-        // Moment-Timezone.js and dependent plugin scripts
-        ermrestJsPath + "vendor/moment-timezone-with-data.min.js",
         // Mustache script
         ermrestJsPath + "vendor/mustache.min.js",
 
