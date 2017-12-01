@@ -2113,7 +2113,7 @@
     
     // these types should be ignored for usage in heuristic for facet
     module._facetHeuristicIgnoredTypes = [
-        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid', 'jsonb', 'json'
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
     
     // these types are not allowed for faceting (heuristic or annotation)
