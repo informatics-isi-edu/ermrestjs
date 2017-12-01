@@ -18,7 +18,7 @@ exports.execute = function (options) {
             'ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE';
 
         var integrityErrorMappedMessage= "This entry cannot be deleted as it is still referenced from the <code>dataset_human_age</code> table. \n All dependent entries must be removed before this item can be deleted.",
-            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different ID for this record.",
+            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different id for this record.",
             generalConflictMappedMessage = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site";
 
         beforeAll(function () {
@@ -30,42 +30,49 @@ exports.execute = function (options) {
         });
 
         it("if it's an integrity error, we should generate a more readable message.", function (done) {
-            server.catalogs.get(id).then(null, function(err) {
-              nock(url, ops)
-                  .get("/ermrest/catalog/" + id + "/schema")
-                  .reply(409, integrityErrorServerResponse);
-                  expect(err.message).toBe(integrityErrorMappedMessage);
+            nock(url, ops)
+                .get("/ermrest/catalog/1234/schema")
+                .reply(409, integrityErrorServerResponse)
+                .persist();
+                
+            server.catalogs.get("1234").then(null, function(err) {
+                expect(err.code).toBe(409, "invalid error code");
+                expect(err.message).toBe(integrityErrorMappedMessage, "invalid error message");
                 done();
-            }).catch(function() {
-                expect(false).toBe(true);
+            }).catch(function(err) {
+                console.log(err);
                 done.fail();
             });
         });
 
         it("if it's a duplicate key error, we should generate a more readable message.", function (done) {
-            server.catalogs.get(id).then(null, function(err) {
-              nock(url, ops)
-                  .get("/ermrest/catalog/" + id + "/schema")
-                  .reply(409, duplicateErrorServerResponse);
-                expect(err.code).toBe(409);
-                expect(err.message).toBe(duplicateErrorMappedMessage);
+            nock(url, ops)
+                .get("/ermrest/catalog/1235/schema")
+                .reply(409, duplicateErrorServerResponse)
+                .persist();
+                
+            server.catalogs.get("1235").then(null, function(err) {
+                expect(err.code).toBe(409, "invalid error code");
+                expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
                 done();
-            }).catch(function() {
-                expect(false).toBe(true);
+            }).catch(function(err) {
+                console.log(err);
                 done.fail();
             });
         });
 
         it("otherwise it should just show the error message without the prefix and suffix.", function (done) {
-            server.catalogs.get(id).then(null, function(err) {
-              nock(url, ops)
-                  .get("/ermrest/catalog/" + id + "/schema")
-                  .reply(409, generalConflictServerResponse);
-                expect(err.code).toBe(409);
-                expect(err.message).toBe(generalConflictMappedMessage);
+            nock(url, ops)
+                .get("/ermrest/catalog/1236/schema")
+                .reply(409, generalConflictServerResponse)
+                .persist();
+                
+            server.catalogs.get("1236").then(null, function(err) {
+                expect(err.code).toBe(409, "invalid error code");
+                expect(err.message).toBe(generalConflictMappedMessage, "invalid error message");
                 done();
-            }).catch(function() {
-                expect(false).toBe(true);
+            }).catch(function(err) {
+                console.log(err);
                 done.fail();
             });
         });

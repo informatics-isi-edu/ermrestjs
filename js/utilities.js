@@ -883,36 +883,46 @@
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
       var mappedErrMessage;
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
-      
+
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
 
+          var referenceTable = "another";
+          
           var detail = generatedErrMessage.search(/DETAIL:/g);
           if (detail > -1) {
-            detailMessage = generatedErrMessage.substring(detail, generatedErrMessage.length);
-            referenceTable = detailMessage.search(/table/g);
-            if(referenceTable > -1){
-                dependentTableName =  detailMessage.substring(referenceTable + 7, detailMessage.length );
+            detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
+            referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
+            if(referenceTable && referenceTable.length > 1){
+                referenceTable =  "the <code>"+ referenceTable[1] +"</code>";
             }
           }
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ dependentTableName +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted.";
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
               matches = regExp.exec(generatedErrMessage), msgTail;
+          
+          if (matches && matches.length > 1) {
+              var primaryColumns =  matches[1].split(','),
+                  numberOfKeys = primaryColumns.length;
 
-          var primaryColumns =  matches[1].toUpperCase().split(','),
-              numberOfKeys = primaryColumns.length;
-
-          if (numberOfKeys > 1){
-            msgTail = " combination of "+ primaryColumns;
-          } else {
-            msgTail = primaryColumns;
+              if (numberOfKeys > 1){
+                msgTail = " combination of " + primaryColumns;
+              } else {
+                msgTail = primaryColumns;
+              }
           }
+          
 
-          mappedErrMessage = "The entry cannot be created/updated. Please use a different "+ msgTail +" for this record.";
+          mappedErrMessage = "The entry cannot be created/updated. ";
+          if (msgTail) {
+              mappedErrMessage += "Please use a different "+ msgTail +" for this record.";
+          } else {
+              mappedErrMessage += "Input data violates unique constraint.";
+          }
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else{
