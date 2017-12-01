@@ -3758,7 +3758,7 @@
                         }
                         //Added this if conditon explicitly for json/jsonb because we need to pass the
                         //formatted string representation of JSON and JSONBvalues
-                        else if (["json", "jsonb", "timestamptz"].indexOf(column.type.name) > -1) {
+                        else if (column.type.name === "json" || column.type.name === "jsonb") {
                             this._values[i] = keyValues[column.name];
                             this._isHTML[i] = false;
                         }
