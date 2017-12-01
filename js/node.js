@@ -29,7 +29,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     };
 
     /*
-     * Inject _momentTz module in ERMrest
+     * Inject _moment module in ERMrest
      */
     ERMrest._moment = require('moment-timezone');
 
