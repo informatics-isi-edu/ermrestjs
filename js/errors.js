@@ -117,6 +117,7 @@
     /**
      * IntegrityConflictError - Return error pertaining to integrity violoation
      *
+     * @memberof ERMrest
      * @param  {type} status     the network error code
      * @param  {type} message    error message
      * @param  {type} subMessage technical message returned by http request
@@ -131,7 +132,8 @@
 
     /**
      * DuplicateConflictError - Return error pertaining to Duplicate entried
-     *
+     * 
+     * @memberof ERMrest
      * @param  {type} status      the network error code
      * @param  {type} message     error message
      * @param  {type} subMessage  technical message returned by http request

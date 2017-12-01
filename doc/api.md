@@ -227,6 +227,10 @@ to use for ERMrest JavaScript agents.
         * [new NotFoundError(status, message)](#new_ERMrest.NotFoundError_new)
     * [.ConflictError](#ERMrest.ConflictError)
         * [new ConflictError(status, message, subMessage)](#new_ERMrest.ConflictError_new)
+    * [.IntegrityConflictError](#ERMrest.IntegrityConflictError)
+        * [new IntegrityConflictError(status, message, subMessage)](#new_ERMrest.IntegrityConflictError_new)
+    * [.DuplicateConflictError](#ERMrest.DuplicateConflictError)
+        * [new DuplicateConflictError(status, message, subMessage)](#new_ERMrest.DuplicateConflictError_new)
     * [.PreconditionFailedError](#ERMrest.PreconditionFailedError)
         * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
@@ -1965,6 +1969,38 @@ will be a type understandable by database.
 | --- | --- | --- |
 | status | <code>string</code> | the network error code |
 | message | <code>string</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.IntegrityConflictError"></a>
+
+### ERMrest.IntegrityConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.IntegrityConflictError_new"></a>
+
+#### new IntegrityConflictError(status, message, subMessage)
+IntegrityConflictError - Return error pertaining to integrity violoation
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.DuplicateConflictError"></a>
+
+### ERMrest.DuplicateConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.DuplicateConflictError_new"></a>
+
+#### new DuplicateConflictError(status, message, subMessage)
+DuplicateConflictError - Return error pertaining to Duplicate entried
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
 | subMessage | <code>type</code> | technical message returned by http request |
 
 <a name="ERMrest.PreconditionFailedError"></a>

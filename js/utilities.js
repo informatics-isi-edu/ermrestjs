@@ -836,57 +836,47 @@
         };
     };
 
-    module._transformToDisplay = function(strToTransform) {
-      if(!strToTransform || strToTransform == "undefined"){
-        return "*";
-      }
-
-      strToTransform = strToTransform.slice(0,-4);
-      return strToTransform.split('_').
-            splice(1).map(function(word)
-              {
-                return word[0].toUpperCase() + word.slice(1);
-              }).join(' ');
-    };
     /**
      * @function
      * @param  {string} errorStatusText    http error status text
      * @param  {string} generatedErrMessage response data returned by http request
      * @return {object}                    error object
-     *  Description
-     *  Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
+     * @desc
+     *  - Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
      *                           All dependent entries must be removed before this item can be deleted.
-     *  Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
+     *  - Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
      *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
+     *
      */
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
-      var mappedErrMessage,
-            serverStatePrefix = "Error 409 Conflict The request conflicts with the state of the server. ";
-      if(generatedErrMessage.indexOf("violates foreign key constraint") > -1){
+      var mappedErrMessage;
+      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
+      
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
 
-          detail= generatedErrMessage.search(/DETAIL:/g);
-          if(detail > -1){
+          var detail = generatedErrMessage.search(/DETAIL:/g);
+          if (detail > -1) {
             detailMessage = generatedErrMessage.substring(detail, generatedErrMessage.length);
             referenceTable = detailMessage.search(/table/g);
             if(referenceTable > -1){
-                dependentTableName =  detailMessage.substring(referenceTable+7, detailMessage.length );
+                dependentTableName =  detailMessage.substring(referenceTable + 7, detailMessage.length );
             }
           }
 
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ module._transformToDisplay(dependentTableName) +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
+          // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from the <code>"+ dependentTableName +"</code> table. \n All dependent entries must be removed before this item can be deleted.";
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
-      else if(generatedErrMessage.indexOf("violates unique constraint") > -1){
+      else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
-          // detail = generatedErrMessage.search(/DETAIL:/g),
-          matches = regExp.exec(generatedErrMessage), msgTail;
+              matches = regExp.exec(generatedErrMessage), msgTail;
 
           var primaryColumns =  matches[1].toUpperCase().split(','),
               numberOfKeys = primaryColumns.length;
 
-          if( numberOfKeys > 1){
+          if (numberOfKeys > 1){
             msgTail = " combination of "+ primaryColumns;
-          } else{
+          } else {
             msgTail = primaryColumns;
           }
 
@@ -894,16 +884,18 @@
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else{
-
-          if(generatedErrMessage.startsWith(serverStatePrefix)){
-            generatedErrMessage = generatedErrMessage.slice(serverStatePrefix.length);
-          }
-
-          errEnd = generatedErrMessage.search(/CONTEXT:/g);
-          if(errEnd > -1){
-            generatedErrMessage = generatedErrMessage.substring(0, errEnd - 1);
-          }
           mappedErrMessage = generatedErrMessage;
+          
+          // remove the previx if exists
+          if (mappedErrMessage.startsWith(conflictErrorPrefix)){
+            mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
+          }
+
+          // remove the suffix is exists
+          errEnd = mappedErrMessage.search(/CONTEXT:/g);
+          if (errEnd > -1){
+            mappedErrMessage = mappedErrMessage.substring(0, errEnd - 1);
+          }
 
           return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
