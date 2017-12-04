@@ -2339,7 +2339,7 @@
         // we can assume that this can be used as a unique identifier for key.
         // NOTE: currently ermrest only returns the first constraint name,
         // so using the first one is sufficient
-        this._name = this.constraint_names[0].join("_");
+        this.name = this.constraint_names[0].join("_");
 
         this._wellFormed = {};
         this._display = {};
@@ -2819,7 +2819,7 @@
         // so using the first one is sufficient
         // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
         // They will produce the same name. Is there any better way to generate this?
-        this._name = this.constraint_names[0].join("_");
+        this.name = this.constraint_names[0].join("_");
 
 
         /**

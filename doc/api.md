@@ -294,6 +294,7 @@ to use for ERMrest JavaScript agents.
         * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
         * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
+        * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
@@ -329,6 +330,8 @@ to use for ERMrest JavaScript agents.
         * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
+        * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
         * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
@@ -339,6 +342,12 @@ to use for ERMrest JavaScript agents.
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+        * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+        * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+        * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+        * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
+        * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
+        * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -413,9 +422,9 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
-    * [.resolve(uri, [params])](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -2774,6 +2783,7 @@ if (content) {
     * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
     * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
+    * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
@@ -2818,6 +2828,16 @@ This is the page of the Tuple
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 **Returns**: [<code>Page</code>](#ERMrest.Page) \| <code>\*</code> - page of the Tuple  
+<a name="ERMrest.Tuple+linkedData"></a>
+
+#### tuple.linkedData : <code>Object</code>
+Foreign key data.
+During the read we get extra information about the foreign keys,
+client could use these extra information for different purposes.
+One of these usecases is domain_filter_pattern which they can
+include foreignkey data in the pattern language.
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+data"></a>
 
 #### tuple.data : <code>Object</code>
@@ -3126,6 +3146,8 @@ TODO should be removed in favor of inputDisabled
     * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
+    * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 
 <a name="new_ERMrest.ForeignKeyPseudoColumn_new"></a>
@@ -3164,11 +3186,23 @@ The reference object that represents the table of this PseudoColumn
 The Foreign key object that this PseudoColumn is created based on
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
+
+#### foreignKeyPseudoColumn.defaultValues : <code>Object</code>
+returns the raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+defaultReference"></a>
+
+#### foreignKeyPseudoColumn.defaultReference : <code>ERMrest.Refernece</code>
+returns a reference using raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+filteredRef"></a>
 
 #### foreignKeyPseudoColumn.filteredRef(column, data) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 This function takes in a tuple and generates a reference that is
-constrained based on the domain_filter_pattern annotation. If this
+constrained based on the domain_filter_pattern annotation. If thisx
 annotation doesn't exist, it returns this (reference)
 `this` is the same as column.reference
 
@@ -3241,6 +3275,12 @@ The Foreign key object that this PseudoColumn is created based on
     * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
     * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+    * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+    * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+    * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+    * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
+    * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
+    * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -3265,6 +3305,42 @@ indicates that this object represents a PseudoColumn.
 
 #### assetPseudoColumn.isAsset : <code>boolean</code>
 Indicates that this ReferenceColumn is an asset.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+urlPattern"></a>
+
+#### assetPseudoColumn.urlPattern : <code>ERMrest.Refernece</code>
+Returns the url_pattern defined in the annotation (the raw value and not computed).
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameColumn"></a>
+
+#### assetPseudoColumn.filenameColumn : [<code>Column</code>](#ERMrest.Column)
+The column object that filename is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameColumn"></a>
+
+#### assetPseudoColumn.filenameColumn : [<code>Column</code>](#ERMrest.Column)
+The column object that filename is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+md5"></a>
+
+#### assetPseudoColumn.md5 : [<code>Column</code>](#ERMrest.Column)
+The column object that md5 hash is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+sha256"></a>
+
+#### assetPseudoColumn.sha256 : [<code>Column</code>](#ERMrest.Column)
+The column object that sha256 hash is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameExtFilter"></a>
+
+#### assetPseudoColumn.filenameExtFilter : [<code>Column</code>](#ERMrest.Column)
+The column object that file extension is stored in.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
@@ -3945,7 +4021,7 @@ This function is used to configure the module
 
 <a name="ERMrest.getServer"></a>
 
-### ERMrest.getServer(uri, [params]) ⇒ [<code>Server</code>](#ERMrest.Server)
+### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ [<code>Server</code>](#ERMrest.Server)
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
@@ -3960,7 +4036,7 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
-| [params] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server query parameter appended to the end of any request to the server. |
+| [contextHeaderParams] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server header parameters for context logging appended to the end of any request to the server. |
 
 <a name="ERMrest.parse"></a>
 
@@ -3981,7 +4057,7 @@ service name.
 
 <a name="ERMrest.resolve"></a>
 
-### ERMrest.resolve(uri, [params]) ⇒ <code>Promise</code>
+### ERMrest.resolve(uri, [contextHeaderParams]) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a
@@ -4019,7 +4095,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
-| [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+| [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
 <a name="httpUnauthorizedFn"></a>
 
