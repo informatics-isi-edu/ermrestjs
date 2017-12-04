@@ -346,26 +346,37 @@
     
     /**
      * Given an object recursively replace all the dots in the keys with underscore.
-     * @param  {Object} obj
-     * @return {Object} 
+     * This will also remove any custom JavaScript objects.
+     * NOTE: This function will ignore any objects that has been created from a custom constructor.
+     * NOTE: This function does not detect loop, make sure that your object does not have circular references.
+     * 
+     * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
+     * @return {Object} A new object created by:
+     *  1. Replacing the dots in keys to underscore.
+     *  2. Ignoring any custom-type objects. The given object should be JSON not JavaScript object.
      */
     module._replaceDotWithUnderscore = function (obj) {
-        if (isObject(obj)) {
-            Object.keys(obj).forEach(function (k) {
-                var val = obj[k];
-                if (k.includes(".")) {
-                    // replace dots with `_`
-                    obj[k.replace(/\./g,"_")] = val;
-                    // remove the old object
-                    delete obj[k];
-                }
+        var res = {}, val, k, newK;
+        for (k in obj) {
+            if (!obj.hasOwnProperty(k)) continue;
+            val = obj[k];  
 
-                if (isObject(val)) {
-                    return module._replaceDotWithUnderscore(val);
-                }
-            });
+            // we don't accept custom type objects (we're not detecting circular referene)
+            if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
+
+            newK = k;
+            if (k.includes(".")) {
+                // replace dot with underscore
+                newK = k.replace(/\./g,"_");
+            }
+
+            if (isObject(val)) {
+                res[newK] = module._replaceDotWithUnderscore(val);
+            } else {
+                res[newK] = val;
+            }
         }
-        return obj;
+        return res;
     };
 
     /**
@@ -1809,9 +1820,16 @@
         options = options || {};
 
         var obj = {};            
-        if (keyValues) {
-            // recursively replace dot with underscore in column names.
-            obj = module._replaceDotWithUnderscore(keyValues);
+        if (keyValues && isObject(keyValues)) {
+            try {
+                // recursively replace dot with underscore in column names.
+                obj = module._replaceDotWithUnderscore(keyValues);
+            } catch (err) {
+                // This should not happen since we're guarding against custom type objects.
+                obj = keyValues;
+                console.log("Could not process the given keyValues in _renderMustacheTemplate. Ignoring the _replaceDotWithUnderscore logic.");
+                console.log(err);
+            }
         }
 
 
