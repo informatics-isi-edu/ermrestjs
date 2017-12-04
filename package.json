@@ -30,6 +30,7 @@
     "markdown-it-sub": "x",
     "markdown-it-sup": "x",
     "moment": "^2.15.1",
+    "moment-timezone": "x",
     "mustache": "x",
     "q": "1.5.0",
     "request-q": "x",
