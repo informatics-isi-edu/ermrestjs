@@ -1043,6 +1043,7 @@
             "kind": "table",
             "keys": [
                 {
+                    "names": [["columns_schema", "main-entity-table_key"]],
                     "comment": null,
                     "annotations": {},
                     "unique_columns": [
@@ -1082,7 +1083,7 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "fk2={{{fk1}}}"
+                            "domain_filter_pattern": "fk2={{{_fk1}}}"
                         }
                     },
                     "referenced_columns": [
@@ -1128,7 +1129,7 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "position_type_col={{{position_text_col}}}"
+                            "domain_filter_pattern": "position_type_col={{{_position_text_col}}}"
                         }
                     },
                     "referenced_columns": [
@@ -1151,7 +1152,30 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "fk2={{{fk1}}}&position_col={{{position_text_col}}}"
+                            "domain_filter_pattern": "fk2={{{_fk1}}}&position_col={{{_position_text_col}}}"
+                        }
+                    },
+                    "referenced_columns": [
+                        {
+                            "table_name": "fk-constrained-table",
+                            "schema_name": "columns_schema",
+                            "column_name": "id"
+                        }
+                    ]
+                },
+                {
+                    "comment": "Foreign key that is relying on data from other foreignkey values.",
+                    "names": [["columns_schema", "fk_using_fkeys"]],
+                    "foreign_key_columns": [
+                        {
+                            "table_name": "main-entity-table",
+                            "schema_name": "columns_schema",
+                            "column_name": "fkeys_fk_col"
+                        }
+                    ],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "domain_filter_pattern": "fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}"
                         }
                     },
                     "referenced_columns": [
@@ -1221,9 +1245,25 @@
                     "type": {
                         "typename": "int4"
                     }
+                },
+                {
+                    "column": "used in a foreignkey that its domain_filter_pattern is using other foreignKey data",
+                    "name": "fkeys_fk_col",
+                    "type": {
+                        "typename": "int4"
+                    }
                 }
             ],
-            "annotations": {}
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*": [
+                        ["columns_schema", "main-entity-table_key"], ["columns_schema", "fk_no_constraint"],
+                        ["columns_schema", "fk_constrained"], ["columns_schema", "fk_position_predefined"],
+                        "position_text_col", ["columns_schema", "fk_position_user_defined"], 
+                        ["columns_schema", "fk_multi_constrained"], ["columns_schema", "fk_using_fkeys"]    
+                    ]
+                }
+            }
         },
         "fk-no-constraint-table": {
             "comment": "Table with values that constrain other foreign key selector.",

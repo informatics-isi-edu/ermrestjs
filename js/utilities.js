@@ -639,7 +639,7 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk._name]);
+                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
                 if (!presentation) return;
                 
                 cons = fk.constraint_names[0];
@@ -648,7 +648,7 @@
                 }
                 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
-                    "values": getTableValues(linkedData[fk._name], fk.key.table),
+                    "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": presentation.unformatted,
                     "uri": {
                         "detailed": presentation.reference.contextualize.detailed.appLink
@@ -1937,7 +1937,7 @@
     module._renderTemplate = function (template, data, table, context, options) {
 
         // to avoid computing data mutliple times, or if we don't want the formatted values
-        if (options === undefined || !options.formatted) {
+        if (table && (options === undefined || !options.formatted)) {
             data = module._getFormattedKeyValues(table, context, data);
         }
 

@@ -1936,7 +1936,7 @@
                     fkr = visibleFKs[i];
 
                     // if in the visible columns list
-                    if (this._inboundFKColumns[fkr._name]) {
+                    if (this._inboundFKColumns[fkr.name]) {
                         continue;
                     }
 
@@ -2362,7 +2362,7 @@
                     if (Array.isArray(col)) {
                         fk = this._table.schema.catalog.constraintByNamePair(col);
                         if (fk !== null) {
-                            fkName = fk.object._name;
+                            fkName = fk.object.name;
                             switch(fk.subject) {
                                 case module._constraintTypes.FOREIGN_KEY:
                                     fk = fk.object;
@@ -2462,7 +2462,7 @@
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                return a._name.localeCompare(b._name);
+                                return a.name.localeCompare(b.name);
                             });
                         } else {
                             colFKs = col.memberOfForeignKeys;
@@ -2471,7 +2471,7 @@
                         colAdded = false;
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
-                            fkName = fk._name;
+                            fkName = fk.name;
                             // hide the origFKR
                             if(hideFKR(fk)) continue;
 
@@ -2621,7 +2621,7 @@
             newRef.origFKR = fkr; // it will be used to trace back the reference
 
             // the name of pseudocolumn that represents origFKR
-            newRef.origColumnName = module._generatePseudoColumnName(fkr._name, fkr._table);
+            newRef.origColumnName = module._generatePseudoColumnName(fkr.name, fkr._table);
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
@@ -3202,7 +3202,7 @@
          * this._linkedData[i] = {`s:constraintName`: data}
          * That is for retrieving data for a foreign key, you should do the following:
          *
-         * var fkData = this._linkedData[i][foreignKey._name];
+         * var fkData = this._linkedData[i][foreignKey.name];
          */
         this._linkedData = [];
         
@@ -3223,7 +3223,7 @@
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
+                        this._linkedData[i][fks[j].name] = data[i]["F"+(j+1)][0];
                     }
                 }
                 
@@ -3232,7 +3232,7 @@
                     this._extraData = extraData[mTableAlias][0];
                     this._extraLinkedData = {};
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._extraLinkedData[fks[j]._name] = extraData["F"+(j+1)][0];
+                        this._extraLinkedData[fks[j].name] = extraData["F"+(j+1)][0];
                     }
                 }
                 
@@ -3248,7 +3248,7 @@
                 for (i = 0; i < data.length; i++) {
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j]._name;
+                        fkName = fks[j].name;
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -3264,7 +3264,7 @@
                     this._extraData = extraData;
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j]._name;
+                        fkName = fks[j].name;
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -3600,6 +3600,19 @@
                 return undefined;
             }
             return this._page;
+         },
+         
+         /**
+          * Foreign key data.
+          * During the read we get extra information about the foreign keys,
+          * client could use these extra information for different purposes.
+          * One of these usecases is domain_filter_pattern which they can
+          * include foreignkey data in the pattern language.
+          * 
+          * @type {Object}
+          */
+         get linkedData() {
+             return this._linkedData;
          },
 
         /**
@@ -4270,6 +4283,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.ForeignKeyRef} fk the foreignkey
      * @desc
@@ -4313,7 +4327,7 @@
          */
         this.foreignKey = fk;
 
-        this._constraintName = this.foreignKey._name;
+        this._constraintName = this.foreignKey.name;
 
         this.table = this.foreignKey.key.table;
     }
@@ -4323,26 +4337,96 @@
     // properties to be overriden:
     /**
      * This function takes in a tuple and generates a reference that is
-     * constrained based on the domain_filter_pattern annotation. If this
+     * constrained based on the domain_filter_pattern annotation. If thisx
      * annotation doesn't exist, it returns this (reference)
      * `this` is the same as column.reference
      * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
      * @param {Object} data - tuple data with potential constraints
      * @returns {ERMrest.Reference} the constrained reference
      */
-    ForeignKeyPseudoColumn.prototype.filteredRef = function(data) {
-        var filteredRef,
-            uri = this.reference.uri;
+    ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
+        var uri = this.reference.uri,
+            location;
 
         if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-            var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-            var uriFilter = module._renderTemplate(filterPattern, data, this.table, this._context);
-            // NOTE: should we check for (uriFilter.trim() !== '') ?
-            if (uriFilter !== null) uri += ('/' + uriFilter);
+            
+            var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
+            var uriFilter = module._renderTemplate(
+                this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern, 
+                keyValues
+            );
+            
+            // should ignore the annotation if it's invalid
+            if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
+                try {
+                    location = module.parse(uri + '/' + uriFilter.trim());
+                } catch (exp) {}
+            }
+        }
+        
+        if (!location) {
+            location = module.parse(uri);
         }
 
-        filteredRef = module._createReference(module.parse(uri), this.table.schema.catalog);
-        return filteredRef;
+        // TODO we might need to check the table of location, so it is indeed this.table
+        return new Reference(location, this.table.schema.catalog);
+    };
+    ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
+        var fkColumns = this.foreignKey.colset.columns,
+            keyColumns = this.foreignKey.key.colset.columns,
+            mapping = this.foreignKey.mapping,
+            table = this.table,
+            keyPairs = [],
+            keyValues = [],
+            caption,
+            col,
+            keyCol,
+            isNull = false,
+            i;
+
+        var defaultStr = null, defaultValues = {}, defaultRef = null;
+
+        for (i = 0; i < fkColumns.length; i++) {
+            if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+                isNull = true; //return null if one of them is null;
+                break;
+            }
+            defaultValues[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+        }
+
+        if (!isNull) {
+            
+            // get the values for using in reference creation
+            for (i = 0; i < keyColumns.length; i++) {
+                col = keyColumns[i];
+                keyValues.push(col.formatvalue(defaultValues[col.name], this._context));
+                keyPairs.push(
+                    module._fixedEncodeURIComponent(col.name) + "=" + module._fixedEncodeURIComponent(defaultValues[col.name])
+                );
+            }
+            
+            // use row name as the caption
+            caption = module._generateRowName(this.table, this._context, defaultValues).value;
+
+            // use "col_1:col_2:col_3"
+            if (caption.trim() === '') {
+                caption = keyValues.join(":");
+            }
+
+            defaultStr = caption.trim() !== '' ? caption : null;
+            
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                keyPairs.join("&")
+            ].join("/");
+            defaultRef = new Reference(module.parse(refURI), table.schema.catalog);
+        }
+        
+        this._default = defaultStr;
+        this._defaultValues = defaultValues;
+        this._defaultReference = defaultRef;
     };
     ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
         var presentation = module._generateForeignKeyPresentation(this.foreignKey, context, data);
@@ -4407,6 +4491,34 @@
             }
         }
     };
+    
+    /**
+     * returns the raw default values of the constituent columns.
+     * @member {Object} defaultValues
+     * @memberof ERMrest.ForeignKeyPseudoColumn#
+     */
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultValues", {
+        get: function () {
+            if (this._defaultValues === undefined) {
+                this._determineDefaultValue();
+            }
+            return this._defaultValues;
+        }
+    });
+    
+    /**
+     * returns a reference using raw default values of the constituent columns.
+     * @member {ERMrest.Refernece} defaultReference
+     * @memberof ERMrest.ForeignKeyPseudoColumn#
+     */
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultReference", {
+        get: function () {
+            if (this._defaultReference === undefined) {
+                this._determineDefaultValue();
+            }
+            return this._defaultReference;
+        }
+    });
     Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
         get: function () {
             if (this._name === undefined) {
@@ -4473,39 +4585,7 @@
     Object.defineProperty(ForeignKeyPseudoColumn.prototype, "default", {
         get: function () {
             if (this._default === undefined) {
-                var fkColumns = this.foreignKey.colset.columns,
-                    keyColumns = this.foreignKey.key.colset.columns,
-                    mapping = this.foreignKey.mapping,
-                    data = {},
-                    caption,
-                    isNull = false,
-                    i;
-
-                for (i = 0; i < fkColumns.length; i++) {
-                    if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
-                        isNull = true; //return null if one of them is null;
-                        break;
-                    }
-                    data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
-                }
-
-                if (isNull) {
-                    this._default = null;
-                } else {
-                    // use row name as the caption
-                    caption = module._generateRowName(this.table, this._context, data).value;
-
-                    // use "col_1:col_2:col_3"
-                    if (caption.trim() === '') {
-                        var keyValues = [];
-                        for (i = 0; i < keyColumns.length; i++) {
-                            keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], this._context));
-                        }
-                        caption = keyValues.join(":");
-                    }
-
-                    this._default = caption.trim() !== '' ? caption : null;
-                }
+                this._determineDefaultValue();
             }
             return this._default;
         }
@@ -4532,6 +4612,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Key} key the key
      * @desc
@@ -4562,7 +4643,7 @@
 
         this.table = this.key.table;
 
-        this._constraintName = key._name;
+        this._constraintName = key.name;
     }
     // extend the prototype
     module._extends(KeyPseudoColumn, ReferenceColumn);
@@ -4813,7 +4894,12 @@
         var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
         return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
     };
-
+    
+    /**
+     * Returns the url_pattern defined in the annotation (the raw value and not computed).
+     * @member {ERMrest.Refernece} urlPattern
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
         get: function () {
             if (this._urlPattern === undefined) {
@@ -4823,6 +4909,12 @@
             return this._urlPattern;
         }
     });
+    
+    /**
+     * The column object that filename is stored in.
+     * @member {ERMrest.Column} filenameColumn
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
         get: function () {
             if (this._filenameColumn === undefined) {
@@ -4836,6 +4928,12 @@
             return this._filenameColumn;
         }
     });
+    
+    /**
+     * The column object that filename is stored in.
+     * @member {ERMrest.Column} filenameColumn
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
         get: function () {
             if (this._byteCountColumn === undefined) {
@@ -4849,6 +4947,12 @@
             return this._byteCountColumn;
         }
     });
+    
+    /**
+     * The column object that md5 hash is stored in.
+     * @member {ERMrest.Column} md5
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
         get: function () {
             if (this._md5 === undefined) {
@@ -4867,6 +4971,12 @@
             return this._md5;
         }
     });
+    
+    /**
+     * The column object that sha256 hash is stored in.
+     * @member {ERMrest.Column} sha256
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
         get: function () {
             if (this._sha256 === undefined) {
@@ -4885,6 +4995,12 @@
             return this._sha256;
         }
     });
+    
+    /**
+     * The column object that file extension is stored in.
+     * @member {ERMrest.Column} filenameExtFilter
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
         get: function () {
             if (this._filenameExtFilter === undefined) {
@@ -4902,6 +5018,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Reference} fk the foreignkey
      * @desc
@@ -4951,7 +5068,7 @@
         this._context = reference._context;
         this._currentRef = reference;
         this._currentTable = reference.table;
-        this._constraintName = fk._name;
+        this._constraintName = fk.name;
     }
 
     // extend the prototype
