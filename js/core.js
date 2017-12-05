@@ -315,7 +315,7 @@
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         },
-        
+
         /**
          * Given tableName, and schemaName find the table
          * @param  {string} tableName  name of the table
@@ -324,7 +324,7 @@
          */
         getTable: function (tableName, schemaName) {
             var schema;
-            
+
             if (!schemaName) {
                 var schemas = this.schemas.all();
                 for (var i = 0; i < schemas.length; i++) {
@@ -342,7 +342,7 @@
             } else {
                 schema = this.schemas.get(schemaName);
             }
-            
+
             return schema.tables.get(tableName);
         }
     };
@@ -1747,17 +1747,17 @@
             /*
              * TODO: Add code to handle `pre_format` in the annotation
              */
-             
-            /* 
+
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            
+
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
             }
-                
-            /* 
+
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * then return data as it is
              */
@@ -1784,18 +1784,18 @@
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            
+
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
-            
+
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
              value = utils.printMarkdown(unformatted, options);
-             
+
              return { isHTML: true, value: value, unformatted: unformatted };
-            
+
         };
 
         /**
@@ -2033,7 +2033,7 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             col = this.table.columns.get(annotation.column_order[i]);
-                            
+
                             // json and jsonb are not sortable.
                             if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
                                 continue;
@@ -2068,7 +2068,7 @@
             if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                 return display.columnOrder;
             }
-            
+
             if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
                 return undefined;
             }
@@ -2452,7 +2452,7 @@
         /**
          * It won't preserve the order of given columns.
          * Returns set of columns sorted by their names.
-         * 
+         *
          * @type {Array}
          */
         this.columns = columns.slice().sort(function(a, b) {
@@ -2886,10 +2886,11 @@
 
         /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} isLeft  false: right join, true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
-        toString: function (reverse){
+        toString: function (reverse, isLeft){
             var leftString = "", rightString = "";
             var columnsLength = this.colset.columns.length;
             for (var i = 0; i < columnsLength; i++) {
@@ -2906,7 +2907,9 @@
                 rightString += separator;
 
             }
-            return "(" + leftString + ")=(" + rightString + ")";
+
+            var joinType = ((typeof isLeft === "boolean") ? (isLeft ? "left": "right") : "");
+            return joinType + "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {
@@ -2997,7 +3000,7 @@
 
     Type.prototype = {
         constructor: Type,
-        
+
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.
