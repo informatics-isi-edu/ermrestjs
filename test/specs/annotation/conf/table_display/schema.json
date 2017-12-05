@@ -31,6 +31,38 @@
         }
       ]
     },
+    "table_w_rid_wo_annotation": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_rid_wo_annotation",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "RID",
+          "nullok": false,
+          "type": {
+              "typename": "text"
+          }
+        }
+      ]
+    },
     "table_w_title_wo_annotation": {
       "kind": "table",
       "keys": [
@@ -325,7 +357,8 @@
         "schema_name": "schema_table_display",
         "kind": "table",
         "keys": [
-            {"unique_columns": ["id"]}
+            {"unique_columns": ["id"]},
+            {"unique_columns": ["col. w. dot."]}
         ],
         "foreign_keys": [
             {
@@ -359,12 +392,68 @@
                 "type": {
                     "typename": "integer"
                 }
+            },
+            {
+                "name": "col. w. dot.",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
             }
         ],
         "annotations": {
           "tag:isrd.isi.edu,2016:table-display": {
             "row_name": {
               "row_markdown_pattern": "{{ $fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values.id }}: {{$fkeys.schema_table_display.table_w_rowname_fkeys2_fk1.values._id}}"
+            }
+          }
+        }
+    },
+    "table_w_rowname_fkeys3": {
+        "table_name": "table_w_rowname_fkeys3",
+        "schema_name": "schema_table_display",
+        "kind": "table",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "foreign_keys": [
+            {
+                "names": [["schema_table_display", "table_w_rowname_fkeys3_fk1"]],
+                "foreign_key_columns": [
+                    {
+                        "table_name": "table_w_rowname_fkeys3",
+                        "schema_name": "schema_table_display",
+                        "column_name": "col_fk1"
+                    }
+                ],
+                "referenced_columns": [
+                    {
+                        "table_name": "table_w_rowname_fkeys2",
+                        "schema_name": "schema_table_display",
+                        "column_name": "col. w. dot."
+                    }
+                ]
+            }
+        ],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
+            },
+            {
+                "name": "col_fk1",
+                "type": {
+                    "typename": "integer"
+                }
+            }
+        ],
+        "annotations": {
+          "tag:isrd.isi.edu,2016:table-display": {
+            "row_name": {
+              "row_markdown_pattern": "{{ $fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values.col_ w_ dot_ }}: {{$fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values._col_ w_ dot_}}"
             }
           }
         }
