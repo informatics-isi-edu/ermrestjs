@@ -39,6 +39,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     ERMrest._mustache = require('mustache');
 
     /*
+     * Inject _handlebars module in ERMrest as well as its helpers
+     */
+    ERMrest._handlebars = require('handlebars');
+    ERMrest._injectHandlebarHelpers();
+
+    /*
      * Inject _markdownIt module in ERMrest
      * Make markdownit use Sub, Sup and Attrs plugin
      */
@@ -134,6 +140,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
              * Inject _mustache module in Ermrest
              */
             ERMrest._mustache = window.Mustache;
+
+            /*
+             * Inject _handlebars module in Ermrest as well as its helpers
+             */
+            ERMrest._handlebars = window.Handlebars;
+            ERMrest._injectHandlebarHelpers();
 
             /*
              * Inject _markdownIt module in ERMrest

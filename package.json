@@ -35,7 +35,8 @@
     "q": "1.5.0",
     "request-q": "x",
     "spark-md5": "^3.0.0",
-    "lz-string": "1.4.4"
+    "lz-string": "1.4.4",
+    "handlebars": "^4.0.11"
   },
   "devDependencies": {
     "bower": "x",
@@ -46,8 +47,8 @@
     "jsdoc-to-markdown": "x",
     "jshint": "x",
     "nock": "9.0.22",
-    "require-reload": "^0.2.2",
     "request": "x",
+    "require-reload": "^0.2.2",
     "set-cookie-parser": "x"
   }
 }
