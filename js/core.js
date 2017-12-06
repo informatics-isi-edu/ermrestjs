@@ -1735,7 +1735,11 @@
             var display = this.getDisplay(context);
 
             if (display.isPreformat) {
-                return module._printf(display.preformatConfig, data);
+                try {
+                    return module._printf(display.preformatConfig, data);
+                } catch(e) {
+                    console.log(e);
+                }
             }
 
             return _formatValueByType(this.type, data, options);
