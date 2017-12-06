@@ -1864,6 +1864,8 @@
 
                         this._display.type = module._displayTypes.MARKDOWN;
 
+                        this._display.templateEngine = annotation.template_engine;
+
                         // Render the row by composing a markdown representation
                         this._display._markdownPattern = annotation.row_markdown_pattern;
 
@@ -3474,13 +3476,13 @@
                 if (this._content === undefined) {
                     if (!this._data || !this._data.length) {
                     this._content = null;
-                }else {
+                } else {
                     var i, value, pattern, values = [];
                     if (typeof this._ref.display._markdownPattern === 'string') {
                        // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                        for (i = 0; i < this._data.length; i++) {
                            // render template
-                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
+                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context, { templateEngine: this._ref.display.templateEngine });
 
                            // If value is null or empty, return value on basis of `show_nulls`
                            if (value === null || value.trim() === '') {
@@ -4353,7 +4355,10 @@
             var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
             var uriFilter = module._renderTemplate(
                 this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern,
-                keyValues
+                keyValues,
+                null,
+                null,
+                { templateEngine: this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).template_engine }
             );
 
             // should ignore the annotation if it's invalid
@@ -4700,7 +4705,7 @@
                options.formattedValues = module._getFormattedKeyValues(this.table, this._context, data);
             }
 
-            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
+            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, { formatted:true, templateEngine: display.templateEngine });
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
             addLink = false;
@@ -4891,7 +4896,7 @@
             "caption": col.formatvalue(data[col.name], context, options),
             "url": data[this._baseCol.name]
         };
-        var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
+        var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, { formatted: true });
         return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
     };
 
@@ -4907,6 +4912,21 @@
                 this._urlPattern = this._annotation.url_pattern;
             }
             return this._urlPattern;
+        }
+    });
+
+    /**
+     * Returns the url_pattern defined in the annotation (the raw value and not computed).
+     * @member {ERMrest.Refernece} templateEngine
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
+    Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
+        get: function () {
+            if (this._templateEngine === undefined) {
+                // url_pattern is a required attribute in annotation
+                this._templateEngine = this._annotation.template_engine;
+            }
+            return this._templateEngine;
         }
     });
 

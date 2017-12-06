@@ -268,7 +268,7 @@ var ERMrest = (function(module) {
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
 
-            return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
+            return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
         }
 
         return true;
