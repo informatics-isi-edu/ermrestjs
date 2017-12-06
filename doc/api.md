@@ -206,7 +206,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-        * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+        * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -1750,7 +1750,7 @@ get the foreign key of the given column set
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-    * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+    * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -1818,7 +1818,7 @@ Indicates if the foreign key is simple (not composite)
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
-#### foreignKeyRef.toString([reverse]) ⇒ <code>string</code>
+#### foreignKeyRef.toString(reverse, isLeft) ⇒ <code>string</code>
 returns string representation of ForeignKeyRef object
 
 **Kind**: instance method of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
@@ -1826,7 +1826,8 @@ returns string representation of ForeignKeyRef object
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [reverse] | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| reverse | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| isLeft | <code>boolean</code> | false: right join, true: left join, other values: inner join |
 
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
@@ -2752,8 +2753,8 @@ if (reference.next) {
 #### page.content : <code>string</code> \| <code>null</code>
 HTML representation of the whole page which uses table-display annotation.
 If markdownPattern is defined then renderTemplate is called to get the correct display.
-In case of no such markdownPattern is defined output is displayed in form of 
-unordered list with displayname as text content of the list. 
+In case of no such markdownPattern is defined output is displayed in form of
+unordered list with displayname as text content of the list.
 For more info you can refer {ERM.reference.display}
 
 Usage:

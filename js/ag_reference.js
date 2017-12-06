@@ -16,9 +16,9 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  *
  * Usage:
  *  - Clients _do not_ directly access this constructor.
- *  - This will currently be used by the aggregateGroup functions to return a 
+ *  - This will currently be used by the aggregateGroup functions to return a
  *    AttributeGroupReference rather than a {@link ERMrest.Reference}
- * 
+ *
  * @param       {ERMRest.AttributeGroupColumn[]} keyColumns List of columns that will be used as keys for the attributegroup request.
  * @param       {?ERMRest.AttributeGroupColumn[]} aggregateColumns List of columns that will create the aggreagte columns list in the request.
  * @param       {ERMRest.AttributeGroupLocation} location  The location object.
@@ -26,34 +26,34 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @constructor
  */
 function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
-    
+
     this.isAttributeGroup = true;
-    
+
     /**
      * Array of AttributeGroupColumn that will be used as the key columns
      * @type {ERMrest.AttributeGroupColumn[]}
      */
     this._keyColumns = keyColumns;
-    
+
     /**
      * Array of AttributeGroupColumn that will be used for the aggregate results
      * @type {?ERMrest.AttributeGroupColumn[]}
      */
     this._aggregateColumns = aggregateColumns;
-    
+
     this.location = location;
-    
+
     this._server = catalog.server;
-    
+
     this._catalog = catalog;
-    
+
     /**
      * @type {ERMrest.ReferenceAggregateFn}
      */
     this.aggregate = new AttributeGroupReferenceAggregateFn(this);
 }
 AttributeGroupReference.prototype = {
-    
+
     constructor: AttributeGroupReference,
 
     /**
@@ -65,7 +65,7 @@ AttributeGroupReference.prototype = {
         //TODO
         notimplemented();
     },
-    
+
     /**
      * Visible columns
      * @type {AttributeGroupColumn[]}
@@ -74,24 +74,24 @@ AttributeGroupReference.prototype = {
         if (this._columns === undefined) {
             var self = this;
             this._columns = [];
-            
+
             var addCol = function (col) {
                 if (col._visible) {
                     self._columns.push(col);
                 }
             };
-            
+
             this._keyColumns.forEach(addCol);
             this._aggregateColumns.forEach(addCol);
-            
+
         }
         return this._columns;
     },
-    
+
     get shortestKey() {
         return this._keyColumns;
     },
-    
+
     /**
      * The session object from the server
      * @param {Object} session - the session object
@@ -101,89 +101,89 @@ AttributeGroupReference.prototype = {
         this._session = session;
     },
     /* jshint ignore:end */
-    
+
     sort: function (sort) {
         if (sort) {
             verify((sort instanceof Array), "input should be an array");
             verify(sort.every(module._isValidSortElement), "invalid arguments in array");
         }
-        
+
         // TODO doesn't support sort based on other columns.
         var newLocation = this.location.changeSort(sort);
         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
     },
-    
+
     search: function (term) {
         if (term) {
             verify(typeof term === "string", "Invalid argument");
             term = term.trim();
         }
-        
+
         verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
-        
+
         var newLocation = this.location.changeSearchTerm(term);
         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
     },
-    
+
     /**
      * The attributegroup uri.
      * <service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
-     * 
-     * NOTE: 
+     *
+     * NOTE:
      * - Since this is the object that has knowledge of columns, this should be here.
      *   (we might want to relocate it to the AttributeGroupLocation object.)
      * - ermrest can processs this uri.
-     * 
+     *
      * @type {string}
      */
     get uri () {
         if (this._uri === undefined) {
             var loc = this.location;
-            
+
             // generate the url
             var uri = [
                 loc.service, "catalog", loc.catalogId, "attributegroup", loc.path
             ];
-            
+
             if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
                 uri.push(loc.searchFilter);
             }
-            
+
             uri = uri.join("/") + "/";
-            
+
             // given an array of columns, return col1,col2,col3
             var colString = function (colArray) {
                 return colArray.map(function (col) {
                     return col.toString();
                 }).join(",");
             };
-            
+
             // add group columns
             uri += colString(this._keyColumns);
-            
+
 
             // add aggregate columns
             if (this._aggregateColumns.length !== 0) {
                 uri += ";" + colString(this._aggregateColumns);
             }
-            
+
             // add sort
             if (loc.sort && loc.sort.length > 0) {
                 uri += loc.sort;
             }
-            
+
             // add page
             if (loc.paging && loc.paging.length > 0) {
                 uri += loc.paging;
             }
-            
+
             this._uri = uri;
         }
         return this._uri;
     },
-    
+
     /**
-     * 
+     *
      * @param  {int=} limit
      * @return {ERMRest.AttributeGroupPage}
      */
@@ -191,15 +191,15 @@ AttributeGroupReference.prototype = {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
-                
+
             var uri = this.uri;
             if (hasPaging) {
                 uri += "?limit=" + (limit+1);
             }
-            
+
             var currRef = this;
             this._server._http.get(uri).then(function (response) {
-                
+
                 //determine hasNext and hasPrevious
                 var hasPrevious, hasNext = false;
                 if (hasPaging) {
@@ -214,7 +214,7 @@ AttributeGroupReference.prototype = {
                         hasNext = (response.data.length > limit);
                     }
                 }
-                
+
                 // Because read() reads one extra row to determine whether the new page has previous or next
                 // We need to remove those extra row of data from the result
                 if (response.data.length > limit) {
@@ -225,15 +225,15 @@ AttributeGroupReference.prototype = {
                         response.data.splice(0, 1);
 
                 }
-                
+
                 // create a page using the data
                 var page = new AttributeGroupPage(currRef, response.data, hasPrevious, hasNext);
-                
+
                 // We are paging based on @before (user navigated backwards in the set of data)
-                // AND there is less data than limit implies (beginning of set) 
+                // AND there is less data than limit implies (beginning of set)
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
                 if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
-                    // a new location without paging 
+                    // a new location without paging
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog);
                     referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
@@ -244,20 +244,20 @@ AttributeGroupReference.prototype = {
                 } else {
                     defer.resolve(page);
                 }
-                
+
             }).catch(function (response) {
                 var error = module._responseToError(response);
                 defer.reject(error);
             });
-            
+
             return defer.promise;
-            
+
         } catch (e) {
             return module._q.reject(e);
         }
-        
+
     },
-    
+
     getAggregates: function (aggregateList) {
         var defer = module._q.defer();
         var url;
@@ -269,11 +269,11 @@ AttributeGroupReference.prototype = {
         var baseUri = [
             loc.service, "catalog", loc.catalogId, "aggregate", loc.path
         ];
-        
+
         if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
             baseUri.push(loc.searchFilter);
         }
-        
+
         baseUri = baseUri.join("/") + "/";
 
         for (var i = 0; i < aggregateList.length; i++) {
@@ -344,24 +344,24 @@ function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
      * @type {ERMrest.AttributeGroupReference}
      */
     this.reference = reference;
-    
+
     /**
      * Whether there is more entities before this page
      * @returns {boolean}
      */
     this.hasPrevious = hasPrevious;
-    
+
     /**
      * Whether there is more entities after this page
      * @returns {boolean}
      */
     this.hasNext = hasNext;
-    
+
     this._data = data;
 }
 AttributeGroupPage.prototype = {
     constructor: AttributeGroupPage,
-    
+
     /**
      * An array of processed tuples.
      *
@@ -384,7 +384,7 @@ AttributeGroupPage.prototype = {
         }
         return this._tuples;
     },
-    
+
     /**
      * A reference to the next set of results.
      *
@@ -403,20 +403,20 @@ AttributeGroupPage.prototype = {
         if (!this.hasNext) {
             return null;
         }
-        
+
         var self = this;
         var currRef = this.reference;
         var rows = [];
-        
+
         currRef.location.sortObject.forEach(function (so) {
             // assumes that sortObject columns are valid
             rows.push(self._data[self._data.length-1][so.column]);
         });
-        
+
         var newLocation = currRef.location.changePage(rows, null);
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     },
-    
+
     /**
      * A reference to the previous set of results.
      *
@@ -435,16 +435,16 @@ AttributeGroupPage.prototype = {
         if (!this.hasPrevious) {
             return null;
         }
-        
+
         var self = this;
         var currRef = this.reference;
         var rows = [];
-        
+
         currRef.location.sortObject.forEach(function (so) {
             // assumes that sortObject columns are valid
             rows.push(self._data[0][so.column]);
         });
-        
+
         var newLocation = currRef.location.changePage(null, rows);
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
     }
@@ -456,13 +456,13 @@ function AttributeGroupTuple(page, data) {
 }
 AttributeGroupTuple.prototype = {
     constructor: AttributeGroupTuple,
-    
+
     /**
      * The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
      * values in the array matches the ordering of the columns in the
      * reference (see {@link ERMrest.Reference#columns}).
      * TODO Eventually should be refactored (https://github.com/informatics-isi-edu/ermrestjs/issues/189).
-     * 
+     *
      * @type {boolean[]}
      */
     get isHTML() {
@@ -477,25 +477,25 @@ AttributeGroupTuple.prototype = {
         if (this._values === undefined) {
             this._values = [];
             this._isHTML = [];
-            
+
             var columns = this._page.reference.columns, self = this;
             var formattedValues = module._getFormattedKeyValues(columns, undefined, this._data);
             var presentation;
-            
+
             columns.forEach(function (col) {
                 presentation = col.formatPresentation(formattedValues[col.name], {formattedValues: formattedValues});
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
-            
+
         }
         return this._values;
     },
-    
+
     get data() {
         return this._data;
     },
-    
+
     /**
      * The unique identifier for this tuple composed of the values for each
      * of the shortest key columns concatenated together by an '_'
@@ -509,7 +509,7 @@ AttributeGroupTuple.prototype = {
                 hasNull = hasNull || data[c.name] == null;
                 return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name]);
             }, "");
-            
+
             //TODO should be evaluated for composite keys
             // might need to change, but for the current usecase it's fine.
             if (hasNull) {
@@ -518,12 +518,12 @@ AttributeGroupTuple.prototype = {
         }
         return this._uniqueId;
     },
-    
-    
+
+
     /**
-     * The _display name_ of this tuple. currently it will be values of 
+     * The _display name_ of this tuple. currently it will be values of
      * key columns concatenated together by `_`.
-     * 
+     *
      * Usage:
      * ```
      * console.log("This tuple has a displayable name of ", tuple.displayname.value);
@@ -538,21 +538,21 @@ AttributeGroupTuple.prototype = {
                 hasMarkdown = false,
                 values = [],
                 value;
-                
+
             keyColumns.forEach(function (c) {
                 hasNull = hasNull || data[c.name] == null;
                 if (hasNull) return;
-                
+
                 hasMarkdown = hasMarkdown || c.type.name === "markdown";
                 values.push(c.formatvalue(data[c.name]));
             });
-            
+
             value = hasNull ? null: values.join(":");
-            
+
             this._displayname = {
-                "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value, 
-                "unformatted": value, 
-                "isHTML": hasMarkdown 
+                "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value,
+                "unformatted": value,
+                "isHTML": hasMarkdown
             };
         }
         return this._displayname;
@@ -564,55 +564,55 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
      * The alias for the column.
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
      * then this will be required by ermrest, but we're not checking anything here...
-     * 
+     *
      * @private
      * @type {string}
      */
     this._alias = alias;
-    
+
     /**
      * This might include the aggregate functions. This is the right side of alias (alias:=term)
-     * NOTE: 
+     * NOTE:
      * - This MUST be url encoded. We're not going to encode this.
-     * - We might want to seperate the aggreagte function and column, but right now this will only be used for 
+     * - We might want to seperate the aggreagte function and column, but right now this will only be used for
      * creating the url.
-     * - Since it can include characters like `*`, we cannot encode this. We assume that 
+     * - Since it can include characters like `*`, we cannot encode this. We assume that
      * this has been encoded before and we're just passing it to the ermrest.
      *   We might want to apply the same rule to every other places that we're passing the column names.
-     * 
+     *
      * @type {string}
      */
     this.term = term;
-    
+
     if (typeof displayname === 'string') {
         this._displayname = {"value": displayname, "unformatted": displayname, "isHTML": false};
     } else if (isObjectAndNotNull(displayname)){
         this._displayname = displayname;
     }
-    
+
     if (typeof colType === 'string') {
         this.type = new Type({typename: colType});
     } else {
-        
+
         /**
          * Type object
          * @type {ERMrest.Type}
          */
         this.type = colType;
     }
-    
+
     /**
      * tooltip
      * @type {string}
      */
     this.comment = comment;
-    
+
     /**
      * [sortable description]
      * @type {boolean}
      */
     this.sortable = sortable; // sort only based on current column, what about sort basesd on other columns?
-    
+
     /**
      * We should have a concept of visible columns, this was the easiest way of implementing it to me.
      * @type {boolean}
@@ -621,7 +621,7 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
 }
 AttributeGroupColumn.prototype = {
     constructor: AttributeGroupColumn,
-    
+
     toString: function () {
         var res = "";
         if (typeof this._alias === "string" && this._alias.length !== 0) {
@@ -630,11 +630,11 @@ AttributeGroupColumn.prototype = {
         res += this.term;
         return res;
     },
-    
+
     /**
      * name of the column that is being used in projection list.
      * If alias exists, it will return alias, otherwise the decoded version of term.
-     * @type {string} 
+     * @type {string}
      */
     get name() {
         if (typeof this._alias === "string" && this._alias.length !== 0) {
@@ -642,11 +642,11 @@ AttributeGroupColumn.prototype = {
         }
         return decodeURIComponent(this.term);
     },
-    
+
     get displayname() {
         return this._displayname;
     },
-    
+
     formatvalue: function (data, options) {
         //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
         if (data === null || data === undefined) {
@@ -654,16 +654,16 @@ AttributeGroupColumn.prototype = {
         }
         return _formatValueByType(this.type, data, options);
     },
-    
+
     formatPresentation: function (data, options) {
         /*
-         * NOTE: currently will only return the given data. This function exist 
+         * NOTE: currently will only return the given data. This function exist
          * so it will be the same pattern as Reference and Column apis.
          * Eventually this also will be used for a case that we want to return rowName,
          * Although in that case we need to have the Table object. We can pass the Table object
          * to this, but the next problem will be the name of columns. The keys in the data object
          * are aliases and not the actual column names in the table.
-         * 
+         *
          */
         if (this.type.name === "markdown") {
             return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true }), unformatted: data};
@@ -678,51 +678,51 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @type {string}
      */
     this.service = service;
-    
+
     /**
      * id of the catalog
      *
      * @type {stirng}
      */
     this.catalogId = catalog;
-    
+
     /**
      * The path that will be used for generating the uri in read.
      * @type {string}
      */
     this.path = path;
-    
+
     /**
      * The search object with "column" and "term".
      * @private
      * @type {object}
      */
     this.searchObject = searchObject;
-    
+
     if (isObjectAndNotNull(this.searchObject)) {
         /**
          * The search term
          * @type {?string}
          */
         this.searchTerm = this.searchObject.term;
-        
+
         /**
          * The colum name that has been used for searching.
-         * NOTE: 
+         * NOTE:
          * - we're going to encode this name. You don't have to encode it.
          * - Currently only search on one column, what about other columns?
          * - Maybe this should be private
          * @type {?string}
          */
         this.searchColumn = this.searchObject.column;
-        
+
         /**
          * The search filter string which can be used for creating the uri
          * @type {?string}
          */
         this.searchFilter = _convertSearchTermToFilter(this.searchTerm, this.searchColumn);
     }
-    
+
     /**
      * The sort object. It will be an array of object with the following format:
      * {"column": columnname, "descending": true|false}
@@ -738,7 +738,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
          */
         this.sort = _getSortModifier(this.sortObject);
     }
-    
+
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
@@ -746,7 +746,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @type {?Object[]}
      */
     this.beforeObject = beforeObject;
-    
+
     if (isObjectAndNotNull(this.beforeObject)) {
         /**
          * The paging midifer string for creating the uri.
@@ -754,7 +754,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
          */
         this.before = _getPagingModifier(this.beforeObject, true);
     }
-    
+
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
@@ -762,7 +762,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @type {?Object[]}
      */
     this.afterObject = afterObject;
-    
+
     if (isObjectAndNotNull(this.afterObject)) {
         /**
          * The paging midifer string for creating the uri.
@@ -770,15 +770,15 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
          */
         this.after = _getPagingModifier(this.afterObject, false);
     }
-    
+
     if (this.after || this.before) {
         this.paging = (this.after ? this.after : "") + (this.before ? this.before : "");
     }
-    
+
 }
 AttributeGroupLocation.prototype = {
     constructor: AttributeGroupLocation,
-    
+
     /**
      * Given a searchObject, return a new location object.
      * @param  {string} term
@@ -788,17 +788,17 @@ AttributeGroupLocation.prototype = {
         var searchObject = {"term": term, "column": this.searchColumn};
         return new AttributeGroupLocation(this.service, this.catalogId, this.path, searchObject, this.sortObject, this.afterObject, this.beforeObject);
     },
-    
+
     /**
      * Given a sortObject, return a new location object.
      * This is removing the before and after (paging).
-     * @param  {object} searchObject 
+     * @param  {object} searchObject
      * @return {ERMRest.AttributeGroupLocation}
      */
     changeSort: function (sort) {
         return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort);
     },
-    
+
     /**
      * Given afterObject and beforeObject, return a new location object.
      * @param  {object} afterObject
@@ -826,7 +826,7 @@ AttributeGroupReferenceAggregateFn.prototype = {
         if (this._ref.shortestKey.length > 1) {
             throw new Error("Cannot use count function, attribute group has more than one key column.");
         }
-        
+
         return "cnt_d(" + this._ref.shortestKey[0].term + ")";
     }
 };
