@@ -1129,6 +1129,132 @@
                     "type": {"typename":"timestamptz"}
                 }
             ]
+        },
+        "reference_pre_format_values": {
+            "comment": "Table to represent a testable reference object with pre_format values",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "reference_pre_format_values",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%s"
+                                }
+                            }
+                        },
+                        "tag:misd.isi.edu,2015:display": {
+                            "show_nulls" : { "*" : false }
+                        }
+                    }
+                },
+                {
+                    "name": "url",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "http://example.com/%s"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "isvalid",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%t",
+                                    "bool_true_value": "Yes",
+                                    "bool_false_value": "No"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "numeric",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%b %d %i %e"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "float",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%'8.3f"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "json",
+                    "type": {
+                        "typename": "json"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "My name is %(name)s. My age is %(age)d years and I study at %(school.name)s located in %(school.location)s. My GPA is %(grade).2f"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                  "*": ["id", "name", "url", "isvalid", "numeric", "float", "json"]
+                }
+            }
         }
     },
     "comment": null,
