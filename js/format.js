@@ -29,14 +29,20 @@ var ERMrest = (function(module) {
                 if (ph.keys) { // keyword argument
                     for (k = 0; k < ph.keys.length; k++) {
                         if (!arg.hasOwnProperty(ph.keys[k])) {
-                            throw new Error(printf('[printf] property "%s" does not exist', ph.keys[k]));
+                            console.log('[printf] property "' + ph.keys[k] + '" does not exist');
                         }
                         arg = arg[ph.keys[k]];
+
+                        // For values which don't exist in json object for corresponding keys we substitute them with empty string
+                        if (arg === undefined || arg === null) {
+                            arg = "";
+                            break;
+                        }
                     }
                 }
 
                 if (re.numeric_arg.test(ph.type) && (typeof arg !== 'number' && isNaN(arg))) {
-                    throw new TypeError(printf('[printf] expecting number but found %T', arg));
+                    throw new TypeError('[printf] expecting number but found ' + arg);
                 }
 
                 if (re.number.test(ph.type)) {
@@ -71,6 +77,12 @@ var ERMrest = (function(module) {
                         arg = (ph.precision ? arg.substring(0, ph.precision) : arg);
                         break;
                     case 't':
+                        if (typeof arg === 'string') {
+                            if (arg === 'true') arg = true;
+                            else if (arg === 'false') arg = false;
+                            else if (arg === '0') arg = 0;
+                            else if (arg.length === 0) arg = false; 
+                        }
                         if (arg) {
                             arg = options.bool_true_value || String(!!arg);
                         } else {
@@ -96,7 +108,7 @@ var ERMrest = (function(module) {
                     if (re.number.test(ph.type)) {
 
                         if (ph.has_thousand_separator) {
-                            arg = arg.toLocaleString();
+                            arg = Number(arg).toLocaleString();
                         }
 
                         if (!is_positive || ph.sign) {
@@ -279,12 +291,31 @@ var ERMrest = (function(module) {
                     X — yields an integer as a hexadecimal number (upper-case)
                     j — yields a JavaScript object or array as a JSON encoded string
 
-       * @param{Object} options A javascript object that contains format property and optional bool_true_value
-                                and bool_false_value. These will be used to replace true and false in `t` type fields.
-       * @param{String|Number|Object} value This would be the value that needs to be formatted.
+      * Named arguments:
+                    Format strings may contain replacement fields rather than positional placeholders. Instead of referring to a certain argument, 
+                    you can now refer to a certain key within an object. Replacement fields are surrounded by rounded parentheses - `(` and `)` - 
+                    and begin with a keyword that refers to a key:
 
-       * @returns {String}
-       **/
+                        var user = { name: 'Dolly' }
+                        sprintf('Hello %(name)s', user) // Hello Dolly
+
+                    Keywords in replacement fields can be optionally followed by any number of keywords or indexes:
+
+                        var users = [
+                            {name: 'Dolly'},
+                            {name: 'Molly'},
+                            {name: 'Polly'},
+                        ]
+                        sprintf('Hello %(users[0].name)s, %(users[1].name)s and %(users[2].name)s', {users: users}) // Hello Dolly, Molly and Polly
+
+                    Note: mixing positional and named placeholders is not (yet) supported
+                    
+      * @param{Object} options A javascript object that contains format property and optional bool_true_value
+                                and bool_false_value. These will be used to replace true and false in `t` type fields.
+      * @param{String|Number|Object} value This would be the value that needs to be formatted.
+
+      * @returns {String}
+      **/
     module._printf = function(options, value) {
         if (typeof options.format !== 'string') throw new SyntaxError("[printf] should be supplied with proper per_format annotation with format string. Eg: { format: '%d' }");
         return printf_format(printf_parse(options.format), value, options);

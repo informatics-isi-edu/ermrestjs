@@ -100,6 +100,11 @@ exports.execute = function (options) {
 
         });
 
+        it("checcks thousand separator", function() {
+        	expect(printf({ format: "%'15.3f" }, 10000.23456)).toBe('     10,000.235', '%15.3f should be formatted as "     10,000.235"');
+        	expect(printf({ format: "%'15d" }, 12345668)).toBe('     12,345,668', '%15d should be formatted as "     12,345,668"')
+        });
+
         it ("check sign, padding, width and precision and use space as default padding", function() {
             
             expect(printf({ format: '%5.1s' }, 'xxxxxxx')).toBe('    x', '%5.1f should be formatted as "    x"');

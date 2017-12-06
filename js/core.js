@@ -1718,12 +1718,10 @@
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
-            if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
+            if (data === undefined || (data === null && this.type.name.indexOf('json') === -1)) {
                 return this._getNullValue(context);
-            }
-
-            if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
-                annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
+            } else if (data === null && this.type.name.indexOf('json') !== 0) {
+                return data;
             }
 
             var display = this.getDisplay(context);
@@ -2023,7 +2021,7 @@
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var annotation = -1, columnOrder = [], hasPreformat;
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
@@ -2046,9 +2044,16 @@
                     columnOrder = annotation.column_order;
                 }
 
+                if (typeof annotation.pre_format === 'object') {
+                    if (typeof annotation.pre_format.format !== 'string') {
+                        throw new Error("Invalid pre_format annotation provided for column " + this.name);
+                    }
+                    hasPreformat = true;
+                }
+
                 this._display[context] = {
-                    "isPreformat": (typeof annotation.pre_format === 'string'),
-                    "preformatConfig": (typeof annotation.pre_format === 'object') ? ((typeof annotation.pre_format.format === 'string') ? annotation.pre_format : null ) : null,
+                    "isPreformat": hasPreformat,
+                    "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
