@@ -2054,9 +2054,10 @@
 
                 if (typeof annotation.pre_format === 'object') {
                     if (typeof annotation.pre_format.format !== 'string') {
-                        throw new Error("Invalid pre_format annotation provided for column " + this.name);
+                        console.log(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
+                    } else {
+                        hasPreformat = true;
                     }
-                    hasPreformat = true;
                 }
 
                 this._display[context] = {
