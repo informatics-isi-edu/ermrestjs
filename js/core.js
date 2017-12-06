@@ -813,34 +813,42 @@
                         keys = this.keys.all();
                     }
 
-                    // returns 1 if all the columns are serial/int, 0 otherwise
-                    var allSerialInt = function (key) {
-                        return (key.colset.columns.map(function (column) {
-                            return column.type.name;
-                        }).every(function (current, index, array) {
-                            return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                        }) ? 1 : 0);
-                    };
+                    var ridKey = keys.filter(function (key) {
+                        return key.colset.columns.length == 1 && key.colset.columns[0].name.toUpperCase() == "RID";
+                    })[0];
 
-                    // pick the first key that is shorter or is all serial/integer.
-                    this._shortestKey = keys.sort(function (a, b) {
-                        var compare;
+                    if (ridKey) {
+                        this._shortestKey = ridKey.colset.columns;
+                    } else {
+                        // returns 1 if all the columns are serial/int, 0 otherwise
+                        var allSerialInt = function (key) {
+                            return (key.colset.columns.map(function (column) {
+                                return column.type.name;
+                            }).every(function (current, index, array) {
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
+                            }) ? 1 : 0);
+                        };
 
-                        // choose the shorter
-                        compare = a.colset.length() - b.colset.length();
-                        if (compare !== 0) {
-                            return compare;
-                        }
+                        // pick the first key that is shorter or is all serial/integer.
+                        this._shortestKey = keys.sort(function (a, b) {
+                            var compare;
 
-                        // if key length equal, choose the one that all of its keys are serial or int
-                        compare = allSerialInt(b) - allSerialInt(a);
-                        if (compare !== 0) {
-                            return compare;
-                        }
+                            // choose the shorter
+                            compare = a.colset.length() - b.colset.length();
+                            if (compare !== 0) {
+                                return compare;
+                            }
 
-                        // the one that has lower column position
-                        return a.colset._getColumnPositions() > b.colset._getColumnPositions();
-                    })[0].colset.columns;
+                            // if key length equal, choose the one that all of its keys are serial or int
+                            compare = allSerialInt(b) - allSerialInt(a);
+                            if (compare !== 0) {
+                                return compare;
+                            }
+
+                            // the one that has lower column position
+                            return a.colset._getColumnPositions() > b.colset._getColumnPositions();
+                        })[0].colset.columns;
+                    }
 
                 } else {
                     this._shortestKey = this.columns.all();
@@ -2354,7 +2362,7 @@
         // we can assume that this can be used as a unique identifier for key.
         // NOTE: currently ermrest only returns the first constraint name,
         // so using the first one is sufficient
-        this._name = this.constraint_names[0].join("_");
+        this.name = this.constraint_names[0].join("_");
 
         this._wellFormed = {};
         this._display = {};
@@ -2834,7 +2842,7 @@
         // so using the first one is sufficient
         // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
         // They will produce the same name. Is there any better way to generate this?
-        this._name = this.constraint_names[0].join("_");
+        this.name = this.constraint_names[0].join("_");
 
 
         /**

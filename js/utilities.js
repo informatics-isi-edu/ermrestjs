@@ -200,6 +200,15 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
+    
+    /**
+     * Returns true if given paramter is object.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isObject = function (obj) {
+        return obj === Object(obj) && !Array.isArray(obj);
+    };
 
     /**
      * @private
@@ -336,7 +345,41 @@
         }
         return undefined;
     };
+    
+    /**
+     * Given an object recursively replace all the dots in the keys with underscore.
+     * This will also remove any custom JavaScript objects.
+     * NOTE: This function will ignore any objects that has been created from a custom constructor.
+     * NOTE: This function does not detect loop, make sure that your object does not have circular references.
+     * 
+     * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
+     * @return {Object} A new object created by:
+     *  1. Replacing the dots in keys to underscore.
+     *  2. Ignoring any custom-type objects. The given object should be JSON not JavaScript object.
+     */
+    module._replaceDotWithUnderscore = function (obj) {
+        var res = {}, val, k, newK;
+        for (k in obj) {
+            if (!obj.hasOwnProperty(k)) continue;
+            val = obj[k];  
 
+            // we don't accept custom type objects (we're not detecting circular referene)
+            if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
+
+            newK = k;
+            if (k.includes(".")) {
+                // replace dot with underscore
+                newK = k.replace(/\./g,"_");
+            }
+
+            if (isObject(val)) {
+                res[newK] = module._replaceDotWithUnderscore(val);
+            } else {
+                res[newK] = val;
+            }
+        }
+        return res;
+    };
 
     /**
      * @function
@@ -598,7 +641,7 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk._name]);
+                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
                 if (!presentation) return;
                 
                 cons = fk.constraint_names[0];
@@ -607,7 +650,7 @@
                 }
                 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
-                    "values": getTableValues(linkedData[fk._name], fk.key.table),
+                    "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": presentation.unformatted,
                     "uri": {
                         "detailed": presentation.reference.contextualize.detailed.appLink
@@ -677,7 +720,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {
@@ -1778,7 +1821,19 @@
 
         options = options || {};
 
-        var obj = {};
+        var obj = {};            
+        if (keyValues && isObject(keyValues)) {
+            try {
+                // recursively replace dot with underscore in column names.
+                obj = module._replaceDotWithUnderscore(keyValues);
+            } catch (err) {
+                // This should not happen since we're guarding against custom type objects.
+                obj = keyValues;
+                console.log("Could not process the given keyValues in _renderMustacheTemplate. Ignoring the _replaceDotWithUnderscore logic.");
+                console.log(err);
+            }
+        }
+
 
         // Inject ermrest internal utility objects such as date
         module._addErmrestVarsToTemplate(obj);
@@ -1796,16 +1851,6 @@
                     return f.fn;
                 };
             });
-        }
-
-        if (keyValues) {
-            for (var k in keyValues) {
-                // Replace "." with "_" to avoid problems with templating
-                var newKey = k.replace(/\./g,"_");
-
-                obj[newKey] = keyValues[k];
-            }
-
         }
 
         // If we should validate, validate the template and if returns false, return null.
@@ -1894,7 +1939,7 @@
     module._renderTemplate = function (template, data, table, context, options) {
 
         // to avoid computing data mutliple times, or if we don't want the formatted values
-        if (options === undefined || !options.formatted) {
+        if (table && (options === undefined || !options.formatted)) {
             data = module._getFormattedKeyValues(table, context, data);
         }
 
@@ -2088,7 +2133,7 @@
     
     // these types should be ignored for usage in heuristic for facet
     module._facetHeuristicIgnoredTypes = [
-        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'ermrest_rid', 'jsonb', 'json'
+        'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
     
     // these types are not allowed for faceting (heuristic or annotation)

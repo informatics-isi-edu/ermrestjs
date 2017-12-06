@@ -315,13 +315,13 @@
                 var self = this;
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var searchTerm =  this.location.searchTerm;
-                
+
                 /*
                  * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
                  * will return {"obj": facet object, "column": Column object}
                  * The returned facet will always be entity, if we cannot show
                  * entity picker (table didn't have simple key), we're ignoring it.
-                 * 
+                 *
                  */
                 var refColToFacetObject = function (refCol) {
                     if (refCol.isKey) {
@@ -330,12 +330,12 @@
                             "column": refCol._baseCols[0]
                         };
                     }
-                    
+
                     // if the pseudo-column table doesn't have simple key
                     if (refCol.isPseudo && refCol.table.shortestKey.length > 1) {
                         return null;
                     }
-                    
+
                     if (refCol.isForeignKey) {
                         var constraint = refCol.foreignKey.constraint_names[0];
                         return {
@@ -346,7 +346,7 @@
                                 ],
                                 // TODO here I am passing unformatted, because we are going to pass it through the markdown
                                 // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
-                                "markdown_name": refCol.displayname.unformatted, 
+                                "markdown_name": refCol.displayname.unformatted,
                                 "entity": true
                             },
                             "column": refCol.table.shortestKey[0]
@@ -366,29 +366,29 @@
                             });
                         }
                         res.push(column.name);
-                        
+
                         // TODO here I am passing unformatted, because we are going to pass it through the markdown
                         // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                         return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
-                    
+
                     return { "obj": {"source": refCol.name}, "column": refCol._baseCols[0]};
                 };
-                
+
                 // will return column or false
                 var checkFacetObject = function (obj) {
                     if (!obj.source) {
                         return false;
                     }
-                    
+
                     var table = self.table, source = obj.source;
                     var colName, col;
-                    
+
                     // from 0 to source.length-1 we have paths
                     if (Array.isArray(source)) {
                         var fk, i, isInbound, constraint, fkObj;
                         for (i = 0; i < source.length - 1; i++) {
-                            
+
                             if ("inbound" in source[i]) {
                                 constraint = source[i].inbound;
                                 isInbound = true;
@@ -399,20 +399,20 @@
                                 // given object was invalid
                                 return false;
                             }
-                            
+
                             fkObj = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
-                            
+
                             // constraint name was not valid
                             if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                                 return false;
                             }
-                            
+
                             fk = fkObj.object;
-                            
+
                             // inbound
                             if (isInbound && fk.key.table === table) {
                                 table = fk._table;
-                            } 
+                            }
                             // outbound
                             else if (!isInbound && fk._table === table) {
                                 table = fk.key.table;
@@ -426,10 +426,10 @@
                     } else {
                         colName = source;
                     }
-                    
+
                     try {
                         col = table.columns.get(colName);
-                        
+
                         // if column is a type that we don't support
                         if (module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
                             return false;
@@ -439,26 +439,26 @@
                         return false;
                     }
                 };
-                
+
                 var checkRefColumn = function (col) {
                     // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
                     if ((col.isKey && !col._simple) || col.isAsset) {
                         return false;
                     }
-                    
+
                     var fcObj = refColToFacetObject(col);
-                    
+
                     // this filters the following unsupported cases:
                     //  - foreignKeys in a table that only has composite keys.
                     if (!fcObj) {
                         return false;
                     }
-                    
+
                     // if in scalar, and is one of unsupported types
                     if (!fcObj.obj.entity && module._facetHeuristicIgnoredTypes.indexOf(fcObj.column.type.name) !== -1) {
                         return false;
                     }
-                    
+
                     return fcObj;
                 };
 
@@ -510,14 +510,14 @@
                     }
                     return true;
                 };
-                
+
                 // only add choices, range, and search
                 var mergeFacetObjects = function (source, extra) {
                     ['choices', 'ranges', 'search'].forEach(function (key) {
                         if (!Array.isArray(extra[key])) {
                             return;
                         }
-                        
+
                         if (!Array.isArray(source[key])) {
                             source[key] = [];
                         }
@@ -526,12 +526,12 @@
                             if (key !== "choices" && ch == null) {
                                 return;
                             }
-                            
+
                             // in range we must have one of min, or max.
                             if (key === 'ranges' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
                                 return;
                             }
-                            
+
                             // don't add duplicates
                             if (source[key].length > 0) {
                                 if (key !== 'ranges') {
@@ -543,10 +543,10 @@
 
                             source[key].push(ch);
                         });
-                    
+
                     });
                 };
-                
+
                 // this is only valid in entity mode.
                 // make sure that facetObject is pointing to the correct table.
                 // NOTE: facetColumns MUST be only used in COMPACT_SELECT context
@@ -555,29 +555,29 @@
                 var checkForAlternative = function (facetObject) {
                     var currTable = facetObject.column.table;
                     var compactSelectTable = currTable._baseTable._getAlternativeTable(module._contexts.COMPACT_SELECT);
-                    
+
                     // there's no alternative table
                     if (currTable === compactSelectTable) {
                         return true;
                     }
-                    
+
                     var basedOnKey = facetObject.column.table.keys.all().filter(function (key) {
                         return !facetObject.column.nullok && key.simple && key.colset.columns[0] === facetObject.column;
                     }).length > 0;
-                    
+
                     if (!basedOnKey || facetObject.obj.entity === false) {
                         // it's not entity mode
                         return true;
                     }
-                    
+
                     // filter is based on alternative for another context, but we have to move to another table
                     // we're not supporting this and we should just ignore it.
                     if (currTable._isAlternativeTable()) {
                         return false;
                     }
-                    
+
                     // filter is based on main, but we have to move to the alternative
-                    // we should add the join, if the filter is based on the key 
+                    // we should add the join, if the filter is based on the key
                     if (!currTable._isAlternativeTable() && compactSelectTable._isAlternativeTable()) {
                         var fk = compactSelectTable._altForeignKey;
                         if (!fk.simple || facetObject.column !== fk.key.colset.columns[0]) {
@@ -586,30 +586,30 @@
                         facetObject.column = fk.colset.columns[0];
                         facetObject.obj.source[facetObject.obj.source.length-1] = {"inbound": fk.constraint_names[0]};
                         facetObject.obj.source.push(facetObject.column.name);
-                        
+
                         // the makrdown_name came from the heuristics
                         if (!usedAnnotation && facetObject.obj.markdown_name) {
                             delete facetObject.obj.markdown_name;
                         }
                     }
-                    
+
                     return true;
                 };
-                
-                
+
+
                 // extract the filters from the url
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 var andFilters = [];
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
                 }
-                
+
                 var annotationCols = -1, usedAnnotation = false;
                 var facetObjects = [];
-                
+
                 // get column orders from annotation
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                    annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);    
+                    annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
                     if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
                         annotationCols = annotationCols[andOperator];
                     } else {
@@ -628,13 +628,13 @@
                             }
                             return;
                         }
-                        
+
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
                         // make sure their not referring to the annotation object.
                         obj = module._simpleDeepCopy(obj);
-                        
+
                         // if we have filters in the url, we will get the filters only from url
                         if (andFilters.length > 0) {
                             delete obj.choices;
@@ -648,7 +648,7 @@
                     // this reference should be only used for getting the list,
                     var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
                     var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
-            
+
 
                     // all the visible columns in compact context
                     compactRef.columns.forEach(function (col) {
@@ -667,12 +667,12 @@
                          * Because of alternative logic, the table that detailed is referring to
                          * might be different than compact.
                          * Since we're using the detailed just for its related entities api,
-                         * if detailed is actually an alternative table, it won't have any 
+                         * if detailed is actually an alternative table, it won't have any
                          * related entities. Therefore we don't need to handle that case.
                          * The only case we need to cover are:
                          * deatiled is main, compact is alternative
                          *    - Add the linkage from main to alternative to all the detailed related entities.
-                         * NOTE: If we change the related logic, to return the 
+                         * NOTE: If we change the related logic, to return the
                          * related entities to the main table instead of alternative, this should be changed.
                          */
                         if (detailedRef.table !== compactRef.table &&
@@ -680,22 +680,22 @@
                             fcObj.obj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
                         }
                         facetObjects.push(fcObj);
-                    });    
+                    });
                 }
-                
+
                 // we should have facetObjects untill here, now we should combine it with andFilters
                 var checkedObjects = {};
-                
+
                 // if we have filters in the url, we should just get the structure from annotation
                 for (var i = 0; i < andFilters.length; i++) {
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].source === "*") continue;
-                    
+
                     found = false;
                     for (var j = 0; j < facetObjects.length; j++) {
                         // has matched with another facet (assumption: no duplicate facets in url)
                         if (checkedObjects[j]) continue;
-                        
+
                         if (sameSource(facetObjects[j].obj.source, andFilters[i].source)) {
                             checkedObjects[j] = true;
                             found = true;
@@ -703,7 +703,7 @@
                             mergeFacetObjects(facetObjects[j].obj, andFilters[i]);
                         }
                     }
-                    
+
                     if (!found) {
                         var filterCol = checkFacetObject(andFilters[i]);
                         if (filterCol) {
@@ -711,8 +711,8 @@
                         }
                     }
                 }
-                
-                
+
+
                 // turn facetObjects into facetColumn
                 facetObjects.forEach(function(fo, index) {
                     // if the function returns false, it couldn't handle that case,
@@ -721,13 +721,13 @@
                     if (!checkForAlternative(fo, usedAnnotation)) return;
                     self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
                 });
-                
-                
-                
+
+
+
                 /*
-                 * In some cases we are updating the given sources and therefore the 
+                 * In some cases we are updating the given sources and therefore the
                  * filter will change, so we must make sure that we update the url
-                 * to reflect those changes. These chagnes are 
+                 * to reflect those changes. These chagnes are
                  * 1. When annotation is used and we have preselected filters.
                  * 2. When the main table has an alternative table.
                  * 3. When facet tables have alternative table
@@ -739,17 +739,17 @@
                         newFilters.push(fc.toJSON());
                     }
                 });
-                
+
                 // add the search term
                 if (typeof searchTerm === "string") {
                     newFilters.push({"source": "*", "search": [searchTerm]});
                 }
-                
+
                 if (newFilters.length > 0) {
                     //TODO we should make sure this is being called before read.
                     this._location.facets = {"and": newFilters};
                 }
-                
+
             }
             return this._facetColumns;
         },
@@ -760,7 +760,7 @@
          */
         removeAllFacetFilters: function () {
             var newReference = _referenceCopy(this);
-            
+
             // update the facetColumns list
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
@@ -774,7 +774,7 @@
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
             newReference._location.facets = null;
-            
+
 
             return newReference;
         },
@@ -1190,7 +1190,7 @@
                 /** Change api to attributegroup for retrieving extra information
                  * These information include:
                  * - Values for the foreignkeys.
-                 * 
+                 *
                  * This will just affect the http request and not this._location
                  *
                  * NOTE:
@@ -1733,7 +1733,7 @@
 
         /**
          * Deletes the referenced resources.
-         * 
+         *
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
@@ -1807,14 +1807,14 @@
          * @type {Object}
          *
          **/
-        
+
         get display() {
             if (this._display === undefined) {
                 var self = this;
-                
+
                 // displaytype default valeu for compact/breif/inline should be markdown. otherwise table
                 var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
-                
+
                 this._display = {
                      type: displayType,
                     _separator: "\n",
@@ -1827,7 +1827,7 @@
                 if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
-                
+
                 // If annotation is defined then parse it
                 if (annotation) {
 
@@ -1837,7 +1837,7 @@
                         annotation.row_order.forEach(function (ro) {
                             // make sure column exists
                             if (!self.table.columns.has(ro.column)) return;
-                            
+
                             rowOrder.push({
                                 "column": ro.column,
                                 "descending": (ro.descending === true) ? true : false
@@ -1845,7 +1845,7 @@
                         });
                         this._display._rowOrder = rowOrder;
                     }
-                    
+
 
                     // Set default page size value
                     if (typeof annotation.page_size === 'number') {
@@ -1877,8 +1877,8 @@
                         this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
 
                     }
-                }              
-                    
+                }
+
             }
 
             return this._display;
@@ -1936,7 +1936,7 @@
                     fkr = visibleFKs[i];
 
                     // if in the visible columns list
-                    if (this._inboundFKColumns[fkr._name]) {
+                    if (this._inboundFKColumns[fkr.name]) {
                         continue;
                     }
 
@@ -2038,7 +2038,7 @@
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
             newReference._location.search(term);
-            
+
             // update facet columns list
             // TODO can be refactored
             newReference._facetColumns = [];
@@ -2125,8 +2125,8 @@
 
             return defer.promise;
         },
-        
-        
+
+
         /**
          * Given a page, will change the reference paging options (before, and after)
          * to match the page.
@@ -2137,20 +2137,20 @@
          * @return {ERMrest.Reference} reference with new page settings.
          */
         setSamePaging: function (page) {
-            
+
             var pageRef = page._ref;
-            
+
             /*
             * It only works when page's table and current table are the same.
             */
             if (pageRef.table !== this.table) {
                 throw new module.InvalidInputError("Given page is not from the same table.");
             }
-            
-            
+
+
             var newRef = _referenceCopy(this);
             newRef._location = this._location._clone();
-            
+
             // same search
             // TODO this should be eventually facets and not just search
             // Current requirement only needs search.
@@ -2158,29 +2158,29 @@
             if (typeof pageRef.location.searchTerm === "string") {
                 newRef._location.search(pageRef.location.searchTerm);
             }
-            
-            
+
+
             /*
              * This case is not possible in the current implementation,
-             * page object is being created from read, and therefore always the 
+             * page object is being created from read, and therefore always the
              * attached reference will have sortObject.
              * But if it didn't have any sort, we should just return the reference.
              */
             if (!pageRef._location.sortObject) {
                 return newRef;
             }
-            
+
             // same sort
             newRef._location.sortObject =  module._simpleDeepCopy(pageRef._location.sortObject);
-            
+
             // same pagination
             newRef._location.afterObject =  pageRef._location.afterObject ? module._simpleDeepCopy(pageRef._location.afterObject) : null;
             newRef._location.beforeObject =  pageRef._location.beforeObject ? module._simpleDeepCopy(pageRef._location.beforeObject) : null;
-            
+
             // if we have extra data, and one of before/after is not available
             if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
                 var pageValues = [], colName, data, pseudoCol, j, i;
-                
+
                 // get list of values based on sort list
                 for (i = 0; i < newRef._location.sortObject.length; i++) {
                     colName = newRef._location.sortObject[i].column;
@@ -2190,7 +2190,7 @@
                     if (typeof data !== 'undefined') { // normal column
                         pageValues.push(data);
                     } else { // pseudo column
-                        
+
                         // find the column
                         for (j = 0; j < newRef.columns.length; j++) {
                             if (this.columns[j].name == colName) {
@@ -2198,7 +2198,7 @@
                                 break;
                             }
                         }
-                        
+
                         // find the values from the sortColumn
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol.isForeignKey) {
@@ -2210,8 +2210,8 @@
                         }
                     }
                 }
-                
-                // add before based on extra data    
+
+                // add before based on extra data
                 if (!pageRef._location.beforeObject) {
                     newRef._location.beforeObject = pageValues;
                 }
@@ -2320,9 +2320,9 @@
                 if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
 
                     if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
-                        
+
                         var urlPattern = col.annotations.get(module._annotations.ASSET).content.url_pattern;
-                        
+
                         // If url_pattenr doesn't has hatrac in it then consider the column as a plain text column and proceed
                         if ((typeof urlPattern !== 'string') || (module._parseUrl(urlPattern).pathname.indexOf('/hatrac/') !== 0)) {
                             // ignore the column
@@ -2362,7 +2362,7 @@
                     if (Array.isArray(col)) {
                         fk = this._table.schema.catalog.constraintByNamePair(col);
                         if (fk !== null) {
-                            fkName = fk.object._name;
+                            fkName = fk.object.name;
                             switch(fk.subject) {
                                 case module._constraintTypes.FOREIGN_KEY:
                                     fk = fk.object;
@@ -2462,7 +2462,7 @@
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                return a._name.localeCompare(b._name);
+                                return a.name.localeCompare(b.name);
                             });
                         } else {
                             colFKs = col.memberOfForeignKeys;
@@ -2471,7 +2471,7 @@
                         colAdded = false;
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
-                            fkName = fk._name;
+                            fkName = fk.name;
                             // hide the origFKR
                             if(hideFKR(fk)) continue;
 
@@ -2539,7 +2539,7 @@
 
             // If not in edit context i.e in read context remove the hidden columns which cannot be selected.
             if (!module._isEntryContext(this._context)) {
-                
+
                 // Iterate over all reference columns
                 for (i = 0; i < this._referenceColumns.length; i++) {
                     var refCol = this._referenceColumns[i];
@@ -2600,7 +2600,7 @@
          */
         _generateRelatedReference: function (fkr, tuple) {
             var j, col, uri, source, subset = "";
-            
+
             var useFaceting = (typeof tuple === 'object');
 
             var newRef = _referenceCopy(this);
@@ -2621,7 +2621,7 @@
             newRef.origFKR = fkr; // it will be used to trace back the reference
 
             // the name of pseudocolumn that represents origFKR
-            newRef.origColumnName = module._generatePseudoColumnName(fkr._name, fkr._table);
+            newRef.origColumnName = module._generatePseudoColumnName(fkr.name, fkr._table);
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
@@ -2629,7 +2629,7 @@
             } else {
                 newRef.parentDisplayname = this.displayname;
             }
-            
+
             // create the subset that will be added for visibility
             if (typeof tuple !== 'undefined') {
                 subset = "?subset=" + module._fixedEncodeURIComponent(
@@ -2678,7 +2678,7 @@
                 newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
-                
+
                 var domainUri = [
                     fkrTable.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(fkrTable.schema.catalog.id), this.location.api,
@@ -2708,7 +2708,7 @@
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                 newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
             }
-            
+
             if (useFaceting) {
                 var table = newRef._table;
                 newRef._location = module.parse([
@@ -2716,7 +2716,7 @@
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
                 ].join("/") + subset);
-                
+
                 //filters
                 var filters = [];
                 source.push({"outbound": fkr.constraint_names[0]});
@@ -2726,7 +2726,7 @@
                         "choices": [tuple.data[col.name]]
                     });
                 });
-                
+
                 newRef._location.facets = {"and": filters};
             }
 
@@ -2938,11 +2938,11 @@
                         newLocationString += generateJoin();
                     }
 
-                } 
+                }
                 else if (source._location.facets) {
                     //TODO needs refactoring
                     var currentFacets = JSON.parse(JSON.stringify(source._location.facets.decoded[module._FacetsLogicalOperators.AND]));
-                    
+
                     // facetColumns is applying extra logic for alternative, and it only
                     // makes sense in the context of facetColumns list. not here.
                     // Therefore we should go based on the facets on the location object, not facetColumns.
@@ -2950,13 +2950,13 @@
                         currentFacets.forEach(function (f) {
                             // TODO parse might need to run this first, to avoid checking for invalid input
                             if (!f.source) return;
-                            
+
                             var fk = null;
-                            
+
                             //TODO needs refactoring, can be a method in parser
                             if (Array.isArray(f.source)) {
                                 var cons, isInbound = false, fkObj;
-                                
+
                                 if ("inbound" in f.source[0]) {
                                     cons = f.source[0].inbound;
                                     isInbound = true;
@@ -2965,15 +2965,15 @@
                                 } else {
                                     return;
                                 }
-                                
+
                                 fkObj = module._getConstraintObject(source._location.catalog, cons[0], cons[1]);
                                 if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                                     return;
                                 }
-                                
+
                                 fk = {"obj": fkObj.object, "isInbound": isInbound};
                             }
-                            
+
                             newFacetFilters.push(funct(f, fk));
                         });
                     };
@@ -3007,7 +3007,7 @@
                                 if (!Array.isArray(facetFilter.source)) {
                                     facetFilter.source = [facetFilter.source];
                                 }
-                                facetFilter.source.unshift({"inbound": source._table._altForeignKey.constraint_names[0]});  
+                                facetFilter.source.unshift({"inbound": source._table._altForeignKey.constraint_names[0]});
                             }
                             return facetFilter;
                         });
@@ -3026,7 +3026,7 @@
                             return facetFilter;
                         });
                     }
-                    
+
                     newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
                                         source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                 }
@@ -3157,7 +3157,7 @@
                 }
 
                 newRef._location = module.parse(newLocationString);
-                
+
                 // change the face filters
                 if (newFacetFilters.length > 0) {
                     newRef._location.facets = {"and": newFacetFilters};
@@ -3187,13 +3187,13 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasNext Whether there is more data before this Page
      * @param {boolean} hasPrevious Whether there is more data after this Page
-     * @param {!Object} extraData if 
+     * @param {!Object} extraData if
      *
      */
     function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
-        
+
         var hasExtraData = typeof extraData === "object" && Object.keys(extraData).length !== 0;
-        
+
         this._ref = reference;
         this._etag = etag;
 
@@ -3202,11 +3202,11 @@
          * this._linkedData[i] = {`s:constraintName`: data}
          * That is for retrieving data for a foreign key, you should do the following:
          *
-         * var fkData = this._linkedData[i][foreignKey._name];
+         * var fkData = this._linkedData[i][foreignKey.name];
          */
         this._linkedData = [];
-        
-        
+
+
 
         // linkedData will include foreign key data
         if (this._ref._table.foreignKeys.length() > 0) {
@@ -3223,19 +3223,19 @@
 
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._linkedData[i][fks[j]._name] = data[i]["F"+(j+1)][0];
+                        this._linkedData[i][fks[j].name] = data[i]["F"+(j+1)][0];
                     }
                 }
-                
+
                 //extra data
                 if (hasExtraData) {
                     this._extraData = extraData[mTableAlias][0];
                     this._extraLinkedData = {};
                     for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._extraLinkedData[fks[j]._name] = extraData["F"+(j+1)][0];
+                        this._extraLinkedData[fks[j].name] = extraData["F"+(j+1)][0];
                     }
                 }
-                
+
             }
             // could not find the expected aliases
             catch(exception) {
@@ -3248,7 +3248,7 @@
                 for (i = 0; i < data.length; i++) {
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j]._name;
+                        fkName = fks[j].name;
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -3258,13 +3258,13 @@
                     }
                     this._linkedData.push(tempData);
                 }
-                
+
                 // extra data
                 if (hasExtraData) {
                     this._extraData = extraData;
                     tempData = {};
                     for (j = 0; j < fks.length; j++) {
-                        fkName = fks[j]._name;
+                        fkName = fks[j].name;
                         tempData[fkName] = {};
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
@@ -3457,8 +3457,8 @@
         /**
          * HTML representation of the whole page which uses table-display annotation.
          * If markdownPattern is defined then renderTemplate is called to get the correct display.
-         * In case of no such markdownPattern is defined output is displayed in form of 
-         * unordered list with displayname as text content of the list. 
+         * In case of no such markdownPattern is defined output is displayed in form of
+         * unordered list with displayname as text content of the list.
          * For more info you can refer {ERM.reference.display}
          *
          * Usage:
@@ -3494,20 +3494,20 @@
 
                        // Join the values array using the separator and prepend it with the prefix and append suffix to it.
                        pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
-                       
+
                    }else{
-                     
+
                       for ( i = 0; i < this.tuples.length; i++) {
                          var tuple = this.tuples[i];
                          var url = tuple.reference.contextualize.detailed.appLink;
-                        
+
                          values.push("* ["+ tuple.displayname.value +"](" + url + ") " + this._ref.display._separator);
                       }
                       pattern = this._ref.display._prefix + values.join(" \n") + this._ref.display._suffix;
                    }
                    this._content =  module._formatUtils.printMarkdown(pattern);
               }
-           } 
+           }
            return this._content;
        }
     };
@@ -3600,6 +3600,19 @@
                 return undefined;
             }
             return this._page;
+         },
+
+         /**
+          * Foreign key data.
+          * During the read we get extra information about the foreign keys,
+          * client could use these extra information for different purposes.
+          * One of these usecases is domain_filter_pattern which they can
+          * include foreignkey data in the pattern language.
+          *
+          * @type {Object}
+          */
+         get linkedData() {
+             return this._linkedData;
          },
 
         /**
@@ -4052,7 +4065,7 @@
             }
             return this._aggregate;
         },
-        
+
         /**
          * @desc Returns the aggregate group object
          * @type {ERMrest.ColumnGroupAggregateFn}
@@ -4270,6 +4283,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.ForeignKeyRef} fk the foreignkey
      * @desc
@@ -4313,7 +4327,7 @@
          */
         this.foreignKey = fk;
 
-        this._constraintName = this.foreignKey._name;
+        this._constraintName = this.foreignKey.name;
 
         this.table = this.foreignKey.key.table;
     }
@@ -4323,34 +4337,104 @@
     // properties to be overriden:
     /**
      * This function takes in a tuple and generates a reference that is
-     * constrained based on the domain_filter_pattern annotation. If this
+     * constrained based on the domain_filter_pattern annotation. If thisx
      * annotation doesn't exist, it returns this (reference)
      * `this` is the same as column.reference
      * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
      * @param {Object} data - tuple data with potential constraints
      * @returns {ERMrest.Reference} the constrained reference
      */
-    ForeignKeyPseudoColumn.prototype.filteredRef = function(data) {
-        var filteredRef,
-            uri = this.reference.uri;
+    ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
+        var uri = this.reference.uri,
+            location;
 
         if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-            var filterPattern = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-            var uriFilter = module._renderTemplate(filterPattern, data, this.table, this._context);
-            // NOTE: should we check for (uriFilter.trim() !== '') ?
-            if (uriFilter !== null) uri += ('/' + uriFilter);
+
+            var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
+            var uriFilter = module._renderTemplate(
+                this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern,
+                keyValues
+            );
+
+            // should ignore the annotation if it's invalid
+            if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
+                try {
+                    location = module.parse(uri + '/' + uriFilter.trim());
+                } catch (exp) {}
+            }
         }
 
-        filteredRef = module._createReference(module.parse(uri), this.table.schema.catalog);
-        return filteredRef;
+        if (!location) {
+            location = module.parse(uri);
+        }
+
+        // TODO we might need to check the table of location, so it is indeed this.table
+        return new Reference(location, this.table.schema.catalog);
+    };
+    ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
+        var fkColumns = this.foreignKey.colset.columns,
+            keyColumns = this.foreignKey.key.colset.columns,
+            mapping = this.foreignKey.mapping,
+            table = this.table,
+            keyPairs = [],
+            keyValues = [],
+            caption,
+            col,
+            keyCol,
+            isNull = false,
+            i;
+
+        var defaultStr = null, defaultValues = {}, defaultRef = null;
+
+        for (i = 0; i < fkColumns.length; i++) {
+            if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+                isNull = true; //return null if one of them is null;
+                break;
+            }
+            defaultValues[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+        }
+
+        if (!isNull) {
+
+            // get the values for using in reference creation
+            for (i = 0; i < keyColumns.length; i++) {
+                col = keyColumns[i];
+                keyValues.push(col.formatvalue(defaultValues[col.name], this._context));
+                keyPairs.push(
+                    module._fixedEncodeURIComponent(col.name) + "=" + module._fixedEncodeURIComponent(defaultValues[col.name])
+                );
+            }
+
+            // use row name as the caption
+            caption = module._generateRowName(this.table, this._context, defaultValues).value;
+
+            // use "col_1:col_2:col_3"
+            if (caption.trim() === '') {
+                caption = keyValues.join(":");
+            }
+
+            defaultStr = caption.trim() !== '' ? caption : null;
+
+            var refURI = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                keyPairs.join("&")
+            ].join("/");
+            defaultRef = new Reference(module.parse(refURI), table.schema.catalog);
+        }
+
+        this._default = defaultStr;
+        this._defaultValues = defaultValues;
+        this._defaultReference = defaultRef;
     };
     ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
         var presentation = module._generateForeignKeyPresentation(this.foreignKey, context, data);
-        
+
         if (!presentation) {
             return {isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context)};
         }
-        
+
         var value, unformatted, appLink;
 
         // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
@@ -4407,6 +4491,34 @@
             }
         }
     };
+
+    /**
+     * returns the raw default values of the constituent columns.
+     * @member {Object} defaultValues
+     * @memberof ERMrest.ForeignKeyPseudoColumn#
+     */
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultValues", {
+        get: function () {
+            if (this._defaultValues === undefined) {
+                this._determineDefaultValue();
+            }
+            return this._defaultValues;
+        }
+    });
+
+    /**
+     * returns a reference using raw default values of the constituent columns.
+     * @member {ERMrest.Refernece} defaultReference
+     * @memberof ERMrest.ForeignKeyPseudoColumn#
+     */
+    Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultReference", {
+        get: function () {
+            if (this._defaultReference === undefined) {
+                this._determineDefaultValue();
+            }
+            return this._defaultReference;
+        }
+    });
     Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
         get: function () {
             if (this._name === undefined) {
@@ -4473,39 +4585,7 @@
     Object.defineProperty(ForeignKeyPseudoColumn.prototype, "default", {
         get: function () {
             if (this._default === undefined) {
-                var fkColumns = this.foreignKey.colset.columns,
-                    keyColumns = this.foreignKey.key.colset.columns,
-                    mapping = this.foreignKey.mapping,
-                    data = {},
-                    caption,
-                    isNull = false,
-                    i;
-
-                for (i = 0; i < fkColumns.length; i++) {
-                    if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
-                        isNull = true; //return null if one of them is null;
-                        break;
-                    }
-                    data[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
-                }
-
-                if (isNull) {
-                    this._default = null;
-                } else {
-                    // use row name as the caption
-                    caption = module._generateRowName(this.table, this._context, data).value;
-
-                    // use "col_1:col_2:col_3"
-                    if (caption.trim() === '') {
-                        var keyValues = [];
-                        for (i = 0; i < keyColumns.length; i++) {
-                            keyValues.push(keyColumns[i].formatvalue(data[keyColumns[i].name], this._context));
-                        }
-                        caption = keyValues.join(":");
-                    }
-
-                    this._default = caption.trim() !== '' ? caption : null;
-                }
+                this._determineDefaultValue();
             }
             return this._default;
         }
@@ -4532,6 +4612,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Key} key the key
      * @desc
@@ -4562,7 +4643,7 @@
 
         this.table = this.key.table;
 
-        this._constraintName = key._name;
+        this._constraintName = key.name;
     }
     // extend the prototype
     module._extends(KeyPseudoColumn, ReferenceColumn);
@@ -4804,7 +4885,7 @@
         }
 
         // otherwise return a download link
-        var template = "[{{{caption}}}]({{{url}}}){download .btn .btn-primary}";
+        var template = "[{{{caption}}}]({{{url}}}){download .download}";
         var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
         var keyValues = {
             "caption": col.formatvalue(data[col.name], context, options),
@@ -4814,6 +4895,11 @@
         return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
     };
 
+    /**
+     * Returns the url_pattern defined in the annotation (the raw value and not computed).
+     * @member {ERMrest.Refernece} urlPattern
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
         get: function () {
             if (this._urlPattern === undefined) {
@@ -4823,6 +4909,12 @@
             return this._urlPattern;
         }
     });
+
+    /**
+     * The column object that filename is stored in.
+     * @member {ERMrest.Column} filenameColumn
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
         get: function () {
             if (this._filenameColumn === undefined) {
@@ -4836,6 +4928,12 @@
             return this._filenameColumn;
         }
     });
+
+    /**
+     * The column object that filename is stored in.
+     * @member {ERMrest.Column} filenameColumn
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
         get: function () {
             if (this._byteCountColumn === undefined) {
@@ -4849,6 +4947,12 @@
             return this._byteCountColumn;
         }
     });
+
+    /**
+     * The column object that md5 hash is stored in.
+     * @member {ERMrest.Column} md5
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
         get: function () {
             if (this._md5 === undefined) {
@@ -4867,6 +4971,12 @@
             return this._md5;
         }
     });
+
+    /**
+     * The column object that sha256 hash is stored in.
+     * @member {ERMrest.Column} sha256
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
         get: function () {
             if (this._sha256 === undefined) {
@@ -4885,6 +4995,12 @@
             return this._sha256;
         }
     });
+
+    /**
+     * The column object that file extension is stored in.
+     * @member {ERMrest.Column} filenameExtFilter
+     * @memberof ERMrest.AssetPseudoColumn#
+     */
     Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
         get: function () {
             if (this._filenameExtFilter === undefined) {
@@ -4902,6 +5018,7 @@
     /**
      * @memberof ERMrest
      * @constructor
+     * @class
      * @param {ERMrest.Reference} reference column's reference
      * @param {ERMrest.Reference} fk the foreignkey
      * @desc
@@ -4951,7 +5068,7 @@
         this._context = reference._context;
         this._currentRef = reference;
         this._currentTable = reference.table;
-        this._constraintName = fk._name;
+        this._constraintName = fk.name;
     }
 
     // extend the prototype
@@ -5022,7 +5139,7 @@
      * @constructor
      */
     function FacetColumn (reference, index, column, facetObject, filters) {
-        
+
         /**
          * The column object that the filters are based on
          * @type {ERMrest.Column}
@@ -5048,7 +5165,7 @@
          * @type {obj|string}
          */
         this.dataSource = facetObject.source;
-        
+
         /**
          * Filters that are applied to this facet.
          * @type{FacetFilter[]}
@@ -5065,7 +5182,7 @@
     }
     FacetColumn.prototype = {
         constructor: FacetColumn,
-        
+
         /**
          * If has filters it will return true,
          * otherwise returns facetObject['open']
@@ -5078,7 +5195,7 @@
             }
             return this._isOpen;
         },
-        
+
         get foreginKeys() {
             if (this._foreignKeys === undefined) {
                 this._foreignKeys = [];
@@ -5102,7 +5219,7 @@
             }
             return this._foreignKeys;
         },
-        
+
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
             if (this._lastForeignKey_cached === undefined) {
@@ -5137,7 +5254,7 @@
          * 1. use ux_mode if available
          * 2. use choices if in entity mode
          * 3. use range or chocies based on type.
-         * 
+         *
          * @type {string}
          */
         get preferredMode() {
@@ -5168,7 +5285,7 @@
          * Returns true if the source is on a key column.
          * If facetObject['entity'] is defined as false, it will return false,
          * otherwise it will true if filter is based on key.
-         * 
+         *
          * @type {Boolean}
          */
         get isEntityMode() {
@@ -5181,7 +5298,7 @@
                     var basedOnKey = currCol.table.keys.all().filter(function (key) {
                         return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
                     }).length > 0;
-                    
+
                     this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
                 }
             }
@@ -5209,16 +5326,16 @@
          * We should not use the absolute path for the table and it must be a path
          * from main to this table. Because if we use the absolute path we're completely
          * ignoring the constraints that the main table will add to this reference.
-         * (For example if maximum possible value for this column is 100 but there's 
+         * (For example if maximum possible value for this column is 100 but there's
          * no data from the main that will leads to this maximum.)
-         * 
+         *
          * Consider the following scenario:
          * Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
          * R1 has a fitler for term=1, and R2 has a filter for term=2
          * Then the source reference for R3 will be the following:
          * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
          * As you can see it has all the filters of the main table + join to current table.
-         * 
+         *
          * NOTE: assumptions:
          *  - The main reference has no join.
          *  - The returned reference has problem with faceting (cannot show faceting).
@@ -5231,16 +5348,16 @@
                     pathFromSource = [], // the path from source reference to this facetColumn
                     self = this,
                     table = this.reference.table;
-                    
+
                 pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
-                
+
                 // create a path from reference to this facetColumn
                 if (Array.isArray(this.dataSource)) {
                     var constraint, isOutbound, fk;
                     this.dataSource.forEach(function (ds, index) {
                         // the last element is the column name
                         if (index === self.dataSource.length - 1) return;
-                        
+
                         if ("inbound" in ds) {
                             constraint = ds.inbound;
                             isOutbound = false;
@@ -5252,7 +5369,7 @@
                         pathFromSource.push(fk.toString(isOutbound));
                     });
                 }
-                    
+
                 // TODO might be able to improve this
                 if (typeof this.reference.location.searchTerm === "string") {
                     jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
@@ -5268,15 +5385,15 @@
                         }
                     });
                 }
-                
+
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     pathFromSource.join("/")
                 ].join("/");
-                
+
                 this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
-                
+
                 if (jsonFilters.length > 0) {
                     this._sourceReference._location.projectionFacets = {"and": jsonFilters};
                 } else {
@@ -5302,7 +5419,7 @@
         get displayname() {
             if (this._displayname === undefined) {
                 var fkObj = this._lastForeignKey, fk;
-                
+
                 if (this._facetObject.markdown_name) {
                     this._displayname = {
                         value: module._formatUtils.printMarkdown(this._facetObject.markdown_name, {inline:true}),
@@ -5315,13 +5432,13 @@
                     this._displayname = this.column.displayname;
                 }
                 // Otherwise
-                else {      
+                else {
                     var value, unformatted, isHTML = false;
                     var displayname, isInbound;
-                    
+
                     isInbound = fkObj.isInbound;
                     fk = fkObj.obj;
-                    
+
                     // use from_name of the last fk if it's inbound
                     if (isInbound && fk.from_name !== "") {
                         value = unformatted = fk.from_name;
@@ -5369,7 +5486,7 @@
             }
             return this._comment;
         },
-        
+
         /**
          * When presenting the applied choice filters, the displayname might be differnt from the value.
          * This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
@@ -5378,37 +5495,37 @@
          *  - If no fitler -> resolve with empty list.
          *  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
          *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
-         * 
+         *
          * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
          */
         getChoiceDisplaynames: function () {
             var defer = module._q.defer();
             var filters =  [];
-            
+
             // if no filter, just resolve with empty list.
             if (this.choiceFilters.length === 0) {
                 defer.resolve(filters);
-            } 
+            }
             // in scalar mode, use the their toString as displayname.
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
                     filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
                 });
                 defer.resolve(filters);
-            } 
+            }
             // otherwise generate an ermrest request to get the displaynames.
             else {
-                
+
                 var table = this._column.table, columnName = this._column.name;
                 var fitlerStr = [];
-                
+
                 // list of fitlers that we want their displaynames.
                 this.choiceFilters.forEach(function (f) {
                     fitlerStr.push(
                         module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
                     );
                 });
-                
+
                 // create a url
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
@@ -5416,14 +5533,14 @@
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
                     fitlerStr.join(";")
                 ].join("/");
-                
+
                 var ref = new Reference(module.parse(uri), table.schema.catalog);
-                
+
                 ref = ref.sort([{"column": columnName, "descending": false}]);
-                
+
                 ref.read(this.choiceFilters.length).then(function (page) {
                     page.tuples.forEach(function (t) {
-                        
+
                         // create the response
                         filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
                     });
@@ -5431,7 +5548,7 @@
                 }).catch(function (err) {
                     defer.reject(module._responseToError(err));
                 });
-                
+
             }
             return defer.promise;
         },
@@ -5461,14 +5578,14 @@
                 if (!(f.facetFilterKey in res)) {
                     res[f.facetFilterKey] = [];
                 }
-                
-                /* 
+
+                /*
                  * We cannot distinguish between json `null` in sql and actual `null`,
                  * therefore in other parts of code we're treating them the same.
                  * But to generate the filters, we have to add these two cases,
                  * that's why we're adding two values for null.
                  */
-                if ((this._column.type.name === "json" || this._column.type.name === "jsonb") && 
+                if ((this._column.type.name === "json" || this._column.type.name === "jsonb") &&
                     (f.term === null || f.term === "null") && f.facetFilterKey === "choices") {
                     if (!hasJSONNull[f.facetFilterKey]) {
                         res[f.facetFilterKey].push(null, "null");
@@ -5508,7 +5625,7 @@
             // create choice filters
             if (Array.isArray(json.choices)) {
                 json.choices.forEach(function (ch) {
-                    
+
                     /*
                      * We cannot distinguish between json `null` in sql and actual `null`,
                      * therefore we should treat them the same.
@@ -5518,15 +5635,15 @@
                             ch = null;
                         }
                     }
-                    
+
                     current = self.filters.filter(function (f) {
                         return (f instanceof ChoiceFacetFilter) && f.term === ch;
                     })[0];
-                    
+
                     if (current !== undefined) {
                         return; // don't add duplicate
                     }
-                    
+
                     self.filters.push(new ChoiceFacetFilter(ch, self._column.type));
                 });
             }
@@ -5537,11 +5654,11 @@
                     current = self.filters.filter(function (f) {
                         return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
                     })[0];
-                    
+
                     if (current !== undefined) {
                         return; // don't add duplicate
                     }
-                    
+
                     self.filters.push(new RangeFacetFilter(ch.min, ch.max, self._column.type));
                 });
             }
@@ -5552,16 +5669,16 @@
                     current = self.filters.filter(function (f) {
                         return (f instanceof SearchFacetFilter) && f.term === ch;
                     })[0];
-                    
+
                     if (current !== undefined) {
                         return; // don't add duplicate
                     }
-                    
+
                     self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
         },
-        
+
         /**
          * search filters
          * NOTE ASSUMES that filters is immutable
@@ -5575,7 +5692,7 @@
             }
             return this._searchFilters;
         },
-        
+
         /**
          * choce filters
          * NOTE ASSUMES that filters is immutable
@@ -5589,7 +5706,7 @@
             }
             return this._choiceFilters;
         },
-        
+
         /**
          * range filters
          * NOTE ASSUMES that filters is immutable
@@ -5624,7 +5741,7 @@
          */
         addChoiceFilters: function (values) {
             verify(Array.isArray(values), "given argument must be an array");
-            
+
             var filters = this.filters.slice(), self = this;
             values.forEach(function (v) {
                 filters.push(new ChoiceFacetFilter(v, self._column.type));
@@ -5632,7 +5749,7 @@
 
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Create a new Reference with replacing choice facet filters by the given input
          * @return {ERMrest.Reference} the reference with the new filter
@@ -5649,7 +5766,7 @@
 
             return this._applyFilters(filters);
         },
-        
+
         /**
          * Given a term, it will remove any choice filter with that term (if any).
          * @param  {String[]|int[]} terms array of terms
@@ -5671,11 +5788,11 @@
          */
         addRangeFilter: function (min, max) {
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
-            
+
             var current = this.filters.filter(function (f) {
                 return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
             })[0];
-            
+
             if (current !== undefined) {
                 return false;
             }
@@ -5689,7 +5806,7 @@
                 filter: newFilter
             };
         },
-        
+
         removeRangeFilter: function (min, max) {
             //TODO needs refactoring
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
@@ -5749,23 +5866,23 @@
                 } else {
                     newFc = new FacetColumn(newReference, self.index, self._column, self._facetObject, filters);
                 }
-                
+
                 newReference._facetColumns.push(newFc);
-                
+
                 if (newFc.filters.length !== 0) {
                     jsonFilters.push(newFc.toJSON());
                 }
             });
-            
+
             newReference._location = this.reference._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
-            
+
             // TODO might be able to improve this
             if (typeof this.reference.location.searchTerm === "string") {
                 jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
             }
-            
+
             // change the facets in location object
             if (jsonFilters.length > 0) {
                 newReference._location.facets = {"and": jsonFilters};
@@ -5779,7 +5896,7 @@
 
     /**
      * Represent filters that can be applied to facet
-     * 
+     *
      * @param       {String|int} term the valeu of filter
      * @constructor
      */
@@ -5824,7 +5941,7 @@
         this.facetFilterKey = "search";
     }
     module._extends(SearchFacetFilter, FacetFilter);
-    
+
     /**
      * Represent choice filters that can be applied to facet.
      * JSON representation of this filter:
@@ -5839,7 +5956,7 @@
         this.facetFilterKey = "choices";
     }
     module._extends(ChoiceFacetFilter, FacetFilter);
-    
+
     /**
      * Represent range filters that can be applied to facet.
      * JSON representation of this filter:
@@ -5920,11 +6037,11 @@
             if (!this._ref.location.hasJoin) {
                 return "cnt(*)";
             }
-            
+
             if (this._ref.table.shortestKey.length > 1) {
                 throw new Error("Since reference has a join, table must have a simple key.");
             }
-            
+
             return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
         }
     };
@@ -5981,10 +6098,10 @@
             return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
         }
     };
-    
+
     function ColumnGroupAggregateFn (column) {
         this.column = column;
-        
+
         this._ref = this.column._baseReference;
     }
 
@@ -5998,24 +6115,24 @@
             if(this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
             }
-            
+
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
             var searchObj = {"column": this.column.name, "term": null};
-            
+
             // sort will be on the aggregated results.
             var sortObj = [{"column": "value", "descending": false}];
-            
+
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
-                
+
             // key columns
             var keyColumns = [
                 new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
-            ];            
-            
+            ];
+
             // the reference
             return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog);
         },
-        
+
         /**
          * Will return an appropriate reference which can be used to show distinct values and their counts
          * NOTE: Will create a new reference by each call.
@@ -6025,36 +6142,36 @@
             if (this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
             }
-            
+
             if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
                 throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
             }
-                
+
             // search will be on the table not the aggregated results, so the column name must be the column name in the database
             var searchObj = {"column": this.column.name, "term": null};
-            
+
             // sort will be on the aggregated results.
             var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
-            
+
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
-            
+
             // key columns
             var keyColumns = [
                 new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
-            
+
             var countName = "cnt(*)";
             if (this._ref.location.hasJoin) {
                 countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
-            
+
             var aggregateColumns = [
                 new AttributeGroupColumn("count", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
         },
-        
+
         /**
          * Given number of buckets, min and max will return bin of results.
          * @param  {int} bucketCount number of buckets
@@ -6066,36 +6183,36 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
-            
+
             if (this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
             }
-            
+
             if (module._histogramSupportedTypes.indexOf(this.column.type.name) === -1) {
                 throw new Error("Binning is not supported on column type " + this.column.type.name);
             }
-            
+
             if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
                 throw new Error("Table must have a simple key.");
             }
-            
+
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
-                
+
             var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
-            
+
             var countName = "cnt(*)";
             if (this._ref.location.hasJoin) {
                 countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
             }
-            
+
             var aggregateColumns = [
                 new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             //TODO this should just return the results, but I'm not sure about the datastructure.
-            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);    
+            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
         }
     };

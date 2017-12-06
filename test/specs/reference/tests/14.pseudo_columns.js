@@ -42,7 +42,7 @@ exports.execute = function (options) {
         var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithAsset + "/id=" + entityId;
 
-        var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/" 
+        var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
@@ -203,7 +203,7 @@ exports.execute = function (options) {
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
-            '<a href="https://dev.isrd.isi.edu" download="" class="btn btn-primary">filename</a>',
+            '<a href="https://dev.isrd.isi.edu" download="" class="download">filename</a>',
             '4'
         ];
 
