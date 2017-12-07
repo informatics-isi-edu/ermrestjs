@@ -1,7 +1,7 @@
 exports.execute = function (options) {
     var module = options.includes.ermRest;
     var formatUtils = module._formatUtils;
-    describe("For pretty printing values based on a value's type, ", function () {
+    describe("Print utils, For pretty printing values based on a value's type, ", function () {
         // Test Cases:
         it('printFloat() should format floats correctly.', function () {
             var printFloat = formatUtils.printFloat;

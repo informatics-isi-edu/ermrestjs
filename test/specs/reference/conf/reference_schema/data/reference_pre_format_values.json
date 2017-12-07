@@ -1,0 +1,3 @@
+[{"id":4000, "name":"Hank", "url": "google.com", "isvalid": false, "numeric": 1024, "float": "0.23432", "json": null },
+ {"id":4001, "name":"Harold", "isvalid": true, "float": "10000.345", "json": { "name": "Harold Durden", "age": 29, "grade": 3.9345, "school": { "name": "USC", "location": "Los Angeles, CA" } }},
+ {"id":4002, "url": "google.com", "numeric": 9001 }]
