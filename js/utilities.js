@@ -1702,13 +1702,17 @@
     module._injectHandlebarHelpers = function() {
 
         // Register a handlebars helper to encode strings in a template
-        module._handlebars.registerHelper('encode', function(context, options) {
-            return module._fixedEncodeURIComponent(options.fn(context));
+        module._handlebars.registerHelper('encode', function() {
+            var args = Array.prototype.slice.call(arguments);
+            var text = args.splice(0, args.length - 1).join('');
+            return module._fixedEncodeURIComponent(text);
         });
 
         // Register a handlebars helper to escape Markdown characters in a string
-        module._handlebars.registerHelper('escape', function(context, options) {
-            return module._escapeMarkdownCharacters(options.fn(context));
+        module._handlebars.registerHelper('escape', function() {
+            var args = Array.prototype.slice.call(arguments);
+            var text = args.splice(0, args.length - 1).join('');
+            return module._escapeMarkdownCharacters(text);
         });
     };
 
@@ -1849,7 +1853,7 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
-        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/, i, key, value;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
@@ -1867,15 +1871,15 @@
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
-                for (var i=0; i<placeholders.length;i++) {
+                for (i=0; i<placeholders.length;i++) {
 
                     // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                    var key = placeholders[i].substring(2, placeholders[i].length - 2);
+                    key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
                     
                     // find the value.
-                    var value = module._getPath(keyValues, key.trim());
+                    value = module._getPath(keyValues, key.trim());
                     
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
@@ -1898,11 +1902,11 @@
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Handlebars`.
      */
-    module._renderHandlebarsTemplate = function(template, keyValues, ignoredColumns) {
+    module._renderHandlebarsTemplate = function(template, keyValues, options) {
         
         options = options || {};
 
-        var obj = module._addTemplateVars(keyValues, options), content;
+        var obj = module._addTemplateVars(keyValues, options), content, _compiledTemplate;
 
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateHandlebarsTemplate(template, obj)) {
@@ -1910,21 +1914,33 @@
         }
 
         try {
-            var _compiledTemplate = module._handlebars.compile(template);
+            // Read template from cache
+            _compiledTemplate = module._handlebarsCompiledTemplates[template];
+
+            // If template not found then add it to cache
+            if (!_compiledTemplate) {
+                module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template);
+            }
+
+            // Generate content from the template
             content = _compiledTemplate(obj);
         } catch(e) {
+            console.log(e);
             content = null;
         }
 
         return content;
     };
 
+    // Cache to store all the handlebar templates to reduce compute time
+    module._handlebarsCompiledTemplates = {};
+
     /**
      * Returns true if all the used keys have values.
      *
      * NOTE:
      * This implementation is very limited and if conditional Handlebar statements
-     * of the form {{#if}}{{/fi}} or {{^if}}{{/fi}} or {{#unless}}{{/unless}} or {{^unless}}{{/unless}} found then it won't check
+     * of the form {{#if }}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless }}{{/unless}} found then it won't check
      * for null values and will return true.s
      *
      * @param  {string}   template       mustache template
@@ -1933,13 +1949,16 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateHandlebarsTemplate = function (template, keyValues, ignoredColumns) {
-        var conditionalRegex = /\{\{(#|\^)(if|unless)\}\}/;
+        var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless))([^\{\}]+)\}\}/, i, key, value;
 
-        // If no conditional Mustache statements of the form {{#if}}{{/fi}} or {{^if}}{{/fi}} or {{#unless}}{{/unless}} or {{^unless}}{{/unless}} not found then do direct null check
+        // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
 
             // Grab all placeholders ({{PROP_NAME}}) in the template
-            var placeholders = template.match(/\{\{([^\{\}]+)\}\}/ig);
+            var placeholders = template.match(/\{\{([^\{\}\(\)\s]+)\}\}/ig);
+
+            // These will match the placeholders that are encapsulated in square brackets {{[string with space]}} or {{{[string with space]}}}
+            var specialPlaceholders = template.match(/\{\{((\[[^\{\}]+\])|(\{\[[^\{\}]+\]\}))\}\}/gi);
 
             // If there are any placeholders
             if (placeholders && placeholders.length) {
@@ -1951,15 +1970,47 @@
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
-                for (var i=0; i<placeholders.length;i++) {
+                for (i=0; i<placeholders.length;i++) {
 
                     // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                    var key = placeholders[i].substring(2, placeholders[i].length - 2);
+                    key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
                     
                     // find the value.
-                    var value = module._getPath(keyValues, key.trim());
+                    value = module._getPath(keyValues, key.trim());
+                    
+                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
+                    // it was a hack that was added for asset columns.
+                    // If key is not in ingored columns value for the key is null or undefined then return null
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
+                       return false;
+                    }
+                }
+            }
+
+            // If there are any placeholders
+            if (specialPlaceholders && specialPlaceholders.length) {
+
+                // Get unique placeholders
+                specialPlaceholders = specialPlaceholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
+
+                /*
+                 * Iterate over all specialPlaceholders to set pattern as null if any of the
+                 * values turn out to be null or undefined
+                 */
+                for (i=0; i<specialPlaceholders.length;i++) {
+
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
+                    key = specialPlaceholders[i].substring(2, specialPlaceholders[i].length - 2);
+
+                    if (key[0] == "{") key = key.substring(1, key.length -1);
+                    
+                    // Remove [] from the key {{[name]}} = name, remove "[" and "]" from the string for key
+                    key = key.substring(1, key.length - 1);
+
+                    // find the value.
+                    value = module._getPath(keyValues, key.trim());
                     
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.

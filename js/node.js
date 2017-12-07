@@ -53,6 +53,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
                             .use(require('markdown-it-sup')) // add superscript support;
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
+
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
     

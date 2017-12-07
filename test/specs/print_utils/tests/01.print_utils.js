@@ -297,5 +297,126 @@ exports.execute = function (options) {
             });
         });
 
+        it('module._renderHandlebarsTemplate() should function correctly for Null and Non-null values', function() {
+            expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: 'Chloe' })).toBe("My name is Chloe");
+            expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: null })).toBe(null);
+            expect(module._renderHandlebarsTemplate("My name is {{name}}", {})).toBe(null);
+            expect(module._renderHandlebarsTemplate("My name is {{#if name}}{{name}}{{/if}}", {})).toBe("My name is ");
+            expect(module._renderHandlebarsTemplate("My name is {{^if name}}{{name}}{{/if}}", {})).toBe("My name is ", "For inverted if with variable");
+            expect(module._renderHandlebarsTemplate("My name is {{^if name}}John{{/if}}", {})).toBe("My name is John", "For inverted if with string");
+            expect(module._renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
+        });
+
+        it('module._renderMustacheTemplate() should inject $moment obj', function() {
+            var moment = module._currDate;
+            expect(moment).toBeDefined();
+            expect(module._renderHandlebarsTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
+            expect(module._renderHandlebarsTemplate("Todays date is {{$moment.dateString}}", {})).toBe("Todays date is " + moment.dateString);
+            
+            expect(module._renderHandlebarsTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
+            expect(module._renderHandlebarsTemplate("Current time is {{$moment.timeString}}", {})).toBe("Current time is " + moment.timeString);
+
+            expect(module._renderHandlebarsTemplate("ISO string is {{$moment.ISOString}}", {})).toBe("ISO string is " + moment.ISOString);
+            expect(module._renderHandlebarsTemplate("GMT string is {{$moment.GMTString}}", {})).toBe("GMT string is " + moment.GMTString);
+            expect(module._renderHandlebarsTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
+
+            expect(module._renderHandlebarsTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
+        });
+
+        var handlebarTemplateCases = [{
+              "template": "{{{m1}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo)",
+              "after_render": "<p><a href=\"http://example.com/foo\">a markdown link</a></p>"
+            }, {
+              "template": "{{{m2}}}",
+              "after_mustache": "[a markdown link](http://example.com/foo/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link]({{#escape u2}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:\\/\\/example\\.com\\/foo\\/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link]({{escape u2}})",
+              "after_mustache": "[a markdown link](http:\\/\\/example\\.com\\/foo\\/\\(a,b\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/(a,b)\">a markdown link</a></p>"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id={{#escape '(' (encode p) ')'}}{{/escape}})",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, the escape block protects the bare parens for us"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id={{escape '(' (encode p) ')'}})",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, the escape block protects the bare parens for us"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id=\\({{#encode p}}{{/encode}}\\))",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, I markdown-escape the bare parens myself for the same final output HTML"
+            }, {
+              "template": "[a markdown link](http://example.com/foo/id=\\({{encode p}}\\))",
+              "after_mustache": "[a markdown link](http://example.com/foo/id=\\(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation\\))",
+              "after_render": "<p><a href=\"http://example.com/foo/id=(messy%28%29%7B%7D%5B%5D%3C%3E%2F%3B%2C%24%3D%2Apunctuation)\">a markdown link</a></p>",
+              "note": "here, I markdown-escape the bare parens myself for the same final output HTML"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{{ǝɯɐu}}}={{{n}}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=ǝɯɐu)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL in this HTML is not actually valid according to RFC 3986!"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{ǝɯɐu}}={{#encode n}}{{/encode}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{ǝɯɐu}}={{encode n}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu"
+            }, {
+              "template": "[a markdown link](http:://example.com/foo/{{#escape ǝɯɐu '=' (encode n)}}{{/escape}})",
+              "after_mustache": "[a markdown link](http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u)",
+              "after_render": "<p><a href=\"http:://example.com/foo/name=%C7%9D%C9%AF%C9%90u\">a markdown link</a></p>",
+              "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
+              "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
+            },{
+                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With no encoding and escaping. Should give malformed HTML"
+            },{
+                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{#encode str_witha_}}{{/encode}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
+            },{
+                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{encode str_witha_}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
+            },{
+                "template" : "[{{#escape str_witha_}}{{/escape}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "note": "With escaping but no encoding. Should give malformed HTML"
+            },{
+                "template" : "[{{#escape str_witha_}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode str_witha_}}{{/encode}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
+            }];
+
+        it('module._renderHandlebarsTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
+            var printMarkdown = formatUtils.printMarkdown;
+
+            handlebarTemplateCases.forEach(function(ex) {
+                var template = module._renderHandlebarsTemplate(ex.template, obj);
+                expect(template).toBe(ex.after_mustache, "For template => " + ex.template);
+                var html = printMarkdown(template);
+                expect(html).toBe(ex.after_render + '\n', "For template => " + ex.template);
+            });
+        });
+
     });
 };
