@@ -125,34 +125,34 @@
     }
     
     if (typeof Object.assign != 'function') {
-  // Must be writable: true, enumerable: false, configurable: true
-  Object.defineProperty(Object, "assign", {
-    value: function assign(target, varArgs) { // .length of function is 2
-      'use strict';
-      if (target == null) { // TypeError if undefined or null
-        throw new TypeError('Cannot convert undefined or null to object');
-      }
+        // Must be writable: true, enumerable: false, configurable: true
+        Object.defineProperty(Object, "assign", {
+            value: function assign(target, varArgs) { // .length of function is 2
+                'use strict';
+                if (target == null) { // TypeError if undefined or null
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
 
-      var to = Object(target);
+                var to = Object(target);
 
-      for (var index = 1; index < arguments.length; index++) {
-        var nextSource = arguments[index];
+                for (var index = 1; index < arguments.length; index++) {
+                    var nextSource = arguments[index];
 
-        if (nextSource != null) { // Skip over if undefined or null
-          for (var nextKey in nextSource) {
-            // Avoid bugs when hasOwnProperty is shadowed
-            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-              to[nextKey] = nextSource[nextKey];
-            }
-          }
-        }
-      }
-      return to;
-    },
-    writable: true,
-    configurable: true
-  });
-}
+                    if (nextSource != null) { // Skip over if undefined or null
+                        for (var nextKey in nextSource) {
+                            // Avoid bugs when hasOwnProperty is shadowed
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
+                            }
+                        }
+                    }
+                }
+                return to;
+                },
+            writable: true,
+            configurable: true
+        });
+    }
 
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
@@ -1714,6 +1714,8 @@
             var text = args.splice(0, args.length - 1).join('');
             return module._escapeMarkdownCharacters(text);
         });
+
+        module._injectExternalHandlerbarHelper(module._handlebars);
     };
 
     /**
@@ -1949,7 +1951,7 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateHandlebarsTemplate = function (template, keyValues, ignoredColumns) {
-        var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless))([^\{\}]+)\}\}/, i, key, value;
+        var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless|else))([^\{\}]+)\}\}/, i, key, value;
 
         // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
@@ -1964,7 +1966,7 @@
             if (placeholders && placeholders.length) {
 
                 // Get unique placeholders
-                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
+                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
 
                 /*
                  * Iterate over all placeholders to set pattern as null if any of the
@@ -1993,7 +1995,7 @@
             if (specialPlaceholders && specialPlaceholders.length) {
 
                 // Get unique placeholders
-                specialPlaceholders = specialPlaceholders.filter(function(item, i, ar) { return ar.indexOf(item) === i; });
+                specialPlaceholders = specialPlaceholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
 
                 /*
                  * Iterate over all specialPlaceholders to set pattern as null if any of the

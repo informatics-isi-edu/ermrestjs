@@ -307,7 +307,12 @@ exports.execute = function (options) {
             expect(module._renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
         });
 
-        it('module._renderMustacheTemplate() should inject $moment obj', function() {
+        it('module._renderHandlebarsTemplate() should function correctly for ifCond helper', function() {
+            expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
+            expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'John' })).toBe("Name John is not equal to Chloe");
+        });
+
+        it('module._renderHandlebarsTemplate() should inject $moment obj', function() {
             var moment = module._currDate;
             expect(moment).toBeDefined();
             expect(module._renderHandlebarsTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);

@@ -29,6 +29,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
+	   $(JS)/handlebar_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
