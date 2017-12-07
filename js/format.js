@@ -1,3 +1,7 @@
+/*
+  This library has been built using sprintf https://github.com/alexei/sprintf.js
+ */
+
 var ERMrest = (function(module) {
 
     // A list of regular expression to extract flags, width and precision from format strings
