@@ -511,8 +511,14 @@
                     return true;
                 };
 
-                // only add choices, range, and search
+                // only add choices, range, search, and not_null
                 var mergeFacetObjects = function (source, extra) {
+                    // if not_null is in the filters other filters are not applicable.
+                    if (extra.not_null === true) {
+                        source.not_null = true;
+                        return;
+                    }
+
                     ['choices', 'ranges', 'search'].forEach(function (key) {
                         if (!Array.isArray(extra[key])) {
                             return;
@@ -543,7 +549,6 @@
 
                             source[key].push(ch);
                         });
-
                     });
                 };
 
@@ -637,6 +642,7 @@
 
                         // if we have filters in the url, we will get the filters only from url
                         if (andFilters.length > 0) {
+                            delete obj.not_null;
                             delete obj.choices;
                             delete obj.search;
                             delete obj.ranges;
@@ -5069,6 +5075,7 @@
         }
 
         // the whole filter object
+        // NOTE: This might not include the filters
         this._facetObject = facetObject;
     }
     FacetColumn.prototype = {
@@ -5464,7 +5471,8 @@
          *    "source": <data-source>,
          *    "choices": [v, ...],
          *    "ranges": [{"min": v1, "max": v2}, ...],
-         *    "search": [v, ...]
+         *    "search": [v, ...],
+         *    "not_null": true
          * }
          * ```
          *
@@ -5476,6 +5484,14 @@
             var hasJSONNull = {};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
+
+                // if there's a not_null filter other filters are not applicable.
+                if (f.facetFilterKey === "not_null") {
+                    res = [];
+                    res[f.facetFilterKey] = true;
+                    break;
+                }
+
                 if (!(f.facetFilterKey in res)) {
                     res[f.facetFilterKey] = [];
                 }
@@ -5509,7 +5525,8 @@
          *    "source": <data-source>,
          *    "choices": [v, ...],
          *    "ranges": [{"min": v1, "max": v2}, ...],
-         *    "search": [v, ...]
+         *    "search": [v, ...],
+         *    "not_null": true
          * }
          * ```
          *
@@ -5520,6 +5537,12 @@
             self.filters = [];
 
             if (!isDefinedAndNotNull(json)) {
+                return;
+            }
+
+            // if there's a not_null other filters are not applicable.
+            if (json.not_null === true) {
+                self.filters.push(new NotNullFacetFilter());
                 return;
             }
 
@@ -5578,6 +5601,15 @@
                     self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
+        },
+
+        get hasNotNullFilter() {
+            if (this._hasNotNullFilter === undefined) {
+                this._hasNotNullFilter = this.filters.filter(function (f) {
+                    return f instanceof NotNullFacetFilter;
+                })[0] !== undefined;
+            }
+            return this._hasNotNullFilter;
         },
 
         /**
@@ -5708,6 +5740,12 @@
             };
         },
 
+        /**
+         * Create a new Reference with removing any range filter that has the given min and max combination.
+         * @param  {String|int=} min minimum value. Can be null or undefined.
+         * @param  {String|int=} max maximum value. Can be null or undefined.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
         removeRangeFilter: function (min, max) {
             //TODO needs refactoring
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
@@ -5720,11 +5758,26 @@
         },
 
         /**
+         * Create a new Reference with removing all the filters and adding a not-null filter.
+         * @return {ERMrest.Reference}
+         */
+        addNotNullFilter: function () {
+            return this._applyFilters([new NotNullFacetFilter()]);
+        },
+
+        /**
+         * Create a new Reference without any filters.
+         * @return {ERMrest.Reference}
+         */
+        removeNotNullFilter: function () {
+            return this._applyFilters([]);
+        },
+
+        /**
          * Create a new Reference by removing all the filters from current facet.
          * @return {ERMrest.Reference} the reference with the new filter
          */
         removeAllFilters: function() {
-
             return this._applyFilters([]);
         },
 
@@ -5911,6 +5964,10 @@
         }
         return res;
     };
+
+    function NotNullFacetFilter () {
+        this.facetFilterKey = "not_null";
+    }
 
     /**
      * Constructs an Aggregate Funciton object

@@ -1235,7 +1235,8 @@
      *          "source": <data-source>,
      *          "choices": [v, ...],
      *          "ranges": [{"min": v1, "max": v2}, ...],
-     *          "search": [v, ...]
+     *          "search": [v, ...],
+     *          "not_null": true
      *      },
      *      ...
      *  ]
@@ -1492,6 +1493,10 @@
                         return "";
                     }
                     constraints.push(parsed);
+                }
+
+                if (term.not_null === true) {
+                    constraints.push("!(" + module._fixedEncodeURIComponent(col) + "::null::)");
                 }
 
                 if (constraints.length == 0) {
