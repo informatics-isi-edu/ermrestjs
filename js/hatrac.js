@@ -660,7 +660,7 @@ var ERMrest = (function(module) {
         row[this.column.name].sha256 = this.hash.sha256;
 
         // Generate url
-        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
+        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true, templateEngine: this.column.templateEngine });
 
         // If the template is null then throw an error
         if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);

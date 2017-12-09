@@ -343,6 +343,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
         * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+        * [.templateEngine](#ERMrest.AssetPseudoColumn+templateEngine) : <code>ERMrest.Refernece</code>
         * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
         * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
@@ -1317,6 +1318,8 @@ return the default value for a column after checking whether it's a primitive th
 
 #### column.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this column definition.
+If a column display annotation with preformat property is available then use prvided format string
+else use the default formatValue function
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>string</code> - The formatted value.  
@@ -3276,6 +3279,7 @@ The Foreign key object that this PseudoColumn is created based on
     * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
     * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+    * [.templateEngine](#ERMrest.AssetPseudoColumn+templateEngine) : <code>ERMrest.Refernece</code>
     * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
     * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
@@ -3310,6 +3314,12 @@ Indicates that this ReferenceColumn is an asset.
 <a name="ERMrest.AssetPseudoColumn+urlPattern"></a>
 
 #### assetPseudoColumn.urlPattern : <code>ERMrest.Refernece</code>
+Returns the url_pattern defined in the annotation (the raw value and not computed).
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+templateEngine"></a>
+
+#### assetPseudoColumn.templateEngine : <code>ERMrest.Refernece</code>
 Returns the url_pattern defined in the annotation (the raw value and not computed).
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
