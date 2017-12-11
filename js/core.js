@@ -1784,7 +1784,10 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options.formattedValues === undefined) {
+                if (options === undefined || options !== Object(options)) {
+                    options = {};
+                }
+                if (options.formattedValues === undefined) {
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 

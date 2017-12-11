@@ -799,6 +799,7 @@
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
     module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+        
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -851,7 +852,7 @@
 
             for (i = 0; i < fkey.colset.columns.length; i++) {
                 col = fkey.colset.columns[i];
-                pres = col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues});
+                pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
             }
