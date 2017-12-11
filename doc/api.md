@@ -1317,6 +1317,8 @@ return the default value for a column after checking whether it's a primitive th
 
 #### column.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this column definition.
+If a column display annotation with preformat property is available then use prvided format string
+else use the default formatValue function
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>string</code> - The formatted value.  
