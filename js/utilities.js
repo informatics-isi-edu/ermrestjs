@@ -125,34 +125,36 @@
     }
     
     if (typeof Object.assign != 'function') {
-  // Must be writable: true, enumerable: false, configurable: true
-  Object.defineProperty(Object, "assign", {
-    value: function assign(target, varArgs) { // .length of function is 2
-      'use strict';
-      if (target == null) { // TypeError if undefined or null
-        throw new TypeError('Cannot convert undefined or null to object');
-      }
+        
+        // Must be writable: true, enumerable: false, configurable: true
+        Object.defineProperty(Object, "assign", {
+            value: function assign(target, varArgs) { // .length of function is 2
+                'use strict';
 
-      var to = Object(target);
+                if (target == null) { // TypeError if undefined or null
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
 
-      for (var index = 1; index < arguments.length; index++) {
-        var nextSource = arguments[index];
+                var to = Object(target);
 
-        if (nextSource != null) { // Skip over if undefined or null
-          for (var nextKey in nextSource) {
-            // Avoid bugs when hasOwnProperty is shadowed
-            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-              to[nextKey] = nextSource[nextKey];
-            }
-          }
-        }
-      }
-      return to;
-    },
-    writable: true,
-    configurable: true
-  });
-}
+                for (var index = 1; index < arguments.length; index++) {
+                    var nextSource = arguments[index];
+
+                    if (nextSource != null) { // Skip over if undefined or null
+                        for (var nextKey in nextSource) {
+                            // Avoid bugs when hasOwnProperty is shadowed
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
+                            }
+                        }
+                    }
+                }
+            return to;
+            },
+            writable: true,
+            configurable: true
+        });
+    }
 
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
@@ -639,7 +641,7 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk._name]);
+                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
                 if (!presentation) return;
                 
                 cons = fk.constraint_names[0];
@@ -648,7 +650,7 @@
                 }
                 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
-                    "values": getTableValues(linkedData[fk._name], fk.key.table),
+                    "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": presentation.unformatted,
                     "uri": {
                         "detailed": presentation.reference.contextualize.detailed.appLink
@@ -1937,7 +1939,7 @@
     module._renderTemplate = function (template, data, table, context, options) {
 
         // to avoid computing data mutliple times, or if we don't want the formatted values
-        if (options === undefined || !options.formatted) {
+        if (table && (options === undefined || !options.formatted)) {
             data = module._getFormattedKeyValues(table, context, data);
         }
 

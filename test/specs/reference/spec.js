@@ -18,8 +18,9 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/14.pseudo_columns.js",
         "/reference/tests/15.reference_column.js",
         "/reference/tests/16.default_value.js",
-        "/reference/tests/17.aggregates.js"
-
+        "/reference/tests/17.aggregates.js",
+        "/reference/tests/18.disabled_system_columns.js",
+        "/reference/tests/19.reference_pre_format_values.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",

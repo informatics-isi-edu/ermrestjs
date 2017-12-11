@@ -21,7 +21,7 @@ exports.execute = function (options) {
 
         var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithAsset + "/id=" + entityId;
-            
+
         var singleEnitityUriDiffColTypes = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithDiffColTypes + "/id=" + entityId;
 
@@ -97,7 +97,7 @@ exports.execute = function (options) {
                 return options.ermRest.resolve(singleEnitityUriDiffColTypes, {cid: "test"});
             }).then(function (ref) {
                 diffColTypeColumns = ref.contextualize.compact.columns;
-                
+
                 done();
             }).catch(function (err){
                 console.dir(err);
@@ -459,7 +459,7 @@ exports.execute = function (options) {
         });
 
         describe('.filteredRef, ', function() {
-            var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData,
+            var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData, foreignKeyData,
                 mainEntityTableName = "main-entity-table",
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
                 mainEntityUri = schemaUri  + mainEntityTableName;
@@ -481,6 +481,7 @@ exports.execute = function (options) {
                             // i=4 - text column that constrains the following fk
                             // i=5 - foreign key to position table with domain filter defined with dynamic value
                             // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values
+                            // i=7 - foreign key to position table with
                             mainEntityColumns = response.columns;
 
                             done();
@@ -506,14 +507,14 @@ exports.execute = function (options) {
                         });
 
                         it('Reference for mainEntityColumns[2], should have proper domain filter.', function() {
-                            mainEntityData = {"fk1": 1};
+                            mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1);
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
-                            mainEntityData = {"fk1": 1, "position_text_col": "relative"};
+                            mainEntityData = {"fk1": 1234, "position_text_col": "relative"};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col);
@@ -553,6 +554,39 @@ exports.execute = function (options) {
 
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
                         });
+                    });
+
+                    describe("should be able to access other foreignkey data, ", function () {
+                        it ("when data is not available should return the unfiltered reference.", function () {
+                            mainEntityData = {"fk1": 1234};
+                            filteredReference = mainEntityColumns[7].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                        });
+
+                        it("otherwise should use the provided data.", function () {
+                            mainEntityData = {"fk1": 1234};
+                            foreignKeyData = {
+                                "columns_schema_fk_position_predefined": {
+                                    "int_value": 4321,
+                                    "id": 1
+                                },
+                                "columns_schema_fk_position_user_defined": {
+                                    "int_value": 1235,
+                                    "id": 2
+                                }
+                            };
+                            filteredReference = mainEntityColumns[7].filteredRef(mainEntityData, foreignKeyData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=4321&position_col=1235&id=1234");
+                        });
+                    });
+
+                    it("should return the originating reference if the domain_filter_pattern results in an invalid (not understandable by parser) url.", function () {
+                        mainEntityData = {"position_text_col": "a&v&c"};
+                        filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
+
+                        expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
                     });
                 });
             });
@@ -619,11 +653,11 @@ exports.execute = function (options) {
                     it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
                         val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
-                        
+
                         val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("value");
                     });
-                    
+
                     it('if coulmn has column-display annotation, use it.', function () {
                         val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("<h2>filename</h2>\n");
@@ -631,7 +665,7 @@ exports.execute = function (options) {
 
                     it("otherwise return a download link", function() {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com" download="" class="btn btn-primary">filename</a>');
+                        expect(val).toEqual('<a href="https://example.com" download="" class="download">filename</a>');
                     });
                  });
 
@@ -736,7 +770,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
-                
+
                 it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
                     expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
                     expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
@@ -751,7 +785,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
-                
+
                 it ("when column doesn't have `column_order ` annotation, should return false if it's json or jsonb.", function () {
                     expect(diffColTypeColumns[8].sortable).toBe(false, "sortable missmatch, index=8.");
                     expect(diffColTypeColumns[8]._sortColumns.length).toBe(0, "sort column length missmatch, index=8.");
