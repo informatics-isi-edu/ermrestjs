@@ -3185,8 +3185,8 @@
      * this data was acquired.
      * @param {String} etag The etag from the reference object that produced this page
      * @param {!Object[]} data The data returned from ERMrest.
-     * @param {boolean} hasNext Whether there is more data before this Page
-     * @param {boolean} hasPrevious Whether there is more data after this Page
+     * @param {boolean} hasPrevious Whether there is more data before this Page
+     * @param {boolean} hasNext Whether there is more data after this Page
      * @param {!Object} extraData if
      *
      */
@@ -6183,6 +6183,11 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            var options = {
+                bucketCount: bucketCount,
+                absMin: min,
+                absMax: max
+            };
 
             if (this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
@@ -6198,6 +6203,11 @@
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
 
+            // if min and max are same value, bin API fails
+            // TODO: based on type, increment max by 1 unit
+            if (max == min) {
+                max += 1;
+            }
             var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
@@ -6213,6 +6223,6 @@
             ];
 
             //TODO this should just return the results, but I'm not sure about the datastructure.
-            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
+            return new BucketAttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog, options);
         }
     };

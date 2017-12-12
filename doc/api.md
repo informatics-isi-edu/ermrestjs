@@ -282,7 +282,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
+        * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -421,6 +421,9 @@ to use for ERMrest JavaScript agents.
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
+    * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
+    * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple) : <code>object</code>
+    * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
@@ -2658,7 +2661,7 @@ NOTE:
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
+    * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2669,7 +2672,7 @@ NOTE:
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, etag, data, hasNext, hasPrevious, extraData)
+#### new Page(reference, etag, data, hasPrevious, hasNext, extraData)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2687,8 +2690,8 @@ Usage:
 | reference | [<code>Reference</code>](#ERMrest.Reference) | The reference object from which this data was acquired. |
 | etag | <code>String</code> | The etag from the reference object that produced this page |
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
-| hasNext | <code>boolean</code> | Whether there is more data before this Page |
-| hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
+| hasPrevious | <code>boolean</code> | Whether there is more data before this Page |
+| hasNext | <code>boolean</code> | Whether there is more data after this Page |
 | extraData | <code>Object</code> | if |
 
 <a name="ERMrest.Page+reference"></a>
@@ -4006,6 +4009,18 @@ get PathColumn object by column name
 <a name="ERMrest.AttributeGroupReference"></a>
 
 ### ERMrest.AttributeGroupReference : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+<a name="ERMrest.AttributeGroupPage"></a>
+
+### ERMrest.AttributeGroupPage : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+<a name="ERMrest.AttributeGroupTuple"></a>
+
+### ERMrest.AttributeGroupTuple : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+<a name="ERMrest.BucketAttributeGroupReference"></a>
+
+### ERMrest.BucketAttributeGroupReference : <code>object</code>
 **Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
 <a name="ERMrest.configure"></a>
 
