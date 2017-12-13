@@ -123,9 +123,9 @@
             return this.substr(position, searchString.length) === searchString;
         };
     }
-    
+
     if (typeof Object.assign != 'function') {
-        
+
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, "assign", {
             value: function assign(target, varArgs) { // .length of function is 2
@@ -176,10 +176,10 @@
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
-    
+
     module.decodeFacet = function (blob) {
         var err = new module.InvalidFacetOperatorError();
-        
+
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
             if (str === null) {
@@ -200,7 +200,7 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
-    
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -247,7 +247,7 @@
             }
         }
     };
-    
+
     /**
      * @private
      * @function
@@ -266,7 +266,7 @@
     module._simpleDeepCopy = function (source) {
         return JSON.parse(JSON.stringify(source));
     };
-    
+
     /**
      * Given a string, will return the existing value in the object.
      * It will return undefined if the key doesn't exist or invalid input.
@@ -276,7 +276,7 @@
      */
     module._getPath = function (obj, path) {
         var pathNodes;
-        
+
         if (typeof path === "string") {
             if (path.length === 0) {
                 return this[""];
@@ -345,13 +345,13 @@
         }
         return undefined;
     };
-    
+
     /**
      * Given an object recursively replace all the dots in the keys with underscore.
      * This will also remove any custom JavaScript objects.
      * NOTE: This function will ignore any objects that has been created from a custom constructor.
      * NOTE: This function does not detect loop, make sure that your object does not have circular references.
-     * 
+     *
      * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
      * @return {Object} A new object created by:
      *  1. Replacing the dots in keys to underscore.
@@ -361,7 +361,7 @@
         var res = {}, val, k, newK;
         for (k in obj) {
             if (!obj.hasOwnProperty(k)) continue;
-            val = obj[k];  
+            val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular referene)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
@@ -602,7 +602,7 @@
     /**
      * @function
      * @private
-     * @param {ERMrest.Table} table The object that we want the formatted values for. 
+     * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object} linkedData The object which contains key value paris of foreign key data.
@@ -611,14 +611,14 @@
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname;
-        
+
         var findCol = function (colName, currTable) {
             if (Array.isArray(currTable)) {
                 return currTable.filter(function (col) {return col.name === colName;})[0];
             }
             return currTable.columns.get(k);
         };
-        
+
         var getTableValues = function (d, currTable) {
             var res = {};
             for (k in d) {
@@ -633,34 +633,34 @@
             }
             return res;
         };
-        
+
         // get the data from current table
         keyValues = getTableValues(data, table);
-        
+
         //get foreignkey data if available
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
                 presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
                 if (!presentation) return;
-                
+
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
                     keyValues.$fkeys[cons[0]] = {};
                 }
-                
+
                 keyValues.$fkeys[cons[0]][cons[1]] = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": presentation.unformatted,
                     "uri": {
                         "detailed": presentation.reference.contextualize.detailed.appLink
                     }
-                }; 
-                
-                 
+                };
+
+
             });
         }
-        
+
         return keyValues;
     };
 
@@ -699,12 +699,12 @@
             if (typeof keyValues === 'undefined') {
                 keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
             }
-            
+
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
-            
+
         }
-        
-        
+
+
         // annotation was not defined, or it's producing empty string.
         if (pattern == null || pattern.trim() === '') {
 
@@ -772,7 +772,7 @@
 
             template = "{{{name}}}";
             keyValues = {"name": result};
-            
+
             // get templated patten after replacing the values using Mustache
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
         }
@@ -789,17 +789,17 @@
         };
 
     };
-    
+
     /**
      * @function
      * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object 
+     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this foreignKey is referring to.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
     module._generateForeignKeyPresentation = function (foreignKey, context, data) {
-        
+
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1556,7 +1556,7 @@
                 }
             }
         });
-        
+
         md.use(mdContainer, 'video', {
             /*
              * Checks whether string matches format ":::video (LINK){ATTR=VALUE .CLASSNAME}"
@@ -1565,23 +1565,23 @@
             validate: function(params) {
                 return params.trim().match(/video\s+(.*$)/i);
             },
-            
+
             render: function (tokens, idx) {
                 // Get token string after regeexp matching to determine actual internal markdown
                 var m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
-                
+
                 // If this is the opening tag i.e. starts with "::: video "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
-                    
+
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
-                    
+
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var videoHTML="<video controls ", openingLink = attrs[0].children[0];
                             var srcHTML="", videoClass="", flag = true, posTop = true;
-                            
+
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
@@ -1590,7 +1590,7 @@
                                         return "";
                                     }
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
-                                } 
+                                }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
                                     videoClass +=  attr[0]+ "="+ attr[1] +" ";
                                 }
@@ -1601,7 +1601,7 @@
                                     posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
                                 }
                             });
-                            
+
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
                             // over all the children until link_close is encountered rednering their markdown
@@ -1617,7 +1617,7 @@
                                     }
                                 }
                             }
-                            
+
                             if(captionHTML.trim().length && flag && posTop){
                                 html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
@@ -1636,7 +1636,7 @@
                 } else {
                   // closing tag
                   return '';
-                }    
+                }
             }
         });
     };
@@ -1770,7 +1770,7 @@
         var date = new Date();
 
         var dateObj = {};
-        
+
         // Set date properties
         dateObj.day = date.getDay();
         dateObj.date = date.getDate();
@@ -1789,7 +1789,7 @@
         dateObj.ISOString = date.toISOString();
         dateObj.GMTString = date.toGMTString();
         dateObj.UTCString = date.toUTCString();
-        
+
         dateObj.localeDateString = date.toLocaleDateString();
         dateObj.localeTimeString = date.toLocaleTimeString();
         dateObj.localeString = date.toLocaleString();
@@ -1801,7 +1801,7 @@
     /**
      * @function
      * @desc
-     * Add utility objects such as date (Computed value) to mustache data obj 
+     * Add utility objects such as date (Computed value) to mustache data obj
      * so that they can be accessed in the template
      */
     module._addErmrestVarsToTemplate = function(obj) {
@@ -1822,7 +1822,7 @@
 
         options = options || {};
 
-        var obj = {};            
+        var obj = {};
         if (keyValues && isObject(keyValues)) {
             try {
                 // recursively replace dot with underscore in column names.
@@ -1908,10 +1908,10 @@
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
-                    
+
                     // find the value.
                     var value = module._getPath(keyValues, key.trim());
-                    
+
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
                     // If key is not in ingored columns value for the key is null or undefined then return null
@@ -2126,22 +2126,25 @@
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-    
+
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
-    
+
     // these types should be ignored for usage in heuristic for facet
     module._facetHeuristicIgnoredTypes = [
         'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
-    
+
     // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
         "json"
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+
+    // NOTE: currently we only ignore the system columns
+    module._ignoreDefaultsNames = module._systemColumns;
 
     module._contextHeaderName = 'Deriva-Client-Context';

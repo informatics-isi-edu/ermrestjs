@@ -315,7 +315,7 @@
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         },
-        
+
         /**
          * Given tableName, and schemaName find the table
          * @param  {string} tableName  name of the table
@@ -324,7 +324,7 @@
          */
         getTable: function (tableName, schemaName) {
             var schema;
-            
+
             if (!schemaName) {
                 var schemas = this.schemas.all();
                 for (var i = 0; i < schemas.length; i++) {
@@ -342,7 +342,7 @@
             } else {
                 schema = this.schemas.get(schemaName);
             }
-            
+
             return schema.tables.get(tableName);
         }
     };
@@ -1758,16 +1758,16 @@
 
             var display = this.getDisplay(context);
 
-            /* 
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            
+
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
             }
-                
-            /* 
+
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * then return data as it is
              */
@@ -1797,18 +1797,18 @@
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            
+
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
-            
+
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
              value = utils.printMarkdown(unformatted, options);
-             
+
              return { isHTML: true, value: value, unformatted: unformatted };
-            
+
         };
 
         /**
@@ -1944,6 +1944,10 @@
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
+                    // If the column typename is in the list of types to ignore setting the default for, throw an error to the catch clause
+                    if (module._ignoreDefaultsNames.includes(this.name)) {
+                        throw new Error("" + this.type.name + " is in the list of ignored default types");
+                    }
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
@@ -2046,7 +2050,7 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             col = this.table.columns.get(annotation.column_order[i]);
-                            
+
                             // json and jsonb are not sortable.
                             if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
                                 continue;
@@ -2091,7 +2095,7 @@
             if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                 return display.columnOrder;
             }
-            
+
             if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
                 return undefined;
             }
@@ -2475,7 +2479,7 @@
         /**
          * It won't preserve the order of given columns.
          * Returns set of columns sorted by their names.
-         * 
+         *
          * @type {Array}
          */
         this.columns = columns.slice().sort(function(a, b) {
@@ -3020,7 +3024,7 @@
 
     Type.prototype = {
         constructor: Type,
-        
+
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.

@@ -1,7 +1,7 @@
 exports.execute = function(options) {
 
     describe('About the Column class, ', function() {
-        var schemaName2 = 'common_schema_2', 
+        var schemaName2 = 'common_schema_2',
             columnName = 'table_1_text',
             table1_schema2;
 
@@ -304,6 +304,52 @@ exports.execute = function(options) {
                 });
             });
 
+            describe('column defaults, ', function () {
+                var table;
+                var tableName = "table_w_defaults",
+                    columns = [
+                        { name: "boolean_proper", value: true },
+                        { name: "boolean_improper", value: null },
+                        { name: "date_proper", value: "2010-06-08" },
+                        { name: "date_improper", value: null },
+                        { name: "timestamp_proper", value: "2016-05-14 17:30:00" },
+                        { name: "timestamp_improper", value: null },
+                        { name: "timestamptz_proper", value: "2016-05-14 17:30:00-07" },
+                        { name: "timestamptz_improper", value: null },
+                        { name: "float4_proper", value: 1.456 },
+                        { name: "float4_improper", value: null },
+                        { name: "float8_proper", value: 22.7849503 },
+                        { name: "float8_improper", value: null },
+                        { name: "numeric_proper", value: "0.591294" },
+                        { name: "numeric_improper", value: null },
+                        { name: "int2_proper", value: 12 },
+                        { name: "int2_improper", value: null },
+                        { name: "int4_proper", value: 373834945 },
+                        { name: "int4_improper", value: null },
+                        { name: "int8_proper", value: 73829572 },
+                        { name: "int8_improper", value: null },
+                        { name: "RID", value: null },
+                        { name: "RCB", value: null },
+                        { name: "RMB", value: null },
+                        { name: "RCT", value: null },
+                        { name: "RMT", value: null }
+                    ];
+
+                beforeAll(function (done) {
+                    table = options.catalog.schemas.get(schemaName2).tables.get(tableName);
+                    done();
+                });
+
+                for (var i=0; i<columns.length; i++) {
+                    (function(columnParams) {
+                        it("for column: " + columnParams.name + ", default should be set properly", function (done) {
+                            var column = table.columns.get(columnParams.name);
+                            expect(column.default).toBe(columnParams.value, "default is not set properly");
+                            done();
+                        });
+                    }) (columns[i], i);
+                }
+            });
         });
     });
 };
