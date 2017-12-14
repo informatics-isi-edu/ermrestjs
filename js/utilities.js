@@ -125,7 +125,7 @@
     }
 
     if (typeof Object.assign != 'function') {
-        
+
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, "assign", {
             value: function assign(target, varArgs) { // .length of function is 2
@@ -200,7 +200,7 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
-    
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -345,13 +345,13 @@
         }
         return undefined;
     };
-    
+
     /**
      * Given an object recursively replace all the dots in the keys with underscore.
      * This will also remove any custom JavaScript objects.
      * NOTE: This function will ignore any objects that has been created from a custom constructor.
      * NOTE: This function does not detect loop, make sure that your object does not have circular references.
-     * 
+     *
      * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
      * @return {Object} A new object created by:
      *  1. Replacing the dots in keys to underscore.
@@ -361,7 +361,7 @@
         var res = {}, val, k, newK;
         for (k in obj) {
             if (!obj.hasOwnProperty(k)) continue;
-            val = obj[k];  
+            val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular referene)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
@@ -799,7 +799,7 @@
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
     module._generateForeignKeyPresentation = function (foreignKey, context, data) {
-        
+
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -894,22 +894,37 @@
      *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
      *
      */
-    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
-      var mappedErrMessage;
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference) {
+      var mappedErrMessage, refTable, tableDisplayName = '';
+      var ref = reference;
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
 
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
 
           var referenceTable = "another";
-          
+
           var detail = generatedErrMessage.search(/DETAIL:/g);
           if (detail > -1) {
             detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
             referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
             if(referenceTable && referenceTable.length > 1){
-                referenceTable =  "the <code>"+ referenceTable[1] +"</code>";
+                refTable = referenceTable[1];
+                referenceTable =  refTable;
             }
           }
+
+          //get constraintName
+          var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];
+          var relatedRef = ref.related();
+
+          for(i = 0; i < relatedRef.length; i++){
+              key  = relatedRef[i];
+              if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
+                referenceTable = key.displayname.value;
+                break;
+              }
+          }
+          referenceTable =  "the <code>"+ referenceTable +"</code>";
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
           mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted.";
@@ -918,7 +933,7 @@
       else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
               matches = regExp.exec(generatedErrMessage), msgTail;
-          
+
           if (matches && matches.length > 1) {
               var primaryColumns =  matches[1].split(','),
                   numberOfKeys = primaryColumns.length;
@@ -929,7 +944,7 @@
                 msgTail = primaryColumns;
               }
           }
-          
+
 
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
@@ -941,7 +956,7 @@
       }
       else{
           mappedErrMessage = generatedErrMessage;
-          
+
           // remove the previx if exists
           if (mappedErrMessage.startsWith(conflictErrorPrefix)){
             mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
@@ -963,7 +978,7 @@
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response) {
+    module._responseToError = function (response, reference) {
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
@@ -981,7 +996,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return module._conflictErrorMapping(response.statusText, response.data);
+                return module._conflictErrorMapping(response.statusText, response.data, reference);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
@@ -1897,7 +1912,7 @@
 
         options = options || {};
 
-        var obj = {};            
+        var obj = {};
         if (keyValues && isObject(keyValues)) {
             try {
                 // recursively replace dot with underscore in column names.

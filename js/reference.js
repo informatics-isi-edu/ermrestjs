@@ -1754,13 +1754,13 @@
                  *
                  * github issue: #425
                  */
-
+                var self = this;
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
-                    return defer.reject(module._responseToError(deleteError));
+                    return defer.reject(module._responseToError(deleteError, self));
                 }).catch(function (catchError) {
-                    return defer.reject(module._responseToError(catchError));
+                    return defer.reject(module._responseToError(catchError, self));
                 });
 
                 return defer.promise;
