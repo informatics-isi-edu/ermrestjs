@@ -894,7 +894,7 @@
      *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
      *
      */
-    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference) {
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
       var mappedErrMessage, refTable, tableDisplayName = '';
       var ref = reference;
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
@@ -913,17 +913,20 @@
             }
           }
 
-          //get constraintName
-          var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];
-          var relatedRef = ref.related();
+          if(actionFlag == "DEL"){            
+            var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
+            if(fkConstraint != 'undefined' && fkConstraint != ''){
+              var relatedRef = ref.related(); //get all related references
 
-          for(i = 0; i < relatedRef.length; i++){
-              key  = relatedRef[i];
-              if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
-                referenceTable = key.displayname.value;
-                break;
-              }
-          }
+              for(i = 0; i < relatedRef.length; i++){
+                  key  = relatedRef[i];
+                  if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
+                    referenceTable = key.displayname.value;
+                    break;
+                  }
+                }
+            }
+        }
           referenceTable =  "the <code>"+ referenceTable +"</code>";
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
@@ -978,7 +981,7 @@
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response, reference) {
+    module._responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
@@ -996,7 +999,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return module._conflictErrorMapping(response.statusText, response.data, reference);
+                return module._conflictErrorMapping(response.statusText, response.data, reference, actionFlag);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
