@@ -612,7 +612,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe ("next ", function () {
+            describe ("Next with more data ", function () {
                 it ("should return a reference with correct url.", function () {
                     newRef = page.next;
                     // the last row has "value x": 17 and "fk_col": null
@@ -632,7 +632,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe ("next ", function () {
+            describe ("Previous with more data ", function () {
                 it ("should return a reference with correct url.", function () {
                     // this is the page from the page.next
                     newRef = page.previous;
