@@ -125,7 +125,7 @@
     }
 
     if (typeof Object.assign != 'function') {
-        
+
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, "assign", {
             value: function assign(target, varArgs) { // .length of function is 2
@@ -200,7 +200,7 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
-    
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -345,13 +345,13 @@
         }
         return undefined;
     };
-    
+
     /**
      * Given an object recursively replace all the dots in the keys with underscore.
      * This will also remove any custom JavaScript objects.
      * NOTE: This function will ignore any objects that has been created from a custom constructor.
      * NOTE: This function does not detect loop, make sure that your object does not have circular references.
-     * 
+     *
      * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
      * @return {Object} A new object created by:
      *  1. Replacing the dots in keys to underscore.
@@ -361,7 +361,7 @@
         var res = {}, val, k, newK;
         for (k in obj) {
             if (!obj.hasOwnProperty(k)) continue;
-            val = obj[k];  
+            val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular referene)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
@@ -799,7 +799,7 @@
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
     module._generateForeignKeyPresentation = function (foreignKey, context, data) {
-        
+
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1897,7 +1897,7 @@
 
         options = options || {};
 
-        var obj = {};            
+        var obj = {};
         if (keyValues && isObject(keyValues)) {
             try {
                 // recursively replace dot with underscore in column names.
@@ -2218,5 +2218,8 @@
     ];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+
+    // NOTE: currently we only ignore the system columns
+    module._ignoreDefaultsNames = module._systemColumns;
 
     module._contextHeaderName = 'Deriva-Client-Context';
