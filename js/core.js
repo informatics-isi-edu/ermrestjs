@@ -1989,7 +1989,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    console.dir(e);
+                    console.dir(e.message);
                     this._default = null;
                 }
             }
