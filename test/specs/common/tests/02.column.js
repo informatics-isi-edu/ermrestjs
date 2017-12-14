@@ -211,7 +211,7 @@ exports.execute = function(options) {
                         var formattedValue = col.formatvalue(testVal);
 
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('2011-05-06 08:25:25');
+                        expect(formattedValue).toBe(options.ermRest._moment(testVal).format("YYYY-MM-DD HH:mm:ss"));
                     });
                 });
 
@@ -312,9 +312,9 @@ exports.execute = function(options) {
                         { name: "boolean_improper", value: null },
                         { name: "date_proper", value: "2010-06-08" },
                         { name: "date_improper", value: null },
-                        { name: "timestamp_proper", value: "2016-05-14 17:30:00" },
+                        { name: "timestamp_proper", value: options.ermRest._moment("2016-05-14 17:30:00").format("YYYY-MM-DD HH:mm:ss") },
                         { name: "timestamp_improper", value: null },
-                        { name: "timestamptz_proper", value: "2016-05-14 17:30:00-07" },
+                        { name: "timestamptz_proper", value: options.ermRest._moment("2016-05-14 17:30:00-07").format("YYYY-MM-DD HH:mm:ssZ") },
                         { name: "timestamptz_improper", value: null },
                         { name: "float4_proper", value: 1.456 },
                         { name: "float4_improper", value: null },
