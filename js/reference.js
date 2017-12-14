@@ -3360,7 +3360,7 @@
                         values.push(data);
                     } else {
                         // pseudo column
-                        var pseudoCol, j;
+                        var pseudoCol, j, fkData;
                         for (j = 0; j < this._ref.columns.length; j++) {
                             if (this._ref.columns[j].name == colName) {
                                 pseudoCol = this._ref.columns[j];
@@ -3370,7 +3370,11 @@
 
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol.isForeignKey) {
-                                data = this._linkedData[0][colName][pseudoCol._sortColumns[j].name];
+                                data = null;
+                                fkData = this._linkedData[0][colName];
+                                if (isObjectAndNotNull(fkData)) {
+                                    data = fkData[pseudoCol._sortColumns[j].name];
+                                }
                             } else {
                                 data = this._data[0][pseudoCol._sortColumns[j].name];
                             }
@@ -3427,7 +3431,7 @@
                         values.push(data);
                     } else {
                         // pseudo column
-                        var pseudoCol, j;
+                        var pseudoCol, j, fkData;
                         for (j = 0; j < this._ref.columns.length; j++) {
                             if (this._ref.columns[j].name == colName) {
                                 pseudoCol = this._ref.columns[j];
@@ -3436,7 +3440,11 @@
                         }
                         for(j = 0; j < pseudoCol._sortColumns.length; j++) {
                             if (pseudoCol.isForeignKey) {
-                                data = this._linkedData[this._linkedData.length-1][colName][pseudoCol._sortColumns[j].name];
+                                data = null;
+                                fkData = this._linkedData[this._linkedData.length-1][colName];
+                                if (isObjectAndNotNull(fkData)) {
+                                    data =  fkData[pseudoCol._sortColumns[j].name];
+                                }
                             } else {
                                 data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
                             }
