@@ -513,10 +513,8 @@
 
                 // only add choices, range, search, and not_null
                 var mergeFacetObjects = function (source, extra) {
-                    // if not_null is in the filters other filters are not applicable.
                     if (extra.not_null === true) {
                         source.not_null = true;
-                        return;
                     }
 
                     ['choices', 'ranges', 'search'].forEach(function (key) {
@@ -5597,16 +5595,15 @@
          */
         toJSON: function () {
             var res = { "source": Array.isArray(this.dataSource) ? this.dataSource.slice() : this.dataSource};
+
             // to avoid adding more than one null for json.
             var hasJSONNull = {};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
 
-                // if there's a not_null filter other filters are not applicable.
                 if (f.facetFilterKey === "not_null") {
-                    res = [];
-                    res[f.facetFilterKey] = true;
-                    break;
+                    res.not_null = true;
+                    continue;
                 }
 
                 if (!(f.facetFilterKey in res)) {
@@ -5636,6 +5633,11 @@
         /**
          * Given an object will create list of filters.
          *
+         * NOTE: if we have not_null, other filters except =null are not relevant.
+         * That means if we saw not_null:
+         * 1. If =null exist, then set the filters to empty array.
+         * 2. otherwise set the filter to just the not_null
+         *
          * Expected object format format:
          * ```
          * {
@@ -5650,7 +5652,7 @@
          * @param  {Object} json JSON representation of filters
          */
         _setFilters: function (json) {
-            var self = this, current;
+            var self = this, current, hasNotNull = false;
             self.filters = [];
 
             if (!isDefinedAndNotNull(json)) {
@@ -5660,7 +5662,7 @@
             // if there's a not_null other filters are not applicable.
             if (json.not_null === true) {
                 self.filters.push(new NotNullFacetFilter());
-                return;
+                hasNotNull = true;
             }
 
             // create choice filters
@@ -5677,6 +5679,14 @@
                         }
                     }
 
+                    if (hasNotNull) {
+                        if (ch === null) {
+                            self.filters = [];
+                        }
+                        return;
+                    }
+
+
                     current = self.filters.filter(function (f) {
                         return (f instanceof ChoiceFacetFilter) && f.term === ch;
                     })[0];
@@ -5690,7 +5700,7 @@
             }
 
             // create range filters
-            if (Array.isArray(json.ranges)) {
+            if (!hasNotNull && Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
                     current = self.filters.filter(function (f) {
                         return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
@@ -5705,7 +5715,7 @@
             }
 
             // create search filters
-            if (Array.isArray(json.search)) {
+            if (!hasNotNull && Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
                     current = self.filters.filter(function (f) {
                         return (f instanceof SearchFacetFilter) && f.term === ch;
@@ -5720,10 +5730,14 @@
             }
         },
 
+        /**
+         * Returns true if the not-null filter exists.
+         * @type {Boolean}
+         */
         get hasNotNullFilter() {
             if (this._hasNotNullFilter === undefined) {
                 this._hasNotNullFilter = this.filters.filter(function (f) {
-                    return f instanceof NotNullFacetFilter;
+                    return (f instanceof NotNullFacetFilter);
                 })[0] !== undefined;
             }
             return this._hasNotNullFilter;
@@ -5802,13 +5816,14 @@
 
         /**
          * Create a new Reference with replacing choice facet filters by the given input
+         * This will also remove NotNullFacetFilter
          * @return {ERMrest.Reference} the reference with the new filter
          */
         replaceAllChoiceFilters: function (values) {
             verify(Array.isArray(values), "given argument must be an array");
             var self = this;
             var filters = this.filters.slice().filter(function (f) {
-                return !(f instanceof ChoiceFacetFilter);
+                return !(f instanceof ChoiceFacetFilter) && !(f instanceof NotNullFacetFilter);
             });
             values.forEach(function (v) {
                 filters.push(new ChoiceFacetFilter(v, self._column.type));
@@ -5887,7 +5902,10 @@
          * @return {ERMrest.Reference}
          */
         removeNotNullFilter: function () {
-            return this._applyFilters([]);
+            var filters = this.filters.filter(function (f) {
+                return !(f instanceof NotNullFacetFilter);
+            });
+            return this._applyFilters(filters);
         },
 
         /**
@@ -6082,6 +6100,12 @@
         return res;
     };
 
+    /**
+     * Represents not_null filter.
+     * It doesn't have the same toJSON and toString functions, since
+     * the only thing that client would need is question of existence of this type of filter.
+     * @constructor
+     */
     function NotNullFacetFilter () {
         this.facetFilterKey = "not_null";
     }
