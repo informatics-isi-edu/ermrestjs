@@ -1755,6 +1755,7 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = 'DEL';
+      
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {

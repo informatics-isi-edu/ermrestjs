@@ -899,7 +899,7 @@
       var ref = reference;
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
 
-      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == "DEL") {
 
           var referenceTable = "another";
 
@@ -913,7 +913,7 @@
             }
           }
 
-          if(actionFlag == "DEL"){            
+          // if(){
             var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
             if(fkConstraint != 'undefined' && fkConstraint != ''){
               var relatedRef = ref.related(); //get all related references
@@ -926,7 +926,7 @@
                   }
                 }
             }
-        }
+        // }
           referenceTable =  "the <code>"+ referenceTable +"</code>";
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
