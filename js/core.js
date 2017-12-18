@@ -711,7 +711,7 @@
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._displayKeys = {}; // Used for display key
+        this._rowDisplayKeys = {}; // Used for display key
 
         /**
          * @type {object}
@@ -858,13 +858,53 @@
         },
 
         /**
+         * The columns that create the shortest key that can be used for display purposes.
+         *
+         * @type {ERMrest.Column[]}
+         */
+        get displayKey () {
+            if (this._displayKey === undefined) {
+                if (this.keys.length() !== 0) {
+                    var countTextColumns = function(key) {
+                        for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                            if (key.colset.columns[i].type.name == "text") res++;
+                        }
+                        return res;
+                    };
+
+                    this._displayKey = this.keys.all().sort(function (keyA, keyB) {
+
+                        // shorter
+                        if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                            return keyA.colset.columns.length > keyB.colset.columns.length;
+                        }
+
+                        // has more text
+                        var aTextCount = countTextColumns(keyA);
+                        var bTextCount = countTextColumns(keyB);
+                        if (aTextCount != bTextCount) {
+                            return aTextCount < bTextCount;
+                        }
+
+                        // the one that has lower column position
+                        return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                    })[0].colset.columns;
+                } else {
+                    this._displayKey = this.columns.all();
+                }
+            }
+            return this._displayKey;
+        },
+
+        /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
          * @desc
-         * returns the key that can be used for display purposes.
+         * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+         * It's the same as displaykey but with extra restrictions. It might return undefined.
          */
-        _getDisplayKey: function (context) {
-            if (!(context in this._displayKeys)) {
+        _getRowDisplayKey: function (context) {
+            if (!(context in this._rowDisplayKeys)) {
                 var displayKey;
                 if (this.keys.length() !== 0) {
                     var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
@@ -917,9 +957,9 @@
                         })[0];
                     }
                 }
-                this._displayKeys[context] = displayKey; // might be undefined
+                this._rowDisplayKeys[context] = displayKey; // might be undefined
             }
-            return this._displayKeys[context];
+            return this._rowDisplayKeys[context];
         },
 
         get reference() {

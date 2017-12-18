@@ -720,7 +720,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {
@@ -745,8 +745,8 @@
 
                 } else {
 
-                    // Get the columns for shortestKey
-                    var keyColumns = table.shortestKey;
+                    // Get the columns for displaykey
+                    var keyColumns = table.displayKey;
 
                     // TODO this check needs to change. it is supposed to check if the table has a key or not
                     // if (keyColumns.length >= table.columns.length) {
@@ -901,7 +901,7 @@
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
 
           var referenceTable = "another";
-          
+
           var detail = generatedErrMessage.search(/DETAIL:/g);
           if (detail > -1) {
             detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
@@ -918,7 +918,7 @@
       else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
               matches = regExp.exec(generatedErrMessage), msgTail;
-          
+
           if (matches && matches.length > 1) {
               var primaryColumns =  matches[1].split(','),
                   numberOfKeys = primaryColumns.length;
@@ -929,7 +929,7 @@
                 msgTail = primaryColumns;
               }
           }
-          
+
 
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
@@ -941,7 +941,7 @@
       }
       else{
           mappedErrMessage = generatedErrMessage;
-          
+
           // remove the previx if exists
           if (mappedErrMessage.startsWith(conflictErrorPrefix)){
             mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
