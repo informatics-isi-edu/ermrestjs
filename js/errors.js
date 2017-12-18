@@ -14,6 +14,8 @@
     module.MalformedURIError = MalformedURIError;
     module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
+    module.IntegrityConflictError = IntegrityConflictError;
+    module.DuplicateConflictError = DuplicateConflictError;
 
     /**
      * @memberof ERMrest
@@ -99,16 +101,50 @@
      * @memberof ERMrest
      * @param {string} status the network error code
      * @param {string} message error message
+     * @param  {type} subMessage technical message returned by http request
      * @constructor
      */
-    function ConflictError(status, message) {
+    function ConflictError(status, message, subMessage) {
         this.code = 409;
         this.status = status;
         this.message = message;
+        this.subMessage = subMessage;
     }
 
     ConflictError.prototype = Object.create(Error.prototype);
     ConflictError.prototype.constructor = ConflictError;
+
+    /**
+     * IntegrityConflictError - Return error pertaining to integrity violoation
+     *
+     * @memberof ERMrest
+     * @param  {type} status     the network error code
+     * @param  {type} message    error message
+     * @param  {type} subMessage technical message returned by http request
+     * @constructor
+     */
+    function IntegrityConflictError(status, message, subMessage) {
+        ConflictError.call(this, status, message, subMessage);
+    }
+
+    IntegrityConflictError.prototype = Object.create(ConflictError.prototype);
+    IntegrityConflictError.prototype.constructor = IntegrityConflictError;
+
+    /**
+     * DuplicateConflictError - Return error pertaining to Duplicate entried
+     * 
+     * @memberof ERMrest
+     * @param  {type} status      the network error code
+     * @param  {type} message     error message
+     * @param  {type} subMessage  technical message returned by http request
+     * @constructor
+     */
+    function DuplicateConflictError(status, message, subMessage) {
+        ConflictError.call(this, status, message, subMessage);
+    }
+
+    DuplicateConflictError.prototype = Object.create(ConflictError.prototype);
+    DuplicateConflictError.prototype.constructor = DuplicateConflictError;
 
     /**
      * @memberof ERMrest
@@ -173,7 +209,7 @@
 
     InvalidFacetOperatorError.prototype = Object.create(Error.prototype);
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
-    
+
     /**
      * @memberof ERMrest
      * @param {string} message error message

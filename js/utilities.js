@@ -884,6 +884,81 @@
 
     /**
      * @function
+     * @param  {string} errorStatusText    http error status text
+     * @param  {string} generatedErrMessage response data returned by http request
+     * @return {object}                    error object
+     * @desc
+     *  - Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
+     *                           All dependent entries must be removed before this item can be deleted.
+     *  - Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
+     *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
+     *
+     */
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
+      var mappedErrMessage;
+      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
+
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
+
+          var referenceTable = "another";
+          
+          var detail = generatedErrMessage.search(/DETAIL:/g);
+          if (detail > -1) {
+            detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
+            referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
+            if(referenceTable && referenceTable.length > 1){
+                referenceTable =  "the <code>"+ referenceTable[1] +"</code>";
+            }
+          }
+
+          // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted.";
+          return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+      else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
+          var regExp = /\(([^)]+)\)/,
+              matches = regExp.exec(generatedErrMessage), msgTail;
+          
+          if (matches && matches.length > 1) {
+              var primaryColumns =  matches[1].split(','),
+                  numberOfKeys = primaryColumns.length;
+
+              if (numberOfKeys > 1){
+                msgTail = " combination of " + primaryColumns;
+              } else {
+                msgTail = primaryColumns;
+              }
+          }
+          
+
+          mappedErrMessage = "The entry cannot be created/updated. ";
+          if (msgTail) {
+              mappedErrMessage += "Please use a different "+ msgTail +" for this record.";
+          } else {
+              mappedErrMessage += "Input data violates unique constraint.";
+          }
+          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+      else{
+          mappedErrMessage = generatedErrMessage;
+          
+          // remove the previx if exists
+          if (mappedErrMessage.startsWith(conflictErrorPrefix)){
+            mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
+          }
+
+          // remove the suffix is exists
+          errEnd = mappedErrMessage.search(/CONTEXT:/g);
+          if (errEnd > -1){
+            mappedErrMessage = mappedErrMessage.substring(0, errEnd - 1);
+          }
+
+          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+    };
+
+    /**
+     * @function
      * @param {Object} response http response object
      * @return {Object} error object
      * @desc create an error object from http response
@@ -906,7 +981,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return new module.ConflictError(response.statusText, response.data);
+                return module._conflictErrorMapping(response.statusText, response.data);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
@@ -2144,5 +2219,8 @@
 
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+
+    // NOTE: currently we only ignore the system columns
+    module._ignoreDefaultsNames = module._systemColumns;
 
     module._contextHeaderName = 'Deriva-Client-Context';

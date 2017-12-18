@@ -2,7 +2,8 @@ var nock = require('nock');
 
 exports.execute = function (options) {
 
-    describe('For determining http 401 error behaviour, ', function () {
+  describe('For determining http 401 error behaviour, ', function () {
+
         var server, ermRest, url, ops = {allowUnmocked: true}, catalog, schema, table, id = "3423423";
 
         var enableNet = function() {
@@ -19,14 +20,15 @@ exports.execute = function (options) {
             url = options.url.replace('ermrest', '');
         });
 
-
+        describe('For determining http 401 error behaviour, ', function () {
         it("should have no httpUnauthorizedFn handler and make a Get Catalog call and receive an exception with error code 401", function (done) {
-            
+
             nock(url, ops)
               .get("/ermrest/catalog/" + id + "/schema")
               .reply(401, 'Service Unavailable');
 
             server.catalogs.get(id).then(null, function(err) {
+
                 expect(err instanceof ermRest.UnauthorizedError).toBe(true);
                 done();
             }).catch(function() {
@@ -37,7 +39,7 @@ exports.execute = function (options) {
 
 
         it("should have httpUnauthorizedFn handler and make a Get Catalog call, for which the handler should be called and catalog call should fail with 404", function(done) {
-            
+
             nock(url, ops)
               .get("/ermrest/catalog/" + id + "/schema")
               .reply(401, 'Unauthorized Error');
@@ -53,7 +55,6 @@ exports.execute = function (options) {
                 return defer.promise;
             });
 
-
             server.catalogs.get(id).then(null, function(err) {
                 expect(err instanceof ermRest.NotFoundError).toBe(true);
                 done();
@@ -62,8 +63,9 @@ exports.execute = function (options) {
                 expect(false).toBe(true);
                 done();
             });
-            
+
         });
+      });
 
 
         afterEach(function() {
