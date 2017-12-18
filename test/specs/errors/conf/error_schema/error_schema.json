@@ -48,7 +48,7 @@
         }
       }
     },
-    "main_delete_table": {
+    "document_table": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -62,7 +62,7 @@
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "main_delete_table",
+      "table_name": "document_table",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -77,7 +77,7 @@
         },
         {
           "comment": null,
-          "name": "association_name",
+          "name": "agreement_name",
           "default": null,
           "nullok": false,
           "type": {
@@ -85,14 +85,9 @@
           },
           "annotations": {}
         }
-      ],
-      "annotations": {
-        "tag:misd.isi.edu,2015:display": {
-          "name": "Delete"
-        }
-      }
+      ]
     },
-    "association_table": {
+    "agreement_table": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -110,21 +105,21 @@
           "comment": null,
           "foreign_key_columns": [
             {
-              "table_name": "association_table",
+              "table_name": "agreement_table",
               "schema_name": "error_schema",
-              "column_name": "accn_id"
+              "column_name": "agreement_id"
             }
           ],
           "annotations": {},
           "referenced_columns": [
             {
-              "table_name": "main_delete_table",
+              "table_name": "document_table",
               "schema_name": "error_schema",
               "column_name": "id"
             }
           ]
         }],
-      "table_name": "association_table",
+      "table_name": "agreement_table",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -139,7 +134,7 @@
         },
         {
           "comment": null,
-          "name": "accn_id",
+          "name": "agreement_id",
           "default": null,
           "nullok": false,
           "type": {
@@ -150,7 +145,7 @@
       ],
       "annotations": {
         "tag:misd.isi.edu,2015:display": {
-          "name": "Association"
+          "name": "Agreement"
         }
       }
     }

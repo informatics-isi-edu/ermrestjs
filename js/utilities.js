@@ -897,7 +897,8 @@
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
       var mappedErrMessage, refTable, tableDisplayName = '';
       var ref = reference;
-      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
+      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
+          siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
 
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == "DEL") {
 
@@ -913,24 +914,25 @@
             }
           }
 
-          // if(){
+
             var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
             if(fkConstraint != 'undefined' && fkConstraint != ''){
               var relatedRef = ref.related(); //get all related references
 
-              for(i = 0; i < relatedRef.length; i++){
+              for(var i = 0; i < relatedRef.length; i++){
                   key  = relatedRef[i];
                   if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
                     referenceTable = key.displayname.value;
+                    siteAdminMsg = "";
                     break;
                   }
                 }
             }
-        // }
+
           referenceTable =  "the <code>"+ referenceTable +"</code>";
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted.";
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("violates unique constraint") > -1){

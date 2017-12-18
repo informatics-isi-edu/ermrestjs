@@ -1,14 +1,14 @@
 var nock = require('nock');
 
 exports.execute = function (options) {
-  
+
     describe("For determining HTTP 409 response message,", function () {
         var server, url, catalog,
             id = "7345274", // something very far out of range
             ops = {allowUnmocked: true};
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "error_schema",
-            tableName = "main_delete_table",
+            tableName = "document_table",
             reference1;
 
         var duplicateErrorServerResponse = '409 Conflict\nThe request conflicts with the state of the server. ' +
@@ -17,7 +17,7 @@ exports.execute = function (options) {
         var generalConflictServerResponse = '409 Conflict\nThe request conflicts with the state of the server. ' +
             'ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE';
 
-        var integrityErrorMappedMessage= "This entry cannot be deleted as it is still referenced from the <code>Association</code> table. \n All dependent entries must be removed before this item can be deleted.",
+        var integrityErrorMappedMessage= "This entry cannot be deleted as it is still referenced from the <code>Agreement</code> table. \n All dependent entries must be removed before this item can be deleted.",
             duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different id for this record.",
             generalConflictMappedMessage = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site";
 
