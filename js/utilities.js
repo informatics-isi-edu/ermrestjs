@@ -894,31 +894,51 @@
      *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
      *
      */
-    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage) {
-      var mappedErrMessage;
-      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ";
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
+      var mappedErrMessage, refTable, tableDisplayName = '';
+      var ref = reference;
+      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
+          siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
 
-      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1) {
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
 
           var referenceTable = "another";
-          
+
           var detail = generatedErrMessage.search(/DETAIL:/g);
           if (detail > -1) {
             detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
             referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
             if(referenceTable && referenceTable.length > 1){
-                referenceTable =  "the <code>"+ referenceTable[1] +"</code>";
+                refTable = referenceTable[1];
+                referenceTable =  refTable;
             }
           }
 
+
+            var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
+            if(fkConstraint != 'undefined' && fkConstraint != ''){
+              var relatedRef = ref.related(); //get all related references
+
+              for(var i = 0; i < relatedRef.length; i++){
+                  key  = relatedRef[i];
+                  if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
+                    referenceTable = key.displayname.value;
+                    siteAdminMsg = "";
+                    break;
+                  }
+                }
+            }
+
+          referenceTable =  "the <code>"+ referenceTable +"</code>";
+
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted.";
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
       }
       else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
           var regExp = /\(([^)]+)\)/,
               matches = regExp.exec(generatedErrMessage), msgTail;
-          
+
           if (matches && matches.length > 1) {
               var primaryColumns =  matches[1].split(','),
                   numberOfKeys = primaryColumns.length;
@@ -929,7 +949,7 @@
                 msgTail = primaryColumns;
               }
           }
-          
+
 
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
@@ -941,7 +961,7 @@
       }
       else{
           mappedErrMessage = generatedErrMessage;
-          
+
           // remove the previx if exists
           if (mappedErrMessage.startsWith(conflictErrorPrefix)){
             mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
@@ -963,7 +983,7 @@
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response) {
+    module._responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
@@ -981,7 +1001,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return module._conflictErrorMapping(response.statusText, response.data);
+                return module._conflictErrorMapping(response.statusText, response.data, reference, actionFlag);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
@@ -2223,3 +2243,10 @@
     module._ignoreDefaultsNames = module._systemColumns;
 
     module._contextHeaderName = 'Deriva-Client-Context';
+
+    module._operationsFlag = Object.freeze({
+        DELETE: "DEL",      //delete
+        CREATE: "CRT",   //create
+        UPDATE: "UPDT",   //update
+        READ: "READ"        //read
+      });
