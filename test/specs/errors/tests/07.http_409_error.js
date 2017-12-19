@@ -8,9 +8,9 @@ exports.execute = function (options) {
             ops = {allowUnmocked: true};
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "error_schema",
-            document_table = "document_table",
-            tableNameWithoutDisplayName = "document_table_for_without_displayname",
-            agreement_table = "agreement_table",
+            document_table = "parent_document_table",
+            tableNameWithoutDisplayName = "parent_document_table_for_without_displayname",
+            agreement_table = "child_agreement_table",
             document_table_for_fromname = "parent_document_table_for_fromname",
             reference1, reference2, reference3, reference4;
 
@@ -25,7 +25,7 @@ exports.execute = function (options) {
             'ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site CONTEXT: PL/pgSQL function experiments.userid_update() line 25 at RAISE';
 
         var integrityErrorMappedMessage= "This entry cannot be deleted as it is still referenced from the <code>Agreement</code> table. \n All dependent entries must be removed before this item can be deleted.",
-            integrityErrorMappedMessageWithoutDisplay= "This entry cannot be deleted as it is still referenced from the <code>agreement_table_without_displayname</code> table. \n All dependent entries must be removed before this item can be deleted.",
+            integrityErrorMappedMessageWithoutDisplay= "This entry cannot be deleted as it is still referenced from the <code>child_agreement_table_without_displayname</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedPureBinaryMessage = "This entry cannot be deleted as it is still referenced from the <code>to_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedFromnameMessage = "This entry cannot be deleted as it is still referenced from the <code>from_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedSiteAdminMessage = "This entry cannot be deleted as it is still referenced from the <code>1dataset_human_age</code> table. \n All dependent entries must be removed before this item can be deleted.\nIf you have trouble removing dependencies please contact the site administrator.",

@@ -48,7 +48,7 @@
         }
       }
     },
-    "document_table": {
+    "parent_document_table": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -62,7 +62,7 @@
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "document_table",
+      "table_name": "parent_document_table",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -87,7 +87,7 @@
         }
       ]
     },
-    "document_table_for_without_displayname": {
+    "parent_document_table_for_without_displayname": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -101,7 +101,7 @@
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "document_table_for_without_displayname",
+      "table_name": "parent_document_table_for_without_displayname",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -165,7 +165,7 @@
         }
       ]
     },
-    "agreement_table": {
+    "child_agreement_table": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -183,7 +183,7 @@
           "comment": null,
           "foreign_key_columns": [
             {
-              "table_name": "agreement_table",
+              "table_name": "child_agreement_table",
               "schema_name": "error_schema",
               "column_name": "agreement_id"
             }
@@ -191,13 +191,13 @@
           "annotations": {},
           "referenced_columns": [
             {
-              "table_name": "document_table",
+              "table_name": "parent_document_table",
               "schema_name": "error_schema",
               "column_name": "id"
             }
           ]
         }],
-      "table_name": "agreement_table",
+      "table_name": "child_agreement_table",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -289,7 +289,7 @@
       ]
 
     },
-    "agreement_table_without_displayname": {
+    "child_agreement_table_without_displayname": {
       "comment": null,
       "kind": "table",
       "keys": [
@@ -307,7 +307,7 @@
           "comment": null,
           "foreign_key_columns": [
             {
-              "table_name": "agreement_table_without_displayname",
+              "table_name": "child_agreement_table_without_displayname",
               "schema_name": "error_schema",
               "column_name": "agreement_id"
             }
@@ -315,13 +315,13 @@
           "annotations": {},
           "referenced_columns": [
             {
-              "table_name": "document_table_for_without_displayname",
+              "table_name": "parent_document_table_for_without_displayname",
               "schema_name": "error_schema",
               "column_name": "id"
             }
           ]
         }],
-      "table_name": "agreement_table_without_displayname",
+      "table_name": "child_agreement_table_without_displayname",
       "schema_name": "error_schema",
       "column_definitions": [
         {
@@ -367,7 +367,7 @@
                    }],
                    "referenced_columns": [{
                        "schema_name": "error_schema",
-                       "table_name": "agreement_table",
+                       "table_name": "child_agreement_table",
                        "column_name": "id"
                    }]
                },
