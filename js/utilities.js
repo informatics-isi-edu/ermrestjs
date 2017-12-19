@@ -2239,6 +2239,9 @@
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
+    // NOTE: currently we only ignore the system columns
+    module._ignoreDefaultsNames = module._systemColumns;
+
     module._contextHeaderName = 'Deriva-Client-Context';
 
     module._operationsFlag = Object.freeze({
