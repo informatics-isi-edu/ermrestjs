@@ -280,6 +280,7 @@ to use for ERMrest JavaScript agents.
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+            * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2210,6 +2211,7 @@ Constructor for a ParsedFilter.
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2574,6 +2576,21 @@ Deletes the referenced resources.
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
+<a name="ERMrest.Reference+delete..self"></a>
+
+##### delete~self
+NOTE: previous implemenation of delete with 412 logic is here:
+https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+
+We decided to drop the support for 412, because the etag that we get from the read function
+is different than the one delete expects. The reason for that is because we are getting etag
+in read with joins in the request, which affects the etag. etag is in response to any change
+to the returned data and since join introduces extra data it is different than a request
+without any joins.
+
+github issue: #425
+
+**Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+related"></a>
 
 #### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
