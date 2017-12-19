@@ -5688,6 +5688,9 @@
                     }
 
                     if (hasNotNull) {
+                        // if not-null filter exists, the only relevant filter is =null.
+                        // Other filters will be ignored.
+                        // If =null exist, we are removing all the filters.
                         if (ch === null) {
                             self.filters = [];
                         }
@@ -5899,6 +5902,11 @@
 
         /**
          * Create a new Reference with removing all the filters and adding a not-null filter.
+         * NOTE based on current usecases this is currently removing all the previous filters.
+         * We might need to change this behavior in the future. I could change the behavior of
+         * this function to only add the filter, and then in the client first remove all and thenadd
+         * addNotNullFilter, but since the code is not very optimized that would result on a heavy
+         * operation.
          * @return {ERMrest.Reference}
          */
         addNotNullFilter: function () {

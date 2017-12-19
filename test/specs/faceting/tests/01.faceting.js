@@ -68,7 +68,7 @@ exports.execute = function (options) {
             tableWFacetAlt = "main_w_facets_w_alt";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
-        var refMainMoreFilters;
+        var refMainMoreFilters, refNotNullFilter;
         var mainFacets;
         var i, facetObj;
 
@@ -396,6 +396,40 @@ exports.execute = function (options) {
 
                 });
 
+                describe ("if a facet has not-null filter,", function () {
+                    it ("if facet has =null filter too, should return an empty list for its filters.", function (done) {
+                        var fObj = { "and": [ {"source": "id", "not_null": true, "choices": [null]} ] };
+                        options.ermRest.resolve(createURL(tableMain, fObj)).then(function (r) {
+                            expect(r.facetColumns.length).toBe(16, "facet list length missmatch.");
+                            expect(r.facetColumns[0].filters.length).toBe(0, "filters length missmatch.");
+                            expect(r.location.ermrestCompactPath).toEqual(
+                                "M:=faceting_schema:main/id::null::;!(id::null::)/$M",
+                                "path missmatch."
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+
+                    it ("otherwise should only return the not-null filter and ignore other filters.", function (done) {
+                        var fObj = { "and": [ {"source": "id", "not_null": true, "choices": ["1"], "search": ["1"], "ranges": [{'min': 1}]} ] };
+                        options.ermRest.resolve(createURL(tableMain, fObj)).then(function (ref) {
+                            expect(ref.facetColumns.length).toBe(16, "facet list length missmatch.");
+                            expect(ref.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
+                            expect(ref.location.facets).toBeDefined("facets is defined.");
+                            expect(ref.location.ermrestCompactPath).toEqual(
+                                "M:=faceting_schema:main/!(id::null::)/$M",
+                                "path missmatch."
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+                });
             });
 
             describe("regarding alternative tables for main table, ", function () {
@@ -756,6 +790,41 @@ exports.execute = function (options) {
                     });
                 });
 
+                describe("addNotNullFilter, ", function () {
+                    it ("should remove all the existing filters on the facet and just add a not-null filter.", function () {
+                        refNotNullFilter = mainFacets[0].addNotNullFilter();
+                        expect(refNotNullFilter).not.toBe(refMain, "reference didn't change.");
+                        expect(refNotNullFilter.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/!(id::null::)/$M/int_col::gt::-2/$M",
+                            "path missmatch."
+                        );
+                        expect(refNotNullFilter.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
+                    });
+                });
+
+                describe("removeNotNullFilter, ", function () {
+                    it ("should only remove the not-null filter on that facet.", function () {
+                        var prevRef = refNotNullFilter.facetColumns[0].addChoiceFilters(["1"]);
+                        var newRef = prevRef.facetColumns[0].removeNotNullFilter();
+                        expect(newRef).not.toBe(prevRef, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M",
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
+                    });
+
+                    it ("should not change filters of the facet if facet didn't have any not-null filter.", function () {
+                        var newRef = mainFacets[0].removeNotNullFilter();
+                        expect(newRef).not.toBe(refMain, "reference didn't change.");
+                        expect(newRef.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1/$M/int_col::gt::-2/$M",
+                            "path missmatch."
+                        );
+                        expect(newRef.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
+                    });
+                });
+
                 it("removeAllFilters, should return a reference without filters of the given facet.", function () {
                     var newRef = refMain.facetColumns[0].removeAllFilters();
                     expect(newRef).not.toBe(refMain, "reference didn't change.");
@@ -767,17 +836,19 @@ exports.execute = function (options) {
                     expect(newRef.facetColumns[1].filters.length).toBe(1, "filters length missmatch for index=1.");
                 });
 
-                it ("filters, should return all the filters available on the facetColumn.", function () {
-                    for (i = 0; i < 2; i ++) {
-                        expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index="+ i);
-                    }
-                    expect(mainFacets[0].filters.map(function (f) {
-                        return f.term;
-                    })).toEqual(["1"], "filter missmatch for facet index=0");
+                describe("filters, ", function () {
+                    it ("otherwise should return all the filters available on the facetColumn.", function () {
+                        for (i = 0; i < 2; i ++) {
+                            expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index="+ i);
+                        }
+                        expect(mainFacets[0].filters.map(function (f) {
+                            return f.term;
+                        })).toEqual(["1"], "filter missmatch for facet index=0");
 
-                    for (i = 2; i < 16; i ++) {
-                        expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
-                    }
+                        for (i = 2; i < 16; i ++) {
+                            expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
+                        }
+                    });
                 });
 
                 it ("searchFilters, should return the search filters.", function () {
@@ -799,6 +870,16 @@ exports.execute = function (options) {
                     expect(filters.length).toBe(2, "length missmatch.");
                     expect(filters[0].toString()).toBe("> a", "term index=0 missmatch.");
                     expect(filters[1].toString()).toBe("< b", "term index=0 missmatch.");
+                });
+
+                describe ("hasNotNullFilter,", function () {
+                    it ('should return true if facet has not-null filter', function () {
+
+                    });
+
+                    it ("otherwise it should return false.", function () {
+
+                    });
                 });
 
                 describe("FacetFilter attributes, ", function () {
