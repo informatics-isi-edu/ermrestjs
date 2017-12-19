@@ -93,7 +93,8 @@ to use for ERMrest JavaScript agents.
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
-            * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+            * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+            * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -763,7 +764,8 @@ get table by table name
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
-        * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+        * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -862,10 +864,17 @@ The columns that create the shortest key
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 **Type{column[]}**:   
-<a name="ERMrest.Table+_getDisplayKey"></a>
+<a name="ERMrest.Table+displayKey"></a>
 
-#### table._getDisplayKey(context)
-returns the key that can be used for display purposes.
+#### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+The columns that create the shortest key that can be used for display purposes.
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_getRowDisplayKey"></a>
+
+#### table._getRowDisplayKey(context)
+This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+It's the same as displaykey but with extra restrictions. It might return undefined.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 **Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
