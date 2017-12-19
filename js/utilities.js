@@ -900,7 +900,7 @@
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
           siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
 
-      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == "DEL") {
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
 
           var referenceTable = "another";
 
@@ -2240,3 +2240,10 @@
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
     module._contextHeaderName = 'Deriva-Client-Context';
+
+    module._operationsFlag = Object.freeze({
+        DELETE: "DEL",      //delete
+        CREATE: "CRT",   //create
+        UPDATE: "UPDT",   //update
+        READ: "READ"        //read
+      });
