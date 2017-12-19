@@ -2954,7 +2954,7 @@
         /**
          * returns string representation of ForeignKeyRef object
          * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
-         * @param {boolean} isLeft  false: right join, true: left join, other values: inner join
+         * @param {boolean} isLeft  true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
         toString: function (reverse, isLeft){
@@ -2975,7 +2975,7 @@
 
             }
 
-            var joinType = ((typeof isLeft === "boolean") ? (isLeft ? "left": "right") : "");
+            var joinType = (isLeft === true ? "left": "");
             return joinType + "(" + leftString + ")=(" + rightString + ")";
         },
 

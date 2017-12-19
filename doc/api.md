@@ -1852,7 +1852,7 @@ returns string representation of ForeignKeyRef object
 | Param | Type | Description |
 | --- | --- | --- |
 | reverse | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
-| isLeft | <code>boolean</code> | false: right join, true: left join, other values: inner join |
+| isLeft | <code>boolean</code> | true: left join, other values: inner join |
 
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
