@@ -2428,7 +2428,7 @@
 
                 //add the key
                 if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
-                    var key = this._table._getDisplayKey(this._context);
+                    var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined) {
                         this._referenceColumns.push(new KeyPseudoColumn(this, key));
 

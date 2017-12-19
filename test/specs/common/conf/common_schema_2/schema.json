@@ -237,7 +237,7 @@
             "schema_name": "common_schema_2",
             "column_definitions": [
                 {
-                    "name": "col_1",
+                    "name": "col_3",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -251,7 +251,7 @@
                     }
                 },
                 {
-                    "name": "col_3",
+                    "name": "col_1",
                     "nullok": false,
                     "type": {
                         "typename": "text"

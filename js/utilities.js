@@ -720,7 +720,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {
@@ -745,8 +745,8 @@
 
                 } else {
 
-                    // Get the columns for shortestKey
-                    var keyColumns = table.shortestKey;
+                    // Get the columns for displaykey
+                    var keyColumns = table.displayKey;
 
                     // TODO this check needs to change. it is supposed to check if the table has a key or not
                     // if (keyColumns.length >= table.columns.length) {

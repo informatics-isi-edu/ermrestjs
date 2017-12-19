@@ -31,7 +31,7 @@
         }
       ]
     },
-    "table_w_rid_wo_annotation": {
+    "table_wo_annotation": {
       "kind": "table",
       "keys": [
         {
@@ -40,11 +40,18 @@
           "unique_columns": [
             "id"
           ]
+        },
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "text_col"
+          ]
         }
       ],
       "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "table_w_rid_wo_annotation",
+      "table_name": "table_wo_annotation",
       "schema_name": "schema_table_display",
       "column_definitions": [
         {
@@ -55,13 +62,13 @@
           }
         },
         {
-          "name": "RID",
+          "name": "text_col",
           "nullok": false,
           "type": {
               "typename": "text"
           }
         }
-      ]
+    ]
     },
     "table_w_title_wo_annotation": {
       "kind": "table",
