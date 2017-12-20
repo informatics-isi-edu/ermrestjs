@@ -1,4 +1,5 @@
 
+    module.ErmrestjsError = ErmrestjsError;
     module.TimedOutError = TimedOutError;
     module.BadRequestError = BadRequestError;
     module.UnauthorizedError = UnauthorizedError;
@@ -17,6 +18,15 @@
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
 
+    function ErmrestjsError(code, status, message, subMessage) {
+        this.code = code;
+        this.status = status;
+        this.message = message;
+        this.subMessage = subMessage;
+    }
+
+    ErmrestjsError.prototype = Object.create(Error.prototype);
+    ErmrestjsError.prototype.constructor = ConflictError;
     /**
      * @memberof ERMrest
      * @param {string} status the network error code
@@ -24,12 +34,11 @@
      * @constructor
      */
     function TimedOutError(status, message) {
-        this.code = 0;
-        this.status = status;
-        this.message = message;
+        var code= 0
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    TimedOutError.prototype = Object.create(Error.prototype);
+    TimedOutError.prototype = Object.create(ErmrestjsError.prototype);
     TimedOutError.prototype.constructor = TimedOutError;
 
 
@@ -40,12 +49,11 @@
      * @constructor
      */
     function BadRequestError(status, message) {
-        this.code = 400;
-        this.status = status;
-        this.message = message;
+        var code = 400;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    BadRequestError.prototype = Object.create(Error.prototype);
+    BadRequestError.prototype = Object.create(ErmrestjsError.prototype);
     BadRequestError.prototype.constructor = BadRequestError;
 
 
@@ -56,12 +64,11 @@
      * @constructor
      */
     function UnauthorizedError(status, message) {
-        this.code = 401;
-        this.status = status;
-        this.message = message;
+        var code = 401;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    UnauthorizedError.prototype = Object.create(Error.prototype);
+    UnauthorizedError.prototype = Object.create(ErmrestjsError.prototype);
     UnauthorizedError.prototype.constructor = UnauthorizedError;
 
 
@@ -72,12 +79,11 @@
      * @constructor
      */
     function ForbiddenError(status, message) {
-        this.code = 403;
-        this.status = status;
-        this.message = message;
+        var code = 403;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    ForbiddenError.prototype = Object.create(Error.prototype);
+    ForbiddenError.prototype = Object.create(ErmrestjsError.prototype);
     ForbiddenError.prototype.constructor = ForbiddenError;
 
 
@@ -88,12 +94,11 @@
      * @constructor
      */
     function NotFoundError(status, message) {
-        this.code = 404;
-        this.status = status;
-        this.message = message;
+        var code = 404;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    NotFoundError.prototype = Object.create(Error.prototype);
+    NotFoundError.prototype = Object.create(ErmrestjsError.prototype);
     NotFoundError.prototype.constructor = NotFoundError;
 
 
@@ -105,13 +110,11 @@
      * @constructor
      */
     function ConflictError(status, message, subMessage) {
-        this.code = 409;
-        this.status = status;
-        this.message = message;
-        this.subMessage = subMessage;
+        var code = 409;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    ConflictError.prototype = Object.create(Error.prototype);
+    ConflictError.prototype = Object.create(ErmrestjsError.prototype);
     ConflictError.prototype.constructor = ConflictError;
 
     /**
@@ -132,7 +135,7 @@
 
     /**
      * DuplicateConflictError - Return error pertaining to Duplicate entried
-     * 
+     *
      * @memberof ERMrest
      * @param  {type} status      the network error code
      * @param  {type} message     error message
@@ -153,10 +156,8 @@
      * @constructor
      */
     function PreconditionFailedError(status, message, data) {
-        this.code = 412;
-        this.status = status;
-        this.message = message;
-        this.data = data;
+        var code = 412;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
     PreconditionFailedError.prototype = Object.create(Error.prototype);
@@ -170,12 +171,11 @@
      * @constructor
      */
     function InternalServerError(status, message) {
-        this.code = 500;
-        this.status = status;
-        this.message = message;
+        var code = 500;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    InternalServerError.prototype = Object.create(Error.prototype);
+    InternalServerError.prototype = Object.create(ErmrestjsError.prototype);
     InternalServerError.prototype.constructor = InternalServerError;
 
 
@@ -186,12 +186,11 @@
      * @constructor
      */
     function ServiceUnavailableError(status, message) {
-        this.code = 503;
-        this.status = status;
-        this.message = message;
+        var code = 503;
+        ErmrestjsError.call(this, code, status, message, subMessage);
     }
 
-    ServiceUnavailableError.prototype = Object.create(Error.prototype);
+    ServiceUnavailableError.prototype = Object.create(ErmrestjsError.prototype);
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
 
@@ -204,10 +203,11 @@
      * @desc An invalid facet operator
      */
     function InvalidFacetOperatorError(message) {
-        this.message = message ? message : "Given encoded string for facets is not valid.";
+        var message = message ? message : "Given encoded string for facets is not valid.";
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
-    InvalidFacetOperatorError.prototype = Object.create(Error.prototype);
+    InvalidFacetOperatorError.prototype = Object.create(ErmrestjsError.prototype);
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
 
     /**
@@ -217,10 +217,11 @@
      * @desc An invalid filter operator
      */
     function InvalidFilterOperatorError(message) {
-        this.message = message;
+        var message = message;
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
-    InvalidFilterOperatorError.prototype = Object.create(Error.prototype);
+    InvalidFilterOperatorError.prototype = Object.create(ErmrestjsError.prototype);
     InvalidFilterOperatorError.prototype.constructor = InvalidFilterOperatorError;
 
 
@@ -231,10 +232,11 @@
      * @desc An invalid input
      */
     function InvalidInputError(message) {
-        this.message = message;
+        var message = message;
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
-    InvalidInputError.prototype = Object.create(Error.prototype);
+    InvalidInputError.prototype = Object.create(ErmrestjsError.prototype);
     InvalidInputError.prototype.constructor = InvalidInputError;
 
 
@@ -246,9 +248,10 @@
      */
     function MalformedURIError(message) {
         this.message = message;
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
-    MalformedURIError.prototype = Object.create(Error.prototype);
+    MalformedURIError.prototype = Object.create(ErmrestjsError.prototype);
     MalformedURIError.prototype.constructor = MalformedURIError;
 
     /**
@@ -258,10 +261,11 @@
      * @desc no data was changed for update
      */
     function NoDataChangedError(message) {
-        this.message = message;
+        var message = message;
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
-    NoDataChangedError.prototype = Object.create(Error.prototype);
+    NoDataChangedError.prototype = Object.create(ErmrestjsError.prototype);
     NoDataChangedError.prototype.constructor = NoDataChangedError;
 
     /**
@@ -271,7 +275,8 @@
      * @desc A no internert was passed to the API.
      */
     function NoConnectionError(message) {
-        this.message = message;
+        var message = message;
+        ErmrestjsError.call(this, '', '', message, '');
     }
 
     NoConnectionError.prototype = Object.create(Error.prototype);
