@@ -204,7 +204,7 @@
      */
     function InvalidFacetOperatorError(message) {
         var message = message ? message : "Given encoded string for facets is not valid.";
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', "Faceting Error", message, '');
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -218,7 +218,7 @@
      */
     function InvalidFilterOperatorError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', 'Invalid Filter', message, '');
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -233,7 +233,7 @@
      */
     function InvalidInputError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', 'Invalid Input', message, '');
     }
 
     InvalidInputError.prototype = Object.create(ErmrestjsError.prototype);
@@ -248,7 +248,7 @@
      */
     function MalformedURIError(message) {
         this.message = message;
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', 'Invalid URI', message, '');
     }
 
     MalformedURIError.prototype = Object.create(ErmrestjsError.prototype);
