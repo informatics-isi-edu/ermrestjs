@@ -1754,13 +1754,14 @@
                  *
                  * github issue: #425
                  */
-
+                var self = this, delFlag = module._operationsFlag.DELETE;
+                
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
-                    return defer.reject(module._responseToError(deleteError));
+                    return defer.reject(module._responseToError(deleteError, self, delFlag));
                 }).catch(function (catchError) {
-                    return defer.reject(module._responseToError(catchError));
+                    return defer.reject(module._responseToError(catchError, self, delFlag));
                 });
 
                 return defer.promise;
@@ -2427,7 +2428,7 @@
 
                 //add the key
                 if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
-                    var key = this._table._getDisplayKey(this._context);
+                    var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined) {
                         this._referenceColumns.push(new KeyPseudoColumn(this, key));
 

@@ -47,7 +47,362 @@
           "name": "Valid Table Name"
         }
       }
-    }
+    },
+    "parent_document_table": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "parent_document_table",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        }
+      ]
+    },
+    "parent_document_table_for_without_displayname": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "parent_document_table_for_without_displayname",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        }
+      ]
+    },
+    "parent_document_table_for_fromname": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "parent_document_table_for_fromname",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        }
+      ]
+    },
+    "child_agreement_table": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [  {
+          "names" : [["error_schema", "fk_test"]],
+          "comment": null,
+          "foreign_key_columns": [
+            {
+              "table_name": "child_agreement_table",
+              "schema_name": "error_schema",
+              "column_name": "agreement_id"
+            }
+          ],
+          "annotations": {},
+          "referenced_columns": [
+            {
+              "table_name": "parent_document_table",
+              "schema_name": "error_schema",
+              "column_name": "id"
+            }
+          ]
+        }],
+      "table_name": "child_agreement_table",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Agreement"
+        }
+      }
+    },
+    "child_agreement_table_fromname": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [  {
+          "names" : [["error_schema", "fk_test"]],
+          "comment": null,
+          "foreign_key_columns": [
+            {
+              "table_name": "child_agreement_table_fromname",
+              "schema_name": "error_schema",
+              "column_name": "agreement_id"
+            }
+          ],
+          "annotations": {
+                "tag:isrd.isi.edu,2016:foreign-key": {
+                    "from_name": "from_name_value"
+                }
+              },
+          "referenced_columns": [
+            {
+              "table_name": "parent_document_table_for_fromname",
+              "schema_name": "error_schema",
+              "column_name": "id"
+            }
+          ]
+        }],
+      "table_name": "child_agreement_table_fromname",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        }
+      ]
+
+    },
+    "child_agreement_table_without_displayname": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [  {
+          "names" : [["error_schema", "fk_test1"]],
+          "comment": null,
+          "foreign_key_columns": [
+            {
+              "table_name": "child_agreement_table_without_displayname",
+              "schema_name": "error_schema",
+              "column_name": "agreement_id"
+            }
+          ],
+          "annotations": {},
+          "referenced_columns": [
+            {
+              "table_name": "parent_document_table_for_without_displayname",
+              "schema_name": "error_schema",
+              "column_name": "id"
+            }
+          ]
+        }],
+      "table_name": "child_agreement_table_without_displayname",
+      "schema_name": "error_schema",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "agreement_id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        }
+      ]
+    },
+    "association_table_with_toname": {
+           "comment": "has fk to reference_table and inbound_related_reference_table. the fk to inbound_related_reference_table has to_name annotation",
+           "kind": "table",
+           "table_name": "association_table_with_toname",
+           "schema_name": "error_schema",
+           "keys": [{
+               "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+           }],
+           "foreign_keys": [
+               {
+                   "names": [
+                       ["error_schema", "toname_fk_association_related_to_reference"]
+                   ],
+                   "comment": "fk to reference_table",
+                   "foreign_key_columns": [{
+                       "schema_name": "error_schema",
+                       "table_name": "association_table_with_toname",
+                       "column_name": "id_from_ref_table"
+                   }],
+                   "referenced_columns": [{
+                       "schema_name": "error_schema",
+                       "table_name": "child_agreement_table",
+                       "column_name": "id"
+                   }]
+               },
+               {
+                   "comment": "fk to inbound_related_reference_table",
+                   "foreign_key_columns": [{
+                       "schema_name": "error_schema",
+                       "table_name": "association_table_with_toname",
+                       "column_name": "id_from_inbound_related_table"
+                   }],
+                   "referenced_columns": [{
+                       "schema_name": "error_schema",
+                       "table_name": "parent_document_table_for_fromname",
+                       "column_name": "id"
+                   }],
+                   "annotations": {
+                       "tag:isrd.isi.edu,2016:foreign-key": {
+                           "to_name": "to_name_value"
+                       }
+                   }
+               }
+           ],
+           "column_definitions": [
+               {
+                   "name": "id_from_ref_table",
+                   "nullok": false,
+                   "type": {"typename":"serial4"}
+               },
+               {
+                   "name": "id_from_inbound_related_table",
+                   "nullok": false,
+                   "type": {"typename":"serial4"}
+               }
+           ]
+       }
   },
   "annotations": {},
   "schema_name": "error_schema"
