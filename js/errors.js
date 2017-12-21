@@ -35,7 +35,7 @@
      */
     function TimedOutError(status, message) {
         var code= 0
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     TimedOutError.prototype = Object.create(ErmrestjsError.prototype);
@@ -50,7 +50,7 @@
      */
     function BadRequestError(status, message) {
         var code = 400;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     BadRequestError.prototype = Object.create(ErmrestjsError.prototype);
@@ -65,7 +65,7 @@
      */
     function UnauthorizedError(status, message) {
         var code = 401;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     UnauthorizedError.prototype = Object.create(ErmrestjsError.prototype);
@@ -80,7 +80,8 @@
      */
     function ForbiddenError(status, message) {
         var code = 403;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        var status = (status != 'undefined' && status != '') ? status: "Forbidden";
+        ErmrestjsError.call(this, code, status, message);
     }
 
     ForbiddenError.prototype = Object.create(ErmrestjsError.prototype);
@@ -95,7 +96,8 @@
      */
     function NotFoundError(status, message) {
         var code = 404;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        var status = (status != 'undefined' && status != '') ? status: "Item Not Found";
+        ErmrestjsError.call(this, code, status, message);
     }
 
     NotFoundError.prototype = Object.create(ErmrestjsError.prototype);
@@ -157,7 +159,7 @@
      */
     function PreconditionFailedError(status, message, data) {
         var code = 412;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     PreconditionFailedError.prototype = Object.create(Error.prototype);
@@ -172,7 +174,7 @@
      */
     function InternalServerError(status, message) {
         var code = 500;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     InternalServerError.prototype = Object.create(ErmrestjsError.prototype);
@@ -187,7 +189,7 @@
      */
     function ServiceUnavailableError(status, message) {
         var code = 503;
-        ErmrestjsError.call(this, code, status, message, subMessage);
+        ErmrestjsError.call(this, code, status, message);
     }
 
     ServiceUnavailableError.prototype = Object.create(ErmrestjsError.prototype);
@@ -204,7 +206,7 @@
      */
     function InvalidFacetOperatorError(message) {
         var message = message ? message : "Given encoded string for facets is not valid.";
-        ErmrestjsError.call(this, '', "Faceting Error", message, '');
+        ErmrestjsError.call(this, '', "Faceting Error", message);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -218,7 +220,7 @@
      */
     function InvalidFilterOperatorError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', 'Invalid Filter', message, '');
+        ErmrestjsError.call(this, '', 'Invalid Filter', message);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -233,7 +235,7 @@
      */
     function InvalidInputError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', 'Invalid Input', message, '');
+        ErmrestjsError.call(this, '', 'Invalid Input', message);
     }
 
     InvalidInputError.prototype = Object.create(ErmrestjsError.prototype);
@@ -248,7 +250,7 @@
      */
     function MalformedURIError(message) {
         this.message = message;
-        ErmrestjsError.call(this, '', 'Invalid URI', message, '');
+        ErmrestjsError.call(this, '', 'Invalid URI', message);
     }
 
     MalformedURIError.prototype = Object.create(ErmrestjsError.prototype);
@@ -262,7 +264,7 @@
      */
     function NoDataChangedError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', 'No Data Changed', message);
     }
 
     NoDataChangedError.prototype = Object.create(ErmrestjsError.prototype);
@@ -276,7 +278,7 @@
      */
     function NoConnectionError(message) {
         var message = message;
-        ErmrestjsError.call(this, '', '', message, '');
+        ErmrestjsError.call(this, '', 'No Connection Error', message);
     }
 
     NoConnectionError.prototype = Object.create(Error.prototype);
