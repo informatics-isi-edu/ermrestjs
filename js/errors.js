@@ -26,7 +26,7 @@
     }
 
     ErmrestjsError.prototype = Object.create(Error.prototype);
-    ErmrestjsError.prototype.constructor = ConflictError;
+    ErmrestjsError.prototype.constructor = ErmrestjsError;
     /**
      * @memberof ERMrest
      * @param {string} status the network error code
