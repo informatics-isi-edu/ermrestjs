@@ -511,8 +511,12 @@
                     return true;
                 };
 
-                // only add choices, range, and search
+                // only add choices, range, search, and not_null
                 var mergeFacetObjects = function (source, extra) {
+                    if (extra.not_null === true) {
+                        source.not_null = true;
+                    }
+
                     ['choices', 'ranges', 'search'].forEach(function (key) {
                         if (!Array.isArray(extra[key])) {
                             return;
@@ -543,7 +547,6 @@
 
                             source[key].push(ch);
                         });
-
                     });
                 };
 
@@ -637,6 +640,7 @@
 
                         // if we have filters in the url, we will get the filters only from url
                         if (andFilters.length > 0) {
+                            delete obj.not_null;
                             delete obj.choices;
                             delete obj.search;
                             delete obj.ranges;
@@ -3874,12 +3878,20 @@
          */
         get uniqueId() {
             if (this._uniqueId === undefined) {
-                var key;
+                var key, hasNull = false;
                 this._uniqueId = "";
                 for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
                     keyName = this.reference.table.shortestKey[i].name;
+                    if (this.data[keyName] == null) {
+                        hasNull = true;
+                        break;
+                    }
                     if (i !== 0) this._uniqueId += "_";
                     this._uniqueId += this.data[keyName];
+                }
+
+                if (hasNull) {
+                    this._uniqueId = null;
                 }
             }
             return this._uniqueId;
@@ -5187,6 +5199,7 @@
         }
 
         // the whole filter object
+        // NOTE: This might not include the filters
         this._facetObject = facetObject;
     }
     FacetColumn.prototype = {
@@ -5375,7 +5388,7 @@
                             isOutbound = true;
                         }
                         fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]).object;
-                        pathFromSource.push(fk.toString(isOutbound));
+                        pathFromSource.push(fk.toString(isOutbound, true));
                     });
                 }
 
@@ -5526,21 +5539,31 @@
             else {
 
                 var table = this._column.table, columnName = this._column.name;
-                var fitlerStr = [];
+                var filterStr = [];
 
                 // list of fitlers that we want their displaynames.
                 this.choiceFilters.forEach(function (f) {
-                    fitlerStr.push(
-                        module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
-                    );
+                    if (f.term == null) {
+                        // term can be null, in this case we don't need to make a request for it.
+                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}});
+                    } else {
+                        filterStr.push(
+                            module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                        );
+                    }
                 });
+
+                // the case that we have only the null value.
+                if (filterStr.length === 0) {
+                    defer.resolve(filters);
+                }
 
                 // create a url
                 var uri = [
                     table.schema.catalog.server.uri ,"catalog" ,
                     module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
-                    fitlerStr.join(";")
+                    filterStr.join(";")
                 ].join("/");
 
                 var ref = new Reference(module.parse(uri), table.schema.catalog);
@@ -5572,7 +5595,8 @@
          *    "source": <data-source>,
          *    "choices": [v, ...],
          *    "ranges": [{"min": v1, "max": v2}, ...],
-         *    "search": [v, ...]
+         *    "search": [v, ...],
+         *    "not_null": true
          * }
          * ```
          *
@@ -5580,10 +5604,17 @@
          */
         toJSON: function () {
             var res = { "source": Array.isArray(this.dataSource) ? this.dataSource.slice() : this.dataSource};
+
             // to avoid adding more than one null for json.
             var hasJSONNull = {};
             for (var i = 0, f; i < this.filters.length; i++) {
                 f = this.filters[i];
+
+                if (f.facetFilterKey === "not_null") {
+                    res.not_null = true;
+                    continue;
+                }
+
                 if (!(f.facetFilterKey in res)) {
                     res[f.facetFilterKey] = [];
                 }
@@ -5611,24 +5642,36 @@
         /**
          * Given an object will create list of filters.
          *
+         * NOTE: if we have not_null, other filters except =null are not relevant.
+         * That means if we saw not_null:
+         * 1. If =null exist, then set the filters to empty array.
+         * 2. otherwise set the filter to just the not_null
+         *
          * Expected object format format:
          * ```
          * {
          *    "source": <data-source>,
          *    "choices": [v, ...],
          *    "ranges": [{"min": v1, "max": v2}, ...],
-         *    "search": [v, ...]
+         *    "search": [v, ...],
+         *    "not_null": true
          * }
          * ```
          *
          * @param  {Object} json JSON representation of filters
          */
         _setFilters: function (json) {
-            var self = this, current;
+            var self = this, current, hasNotNull = false;
             self.filters = [];
 
             if (!isDefinedAndNotNull(json)) {
                 return;
+            }
+
+            // if there's a not_null other filters are not applicable.
+            if (json.not_null === true) {
+                self.filters.push(new NotNullFacetFilter());
+                hasNotNull = true;
             }
 
             // create choice filters
@@ -5645,6 +5688,17 @@
                         }
                     }
 
+                    if (hasNotNull) {
+                        // if not-null filter exists, the only relevant filter is =null.
+                        // Other filters will be ignored.
+                        // If =null exist, we are removing all the filters.
+                        if (ch === null) {
+                            self.filters = [];
+                        }
+                        return;
+                    }
+
+
                     current = self.filters.filter(function (f) {
                         return (f instanceof ChoiceFacetFilter) && f.term === ch;
                     })[0];
@@ -5658,7 +5712,7 @@
             }
 
             // create range filters
-            if (Array.isArray(json.ranges)) {
+            if (!hasNotNull && Array.isArray(json.ranges)) {
                 json.ranges.forEach(function (ch) {
                     current = self.filters.filter(function (f) {
                         return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
@@ -5673,7 +5727,7 @@
             }
 
             // create search filters
-            if (Array.isArray(json.search)) {
+            if (!hasNotNull && Array.isArray(json.search)) {
                 json.search.forEach(function (ch) {
                     current = self.filters.filter(function (f) {
                         return (f instanceof SearchFacetFilter) && f.term === ch;
@@ -5686,6 +5740,19 @@
                     self.filters.push(new SearchFacetFilter(ch, self._column.type));
                 });
             }
+        },
+
+        /**
+         * Returns true if the not-null filter exists.
+         * @type {Boolean}
+         */
+        get hasNotNullFilter() {
+            if (this._hasNotNullFilter === undefined) {
+                this._hasNotNullFilter = this.filters.filter(function (f) {
+                    return (f instanceof NotNullFacetFilter);
+                })[0] !== undefined;
+            }
+            return this._hasNotNullFilter;
         },
 
         /**
@@ -5761,13 +5828,14 @@
 
         /**
          * Create a new Reference with replacing choice facet filters by the given input
+         * This will also remove NotNullFacetFilter
          * @return {ERMrest.Reference} the reference with the new filter
          */
         replaceAllChoiceFilters: function (values) {
             verify(Array.isArray(values), "given argument must be an array");
             var self = this;
             var filters = this.filters.slice().filter(function (f) {
-                return !(f instanceof ChoiceFacetFilter);
+                return !(f instanceof ChoiceFacetFilter) && !(f instanceof NotNullFacetFilter);
             });
             values.forEach(function (v) {
                 filters.push(new ChoiceFacetFilter(v, self._column.type));
@@ -5816,6 +5884,12 @@
             };
         },
 
+        /**
+         * Create a new Reference with removing any range filter that has the given min and max combination.
+         * @param  {String|int=} min minimum value. Can be null or undefined.
+         * @param  {String|int=} max maximum value. Can be null or undefined.
+         * @return {ERMrest.Reference} the reference with the new filter
+         */
         removeRangeFilter: function (min, max) {
             //TODO needs refactoring
             verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
@@ -5828,11 +5902,34 @@
         },
 
         /**
+         * Create a new Reference with removing all the filters and adding a not-null filter.
+         * NOTE based on current usecases this is currently removing all the previous filters.
+         * We might need to change this behavior in the future. I could change the behavior of
+         * this function to only add the filter, and then in the client first remove all and thenadd
+         * addNotNullFilter, but since the code is not very optimized that would result on a heavy
+         * operation.
+         * @return {ERMrest.Reference}
+         */
+        addNotNullFilter: function () {
+            return this._applyFilters([new NotNullFacetFilter()]);
+        },
+
+        /**
+         * Create a new Reference without any filters.
+         * @return {ERMrest.Reference}
+         */
+        removeNotNullFilter: function () {
+            var filters = this.filters.filter(function (f) {
+                return !(f instanceof NotNullFacetFilter);
+            });
+            return this._applyFilters(filters);
+        },
+
+        /**
          * Create a new Reference by removing all the filters from current facet.
          * @return {ERMrest.Reference} the reference with the new filter
          */
         removeAllFilters: function() {
-
             return this._applyFilters([]);
         },
 
@@ -6019,6 +6116,16 @@
         }
         return res;
     };
+
+    /**
+     * Represents not_null filter.
+     * It doesn't have the same toJSON and toString functions, since
+     * the only thing that client would need is question of existence of this type of filter.
+     * @constructor
+     */
+    function NotNullFacetFilter () {
+        this.facetFilterKey = "not_null";
+    }
 
     /**
      * Constructs an Aggregate Funciton object
