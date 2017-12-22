@@ -30,6 +30,7 @@ exports.execute = function (options) {
             server.catalogs.get(id).then(null, function(err) {
 
                 expect(err instanceof ermRest.UnauthorizedError).toBe(true);
+                expect(err instanceof ermRest.ErmrestError).toBe(true);
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
@@ -57,6 +58,7 @@ exports.execute = function (options) {
 
             server.catalogs.get(id).then(null, function(err) {
                 expect(err instanceof ermRest.NotFoundError).toBe(true);
+                expect(err instanceof ermRest.ErmrestError).toBe(true);
                 done();
             }).catch(function(err) {
                 console.log(err);

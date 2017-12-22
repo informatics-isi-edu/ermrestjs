@@ -4,7 +4,7 @@ var httpError = require('../helpers/http_error.js');
 exports.execute = function (options) {
 
     describe('For determining Catalog exceptions, ', function () {
-        var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true}, 
+        var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true},
         			catalog, id = "3423423";
 
 		httpError.setup(options);
@@ -17,13 +17,14 @@ exports.execute = function (options) {
         httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
         	server.catalogs.get(id).then(null, function(err) {
         		expect(err instanceof ermRest[error.type]).toBeTruthy();
+            expect(err instanceof ermRest.ErmrestError).toBe(true);
 	            done();
 	        }).catch(function(e) {
 	        	console.dir(e);
 	        	expect(false).toBe(true);
 	        	done();
 	        });
-        }, "existing catalog retreival", 
+        }, "existing catalog retreival",
         "/ermrest/catalog/" + id + "/schema");
 
         afterEach(function() {

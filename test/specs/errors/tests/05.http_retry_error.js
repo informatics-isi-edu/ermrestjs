@@ -23,7 +23,7 @@ exports.execute = function (options) {
 
 
         it("should make default 2 http retries with initial 50ms delay and then call error callback for error code 503", function (done) {
-    		
+
         	server._http.max_retries = 2;
         	server._http.initial_delay = 50;
         	var delay  = server._http.initial_delay, i = 0;
@@ -43,6 +43,7 @@ exports.execute = function (options) {
 	        	var currentTime = (new Date().getTime());
 	        	expect(currentTime - startTime).toBeGreaterThan(delay);
 	            expect(err instanceof ermRest.ServiceUnavailableError).toBe(true);
+              expect(err instanceof ermRest.ErmrestError).toBe(true);
 	            done();
 	        }).catch(function() {
 	        	expect(false).toBe(true);
@@ -52,7 +53,7 @@ exports.execute = function (options) {
 
 
         it("should make 5 http retries with initial 50ms delay and then call error callback for error code 500", function(done) {
-	        
+
         	server._http.max_retries = 5;
         	server._http.initial_delay = 50;
         	var delay  = server._http.initial_delay, i = 0;
@@ -71,17 +72,18 @@ exports.execute = function (options) {
 	        server.catalogs.get(id).then(null, function(err) {
 	            expect((new Date().getTime()) - startTime).toBeGreaterThan(delay);
 	            expect(err instanceof ermRest.InternalServerError).toBe(true);
+              expect(err instanceof ermRest.ErmrestError).toBe(true);
 	            done();
 	        }).catch(function() {
 	        	expect(false).toBe(true);
 	        	done();
 	        });
-	        
+
 	    });
 
 
 	    it("should make 3 http retry with initial 500ms delay and then call success callback for entity delete", function(done) {
-	        
+
         	server._http.max_retries = 3;
         	server._http.initial_delay = 500;
         	var delay  = server._http.initial_delay, i = 0;
@@ -98,7 +100,7 @@ exports.execute = function (options) {
               .delete(uri)
               .times(server._http.max_retries)
 	          .reply(500, 'Internal Server Error');
-	          
+
             var startTime = (new Date()).getTime();
 
             setTimeout(function() {
@@ -118,7 +120,7 @@ exports.execute = function (options) {
                 expect(e.message).toBe(true);
                 done();
             });
-	        
+
 	    });
 
 
