@@ -21,9 +21,9 @@
     /**
      * @memberof ERMrest
      * @param  {int} code           http error code
-     * @param  {string} status      message status/title in modal box
+     * @param  {string} status      message status/title in the modal box
      * @param  {string} message     main user error message
-     * @param  {string} subMessage  technical details about error. Appear in collapsible span in modal box
+     * @param  {string} subMessage  technical details about the error. Appear in collapsible span in the modal box
      * @constructor
      */
     function ErmrestError(code, status, message, subMessage) {
