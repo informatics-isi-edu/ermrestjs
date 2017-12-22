@@ -216,6 +216,8 @@ to use for ERMrest JavaScript agents.
         * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
+    * [.ERMrestError](#ERMrest.ERMrestError)
+        * [new ERMrestError(code, status, message, subMessage)](#new_ERMrest.ERMrestError_new)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -1914,6 +1916,21 @@ The column name of the base. This goes to the first level which
 will be a type understandable by database.
 
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.ERMrestError"></a>
+
+### ERMrest.ERMrestError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.ERMrestError_new"></a>
+
+#### new ERMrestError(code, status, message, subMessage)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| code | <code>int</code> | http error code |
+| status | <code>string</code> | message status/title in the modal box |
+| message | <code>string</code> | main user error message |
+| subMessage | <code>string</code> | technical details about the error. Appear in collapsible span in the modal box |
+
 <a name="ERMrest.TimedOutError"></a>
 
 ### ERMrest.TimedOutError
