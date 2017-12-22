@@ -17,7 +17,7 @@ exports.execute = function (options) {
         httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
         	server.catalogs.get(id).then(null, function(err) {
         		expect(err instanceof ermRest[error.type]).toBeTruthy();
-            expect(err instanceof ermRest.ErmrestError).toBe(true);
+            expect(err instanceof ermRest.ERMrestError).toBe(true);
 	            done();
 	        }).catch(function(e) {
 	        	console.dir(e);

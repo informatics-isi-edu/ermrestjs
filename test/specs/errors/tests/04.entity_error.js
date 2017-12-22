@@ -30,7 +30,7 @@ exports.execute = function (options) {
             httpError.testForErrors("POST", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.post([{ "valid_column_name" : "some randome value"}], [column.name]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);
@@ -50,7 +50,7 @@ exports.execute = function (options) {
                 path = path.filter(filter);
                 path.entity.get().then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);
@@ -69,7 +69,7 @@ exports.execute = function (options) {
             httpError.testForErrors("GET", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.get(null, null, [column]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);
@@ -88,7 +88,7 @@ exports.execute = function (options) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 table.entity.count(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);
@@ -106,7 +106,7 @@ exports.execute = function (options) {
             httpError.testForErrors("PUT", ["400", "401", "403", "404", "409", "500", "503"], function(error, done) {
                 table.entity.put([{ "valid_column_name" : "some randome value"}]).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);
@@ -124,7 +124,7 @@ exports.execute = function (options) {
                 var filter = new ermRest.BinaryPredicate(table.columns.get(column.name), "=", entityId);
                 table.entity.delete(filter).then(null, function(err) {
                     expect(err instanceof ermRest[error.type]).toBeTruthy();
-                    expect(err instanceof ermRest.ErmrestError).toBe(true);
+                    expect(err instanceof ermRest.ERMrestError).toBe(true);
                     done();
                 }).catch(function(e) {
                     console.dir(e);

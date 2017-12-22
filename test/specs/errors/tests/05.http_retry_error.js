@@ -43,7 +43,7 @@ exports.execute = function (options) {
 	        	var currentTime = (new Date().getTime());
 	        	expect(currentTime - startTime).toBeGreaterThan(delay);
 	            expect(err instanceof ermRest.ServiceUnavailableError).toBe(true);
-              expect(err instanceof ermRest.ErmrestError).toBe(true);
+              expect(err instanceof ermRest.ERMrestError).toBe(true);
 	            done();
 	        }).catch(function() {
 	        	expect(false).toBe(true);
@@ -72,7 +72,7 @@ exports.execute = function (options) {
 	        server.catalogs.get(id).then(null, function(err) {
 	            expect((new Date().getTime()) - startTime).toBeGreaterThan(delay);
 	            expect(err instanceof ermRest.InternalServerError).toBe(true);
-              expect(err instanceof ermRest.ErmrestError).toBe(true);
+              expect(err instanceof ermRest.ERMrestError).toBe(true);
 	            done();
 	        }).catch(function() {
 	        	expect(false).toBe(true);
