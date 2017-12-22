@@ -2953,10 +2953,11 @@
 
         /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} isLeft  true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
-        toString: function (reverse){
+        toString: function (reverse, isLeft){
             var leftString = "", rightString = "";
             var columnsLength = this.colset.columns.length;
             for (var i = 0; i < columnsLength; i++) {
@@ -2973,7 +2974,9 @@
                 rightString += separator;
 
             }
-            return "(" + leftString + ")=(" + rightString + ")";
+
+            var joinType = (isLeft === true ? "left": "");
+            return joinType + "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {
