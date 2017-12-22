@@ -2250,3 +2250,18 @@
         UPDATE: "UPDT",   //update
         READ: "READ"        //read
       });
+
+    module._errorStatus = Object.freeze({
+      forbidden : "Forbidden",
+      itemNotFound : "Item Not Found",
+      facetingError: "Faceting Error",
+      invalidFilter : "Invalid Filter",
+      invalidInput : "Invalid Input",
+      invalidURI : "Invalid URI",
+      noDataChanged : "No Data Changed",
+      noConnectionError : "No Connection Error"
+      });
+
+    module._errorMessage = Object.freeze({
+      facetingError : "Given encoded string for facets is not valid."
+    });

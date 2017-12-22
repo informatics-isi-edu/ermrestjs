@@ -34,7 +34,7 @@
      * @constructor
      */
     function TimedOutError(status, message) {
-        var code= 0
+        var code = 0;
         ErmrestjsError.call(this, code, status, message);
     }
 
@@ -80,7 +80,7 @@
      */
     function ForbiddenError(status, message) {
         var code = 403;
-        var status = (status != 'undefined' && status != '') ? status: "Forbidden";
+        status = (status != 'undefined' && status != '') ? status: module._errorStatus.forbidden;
         ErmrestjsError.call(this, code, status, message);
     }
 
@@ -96,7 +96,7 @@
      */
     function NotFoundError(status, message) {
         var code = 404;
-        var status = (status != 'undefined' && status != '') ? status: "Item Not Found";
+        status = (status != 'undefined' && status != '') ? status: module._errorStatus.itemNotFound;
         ErmrestjsError.call(this, code, status, message);
     }
 
@@ -205,8 +205,8 @@
      * @desc An invalid facet operator
      */
     function InvalidFacetOperatorError(message) {
-        var message = message ? message : "Given encoded string for facets is not valid.";
-        ErmrestjsError.call(this, '', "Faceting Error", message);
+        message = message ? message : module._errorMessage.facetingError;
+        ErmrestjsError.call(this, '', module._errorStatus.facetingError, message);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -219,8 +219,8 @@
      * @desc An invalid filter operator
      */
     function InvalidFilterOperatorError(message) {
-        var message = message;
-        ErmrestjsError.call(this, '', 'Invalid Filter', message);
+        message = message;
+        ErmrestjsError.call(this, '', module._errorStatus.invalidFilter, message);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ErmrestjsError.prototype);
@@ -234,8 +234,8 @@
      * @desc An invalid input
      */
     function InvalidInputError(message) {
-        var message = message;
-        ErmrestjsError.call(this, '', 'Invalid Input', message);
+        message = message;
+        ErmrestjsError.call(this, '', module._errorStatus.invalidInput, message);
     }
 
     InvalidInputError.prototype = Object.create(ErmrestjsError.prototype);
@@ -250,7 +250,7 @@
      */
     function MalformedURIError(message) {
         this.message = message;
-        ErmrestjsError.call(this, '', 'Invalid URI', message);
+        ErmrestjsError.call(this, '', module._errorStatus.invalidURI, message);
     }
 
     MalformedURIError.prototype = Object.create(ErmrestjsError.prototype);
@@ -263,8 +263,8 @@
      * @desc no data was changed for update
      */
     function NoDataChangedError(message) {
-        var message = message;
-        ErmrestjsError.call(this, '', 'No Data Changed', message);
+        message = message;
+        ErmrestjsError.call(this, '', module._errorStatus.noDataChanged, message);
     }
 
     NoDataChangedError.prototype = Object.create(ErmrestjsError.prototype);
@@ -277,8 +277,8 @@
      * @desc A no internert was passed to the API.
      */
     function NoConnectionError(message) {
-        var message = message;
-        ErmrestjsError.call(this, '', 'No Connection Error', message);
+        message = message;
+        ErmrestjsError.call(this, '', module._errorStatus.noConnectionError, message);
     }
 
     NoConnectionError.prototype = Object.create(Error.prototype);
