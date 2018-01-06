@@ -6183,10 +6183,16 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            var width = Math.ceil( (max-min)/bucketCount );
+            var absMax = max;
+            if (this.column.type.name.indexOf("int") > -1) {
+                absMax = (min + (width*bucketCount));
+            }
             var options = {
                 bucketCount: bucketCount,
                 absMin: min,
-                absMax: max
+                absMax: absMax,
+                binWidth: width
             };
 
             if (this.column.isPseudo) {
@@ -6208,7 +6214,7 @@
             if (max == min) {
                 max += 1;
             }
-            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
+            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + options.absMin + ";" + options.absMax + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
             ];

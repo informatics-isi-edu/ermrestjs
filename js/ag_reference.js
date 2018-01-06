@@ -928,6 +928,7 @@ BucketAttributeGroupReference.prototype.read = function () {
         var defer = module._q.defer();
 
         var uri = this.uri;
+        console.log("Bucket AG reference: ", this);
 
         var currRef = this;
         this._server._http.get(uri).then(function (response) {
@@ -943,7 +944,7 @@ BucketAttributeGroupReference.prototype.read = function () {
 
             var min, max;
 
-            console.log(response);
+            console.log(response.data);
             for (var i=0; i<response.data.length; i++) {
                 var index = response.data[i].c1[0];
                 if (index !== null) {
@@ -954,42 +955,55 @@ BucketAttributeGroupReference.prototype.read = function () {
                         max = moment(max).format("YYYY-MM-DD");
                     }
 
-                    data.x[index] = min + "-" + max;
+                    data.x[index] = min;
                     data.y[index] = response.data[i].c2;
                 }
+                // NOTE: debugging statments
+                // console.log("===========" + index + "===========");
+                // console.log("Min when reading data: ", min);
+                // console.log("Max when reading data: ", max);
+
+                // else if null (this is the null bin)
+                // make it bin at index 0
             }
 
             console.log("Labels: ", labels);
-            var bucketRange = ((currRef._options.absMax-currRef._options.absMin)/currRef._options.bucketCount);
+            var bucketRange = currRef._options.binWidth;
             console.log("options: ", currRef._options);
             console.log("bucket range: ", bucketRange);
             for (var j=0; j<data.x.length; j++) {
-                // if no value is present, we didn't get  bucket back for this index
-                // we check x values instead of y values because y values can be 0 (may be interpretted as false in condition)
-                console.log("data.x[j] when j=" + j + ": ", data.x[j]);
-                if (!data.x[j]) {
-                    console.log("No Data");
-                    console.log("j index: ", j);
+                // if no value is present (null is a value), we didn't get a bucket back for this index
+                // NOTE: debugging statments
+                // console.log("===========" + j + "===========");
+                // console.log("data when padding: ", data.x[j]);
+                // console.log("label min when padding: ", labels.min[j]);
+                // console.log("label max when padding: ", labels.max[j]);
+                if (data.x[j] === undefined) {
                     // determine x axis label
                     // no label for index 0
                     if (j==0) {
-                        min = currRef._options.absMin;
+                        min = null;
                     } else {
                         min = labels.max[j-1];
                     }
-                    console.log("min after j check: ", min);
                     // if there was a response row for next index, get min of next value
                     max = labels.min[j+1] ? labels.min[j+1] : (min + bucketRange);
 
                     labels.min[j] = min;
                     labels.max[j] = max;
 
-                    data.x[j] = min + "-" + max;
+                    data.x[j] = min;
                     data.y[j] = 0;
                 }
             }
 
-            console.log(data);
+            // remove the first bin (null-min)
+            data.x.splice(0, 1);
+            data.y.splice(0, 1);
+            labels.min.splice(0, 1);
+            labels.max.splice(0, 1);
+
+            data.labels = labels;
 
             defer.resolve(data);
 
