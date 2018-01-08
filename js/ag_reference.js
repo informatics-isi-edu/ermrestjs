@@ -970,7 +970,6 @@ BucketAttributeGroupReference.prototype.read = function () {
             console.log("Labels: ", labels);
             var bucketRange = currRef._options.binWidth;
             console.log("options: ", currRef._options);
-            console.log("bucket range: ", bucketRange);
             for (var j=0; j<data.x.length; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
                 // NOTE: debugging statments
