@@ -1759,7 +1759,7 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-                
+
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
@@ -4908,9 +4908,13 @@
         // otherwise return a download link
         var template = "[{{{caption}}}]({{{url}}}){download .download}";
         var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
+        var url = data[this._baseCol.name];
+
+        // add the uint=1 query params
+        url += ( url.indexOf("?") !== -1 ? "&": "?") + "uint=1";
         var keyValues = {
             "caption": col.formatvalue(data[col.name], context, options),
-            "url": data[this._baseCol.name]
+            "url": url
         };
         var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
         return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
