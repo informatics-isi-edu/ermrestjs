@@ -1759,7 +1759,7 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-                
+
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
@@ -3865,7 +3865,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
         },
