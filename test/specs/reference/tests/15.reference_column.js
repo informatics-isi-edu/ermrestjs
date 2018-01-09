@@ -665,11 +665,11 @@ exports.execute = function (options) {
 
                     it("otherwise return a download link with query parameter", function() {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com?uint=1" download="" class="download">filename</a>', "value missmatch.");
+                        expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
 
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
                         //NOTE this is the output but it will be displayed correctly.
-                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uint=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
                     });
                  });
 
