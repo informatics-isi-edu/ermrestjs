@@ -3865,7 +3865,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
         },

@@ -670,18 +670,27 @@
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
+     * @param {Object} linkedData The object which contains key value pairs of foreign key data.
+     * @param {boolean} isTitle determines Whether we want rowname for title or not
      * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
      */
-    module._generateRowName = function (table, context, data, linkedData) {
-        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern;
+    module._generateRowName = function (table, context, data, linkedData, isTitle) {
+        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
 
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-            annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+            actualContext = isTitle ? "title" : (typeof context === "string" && context !== "*" ? context : "");
+            annotation = module._getRecursiveAnnotationValue(
+                [module._contexts.ROWNAME, actualContext].join("/"),
+                table.annotations.get(module._annotations.TABLE_DISPLAY).content
+            );
 
             // getting the defined unformatted value
-            unformattedAnnotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME_UNFORMATTED, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+            unformattedAnnotation = module._getRecursiveAnnotationValue(
+                [module._contexts.ROWNAME_UNFORMATTED, actualContext].join("/"),
+                table.annotations.get(module._annotations.TABLE_DISPLAY).content
+            );
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
                 // Get formatted keyValues for a table for the data
                 keyValues = module._getFormattedKeyValues(table, context, data, linkedData);

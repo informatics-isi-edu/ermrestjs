@@ -362,7 +362,7 @@ exports.execute = function (options) {
                     expect(compactColumns[15].default).toBe(null);
                 });
 
-                it ('should return a rowname if it is possible to generate one with default values.', function () {
+                it ('should return a rowname with correct context if it is possible to generate one with default values.', function () {
                     expect(compactColumns[14].default).toEqual('col 4 default , col 5 default');
                 });
 
@@ -597,7 +597,7 @@ exports.execute = function (options) {
             describe('for pseudoColumns, ', function () {
                 describe('for foreign keys, ', function () {
                     it('should return the correct link.', function () {
-                        val = compactColumns[14].formatPresentation(data).value;
+                        val = compactColumns[14].formatPresentation(data, 'compact').value;
 
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
