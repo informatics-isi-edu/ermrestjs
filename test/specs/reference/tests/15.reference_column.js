@@ -663,9 +663,13 @@ exports.execute = function (options) {
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 
-                    it("otherwise return a download link", function() {
+                    it("otherwise return a download link with query parameter", function() {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com" download="" class="download">filename</a>');
+                        expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+
+                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                        //NOTE this is the output but it will be displayed correctly.
+                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
                     });
                  });
 
