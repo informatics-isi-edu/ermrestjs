@@ -1759,7 +1759,7 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-                
+
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
@@ -3880,8 +3880,8 @@
             if (this._uniqueId === undefined) {
                 var key, hasNull = false;
                 this._uniqueId = "";
-                for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
-                    keyName = this.reference.table.shortestKey[i].name;
+                for (var i = 0; i < this._pageRef.table.shortestKey.length; i++) {
+                    keyName = this._pageRef.table.shortestKey[i].name;
                     if (this.data[keyName] == null) {
                         hasNull = true;
                         break;
