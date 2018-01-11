@@ -211,6 +211,15 @@
     };
 
     /**
+     * Returns true if given parameter isan integer
+     * @param  {*} x
+     * @return {boolean}
+     */
+    var isInteger = function (x) {
+        return (typeof x === 'number') && (x % 1 === 0);
+    };
+
+    /**
      * @private
      * @param {Object} child child class
      * @param {Object} parent parent class

@@ -279,10 +279,10 @@ to use for ERMrest JavaScript agents.
         * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
-        * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
-        * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2190,9 +2190,9 @@ Constructor for a ParsedFilter.
 #### parsedFilter.setFilters(filters)
 **Kind**: instance method of [<code>ParsedFilter</code>](#ERMrest.ParsedFilter)  
 
-| Param | Description |
-| --- | --- |
-| filters | array of binary predicate |
+| Param | Type | Description |
+| --- | --- | --- |
+| filters | <code>Array.&lt;ParsedFilter&gt;</code> | array of binary predicate |
 
 <a name="ERMrest.ParsedFilter+setBinaryPredicate"></a>
 
@@ -2233,10 +2233,10 @@ Constructor for a ParsedFilter.
     * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
-    * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
-    * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2530,7 +2530,7 @@ The 6 is ignored because we only want to know what's in the minuend that is not 
 **Kind**: inner method of [<code>create</code>](#ERMrest.Reference+create)  
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -2561,6 +2561,7 @@ or rejected with any of these errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+sort"></a>
 
@@ -2580,7 +2581,7 @@ Return a new Reference with the new sorting
 
 <a name="ERMrest.Reference+update"></a>
 
-#### reference.update(tuples) ⇒ <code>Promise</code>
+#### reference.update(tuples, contextHeaderParams) ⇒ <code>Promise</code>
 Updates a set of resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -2593,15 +2594,21 @@ or rejected with any of these errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuples | <code>Array</code> | array of tuple objects so that the new data nd old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete() ⇒ <code>Promise</code>
+#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
 <a name="ERMrest.Reference+delete..self"></a>
 
 ##### delete~self

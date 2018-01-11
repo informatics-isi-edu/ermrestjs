@@ -185,9 +185,10 @@ AttributeGroupReference.prototype = {
     /**
      *
      * @param  {int=} limit
+     * @param {Object} contextHeaderParams the object that we want to log.
      * @return {ERMRest.AttributeGroupPage}
      */
-    read: function (limit) {
+    read: function (limit, contextHeaderParams) {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
@@ -198,7 +199,13 @@ AttributeGroupReference.prototype = {
             }
 
             var currRef = this;
-            this._server._http.get(uri).then(function (response) {
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {"action": "read"};
+            }
+            var config = {
+                headers: this._generateContextHeader(contextHeaderParams, limit)
+            };
+            this._server._http.get(uri, config).then(function (response) {
 
                 //determine hasNext and hasPrevious
                 var hasPrevious, hasNext = false;
