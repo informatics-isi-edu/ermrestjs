@@ -1123,10 +1123,11 @@
 
          /**
           *
-          * @param filters array of binary predicate
+          * @param {ParsedFilter[]} filters array of binary predicate
           */
          setFilters: function(filters) {
              this.filters = filters;
+             this.facet = this._filterToFacet(this);
          },
 
          /**
@@ -1139,6 +1140,61 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
+             this.facet = this._filterToFacet(this);
+         },
+
+         // turn filter into facet, will return null if it's not possible to do so.
+         _filterToFacet: function () {
+             var facet = {}, self = this, parsed, op;
+
+             // base for binary predicate filters
+             if (self instanceof ParsedFilter && self.type === module.filterTypes.BINARYPREDICATE){
+                  facet.source = self.column;
+                  switch (self.operator) {
+                      case "::gt::":
+                          facet.ranges = [{min: self.value}];
+                          break;
+                      case "::lt::":
+                          facet.ranges = [{max: self.value}];
+                          break;
+                      case "::null::":
+                          facet.choices = [null];
+                          break;
+                      case "::ciregexp::":
+                          facet.search = [self.value];
+                          break;
+                      case "=":
+                          facet.choices = [self.value];
+                          break;
+                      default:
+                         return null;
+                  }
+                  return facet;
+              }
+
+              // if it's an array of filters
+             if (Array.isArray(self.filters)) {
+                 if (this.type === module.filterTypes.DISJUNCTION) {
+                    op = "or";
+                } else if (this.type === module.filterTypes.CONJUNCTION) {
+                    op = "and";
+                } else {
+                    return null;
+                }
+
+                self.filters.forEach(function (f) {
+                    parsed = f._filterToFacet();
+                    if (parsed) {
+                        if (!Array.isArray(facet[op])) facet[op] = [];
+                        facet[op].push(parsed);
+                    }
+                });
+
+                return facet;
+            }
+
+            // invalid filter
+            return null;
          }
      };
 
