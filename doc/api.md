@@ -277,7 +277,7 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-        * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -2231,7 +2231,7 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-    * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -2500,7 +2500,7 @@ Remove all the fitlers from facets
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 <a name="ERMrest.Reference+create"></a>
 
-#### reference.create(data) ⇒ <code>Promise</code>
+#### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>
 Creates a set of tuples in the references relation. Note, this
 operation sets the `defaults` list according to the table
 specification, and not according to the contents of in the input
@@ -2517,6 +2517,7 @@ or rejected with any of the following errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Array</code> | The array of data to be created as new tuples. |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+create..columnDiff"></a>
 
