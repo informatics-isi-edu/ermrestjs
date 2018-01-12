@@ -928,7 +928,6 @@ BucketAttributeGroupReference.prototype.read = function () {
         var defer = module._q.defer();
 
         var uri = this.uri;
-        console.log("Bucket AG reference: ", this);
 
         var currRef = this;
         this._server._http.get(uri).then(function (response) {
@@ -944,7 +943,6 @@ BucketAttributeGroupReference.prototype.read = function () {
 
             var min, max;
 
-            console.log(response.data);
             for (var i=0; i<response.data.length; i++) {
                 var index = response.data[i].c1[0];
                 if (index !== null) {
@@ -967,9 +965,7 @@ BucketAttributeGroupReference.prototype.read = function () {
                 // make it bin at index 0
             }
 
-            console.log("Labels: ", labels);
             var bucketRange = currRef._options.binWidth;
-            console.log("options: ", currRef._options);
             for (var j=0; j<data.x.length; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
                 // NOTE: debugging statments

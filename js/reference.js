@@ -6184,10 +6184,11 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
-            var width = Math.ceil( (max-min)/bucketCount );
+            var width = (max-min)/bucketCount;
             var absMax = max;
             if (this.column.type.name.indexOf("int") > -1) {
                 absMax = (min + (width*bucketCount));
+                width = Math.ceil(width);
             }
             var options = {
                 bucketCount: bucketCount,
