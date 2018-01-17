@@ -6184,21 +6184,37 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            var width;
+
             if (max-min == 0) {
                 max++;
             }
-            var width = (max-min)/bucketCount;
             var absMax = max;
-            if (this.column.type.name.indexOf("int") > -1) {
+
+            if (this.column.type.name.indexOf("date") > -1) {
+                var minMoment = moment(min),
+                    maxMoment = moment(max);
+
+                width =  moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays();
                 width = Math.ceil(width);
-                absMax = (min + (width*bucketCount));
+                absMax = minMoment.add(width*bucketCount, 'd').format('YYYY-MM-DD');
+            } else if (this.column.type.name.indexOf("timestamp") > -1) {
+
+            } else {
+                width = (max-min)/bucketCount;
+                if (this.column.type.name.indexOf("int") > -1) {
+                    width = Math.ceil(width);
+                    absMax = (min + (width*bucketCount));
+                }
             }
+
             var options = {
                 bucketCount: bucketCount,
                 absMin: min,
                 absMax: absMax,
                 binWidth: width
             };
+            console.log(options);
 
             if (this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
@@ -6219,7 +6235,7 @@
             if (max == min) {
                 max += 1;
             }
-            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + options.absMin + ";" + options.absMax + ")";
+            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + module._fixedEncodeURIComponent(options.absMin) + ";" + module._fixedEncodeURIComponent(options.absMax) + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
             ];

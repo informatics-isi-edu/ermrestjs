@@ -924,6 +924,18 @@ BucketAttributeGroupReference.prototype.search = function (term) {
 BucketAttributeGroupReference.prototype.read = function () {
     var moment = module._moment;
 
+    function calculateWidthLabel(min, bucketRange) {
+        var nextLabel;
+        if (currRef._keyColumns[0].type.name == "date") {
+            nextLabel = moment(min).add(bucketRange, 'd').format('YYYY-MM-DD');
+        } else if (currRef._keyColumns[0].type.name.indexOf("timestamp") > -1) {
+
+        } else {
+            nextLabel = (min + bucketRange)
+        }
+        return nextLabel;
+    }
+
     try {
         var defer = module._q.defer();
 
@@ -951,6 +963,9 @@ BucketAttributeGroupReference.prototype.read = function () {
                     if (currRef._keyColumns[0].type.name == "date") {
                         min = moment(min).format("YYYY-MM-DD");
                         max = moment(max).format("YYYY-MM-DD");
+                    } else if (currRef._keyColumns[0].type.name.indexOf("timestamp") > -1) {
+                        min = moment(min).format("YYYY-MM-DD hh:mm:ss");
+                        max = moment(max).format("YYYY-MM-DD hh:mm:ss");
                     }
 
                     data.x[index] = min;
@@ -982,7 +997,7 @@ BucketAttributeGroupReference.prototype.read = function () {
                         min = labels.max[j-1];
                     }
                     // if there was a response row for next index, get min of next value
-                    max = labels.min[j+1] ? labels.min[j+1] : (min + bucketRange);
+                    max = labels.min[j+1] ? labels.min[j+1] : calculateWidthLabel(min, bucketRange);
 
                     labels.min[j] = min;
                     labels.max[j] = max;
@@ -1000,6 +1015,7 @@ BucketAttributeGroupReference.prototype.read = function () {
 
             data.labels = labels;
 
+            console.log(data);
             defer.resolve(data);
 
         }).catch(function (response) {
