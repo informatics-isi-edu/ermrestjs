@@ -6184,23 +6184,33 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
-            var width;
-
-            if (max-min == 0) {
-                max++;
-            }
+            var width, range;
             var absMax = max;
 
             if (this.column.type.name.indexOf("date") > -1) {
                 var minMoment = moment(min),
                     maxMoment = moment(max);
 
-                width =  moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays();
-                width = Math.ceil(width);
+                if (maxMoment.diff(minMoment) === 0) {
+                    maxMoment.add(1, 'd');
+                }
+
+                width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
                 absMax = minMoment.add(width*bucketCount, 'd').format('YYYY-MM-DD');
             } else if (this.column.type.name.indexOf("timestamp") > -1) {
+                var minMoment = moment(min),
+                    maxMoment = moment(max);
 
+                if (maxMoment.diff(minMoment) === 0) {
+                    maxMoment.add(1, 's');
+                }
+
+                width = moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds();
             } else {
+                if (max-min === 0) {
+                    max++;
+                }
+
                 width = (max-min)/bucketCount;
                 if (this.column.type.name.indexOf("int") > -1) {
                     width = Math.ceil(width);
