@@ -237,7 +237,7 @@
             "schema_name": "common_schema_2",
             "column_definitions": [
                 {
-                    "name": "col_1",
+                    "name": "col_3",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -251,7 +251,7 @@
                     }
                 },
                 {
-                    "name": "col_3",
+                    "name": "col_1",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -306,6 +306,148 @@
                     }
                 }
             ],
+            "annotations": {}
+        },
+        "table_w_defaults": {
+            "comment": "has proper and improper defaul values",
+            "kind": "table",
+            "table_name": "table_w_defaults",
+            "keys": [
+                { "unique_columns": ["key"] }
+            ],
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "boolean_proper",
+                    "default": "true",
+                    "type": { "typename": "boolean" }
+                },
+                {
+                    "name": "boolean_improper",
+                    "default": "",
+                    "type": { "typename": "boolean" }
+                },
+                {
+                    "name": "date_proper",
+                    "default": "2010-06-08",
+                    "type": { "typename": "date" }
+                },
+                {
+                    "name": "date_improper",
+                    "default": "",
+                    "type": { "typename": "date" }
+                },
+                {
+                    "name": "timestamp_proper",
+                    "default": "2016-05-14T12:30:00",
+                    "type": { "typename": "timestamp" }
+                },
+                {
+                    "name": "timestamp_improper",
+                    "default": "",
+                    "type": { "typename": "timestamp" }
+                },
+                {
+                    "name": "timestamptz_proper",
+                    "default": "2016-05-14T12:30:00-07:00",
+                    "type": { "typename": "timestamptz" }
+                },
+                {
+                    "name": "timestamptz_improper",
+                    "default": "",
+                    "type": { "typename": "timestamptz" }
+                },
+                {
+                    "name": "float4_proper",
+                    "default": 1.456,
+                    "type": { "typename": "float4" }
+                },
+                {
+                    "name": "float4_improper",
+                    "default": "",
+                    "type": { "typename": "float4" }
+                },
+                {
+                    "name": "float8_proper",
+                    "default": 22.7849503,
+                    "type": { "typename": "float8" }
+                },
+                {
+                    "name": "float8_improper",
+                    "default": "",
+                    "type": { "typename": "float8" }
+                },
+                {
+                    "name": "numeric_proper",
+                    "default": 0.591294,
+                    "type": { "typename": "numeric" }
+                },
+                {
+                    "name": "numeric_improper",
+                    "default": "",
+                    "type": { "typename": "numeric" }
+                },
+                {
+                    "name": "int2_proper",
+                    "default": 12,
+                    "type": { "typename": "int2" }
+                },
+                {
+                    "name": "int2_improper",
+                    "default": "",
+                    "type": { "typename": "int2" }
+                },
+                {
+                    "name": "int4_proper",
+                    "default": 373834945,
+                    "type": { "typename": "int4" }
+                },
+                {
+                    "name": "int4_improper",
+                    "default": "",
+                    "type": { "typename": "int4" }
+                },
+                {
+                    "name": "int8_proper",
+                    "default": 73829572,
+                    "type": { "typename": "int8" }
+                },
+                {
+                    "name": "int8_improper",
+                    "default": "",
+                    "type": { "typename": "int8" }
+                },
+                {
+                    "name": "RID",
+                    "default": "someFunc()",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "RCB",
+                    "default": "someFunc()",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "RMB",
+                    "default": "someFunc()",
+                    "type": { "typename": "text" }
+                },
+                {
+                    "name": "RCT",
+                    "default": "",
+                    "type": { "typename": "timestamptz" }
+                },
+                {
+                    "name": "RMT",
+                    "default": "",
+                    "type": { "typename": "timestamptz" }
+                }
+            ],
+            "foreign_keys": [],
             "annotations": {}
         }
     },

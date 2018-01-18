@@ -156,10 +156,10 @@ exports.execute = function (options) {
             '4000',
             '4000',
             '12',
-            '4000 , 4001',
+            '4000 : 4001',
             '4000:4003',
-            '4000 , 4002',
-            '4001 , 4002',
+            '4000 : 4002',
+            '4001 : 4002',
             ''
         ];
 
@@ -170,19 +170,19 @@ exports.execute = function (options) {
             'John',
             'Hank',
             '12',
-            '4000 , 4001',
+            '4000 : 4001',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '4000 , 4002',
-            '4001 , 4002',
+            '4000 : 4002',
+            '4001 : 4002',
             ''
         ];
 
         var entryCreateRefExpectedLinkedValue = [
-            'Hank', '', '4000 , 4002', '1'
+            'Hank', '', '4000 : 4002', '1'
         ];
 
         var entryCreateRefExpectedPartialValue = [
-            '9000', '', '4000 , 4002', '1'
+            '9000', '', '4000 : 4002', '1'
         ];
 
         var tableWSlashData = [
@@ -203,7 +203,7 @@ exports.execute = function (options) {
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
-            '<a href="https://dev.isrd.isi.edu" download="" class="download">filename</a>',
+            '<a href="https://dev.isrd.isi.edu?uinit=1" download="" class="download">filename</a>',
             '4'
         ];
 
@@ -319,9 +319,11 @@ exports.execute = function (options) {
          *  - entry/edit: includes col_asset_3 and all its contituent columns
          *  - compact/brief: includes col_asset_3 and all its contituent columns
          *
+         *  3. table_w_composite_key:
+         *      has different values for row_name, row_name/compact and row_name/entry.
          */
 
-        var compactRef, compactBriefRef, compactSelectRef, compactRef, entryRef, entryCreateRef, entryEditRef,
+        var compactRef, compactBriefRef, compactSelectRef, entryRef, entryCreateRef, entryEditRef,
             slashRef, assetRef, assetRefEntry, assetRefCompact, assetRefCompactCols,
             compactColumns, compactSelectColumns, table2RefColumns;
 

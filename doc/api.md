@@ -93,7 +93,8 @@ to use for ERMrest JavaScript agents.
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
-            * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+            * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+            * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -206,7 +207,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-        * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+        * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -215,6 +216,8 @@ to use for ERMrest JavaScript agents.
         * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
+    * [.ERMrestError](#ERMrest.ERMrestError)
+        * [new ERMrestError(code, status, message, subMessage)](#new_ERMrest.ERMrestError_new)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -226,7 +229,11 @@ to use for ERMrest JavaScript agents.
     * [.NotFoundError](#ERMrest.NotFoundError)
         * [new NotFoundError(status, message)](#new_ERMrest.NotFoundError_new)
     * [.ConflictError](#ERMrest.ConflictError)
-        * [new ConflictError(status, message)](#new_ERMrest.ConflictError_new)
+        * [new ConflictError(status, message, subMessage)](#new_ERMrest.ConflictError_new)
+    * [.IntegrityConflictError](#ERMrest.IntegrityConflictError)
+        * [new IntegrityConflictError(status, message, subMessage)](#new_ERMrest.IntegrityConflictError_new)
+    * [.DuplicateConflictError](#ERMrest.DuplicateConflictError)
+        * [new DuplicateConflictError(status, message, subMessage)](#new_ERMrest.DuplicateConflictError_new)
     * [.PreconditionFailedError](#ERMrest.PreconditionFailedError)
         * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
@@ -276,6 +283,7 @@ to use for ERMrest JavaScript agents.
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+            * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -761,7 +769,8 @@ get table by table name
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
-        * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+        * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -860,10 +869,17 @@ The columns that create the shortest key
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 **Type{column[]}**:   
-<a name="ERMrest.Table+_getDisplayKey"></a>
+<a name="ERMrest.Table+displayKey"></a>
 
-#### table._getDisplayKey(context)
-returns the key that can be used for display purposes.
+#### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+The columns that create the shortest key that can be used for display purposes.
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_getRowDisplayKey"></a>
+
+#### table._getRowDisplayKey(context)
+This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+It's the same as displaykey but with extra restrictions. It might return undefined.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 **Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
@@ -1320,6 +1336,8 @@ return the default value for a column after checking whether it's a primitive th
 
 #### column.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this column definition.
+If a column display annotation with preformat property is available then use prvided format string
+else use the default formatValue function
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>string</code> - The formatted value.  
@@ -1762,7 +1780,7 @@ get the foreign key of the given column set
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-    * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+    * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -1830,7 +1848,7 @@ Indicates if the foreign key is simple (not composite)
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
-#### foreignKeyRef.toString([reverse]) ⇒ <code>string</code>
+#### foreignKeyRef.toString(reverse, isLeft) ⇒ <code>string</code>
 returns string representation of ForeignKeyRef object
 
 **Kind**: instance method of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
@@ -1838,7 +1856,8 @@ returns string representation of ForeignKeyRef object
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [reverse] | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| reverse | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| isLeft | <code>boolean</code> | true: left join, other values: inner join |
 
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
@@ -1900,6 +1919,21 @@ The column name of the base. This goes to the first level which
 will be a type understandable by database.
 
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.ERMrestError"></a>
+
+### ERMrest.ERMrestError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.ERMrestError_new"></a>
+
+#### new ERMrestError(code, status, message, subMessage)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| code | <code>int</code> | http error code |
+| status | <code>string</code> | message status/title in the modal box |
+| message | <code>string</code> | main user error message |
+| subMessage | <code>string</code> | technical details about the error. Appear in collapsible span in the modal box |
+
 <a name="ERMrest.TimedOutError"></a>
 
 ### ERMrest.TimedOutError
@@ -1971,12 +2005,45 @@ will be a type understandable by database.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.ConflictError_new"></a>
 
-#### new ConflictError(status, message)
+#### new ConflictError(status, message, subMessage)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | status | <code>string</code> | the network error code |
 | message | <code>string</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.IntegrityConflictError"></a>
+
+### ERMrest.IntegrityConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.IntegrityConflictError_new"></a>
+
+#### new IntegrityConflictError(status, message, subMessage)
+IntegrityConflictError - Return error pertaining to integrity violoation
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.DuplicateConflictError"></a>
+
+### ERMrest.DuplicateConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.DuplicateConflictError_new"></a>
+
+#### new DuplicateConflictError(status, message, subMessage)
+DuplicateConflictError - Return error pertaining to Duplicate entried
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
 
 <a name="ERMrest.PreconditionFailedError"></a>
 
@@ -2173,6 +2240,7 @@ Constructor for a ParsedFilter.
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2537,6 +2605,21 @@ Deletes the referenced resources.
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
+<a name="ERMrest.Reference+delete..self"></a>
+
+##### delete~self
+NOTE: previous implemenation of delete with 412 logic is here:
+https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+
+We decided to drop the support for 412, because the etag that we get from the read function
+is different than the one delete expects. The reason for that is because we are getting etag
+in read with joins in the request, which affects the etag. etag is in response to any change
+to the returned data and since join introduces extra data it is different than a request
+without any joins.
+
+github issue: #425
+
+**Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+related"></a>
 
 #### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)

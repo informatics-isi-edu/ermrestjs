@@ -54,13 +54,13 @@
                    }
                },
                {
-                    "comment": null, 
-                    "name": "col_markdown_blankable", 
-                    "default": null, 
-                    "nullok": true, 
+                    "comment": null,
+                    "name": "col_markdown_blankable",
+                    "default": null,
+                    "nullok": true,
                     "type": {
                       "typename": "json"
-                    }, 
+                    },
                     "annotations": {
                       "tag:isrd.isi.edu,2016:column-display": {
                         "*": {
@@ -505,7 +505,19 @@
                 }
             ],
             "entityCount": 0,
-            "foreign_keys": [],
+            "foreign_keys": [{
+                "names": [["reference_schema", "paging_table_no_sort_fk1"]],
+                "foreign_key_columns": [{
+                    "table_name": "paging table no sort",
+                    "schema_name": "reference_schema",
+                    "column_name": "fk_col"
+                }],
+                "referenced_columns": [{
+                    "table_name": "reference_table",
+                    "schema_name": "reference_schema",
+                    "column_name": "id"
+                }]
+            }],
             "table_name": "paging table no sort",
             "schema_name": "reference_schema",
             "column_definitions": [
@@ -534,6 +546,13 @@
                     "nullok": true,
                     "type": {
                         "typename": "integer"
+                    }
+                },
+                {
+                    "name": "fk_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
                     }
                 }
             ],
@@ -817,7 +836,7 @@
                       "tag:isrd.isi.edu,2016:column-display": {
                           "*": {
                             "markdown_pattern": "::: video []({{{video_col}}}){height=500 width=600 loop} \n:::"
-                          }  
+                          }
                       }
                   }
               },
@@ -825,7 +844,7 @@
                     "name": "fk_col",
                     "type": {
                         "typename": "text"
-                    } 
+                    }
               },
               {
                   "comment": null,
@@ -837,7 +856,7 @@
                       "tag:isrd.isi.edu,2016:column-display": {
                           "*": {
                             "markdown_pattern": "{{# $fkeys.reference_schema.reference_values_fk1}} \n [{{{ rowName }}}]({{ uri.detailed }}){.class-{{{values.col_ w_ dot_}}}} \n {{/$fkeys.reference_schema.reference_values_fk1}}"
-                          }  
+                          }
                       }
                   }
               },
@@ -851,7 +870,7 @@
                       "tag:isrd.isi.edu,2016:column-display": {
                           "*": {
                             "markdown_pattern": "{{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}"
-                          }  
+                          }
                       }
                   }
               }
@@ -1129,6 +1148,132 @@
                     "type": {"typename":"timestamptz"}
                 }
             ]
+        },
+        "reference_pre_format_values": {
+            "comment": "Table to represent a testable reference object with pre_format values",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "reference_pre_format_values",
+            "schema_name": "reference_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%s"
+                                }
+                            }
+                        },
+                        "tag:misd.isi.edu,2015:display": {
+                            "show_nulls" : { "*" : false }
+                        }
+                    }
+                },
+                {
+                    "name": "url",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "http://example.com/%s"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "isvalid",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%t",
+                                    "bool_true_value": "Yes",
+                                    "bool_false_value": "No"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "numeric",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%b %d %i %e"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "float",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%'8.3f"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "json",
+                    "type": {
+                        "typename": "json"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "My name is %(name)s. My age is %(age)d years and I study at %(school.name)s located in %(school.location)s. My GPA is %(grade).2f"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                  "*": ["id", "name", "url", "isvalid", "numeric", "float", "json"]
+                }
+            }
         }
     },
     "comment": null,

@@ -18,7 +18,7 @@ exports.execute = function (options) {
             tableNameReference = "reference_table",
             tableNameInboundRelated = "inbound_related_reference_table";
 
-/*
+
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                 + tableNameNoSort;
@@ -595,6 +595,65 @@ exports.execute = function (options) {
             });
         });
 
+        describe("Paging with sort based on foreignkey with null data ", function () {
+            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+                      tableNameNoSort + "@sort(reference_schema_paging_table_no_sort_fk1,value%20x)";
+
+            var page, newRef;
+            beforeAll(function (done) {
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (ref) {
+                    return ref.read(5);
+                }).then(function (res) {
+                    page = res;
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+
+            describe ("Next with more data ", function () {
+                it ("should return a reference with correct url.", function () {
+                    newRef = page.next;
+                    // the last row has "value x": 17 and "fk_col": null
+                    expect(newRef.location.uri).toEqual(uri + "@after(::null::,17)");
+                });
+
+                it ("tuples should be on the expected order.", function (done) {
+                    newRef.read(5).then(function (res) {
+                        page = res;
+                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.tuples[0].data['value x']).toEqual(19,"data missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+            });
+
+            describe ("Previous with more data ", function () {
+                it ("should return a reference with correct url.", function () {
+                    // this is the page from the page.next
+                    newRef = page.previous;
+
+                    // the first row has "value x": 19 and "fk_col": null
+                    expect(newRef.location.uri).toEqual(uri + "@before(::null::,19)");
+                });
+
+                it ("tuples should be on the expected order.", function (done) {
+                    newRef.read(5).then(function (page) {
+                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.tuples[0].data['value x']).toEqual(1,"data missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+            });
+        });
+
         // Test Cases:
         describe("Sorting, ", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -678,7 +737,7 @@ exports.execute = function (options) {
             });
 
         });
-*/
+
 
         describe("setSamePaging, ", function () {
             var baseUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
@@ -686,7 +745,7 @@ exports.execute = function (options) {
                 refUriJoin = baseUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
 
             var currRef, newRef;
-            
+
             var testUri = function (done, uri, limit, afterObject, beforeObject) {
                 options.ermRest.resolve(uri).then(function (ref) {
                     return ref.read(limit);
@@ -700,7 +759,7 @@ exports.execute = function (options) {
                     console.log(err);
                 });
             };
-            
+
             beforeAll(function (done) {
                 options.ermRest.resolve(refUriJoin + "/@sort(id)@after(5)@before(20)").then(function (ref) {
                     currRef = ref;
@@ -710,7 +769,7 @@ exports.execute = function (options) {
                     console.log(err);
                 });
             });
-            
+
             it ("should throw an error if reference's table and page's table are not the same.", function (done) {
                 options.ermRest.resolve(baseUri + tableNameReference).then(function (ref) {
                     return ref.read(2);
@@ -724,39 +783,39 @@ exports.execute = function (options) {
                     console.log(err);
                 });
             });
-            
+
             describe("if page didn't have any extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference without any page setting.", function (done) {
                     testUri(done, refUri, 25, null, null);
                 });
-                
+
                 it ("if page had before, should return a reference with before.", function (done) {
                     testUri(done, refUri + "@before(6)", 5, null, ["6"]);
                 });
-                
+
                 it ("if page had after, should return a reference with after.", function (done) {
                     testUri(done, refUri + "@after(96)", 5, ["96"], null);
                 });
-                
+
                 // NOTE: based on current implementation, page cannot have both before and after
             });
-            
+
             describe("if page had extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
                     testUri(done, refUri, 5, null, ["6"]);
                 });
-                
+
                 it ("if page had before, should return a reference with same before and new after.", function (done) {
                     testUri(done, refUri + "@before(7)", 5, ["1"], ["7"]);
                 });
-                
+
                 it ("if page had after, should return a reference with same after and new before.", function (done) {
                     testUri(done, refUri + "@after(5)", 5, ["5"], ["92"]);
                 });
-                
+
                 // NOTE: based on current implementation, page cannot have both before and after
             });
-            
+
             it ("if page had search, it should change the search accordingly.", function (done) {
                 options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
                     ref = ref.search("9");

@@ -123,36 +123,38 @@
             return this.substr(position, searchString.length) === searchString;
         };
     }
-    
+
     if (typeof Object.assign != 'function') {
-  // Must be writable: true, enumerable: false, configurable: true
-  Object.defineProperty(Object, "assign", {
-    value: function assign(target, varArgs) { // .length of function is 2
-      'use strict';
-      if (target == null) { // TypeError if undefined or null
-        throw new TypeError('Cannot convert undefined or null to object');
-      }
 
-      var to = Object(target);
+        // Must be writable: true, enumerable: false, configurable: true
+        Object.defineProperty(Object, "assign", {
+            value: function assign(target, varArgs) { // .length of function is 2
+                'use strict';
 
-      for (var index = 1; index < arguments.length; index++) {
-        var nextSource = arguments[index];
+                if (target == null) { // TypeError if undefined or null
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
 
-        if (nextSource != null) { // Skip over if undefined or null
-          for (var nextKey in nextSource) {
-            // Avoid bugs when hasOwnProperty is shadowed
-            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-              to[nextKey] = nextSource[nextKey];
-            }
-          }
-        }
-      }
-      return to;
-    },
-    writable: true,
-    configurable: true
-  });
-}
+                var to = Object(target);
+
+                for (var index = 1; index < arguments.length; index++) {
+                    var nextSource = arguments[index];
+
+                    if (nextSource != null) { // Skip over if undefined or null
+                        for (var nextKey in nextSource) {
+                            // Avoid bugs when hasOwnProperty is shadowed
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
+                            }
+                        }
+                    }
+                }
+            return to;
+            },
+            writable: true,
+            configurable: true
+        });
+    }
 
     // Utility function to replace all occurances of a search with its replacement in a string
     String.prototype.replaceAll = function(search, replacement) {
@@ -174,10 +176,10 @@
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
-    
+
     module.decodeFacet = function (blob) {
         var err = new module.InvalidFacetOperatorError();
-        
+
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
             if (str === null) {
@@ -198,7 +200,7 @@
     var isObjectAndNotNull = function (obj) {
         return typeof obj === "object" && obj !== null;
     };
-    
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -245,7 +247,7 @@
             }
         }
     };
-    
+
     /**
      * @private
      * @function
@@ -264,7 +266,7 @@
     module._simpleDeepCopy = function (source) {
         return JSON.parse(JSON.stringify(source));
     };
-    
+
     /**
      * Given a string, will return the existing value in the object.
      * It will return undefined if the key doesn't exist or invalid input.
@@ -274,7 +276,7 @@
      */
     module._getPath = function (obj, path) {
         var pathNodes;
-        
+
         if (typeof path === "string") {
             if (path.length === 0) {
                 return this[""];
@@ -343,13 +345,13 @@
         }
         return undefined;
     };
-    
+
     /**
      * Given an object recursively replace all the dots in the keys with underscore.
      * This will also remove any custom JavaScript objects.
      * NOTE: This function will ignore any objects that has been created from a custom constructor.
      * NOTE: This function does not detect loop, make sure that your object does not have circular references.
-     * 
+     *
      * @param  {Object} obj A simple javascript object. It should not include anything that is not in JSON syntax (functions, etc.).
      * @return {Object} A new object created by:
      *  1. Replacing the dots in keys to underscore.
@@ -359,7 +361,7 @@
         var res = {}, val, k, newK;
         for (k in obj) {
             if (!obj.hasOwnProperty(k)) continue;
-            val = obj[k];  
+            val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular referene)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
@@ -600,7 +602,7 @@
     /**
      * @function
      * @private
-     * @param {ERMrest.Table} table The object that we want the formatted values for. 
+     * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object} linkedData The object which contains key value paris of foreign key data.
@@ -609,14 +611,14 @@
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname;
-        
+
         var findCol = function (colName, currTable) {
             if (Array.isArray(currTable)) {
                 return currTable.filter(function (col) {return col.name === colName;})[0];
             }
             return currTable.columns.get(k);
         };
-        
+
         var getTableValues = function (d, currTable) {
             var res = {};
             for (k in d) {
@@ -631,34 +633,34 @@
             }
             return res;
         };
-        
+
         // get the data from current table
         keyValues = getTableValues(data, table);
-        
+
         //get foreignkey data if available
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
                 presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
                 if (!presentation) return;
-                
+
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
                     keyValues.$fkeys[cons[0]] = {};
                 }
-                
+
                 keyValues.$fkeys[cons[0]][cons[1]] = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": presentation.unformatted,
                     "uri": {
                         "detailed": presentation.reference.contextualize.detailed.appLink
                     }
-                }; 
-                
-                 
+                };
+
+
             });
         }
-        
+
         return keyValues;
     };
 
@@ -668,18 +670,27 @@
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
+     * @param {Object} linkedData The object which contains key value pairs of foreign key data.
+     * @param {boolean} isTitle determines Whether we want rowname for title or not
      * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
      */
-    module._generateRowName = function (table, context, data, linkedData) {
-        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern;
+    module._generateRowName = function (table, context, data, linkedData, isTitle) {
+        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
 
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-            annotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+            actualContext = isTitle ? "title" : (typeof context === "string" && context !== "*" ? context : "");
+            annotation = module._getRecursiveAnnotationValue(
+                [module._contexts.ROWNAME, actualContext].join("/"),
+                table.annotations.get(module._annotations.TABLE_DISPLAY).content
+            );
 
             // getting the defined unformatted value
-            unformattedAnnotation = module._getRecursiveAnnotationValue(module._contexts.ROWNAME_UNFORMATTED, table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+            unformattedAnnotation = module._getRecursiveAnnotationValue(
+                [module._contexts.ROWNAME_UNFORMATTED, actualContext].join("/"),
+                table.annotations.get(module._annotations.TABLE_DISPLAY).content
+            );
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
                 // Get formatted keyValues for a table for the data
                 keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
@@ -697,12 +708,12 @@
             if (typeof keyValues === 'undefined') {
                 keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
             }
-            
+
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
-            
+
         }
-        
-        
+
+
         // annotation was not defined, or it's producing empty string.
         if (pattern == null || pattern.trim() === '') {
 
@@ -718,7 +729,7 @@
                 return false;
             };
 
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number', 'RID'];
+            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
 
             for (var i = 0; i < columns.length; i++) {
                 if (setDisplaynameForACol(columns[i])) {
@@ -743,8 +754,8 @@
 
                 } else {
 
-                    // Get the columns for shortestKey
-                    var keyColumns = table.shortestKey;
+                    // Get the columns for displaykey
+                    var keyColumns = table.displayKey;
 
                     // TODO this check needs to change. it is supposed to check if the table has a key or not
                     // if (keyColumns.length >= table.columns.length) {
@@ -770,7 +781,7 @@
 
             template = "{{{name}}}";
             keyValues = {"name": result};
-            
+
             // get templated patten after replacing the values using Mustache
             pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
         }
@@ -787,16 +798,17 @@
         };
 
     };
-    
+
     /**
      * @function
      * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object 
+     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this foreignKey is referring to.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
     module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -849,7 +861,7 @@
 
             for (i = 0; i < fkey.colset.columns.length; i++) {
                 col = fkey.colset.columns[i];
-                pres = col.formatPresentation(formattedValues[col.name], {context: context, formattedValues: formattedValues});
+                pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
             }
@@ -881,11 +893,106 @@
 
     /**
      * @function
+     * @param  {string} errorStatusText    http error status text
+     * @param  {string} generatedErrMessage response data returned by http request
+     * @return {object}                    error object
+     * @desc
+     *  - Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
+     *                           All dependent entries must be removed before this item can be deleted.
+     *  - Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
+     *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
+     *
+     */
+    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
+      var mappedErrMessage, refTable, tableDisplayName = '';
+      var ref = reference;
+      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
+          siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
+
+      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
+
+          var referenceTable = "another";
+
+          var detail = generatedErrMessage.search(/DETAIL:/g);
+          if (detail > -1) {
+            detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
+            referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
+            if(referenceTable && referenceTable.length > 1){
+                refTable = referenceTable[1];
+                referenceTable =  refTable;
+            }
+          }
+
+
+            var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
+            if(fkConstraint != 'undefined' && fkConstraint != ''){
+              var relatedRef = ref.related(); //get all related references
+
+              for(var i = 0; i < relatedRef.length; i++){
+                  key  = relatedRef[i];
+                  if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
+                    referenceTable = key.displayname.value;
+                    siteAdminMsg = "";
+                    break;
+                  }
+                }
+            }
+
+          referenceTable =  "the <code>"+ referenceTable +"</code>";
+
+          // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
+          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
+          return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+      else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
+          var regExp = /\(([^)]+)\)/,
+              matches = regExp.exec(generatedErrMessage), msgTail;
+
+          if (matches && matches.length > 1) {
+              var primaryColumns =  matches[1].split(','),
+                  numberOfKeys = primaryColumns.length;
+
+              if (numberOfKeys > 1){
+                msgTail = " combination of " + primaryColumns;
+              } else {
+                msgTail = primaryColumns;
+              }
+          }
+
+
+          mappedErrMessage = "The entry cannot be created/updated. ";
+          if (msgTail) {
+              mappedErrMessage += "Please use a different "+ msgTail +" for this record.";
+          } else {
+              mappedErrMessage += "Input data violates unique constraint.";
+          }
+          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+      else{
+          mappedErrMessage = generatedErrMessage;
+
+          // remove the previx if exists
+          if (mappedErrMessage.startsWith(conflictErrorPrefix)){
+            mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
+          }
+
+          // remove the suffix is exists
+          errEnd = mappedErrMessage.search(/CONTEXT:/g);
+          if (errEnd > -1){
+            mappedErrMessage = mappedErrMessage.substring(0, errEnd - 1);
+          }
+
+          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+      }
+    };
+
+    /**
+     * @function
      * @param {Object} response http response object
      * @return {Object} error object
      * @desc create an error object from http response
      */
-    module._responseToError = function (response) {
+    module._responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
@@ -903,7 +1010,7 @@
             case 408:
                 return new module.TimedOutError(response.statusText, response.data);
             case 409:
-                return new module.ConflictError(response.statusText, response.data);
+                return module._conflictErrorMapping(response.statusText, response.data, reference, actionFlag);
             case 412:
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
@@ -1553,7 +1660,7 @@
                 }
             }
         });
-        
+
         md.use(mdContainer, 'video', {
             /*
              * Checks whether string matches format ":::video (LINK){ATTR=VALUE .CLASSNAME}"
@@ -1562,23 +1669,23 @@
             validate: function(params) {
                 return params.trim().match(/video\s+(.*$)/i);
             },
-            
+
             render: function (tokens, idx) {
                 // Get token string after regeexp matching to determine actual internal markdown
                 var m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
-                
+
                 // If this is the opening tag i.e. starts with "::: video "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
-                    
+
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
-                    
+
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var videoHTML="<video controls ", openingLink = attrs[0].children[0];
                             var srcHTML="", videoClass="", flag = true, posTop = true;
-                            
+
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
@@ -1587,7 +1694,7 @@
                                         return "";
                                     }
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
-                                } 
+                                }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
                                     videoClass +=  attr[0]+ "="+ attr[1] +" ";
                                 }
@@ -1598,7 +1705,7 @@
                                     posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
                                 }
                             });
-                            
+
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
                             // over all the children until link_close is encountered rednering their markdown
@@ -1614,7 +1721,7 @@
                                     }
                                 }
                             }
-                            
+
                             if(captionHTML.trim().length && flag && posTop){
                                 html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
@@ -1633,7 +1740,7 @@
                 } else {
                   // closing tag
                   return '';
-                }    
+                }
             }
         });
     };
@@ -1767,7 +1874,7 @@
         var date = new Date();
 
         var dateObj = {};
-        
+
         // Set date properties
         dateObj.day = date.getDay();
         dateObj.date = date.getDate();
@@ -1786,7 +1893,7 @@
         dateObj.ISOString = date.toISOString();
         dateObj.GMTString = date.toGMTString();
         dateObj.UTCString = date.toUTCString();
-        
+
         dateObj.localeDateString = date.toLocaleDateString();
         dateObj.localeTimeString = date.toLocaleTimeString();
         dateObj.localeString = date.toLocaleString();
@@ -1798,7 +1905,7 @@
     /**
      * @function
      * @desc
-     * Add utility objects such as date (Computed value) to mustache data obj 
+     * Add utility objects such as date (Computed value) to mustache data obj
      * so that they can be accessed in the template
      */
     module._addErmrestVarsToTemplate = function(obj) {
@@ -1819,7 +1926,7 @@
 
         options = options || {};
 
-        var obj = {};            
+        var obj = {};
         if (keyValues && isObject(keyValues)) {
             try {
                 // recursively replace dot with underscore in column names.
@@ -1905,10 +2012,10 @@
                     var key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
-                    
+
                     // find the value.
                     var value = module._getPath(keyValues, key.trim());
-                    
+
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
                     // If key is not in ingored columns value for the key is null or undefined then return null
@@ -2123,22 +2230,62 @@
         MARKDOWN: 'markdown',
         MODULE: 'module'
     });
-    
+
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
         'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
     ];
-    
+
     // these types should be ignored for usage in heuristic for facet
     module._facetHeuristicIgnoredTypes = [
         'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
-    
+
     // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
         "json"
     ];
 
+
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
+    // NOTE: currently we only ignore the system columns
+    module._ignoreDefaultsNames = module._systemColumns;
+
     module._contextHeaderName = 'Deriva-Client-Context';
+
+    module._operationsFlag = Object.freeze({
+        DELETE: "DEL",      //delete
+        CREATE: "CRT",   //create
+        UPDATE: "UPDT",   //update
+        READ: "READ"        //read
+      });
+
+    module._errorStatus = Object.freeze({
+      forbidden : "Forbidden",
+      itemNotFound : "Item Not Found",
+      facetingError: "Invalid Facet Filters",
+      invalidFilter : "Invalid Filter",
+      invalidInput : "Invalid Input",
+      invalidURI : "Invalid URI",
+      noDataChanged : "No Data Changed",
+      noConnectionError : "No Connection Error"
+      });
+
+    module._errorMessage = Object.freeze({
+      facetingError : "Given encoded string for facets is not valid."
+    });
+
+    module._HTTPErrorCodes = Object.freeze({
+      BAD_REQUEST: 400,
+      UNAUTHORIZED: 401,
+      FORBIDDEN : 403,
+      NOT_FOUND: 404,
+      TIMEOUT_ERROR: 408,
+      CONFLICT : 409,
+      PRECONDITION_FAILED: 412,
+      INTERNAL_SERVER_ERROR :500,
+      NO_CONNECTION_ERROR :502,
+      SERVIVE_UNAVAILABLE: 503
+
+      });
