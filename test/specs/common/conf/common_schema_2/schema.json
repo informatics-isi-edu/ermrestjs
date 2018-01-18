@@ -161,8 +161,6 @@
                 }
             ],
             "annotations": {}
-<<<<<<< HEAD
-=======
         },
         "multi_w_same_len_keys_w_all_serial": {
             "comment": "",
@@ -451,7 +449,6 @@
             ],
             "foreign_keys": [],
             "annotations": {}
->>>>>>> master
         }
     },
     "schema_name": "common_schema_2",
