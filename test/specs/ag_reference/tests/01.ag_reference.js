@@ -4,25 +4,53 @@ exports.execute = function (options) {
         var catID = process.env.DEFAULT_CATALOG,
             schemaName = "agref_schema",
             mainTable = "main",
+            unicodeTable = "uᴉɐɯ",
+            unicodeTableEncoded = "u%E1%B4%89%C9%90%C9%AF",
             relatedTable = "related_table";
+            
+        var encodedMain = "u%E1%B4%89%C9%90%C9%AF",
+            decodedMain = "uᴉɐɯ",
+            encodedCol = "lo%C9%94",
+            decodedCol = "loɔ",
+            encodedID = "p%E1%B4%89";
+            decodedID = "pᴉ";
             
         var mainTableBaseUri = [
             options.url, "catalog", catID, "attributegroup", 
             schemaName + ":" + mainTable
         ].join("/");
         
-        var ref, refWithModifiers;
-        var loc, locWithModifiers;
-        var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible;
+        var unicodeTableBaseUri = [
+            options.url, "catalog", catID, "attributegroup", 
+            schemaName + ":" + unicodeTableEncoded
+        ].join("/");
+        
+        var ref, refWithModifiers, unicodeRef;
+        var loc, locWithModifiers, unicodeLoc;
+        var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible, unicodeID, unicodeCol;
+        
+        var checkLocation = function (objName, obj, path) {
+            expect(obj).toBeDefined(objName + " was not defined.");
+            expect(obj.service).toBe(options.url, objName + " service missmatch.");
+            expect(obj.catalogId).toBe(catID, objName + " catalogId missmatch.");
+            expect(obj.path).toBe(path, objName + " path missmatch.");
+        };
+        
+        var checkColumn = function (objName, obj, term, displayname, typeName, comment, sortable) {
+            expect(obj).toBeDefined(objName + " column was undefined.");
+            expect(obj.term).toBe(term, objName + " term missmatch");
+            expect(obj.displayname.value).toBe(displayname, objName + " displayname missmatch");
+            expect(obj.type.name).toBe(typeName, objName + " type missmatch");
+            expect(obj.comment).toBe(comment, objName + " comment missmatch");
+            expect(obj.sortable).toBe(sortable, objName + " sortable missmatch");    
+        };
+        
+        var checkReference = function (objName, obj, location) {
+            expect(obj).toBeDefined(objName + " is not defined.");
+            expect(obj.location).toBe(location, objName + " location missmatch.");
+        };
         
         describe("AttributeGroupLocation, ", function () {
-            var checkLocation = function (obj, objName, path) {
-                expect(loc).toBeDefined(objName + " was not defined.");
-                expect(loc.service).toBe(options.url, objName + " service missmatch.");
-                expect(loc.catalogId).toBe(catID, objName + " catalogId missmatch.");
-                expect(loc.path).toBe(path, objName + " path missmatch.");
-            };
-            
             beforeAll(function () {
                 loc = new options.ermRest.AttributeGroupLocation(options.url, catID, schemaName + ":" + mainTable);
                 locWithModifiers = new options.ermRest.AttributeGroupLocation(
@@ -37,9 +65,9 @@ exports.execute = function (options) {
             });
             
             it ("can create a location object passing the values.", function () {
-                checkLocation(loc, "loc", schemaName + ":" + mainTable);
+                checkLocation("loc", loc, schemaName + ":" + mainTable);
                 
-                checkLocation(locWithModifiers, "locWithModifiers", schemaName + ":" + mainTable);
+                checkLocation("locWithModifiers", locWithModifiers, schemaName + ":" + mainTable);
             });
             
             it ("search related attributes are correct.", function () {
@@ -76,11 +104,24 @@ exports.execute = function (options) {
                 expect(newLoc.searchColumn).toBe(loc.searchColumn, "searchColumn missmatch");
             });
             
-            it ("changeSort returns a new object with new sorting attributes.", function () {
-                var newLoc = loc.changeSort([{"column": "col", "descending": true}]);
-                expect(loc).not.toBe(newLoc, "Didn't return a new object.");
-                expect(loc.sortObject).toBeUndefined("changed original object.");
-                expect(newLoc.sort).toBe("@sort(col::desc::)");
+            describe ("changeSort, ", function () {
+                it ("returns a new object with new sorting attributes.", function () {
+                    var newLoc = loc.changeSort([{"column": "col", "descending": true}]);
+                    expect(loc).not.toBe(newLoc, "Didn't return a new object.");
+                    expect(loc.sortObject).toBeUndefined("changed original object.");
+                    expect(newLoc.sort).toBe("@sort(col::desc::)");                    
+                });
+                
+                it ("should remove all the pagings.", function () {
+                    var newLoc = locWithModifiers.changeSort([{"column": "col", "descending": true}]);
+                    expect(locWithModifiers).not.toBe(newLoc, "Didn't return a new object.");
+                    expect(locWithModifiers.sort).toBe("@sort(alias)","changed original object.");
+                    expect(locWithModifiers.beforeObject).toBeDefined("changed original before.");
+                    expect(locWithModifiers.afterObject).toBeDefined("changed original after.");
+                    expect(newLoc.sort).toBe("@sort(col::desc::)");
+                    expect(newLoc.beforeObject).toBeUndefined("didn't remove before.");
+                    expect(newLoc.afterObject).toBeUndefined("didn't remove after.");
+                });
             });
             
             it ("changePage returns a new object with new paging attributes.", function () {
@@ -93,15 +134,6 @@ exports.execute = function (options) {
         });
         
         describe("AttributeGroupColumn, ", function () {
-            var checkColumn = function (objTitle, obj, term, displayname, typeName, comment, sortable) {
-                expect(obj).toBeDefined(objTitle + " column was undefined.");
-                expect(obj.term).toBe(term, objTitle + " term missmatch");
-                expect(obj.displayname.value).toBe(displayname, objTitle + " displayname missmatch");
-                expect(obj.type.name).toBe(typeName, objTitle + " type missmatch");
-                expect(obj.comment).toBe(comment, objTitle + " comment missmatch");
-                expect(obj.sortable).toBe(sortable, objTitle + " sortable missmatch");
-                
-            };
             
             beforeAll(function () {
                 keyColVisible = new options.ermRest.AttributeGroupColumn(
@@ -157,9 +189,9 @@ exports.execute = function (options) {
             
             describe ("formatvalue, ", function () {
                 var val;
-                it ("if data is null or undefined should return empty string.", function () {
-                    expect(keyColVisible.formatvalue(undefined)).toBe("", "undefined missmatch.");
-                    expect(keyColVisible.formatvalue(null)).toBe("", "null missmatch.");
+                it ("if data is null or undefined should return `null`.", function () {
+                    expect(keyColVisible.formatvalue(undefined)).toBe(null, "undefined missmatch.");
+                    expect(keyColVisible.formatvalue(null)).toBe(null, "null missmatch.");
                 });
                 
                 it ("otherwise should format the value.", function () {
@@ -181,10 +213,6 @@ exports.execute = function (options) {
         });
         
         describe("AttributeGroupReference, ", function () {
-            var checkReference = function (objName, obj, location) {
-                expect(obj).toBeDefined(objName + " is not defined.");
-                expect(obj.location).toBe(location, objName + " location missmatch.");
-            };
             
             beforeAll(function () {
                 ref = new options.ermRest.AttributeGroupReference(
@@ -376,6 +404,96 @@ exports.execute = function (options) {
             });
         });
         
+        describe ("regarding table and columns with unicode characters, ", function () {
+            it ("Location should handle it.", function () {
+                unicodeLoc = new options.ermRest.AttributeGroupLocation(
+                    options.url, 
+                    catID, 
+                    schemaName + ":" + unicodeTableEncoded,
+                    {"column": decodedCol, "term": "test"}, // search
+                    [{"column": decodedCol}], // sort
+                    ["c"], //after
+                    ["z"] // before
+                );
+                
+                checkLocation("Location: ", unicodeLoc, schemaName + ":" + unicodeTableEncoded);
+            });
+            
+            it ("Column should handle it.", function () {
+                unicodeID = new options.ermRest.AttributeGroupColumn(
+                    null, encodedID, decodedID, "serial4", "comment", true, true
+                );
+                
+                unicodeCol = new options.ermRest.AttributeGroupColumn(
+                    null, encodedCol, decodedCol, "text", "comment", true, true
+                );
+                
+                
+                checkColumn("Column: id", unicodeID, encodedID, decodedID, "serial4", "comment", true);
+                
+                checkColumn("Column: col", unicodeCol, encodedCol, decodedCol, "text", "comment", true);
+                
+                expect(unicodeID.name).toBe(decodedID, "unicodeID name missmatch.");
+                expect(unicodeCol.name).toBe(decodedCol, "unicodeCol name missmatch.");
+            });
+            
+            describe ("Reference, ", function () {
+                beforeAll(function () {
+                    unicodeRef = new options.ermRest.AttributeGroupReference(
+                        [unicodeID],
+                        [unicodeCol],
+                        unicodeLoc,
+                        options.catalog
+                    );
+                });
+                
+                it ("reference should have the correct attributes.", function () {
+                    checkReference("Refrence: ", unicodeRef, unicodeLoc);
+                });
+
+                it ("uri should be correct.", function () {
+                    expect(unicodeRef.uri).toBe(
+                        unicodeTableBaseUri + "/" + encodedCol + "::ciregexp::test/" + encodedID + ";" + encodedCol + "@sort(" + encodedCol + ")@after(c)@before(z)"
+                    );
+                });
+                
+                it ("sort, should return a new reference with new sort.", function () {
+                    var newRef = refWithModifiers.sort([{"column": decodedCol, "descending": true}]);
+                    expect(newRef.location.sort).toBe("@sort("+encodedCol+"::desc::)");
+                });
+                
+                it ("search, should return a new reference with new searchTerm.", function () {
+                    var newRef = unicodeRef.search("new search");
+                    expect(newRef).not.toBe(unicodeRef, "reference didn't change");
+                    expect(unicodeRef.location.searchTerm).toBe("test", "main reference changed.");
+                    expect(newRef.location.searchTerm).toBe("new search", "searchTerm didn't change.");
+                });
+                
+                it ("read should return the correct values.", function (done) {
+                    unicodeRef.read(1).then(function (page) {
+                        expect(page).toBeDefined("page was not defined.");
+                        expect(page.tuples[0].values).toEqual(["4", "val test 4"], "value missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        consoel.log(err);
+                        done.fail();
+                    });
+                });
+                
+                describe("getAggregates, ", function () {
+                    it ("countAgg should return the count and not any errors.", function (done) {
+                        var aggList = [unicodeRef.aggregate.countAgg];
+                        unicodeRef.getAggregates(aggList).then(function (response) {
+                            expect(response[0]).toBe(2);
+                            done();
+                        }).catch(function (err) {
+                            consoel.log(err);
+                            done.fail();
+                        });
+                    });
+                });
+            });                
+        });
     });
 
 };

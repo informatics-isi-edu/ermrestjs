@@ -48,7 +48,7 @@
      * @memberof ERMrest
      * @function
      * @param {string} uri URI of the ERMrest service.
-     * @param {Object} [params={cid:'null'}] An optional server query parameter
+     * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
      * @return {ERMrest.Server} Returns a server instance.
      * @throws {ERMrest.InvalidInputError} URI is missing
@@ -57,21 +57,21 @@
      * URI should be to the ERMrest _service_. For example,
      * `https://www.example.org/ermrest`.
      */
-    function getServer(uri, params) {
+    function getServer(uri, contextHeaderParams) {
 
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
-        if (typeof params === 'undefined' || params === null) {
+        if (typeof contextHeaderParams === 'undefined' || contextHeaderParams === null) {
             // Set default cid to a truthy string because a true null will not
             // appear as a query parameter but we want to track cid even when cid
             // isn't provided
-            params = {'cid': 'null'};
+            contextHeaderParams = {'cid': 'null'};
         }
 
-        var server = _servers[uri]; // TODO this lookup should factor in params
+        var server = _servers[uri];
         if (!server) {
-            server = new Server(uri, params);
+            server = new Server(uri, contextHeaderParams);
 
             server.catalogs = new Catalogs(server);
             _servers[uri] = server;
@@ -86,7 +86,7 @@
      * @param {string} uri URI of the ERMrest service.
      * @constructor
      */
-    function Server(uri, params) {
+    function Server(uri, contextHeaderParams) {
 
         /**
          * The URI of the ERMrest service
@@ -100,8 +100,8 @@
          * @type {Object}
          */
         this._http = module._wrap_http(module._http);
-        this._http.params = params || {};
-        this._http.params.cid = this._http.params.cid || null;
+        this._http.contextHeaderParams = contextHeaderParams || {};
+        this._http.contextHeaderParams.cid = this._http.contextHeaderParams.cid || null;
 
         /**
          *
@@ -315,7 +315,7 @@
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         },
-        
+
         /**
          * Given tableName, and schemaName find the table
          * @param  {string} tableName  name of the table
@@ -324,7 +324,7 @@
          */
         getTable: function (tableName, schemaName) {
             var schema;
-            
+
             if (!schemaName) {
                 var schemas = this.schemas.all();
                 for (var i = 0; i < schemas.length; i++) {
@@ -342,7 +342,7 @@
             } else {
                 schema = this.schemas.get(schemaName);
             }
-            
+
             return schema.tables.get(tableName);
         }
     };
@@ -711,7 +711,7 @@
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._displayKeys = {}; // Used for display key
+        this._rowDisplayKeys = {}; // Used for display key
 
         /**
          * @type {object}
@@ -813,34 +813,42 @@
                         keys = this.keys.all();
                     }
 
-                    // returns 1 if all the columns are serial/int, 0 otherwise
-                    var allSerialInt = function (key) {
-                        return (key.colset.columns.map(function (column) {
-                            return column.type.name;
-                        }).every(function (current, index, array) {
-                            return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                        }) ? 1 : 0);
-                    };
+                    var ridKey = keys.filter(function (key) {
+                        return key.colset.columns.length == 1 && key.colset.columns[0].name.toUpperCase() == "RID";
+                    })[0];
 
-                    // pick the first key that is shorter or is all serial/integer.
-                    this._shortestKey = keys.sort(function (a, b) {
-                        var compare;
+                    if (ridKey) {
+                        this._shortestKey = ridKey.colset.columns;
+                    } else {
+                        // returns 1 if all the columns are serial/int, 0 otherwise
+                        var allSerialInt = function (key) {
+                            return (key.colset.columns.map(function (column) {
+                                return column.type.name;
+                            }).every(function (current, index, array) {
+                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
+                            }) ? 1 : 0);
+                        };
 
-                        // choose the shorter
-                        compare = a.colset.length() - b.colset.length();
-                        if (compare !== 0) {
-                            return compare;
-                        }
+                        // pick the first key that is shorter or is all serial/integer.
+                        this._shortestKey = keys.sort(function (a, b) {
+                            var compare;
 
-                        // if key length equal, choose the one that all of its keys are serial or int
-                        compare = allSerialInt(b) - allSerialInt(a);
-                        if (compare !== 0) {
-                            return compare;
-                        }
+                            // choose the shorter
+                            compare = a.colset.length() - b.colset.length();
+                            if (compare !== 0) {
+                                return compare;
+                            }
 
-                        // the one that has lower column position
-                        return a.colset._getColumnPositions() > b.colset._getColumnPositions();
-                    })[0].colset.columns;
+                            // if key length equal, choose the one that all of its keys are serial or int
+                            compare = allSerialInt(b) - allSerialInt(a);
+                            if (compare !== 0) {
+                                return compare;
+                            }
+
+                            // the one that has lower column position
+                            return a.colset._getColumnPositions() > b.colset._getColumnPositions();
+                        })[0].colset.columns;
+                    }
 
                 } else {
                     this._shortestKey = this.columns.all();
@@ -850,13 +858,53 @@
         },
 
         /**
+         * The columns that create the shortest key that can be used for display purposes.
+         *
+         * @type {ERMrest.Column[]}
+         */
+        get displayKey () {
+            if (this._displayKey === undefined) {
+                if (this.keys.length() !== 0) {
+                    var countTextColumns = function(key) {
+                        for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                            if (key.colset.columns[i].type.name == "text") res++;
+                        }
+                        return res;
+                    };
+
+                    this._displayKey = this.keys.all().sort(function (keyA, keyB) {
+
+                        // shorter
+                        if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                            return keyA.colset.columns.length > keyB.colset.columns.length;
+                        }
+
+                        // has more text
+                        var aTextCount = countTextColumns(keyA);
+                        var bTextCount = countTextColumns(keyB);
+                        if (aTextCount != bTextCount) {
+                            return aTextCount < bTextCount;
+                        }
+
+                        // the one that has lower column position
+                        return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                    })[0].colset.columns;
+                } else {
+                    this._displayKey = this.columns.all();
+                }
+            }
+            return this._displayKey;
+        },
+
+        /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
          * @desc
-         * returns the key that can be used for display purposes.
+         * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+         * It's the same as displaykey but with extra restrictions. It might return undefined.
          */
-        _getDisplayKey: function (context) {
-            if (!(context in this._displayKeys)) {
+        _getRowDisplayKey: function (context) {
+            if (!(context in this._rowDisplayKeys)) {
                 var displayKey;
                 if (this.keys.length() !== 0) {
                     var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
@@ -909,9 +957,9 @@
                         })[0];
                     }
                 }
-                this._displayKeys[context] = displayKey; // might be undefined
+                this._rowDisplayKeys[context] = displayKey; // might be undefined
             }
-            return this._displayKeys[context];
+            return this._rowDisplayKeys[context];
         },
 
         get reference() {
@@ -1707,15 +1755,31 @@
 
         /**
          * Formats a value corresponding to this column definition.
+         * If a column display annotation with preformat property is available then use prvided format string
+         * else use the default formatValue function
+         *
          * @param {Object} data The 'raw' data value.
+         * @param {String} context the app context
          * @returns {string} The formatted value.
          */
-        this.formatvalue = function (data, options) {
+        this.formatvalue = function (data, context, options) {
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
-            if (data === undefined || (data === null && this.type.name.indexOf('json') !== 0)) {
-                return this._getNullValue(options ? options.context : undefined);
+            if (data === undefined || (data === null && this.type.name.indexOf('json') === -1)) {
+                return this._getNullValue(context);
+            } else if (data === null && this.type.name.indexOf('json') !== 0) {
+                return data;
+            }
+
+            var display = this.getDisplay(context);
+
+            if (display.isPreformat) {
+                try {
+                    return module._printf(display.preformatConfig, data);
+                } catch(e) {
+                    console.log(e);
+                }
             }
 
             return _formatValueByType(this.type, data, options);
@@ -1724,39 +1788,34 @@
         /**
          * Formats the presentation value corresponding to this column definition.
          * @param {String} data The 'formatted' data value.
+         * @param {String} context the app context
          * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
-         * @returns {Object} A key value pair containing value and isHTML that detemrines the presenation.
+         * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
-        this.formatPresentation = function(data, options) {
+        this.formatPresentation = function(data, context, options) {
 
-            var context = options ? options.context : undefined,
-                utils = module._formatUtils;
+            var utils = module._formatUtils;
 
             var display = this.getDisplay(context);
 
-
             /*
-             * TODO: Add code to handle `pre_format` in the annotation
-             */
-             
-            /* 
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            
+
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
-                return { isHTML: true, value: '<pre>' + data + '</pre>'};
+                return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
             }
-                
-            /* 
+
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * then return data as it is
              */
             if (!display.isHTML) {
-                return { isHTML: false, value: data };
+                return { isHTML: false, value: data, unformatted: data };
             }
 
-            var value = data;
+            var unformatted = data;
 
             // If there is any markdown pattern then evaluate it
             if (display.isMarkdownPattern) {
@@ -1765,28 +1824,31 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options.formattedValues === undefined) {
-                    options.formattedValues = module._getFormattedKeyValues(this.table.columns, context, data);
+                if (options === undefined || options !== Object(options)) {
+                    options = {};
+                }
+                if (options.formattedValues === undefined) {
+                    options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 
                 options.formatted = true; // to avoid creating formattedValues again
-                value = module._renderTemplate(template, options.formattedValues, this.table, context, options);
+                unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
             }
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            
-            if (value === null || value.trim() === '') {
-                return { isHTML: false, value: this._getNullValue(context) };
+
+            if (unformatted === null || unformatted.trim() === '') {
+                return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
-            
+
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-             value = utils.printMarkdown(value, options);
-             
-             return { isHTML: true, value: value };
-            
+             value = utils.printMarkdown(unformatted, options);
+
+             return { isHTML: true, value: value, unformatted: unformatted };
+
         };
 
         /**
@@ -1922,10 +1984,14 @@
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
+                    // If the column typename is in the list of types to ignore setting the default for, throw an error to the catch clause
+                    if (module._ignoreDefaultsNames.includes(this.name)) {
+                        throw new Error("" + this.type.name + " is in the list of ignored default types");
+                    }
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
-                                throw new Error();
+                                throw new Error("Val: " + defaultVal + " is not of type boolean.");
                             }
                             break;
                         case "int2":
@@ -1933,7 +1999,7 @@
                         case "int8":
                             var intVal = parseInt(defaultVal, 10);
                             if (isNaN(intVal)) {
-                                throw new Error();
+                                throw new Error("Val: " + intVal + " is not of type integer.");
                             }
                             break;
                         case "float4":
@@ -1941,7 +2007,7 @@
                         case "numeric":
                             var floatVal = parseFloat(defaultVal);
                             if (isNaN(floatVal)) {
-                                throw new Error();
+                                throw new Error("Val: " + floatVal + " is not of type float.");
                             }
                             break;
                         case "date":
@@ -1950,7 +2016,7 @@
                             // convert using moment, if it doesn't error out, set the value.
                             // try/catch catches this if it does error out and sets it to null
                             if (!module._moment(defaultVal).isValid()) {
-                                throw new Error();
+                                throw new Error("Val: " + defaultVal + " is not a valid DateTime value.");
                             }
                             break;
                         case "json":
@@ -1963,7 +2029,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    console.dir(e);
+                    console.dir(e.message);
                     this._default = null;
                 }
             }
@@ -2014,7 +2080,7 @@
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var annotation = -1, columnOrder = [], hasPreformat;
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
@@ -2024,7 +2090,7 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             col = this.table.columns.get(annotation.column_order[i]);
-                            
+
                             // json and jsonb are not sortable.
                             if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
                                 continue;
@@ -2037,7 +2103,17 @@
                     columnOrder = annotation.column_order;
                 }
 
+                if (typeof annotation.pre_format === 'object') {
+                    if (typeof annotation.pre_format.format !== 'string') {
+                        console.log(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
+                    } else {
+                        hasPreformat = true;
+                    }
+                }
+
                 this._display[context] = {
+                    "isPreformat": hasPreformat,
+                    "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
@@ -2059,7 +2135,7 @@
             if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                 return display.columnOrder;
             }
-            
+
             if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
                 return undefined;
             }
@@ -2338,7 +2414,7 @@
         // we can assume that this can be used as a unique identifier for key.
         // NOTE: currently ermrest only returns the first constraint name,
         // so using the first one is sufficient
-        this._name = this.constraint_names[0].join("_");
+        this.name = this.constraint_names[0].join("_");
 
         this._wellFormed = {};
         this._display = {};
@@ -2443,7 +2519,7 @@
         /**
          * It won't preserve the order of given columns.
          * Returns set of columns sorted by their names.
-         * 
+         *
          * @type {Array}
          */
         this.columns = columns.slice().sort(function(a, b) {
@@ -2816,7 +2892,9 @@
         // we can assume that this can be used as a unique identifier for fk.
         // NOTE: currently ermrest only returns the first constraint name,
         // so using the first one is sufficient
-        this._name = this.constraint_names[0].join("_");
+        // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
+        // They will produce the same name. Is there any better way to generate this?
+        this.name = this.constraint_names[0].join("_");
 
 
         /**
@@ -2875,10 +2953,11 @@
 
         /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} isLeft  true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
-        toString: function (reverse){
+        toString: function (reverse, isLeft){
             var leftString = "", rightString = "";
             var columnsLength = this.colset.columns.length;
             for (var i = 0; i < columnsLength; i++) {
@@ -2895,7 +2974,9 @@
                 rightString += separator;
 
             }
-            return "(" + leftString + ")=(" + rightString + ")";
+
+            var joinType = (isLeft === true ? "left": "");
+            return joinType + "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {
@@ -2986,7 +3067,7 @@
 
     Type.prototype = {
         constructor: Type,
-        
+
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.

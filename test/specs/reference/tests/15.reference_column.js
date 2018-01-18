@@ -21,7 +21,7 @@ exports.execute = function (options) {
 
         var singleEnitityUriWithAsset = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithAsset + "/id=" + entityId;
-            
+
         var singleEnitityUriDiffColTypes = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithDiffColTypes + "/id=" + entityId;
 
@@ -97,7 +97,7 @@ exports.execute = function (options) {
                 return options.ermRest.resolve(singleEnitityUriDiffColTypes, {cid: "test"});
             }).then(function (ref) {
                 diffColTypeColumns = ref.contextualize.compact.columns;
-                
+
                 done();
             }).catch(function (err){
                 console.dir(err);
@@ -363,8 +363,8 @@ exports.execute = function (options) {
                     expect(compactColumns[20].default).toBe(null);
                 });
 
-                it ('should return a rowname if it is possible to generate one with default values.', function () {
-                    expect(compactColumns[19].default).toEqual('col 4 default , col 5 default');
+                it ('should return a rowname with correct context if it is possible to generate one with default values.', function () {
+                    expect(compactColumns[14].default).toEqual('col 4 default , col 5 default');
                 });
 
                 it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {
@@ -460,7 +460,7 @@ exports.execute = function (options) {
         });
 
         describe('.filteredRef, ', function() {
-            var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData,
+            var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData, foreignKeyData,
                 mainEntityTableName = "main-entity-table",
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
                 mainEntityUri = schemaUri  + mainEntityTableName;
@@ -482,6 +482,7 @@ exports.execute = function (options) {
                             // i=4 - text column that constrains the following fk
                             // i=5 - foreign key to position table with domain filter defined with dynamic value
                             // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values
+                            // i=7 - foreign key to position table with
                             mainEntityColumns = response.columns;
 
                             done();
@@ -507,14 +508,14 @@ exports.execute = function (options) {
                         });
 
                         it('Reference for mainEntityColumns[2], should have proper domain filter.', function() {
-                            mainEntityData = {"fk1": 1};
+                            mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1);
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
-                            mainEntityData = {"fk1": 1, "position_text_col": "relative"};
+                            mainEntityData = {"fk1": 1234, "position_text_col": "relative"};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col);
@@ -555,6 +556,39 @@ exports.execute = function (options) {
                             expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
                         });
                     });
+
+                    describe("should be able to access other foreignkey data, ", function () {
+                        it ("when data is not available should return the unfiltered reference.", function () {
+                            mainEntityData = {"fk1": 1234};
+                            filteredReference = mainEntityColumns[7].filteredRef(mainEntityData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                        });
+
+                        it("otherwise should use the provided data.", function () {
+                            mainEntityData = {"fk1": 1234};
+                            foreignKeyData = {
+                                "columns_schema_fk_position_predefined": {
+                                    "int_value": 4321,
+                                    "id": 1
+                                },
+                                "columns_schema_fk_position_user_defined": {
+                                    "int_value": 1235,
+                                    "id": 2
+                                }
+                            };
+                            filteredReference = mainEntityColumns[7].filteredRef(mainEntityData, foreignKeyData);
+
+                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=4321&position_col=1235&id=1234");
+                        });
+                    });
+
+                    it("should return the originating reference if the domain_filter_pattern results in an invalid (not understandable by parser) url.", function () {
+                        mainEntityData = {"position_text_col": "a&v&c"};
+                        filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
+
+                        expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
+                    });
                 });
             });
         });
@@ -564,7 +598,7 @@ exports.execute = function (options) {
             describe('for pseudoColumns, ', function () {
                 describe('for foreign keys, ', function () {
                     it('should return the correct link.', function () {
-                        val = compactColumns[19].formatPresentation(data).value;
+                        val = compactColumns[14].formatPresentation(data, 'compact').value;
 
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
@@ -588,29 +622,29 @@ exports.execute = function (options) {
 
                 describe('for keys, ', function () {
                     it('should return null-value if any of the key columns are null.', function () {
-                        val = compactColumns[0].formatPresentation({"id_2":1}, {context: "detailed"}).value;
+                        val = compactColumns[0].formatPresentation({"id_2":1}, "detailed").value;
                         expect(val).toBe(null);
 
-                        val = compactBriefRef.columns[0].formatPresentation({"col_3":"3"}, {context: "compact/brief"}).value;
+                        val = compactBriefRef.columns[0].formatPresentation({"col_3":"3"}, "compact/brief").value;
                         expect(val).toBe('');
                     });
 
                     it('should use `markdown_pattern` from key display annotation.', function () {
-                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, {context: "compact/brief", "formattedValues": {"col_4":"value"}}).value;
+                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"formattedValues": {"col_4":"value"}}).value;
                         expect(val).toEqual('<strong>value</strong>');
                     });
 
                     describe('otherwise, ', function () {
                         it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
-                            val = compactColumns[0].formatPresentation({"id":2}, {context: "detailed", "formattedValues": {"id":2}}).value;
+                            val = compactColumns[0].formatPresentation({"id":2}, "detailed", {"formattedValues": {"id":2}}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=2">2</a>');
 
-                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, {context: "compact/brief", "formattedValues": {"col_3":"3", "col_6":"6"}}).value;
+                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, "compact/brief", {"formattedValues": {"col_3":"3", "col_6":"6"}}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns are html.', function () {
-                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, {context: "compact/brief", "formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
+                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, "compact/brief", {"formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
                             expect(val).toEqual('<p>value</p>\n');
                         })
                     });
@@ -618,28 +652,30 @@ exports.execute = function (options) {
 
                 describe('for assets, ', function() {
                     it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
-                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, {context:"entry", "formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
-                        
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"entry", "formattedValues":{"col_filename": "filename"}}).value;
+
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("value");
                     });
-                    
+
                     it('if coulmn has column-display annotation, use it.', function () {
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, {context:"compact", "formattedValues":{"col_filename": "filename"}}).value;
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"formattedValues":{"col_filename": "filename"}}).value;
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 
-                    it("otherwise return a download link", function() {
+                    it("otherwise return a download link with query parameter", function() {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com" download="" class="btn btn-primary">filename</a>');
+                        expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+
+                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                        //NOTE this is the output but it will be displayed correctly.
+                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
                     });
                  });
 
                 it('should use the show-nulls annotation, when the data is null.', function () {
-                    val = compactColumns[19].formatPresentation({}, {
-                        context: "detailed"
-                    }).value;
+                    val = compactColumns[14].formatPresentation({}, "detailed").value;
                     expect(val).toBe(null);
                     val = entryEditRef.columns[7].formatPresentation({}).value;
                     expect(val).toBe("");
@@ -739,7 +775,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
-                
+
                 it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
                     expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
                     expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
@@ -754,7 +790,7 @@ exports.execute = function (options) {
                         return col.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
-                
+
                 it ("when column doesn't have `column_order ` annotation, should return false if it's json or jsonb.", function () {
                     expect(diffColTypeColumns[8].sortable).toBe(false, "sortable missmatch, index=8.");
                     expect(diffColTypeColumns[8]._sortColumns.length).toBe(0, "sort column length missmatch, index=8.");

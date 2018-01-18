@@ -29,6 +29,27 @@
                     }
                 }
             ]
+        },
+        "uᴉɐɯ": {
+            "kind": "table",
+            "table_name": "uᴉɐɯ",
+            "schema_name": "agref_schema",
+            "comment": "has unicode characters",
+            "keys": [{"unique_columns": ["pᴉ"]}],
+            "foreign_keys": [],
+            "column_definitions": [{
+                "name": "pᴉ",
+                "nullok": false,
+                "type": {
+                    "typename": "serial4"
+                }
+            },
+            {
+                "name": "loɔ",
+                "type": {
+                    "typename": "text"
+                }
+            }]
         }
     }
 }

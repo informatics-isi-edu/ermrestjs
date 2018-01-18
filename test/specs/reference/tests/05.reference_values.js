@@ -13,9 +13,44 @@ exports.execute = function (options) {
             + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
         var reference, page, tuples;
+        
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+
+        var appLinkFn = function (tag, location) {
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
 
         beforeAll(function(done) {
-            
+            options.ermRest.appLinkFn(appLinkFn);
+
             // Fetch the entities beforehand
             options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
                 reference = response;
@@ -86,9 +121,9 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues, expectedIsHTMLValues) {
 
-            it("should return 12 values for a tuple", function() {
+            it("should return 14 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
-                expect(values.length).toBe(12);
+                expect(values.length).toBe(14);
             });
             
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
@@ -102,9 +137,14 @@ exports.execute = function (options) {
             checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);  
             checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);    
             checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);       
+            checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("moment_col", tupleIndex, 13, expectedValues, expectedIsHTMLValues);
         };
         
         describe("Testing tuples values", function() {
+            var moment = options.ermRest._currDate;
+            var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
+
             var testObjects ={ 
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
@@ -119,9 +159,11 @@ exports.execute = function (options) {
                                             '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
                                             '<code>GATCGATCGC GTATT</code>',
                                             'NA',
-                                            '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>'
+                                            '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
+                                            '',
+                                            expectedMomentValue
                                              ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true]              
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]              
                         },
                 "test2": {
                     "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -137,9 +179,11 @@ exports.execute = function (options) {
                                     '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                     '',
                                     '<p><a href="http://example.com/Junior">Junior</a></p>\n',
-                                    ''
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1" class="class-10">4000 , 4001</a></p>\n',
+                                    expectedMomentValue
                                 ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                     },
             "test3": {
                     "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -155,9 +199,11 @@ exports.execute = function (options) {
                                     '',
                                     '',
                                     'NA',
-                                    ''             
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2" class="class-20">4000 , 4002</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true]
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
                     },
             "test4": {
                     "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -173,9 +219,11 @@ exports.execute = function (options) {
                                     '',
                                     '',
                                     '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
-                                    ''             
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=3" class="class-30">4000 , 4003</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true]
+                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
                     },
             "test5": {
                     "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -191,9 +239,11 @@ exports.execute = function (options) {
                                     '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                     '',
                                     'NA',
-                                    ''             
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4" class="class-40">4001 , 4002</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
                     },
             "test6": {
                     "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -209,9 +259,11 @@ exports.execute = function (options) {
                                     '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                     '',
                                     '<p><a href="http://example.com/Senior">Senior</a></p>\n',
-                                    ''             
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5" class="class-50">4002 , 4000</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                     },
             "test7": {
                     "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -227,9 +279,11 @@ exports.execute = function (options) {
                                     '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                     '<code>GATCGATCGC GTATT</code>',
                                     '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
-                                    ''             
+                                    '',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=6" class="class-60">4000 , 4000</a></p>\n',
+                                    expectedMomentValue
                                     ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                 }
                 
             }
@@ -247,8 +301,6 @@ exports.execute = function (options) {
         });
 
     });
-    
-    
     
     describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
@@ -269,43 +321,6 @@ exports.execute = function (options) {
         var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
 
         var reference, page, tuples, url;
-        
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
-       var recordURL = chaiseURL + "/record";
-       var record2URL = chaiseURL + "/record-two";
-       var viewerURL = chaiseURL + "/viewer";
-       var searchURL = chaiseURL + "/search";
-       var recordsetURL = chaiseURL + "/recordset";
-
-       var appLinkFn = function (tag, location) {
-           
-           switch (tag) {
-               case "tag:isrd.isi.edu,2016:chaise:record":
-                   url = recordURL;
-                   break;
-               case "tag:isrd.isi.edu,2016:chaise:record-two":
-                   url = record2URL;
-                   break;
-               case "tag:isrd.isi.edu,2016:chaise:viewer":
-                   url = viewerURL;
-                   break;
-               case "tag:isrd.isi.edu,2016:chaise:search":
-                   url = searchURL;
-                   break;
-               case "tag:isrd.isi.edu,2016:chaise:recordset":
-                   url = recordsetURL;
-                   break;
-               default:
-                   url = recordURL;
-                   break;
-           }
-
-           url = url + "/" + location.path;
-
-           return url;
-       };
-
-      
 
         beforeAll(function(done) {
             
@@ -332,21 +347,18 @@ exports.execute = function (options) {
                 console.dir(err);
                 done.fail();
             });
-            options.ermRest.appLinkFn(appLinkFn);
         });
         
         it("JSON column should display pre tags without markdown and should not append pre tag with markdown", function() {
             
             for( var i=0; i<limit; i++){
                 var values=tuples[i].values;
-                var uri='<a href="'+url+'">'+expectedValues[i].id+'</a>';
-                expect(values[0]).toBe(uri);
                 var json='<pre>'+JSON.stringify(expectedValues[i].json_col,"undefined",2)+'</pre>';
                 var jsonb='<pre>'+JSON.stringify(expectedValues[i].jsonb_col,"undefined",2)+'</pre>';
-                expect(values[1]).toBe(json, "Mismatch in tuple with index = "+ i +", column= json_col");
-                expect(values[2]).toBe(jsonb ,"Mismatch in tuple with index = "+ i +", column= jsonb_col");
-                expect(values[3]).toBe(expectedValues[i].json_col_with_markdownpattern, "Mismatch in tuple with index = "+ i +", column= json_col_with_markdownpattern");
-                expect(values[4]).toBe(expectedValues[i].col_markdown_blankable, "Mismatch in tuple with index = "+ i +", column= col_markdown_blankable");
+                expect(values[0]).toBe(json, "Mismatch in tuple with index = "+ i +", column= json_col");
+                expect(values[1]).toBe(jsonb ,"Mismatch in tuple with index = "+ i +", column= jsonb_col");
+                expect(values[2]).toBe(expectedValues[i].json_col_with_markdownpattern, "Mismatch in tuple with index = "+ i +", column= json_col_with_markdownpattern");
+                expect(values[3]).toBe(expectedValues[i].col_markdown_blankable, "Mismatch in tuple with index = "+ i +", column= col_markdown_blankable");
             }
         });
 

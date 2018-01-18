@@ -166,7 +166,7 @@ exports.execute = (options) => {
                                 "tables" : {
                                     "perm_table": {
                                         "acls": {
-                                            "insert" : ["*"],
+                                            "insert" : [restrictedUserId],
                                             "select": [restrictedUserId],
                                             "update": [restrictedUserId],
                                             "delete": [restrictedUserId]
@@ -199,7 +199,7 @@ exports.execute = (options) => {
 
             });
 
-            describe("Table with anonymous context should return false for select, update and delete, and true for insert,", () => {
+            describe("Table with anonymous context should return false for select, insert, update and delete.,", () => {
 
                 beforeAll((done) => {
                     removeCachedCatalog(catalogId);
@@ -214,7 +214,7 @@ exports.execute = (options) => {
                 });
 
                 it("canCreate.", () => {
-                    expect(reference.canCreate).toBe(true);
+                    expect(reference.canCreate).toBe(false);
                 });
 
                 it("canRead.", () => {
@@ -254,7 +254,7 @@ exports.execute = (options) => {
             });
         });
 
-        describe("check permissions when table is accessed anonymously and as allowed user with select and update permissions,", () => {
+        describe("check permissions when table is accessed anonymously and as allowed user with only select permissions,", () => {
             var reference;
 
             beforeAll((done) => {
@@ -271,7 +271,7 @@ exports.execute = (options) => {
                                         "acls": {
                                             "insert" : [restrictedUserId],
                                             "select": ["*"],
-                                            "update": ["*"],
+                                            "update": [restrictedUserId],
                                             "delete": []
                                         }
                                     }
@@ -325,7 +325,7 @@ exports.execute = (options) => {
                 });
 
                 it("canUpdate.", () => {
-                    expect(reference.canUpdate).toBe(true);
+                    expect(reference.canUpdate).toBe(false);
                 });
 
                 it("canDelete.", () => {
@@ -373,8 +373,8 @@ exports.execute = (options) => {
                                     "perm_table": {
                                         "acls": {
                                             "select" : ["*"],
-                                            "update": ["*"],
-                                            "insert": ["*"]
+                                            "update": [restrictedUserId],
+                                            "insert": [restrictedUserId]
                                         },
                                         "columns": {
                                             "name": {
@@ -497,13 +497,13 @@ exports.execute = (options) => {
                                     "perm_table": {
                                         "acls": {
                                             "select" : ["*"],
-                                            "update": ["*"],
-                                            "insert": ["*"]
+                                            "update": [restrictedUserId],
+                                            "insert": [restrictedUserId]
                                         },
                                         "columns": {
                                             "name": {
                                                 "acls": {
-                                                    "insert" : ["*"],
+                                                    "insert" : [restrictedUserId],
                                                     "select": [restrictedUserId],
                                                     "update": []
                                                 }

@@ -1,7 +1,7 @@
 exports.execute = function(options) {
 
     describe('About the Column class, ', function() {
-        var schemaName2 = 'common_schema_2', 
+        var schemaName2 = 'common_schema_2',
             columnName = 'table_1_text',
             table1_schema2;
 
@@ -121,7 +121,7 @@ exports.execute = function(options) {
 
                     function runShowNullTestCases (column, testCases){
                         for(key in testCases){
-                            expect(column.formatvalue(null, {context:key})).toBe(testCases[key]);
+                            expect(column.formatvalue(null, key)).toBe(testCases[key]);
                         }
                     }
                     it('should return the value that is defined in its `show_nulls` display annotation based on context.', function() {
@@ -211,7 +211,7 @@ exports.execute = function(options) {
                         var formattedValue = col.formatvalue(testVal);
 
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe('2011-05-06 08:25:25');
+                        expect(formattedValue).toBe(options.ermRest._moment(testVal).format("YYYY-MM-DD HH:mm:ss"));
                     });
                 });
 
@@ -228,7 +228,7 @@ exports.execute = function(options) {
                     it('float8 columns correctly.', function() {
                         var col = table1_schema2.columns.get('table_1_float8');
                         var options = {numFracDigits: 7};
-                        formattedValue = col.formatvalue(234523523.023045230450245, options);
+                        formattedValue = col.formatvalue(234523523.023045230450245, null, options);
 
                         expect(formattedValue).toBe('234,523,523.0230452');
                     });
@@ -236,7 +236,7 @@ exports.execute = function(options) {
                     it('numeric columns correctly.', function() {
                         var col = table1_schema2.columns.get('table_1_numeric');
                         var options = {numFracDigits: 8};
-                        formattedValue = col.formatvalue(456456.234682307474076, options);
+                        formattedValue = col.formatvalue(456456.234682307474076, null, options);
 
                         expect(formattedValue).toBe('456,456.23468231');
                     })
@@ -304,6 +304,37 @@ exports.execute = function(options) {
                 });
             });
 
+            describe('column defaults, ', function () {
+                var table;
+                var tableName = "table_w_defaults",
+                    nullColumns = ["boolean_improper", "date_improper", "timestamp_improper", "timestamptz_improper", "float4_improper", "float8_improper", "numeric_improper", "int2_improper", "int4_improper", "int8_improper", "RID", "RCB", "RMB", "RCT", "RMT"],
+                    notNullColumns = ["boolean_proper", "date_proper", "timestamp_proper", "timestamptz_proper", "float4_proper", "float8_proper", "numeric_proper", "int2_proper", "int4_proper", "int8_proper"];
+
+                beforeAll(function (done) {
+                    table = options.catalog.schemas.get(schemaName2).tables.get(tableName);
+                    done();
+                });
+
+                for (var i=0; i<nullColumns.length; i++) {
+                    (function(columnName) {
+                        it("for column `" + columnName + "`, default should be null", function (done) {
+                            var column = table.columns.get(columnName);
+                            expect(column.default).toBeNull("default is not set properly");
+                            done();
+                        });
+                    }) (nullColumns[i]);
+                }
+
+                for (var i=0; i<notNullColumns.length; i++) {
+                    (function(columnName) {
+                        it("for column `" + columnName + "`, default should not be null", function (done) {
+                            var column = table.columns.get(columnName);
+                            expect(column.default).not.toBeNull("default is not set properly");
+                            done();
+                        });
+                    }) (notNullColumns[i]);
+                }
+            });
         });
     });
 };

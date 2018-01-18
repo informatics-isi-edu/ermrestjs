@@ -93,7 +93,8 @@ to use for ERMrest JavaScript agents.
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
-            * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+            * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+            * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -143,8 +144,8 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-        * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
     * [.Annotations](#ERMrest.Annotations)
@@ -206,7 +207,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-        * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+        * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
@@ -215,6 +216,8 @@ to use for ERMrest JavaScript agents.
         * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
+    * [.ERMrestError](#ERMrest.ERMrestError)
+        * [new ERMrestError(code, status, message, subMessage)](#new_ERMrest.ERMrestError_new)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -226,7 +229,11 @@ to use for ERMrest JavaScript agents.
     * [.NotFoundError](#ERMrest.NotFoundError)
         * [new NotFoundError(status, message)](#new_ERMrest.NotFoundError_new)
     * [.ConflictError](#ERMrest.ConflictError)
-        * [new ConflictError(status, message)](#new_ERMrest.ConflictError_new)
+        * [new ConflictError(status, message, subMessage)](#new_ERMrest.ConflictError_new)
+    * [.IntegrityConflictError](#ERMrest.IntegrityConflictError)
+        * [new IntegrityConflictError(status, message, subMessage)](#new_ERMrest.IntegrityConflictError_new)
+    * [.DuplicateConflictError](#ERMrest.DuplicateConflictError)
+        * [new DuplicateConflictError(status, message, subMessage)](#new_ERMrest.DuplicateConflictError_new)
     * [.PreconditionFailedError](#ERMrest.PreconditionFailedError)
         * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
@@ -276,6 +283,7 @@ to use for ERMrest JavaScript agents.
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+            * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -294,6 +302,7 @@ to use for ERMrest JavaScript agents.
         * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
         * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
+        * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
@@ -320,8 +329,8 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
-        * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
         * [new ForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.ForeignKeyPseudoColumn_new)
@@ -329,6 +338,8 @@ to use for ERMrest JavaScript agents.
         * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
+        * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
         * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
@@ -339,6 +350,12 @@ to use for ERMrest JavaScript agents.
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+        * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+        * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+        * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+        * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
+        * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
+        * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -413,9 +430,9 @@ to use for ERMrest JavaScript agents.
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri, [params])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
-    * [.resolve(uri, [params])](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -749,7 +766,8 @@ get table by table name
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
-        * [._getDisplayKey(context)](#ERMrest.Table+_getDisplayKey)
+        * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -848,10 +866,17 @@ The columns that create the shortest key
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 **Type{column[]}**:   
-<a name="ERMrest.Table+_getDisplayKey"></a>
+<a name="ERMrest.Table+displayKey"></a>
 
-#### table._getDisplayKey(context)
-returns the key that can be used for display purposes.
+#### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+The columns that create the shortest key that can be used for display purposes.
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_getRowDisplayKey"></a>
+
+#### table._getRowDisplayKey(context)
+This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+It's the same as displaykey but with extra restrictions. It might return undefined.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 **Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
@@ -1191,8 +1216,8 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-    * [.formatvalue(data)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+    * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
 
@@ -1306,8 +1331,10 @@ return the default value for a column after checking whether it's a primitive th
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>
 
-#### column.formatvalue(data) ⇒ <code>string</code>
+#### column.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this column definition.
+If a column display annotation with preformat property is available then use prvided format string
+else use the default formatValue function
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>string</code> - The formatted value.  
@@ -1315,18 +1342,20 @@ Formats a value corresponding to this column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+| context | <code>String</code> | the app context |
 
 <a name="ERMrest.Column+formatPresentation"></a>
 
-#### column.formatPresentation(data, options) ⇒ <code>Object</code>
+#### column.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
-**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>String</code> | The 'formatted' data value. |
+| context | <code>String</code> | the app context |
 | options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
 <a name="ERMrest.Column+toString"></a>
@@ -1748,7 +1777,7 @@ get the foreign key of the given column set
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
-    * [.toString([reverse])](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
+    * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.ForeignKeyRef_new"></a>
@@ -1816,7 +1845,7 @@ Indicates if the foreign key is simple (not composite)
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+toString"></a>
 
-#### foreignKeyRef.toString([reverse]) ⇒ <code>string</code>
+#### foreignKeyRef.toString(reverse, isLeft) ⇒ <code>string</code>
 returns string representation of ForeignKeyRef object
 
 **Kind**: instance method of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
@@ -1824,7 +1853,8 @@ returns string representation of ForeignKeyRef object
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [reverse] | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| reverse | <code>boolean</code> | false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2) |
+| isLeft | <code>boolean</code> | true: left join, other values: inner join |
 
 <a name="ERMrest.ForeignKeyRef+getDomainValues"></a>
 
@@ -1886,6 +1916,21 @@ The column name of the base. This goes to the first level which
 will be a type understandable by database.
 
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
+<a name="ERMrest.ERMrestError"></a>
+
+### ERMrest.ERMrestError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.ERMrestError_new"></a>
+
+#### new ERMrestError(code, status, message, subMessage)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| code | <code>int</code> | http error code |
+| status | <code>string</code> | message status/title in the modal box |
+| message | <code>string</code> | main user error message |
+| subMessage | <code>string</code> | technical details about the error. Appear in collapsible span in the modal box |
+
 <a name="ERMrest.TimedOutError"></a>
 
 ### ERMrest.TimedOutError
@@ -1957,12 +2002,45 @@ will be a type understandable by database.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.ConflictError_new"></a>
 
-#### new ConflictError(status, message)
+#### new ConflictError(status, message, subMessage)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | status | <code>string</code> | the network error code |
 | message | <code>string</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.IntegrityConflictError"></a>
+
+### ERMrest.IntegrityConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.IntegrityConflictError_new"></a>
+
+#### new IntegrityConflictError(status, message, subMessage)
+IntegrityConflictError - Return error pertaining to integrity violoation
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
+
+<a name="ERMrest.DuplicateConflictError"></a>
+
+### ERMrest.DuplicateConflictError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.DuplicateConflictError_new"></a>
+
+#### new DuplicateConflictError(status, message, subMessage)
+DuplicateConflictError - Return error pertaining to Duplicate entried
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>type</code> | the network error code |
+| message | <code>type</code> | error message |
+| subMessage | <code>type</code> | technical message returned by http request |
 
 <a name="ERMrest.PreconditionFailedError"></a>
 
@@ -2159,6 +2237,7 @@ Constructor for a ParsedFilter.
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2523,6 +2602,21 @@ Deletes the referenced resources.
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
+<a name="ERMrest.Reference+delete..self"></a>
+
+##### delete~self
+NOTE: previous implemenation of delete with 412 logic is here:
+https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+
+We decided to drop the support for 412, because the etag that we get from the read function
+is different than the one delete expects. The reason for that is because we are getting etag
+in read with joins in the request, which affects the etag. etag is in response to any change
+to the returned data and since join introduces extra data it is different than a request
+without any joins.
+
+github issue: #425
+
+**Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+related"></a>
 
 #### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
@@ -2750,8 +2844,8 @@ if (reference.next) {
 #### page.content : <code>string</code> \| <code>null</code>
 HTML representation of the whole page which uses table-display annotation.
 If markdownPattern is defined then renderTemplate is called to get the correct display.
-In case of no such markdownPattern is defined output is displayed in form of 
-unordered list with displayname as text content of the list. 
+In case of no such markdownPattern is defined output is displayed in form of
+unordered list with displayname as text content of the list.
 For more info you can refer {ERM.reference.display}
 
 Usage:
@@ -2772,6 +2866,7 @@ if (content) {
     * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
     * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
+    * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
@@ -2816,6 +2911,16 @@ This is the page of the Tuple
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 **Returns**: [<code>Page</code>](#ERMrest.Page) \| <code>\*</code> - page of the Tuple  
+<a name="ERMrest.Tuple+linkedData"></a>
+
+#### tuple.linkedData : <code>Object</code>
+Foreign key data.
+During the read we get extra information about the foreign keys,
+client could use these extra information for different purposes.
+One of these usecases is domain_filter_pattern which they can
+include foreignkey data in the pattern language.
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+data"></a>
 
 #### tuple.data : <code>Object</code>
@@ -2986,8 +3091,8 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
-    * [.formatvalue(data)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
@@ -3078,7 +3183,7 @@ Heuristics are as follows:
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
-#### referenceColumn.formatvalue(data) ⇒ <code>string</code>
+#### referenceColumn.formatvalue(data, context) ⇒ <code>string</code>
 Formats a value corresponding to this reference-column definition.
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -3087,18 +3192,20 @@ Formats a value corresponding to this reference-column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
+| context | <code>String</code> | the context of app |
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
-#### referenceColumn.formatPresentation(data, options) ⇒ <code>Object</code>
+#### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presenation.  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| context | <code>String</code> | the app context |
 | options | <code>Object</code> | includes `context` and `formattedValues` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
@@ -3122,6 +3229,8 @@ TODO should be removed in favor of inputDisabled
     * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
+    * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 
 <a name="new_ERMrest.ForeignKeyPseudoColumn_new"></a>
@@ -3160,11 +3269,23 @@ The reference object that represents the table of this PseudoColumn
 The Foreign key object that this PseudoColumn is created based on
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
+
+#### foreignKeyPseudoColumn.defaultValues : <code>Object</code>
+returns the raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+defaultReference"></a>
+
+#### foreignKeyPseudoColumn.defaultReference : <code>ERMrest.Refernece</code>
+returns a reference using raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+filteredRef"></a>
 
 #### foreignKeyPseudoColumn.filteredRef(column, data) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 This function takes in a tuple and generates a reference that is
-constrained based on the domain_filter_pattern annotation. If this
+constrained based on the domain_filter_pattern annotation. If thisx
 annotation doesn't exist, it returns this (reference)
 `this` is the same as column.reference
 
@@ -3237,6 +3358,12 @@ The Foreign key object that this PseudoColumn is created based on
     * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
     * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isAsset](#ERMrest.AssetPseudoColumn+isAsset) : <code>boolean</code>
+    * [.urlPattern](#ERMrest.AssetPseudoColumn+urlPattern) : <code>ERMrest.Refernece</code>
+    * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+    * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
+    * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
+    * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
+    * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -3261,6 +3388,42 @@ indicates that this object represents a PseudoColumn.
 
 #### assetPseudoColumn.isAsset : <code>boolean</code>
 Indicates that this ReferenceColumn is an asset.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+urlPattern"></a>
+
+#### assetPseudoColumn.urlPattern : <code>ERMrest.Refernece</code>
+Returns the url_pattern defined in the annotation (the raw value and not computed).
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameColumn"></a>
+
+#### assetPseudoColumn.filenameColumn : [<code>Column</code>](#ERMrest.Column)
+The column object that filename is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameColumn"></a>
+
+#### assetPseudoColumn.filenameColumn : [<code>Column</code>](#ERMrest.Column)
+The column object that filename is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+md5"></a>
+
+#### assetPseudoColumn.md5 : [<code>Column</code>](#ERMrest.Column)
+The column object that md5 hash is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+sha256"></a>
+
+#### assetPseudoColumn.sha256 : [<code>Column</code>](#ERMrest.Column)
+The column object that sha256 hash is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameExtFilter"></a>
+
+#### assetPseudoColumn.filenameExtFilter : [<code>Column</code>](#ERMrest.Column)
+The column object that file extension is stored in.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
@@ -3941,7 +4104,7 @@ This function is used to configure the module
 
 <a name="ERMrest.getServer"></a>
 
-### ERMrest.getServer(uri, [params]) ⇒ [<code>Server</code>](#ERMrest.Server)
+### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ [<code>Server</code>](#ERMrest.Server)
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
@@ -3956,7 +4119,7 @@ URI should be to the ERMrest _service_. For example,
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
-| [params] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server query parameter appended to the end of any request to the server. |
+| [contextHeaderParams] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server header parameters for context logging appended to the end of any request to the server. |
 
 <a name="ERMrest.parse"></a>
 
@@ -3977,7 +4140,7 @@ service name.
 
 <a name="ERMrest.resolve"></a>
 
-### ERMrest.resolve(uri, [params]) ⇒ <code>Promise</code>
+### ERMrest.resolve(uri, [contextHeaderParams]) ⇒ <code>Promise</code>
 This function resolves a URI reference to a [Reference](#ERMrest.Reference)
 object. It validates the syntax of the URI and validates that the
 references to model elements in it are correct. This function makes a
@@ -4015,7 +4178,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
-| [params] | <code>Object</code> | An optional parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
+| [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
 <a name="httpUnauthorizedFn"></a>
 

@@ -261,10 +261,12 @@ var ERMrest = (function(module) {
             ignoredColumns.push("md5_base64");
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
+            ignoredColumns.push("mimetype");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
+            ignoredColumns.push(this.column.name + ".mimetype");
 
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
         }
@@ -448,11 +450,17 @@ var ERMrest = (function(module) {
             var blob;
             var index = 0;
             this.chunks = [];
-            while (start < this.file.size) {
-                end = Math.min(start + this.PART_SIZE, this.file.size);
-                var chunk = new Chunk(index++, start, end);
-                self.chunks.push(chunk);
-                start = end;
+
+            if (this.file.size === 0) {
+                deferred.resolve(this.url);
+                return deferred.promise;
+            } else {
+                while (start < this.file.size) {
+                    end = Math.min(start + this.PART_SIZE, this.file.size);
+                    var chunk = new Chunk(index++, start, end);
+                    this.chunks.push(chunk);
+                    start = end;
+                }
             }
         }
 
@@ -646,6 +654,7 @@ var ERMrest = (function(module) {
 
         row[this.column.name].filename = this.file.name;
         row[this.column.name].size = this.file.size;
+        row[this.column.name].mimetype = this.file.type;
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;

@@ -207,8 +207,8 @@ exports.execute = function (options) {
             describe('when sorting based on a PseudoColumn, ', function () {
 
                 it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
-                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=2 will be the first.
-                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": true}], "2", done);
+                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=1 will be the first.
+                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": true}], "1", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
@@ -216,7 +216,7 @@ exports.execute = function (options) {
                 });
 
                 it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
-                    checkSort([{"column": "columns_schema_outbound_fk_2", "descending": true}], "4", done);
+                    checkSort([{"column": "columns_schema_outbound_fk_2", "descending": true}], "1", done);
                 });
 
                 if (!process.env.TRAVIS) {

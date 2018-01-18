@@ -130,7 +130,7 @@ exports.execute = function (options) {
         var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
             relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=(" +
             schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
-        
+
         var facetObject15 = {
             "and": [
                 {"source": [{"inbound": ["reference schema altTables", "alt_detailed_fk"]}, "details"], "search": ["H"]},
@@ -142,10 +142,10 @@ exports.execute = function (options) {
                 ], "choices": ["two"]}
             ]
         };
-        
-        var uri15 = options.url + "/catalog/" + catalog_id + "/entity/" + 
+
+        var uri15 = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15);
-            
+
         var facetObject16 = {
             "and": [
                 {"source": [{"outbound": ["reference schema altTables", "alt_detailed_fk"]}, "name"], "search": ["H"]},
@@ -158,8 +158,8 @@ exports.execute = function (options) {
                 ], "choices": ["two"]}
             ]
         };
-        
-        var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" + 
+
+        var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16);
 
         describe('1. base table with no entity filters,', function() {
@@ -251,6 +251,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("1.A.5 tuple uniqueId should return correct data from base table.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('1.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -304,6 +308,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("1.B.5 tuple uniqueId should return correct data from base table.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('1.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
@@ -355,6 +363,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("1.C.5 tuple uniqueId should return correct data from base table.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -447,6 +459,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("2.A.5 tuple uniqueId should return correct data from base table.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('2.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -485,7 +501,7 @@ exports.execute = function (options) {
                 expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
             });
 
-            it('2.B.3 tuple read should return correct data from base table', function(done) {
+            it('2.B.4 tuple read should return correct data from base table', function(done) {
                 tuple.reference.read(limit).then(function (response) {
                     page = response;
 
@@ -499,6 +515,11 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("2.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
 
             it('2.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
@@ -551,6 +572,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("2.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -643,6 +668,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("3.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('3.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
@@ -699,6 +728,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("3.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('3.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
@@ -752,6 +785,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("3.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
             });
         });
 
@@ -843,6 +880,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("4.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('4.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -896,6 +937,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("4.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('4.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
@@ -947,6 +992,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("4.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -1141,6 +1190,10 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("5.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
         });
 
         describe('6. alternative detail table with single entity filter (single col key),', function() {
@@ -1228,6 +1281,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("6.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
 
             it('6.B contextualize detailed should return a new reference with alternative table', function() {
@@ -1335,6 +1392,10 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("6.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
         });
 
         describe('7. alternative detail table with single entity filter (multi col key),', function() {
@@ -1425,6 +1486,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("7.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('7.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
@@ -1481,6 +1546,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("7.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('7.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
@@ -1535,8 +1604,12 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("7.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
         });
-        
+
         describe('8. alternative detail table with multiple entity filters,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -1623,6 +1696,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("8.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('8.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -1676,6 +1753,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("8.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('8.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
@@ -1727,6 +1808,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("8.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -1816,6 +1901,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("9.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('9.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -1869,6 +1958,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("9.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('9.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
@@ -1920,6 +2013,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("9.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -2008,6 +2105,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("10.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
 
             it('10.B contextualize detailed should return a new reference with alternative table', function() {
@@ -2115,6 +2216,10 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("10.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
         });
 
         describe('11. alternative compact table with single entity filter (multi col key),', function() {
@@ -2205,6 +2310,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("11.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('11.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
@@ -2261,6 +2370,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("11.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
+            });
+
             it('11.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
@@ -2314,6 +2427,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("11.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001_12");
             });
         });
 
@@ -2403,6 +2520,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("12.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('12.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -2456,6 +2577,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("12.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('12.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
@@ -2507,6 +2632,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("12.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -2598,6 +2727,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("13.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('13.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -2649,6 +2782,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("13.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
 
             it('13.C contextualize compact should return a new reference with alternative table', function() {
@@ -2704,6 +2841,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("13.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it("13.D contextualizing a contextualized reference should not remove the join., ", function () {
                 reference3 = reference2.contextualize.entry;
                 expect(reference3._table.name).toBe(baseTable1);
@@ -2755,6 +2896,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("13.D.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -2846,6 +2991,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("14.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
+
             it('14.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
@@ -2897,6 +3046,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("14.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
             });
 
             it('14.C contextualize compact should return a new reference with alternative table', function() {
@@ -2951,6 +3104,10 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("14.C.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00001");
+            });
         });
 
         describe("15. base table with facets, ", function () {
@@ -2972,7 +3129,7 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-            
+
             it('15.2 base table should be properly defined', function() {
                 expect(reference._table.name).toBe(baseTable1, "table name missmatch.");
                 expect(reference._table._alternatives.detailed.name).toBe(altDetailedTable1, "detailed alternative table missmatch.");
@@ -2992,12 +3149,12 @@ exports.execute = function (options) {
                 expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
                 expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
-            
+
             it("15.A.0 returned reference should have correct facets.", function () {
                 expect(reference2.location.facets).toBeDefined("facets was not defined.");
                 expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(facetObject15), "facets missmatch.");
             });
-            
+
             it('15.A.1 read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -3043,6 +3200,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("15.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00002");
+            });
+
             it('15.B contextualize detailed should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1, "table missmatch.");
@@ -3050,7 +3211,7 @@ exports.execute = function (options) {
                 expect(reference2._shortestKey[0].name).toBe("id x", "shortestkey name missmatch.");
                 expect(reference2.displayname.value).toBe(altDetailedTable1, "displayname missmatch.");
             });
-            
+
             it("15.B.0 returned reference should have correct facets.", function () {
                 newFacetObject = {
                     "and": [
@@ -3067,7 +3228,7 @@ exports.execute = function (options) {
                 expect(reference2.location.facets).toBeDefined("facets was not defined.");
                 expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
             });
-            
+
             it('15.B.1 read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -3109,6 +3270,10 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
+
+            it("15.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00002");
+            });
         });
 
         describe("16. alternative detailed table with facets,", function () {
@@ -3130,7 +3295,7 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-            
+
             it('16.2 alternative table should be properly defined', function() {
                 expect(reference._location.uri).toBe(uri16, "uri missmatch.");
                 expect(reference._table.name).toBe(altDetailedTable1, "table name missmatch.");
@@ -3148,7 +3313,7 @@ exports.execute = function (options) {
                 expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
                 expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
-            
+
             it("16.A.0 returned reference should have correct facets.", function () {
                 newFacetObject = {
                     "and": [
@@ -3164,7 +3329,7 @@ exports.execute = function (options) {
                 expect(reference2.location.facets).toBeDefined("facets was not defined.");
                 expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
             });
-            
+
             it('16.A.1 read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -3208,13 +3373,17 @@ exports.execute = function (options) {
                 });
             });
 
+            it("16.A.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00002");
+            });
+
             it('16.B contextualize compact should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1, "table missmatch.");
                 expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
                 expect(reference2._shortestKey[0].name).toBe("id y", "shortestkey name missmatch.");
             });
-            
+
             it("16.B.0 returned reference should have correct facets.", function () {
                 newFacetObject = {
                     "and": [
@@ -3235,7 +3404,7 @@ exports.execute = function (options) {
                 expect(reference2.location.facets).toBeDefined("facets was not defined.");
                 expect(JSON.stringify(reference2.location.facets.decoded)).toEqual(JSON.stringify(newFacetObject), "facets missmatch.");
             });
-            
+
             it('16.B.1 read should return a Page object that is defined.', function(done) {
                 reference2.read(limit).then(function (response) {
                     page = response;
@@ -3276,6 +3445,10 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it("16.B.5 tuple uniqueId should return correct data.", function () {
+                expect(tuple.uniqueId).toEqual("00002");
             });
         });
     });
