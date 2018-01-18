@@ -958,15 +958,19 @@ BucketAttributeGroupReference.prototype.read = function () {
             for (var i=0; i<response.data.length; i++) {
                 var index = response.data[i].c1[0];
                 if (index !== null) {
-                    labels.min[index] = min = response.data[i].c1[1];
-                    labels.max[index] = max = response.data[i].c1[2];
+                    min = response.data[i].c1[1];
+                    max = response.data[i].c1[2];
+
                     if (currRef._keyColumns[0].type.name == "date") {
-                        min = moment(min).format("YYYY-MM-DD");
-                        max = moment(max).format("YYYY-MM-DD");
+                        min = min !== null ? moment(min).format("YYYY-MM-DD") : null;
+                        max = max !== null ? moment(max).format("YYYY-MM-DD") : null;
                     } else if (currRef._keyColumns[0].type.name.indexOf("timestamp") > -1) {
-                        min = moment(min).format("YYYY-MM-DD hh:mm:ss");
-                        max = moment(max).format("YYYY-MM-DD hh:mm:ss");
+                        min = min !== null ? moment(min).format("YYYY-MM-DD hh:mm:ss") : null;
+                        max = max !== null ? moment(max).format("YYYY-MM-DD hh:mm:ss") : null;
                     }
+
+                    labels.min[index] = min
+                    labels.max[index] = max
 
                     data.x[index] = min;
                     data.y[index] = response.data[i].c2;
@@ -1015,7 +1019,6 @@ BucketAttributeGroupReference.prototype.read = function () {
 
             data.labels = labels;
 
-            console.log(data);
             defer.resolve(data);
 
         }).catch(function (response) {

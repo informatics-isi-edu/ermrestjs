@@ -5306,6 +5306,13 @@
             return this._isEntityMode;
         },
 
+        get showHistogram() {
+            if (this._showHistogram === undefined) {
+                this._showHistogram = (this._facetObject.histogram === false) ? false : true;
+            }
+            return this._showHistogram;
+        },
+
         /**
          * ReferenceColumn that this facetColumn is based on
          * @type {ERMrest.ReferenceColumn}
@@ -6224,7 +6231,6 @@
                 absMax: absMax,
                 binWidth: width
             };
-            console.log(options);
 
             if (this.column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
