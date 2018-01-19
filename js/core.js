@@ -813,13 +813,13 @@
                         keys = this.keys.all();
                     }
 
-                    // var ridKey = keys.filter(function (key) {
-                    //     return key.colset.columns.length == 1 && key.colset.columns[0].name.toUpperCase() == "RID";
-                    // })[0];
+                    var ridKey = keys.filter(function (key) {
+                        return key.colset.columns.length == 1 && key.colset.columns[0].name.toUpperCase() == "RID";
+                    })[0];
 
-                    // if (ridKey) {
-                    //     this._shortestKey = ridKey.colset.columns;
-                    // } else {
+                    if (ridKey) {
+                        this._shortestKey = ridKey.colset.columns;
+                    } else {
                         // returns 1 if all the columns are serial/int, 0 otherwise
                         var allSerialInt = function (key) {
                             return (key.colset.columns.map(function (column) {
@@ -848,7 +848,7 @@
                             // the one that has lower column position
                             return a.colset._getColumnPositions() > b.colset._getColumnPositions();
                         })[0].colset.columns;
-                    // }
+                    }
 
                 } else {
                     this._shortestKey = this.columns.all();
