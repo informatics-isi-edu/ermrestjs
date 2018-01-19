@@ -598,7 +598,7 @@ exports.execute = function (options) {
             describe('for pseudoColumns, ', function () {
                 describe('for foreign keys, ', function () {
                     it('should return the correct link.', function () {
-                        val = compactColumns[14].formatPresentation(data, 'compact').value;
+                        val = compactColumns[19].formatPresentation(data, 'compact').value;
 
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
@@ -675,7 +675,7 @@ exports.execute = function (options) {
                  });
 
                 it('should use the show-nulls annotation, when the data is null.', function () {
-                    val = compactColumns[14].formatPresentation({}, "detailed").value;
+                    val = compactColumns[19].formatPresentation({}, "detailed").value;
                     expect(val).toBe(null);
                     val = entryEditRef.columns[7].formatPresentation({}).value;
                     expect(val).toBe("");

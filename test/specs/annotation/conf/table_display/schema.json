@@ -29,7 +29,14 @@
             "typename": "text"
           }
         }
-      ]
+      ],
+      "annotations": {
+          "tag:isrd.isi.edu,2016:visible-columns": {
+              "*": [
+                  "id", "description"
+              ]
+          }
+      }
     },
     "table_wo_annotation": {
       "kind": "table",
@@ -99,7 +106,14 @@
             "typename": "text"
           }
         }
-      ]
+      ],
+      "annotations": {
+          "tag:isrd.isi.edu,2016:visible-columns": {
+              "*": [
+                  "id", "title"
+              ]
+          }
+      }
     },
     "table_w_accession_id_wo_annotation": {
       "kind": "table",

@@ -17,7 +17,7 @@ exports.execute = function (options) {
             tableNameWoAnnot = "table_wo_annotation";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + tableName1;
+            schemaName + ":" + tableName1 + "/@sort(id)";
 
         var table2EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName2;
@@ -30,19 +30,19 @@ exports.execute = function (options) {
 
 
         var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName5;
+            tableName5 + "/@sort(id)";
 
         var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName6;
+            tableName6 + "/@sort(id)";
 
         var table7EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName7;
+            tableName7 + "/@sort(id)";
 
         var table8EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName8;
+            tableName8 + "/@sort(id)";
 
         var table9EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName9;
+            tableName9 + "/@sort(id)";
 
         var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName10;
@@ -130,12 +130,9 @@ exports.execute = function (options) {
 
             it('tuple displayname should return formatted value of id as it is the unique key.', function() {
                 var tuples = page.tuples;
-                var expected = [
-                    "20,001", "20,002", "20,003", "20,004", "20,005", "20,006", "20,007", "20,008", "20,009", "20,010"
-                ];
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    expect(tuple.displayname.value).toBe(expected[i]);
+                    expect(tuple.displayname.value).toBe(tuple.values[0]);
                     expect(tuple.displayname.unformatted).toBe(expected[i]);
                 }
             });

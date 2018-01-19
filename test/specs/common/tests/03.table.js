@@ -11,12 +11,14 @@ exports.execute = function(options) {
 
         // Test Cases:
         describe('Shortest key, ', function () {
+            //NOTE shortest key will always be RID
+
             it("should return RID as the shortest key.", function () {
                 checkShortestKey("table_w_rid_key", ["RID"]);
             });
 
             it("should return the shortest key.", function () {
-                checkShortestKey("table_w_dif_len_keys", ["col_3"]);
+                checkShortestKey("table_w_dif_len_keys", ["RID"]);
             });
         });
 

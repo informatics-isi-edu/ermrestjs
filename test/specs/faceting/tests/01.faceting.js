@@ -433,7 +433,7 @@ exports.execute = function (options) {
 
             describe("regarding alternative tables for main table, ", function () {
                 // TODO: We need to rewrite this testcase because of system columns
-                it("if main table has an alternative for compact and not for detailed, we should add linkage from main to alternative to all the detailed related entities.", function (done) {
+                xit("if main table has an alternative for compact and not for detailed, we should add linkage from main to alternative to all the detailed related entities.", function (done) {
                     options.ermRest.resolve(createURL(tableWAlt)).then(function (ref) {
                         ref = ref.contextualize.compact;
                         var facetColumns = ref.facetColumns;
