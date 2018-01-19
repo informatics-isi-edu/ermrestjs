@@ -273,11 +273,6 @@
                     "comment": null,
                     "annotations": {},
                     "unique_columns": ["serial_col"]
-                },
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": ["RID"]
                 }
             ],
             "foreign_keys": [],
@@ -296,13 +291,6 @@
                     "nullok": false,
                     "type": {
                         "typename": "serial"
-                    }
-                },
-                {
-                    "name": "RID",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
                     }
                 }
             ],
@@ -420,31 +408,6 @@
                     "name": "int8_improper",
                     "default": "",
                     "type": { "typename": "int8" }
-                },
-                {
-                    "name": "RID",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
-                },
-                {
-                    "name": "RCB",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
-                },
-                {
-                    "name": "RMB",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
-                },
-                {
-                    "name": "RCT",
-                    "default": "",
-                    "type": { "typename": "timestamptz" }
-                },
-                {
-                    "name": "RMT",
-                    "default": "",
-                    "type": { "typename": "timestamptz" }
                 }
             ],
             "foreign_keys": [],
