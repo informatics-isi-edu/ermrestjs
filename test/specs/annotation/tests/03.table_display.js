@@ -133,7 +133,7 @@ exports.execute = function (options) {
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     expect(tuple.displayname.value).toBe(tuple.values[0]);
-                    expect(tuple.displayname.unformatted).toBe(expected[i]);
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[0]);
                 }
             });
         });
