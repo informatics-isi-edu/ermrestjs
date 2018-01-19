@@ -61,7 +61,7 @@ exports.execute = function (options) {
             expect(printText({key:123})).toBe('{"key":123}');
             expect(printText({key:123,subkey:{subsubkey:456}})).toBe('{"key":123,"subkey":{"subsubkey":456}}');
         });
-        
+
         it('printJSON() should show stringified version of JSON value.', function() {
             var printJSON = formatUtils.printJSON;
             expect(printJSON(null)).toBe('null');
@@ -141,22 +141,22 @@ exports.execute = function (options) {
             expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
 
             expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
-            
+
             //Check for proper rendering of video tag with no attributes
             var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
             var videoHTML = '<figure><figcaption>caption</figcaption><video controls ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
             expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with no attributes ");
-            
+
             //Check for proper rendering of video tag with height and width attributes
             var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
             var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
             expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with height and width attributes ");
-            
+
             //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
             var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
             var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
             expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with boolean attributes ");
-            
+
             //Check for proper rendering of video tag with some invalid attributes
             var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
             var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
@@ -205,7 +205,7 @@ exports.execute = function (options) {
             expect(moment).toBeDefined();
             expect(module._renderMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
             expect(module._renderMustacheTemplate("Todays date is {{$moment.dateString}}", {})).toBe("Todays date is " + moment.dateString);
-            
+
             expect(module._renderMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
             expect(module._renderMustacheTemplate("Current time is {{$moment.timeString}}", {})).toBe("Current time is " + moment.timeString);
 
@@ -214,6 +214,20 @@ exports.execute = function (options) {
             expect(module._renderMustacheTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
 
             expect(module._renderMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
+        });
+
+        it('module._valdiateMustacheTemplate() should accept templates that have $moment in them.', function () {
+            expect(module._validateMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe(true);
+            expect(module._validateMustacheTemplate("Todays date is {{$moment.dateString}}", {})).toBe(true);
+
+            expect(module._validateMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("Current time is {{$moment.timeString}}", {})).toBe(true);
+
+            expect(module._validateMustacheTemplate("ISO string is {{$moment.ISOString}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("GMT string is {{$moment.GMTString}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("UTC string is {{$moment.UTCString}}", {})).toBe(true);
+
+            expect(module._validateMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe(true);
         });
 
         var obj = {
