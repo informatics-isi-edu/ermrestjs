@@ -10,7 +10,6 @@ var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 var createCatalog = function() {
 	var defer = q.defer();
 
-	process.env.SCHEMAS = {};
 	// make http request to create a catalog to be used across all specs
 	ermrestUtils.importData({
         setup: { catalog: { acls: { 'enumerate': ['*'] } } },
@@ -18,9 +17,6 @@ var createCatalog = function() {
         authCookie: process.env.AUTH_COOKIE
     }).then(function (data) {
     	process.env.DEFAULT_CATALOG = data.catalogId;
-		console.log("done importing data...");
-		console.log(data.schema);
-		// process.env.SCHEMAS[data.schema.name] = data.schema;
 	    defer.resolve(data.catalogId);
     }, function (err) {
 	    defer.reject(err);

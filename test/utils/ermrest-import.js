@@ -13,16 +13,19 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 	var configFilePath = configFilePaths.shift();
 
 	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
-	
+
 	if (catalogId) config.catalog.id = catalogId;
 	else delete config.catalog.id;
-	
+
 	ermrestUtils.importData({
         setup: config,
         url: includes.url,
         authCookie: includes.authCookie
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
+		console.log("==============schema==============");
+		console.log(data.schema);
+		console.log("==============schema==============");
     	importSchemas(configFilePaths, defer, data.catalogId);
     }, function (err) {
         defer.reject(err);
@@ -58,7 +61,7 @@ exports.importAcls = function(params) {
 };
 
 var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
-	
+
 	if (configFilePaths.length == 0) {
 		defer.resolve(catalogId);
 		return;
@@ -91,14 +94,14 @@ var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
 
 exports.tear = function(configFilePaths, catalogId, deleteCatalog) {
 	var defer = q.defer();
-	
+
 	if (!configFilePaths || !configFilePaths.length || !catalogId) {
 		defer.resolve();
 		return defer.promise;
 	}
-	
+
 	configFilePaths = configFilePaths.reverse();
-	
+
 	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
 
 	return defer.promise;
