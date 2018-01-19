@@ -45,10 +45,10 @@ exports.execute = function (options) {
             tableName9 + "/@sort(id)";
 
         var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName10;
+            tableName10 + "/@sort(id)";
 
         var table11EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName11;
+            tableName11 + "/@sort(id)";
 
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;

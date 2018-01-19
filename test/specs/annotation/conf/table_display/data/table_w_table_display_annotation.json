@@ -1,5 +1,5 @@
-[{"id":10001, "firstname":"William", "lastname":"Shakespeare", "RID": "10001"},
-  {"id":10002, "firstname":"Mark", "lastname":"Twain", "RID": "10002"},
-  {"id":10003, "firstname":"Lewis", "lastname":"Carroll", "RID": "10003"},
-  {"id":10004, "firstname":"Jane", "lastname":"Austen", "RID": "10004"},
-  {"id":10005, "firstname":"Charles", "lastname":"Dickens", "RID": "10005"}]
+[{"id":10001, "firstname":"William", "lastname":"Shakespeare"},
+  {"id":10002, "firstname":"Mark", "lastname":"Twain"},
+  {"id":10003, "firstname":"Lewis", "lastname":"Carroll"},
+  {"id":10004, "firstname":"Jane", "lastname":"Austen"},
+  {"id":10005, "firstname":"Charles", "lastname":"Dickens"}]
