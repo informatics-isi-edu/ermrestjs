@@ -18,7 +18,9 @@ var createCatalog = function() {
         authCookie: process.env.AUTH_COOKIE
     }).then(function (data) {
     	process.env.DEFAULT_CATALOG = data.catalogId;
-		process.env.SCHEMAS[data.schema.name] = data.schema;
+		console.log("done importing data...");
+		console.log(data.schema);
+		// process.env.SCHEMAS[data.schema.name] = data.schema;
 	    defer.resolve(data.catalogId);
     }, function (err) {
 	    defer.reject(err);
