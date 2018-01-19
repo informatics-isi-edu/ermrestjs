@@ -17,15 +17,16 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 	if (catalogId) config.catalog.id = catalogId;
 	else delete config.catalog.id;
 
+	process.env.SCHEMAS = {};
 	ermrestUtils.importData({
         setup: config,
         url: includes.url,
         authCookie: includes.authCookie
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
-		console.log("==============schema==============");
-		console.log(data.schema);
-		console.log("==============schema==============");
+		if (data.schema) {
+			process.env.SCHEMAS[data.schema.name] = data.schema;
+		}
     	importSchemas(configFilePaths, defer, data.catalogId);
     }, function (err) {
         defer.reject(err);
