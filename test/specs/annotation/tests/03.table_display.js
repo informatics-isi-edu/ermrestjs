@@ -1,15 +1,6 @@
 exports.execute = function (options) {
 
     describe("2016:table-display annotation test", function () {
-        console.log("========================");
-        console.log(process.env.SCHEMAS['schema_table_display']);
-        // console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']));
-        // console.log("==================test==========");
-        // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation'].entities);
-        // console.log("==================test==========");
-        // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_w_table_display_annotation_w_markdown_pattern'].entities);
-
-        console.log("========================");
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "schema_table_display",
@@ -107,6 +98,16 @@ exports.execute = function (options) {
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
+                console.log("========================");
+                console.log(process.env.SCHEMAS['schema_table_display']);
+                // console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']));
+                // console.log("==================test==========");
+                // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation'].entities);
+                // console.log("==================test==========");
+                // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_w_table_display_annotation_w_markdown_pattern'].entities);
+
+                console.log("========================");
+
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
