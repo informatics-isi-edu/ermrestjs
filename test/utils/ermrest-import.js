@@ -2,6 +2,7 @@ var q = require('q');
 var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
+process.env.SCHEMAS = {};
 
 var importSchemas = function(configFilePaths, defer, catalogId) {
 
@@ -17,7 +18,6 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 	if (catalogId) config.catalog.id = catalogId;
 	else delete config.catalog.id;
 
-	process.env.SCHEMAS = {};
 	ermrestUtils.importData({
         setup: config,
         url: includes.url,
@@ -25,6 +25,7 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
 		if (data.schema) {
+			console.log("ATTACHED SCHEMA");
 			process.env.SCHEMAS[data.schema.name] = data.schema;
 		}
     	importSchemas(configFilePaths, defer, data.catalogId);
