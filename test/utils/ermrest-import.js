@@ -25,7 +25,7 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
 		if (data.schema) {
-			console.log("ATTACHED SCHEMA");
+			console.log("ATTACHED SCHEMA " + data.schema.name);
 			process.env.SCHEMAS[data.schema.name] = data.schema;
 		}
     	importSchemas(configFilePaths, defer, data.catalogId);
