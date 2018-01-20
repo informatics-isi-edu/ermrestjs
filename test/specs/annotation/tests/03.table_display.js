@@ -3,7 +3,7 @@ exports.execute = function (options) {
     describe("2016:table-display annotation test", function () {
         console.log("========================");
 
-        console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']);
+        console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']));
         console.log("==================test==========");
         console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation'].entities);
         console.log("==================test==========");
