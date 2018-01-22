@@ -98,7 +98,7 @@ exports.execute = function (options) {
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                console.log("========================");
+                console.log("===========test=============");
                 console.log(process.env.SCHEMAS['schema_table_display']);
                 // console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']));
                 // console.log("==================test==========");
