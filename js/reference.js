@@ -6313,7 +6313,7 @@
             var width, range;
             var absMax = max;
 
-            if (this.column.type.name.indexOf("date") > -1) {
+            if (this.column.type.rootName.indexOf("date") > -1) {
                 var minMoment = moment(min),
                     maxMoment = moment(max);
 
@@ -6323,12 +6323,13 @@
 
                 width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
                 absMax = minMoment.add(width*bucketCount, 'd').format('YYYY-MM-DD');
-            } else if (this.column.type.name.indexOf("timestamp") > -1) {
+            } else if (this.column.type.rootName.indexOf("timestamp") > -1) {
                 var minMoment = moment(min),
                     maxMoment = moment(max);
 
                 if (maxMoment.diff(minMoment) === 0) {
                     maxMoment.add(1, 's');
+                    absMax = maxMoment.format('YYYY-MM-DDTHH:mm:ssZ');
                 }
 
                 width = moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds();
@@ -6338,7 +6339,7 @@
                 }
 
                 width = (max-min)/bucketCount;
-                if (this.column.type.name.indexOf("int") > -1) {
+                if (this.column.type.rootName.indexOf("int") > -1) {
                     width = Math.ceil(width);
                     absMax = (min + (width*bucketCount));
                 }
@@ -6355,7 +6356,7 @@
                 throw new Error("Cannot use this API on pseudo-column.");
             }
 
-            if (module._histogramSupportedTypes.indexOf(this.column.type.name) === -1) {
+            if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
                 throw new Error("Binning is not supported on column type " + this.column.type.name);
             }
 

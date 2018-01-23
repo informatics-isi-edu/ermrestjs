@@ -926,9 +926,9 @@ BucketAttributeGroupReference.prototype.read = function () {
 
     function calculateWidthLabel(min, binWidth) {
         var nextLabel;
-        if (currRef._keyColumns[0].type.name == "date") {
+        if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
             nextLabel = moment(min).add(binWidth, 'd').format('YYYY-MM-DD');
-        } else if (currRef._keyColumns[0].type.name.indexOf("timestamp") > -1) {
+        } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
             nextLabel = moment(min).add(binWidth, 's').format("YYYY-MM-DD hh:mm:ss");
         } else {
             nextLabel = (min + binWidth);
@@ -961,10 +961,10 @@ BucketAttributeGroupReference.prototype.read = function () {
                     min = response.data[i].c1[1];
                     max = response.data[i].c1[2];
 
-                    if (currRef._keyColumns[0].type.name == "date") {
+                    if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
                         min = min !== null ? moment(min).format("YYYY-MM-DD") : null;
                         max = max !== null ? moment(max).format("YYYY-MM-DD") : null;
-                    } else if (currRef._keyColumns[0].type.name.indexOf("timestamp") > -1) {
+                    } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
                         min = min !== null ? moment(min).format("YYYY-MM-DD hh:mm:ss") : null;
                         max = max !== null ? moment(max).format("YYYY-MM-DD hh:mm:ss") : null;
                     }
@@ -985,7 +985,8 @@ BucketAttributeGroupReference.prototype.read = function () {
             }
 
             var binWidth = currRef._options.binWidth;
-            for (var j=0; j<data.x.length; j++) {
+            // This should be set to 12 to include the # of bins we want to display + the above max and below min bucket
+            for (var j=0; j<12; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
                 // NOTE: debugging statments
                 // console.log("===========" + j + "===========");

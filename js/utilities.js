@@ -2231,9 +2231,10 @@
         MODULE: 'module'
     });
 
+    // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
-        'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
+        'serial2', 'serial4', 'serial8', 'timestamptz', 'timestamp', 'date'
     ];
 
     // these types should be ignored for usage in heuristic for facet
