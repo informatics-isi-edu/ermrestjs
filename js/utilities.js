@@ -2260,7 +2260,9 @@
       invalidInput : "Invalid Input",
       invalidURI : "Invalid URI",
       noDataChanged : "No Data Changed",
-      noConnectionError : "No Connection Error"
+      noConnectionError : "No Connection Error",
+      invalidFacetSorting : "Invalid Facet Sorting",
+      invalidPageCriteria : "Invalid Page Criteria"
       });
 
     module._errorMessage = Object.freeze({

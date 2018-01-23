@@ -47,6 +47,7 @@
      * {@link ERMrest.ForbiddenError},
      * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
+     * {@link ERMrest.InvalidFacetSorting},
      */
     module.resolve = function (uri, contextHeaderParams) {
         try {
@@ -1142,7 +1143,7 @@
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
+                            throw new module.InvalidFacetSorting("", "Column " + sortObject[i].column + " is not sortable.");
                         }
 
                         // use the sort columns instead of the actual column.
@@ -1759,7 +1760,7 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-                
+
                 this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {

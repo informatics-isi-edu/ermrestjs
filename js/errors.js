@@ -17,7 +17,9 @@
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
-
+    module.InvalidFacetSorting = InvalidFacetSorting
+    module.invalidPageCriteria = InvalidPageCriteria
+    
     /**
      * @memberof ERMrest
      * @param  {int} code           http error code
@@ -273,7 +275,7 @@
      * @memberof ERMrest
      * @param {string} message error message
      * @constructor
-     * @desc A no internert was passed to the API.
+     * @desc A no internet was passed to the API.
      */
     function NoConnectionError(message) {
         message = message;
@@ -282,3 +284,29 @@
 
     NoConnectionError.prototype = Object.create(Error.prototype);
     NoConnectionError.prototype.constructor = NoConnectionError;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc Invalid sorting conditions
+     */
+    function InvalidFacetSorting(message) {
+        ERMrestError.call(this, '', module._errorStatus.invalidFacetSorting, message);
+    }
+
+    InvalidFacetSorting.prototype = Object.create(Error.prototype);
+    InvalidFacetSorting.prototype.constructor = InvalidFacetSorting;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc Invalid page conditions
+     */
+    function InvalidPageCriteria(message) {
+        ERMrestError.call(this, '', module._errorStatus.invalidPageCriteria, message);
+    }
+
+    InvalidPageCriteria.prototype = Object.create(Error.prototype);
+    InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
