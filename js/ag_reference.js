@@ -202,8 +202,13 @@ AttributeGroupReference.prototype = {
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                 contextHeaderParams = {"action": "read"};
             }
+
+            contextHeaderParams.page_size = limit;
+
+            var headers = {};
+            headers[module._contextHeaderName] = contextHeaderParams;
             var config = {
-                headers: this._generateContextHeader(contextHeaderParams, limit)
+                headers: headers
             };
             this._server._http.get(uri, config).then(function (response) {
 

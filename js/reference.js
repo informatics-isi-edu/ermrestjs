@@ -2039,27 +2039,28 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestUri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
+        /**
+         * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+         * @type {Object}
+         */
         get defaultLogInfo() {
-            if (this._defaultLogInfo === undefined) {
-                var obj = {};
-                obj.table = this.table.name;
+            var obj = {};
+            obj.schema_table = this.table.schema.name + ":" + this.table.name;
 
-                if (this.location.facets) {
-                    obj.facets = this.location.facets;
-                } else if (this.location.filter) {
-                    if (this.location.filter.facet) {
-                        obj.facets = this.location.filter.facet;
-                    } else {
-                        obj.filters = this.location.filtersString;
-                    }
+            if (this.location.facets) {
+                obj.facet = this.location.facets.decoded;
+            } else if (this.location.filter) {
+                if (this.location.filter.facet) {
+                    obj.facet = this.location.filter.facet;
+                } else {
+                    obj.filter = this.location.filtersString;
                 }
-
-                this._defaultLogInfo = obj;
             }
-            return this._defaultLogInfo;
+
+            return obj;
         },
 
         /**
@@ -2109,9 +2110,17 @@
          * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
          * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
          */
-        getAggregates: function(aggregateList) {
+        getAggregates: function(aggregateList, contextHeaderParams) {
             var defer = module._q.defer();
             var url;
+
+            // create the context header params for log
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {"action": "aggregate"};
+            }
+            var config = {
+                headers: this._generateContextHeader(contextHeaderParams)
+            };
 
             var URL_LENGTH_LIMIT = 2048;
 
@@ -2151,7 +2160,7 @@
             var aggregatePromises = [];
             var http = this._server._http;
             for (var j = 0; j < urlSet.length; j++) {
-                aggregatePromises.push(http.get(urlSet[j]));
+                aggregatePromises.push(http.get(urlSet[j], config));
             }
 
             module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -2792,6 +2801,8 @@
             }
 
             for (var key in this.defaultLogInfo) {
+                // only add the values that are not defined.
+                if (key in contextHeaderParams) continue;
                 contextHeaderParams[key] = this.defaultLogInfo[key];
             }
 
@@ -5238,7 +5249,7 @@
         this._column = column;
 
         /**
-         * [reference description]
+         * The reference that this facet blongs to
          * @type {ERMrest.Reference}
          */
         this.reference = reference;
