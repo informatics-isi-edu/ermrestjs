@@ -929,7 +929,7 @@ BucketAttributeGroupReference.prototype.read = function () {
         if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
             nextLabel = moment(min).add(binWidth, 'd').format('YYYY-MM-DD');
         } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-            nextLabel = moment(min).add(binWidth, 's').format("YYYY-MM-DD hh:mm:ss");
+            nextLabel = moment(min).add(binWidth, 's').format("YYYY-MM-DD HH:mm:ss");
         } else {
             nextLabel = (min + binWidth);
         }
@@ -965,12 +965,12 @@ BucketAttributeGroupReference.prototype.read = function () {
                         min = min !== null ? moment(min).format("YYYY-MM-DD") : null;
                         max = max !== null ? moment(max).format("YYYY-MM-DD") : null;
                     } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                        min = min !== null ? moment(min).format("YYYY-MM-DD hh:mm:ss") : null;
-                        max = max !== null ? moment(max).format("YYYY-MM-DD hh:mm:ss") : null;
+                        min = min !== null ? moment(min).format("YYYY-MM-DD HH:mm:ss") : null;
+                        max = max !== null ? moment(max).format("YYYY-MM-DD HH:mm:ss") : null;
                     }
 
-                    labels.min[index] = min
-                    labels.max[index] = max
+                    labels.min[index] = min;
+                    labels.max[index] = max;
 
                     data.x[index] = min;
                     data.y[index] = response.data[i].c2;
@@ -984,9 +984,8 @@ BucketAttributeGroupReference.prototype.read = function () {
                 // make it bin at index 0
             }
 
-            var binWidth = currRef._options.binWidth;
             // This should be set to 12 to include the # of bins we want to display + the above max and below min bucket
-            for (var j=0; j<12; j++) {
+            for (var j=0; j<currRef._options.bucketCount+2; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
                 // NOTE: debugging statments
                 // console.log("===========" + j + "===========");
@@ -995,14 +994,32 @@ BucketAttributeGroupReference.prototype.read = function () {
                 // console.log("label max when padding: ", labels.max[j]);
                 if (data.x[j] === undefined) {
                     // determine x axis label
+
+                    // figure out min first
                     // no label for index 0
                     if (j==0) {
                         min = null;
                     } else {
                         min = labels.max[j-1];
                     }
+
+                    // use min to determine max
                     // if there was a response row for next index, get min of next value
-                    max = labels.min[j+1] ? labels.min[j+1] : calculateWidthLabel(min, binWidth);
+                    if (labels.min[j+1]) {
+                        max = labels.min[j+1];
+                    } else {
+                        if (j == 0) {
+                            max = currRef._options.absMin;
+
+                            if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
+                                max = moment(max).format("YYYY-MM-DD");
+                            } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
+                                max = moment(max).format("YYYY-MM-DD HH:mm:ss");
+                            }
+                        } else {
+                            max = calculateWidthLabel(min, currRef._options.binWidth);
+                        }
+                    }
 
                     labels.min[j] = min;
                     labels.max[j] = max;

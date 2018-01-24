@@ -5331,9 +5331,16 @@
             return this._isEntityMode;
         },
 
+        /**
+         * Returns true if the plotly histogram graph should be shown in the UI
+         * If _facetObject.binning is not defined, the value is true. By default
+         * the histogram should be shown unless specified otherwise
+         *
+         * @type {Boolean}
+         */
         get showHistogram() {
             if (this._showHistogram === undefined) {
-                this._showHistogram = (this._facetObject.histogram === false) ? false : true;
+                this._showHistogram = (this._facetObject.binning === false) ? false : true;
             }
             return this._showHistogram;
         },
@@ -6310,12 +6317,12 @@
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
-            var width, range;
+            var width, range, minMoment, maxMoment;
             var absMax = max;
 
             if (this.column.type.rootName.indexOf("date") > -1) {
-                var minMoment = moment(min),
-                    maxMoment = moment(max);
+                minMoment = moment(min);
+                maxMoment = moment(max);
 
                 if (maxMoment.diff(minMoment) === 0) {
                     maxMoment.add(1, 'd');
@@ -6324,15 +6331,20 @@
                 width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
                 absMax = minMoment.add(width*bucketCount, 'd').format('YYYY-MM-DD');
             } else if (this.column.type.rootName.indexOf("timestamp") > -1) {
-                var minMoment = moment(min),
-                    maxMoment = moment(max);
+                minMoment = moment(min);
+                maxMoment = moment(max);
 
                 if (maxMoment.diff(minMoment) === 0) {
-                    maxMoment.add(1, 's');
+                    maxMoment.add(10*bucketCount, 's');
                     absMax = maxMoment.format('YYYY-MM-DDTHH:mm:ssZ');
                 }
 
-                width = moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds();
+                width = Math.round( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds() );
+
+                // increase width to be minimum of 1 second
+                if (width < 1) {
+                    width = 1;
+                }
             } else {
                 if (max-min === 0) {
                     max++;
