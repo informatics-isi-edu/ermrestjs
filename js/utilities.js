@@ -1988,6 +1988,10 @@
      * @return {boolean} true if all the used keys have values
      */
     module._validateMustacheTemplate = function (template, keyValues, ignoredColumns) {
+
+        // Inject ermrest internal utility objects such as date
+        module._addErmrestVarsToTemplate(keyValues);
+
         var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
