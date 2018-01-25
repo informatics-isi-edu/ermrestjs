@@ -194,7 +194,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
         var assetCompactExpectedValue = [
@@ -297,7 +297,7 @@ exports.execute = function (options) {
          *  5: col_byte
          *  6: col_md5
          *  7: col_sha256
-         *  8: col_asset_1 (asset with default options) is null
+         *  8: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern)
          *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display
          *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
          *  11: col_asset_4 (asset with type not text)
@@ -307,9 +307,10 @@ exports.execute = function (options) {
          *  1: table_w_asset_fk_to_outbound *ForeignKeyPseudoColumn*
          *  2: col_1
          *  3: col_2
-         *  4: col_asset_2 *AssetPseudoColumn*
-         *  5: col_asset_3 *AssetPseudoColumn*
-         *  6: col_asset_4
+         *  4: col_asset_1 *AssetPseudoColumn* (disabled)
+         *  5: col_asset_2 *AssetPseudoColumn*
+         *  6: col_asset_3 *AssetPseudoColumn*
+         *  7: col_asset_4
          *
          *
          *  contexts that are used:
@@ -450,9 +451,17 @@ exports.execute = function (options) {
                     });
 
 
-                    describe("for checking table which has an asset column with invalid url pattern in entry context, ", function() {
+                    describe("for checking table which has asset column without upload feature, ", function() {
 
                         var assetRef1;
+
+                        var checkCol = function (name) {
+                            var colIndex = assetRef1.columns.findIndex(function(c) { return c.name === name; });
+                            expect(colIndex).not.toBe(-1, "column doesn't exist.");
+                            var col = assetRef1.columns[colIndex];
+                            expect(col.isAsset).toBe(true, "column is not asset.");
+                            expect(col.inputDisabled).toBe(true, "column was not disabled.");
+                        }
 
                         beforeAll(function (done) {
                             options.ermRest.resolve(tableWithInvalidUrlPatternURI, { cid: "test" }).then(function (response) {
@@ -465,26 +474,20 @@ exports.execute = function (options) {
                             });
                         });
 
-                        it("'uri1' column should not be returned in visible-columns as it has no url_pattern property", function() {
-                            var column = assetRef1.columns.find(function(c) { return c.name === "uri1" });
-                            expect(column).toBeUndefined();
+                        it("should create asset column if annotation is available, but disable it if url_pattern is missing", function() {
+                            checkCol("uri1");
                         });
 
-                        it("'uri2' column should not be returned in visible-columns as it doesn't has 'hatrac' in url_pattern (/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
-                            var column = assetRef1.columns.find(function(c) { return c.name === "uri2" });
-                            expect(column).toBeUndefined();
+                        it("should create asset column if annotation is available, but disable it if url_pattern is not an string", function() {
+                            checkCol("uri2");
                         });
 
-                        it("'uri3' column should be returned in visible-columns and should be of asset type as it has 'hatrac' in url_pattern (/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
-                            var column = assetRef1.columns.find(function(c) { return c.name === "uri3" });
-                            expect(column).toBeDefined();
-                            expect(column.isAsset).toBe(true);
+                        it("should create asset column if annotation is available, but disable it if url_pattern is an empty string", function() {
+                            checkCol("uri3");
                         });
 
-                        it("'uri3' column should be returned in visible-columns and should be of asset type as it has 'hatrac' in url_pattern (https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}) property", function() {
-                            var column = assetRef1.columns.find(function(c) { return c.name === "uri4" });
-                            expect(column).toBeDefined();
-                            expect(column.isAsset).toBe(true);
+                        it("should create asset column if annotation is available, but disable it if browser_upload is false", function() {
+                            checkCol("uri4");
                         });
                     });
                 });
@@ -675,7 +678,7 @@ exports.execute = function (options) {
                                 expected: [
                                     "id",
                                     ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
-                                    "col_1", "col_2", "col_asset_2", "col_asset_3", "col_asset_4"
+                                    "col_1", "col_2", "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4"
                                 ]
                             }]);
                         });
@@ -704,10 +707,10 @@ exports.execute = function (options) {
                     });
 
                     it("if column type is not `text`, should ignore the asset annotation.", function() {
-                      expect(assetRefCompactCols[11].name).toBe("col_asset_4");
-                      expect(assetRefCompactCols[11].isPseudo).toBe(false);
-                      expect(assetRefEntry.columns[6].name).toBe("col_asset_4");
-                      expect(assetRefEntry.columns[6].isPseudo).toBe(false);
+                      expect(assetRefCompactCols[11].name).toBe("col_asset_4", "invalid name for compact");
+                      expect(assetRefCompactCols[11].isPseudo).toBe(false, "invalid isPseudo for compact");
+                      expect(assetRefEntry.columns[7].name).toBe("col_asset_4", "invalid name for entry");
+                      expect(assetRefEntry.columns[7].isPseudo).toBe(false, "invalid isPseudo for entry");
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {

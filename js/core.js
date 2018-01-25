@@ -2062,7 +2062,7 @@
                         message: "Automatically generated"
                     };
                 }
-            } else if (context == module._contexts.EDIT) {
+            } else if (context == module._contexts.EDIT || context == module._contexts.ENTRY) {
                 if (this.isSystemColumn || this.isImmutable || isGenerated || isImmutable || isSerial) {
                     return true;
                 }
