@@ -11,6 +11,8 @@ exports.execute = function (options) {
             table,
             columnName = "uri",
             column,
+            columnNameWOHatrac = "uri_wo_hatrac",
+            columnWOHatrac,
             template = "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.md5_hex}}}",
             ermRest,
             reference;
@@ -61,6 +63,7 @@ exports.execute = function (options) {
                 reference = response;
                 reference = reference.contextualize.entryCreate;
                 column = reference.columns.find(function(c) { return c.name == columnName;  });
+                columnWOHatrac = reference.columns.find(function(c) { return c.name == columnNameWOHatrac;  });
 
                 if (!column) throw new Error("Unable to find column " + columnName);
                 done();
@@ -77,7 +80,7 @@ exports.execute = function (options) {
                 describe("For file " + file.name + "," , function() {
                     var currentTime = Date.now();
 
-                    var uploadObj,
+                    var uploadObj, uploadObj2,
                         invalidRow = { timestamp: null, uri : { md5_hex: "wfqewf4234" } },
                         validRow = { timestamp: currentTime, uri : { md5_hex: "wfqewf4234" } };
 
@@ -86,6 +89,12 @@ exports.execute = function (options) {
                         try {
                             uploadObj = new ermRest.Upload(file.file, {
                                 column: column,
+                                reference: reference,
+                                chunkSize: 5 * 1024 * 1024
+                            });
+
+                            uploadObj2 = new ermRest.Upload(file.file, {
+                                column: columnWOHatrac,
                                 reference: reference,
                                 chunkSize: 5 * 1024 * 1024
                             });
@@ -102,6 +111,10 @@ exports.execute = function (options) {
                         expect(uploadObj.file.size).toBe(file.size);
                         expect(uploadObj.file.name).toBe(file.name);
                         expect(uploadObj.file.type).toBe(file.type);
+                    });
+
+                    it ("should return false for `validateURL` method if tempalte doesn't start with hatrac", function () {
+                        expect(uploadObj2.validateURL(validRow)).toBe(false);
                     });
 
                     it("should return false for `validateurl` method as one of the properties 'timestamp' is null in template `" + template + "`", function() {
@@ -159,7 +172,7 @@ exports.execute = function (options) {
                 exec('rm ' + filePath);
             });
             // no reason to remove the files from hatrac as they were never uploaded, just checksums were calculated
-            done()
+            done();
         })
 
     });
