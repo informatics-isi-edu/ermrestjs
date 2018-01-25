@@ -54,7 +54,7 @@ exports.execute = function (options) {
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
 
-        var tables = options.schemas[schemaName].tables;
+        var tables;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -93,6 +93,7 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
+            tables = options.schemas[schemaName].tables;
         });
 
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
