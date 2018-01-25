@@ -926,6 +926,7 @@
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
          * Both are {@link ERMrest.Page} of results.
          * or rejected with any of the following errors:
@@ -933,7 +934,7 @@
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        create: function(data) {
+        create: function(data, contextHeaderParams) {
             var self = this;
             try {
                 //  verify: data is not null, data has non empty tuple set
@@ -952,8 +953,16 @@
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
 
+                // create the context header params for log
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "create"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, data.length)
+                };
+
                 //  do the 'post' call
-                this._server._http.post(uri, data).then(function(response) {
+                this._server._http.post(uri, data, config).then(function(response) {
                     var etag = response.headers().etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
@@ -1071,6 +1080,7 @@
          *
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
+         * @param {Object} contextHeaderParams the object that we want to log.
          *
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
@@ -1079,7 +1089,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit) {
+        read: function(limit, contextHeaderParams) {
             try {
 
                 var defer = module._q.defer();
@@ -1271,7 +1281,13 @@
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                this._server._http.get(uri).then(function readReference(response) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "read"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, limit)
+                };
+                this._server._http.get(uri, config).then(function (response) {
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -1364,13 +1380,14 @@
          * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
          * Both are {@link ERMrest.Page} of results.
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        update: function(tuples) {
+        update: function(tuples, contextHeaderParams) {
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
@@ -1591,7 +1608,13 @@
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "update"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, submissionData.length)
+                };
+                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
                     // Some data was not updated
                     if (response.status === 200 && response.data.length < submissionData.length) {
                         var updatedRows = response.data;
@@ -1737,11 +1760,11 @@
 
         /**
          * Deletes the referenced resources.
-         *
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function() {
+        delete: function(contextHeaderParams) {
             try {
 
                 var defer = module._q.defer();
@@ -1759,8 +1782,13 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-
-                this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "delete"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams)
+                };
+                this._server._http.delete(this.location.ermrestUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
@@ -2011,7 +2039,28 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestUri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+        },
+
+        /**
+         * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+         * @type {Object}
+         */
+        get defaultLogInfo() {
+            var obj = {};
+            obj.schema_table = this.table.schema.name + ":" + this.table.name;
+
+            if (this.location.facets) {
+                obj.facet = this.location.facets.decoded;
+            } else if (this.location.filter) {
+                if (this.location.filter.facet) {
+                    obj.facet = this.location.filter.facet;
+                } else {
+                    obj.filter = this.location.filtersString;
+                }
+            }
+
+            return obj;
         },
 
         /**
@@ -2061,9 +2110,17 @@
          * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
          * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
          */
-        getAggregates: function(aggregateList) {
+        getAggregates: function(aggregateList, contextHeaderParams) {
             var defer = module._q.defer();
             var url;
+
+            // create the context header params for log
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {"action": "aggregate"};
+            }
+            var config = {
+                headers: this._generateContextHeader(contextHeaderParams)
+            };
 
             var URL_LENGTH_LIMIT = 2048;
 
@@ -2103,7 +2160,7 @@
             var aggregatePromises = [];
             var http = this._server._http;
             for (var j = 0; j < urlSet.length; j++) {
-                aggregatePromises.push(http.get(urlSet[j]));
+                aggregatePromises.push(http.get(urlSet[j], config));
             }
 
             module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -2736,6 +2793,26 @@
             }
 
             return newRef;
+        },
+
+        _generateContextHeader: function (contextHeaderParams, page_size) {
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {};
+            }
+
+            for (var key in this.defaultLogInfo) {
+                // only add the values that are not defined.
+                if (key in contextHeaderParams) continue;
+                contextHeaderParams[key] = this.defaultLogInfo[key];
+            }
+
+            if (isInteger(page_size)) {
+                contextHeaderParams.page_size = page_size;
+            }
+
+            var headers = {};
+            headers[module._contextHeaderName] = contextHeaderParams;
+            return headers;
         }
     };
 
@@ -5172,7 +5249,7 @@
         this._column = column;
 
         /**
-         * [reference description]
+         * The reference that this facet blongs to
          * @type {ERMrest.Reference}
          */
         this.reference = reference;
