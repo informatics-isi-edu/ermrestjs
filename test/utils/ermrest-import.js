@@ -4,10 +4,10 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 process.env.SCHEMAS = {};
 
-var importSchemas = function(configFilePaths, defer, catalogId) {
+var importSchemas = function(configFilePaths, defer, catalogId, schemas) {
 
 	if (!configFilePaths.length) {
-		defer.resolve(catalogId);
+		defer.resolve({catalogId: catalogId, schemas: schemas});
 		return;
 	}
 
@@ -25,9 +25,8 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
 		if (data.schema) {
-			console.log("ATTACHED SCHEMA " + data.schema.name);
-			console.log("tables", data.schema.tables);
-			process.env.SCHEMAS[data.schema.name] = data.schema;
+			schemas[data.schema.name] = data.schema;
+			console.log("Attached schema " + data.schema.name);
 		}
     	importSchemas(configFilePaths, defer, data.catalogId);
     }, function (err) {
@@ -39,13 +38,13 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 };
 
 exports.importSchemas = function(configFilePaths, catalogId) {
-	var defer = q.defer();
+	var defer = q.defer(), schemas = {};
 	if (!configFilePaths || !configFilePaths.length) {
-		defer.resolve(catalogId);
+		defer.resolve({catalogId: catalogId, schemas: schemas});
 		return defer.promise;
 	}
 
-	importSchemas(configFilePaths.slice(0), defer, catalogId);
+	importSchemas(configFilePaths.slice(0), defer, catalogId, schemas);
 	return defer.promise;
 };
 

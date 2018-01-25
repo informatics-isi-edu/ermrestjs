@@ -54,6 +54,8 @@ exports.execute = function (options) {
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
 
+        var tables = options.schemas[schemaName].tables;
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -98,18 +100,6 @@ exports.execute = function (options) {
             var limit = 10;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                console.log("===========test=============");
-                for (var t in process.env.SCHEMAS) {
-                    console.log(t);
-                }
-                // console.log(console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation']));
-                // console.log("==================test==========");
-                // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_wo_title_wo_annotation'].entities);
-                // console.log("==================test==========");
-                // console.log(process.env.SCHEMAS['schema_table_display'].tables['table_w_table_display_annotation_w_markdown_pattern'].entities);
-
-                console.log("========================");
-
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
 
@@ -507,13 +497,19 @@ exports.execute = function (options) {
                         ""
                     ];
 
+                    var findRID = function (id) {
+                        return tables[tableName8].entities[0].filter(function (e) {
+                            return e.id === id;
+                        })[0].RID;
+                    };
+
                     var val;
                     page.tuples.forEach(function (t, index) {
                         if (typeof expected[i] === "string") {
                             val = expected[i];
                         } else {
-                            val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/id=' +
-                                  expected[index].id + '">' + expected[index].rowName + '</a>';
+                            val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/RID=' +
+                                  findRID(expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
                     });

@@ -262,7 +262,6 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-        * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -2216,7 +2215,6 @@ Constructor for a ParsedFilter.
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-    * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -2304,17 +2302,6 @@ NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers
 Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+session"></a>
-
-#### reference.session
-The session object from the server
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| session | <code>Object</code> | the session object |
-
 <a name="ERMrest.Reference+table"></a>
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
