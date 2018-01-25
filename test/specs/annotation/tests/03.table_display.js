@@ -499,7 +499,7 @@ exports.execute = function (options) {
                     ];
 
                     var findRID = function (id) {
-                        return tables[tableName8].entities[0].filter(function (e) {
+                        return tables[tableName8].entities.filter(function (e) {
                             return e.id === id;
                         })[0].RID;
                     };
