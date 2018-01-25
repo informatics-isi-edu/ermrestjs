@@ -25,9 +25,10 @@ exports.runTests = function (options) {
         // Import the schemas
         beforeAll(function (done) {
             importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG)
-                .then(function (catalogId) {
-                    console.log("Data imported with catalogId " + catalogId);
-                    testOptions.catalogId = catalogId;
+                .then(function (res) {
+                    console.log("Data imported with catalogId " + res.catalogId);
+                    testOptions.catalogId = res.catalogId;
+                    testOptions.schemas = res.schemas;
                     return server.catalogs.get(process.env.DEFAULT_CATALOG);
                 }).then(function (response) {
                     testOptions.catalog = response;
