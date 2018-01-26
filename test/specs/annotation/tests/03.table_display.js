@@ -498,6 +498,10 @@ exports.execute = function (options) {
                         ""
                     ];
 
+                    console.log("--------");
+                    console.log(tables[tableName5].entities);
+                    console.log("--------");
+
                     var findRID = function (id) {
                         return tables[tableName5].entities.filter(function (e) {
                             return e.id === id;
