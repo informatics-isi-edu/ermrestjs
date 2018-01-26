@@ -130,7 +130,8 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
 
@@ -138,7 +139,8 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
         }
@@ -819,7 +821,8 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        throw new module.InvalidFacetSorting("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.");
+                        pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                        throw new module.InvalidFacetSorting("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", pathWithCatalog);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -848,7 +851,8 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort");
+                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", pathWithCatalog);
                 }
             }
 
@@ -869,7 +873,8 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.");
+                        pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.", pathWithCatalog);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -898,7 +903,8 @@
                     this._afterObject = values;
                     this._after = _getPagingModifier(values, false);
                 } else {
-                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort");
+                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", pathWithCatalog);
                 }
             }
 
@@ -969,7 +975,7 @@
         var modifier = "@sort(";
         for (var i = 0; i < sort.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            if (!sort[i].column) throw new module.InvalidFacetSorting("Invalid sort object.");
+            if (!sort[i].column) throw new module.InvalidInputError("Invalid sort object.");
             modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
         }
         modifier = modifier + ")";

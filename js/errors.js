@@ -18,8 +18,8 @@
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
     module.InvalidFacetSorting = InvalidFacetSorting
-    module.invalidPageCriteria = InvalidPageCriteria
-    
+    module.InvalidPageCriteria = InvalidPageCriteria
+
     /**
      * @memberof ERMrest
      * @param  {int} code           http error code
@@ -28,11 +28,15 @@
      * @param  {string} subMessage  technical details about the error. Appear in collapsible span in the modal box
      * @constructor
      */
-    function ERMrestError(code, status, message, subMessage) {
+    function ERMrestError(code, status, message, subMessage, redirectPath) {
         this.code = code;
         this.status = status;
         this.message = message;
         this.subMessage = subMessage;
+        if(redirectPath !=='undefined' && redirectPath != ''){
+           this.errorData = {};
+           this.errorData.redirectPath = redirectPath;
+        }
     }
 
     ERMrestError.prototype = Object.create(Error.prototype);
@@ -285,17 +289,50 @@
     NoConnectionError.prototype = Object.create(Error.prototype);
     NoConnectionError.prototype.constructor = NoConnectionError;
 
+
+    // function findAndReplace(path, replace){
+    //   if (path != 'undefined' && path.indexOf(replace) !== -1) {
+    //      newReg = new RegExp('/('+replace+'\([^\)]*\))/')
+    //      match = newReg[Symbol.match](replace);
+    //      console.log(match);
+    //       // newPath = path.replace(afterLiteral, '');
+    //   }
+    // }
+
+    function removePageCondition(path){
+      var newPath;
+      if (path != 'undefined' && path.indexOf("@before") !== -1) {
+        beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
+          path = path.replace(beforerLiteral, '');
+      }
+      if (path != 'undefined' && path.indexOf("@after") !== -1) {
+        afterLiteral = path.match(/(@after\([^\)]*\))/)[1];
+          path = path.replace(afterLiteral, '');
+      }
+      return path;
+    }
+    function removeSortCondition(path){
+      var newPath;
+      if (path != 'undefined' && path.indexOf("@before") !== -1) {
+        beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
+          newPath = path.replace(beforerLiteral, '');
+      }
+      return newPath;
+    }
+
+
     /**
      * @memberof ERMrest
      * @param {string} message error message
      * @constructor
      * @desc Invalid sorting conditions
      */
-    function InvalidFacetSorting(message) {
-        ERMrestError.call(this, '', module._errorStatus.invalidFacetSorting, message);
+    function InvalidFacetSorting(message, path) {
+        var newPath = removePageCondition(removeSortCondition(path));
+        ERMrestError.call(this, '', module._errorStatus.invalidFacetSorting, message, '', newPath);
     }
 
-    InvalidFacetSorting.prototype = Object.create(Error.prototype);
+    InvalidFacetSorting.prototype = Object.create(ERMrestError.prototype);
     InvalidFacetSorting.prototype.constructor = InvalidFacetSorting;
 
     /**
@@ -304,9 +341,10 @@
      * @constructor
      * @desc Invalid page conditions
      */
-    function InvalidPageCriteria(message) {
-        ERMrestError.call(this, '', module._errorStatus.invalidPageCriteria, message);
+    function InvalidPageCriteria(message, path) {
+        var newPath = removePageCondition(path);
+        ERMrestError.call(this, '', module._errorStatus.invalidPageCriteria, message, '', newPath);
     }
 
-    InvalidPageCriteria.prototype = Object.create(Error.prototype);
+    InvalidPageCriteria.prototype = Object.create(ERMrestError.prototype);
     InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
