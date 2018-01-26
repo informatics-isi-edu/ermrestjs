@@ -262,10 +262,9 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-        * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -326,7 +325,7 @@ to use for ERMrest JavaScript agents.
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
-        * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : <code>ERMrest.ColumnGroupAggregateFn</code>
+        * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -364,6 +363,51 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.FacetColumn](#ERMrest.FacetColumn)
+        * [new FacetColumn(reference, index, column, facetObject, filters)](#new_ERMrest.FacetColumn_new)
+        * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
+        * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
+        * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
+        * [.filters](#ERMrest.FacetColumn+filters)
+        * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+        * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
+        * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+        * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
+        * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
+        * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+        * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
+        * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
+        * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
+        * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
+        * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+        * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
+        * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
+        * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addChoiceFilters()](#ERMrest.FacetColumn+addChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.replaceAllChoiceFilters()](#ERMrest.FacetColumn+replaceAllChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeChoiceFilters(terms)](#ERMrest.FacetColumn+removeChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addRangeFilter(min, max)](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeRangeFilter(min, max)](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addNotNullFilter()](#ERMrest.FacetColumn+addNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeNotNullFilter()](#ERMrest.FacetColumn+removeNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeAllFilters()](#ERMrest.FacetColumn+removeAllFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeFilter(index)](#ERMrest.FacetColumn+removeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.FacetFilter](#ERMrest.FacetFilter)
+        * [new FacetFilter(term)](#new_ERMrest.FacetFilter_new)
+        * [.toString()](#ERMrest.FacetFilter+toString) ⇒ <code>string</code>
+        * [.toJSON()](#ERMrest.FacetFilter+toJSON) ⇒ <code>string</code>
+    * [.SearchFacetFilter](#ERMrest.SearchFacetFilter)
+        * [new SearchFacetFilter(term)](#new_ERMrest.SearchFacetFilter_new)
+    * [.ChoiceFacetFilter](#ERMrest.ChoiceFacetFilter)
+        * [new ChoiceFacetFilter(term)](#new_ERMrest.ChoiceFacetFilter_new)
+    * [.RangeFacetFilter](#ERMrest.RangeFacetFilter)
+        * [new RangeFacetFilter(min, max)](#new_ERMrest.RangeFacetFilter_new)
+        * [.toString()](#ERMrest.RangeFacetFilter+toString) ⇒ <code>string</code>
+        * [.toJSON()](#ERMrest.RangeFacetFilter+toJSON) ⇒ <code>Object</code>
+    * [.NotNullFacetFilter](#ERMrest.NotNullFacetFilter)
+        * [new NotNullFacetFilter()](#new_ERMrest.NotNullFacetFilter_new)
     * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
         * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
         * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
@@ -373,6 +417,36 @@ to use for ERMrest JavaScript agents.
         * [.maxAgg](#ERMrest.ColumnAggregateFn+maxAgg) : <code>Object</code>
         * [.countNotNullAgg](#ERMrest.ColumnAggregateFn+countNotNullAgg) : <code>Object</code>
         * [.countDistinctAgg](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
+    * [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
+        * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
+        * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+    * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
+        * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+        * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+        * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+        * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
+        * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+        * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
+        * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
+        * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
+        * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
+        * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+        * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+        * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+    * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple)
+        * [new AttributeGroupTuple(page, data)](#new_ERMrest.AttributeGroupTuple_new)
+        * [.isHTML](#ERMrest.AttributeGroupTuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+        * [.uniqueId](#ERMrest.AttributeGroupTuple+uniqueId) : <code>string</code>
+        * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
+    * [.AttributeGroupReferenceAggregateFn](#ERMrest.AttributeGroupReferenceAggregateFn)
+        * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
+        * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
     * [.upload](#ERMrest.upload)
@@ -430,6 +504,14 @@ to use for ERMrest JavaScript agents.
             * [new BinaryPredicate(column, operator, rvalue)](#new_ERMrest.Filters.BinaryPredicate_new)
             * [.toUri()](#ERMrest.Filters.BinaryPredicate+toUri) ⇒ <code>string</code>
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
+        * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+        * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+        * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+        * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
+        * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+        * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
@@ -2217,10 +2299,9 @@ Constructor for a ParsedFilter.
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-    * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -2306,17 +2387,6 @@ NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers
 Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+session"></a>
-
-#### reference.session
-The session object from the server
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| session | <code>Object</code> | the session object |
-
 <a name="ERMrest.Reference+table"></a>
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
@@ -2346,7 +2416,7 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+facetColumns"></a>
 
-#### reference.facetColumns ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
+#### reference.facetColumns ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
 Facets that should be represented to the user.
 Heuristics:
  - All the visible columns in compact context.
@@ -3103,7 +3173,7 @@ the _data attribute. This way _data can be modified in chaise without changing t
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
-    * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : <code>ERMrest.ColumnGroupAggregateFn</code>
+    * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -3166,7 +3236,7 @@ Returns the aggregate function object
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+groupAggregate"></a>
 
-#### referenceColumn.groupAggregate : <code>ERMrest.ColumnGroupAggregateFn</code>
+#### referenceColumn.groupAggregate : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
 Returns the aggregate group object
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -3500,6 +3570,484 @@ indicates that this object represents a PseudoColumn.
 Indicates that this ReferenceColumn is an inbound foreign key.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.FacetColumn"></a>
+
+### ERMrest.FacetColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.FacetColumn](#ERMrest.FacetColumn)
+    * [new FacetColumn(reference, index, column, facetObject, filters)](#new_ERMrest.FacetColumn_new)
+    * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
+    * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
+    * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
+    * [.filters](#ERMrest.FacetColumn+filters)
+    * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+    * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
+    * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+    * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
+    * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
+    * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+    * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
+    * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
+    * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
+    * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
+    * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+    * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
+    * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
+    * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addChoiceFilters()](#ERMrest.FacetColumn+addChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.replaceAllChoiceFilters()](#ERMrest.FacetColumn+replaceAllChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeChoiceFilters(terms)](#ERMrest.FacetColumn+removeChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addRangeFilter(min, max)](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeRangeFilter(min, max)](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addNotNullFilter()](#ERMrest.FacetColumn+addNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeNotNullFilter()](#ERMrest.FacetColumn+removeNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeAllFilters()](#ERMrest.FacetColumn+removeAllFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeFilter(index)](#ERMrest.FacetColumn+removeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+
+<a name="new_ERMrest.FacetColumn_new"></a>
+
+#### new FacetColumn(reference, index, column, facetObject, filters)
+Represent facet columns that are available.
+NOTE:
+Based on facets JSON structure we can have joins that result in facets
+on columns that are not part of reference column.
+
+TODO This is just experimental, the arguments might change eventually.
+
+If the ReferenceColumn is not provided, then the FacetColumn is for reference
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | the reference that this FacetColumn blongs to. |
+| index | <code>int</code> | The index of this FacetColumn in the list of facetColumns |
+| column | [<code>Column</code>](#ERMrest.Column) | the column that filters will be based on. |
+| facetObject | <code>object</code> | The filter object that this FacetColumn will be created based on |
+| filters | [<code>Array.&lt;FacetFilter&gt;</code>](#ERMrest.FacetFilter) | Array of filters |
+
+<a name="ERMrest.FacetColumn+_column"></a>
+
+#### facetColumn._column : [<code>Column</code>](#ERMrest.Column)
+The column object that the filters are based on
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+reference"></a>
+
+#### facetColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
+The reference that this facet blongs to
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+index"></a>
+
+#### facetColumn.index : <code>int</code>
+The index of facetColumn in the list of facetColumns
+NOTE: Might not be needed
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+dataSource"></a>
+
+#### facetColumn.dataSource : <code>obj</code> \| <code>string</code>
+A valid data-source path
+NOTE: we're not validating this data-source, we assume that this is valid.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+filters"></a>
+
+#### facetColumn.filters
+Filters that are applied to this facet.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Type{facetfilter[]}**:   
+<a name="ERMrest.FacetColumn+isOpen"></a>
+
+#### facetColumn.isOpen : <code>Boolean</code>
+If has filters it will return true,
+otherwise returns facetObject['open']
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+preferredMode"></a>
+
+#### facetColumn.preferredMode : <code>string</code>
+The Preferred ux mode.
+Any of:
+`choices`, `ranges`, or `search`
+This should be used if we're not in entity mode.
+
+1. use ux_mode if available
+2. use choices if in entity mode
+3. use range or chocies based on type.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+isEntityMode"></a>
+
+#### facetColumn.isEntityMode : <code>Boolean</code>
+Returns true if the source is on a key column.
+If facetObject['entity'] is defined as false, it will return false,
+otherwise it will true if filter is based on key.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+column"></a>
+
+#### facetColumn.column : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
+ReferenceColumn that this facetColumn is based on
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+sourceReference"></a>
+
+#### facetColumn.sourceReference : [<code>Reference</code>](#ERMrest.Reference)
+uncontextualized [Reference](#ERMrest.Reference) that has all the joins specified
+in the source with all the filters of other FacetColumns in the reference.
+
+NOTE needs refactoring,
+This should return a reference that referes to the current column's table
+having filters from other facetcolumns.
+We should not use the absolute path for the table and it must be a path
+from main to this table. Because if we use the absolute path we're completely
+ignoring the constraints that the main table will add to this reference.
+(For example if maximum possible value for this column is 100 but there's
+no data from the main that will leads to this maximum.)
+
+Consider the following scenario:
+Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
+R1 has a fitler for term=1, and R2 has a filter for term=2
+Then the source reference for R3 will be the following:
+T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
+As you can see it has all the filters of the main table + join to current table.
+
+NOTE: assumptions:
+ - The main reference has no join.
+ - The returned reference has problem with faceting (cannot show faceting).
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+displayname"></a>
+
+#### facetColumn.displayname : <code>object</code>
+Returns the displayname object that should be used for this facetColumn.
+
+Heuristics are as follows (first applicable rule):
+ 0. If markdown_name is defined, use it.
+ 1. If column is part of the main table (there's no join), use the column's displayname.
+ 2. If last foreignkey is outbound and has to_name, use it.
+ 3. If last foreignkey is inbound and has from_name, use it.
+ 4. Otherwise use the table name.
+   - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+comment"></a>
+
+#### facetColumn.comment : <code>string</code>
+Could be used as tooltip to provide more information about the facetColumn
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hasNotNullFilter"></a>
+
+#### facetColumn.hasNotNullFilter : <code>Boolean</code>
+Returns true if the not-null filter exists.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+searchFilters"></a>
+
+#### facetColumn.searchFilters : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
+search filters
+NOTE ASSUMES that filters is immutable
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+choiceFilters"></a>
+
+#### facetColumn.choiceFilters : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
+choce filters
+NOTE ASSUMES that filters is immutable
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+rangeFilters"></a>
+
+#### facetColumn.rangeFilters : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
+range filters
+NOTE ASSUMES that filters is immutable
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+getChoiceDisplaynames"></a>
+
+#### facetColumn.getChoiceDisplaynames() ⇒ <code>Promise</code>
+When presenting the applied choice filters, the displayname might be differnt from the value.
+This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
+In case of entity-picker, we should get the displayname of the choices.
+Therefore heuristic is as follows:
+ - If no fitler -> resolve with empty list.
+ - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
+ - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: <code>Promise</code> - A promise resolved with list of objects that have `uniqueId`, and `displayname`.  
+<a name="ERMrest.FacetColumn+toJSON"></a>
+
+#### facetColumn.toJSON() ⇒ <code>Object</code>
+Return JSON presentation of the filters. This will be used in the location.
+Anything that we want to leak to the url should be here.
+It will be in the following format:
+
+```
+{
+   "source": <data-source>,
+   "choices": [v, ...],
+   "ranges": [{"min": v1, "max": v2}, ...],
+   "search": [v, ...],
+   "not_null": true
+}
+```
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+_setFilters"></a>
+
+#### facetColumn._setFilters(json)
+Given an object will create list of filters.
+
+NOTE: if we have not_null, other filters except =null are not relevant.
+That means if we saw not_null:
+1. If =null exist, then set the filters to empty array.
+2. otherwise set the filter to just the not_null
+
+Expected object format format:
+```
+{
+   "source": <data-source>,
+   "choices": [v, ...],
+   "ranges": [{"min": v1, "max": v2}, ...],
+   "search": [v, ...],
+   "not_null": true
+}
+```
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| json | <code>Object</code> | JSON representation of filters |
+
+<a name="ERMrest.FacetColumn+addSearchFilter"></a>
+
+#### facetColumn.addSearchFilter(term) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with appending a new Search filter to current FacetColumn
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the Reference with the new filter  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| term | <code>String</code> | the term for search |
+
+<a name="ERMrest.FacetColumn+addChoiceFilters"></a>
+
+#### facetColumn.addChoiceFilters() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with appending a list of choice filters to current FacetColumn
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+<a name="ERMrest.FacetColumn+replaceAllChoiceFilters"></a>
+
+#### facetColumn.replaceAllChoiceFilters() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with replacing choice facet filters by the given input
+This will also remove NotNullFacetFilter
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+<a name="ERMrest.FacetColumn+removeChoiceFilters"></a>
+
+#### facetColumn.removeChoiceFilters(terms) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a term, it will remove any choice filter with that term (if any).
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| terms | <code>Array.&lt;String&gt;</code> \| <code>Array.&lt;int&gt;</code> | array of terms |
+
+<a name="ERMrest.FacetColumn+addRangeFilter"></a>
+
+#### facetColumn.addRangeFilter(min, max) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with appending a new range filter to current FacetColumn
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| min | <code>String</code> \| <code>int</code> | minimum value. Can be null or undefined. |
+| max | <code>String</code> \| <code>int</code> | maximum value. Can be null or undefined. |
+
+<a name="ERMrest.FacetColumn+removeRangeFilter"></a>
+
+#### facetColumn.removeRangeFilter(min, max) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with removing any range filter that has the given min and max combination.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| min | <code>String</code> \| <code>int</code> | minimum value. Can be null or undefined. |
+| max | <code>String</code> \| <code>int</code> | maximum value. Can be null or undefined. |
+
+<a name="ERMrest.FacetColumn+addNotNullFilter"></a>
+
+#### facetColumn.addNotNullFilter() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference with removing all the filters and adding a not-null filter.
+NOTE based on current usecases this is currently removing all the previous filters.
+We might need to change this behavior in the future. I could change the behavior of
+this function to only add the filter, and then in the client first remove all and thenadd
+addNotNullFilter, but since the code is not very optimized that would result on a heavy
+operation.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+removeNotNullFilter"></a>
+
+#### facetColumn.removeNotNullFilter() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference without any filters.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+removeAllFilters"></a>
+
+#### facetColumn.removeAllFilters() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference by removing all the filters from current facet.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+<a name="ERMrest.FacetColumn+removeFilter"></a>
+
+#### facetColumn.removeFilter(index) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Create a new Reference by removing a filter from current facet.
+
+**Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+**Returns**: [<code>Reference</code>](#ERMrest.Reference) - the reference with the new filter  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>int</code> | index of element that we want to remove from list |
+
+<a name="ERMrest.FacetFilter"></a>
+
+### ERMrest.FacetFilter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.FacetFilter](#ERMrest.FacetFilter)
+    * [new FacetFilter(term)](#new_ERMrest.FacetFilter_new)
+    * [.toString()](#ERMrest.FacetFilter+toString) ⇒ <code>string</code>
+    * [.toJSON()](#ERMrest.FacetFilter+toJSON) ⇒ <code>string</code>
+
+<a name="new_ERMrest.FacetFilter_new"></a>
+
+#### new FacetFilter(term)
+Represent filters that can be applied to facet
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| term | <code>String</code> \| <code>int</code> | the valeu of filter |
+
+<a name="ERMrest.FacetFilter+toString"></a>
+
+#### facetFilter.toString() ⇒ <code>string</code>
+String representation of filter
+
+**Kind**: instance method of [<code>FacetFilter</code>](#ERMrest.FacetFilter)  
+<a name="ERMrest.FacetFilter+toJSON"></a>
+
+#### facetFilter.toJSON() ⇒ <code>string</code>
+JSON representation of filter
+
+**Kind**: instance method of [<code>FacetFilter</code>](#ERMrest.FacetFilter)  
+<a name="ERMrest.SearchFacetFilter"></a>
+
+### ERMrest.SearchFacetFilter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.SearchFacetFilter_new"></a>
+
+#### new SearchFacetFilter(term)
+Represent search filters that can be applied to facet.
+JSON representation of this filter:
+"search": [v1, ...]
+
+Extends [FacetFilter](#ERMrest.FacetFilter).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| term | <code>String</code> \| <code>int</code> | the valeu of filter |
+
+<a name="ERMrest.ChoiceFacetFilter"></a>
+
+### ERMrest.ChoiceFacetFilter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.ChoiceFacetFilter_new"></a>
+
+#### new ChoiceFacetFilter(term)
+Represent choice filters that can be applied to facet.
+JSON representation of this filter:
+"choices": [v1, ...]
+
+Extends [FacetFilter](#ERMrest.FacetFilter).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| term | <code>String</code> \| <code>int</code> | the valeu of filter |
+
+<a name="ERMrest.RangeFacetFilter"></a>
+
+### ERMrest.RangeFacetFilter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.RangeFacetFilter](#ERMrest.RangeFacetFilter)
+    * [new RangeFacetFilter(min, max)](#new_ERMrest.RangeFacetFilter_new)
+    * [.toString()](#ERMrest.RangeFacetFilter+toString) ⇒ <code>string</code>
+    * [.toJSON()](#ERMrest.RangeFacetFilter+toJSON) ⇒ <code>Object</code>
+
+<a name="new_ERMrest.RangeFacetFilter_new"></a>
+
+#### new RangeFacetFilter(min, max)
+Represent range filters that can be applied to facet.
+JSON representation of this filter:
+"ranges": [{min: v1, max: v2}]
+
+Extends [FacetFilter](#ERMrest.FacetFilter).
+
+
+| Param | Type |
+| --- | --- |
+| min | <code>String</code> \| <code>int</code> | 
+| max | <code>String</code> \| <code>int</code> | 
+
+<a name="ERMrest.RangeFacetFilter+toString"></a>
+
+#### rangeFacetFilter.toString() ⇒ <code>string</code>
+String representation of range filter. With the format of:
+
+- both min and max defined: `{{min}}-{{max}}`
+- only min defined: `> {{min}}`
+- only max defined: `< {{max}}`
+
+**Kind**: instance method of [<code>RangeFacetFilter</code>](#ERMrest.RangeFacetFilter)  
+<a name="ERMrest.RangeFacetFilter+toJSON"></a>
+
+#### rangeFacetFilter.toJSON() ⇒ <code>Object</code>
+JSON representation of range filter.
+
+**Kind**: instance method of [<code>RangeFacetFilter</code>](#ERMrest.RangeFacetFilter)  
+<a name="ERMrest.NotNullFacetFilter"></a>
+
+### ERMrest.NotNullFacetFilter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.NotNullFacetFilter_new"></a>
+
+#### new NotNullFacetFilter()
+Represents not_null filter.
+It doesn't have the same toJSON and toString functions, since
+the only thing that client would need is question of existence of this type of filter.
+
 <a name="ERMrest.ReferenceAggregateFn"></a>
 
 ### ERMrest.ReferenceAggregateFn
@@ -3583,6 +4131,330 @@ not null count aggregate representation
 distinct count aggregate representation
 
 **Kind**: instance property of [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)  
+<a name="ERMrest.ColumnGroupAggregateFn"></a>
+
+### ERMrest.ColumnGroupAggregateFn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
+    * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
+    * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+
+<a name="new_ERMrest.ColumnGroupAggregateFn_new"></a>
+
+#### new ColumnGroupAggregateFn(column)
+Can be used to access group aggregate functions.
+Usage:
+ Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+ will access this constructor for purposes of fetching grouped aggregate data
+ for a specific column
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | The column that is used for creating grouped aggregate |
+
+<a name="ERMrest.ColumnGroupAggregateFn+entityValues"></a>
+
+#### columnGroupAggregateFn.entityValues : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+Will return an appropriate reference which can be used to show distinct values of an entity
+NOTE: Will create a new reference by each call.
+
+**Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
+<a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
+
+#### columnGroupAggregateFn.entityCounts : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+Will return an appropriate reference which can be used to show distinct values and their counts
+NOTE: Will create a new reference by each call.
+
+**Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
+<a name="ERMrest.ColumnGroupAggregateFn+histogram"></a>
+
+#### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ <code>obj</code>
+Given number of buckets, min and max will return bin of results.
+
+**Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
+**Returns**: <code>obj</code> - //TODO What should be ther returned object?  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| bucketCount | <code>int</code> | number of buckets |
+| min | <code>int</code> | minimum value |
+| max | <code>int</code> | maximum value |
+
+<a name="ERMrest.AttributeGroupReference"></a>
+
+### ERMrest.AttributeGroupReference
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
+    * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+    * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+    * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+    * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
+    * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+    * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+
+<a name="new_ERMrest.AttributeGroupReference_new"></a>
+
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)
+Constructs a Reference object.
+
+This object will be the main object that client will interact with, when we want
+to use ermrset `attributegroup` api. Referencse are immutable and therefore can be
+safely passed around and used between multiple client components without risk that the
+underlying reference to server-side resources could change.
+
+Usage:
+ - Clients can use this constructor to create attribute group references if needed.
+ - This will currently be used by the aggregateGroup functions to return a
+   AttributeGroupReference rather than a [Reference](#ERMrest.Reference)
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| keyColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will be used as keys for the attributegroup request. |
+| aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
+| location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
+| catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+
+<a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
+
+#### attributeGroupReference._keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Array of AttributeGroupColumn that will be used as the key columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+_aggregateColumns"></a>
+
+#### attributeGroupReference._aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Array of AttributeGroupColumn that will be used for the aggregate results
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+aggregate"></a>
+
+#### attributeGroupReference.aggregate : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+displayname"></a>
+
+#### attributeGroupReference.displayname : <code>object</code>
+the displayname of the reference
+TODO not sure if this sis needed
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+columns"></a>
+
+#### attributeGroupReference.columns : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+Visible columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+uri"></a>
+
+#### attributeGroupReference.uri : <code>string</code>
+The attributegroup uri.
+<service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+
+NOTE:
+- Since this is the object that has knowledge of columns, this should be here.
+  (we might want to relocate it to the AttributeGroupLocation object.)
+- ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+read"></a>
+
+#### attributeGroupReference.read([limit], contextHeaderParams) ⇒ <code>ERMRest.AttributeGroupPage</code>
+**Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [limit] | <code>int</code> |  |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
+<a name="ERMrest.AttributeGroupPage"></a>
+
+### ERMrest.AttributeGroupPage
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
+    * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
+    * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
+    * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
+    * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+    * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+    * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+
+<a name="new_ERMrest.AttributeGroupPage_new"></a>
+
+#### new AttributeGroupPage(reference, data, hasPrevious, hasNext)
+Constructor for creating a attribute group page. It has similar functionalities
+as [Page](#ERMrest.Page)
+
+Usage:
+  Clients _do not_ directly access this constructor.
+  [AttributeGroupReference](#ERMrest.AttributeGroupReference) will access this constructor for returning page of data.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) | the reference that this page belongs to |
+| data | <code>Object</code> | the raw data |
+| hasPrevious | <code>Boolean</code> | Whether database has some data before current page |
+| hasNext | <code>Boolean</code> | Whether database has some data after current page |
+
+<a name="ERMrest.AttributeGroupPage+reference"></a>
+
+#### attributeGroupPage.reference : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+The page's associated reference.
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+hasPrevious"></a>
+
+#### attributeGroupPage.hasPrevious ⇒ <code>boolean</code>
+Whether there is more entities before this page
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+hasNext"></a>
+
+#### attributeGroupPage.hasNext ⇒ <code>boolean</code>
+Whether there is more entities after this page
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+tuples"></a>
+
+#### attributeGroupPage.tuples : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+An array of processed tuples.
+
+Usage:
+```
+for (var i=0, len=page.tuples.length; i<len; i++) {
+  var tuple = page.tuples[i];
+  console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+next"></a>
+
+#### attributeGroupPage.next : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+A reference to the next set of results.
+
+Usage:
+```
+if (reference.next) {
+  // more tuples in the 'next' direction are available
+  reference.next.read(10).then(
+    ...
+  );
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+previous"></a>
+
+#### attributeGroupPage.previous : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+A reference to the previous set of results.
+
+Usage:
+```
+if (reference.previous) {
+  // more tuples in the 'previous' direction are available
+  reference.previous.read(10).then(
+    ...
+  );
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupTuple"></a>
+
+### ERMrest.AttributeGroupTuple
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple)
+    * [new AttributeGroupTuple(page, data)](#new_ERMrest.AttributeGroupTuple_new)
+    * [.isHTML](#ERMrest.AttributeGroupTuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+    * [.uniqueId](#ERMrest.AttributeGroupTuple+uniqueId) : <code>string</code>
+    * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
+
+<a name="new_ERMrest.AttributeGroupTuple_new"></a>
+
+#### new AttributeGroupTuple(page, data)
+Constructor for creating a attribute group page. It has similar functionalities
+as [Tuple](#ERMrest.Tuple)
+
+Usage:
+  Clients _do not_ directly access this constructor.
+  [AttributeGroupPage](#ERMrest.AttributeGroupPage) will access this constructor for returning tuples of a page.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| page | [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage) | the page that tuple is part of |
+| data | <code>Object</code> | tuple's raw data |
+
+<a name="ERMrest.AttributeGroupTuple+isHTML"></a>
+
+#### attributeGroupTuple.isHTML : <code>Array.&lt;boolean&gt;</code>
+The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
+values in the array matches the ordering of the columns in the
+reference (see [columns](#ERMrest.Reference+columns)).
+TODO Eventually should be refactored (https://github.com/informatics-isi-edu/ermrestjs/issues/189).
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.AttributeGroupTuple+uniqueId"></a>
+
+#### attributeGroupTuple.uniqueId : <code>string</code>
+The unique identifier for this tuple composed of the values for each
+of the shortest key columns concatenated together by an '_'
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.AttributeGroupTuple+displayname"></a>
+
+#### attributeGroupTuple.displayname : <code>string</code>
+The _display name_ of this tuple. currently it will be values of
+key columns concatenated together by `_`.
+
+Usage:
+```
+console.log("This tuple has a displayable name of ", tuple.displayname.value);
+```
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.AttributeGroupReferenceAggregateFn"></a>
+
+### ERMrest.AttributeGroupReferenceAggregateFn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupReferenceAggregateFn](#ERMrest.AttributeGroupReferenceAggregateFn)
+    * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
+    * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
+
+<a name="new_ERMrest.AttributeGroupReferenceAggregateFn_new"></a>
+
+#### new AttributeGroupReferenceAggregateFn(reference)
+Can be used to access group aggregate functions.
+Usage:
+ Clients _do not_ directly access this constructor. [AttributeGroupReference](#ERMrest.AttributeGroupReference)
+ will access this constructor for purposes of fetching grouped aggregate data
+ for a specific column
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) | The reference that this aggregate function belongs to |
+
+<a name="ERMrest.AttributeGroupReferenceAggregateFn+countAgg"></a>
+
+#### attributeGroupReferenceAggregateFn.countAgg : <code>Object</code>
+count aggregate representation
+This does not count null values for the key since we're using `count distinct`.
+Therefore the returned count might not be exactly the same as number of returned values.
+
+**Kind**: instance property of [<code>AttributeGroupReferenceAggregateFn</code>](#ERMrest.AttributeGroupReferenceAggregateFn)  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum
@@ -4106,6 +4978,91 @@ get PathColumn object by column name
 
 ### ERMrest.AttributeGroupReference : <code>object</code>
 **Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
+    * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+    * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+    * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+    * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
+    * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+    * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+
+<a name="new_ERMrest.AttributeGroupReference_new"></a>
+
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)
+Constructs a Reference object.
+
+This object will be the main object that client will interact with, when we want
+to use ermrset `attributegroup` api. Referencse are immutable and therefore can be
+safely passed around and used between multiple client components without risk that the
+underlying reference to server-side resources could change.
+
+Usage:
+ - Clients can use this constructor to create attribute group references if needed.
+ - This will currently be used by the aggregateGroup functions to return a
+   AttributeGroupReference rather than a [Reference](#ERMrest.Reference)
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| keyColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will be used as keys for the attributegroup request. |
+| aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
+| location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
+| catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+
+<a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
+
+#### attributeGroupReference._keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Array of AttributeGroupColumn that will be used as the key columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+_aggregateColumns"></a>
+
+#### attributeGroupReference._aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Array of AttributeGroupColumn that will be used for the aggregate results
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+aggregate"></a>
+
+#### attributeGroupReference.aggregate : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+displayname"></a>
+
+#### attributeGroupReference.displayname : <code>object</code>
+the displayname of the reference
+TODO not sure if this sis needed
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+columns"></a>
+
+#### attributeGroupReference.columns : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+Visible columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+uri"></a>
+
+#### attributeGroupReference.uri : <code>string</code>
+The attributegroup uri.
+<service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+
+NOTE:
+- Since this is the object that has knowledge of columns, this should be here.
+  (we might want to relocate it to the AttributeGroupLocation object.)
+- ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+read"></a>
+
+#### attributeGroupReference.read([limit], contextHeaderParams) ⇒ <code>ERMRest.AttributeGroupPage</code>
+**Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [limit] | <code>int</code> |  |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
 <a name="ERMrest.configure"></a>
 
 ### ERMrest.configure(http, q)
