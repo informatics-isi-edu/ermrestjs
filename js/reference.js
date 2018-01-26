@@ -2380,34 +2380,13 @@
             // this function will take care of adding column and asset column
             var addColumn = function (col) {
                 if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
-
-                    if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
-
-                        var urlPattern = col.annotations.get(module._annotations.ASSET).content.url_pattern;
-
-                        // If url_pattenr doesn't has hatrac in it then consider the column as a plain text column and proceed
-                        if ((typeof urlPattern !== 'string') || (module._parseUrl(urlPattern).pathname.indexOf('/hatrac/') !== 0)) {
-                            // ignore the column
-                            console.log("url_pattern '" + urlPattern + "' for column '" + col.name + "' doesn't has hatrac");
-                            if (module._isEntryContext(self._context)) {
-                                return;
-                            }
-                        } else {
-                            // add asset annotation
-                            var assetCol = new AssetPseudoColumn(self, col);
-                            assetColumns.push(assetCol);
-                            self._referenceColumns.push(assetCol);
-                            return;
-                        }
-                    } else if (module._isEntryContext(self._context)) {
-                        // ignore the column
-                        console.log("Column " + col.name + " doesn't contains url_pattern");
-                        return;
-                    }
+                    var assetCol = new AssetPseudoColumn(self, col);
+                    assetColumns.push(assetCol);
+                    self._referenceColumns.push(assetCol);
+                    return;
                 }
 
                 // if annotation is not present,
-                // or in any context other than entry, and the url_pattern is not present
                 self._referenceColumns.push(new ReferenceColumn(self, [col]));
             };
 
@@ -4948,7 +4927,7 @@
 
         this._baseCol = column;
 
-        this._annotation = column.annotations.get(module._annotations.ASSET).content;
+        this._annotation = column.annotations.get(module._annotations.ASSET).content || {};
 
         /**
          * @type {boolean}
@@ -4964,6 +4943,20 @@
     }
     // extend the prototype
     module._extends(AssetPseudoColumn, ReferenceColumn);
+
+    /**
+     * If url_pattern is invalid or browser_upload=false the input will be disabled.
+     * @param  {string} context the context
+     * @return {boolean|object}
+     */
+    AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
+        var pat = this._annotation.url_pattern;
+        if (typeof pat !== "string" || pat.length === 0 || this._annotation.browser_upload === false) {
+            return true;
+        }
+        // TODO not sure
+        return AssetPseudoColumn.super._determineInputDisabled.call(this, context);
+    };
 
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
@@ -5005,7 +4998,6 @@
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
         get: function () {
             if (this._urlPattern === undefined) {
-                // url_pattern is a required attribute in annotation
                 this._urlPattern = this._annotation.url_pattern;
             }
             return this._urlPattern;
