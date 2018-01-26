@@ -223,9 +223,21 @@
      * @constructor
      * @desc An invalid filter operator
      */
-    function InvalidFilterOperatorError(message) {
+    function InvalidFilterOperatorError(message, fullURI, invalidFilter) {
         message = message;
-        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message);
+        //get path out of fullURI
+        fullURI = fullURI.replace("entity/", '');
+        fullURI = fullURI.replace("catalog/", '#');
+        var pathStart = fullURI.search('#');
+        if (invalidFilter != ''){
+          newPath = fullURI.slice(pathStart, fullURI.search(invalidFilter));
+        } else{
+          fullURI = fullURI.slice(pathStart);
+          dummyURI = fullURI.replace('/', '@');
+          newPath = fullURI.slice(0, dummyURI.indexOf('/'));
+
+        }
+        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', newPath);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ERMrestError.prototype);

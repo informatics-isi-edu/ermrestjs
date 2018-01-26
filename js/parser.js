@@ -252,10 +252,10 @@
                             type = module.filterTypes.DISJUNCTION;
                         } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._uri,'');
                         } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._uri,'');
                         } else if (items[i] !== "&" && items[i] !== ";") {
                             // single filter on the first level
                             var binaryFilter = _processSingleFilterString(items[i], this._uri);
@@ -821,7 +821,7 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                        pathWithCatalog = '#' + this.catalog + '/' + this.path;
                         throw new module.InvalidFacetSorting("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", pathWithCatalog);
                     }
 
@@ -851,7 +851,7 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    pathWithCatalog = '#' + this.catalog + '/' + this.path;
                     throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", pathWithCatalog);
                 }
             }
@@ -1174,7 +1174,7 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
     }
 
     /**
@@ -1197,10 +1197,10 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
