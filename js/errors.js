@@ -360,3 +360,30 @@
 
     InvalidPageCriteria.prototype = Object.create(ERMrestError.prototype);
     InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
+    /**
+     * Log the error object to the given ermrest location.
+     * It will generate a put request to the /terminal_error with the correct headers.
+     * ermrset will return a 400 page, but will log the message.
+     * @param  {object} err             the error object
+     * @param  {string} ermrestLocation the ermrest location
+     */
+    module.logError = function (err, ermrestLocation) {
+        var defer = module._q.defer();
+        var http = module._wrap_http(module._http);
+
+        var headers = {};
+        headers[module._contextHeaderName] = {
+            e: 1,
+            name: err.constructor.name,
+            message: err.message
+        };
+
+        // this http request will fail but will still log the message.
+        http.put(ermrestLocation + "/terminal_error", {}, {headers: headers}).then(function () {
+            defer.resolve();
+        }).catch(function (err) {
+            defer.resolve();
+        });
+
+        return defer.promise;
+    };

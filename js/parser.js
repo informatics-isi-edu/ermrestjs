@@ -1129,10 +1129,11 @@
 
          /**
           *
-          * @param filters array of binary predicate
+          * @param {ParsedFilter[]} filters array of binary predicate
           */
          setFilters: function(filters) {
              this.filters = filters;
+             this.facet = _filterToFacet(this);
          },
 
          /**
@@ -1145,6 +1146,8 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
+
+             this.facet = {and: [_filterToFacet(this)]};
          }
      };
 
@@ -1211,6 +1214,84 @@
         var filter = new ParsedFilter(type);
         filter.setFilters(filters);
         return filter;
+    }
+
+    /**
+     * Turn filter into facet, will return null if it's not possible to do so.
+     * @param       {ParsedFilter} parsedFilte
+     * @return      {Object}
+     */
+    function _filterToFacet(parsedFilter) {
+        var facet = {}, orSources = {}, parsed, op, i, f;
+
+        // base for binary predicate filters
+        if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
+            facet.source = parsedFilter.column;
+            switch (parsedFilter.operator) {
+                case "::gt::":
+                    facet.ranges = [{min: parsedFilter.value}];
+                    break;
+                case "::lt::":
+                    facet.ranges = [{max: parsedFilter.value}];
+                    break;
+                case "::null::":
+                    facet.choices = [null];
+                    break;
+                case "::ciregexp::":
+                    facet.search = [parsedFilter.value];
+                    break;
+                case "=":
+                    facet.choices = [parsedFilter.value];
+                    break;
+                default:
+                    return null;
+            }
+            return facet;
+        }
+
+        // if it's an array of filters
+        if (Array.isArray(parsedFilter.filters)) {
+            if (parsedFilter.type === module.filterTypes.DISJUNCTION) {
+                op = "or";
+            } else if (parsedFilter.type === module.filterTypes.CONJUNCTION) {
+                op = "and";
+            } else {
+                return null;
+            }
+
+            // will add the facets in the parsed to facet object
+            var mergeFacets = function (c) {
+                if (!parsed[c]) return;
+                if (!facet[op][index][c]) facet[op][index][c] = [];
+                facet[op][index][c].push(parsed[c][0]);
+            };
+
+            facet[op] = [];
+            for (i = 0; i < parsedFilter.filters.length; i++) {
+                f = parsedFilter.filters[i];
+                parsed = _filterToFacet(f);
+
+                // couldn't parse it.
+                if (!parsed) return null;
+
+                if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
+                    if (orSources[parsed.source] > -1) {
+                        var index = orSources[parsed.source];
+                        ["ranges", "choices", "search"].forEach(mergeFacets);
+                        continue;
+                    } else {
+                        orSources[parsed.source] = facet[op].length;
+                    }
+                }
+
+                facet[op].push(parsed);
+            }
+
+            return facet;
+        }
+
+       // invalid filter
+       return null;
     }
 
     module.filterTypes = Object.freeze({

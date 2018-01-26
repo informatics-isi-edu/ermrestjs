@@ -13,6 +13,7 @@ exports.execute = function (options) {
             tableName8 = "table_w_rowname_fkeys1",
             tableName9 = "table_w_rowname_fkeys2",
             tableName10 = "table_w_rowname_fkeys3",
+            tableName11 = "table_w_table_display_annotation_w_title",
             tableNameWoAnnot = "table_wo_annotation";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
@@ -45,6 +46,9 @@ exports.execute = function (options) {
 
         var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName10;
+
+        var table11EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName11;
 
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
@@ -374,6 +378,36 @@ exports.execute = function (options) {
                     expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
                     expect(tuple.displayname.unformatted).toBe(expected);
                 }
+            });
+        });
+
+        describe('table entities with table-display.row-name/title annotation.', function () {
+            var ref, limit = 5;
+            beforeAll(function (done) {
+                options.ermRest.resolve(table11EntityUri, {cid: "test"}).then(function (res) {
+                    ref = res;
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+
+            describe('tuple displayname, ', function () {
+                it ("should use the row_name/title for getting the rowname.", function(done) {
+                    ref.read(limit).then(function (page) {
+                        for(var i = 0; i < limit; i++) {
+                            var tuple = page.tuples[i];
+                            var expected = tuple.values[2];
+                            expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>", "value missmatch for tuple index="+i);
+                            expect(tuple.displayname.unformatted).toBe(expected, "unformatted missmatch for tuple index="+i);
+                        }
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
             });
         });
 

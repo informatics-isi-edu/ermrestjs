@@ -131,7 +131,7 @@
 
                 // make sure arguments has a config, and config has a headers
                 var config = args[cfg_idx] = args[cfg_idx] || {};
-            
+
                 // now add default headers i
                 config.headers = config.headers || {};
 
@@ -148,16 +148,17 @@
                     args = arguments;
                 }
 
-                /** 
+                /**
                   * If context header is found in header then encode the stringified value of the header and unescape to keep some of them same
                   *     JSON and HTTP safe reserved chars: {, }, ", ,, :
                   *     non-reserved punctuation: -, _, ., ~
                   *     digit: 0 - 9
                   *     alpha: A - Z and a - z
-                  * 
+                  *
                   **/
                 if (typeof config.headers[module._contextHeaderName] === 'object') {
-                    config.headers[module._contextHeaderName] = unescape(module._fixedEncodeURIComponent(JSON.stringify(config.headers[module._contextHeaderName])));
+                    // encode and make sure it's not very lengthy
+                    config.headers[module._contextHeaderName] = module._certifyContextHeader(config.headers[module._contextHeaderName]);
                 }
 
                 // now call the fn, with retry logic

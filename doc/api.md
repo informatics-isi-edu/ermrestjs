@@ -262,7 +262,6 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-        * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -276,13 +275,14 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+        * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-        * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
-        * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
-        * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -356,6 +356,7 @@ to use for ERMrest JavaScript agents.
         * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+        * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2190,9 +2191,9 @@ Constructor for a ParsedFilter.
 #### parsedFilter.setFilters(filters)
 **Kind**: instance method of [<code>ParsedFilter</code>](#ERMrest.ParsedFilter)  
 
-| Param | Description |
-| --- | --- |
-| filters | array of binary predicate |
+| Param | Type | Description |
+| --- | --- | --- |
+| filters | <code>Array.&lt;ParsedFilter&gt;</code> | array of binary predicate |
 
 <a name="ERMrest.ParsedFilter+setBinaryPredicate"></a>
 
@@ -2216,7 +2217,6 @@ Constructor for a ParsedFilter.
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
-    * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -2230,13 +2230,14 @@ Constructor for a ParsedFilter.
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
+    * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-    * [.create(data)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
-    * [.read(limit)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
-    * [.update(tuples)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete()](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
+    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2304,17 +2305,6 @@ NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers
 Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+session"></a>
-
-#### reference.session
-The session object from the server
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| session | <code>Object</code> | the session object |
-
 <a name="ERMrest.Reference+table"></a>
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
@@ -2491,6 +2481,12 @@ Returns a uri that will properly generate the download link for a csv document
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
+<a name="ERMrest.Reference+defaultLogInfo"></a>
+
+#### reference.defaultLogInfo : <code>Object</code>
+The default information that we want to be logged including catalog, schema_table, and facet (filter).
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters() ⇒ <code>ERMrest.reference</code>
@@ -2500,7 +2496,7 @@ Remove all the fitlers from facets
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 <a name="ERMrest.Reference+create"></a>
 
-#### reference.create(data) ⇒ <code>Promise</code>
+#### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>
 Creates a set of tuples in the references relation. Note, this
 operation sets the `defaults` list according to the table
 specification, and not according to the contents of in the input
@@ -2517,6 +2513,7 @@ or rejected with any of the following errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Array</code> | The array of data to be created as new tuples. |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+create..columnDiff"></a>
 
@@ -2530,7 +2527,7 @@ The 6 is ignored because we only want to know what's in the minuend that is not 
 **Kind**: inner method of [<code>create</code>](#ERMrest.Reference+create)  
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -2561,6 +2558,7 @@ or rejected with any of these errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+sort"></a>
 
@@ -2580,7 +2578,7 @@ Return a new Reference with the new sorting
 
 <a name="ERMrest.Reference+update"></a>
 
-#### reference.update(tuples) ⇒ <code>Promise</code>
+#### reference.update(tuples, contextHeaderParams) ⇒ <code>Promise</code>
 Updates a set of resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -2593,15 +2591,21 @@ or rejected with any of these errors:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuples | <code>Array</code> | array of tuple objects so that the new data nd old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete() ⇒ <code>Promise</code>
+#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
 <a name="ERMrest.Reference+delete..self"></a>
 
 ##### delete~self
@@ -3364,6 +3368,7 @@ The Foreign key object that this PseudoColumn is created based on
     * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+    * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -3426,6 +3431,17 @@ The column object that sha256 hash is stored in.
 The column object that file extension is stored in.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+_determineInputDisabled"></a>
+
+#### assetPseudoColumn._determineInputDisabled(context) ⇒ <code>boolean</code> \| <code>object</code>
+If url_pattern is invalid or browser_upload=false the input will be disabled.
+
+**Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| context | <code>string</code> | the context |
+
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
 ### ERMrest.InboundForeignKeyPseudoColumn

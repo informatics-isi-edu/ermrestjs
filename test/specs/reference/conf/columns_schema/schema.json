@@ -611,7 +611,13 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "row_name": {
+                        "row_markdown_pattern": "{{id}}"
+                    },
+                    "row_name/compact": {
                         "row_markdown_pattern": "{{id_1}} , {{id_2}}"
+                    },
+                    "row_name/entry": {
+                        "row_markdown_pattern": "{{id_1}} : {{id_2}}"
                     }
                 },
                 "tag:isrd.isi.edu,2016:visible-columns": {
@@ -876,6 +882,7 @@
                         "typename": "text"
                     },
                     "annotations": {
+                        "tag:isrd.isi.edu,2016:immutable": null,
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_2}}",
                             "filename_column": "no col",
@@ -1259,8 +1266,8 @@
                     "*": [
                         ["columns_schema", "main-entity-table_key"], ["columns_schema", "fk_no_constraint"],
                         ["columns_schema", "fk_constrained"], ["columns_schema", "fk_position_predefined"],
-                        "position_text_col", ["columns_schema", "fk_position_user_defined"], 
-                        ["columns_schema", "fk_multi_constrained"], ["columns_schema", "fk_using_fkeys"]    
+                        "position_text_col", ["columns_schema", "fk_position_user_defined"],
+                        ["columns_schema", "fk_multi_constrained"], ["columns_schema", "fk_using_fkeys"]
                     ]
                 }
             }
@@ -1568,13 +1575,13 @@
                 },
                 {
                     "name": "json_col",
-                    "type": { 
+                    "type": {
                         "typename": "json"
                     }
                 },
                 {
                     "name": "jsonb_col",
-                    "type": { 
+                    "type": {
                         "typename": "jsonb"
                     }
                 }
@@ -1633,7 +1640,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : 1
                         }
                     }
                 },
@@ -1647,7 +1654,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : ""
                         }
                     }
                 },
@@ -1661,7 +1668,8 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : "https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}",
+                            "browser_upload": false
                         }
                     }
                 }

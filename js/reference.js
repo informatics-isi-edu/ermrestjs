@@ -927,6 +927,7 @@
          * specification, and not according to the contents of in the input
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
          * Both are {@link ERMrest.Page} of results.
          * or rejected with any of the following errors:
@@ -934,7 +935,7 @@
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        create: function(data) {
+        create: function(data, contextHeaderParams) {
             var self = this;
             try {
                 //  verify: data is not null, data has non empty tuple set
@@ -953,8 +954,16 @@
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
 
+                // create the context header params for log
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "create"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, data.length)
+                };
+
                 //  do the 'post' call
-                this._server._http.post(uri, data).then(function(response) {
+                this._server._http.post(uri, data, config).then(function(response) {
                     var etag = response.headers().etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
@@ -1072,6 +1081,7 @@
          *
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
+         * @param {Object} contextHeaderParams the object that we want to log.
          *
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
@@ -1080,7 +1090,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit) {
+        read: function(limit, contextHeaderParams) {
             try {
 
                 var defer = module._q.defer();
@@ -1272,7 +1282,13 @@
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
                 var ownReference = this;
-                this._server._http.get(uri).then(function readReference(response) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "read"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, limit)
+                };
+                this._server._http.get(uri, config).then(function (response) {
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -1365,13 +1381,14 @@
          * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
          * Both are {@link ERMrest.Page} of results.
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        update: function(tuples) {
+        update: function(tuples, contextHeaderParams) {
             try {
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
@@ -1592,7 +1609,13 @@
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                this._server._http.put(uri, submissionData).then(function updateReference(response) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "update"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams, submissionData.length)
+                };
+                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
                     // Some data was not updated
                     if (response.status === 200 && response.data.length < submissionData.length) {
                         var updatedRows = response.data;
@@ -1738,11 +1761,11 @@
 
         /**
          * Deletes the referenced resources.
-         *
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function() {
+        delete: function(contextHeaderParams) {
             try {
 
                 var defer = module._q.defer();
@@ -1760,8 +1783,13 @@
                  * github issue: #425
                  */
                 var self = this, delFlag = module._operationsFlag.DELETE;
-
-                this._server._http.delete(this.location.ermrestUri).then(function deleteReference(deleteResponse) {
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "delete"};
+                }
+                var config = {
+                    headers: this._generateContextHeader(contextHeaderParams)
+                };
+                this._server._http.delete(this.location.ermrestUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
@@ -2012,7 +2040,28 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestUri + "?limit=none&accept=csv&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+        },
+
+        /**
+         * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+         * @type {Object}
+         */
+        get defaultLogInfo() {
+            var obj = {};
+            obj.schema_table = this.table.schema.name + ":" + this.table.name;
+
+            if (this.location.facets) {
+                obj.facet = this.location.facets.decoded;
+            } else if (this.location.filter) {
+                if (this.location.filter.facet) {
+                    obj.facet = this.location.filter.facet;
+                } else {
+                    obj.filter = this.location.filtersString;
+                }
+            }
+
+            return obj;
         },
 
         /**
@@ -2062,9 +2111,17 @@
          * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
          * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
          */
-        getAggregates: function(aggregateList) {
+        getAggregates: function(aggregateList, contextHeaderParams) {
             var defer = module._q.defer();
             var url;
+
+            // create the context header params for log
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {"action": "aggregate"};
+            }
+            var config = {
+                headers: this._generateContextHeader(contextHeaderParams)
+            };
 
             var URL_LENGTH_LIMIT = 2048;
 
@@ -2104,7 +2161,7 @@
             var aggregatePromises = [];
             var http = this._server._http;
             for (var j = 0; j < urlSet.length; j++) {
-                aggregatePromises.push(http.get(urlSet[j]));
+                aggregatePromises.push(http.get(urlSet[j], config));
             }
 
             module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -2324,34 +2381,13 @@
             // this function will take care of adding column and asset column
             var addColumn = function (col) {
                 if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
-
-                    if (("url_pattern" in col.annotations.get(module._annotations.ASSET).content)) {
-
-                        var urlPattern = col.annotations.get(module._annotations.ASSET).content.url_pattern;
-
-                        // If url_pattenr doesn't has hatrac in it then consider the column as a plain text column and proceed
-                        if ((typeof urlPattern !== 'string') || (module._parseUrl(urlPattern).pathname.indexOf('/hatrac/') !== 0)) {
-                            // ignore the column
-                            console.log("url_pattern '" + urlPattern + "' for column '" + col.name + "' doesn't has hatrac");
-                            if (module._isEntryContext(self._context)) {
-                                return;
-                            }
-                        } else {
-                            // add asset annotation
-                            var assetCol = new AssetPseudoColumn(self, col);
-                            assetColumns.push(assetCol);
-                            self._referenceColumns.push(assetCol);
-                            return;
-                        }
-                    } else if (module._isEntryContext(self._context)) {
-                        // ignore the column
-                        console.log("Column " + col.name + " doesn't contains url_pattern");
-                        return;
-                    }
+                    var assetCol = new AssetPseudoColumn(self, col);
+                    assetColumns.push(assetCol);
+                    self._referenceColumns.push(assetCol);
+                    return;
                 }
 
                 // if annotation is not present,
-                // or in any context other than entry, and the url_pattern is not present
                 self._referenceColumns.push(new ReferenceColumn(self, [col]));
             };
 
@@ -2737,6 +2773,26 @@
             }
 
             return newRef;
+        },
+
+        _generateContextHeader: function (contextHeaderParams, page_size) {
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {};
+            }
+
+            for (var key in this.defaultLogInfo) {
+                // only add the values that are not defined.
+                if (key in contextHeaderParams) continue;
+                contextHeaderParams[key] = this.defaultLogInfo[key];
+            }
+
+            if (isInteger(page_size)) {
+                contextHeaderParams.page_size = page_size;
+            }
+
+            var headers = {};
+            headers[module._contextHeaderName] = contextHeaderParams;
+            return headers;
         }
     };
 
@@ -3866,7 +3922,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
         },
@@ -3881,8 +3937,8 @@
             if (this._uniqueId === undefined) {
                 var key, hasNull = false;
                 this._uniqueId = "";
-                for (var i = 0; i < this.reference.table.shortestKey.length; i++) {
-                    keyName = this.reference.table.shortestKey[i].name;
+                for (var i = 0; i < this._pageRef.table.shortestKey.length; i++) {
+                    keyName = this._pageRef.table.shortestKey[i].name;
                     if (this.data[keyName] == null) {
                         hasNull = true;
                         break;
@@ -4872,7 +4928,7 @@
 
         this._baseCol = column;
 
-        this._annotation = column.annotations.get(module._annotations.ASSET).content;
+        this._annotation = column.annotations.get(module._annotations.ASSET).content || {};
 
         /**
          * @type {boolean}
@@ -4888,6 +4944,20 @@
     }
     // extend the prototype
     module._extends(AssetPseudoColumn, ReferenceColumn);
+
+    /**
+     * If url_pattern is invalid or browser_upload=false the input will be disabled.
+     * @param  {string} context the context
+     * @return {boolean|object}
+     */
+    AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
+        var pat = this._annotation.url_pattern;
+        if (typeof pat !== "string" || pat.length === 0 || this._annotation.browser_upload === false) {
+            return true;
+        }
+        // TODO not sure
+        return AssetPseudoColumn.super._determineInputDisabled.call(this, context);
+    };
 
     // properties to be overriden:
     AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
@@ -4909,9 +4979,13 @@
         // otherwise return a download link
         var template = "[{{{caption}}}]({{{url}}}){download .download}";
         var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
+        var url = data[this._baseCol.name];
+
+        // add the uinit=1 query params
+        url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
         var keyValues = {
             "caption": col.formatvalue(data[col.name], context, options),
-            "url": data[this._baseCol.name]
+            "url": url
         };
         var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
         return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
@@ -4925,7 +4999,6 @@
     Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
         get: function () {
             if (this._urlPattern === undefined) {
-                // url_pattern is a required attribute in annotation
                 this._urlPattern = this._annotation.url_pattern;
             }
             return this._urlPattern;
@@ -5169,7 +5242,7 @@
         this._column = column;
 
         /**
-         * [reference description]
+         * The reference that this facet blongs to
          * @type {ERMrest.Reference}
          */
         this.reference = reference;
