@@ -924,12 +924,22 @@ BucketAttributeGroupReference.prototype.search = function (term) {
 BucketAttributeGroupReference.prototype.read = function () {
     var moment = module._moment;
 
+    // function decimals_s(num){
+    //     var num_s = "" + num;
+    //     return num_s.split(".")[1].length;
+    // }
+    //
+    // function addFloats(min, width) {
+    //     var precision = Math.max(decimals_s(min), decimals_s(width));
+    //     return ((min*1) + (width*1)).toFixed(precision);
+    // }
+
     function calculateWidthLabel(min, binWidth) {
         var nextLabel;
         if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
-            nextLabel = moment(min).add(binWidth, 'd').format('YYYY-MM-DD');
+            nextLabel = moment(min).add(binWidth, 'd').format(module._dataFormats.DATE);
         } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-            nextLabel = moment(min).add(binWidth, 's').format("YYYY-MM-DD HH:mm:ss");
+            nextLabel = moment(min).add(binWidth, 's').format(module._dataFormats.DATETIME.display);
         } else {
             nextLabel = (min + binWidth);
         }
@@ -962,11 +972,11 @@ BucketAttributeGroupReference.prototype.read = function () {
                     max = response.data[i].c1[2];
 
                     if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
-                        min = min !== null ? moment(min).format("YYYY-MM-DD") : null;
-                        max = max !== null ? moment(max).format("YYYY-MM-DD") : null;
+                        min = min !== null ? moment(min).format(module._dataFormats.DATE) : null;
+                        max = max !== null ? moment(max).format(module._dataFormats.DATE) : null;
                     } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                        min = min !== null ? moment(min).format("YYYY-MM-DD HH:mm:ss") : null;
-                        max = max !== null ? moment(max).format("YYYY-MM-DD HH:mm:ss") : null;
+                        min = min !== null ? moment(min).format(module._dataFormats.DATETIME.display) : null;
+                        max = max !== null ? moment(max).format(module._dataFormats.DATETIME.display) : null;
                     }
 
                     labels.min[index] = min;
@@ -975,23 +985,13 @@ BucketAttributeGroupReference.prototype.read = function () {
                     data.x[index] = min;
                     data.y[index] = response.data[i].c2;
                 }
-                // NOTE: debugging statments
-                // console.log("===========" + index + "===========");
-                // console.log("Min when reading data: ", min);
-                // console.log("Max when reading data: ", max);
-
                 // else if null (this is the null bin)
-                // make it bin at index 0
+                // we currently don't want to do anything with the null values
             }
 
             // This should be set to 12 to include the # of bins we want to display + the above max and below min bucket
             for (var j=0; j<currRef._options.bucketCount+2; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
-                // NOTE: debugging statments
-                // console.log("===========" + j + "===========");
-                // console.log("data when padding: ", data.x[j]);
-                // console.log("label min when padding: ", labels.min[j]);
-                // console.log("label max when padding: ", labels.max[j]);
                 if (data.x[j] === undefined) {
                     // determine x axis label
 
@@ -1012,9 +1012,9 @@ BucketAttributeGroupReference.prototype.read = function () {
                             max = currRef._options.absMin;
 
                             if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
-                                max = moment(max).format("YYYY-MM-DD");
+                                max = moment(max).format(module._dataFormats.DATE);
                             } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                                max = moment(max).format("YYYY-MM-DD HH:mm:ss");
+                                max = moment(max).format(module._dataFormats.DATETIME.display);
                             }
                         } else {
                             max = calculateWidthLabel(min, currRef._options.binWidth);

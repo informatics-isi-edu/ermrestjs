@@ -211,7 +211,7 @@ exports.execute = function(options) {
                         var formattedValue = col.formatvalue(testVal);
 
                         expect(formattedValue).toEqual(jasmine.any(String));
-                        expect(formattedValue).toBe(options.ermRest._moment(testVal).format("YYYY-MM-DD HH:mm:ss"));
+                        expect(formattedValue).toBe(options.ermRest._moment(testVal).format(options.ermRest._dataFormats.DATETIME.display));
                     });
                 });
 

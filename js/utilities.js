@@ -1018,7 +1018,11 @@
             case 503:
                 return new module.ServiceUnavailableError(response.statusText, response.data);
             default:
-                return new Error(response.statusText, response.data);
+                if (response.statusText || response.data) {
+                    return new Error(response.statusText, response.data);
+                } else {
+                    return new Error(response);
+                }
         }
     };
 
@@ -1102,7 +1106,7 @@
                 throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
             }
 
-            return moment(value).format('YYYY-MM-DD HH:mm:ss');
+            return moment(value).format(module._dataFormats.DATETIME.display);
         },
 
         /**
@@ -1132,7 +1136,7 @@
                 throw new module.InvalidInputError("Couldn't transform input to a valid date");
             }
 
-            return moment(value).format('YYYY-MM-DD');
+            return moment(value).format(module._dataFormats.DATE);
         },
 
         /**
@@ -2214,6 +2218,15 @@
         ROWNAME :'row_name',
         ROWNAME_UNFORMATTED: "row_name/unformatted",
         COMPACT_BRIEF_INLINE: 'compact/brief/inline'
+    });
+
+    module._dataFormats = Object.freeze({
+        DATE: "YYYY-MM-DD",
+        TIME: "HH:mm:ss",
+        DATETIME:  {
+            display: "YYYY-MM-DD HH:mm:ss",
+            submission:  "YYYY-MM-DDTHH:mm:ss.SSSZ"
+        }
     });
 
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];

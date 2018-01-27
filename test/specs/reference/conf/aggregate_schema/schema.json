@@ -57,7 +57,7 @@
                     "name": "timestamp_agg",
                     "nullok": true,
                     "type": {
-                        "typename": "timestamp"
+                        "typename": "timestamptz"
                     }
                 }
             ],

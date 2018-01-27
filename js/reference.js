@@ -5340,9 +5340,25 @@
          */
         get showHistogram() {
             if (this._showHistogram === undefined) {
-                this._showHistogram = (this._facetObject.binning === false) ? false : true;
+                this._showHistogram = (this._facetObject.barPlot === false) ? false : true;
             }
             return this._showHistogram;
+        },
+
+        /**
+         * Returns the value of `barPlot.nBins` if it was defined as part of the
+         * `facetObject` in the annotation. If undefined, the default # of buckets is 30
+         *
+         * @type {Integer}
+         */
+        get histogramBucketCount() {
+            if (this._numBuckets === undefined) {
+                this._numBuckets = 30;
+                if (this._facetObject.barPlot && this._facetObject.barPlot.nBins) {
+                    this._numBuckets = this._facetObject.barPlot.nBins;
+                }
+            }
+            return this._numBuckets;
         },
 
         /**
@@ -6318,7 +6334,9 @@
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
             var width, range, minMoment, maxMoment;
-            var absMax = max;
+
+            var absMax = max,
+                moment = module._moment;
 
             if (this.column.type.rootName.indexOf("date") > -1) {
                 minMoment = moment(min);
@@ -6329,14 +6347,14 @@
                 }
 
                 width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
-                absMax = minMoment.add(width*bucketCount, 'd').format('YYYY-MM-DD');
+                absMax = minMoment.add(width*bucketCount, 'd').format(module._dataFormats.DATE);
             } else if (this.column.type.rootName.indexOf("timestamp") > -1) {
                 minMoment = moment(min);
                 maxMoment = moment(max);
 
                 if (maxMoment.diff(minMoment) === 0) {
                     maxMoment.add(10*bucketCount, 's');
-                    absMax = maxMoment.format('YYYY-MM-DDTHH:mm:ssZ');
+                    absMax = maxMoment.format(module._dataFormats.DATETIME.submission);
                 }
 
                 width = Math.round( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds() );
@@ -6397,7 +6415,6 @@
                 new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
-            //TODO this should just return the results, but I'm not sure about the datastructure.
             return new BucketAttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog, options);
         }
     };
