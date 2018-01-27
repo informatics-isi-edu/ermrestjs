@@ -2394,7 +2394,8 @@
         TIME: "HH:mm:ss",
         DATETIME:  {
             display: "YYYY-MM-DD HH:mm:ss",
-            submission:  "YYYY-MM-DDTHH:mm:ss.SSSZ"
+            returnFormat: "YYYY-MM-DDTHH:mm:ssZ", // the format that the database returns when there are no fractional seconds to show
+            submission: "YYYY-MM-DDTHH:mm:ss.SSSZ"
         }
     });
 

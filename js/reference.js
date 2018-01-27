@@ -5403,7 +5403,7 @@
 
         /**
          * Returns true if the plotly histogram graph should be shown in the UI
-         * If _facetObject.binning is not defined, the value is true. By default
+         * If _facetObject.barPlot is not defined, the value is true. By default
          * the histogram should be shown unless specified otherwise
          *
          * @type {Boolean}
@@ -6482,11 +6482,6 @@
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
 
-            // if min and max are same value, bin API fails
-            // TODO: based on type, increment max by 1 unit
-            if (max == min) {
-                max += 1;
-            }
             var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + module._fixedEncodeURIComponent(options.absMin) + ";" + module._fixedEncodeURIComponent(options.absMax) + ")";
             var keyColumns = [
                 new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)

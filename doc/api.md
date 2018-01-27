@@ -3724,7 +3724,7 @@ otherwise it will true if filter is based on key.
 
 #### facetColumn.showHistogram : <code>Boolean</code>
 Returns true if the plotly histogram graph should be shown in the UI
-If _facetObject.binning is not defined, the value is true. By default
+If _facetObject.barPlot is not defined, the value is true. By default
 the histogram should be shown unless specified otherwise
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  

@@ -174,8 +174,8 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(5, "Timestamp count not null is incorrect");
                     expect(response[1]).toBe(5, "Timestamp unique count is incorrect");
-                    expect(response[2]).toBe("2010-05-22T17:44:00-07:00", "Timestamp min value is incorrect");
-                    expect(response[3]).toBe("2017-04-13T14:10:00-07:00", "Timestamp max value is incorrect");
+                    expect(response[2]).toBe(moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp min value is incorrect");
+                    expect(response[3]).toBe(moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp max value is incorrect");
 
                     done();
                 }).catch(function (error) {
@@ -462,8 +462,8 @@ exports.execute = function (options) {
                     var submissionMin, submissionMax;
 
                     beforeAll(function () {
-                        submissionMin = "2010-05-22T17:44:00-07:00";
-                        submissionMax = "2017-04-13T14:10:00-07:00";
+                        submissionMin = moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat);
+                        submissionMax = moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat);
 
                         min = "2010-05-22 17:44:00";
                         max = "2017-04-13 14:10:00";
@@ -503,7 +503,7 @@ exports.execute = function (options) {
                 });
             });
 
-            //TODO add test cases for entityValues 
+            //TODO add test cases for entityValues
         });
     });
 };
