@@ -356,6 +356,7 @@ to use for ERMrest JavaScript agents.
         * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+        * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3450,6 +3451,7 @@ The Foreign key object that this PseudoColumn is created based on
     * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+    * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -3512,6 +3514,17 @@ The column object that sha256 hash is stored in.
 The column object that file extension is stored in.
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+_determineInputDisabled"></a>
+
+#### assetPseudoColumn._determineInputDisabled(context) ⇒ <code>boolean</code> \| <code>object</code>
+If url_pattern is invalid or browser_upload=false the input will be disabled.
+
+**Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| context | <code>string</code> | the context |
+
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
 ### ERMrest.InboundForeignKeyPseudoColumn

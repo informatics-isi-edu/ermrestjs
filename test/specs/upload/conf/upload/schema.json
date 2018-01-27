@@ -110,11 +110,25 @@
                         "typename": "text"
                     },
                     "annotations": {}
+                },
+                {
+                    "comment": "asset column with url_pattern that doesn't start with hatrac",
+                    "name": "uri_wo_hatrac",
+                    "default": null,
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern" : "/ermrestjs/{{{_timestamp}}}/{{{_uri_wo_hatrac}}"
+                        }
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*" : ["id", "uri", "fk_id"]
+                    "*" : ["id", "uri", "fk_id", "uri_wo_hatrac"]
                 }
             }
         },

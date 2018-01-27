@@ -160,14 +160,14 @@ exports.execute = function (options) {
 
         describe('.isAsset, ', function () {
             it ('for PseudoColumns that are asset should return true.', function () {
-                for (var i = 9; i < 11; i++) {
-                    expect(assetRefCompactCols[i].isAsset).toBe(true);
+                for (var i = 8; i < 11; i++) {
+                    expect(assetRefCompactCols[i].isAsset).toBe(true, "invalid isAsset for index="+ i);
                 }
             });
 
             it ('for other columns should return undefined.', function () {
-                for (var i = 0; i < 9; i++) {
-                    expect(assetRefCompactCols[i].isAsset).toBe(undefined);
+                for (var i = 0; i < 8; i++) {
+                    expect(assetRefCompactCols[i].isAsset).toBe(undefined, "invalid isAsset for index="+ i);
                 }
             });
         });
@@ -411,6 +411,18 @@ exports.execute = function (options) {
                     }).toThrow("can not use this type of column in entry mode.");
                 });
 
+                describe("for assets,", function () {
+                    it ("if url_pattern is invalid, return true.", function () {
+                        expect(assetRefEntryCols[4].isAsset).toBe(true, "isAsset invalid");
+                        expect(assetRefEntryCols[4].inputDisabled).toBe(true, "inputDisabled invalid");
+                    });
+
+                    it ("otherwise return the base column's result.", function () {
+                        expect(assetRefEntryCols[5].inputDisabled).toBe(true, "input disabled invalid for col_asset_2");
+                        expect(assetRefEntryCols[6].inputDisabled).toBe(false, "input disabled invalid for col_asset_3");
+                    });
+                });
+
                 it('if it\'s based on one column (simple), should return base column\`s result.', function () {
                     // has generated
                     expect(entryCreateRef.columns[0].inputDisabled).toEqual({
@@ -651,7 +663,7 @@ exports.execute = function (options) {
 
                 describe('for assets, ', function() {
                     it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
-                        val = assetRefEntryCols[5].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"formattedValues":{"col_asset_3": "https://example.com"}}).value;
+                        val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"formattedValues":{"col_asset_3": "https://example.com"}}).value;
                         expect(val).toEqual("https://example.com");
 
                         val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"formattedValues":{"col_filename": "filename"}}).value;
