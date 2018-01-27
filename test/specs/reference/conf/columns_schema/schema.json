@@ -882,6 +882,7 @@
                         "typename": "text"
                     },
                     "annotations": {
+                        "tag:isrd.isi.edu,2016:immutable": null,
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_2}}",
                             "filename_column": "no col",
@@ -1639,7 +1640,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : 1
                         }
                     }
                 },
@@ -1653,7 +1654,7 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : ""
                         }
                     }
                 },
@@ -1667,7 +1668,8 @@
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}"
+                            "url_pattern" : "https://example.com/hatrac/js/ermrestjs/{{{_uri.md5_hex}}}",
+                            "browser_upload": false
                         }
                     }
                 }

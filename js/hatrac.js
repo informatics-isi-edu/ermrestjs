@@ -662,6 +662,11 @@ var ERMrest = (function(module) {
         // Generate url
         var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
 
+        // check for having hatrac
+        if ((module._parseUrl(url).pathname.indexOf('/hatrac/') !== 0)) {
+            throw new module.MalformedURIError("The path for uploading a url should begin with /hatrac/ .");
+        }
+
         // If the template is null then throw an error
         if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
 

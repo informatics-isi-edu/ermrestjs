@@ -211,6 +211,15 @@
     };
 
     /**
+     * Returns true if given parameter isan integer
+     * @param  {*} x
+     * @return {boolean}
+     */
+    var isInteger = function (x) {
+        return (typeof x === 'number') && (x % 1 === 0);
+    };
+
+    /**
      * @private
      * @param {Object} child child class
      * @param {Object} parent parent class
@@ -2168,6 +2177,166 @@
         }
         r.href = r.origin + r.pathname + r.search + r.hash;
         return m && r;
+    };
+
+    /**
+     * Given an object will make sure it's safe for header.
+     * @param  {object} obj JavaScript object or JSON object
+     * @return {string} A safe string for http header
+     */
+    module._encodeHeaderContent = function (obj) {
+        return unescape(module._fixedEncodeURIComponent(JSON.stringify(obj)));
+    };
+
+    /**
+     * Given a header value, will encode and truncate if its length is more than the allowed length.
+     * These are the allowed and expected values in a header:
+     * - cid
+     * - pid
+     * - wid
+     * - schema_table: schema:table
+     * - filter
+     * - facet
+     * - referrer: for related entities the main entity, for recordset facets: the main entity
+     *    - filter
+     *    - facet
+     *    - schema_table
+     * - source: the source object of facet
+     * @param  {object} header The header content
+     * @return {object}
+     */
+    module._certifyContextHeader = function (header) {
+        var MAX_LENGTH = 6500;
+        var encode = module._encodeHeaderContent;
+        var res = encode(header), prevRes, facetRes;
+
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // the minimal required attributes for log
+        var obj = {
+            cid: header.cid,
+            wid: header.wid,
+            pid: header.pid,
+            action: header.action,
+            schema_table: header.schema_table,
+            t: 1 // indicates that this request has been truncated
+        };
+
+        prevRes = res = encode(obj);
+        if (res.length >= MAX_LENGTH) {
+            return {};
+        }
+
+        // truncate facet or filter
+        // if it's a facet that has `and` in the first level,
+        // it will remove only the array element that is needed. otherwise
+        // the whole facet/filter will be removed.
+        var truncateFacet = function (obj, header, key) {
+            var prevRes = encode(obj);
+            var h = key ? header[key] : header;
+
+            if (h.filter) {
+                // add the filter
+                if (key) {
+                    obj[key].filter = h.filter;
+                } else {
+                    obj.filter = h.filter;
+                }
+
+                // encode and test the length
+                res = encode(obj);
+                if (res.length >= MAX_LENGTH) {
+                    // it was lengthy so just return the obj without filter
+                    return {truncated: true, res: prevRes};
+                }
+
+                // return result with filter
+                return {truncated: false, res: res};
+            }
+
+            // this function only expects facet and filter. it will ignore other variables
+            if (!h.facet) {
+                return {truncated: false, res: prevRes};
+            }
+
+            // only optimized for just one type of facet that we currently support: {and: []}
+            // otherwise just treat it as a object
+            if (!Array.isArray(h.facet.and)) {
+
+                // add the facet
+                if (key) {
+                    obj[key].facet = h.facet;
+                } else {
+                    obj.facet = h.facet;
+                }
+
+                // encode and test the length
+                res = encode(obj);
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+
+                // return result with facet
+                return {truncated: true, res: res};
+            }
+
+            if (key) {
+                obj[key].facet = {and: []};
+            } else {
+                obj.facet = {and: []};
+            }
+
+            // add fitlers in the and array one by one until getting to the limit.
+            for (var i = 0; i < h.facet.and.length; i++) {
+                if (key) {
+                    obj[key].facet.and.push(h.facet.and[i]);
+                } else {
+                    obj.facet.and.push(h.facet.and[i]);
+                }
+
+                res = encode(obj);
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+                prevRes = res;
+            }
+
+            // this means that the object had other attributes (apart from filter and facet)
+            // which is getting truncated
+            return {truncated: true, res: res};
+        };
+
+        // referrer: schema_table, facet (filter)
+        if (header.referrer) {
+            obj.referrer = {
+                schema_table: header.referrer.schema_table
+            };
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+
+            // take care of facet and fitler in referrer
+            facetRes = truncateFacet(obj, header, "referrer");
+            if (facetRes.truncated) {
+                return facetRes.res;
+            }
+            prevRes = facetRes.res;
+        }
+
+        // .source
+        if (header.source) {
+            obj.source = header.source;
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+        }
+
+        // take care of facet and fitler
+        return truncateFacet(obj, header).res;
     };
 
     module._constraintTypes = Object.freeze({
