@@ -2,6 +2,11 @@ exports.execute = function (options) {
     // Test Cases:
     describe("for testing aggregate functions on tables and columns,", function () {
         var moment = options.ermRest._moment;
+
+        function formatTimestamp(value) {
+            return moment(value).format(options.ermRest._dataFormats.DATETIME.returnFormat);
+        }
+
         var reference;
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "aggregate_schema",
@@ -174,8 +179,8 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(5, "Timestamp count not null is incorrect");
                     expect(response[1]).toBe(5, "Timestamp unique count is incorrect");
-                    expect(moment(response[2]).format(options.ermRest._dataFormats.DATETIME.returnFormat)).toBe(moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp min value is incorrect");
-                    expect(moment(response[3]).format(options.ermRest._dataFormats.DATETIME.returnFormat)).toBe(moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp max value is incorrect");
+                    expect(formatTimestamp(response[2])).toBe(formatTimestamp("2010-05-22T17:44:00-07:00"), "Timestamp min value is incorrect");
+                    expect(formatTimestamp(response[3])).toBe(formatTimestamp("2017-04-13T14:10:00-07:00"), "Timestamp max value is incorrect");
 
                     done();
                 }).catch(function (error) {
@@ -462,8 +467,8 @@ exports.execute = function (options) {
                     var submissionMin, submissionMax;
 
                     beforeAll(function () {
-                        submissionMin = moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat);
-                        submissionMax = moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat);
+                        submissionMin = formatTimestamp("2010-05-22T17:44:00-07:00");
+                        submissionMax = formatTimestamp("2017-04-13T14:10:00-07:00");
 
                         min = "2010-05-22 17:44:00";
                         max = "2017-04-13 14:10:00";
