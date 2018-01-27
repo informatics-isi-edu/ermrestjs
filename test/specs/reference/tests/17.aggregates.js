@@ -174,8 +174,8 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(5, "Timestamp count not null is incorrect");
                     expect(response[1]).toBe(5, "Timestamp unique count is incorrect");
-                    expect(response[2]).toBe(moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp min value is incorrect");
-                    expect(response[3]).toBe(moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp max value is incorrect");
+                    expect(moment(response[2]).format(options.ermRest._dataFormats.DATETIME.returnFormat)).toBe(moment("2010-05-22T17:44:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp min value is incorrect");
+                    expect(moment(response[3]).format(options.ermRest._dataFormats.DATETIME.returnFormat)).toBe(moment("2017-04-13T14:10:00-07:00").format(options.ermRest._dataFormats.DATETIME.returnFormat), "Timestamp max value is incorrect");
 
                     done();
                 }).catch(function (error) {
