@@ -3,7 +3,16 @@
   "spec_files": [
     "common/spec.js",
     "parser/spec.js",
-    "annotation/spec.js" ],
+    "annotation/spec.js",
+    "reference/spec.js",
+    "ag_reference/spec.js",
+    "faceting/spec.js",
+    "comment/spec.js",
+    "print_utils/spec.js",
+    "errors/spec.js",
+    "upload/spec.js",
+    "sample/spec.js"
+  ],
   "helpers": ["../../node_modules/jasmine-expect/index.js"],
   "stopSpecOnExpectationFailure": false,
   "random": false

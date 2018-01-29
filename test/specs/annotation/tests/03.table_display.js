@@ -54,6 +54,12 @@ exports.execute = function (options) {
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
 
+        var findRID = function (tableName, id) {
+            return tables[tableName].entities.filter(function (e) {
+                return e.id == id;
+            })[0].RID;
+        };
+
         var tables;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
@@ -468,7 +474,9 @@ exports.execute = function (options) {
 
         describe('markdown display in case of no annotation is defined', function() {
             it('when no annotation is defiend; content should appear in unordered list format.', function(done){
-                var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20001">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20002">20,002</a></p>\n</li>\n</ul>\n';
+                var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName, "20001") + '">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName, "20002") + '">20,002</a></p>\n</li>\n</ul>\n';
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     return response;
                 }).then(function (reference){
@@ -498,23 +506,13 @@ exports.execute = function (options) {
                         ""
                     ];
 
-                    console.log("--------");
-                    console.log(tables[tableName5].entities);
-                    console.log("--------");
-
-                    var findRID = function (id) {
-                        return tables[tableName5].entities.filter(function (e) {
-                            return e.id == id;
-                        })[0].RID;
-                    };
-
                     var val;
                     page.tuples.forEach(function (t, index) {
                         if (typeof expected[i] === "string") {
                             val = expected[i];
                         } else {
                             val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/RID=' +
-                                  findRID(expected[index].id) + '">' + expected[index].rowName + '</a>';
+                                  findRID(tableName5, expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
                     });
