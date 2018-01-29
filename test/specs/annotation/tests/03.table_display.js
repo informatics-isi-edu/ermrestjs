@@ -490,11 +490,11 @@ exports.execute = function (options) {
                     return ref.read(5);
                 }).then(function (page) {
                     var expected = [
-                        {id: "10001", rowName: "<strong>William Shakespeare</strong>"},
-                        {id: "10002", rowName: "<strong>Mark Twain</strong>"},
-                        {id: "10003", rowName: "<strong>Lewis Carroll</strong>"},
-                        {id: "10004", rowName: "<strong>Jane Austen</strong>"},
-                        {id: "10005", rowName: "<strong>Charles Dickens</strong>"},
+                        {id: 10001, rowName: "<strong>William Shakespeare</strong>"},
+                        {id: 10002, rowName: "<strong>Mark Twain</strong>"},
+                        {id: 10003, rowName: "<strong>Lewis Carroll</strong>"},
+                        {id: 10004, rowName: "<strong>Jane Austen</strong>"},
+                        {id: 10005, rowName: "<strong>Charles Dickens</strong>"},
                         ""
                     ];
 
@@ -504,7 +504,7 @@ exports.execute = function (options) {
 
                     var findRID = function (id) {
                         return tables[tableName5].entities.filter(function (e) {
-                            return e.id === id;
+                            return e.id == id;
                         })[0].RID;
                     };
 
