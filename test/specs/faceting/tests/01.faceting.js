@@ -330,6 +330,7 @@ exports.execute = function (options) {
                         var facetColumns = ref.facetColumns;
                         expect(ref.facetColumns.length).toBe(17, "length missmatch.");
                         expect(ref.facetColumns[16]._column.name).toBe("unfaceted_column", "column name missmatch.");
+                        expect(ref.facetColumns[16].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toEqual(
                             "M:=faceting_schema:main/unfaceted_column::ciregexp::test/$M",
@@ -342,13 +343,31 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("If the facet exisits in the annotation should only add the filter to that facet from uri.", function (done) {
+                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
                     facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(16, "length missmatch.");
+                        expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
                             "M:=faceting_schema:main/id=2/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (ranges)", function (done) {
+                    facetObj = { "and": [ {"source": "int_col", "ranges": [{"max": 12, "min": 5}]} ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(16, "length missmatch.");
+                        expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/int_col::gt::5&int_col::lt::12/$M",
                             "path missmatch."
                         );
                         done();
@@ -369,6 +388,9 @@ exports.execute = function (options) {
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         refMainMoreFilters = ref;
                         expect(ref.facetColumns.length).toBe(16, "length missmatch.");
+                        expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.facetColumns[5].filters.length).toBe(6, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
                             "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/text_col=a;text_col=b;text_col::geq::a;text_col::leq::b;text_col::ciregexp::a;text_col::ciregexp::b/$M",

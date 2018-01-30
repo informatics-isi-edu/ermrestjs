@@ -532,7 +532,7 @@
                             }
 
                             // in range we must have one of min, or max.
-                            if (key === 'ranges' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
+                            if ( key === 'ranges' && (!isDefinedAndNotNull(ch.min) && !isDefinedAndNotNull(ch.max)) ) {
                                 return;
                             }
 
