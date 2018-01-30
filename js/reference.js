@@ -5411,6 +5411,12 @@
         get showHistogram() {
             if (this._showHistogram === undefined) {
                 this._showHistogram = (this._facetObject.barPlot === false) ? false : true;
+
+                // if it's not in the list of spported types we won't show it even if the user defined it in the annotation
+                if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
+                    this._showHistogram = false;
+                }
+
             }
             return this._showHistogram;
         },
