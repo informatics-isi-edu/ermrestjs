@@ -367,7 +367,7 @@ exports.execute = function (options) {
                         expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/int_col::gt::5&int_col::lt::12/$M",
+                            "M:=faceting_schema:main/int_col::geq::5&int_col::leq::12/$M",
                             "path missmatch."
                         );
                         done();
