@@ -22,7 +22,7 @@ exports.execute = function (options) {
 
         var singleEntityUri = baseUri + "/id=" + entityId;
 
-        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
+        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -272,7 +272,7 @@ exports.execute = function (options) {
                 expect(tuple.displayname.value).toBe("Hank", "tuple.displayname.value is incorrect");
                 var rid = options.entities[schemaName][tableName].filter(function (e) {
                     return e.id == "9000";
-                })
+                })[0].RID;
                 expect(tuple.uniqueId).toBe(rid, "tuple.uniqueId is incorrect");
             });
 
@@ -308,7 +308,7 @@ exports.execute = function (options) {
             var limit = 5;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(multipleEntityUri + "/@sort(id)", {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));

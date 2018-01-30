@@ -89,47 +89,47 @@ exports.execute = function (options) {
          */
 
         var uri1 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded;
+            schemaNameEncoded + ":" + baseTable1Encoded + "/@sort(id)";
 
         var uri2 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId;
+            schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId + "/@sort(id)";
 
         var uri3 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value;
+            schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value + "/@sort(id)";
 
         var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
+            baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006" + "/@sort(id)";
 
         var uri5 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded;
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/@sort(id%20x)";
 
         var uri6 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId + "/@sort(id%20x)";
 
         var uri7 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value;
+            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value + "/@sort(id%20x,value%20x)";
 
         var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
+            altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006"  + "/@sort(id%20x)";
 
         var uri9 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable1Encoded;
+            schemaNameEncoded + ":" + altCompactTable1Encoded + "/@sort(id%20y)";
 
         var uri10 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId;
+            schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId + "/@sort(id%20y)";
 
         var uri11 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value;
+            schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value + "/@sort(id%20y,value%20y)";
 
         var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
+            altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006" + "/@sort(id%y)";
 
         var uri13 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)";
+            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)/@sort(id)";
 
         var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
             relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=(" +
-            schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
+            schemaNameEncoded + ":" + baseTable1Encoded + ":id)" + "/@sort(id)";
 
         var facetObject15 = {
             "and": [
@@ -144,7 +144,7 @@ exports.execute = function (options) {
         };
 
         var uri15 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15);
+            schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15) + "/@sort(id)";
 
         var facetObject16 = {
             "and": [
@@ -160,7 +160,13 @@ exports.execute = function (options) {
         };
 
         var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16);
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16) + "/@sort(id)";
+
+        var findRID = function (currTable, keyName, keyValue) {
+            return options.entities[schemaName][currTable].filter(function (e) {
+                return e[keyName] == keyValue;
+            })[0].RID;
+        };
 
         describe('1. base table with no entity filters,', function() {
             var reference, reference2, page, tuple;
@@ -199,8 +205,6 @@ exports.execute = function (options) {
             it('1.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -232,7 +236,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00001"));
             });
 
             it('1.A.4 tuple read should return correct data from base table', function(done) {
@@ -251,15 +255,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("1.A.5 tuple uniqueId should return correct data from base table.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('1.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -315,8 +313,6 @@ exports.execute = function (options) {
             it('1.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -408,8 +404,6 @@ exports.execute = function (options) {
             it('2.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -466,8 +460,6 @@ exports.execute = function (options) {
             it('2.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -524,8 +516,6 @@ exports.execute = function (options) {
             it('2.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -617,8 +607,6 @@ exports.execute = function (options) {
             it('3.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -675,8 +663,6 @@ exports.execute = function (options) {
             it('3.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -735,8 +721,6 @@ exports.execute = function (options) {
             it('3.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -829,8 +813,6 @@ exports.execute = function (options) {
             it('4.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -887,8 +869,6 @@ exports.execute = function (options) {
             it('4.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -944,8 +924,6 @@ exports.execute = function (options) {
             it('4.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1034,8 +1012,6 @@ exports.execute = function (options) {
             it('5.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1088,8 +1064,8 @@ exports.execute = function (options) {
             it('5.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1141,8 +1117,8 @@ exports.execute = function (options) {
             it('5.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1232,8 +1208,6 @@ exports.execute = function (options) {
             it('6.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1290,8 +1264,8 @@ exports.execute = function (options) {
             it('6.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1343,8 +1317,8 @@ exports.execute = function (options) {
             it('6.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1434,8 +1408,8 @@ exports.execute = function (options) {
             it('7.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
+
+
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -1493,8 +1467,8 @@ exports.execute = function (options) {
             it('7.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -1553,8 +1527,8 @@ exports.execute = function (options) {
             it('7.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -1645,8 +1619,6 @@ exports.execute = function (options) {
             it('8.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1703,8 +1675,8 @@ exports.execute = function (options) {
             it('8.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1760,8 +1732,8 @@ exports.execute = function (options) {
             it('8.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1850,8 +1822,6 @@ exports.execute = function (options) {
             it('9.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1908,8 +1878,8 @@ exports.execute = function (options) {
             it('9.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1965,8 +1935,8 @@ exports.execute = function (options) {
             it('9.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2056,8 +2026,6 @@ exports.execute = function (options) {
             it('10.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2114,8 +2082,8 @@ exports.execute = function (options) {
             it('10.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2167,8 +2135,8 @@ exports.execute = function (options) {
             it('10.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2258,8 +2226,8 @@ exports.execute = function (options) {
             it('11.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
+
+
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -2317,8 +2285,6 @@ exports.execute = function (options) {
             it('11.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -2377,8 +2343,6 @@ exports.execute = function (options) {
             it('11.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("RID");
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -2469,8 +2433,6 @@ exports.execute = function (options) {
             it('12.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2527,8 +2489,6 @@ exports.execute = function (options) {
             it('12.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2584,8 +2544,6 @@ exports.execute = function (options) {
             it('12.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2676,8 +2634,6 @@ exports.execute = function (options) {
             it('13.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2734,8 +2690,6 @@ exports.execute = function (options) {
             it('13.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2791,8 +2745,6 @@ exports.execute = function (options) {
             it('13.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2848,8 +2800,6 @@ exports.execute = function (options) {
             it("13.D contextualizing a contextualized reference should not remove the join., ", function () {
                 reference3 = reference2.contextualize.entry;
                 expect(reference3._table.name).toBe(baseTable1);
-                expect(reference3._shortestKey.length).toBe(1);
-                expect(reference3._shortestKey[0].name).toBe("id");
                 expect(reference3.displayname.value).toBe(baseTable1);
             });
 
@@ -2940,8 +2890,6 @@ exports.execute = function (options) {
             it('14.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2998,8 +2946,6 @@ exports.execute = function (options) {
             it('14.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -3055,8 +3001,6 @@ exports.execute = function (options) {
             it('14.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -3146,8 +3090,6 @@ exports.execute = function (options) {
             it('15.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
 
             it("15.A.0 returned reference should have correct facets.", function () {
@@ -3207,8 +3149,6 @@ exports.execute = function (options) {
             it('15.B contextualize detailed should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1, "table missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id x", "shortestkey name missmatch.");
                 expect(reference2.displayname.value).toBe(altDetailedTable1, "displayname missmatch.");
             });
 
@@ -3310,8 +3250,6 @@ exports.execute = function (options) {
             it('16.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
 
             it("16.A.0 returned reference should have correct facets.", function () {
@@ -3380,8 +3318,6 @@ exports.execute = function (options) {
             it('16.B contextualize compact should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1, "table missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id y", "shortestkey name missmatch.");
             });
 
             it("16.B.0 returned reference should have correct facets.", function () {

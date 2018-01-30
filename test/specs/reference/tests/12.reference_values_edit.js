@@ -9,11 +9,11 @@ exports.execute = function (options) {
             limit = 7;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
-        
-        
+
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -144,13 +144,13 @@ exports.execute = function (options) {
 
 
 
-        
-        
+
+
         describe("Testing tuples values", function() {
             var testObjects ={
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
-                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, null] 
+                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, null]
                         },
                 "test2": {
                         "rowValue" : ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -184,11 +184,11 @@ exports.execute = function (options) {
                 describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
                     testTupleValidity(i, expectedValue);
                 })
-                i++;    
+                i++;
             }
         });
-        
-        
+
+
         describe("Testing for EDIT JSON and JSONB Values", function() {
             //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
             var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true, "json_col_with_markdownpattern": "\"processed\""},
@@ -205,7 +205,7 @@ exports.execute = function (options) {
                 upperLimit = 2001,
                 limit = 6;
 
-            var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+            var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName + "/@sort(id)";
 
             var reference, page, tuples;
 
@@ -221,14 +221,14 @@ exports.execute = function (options) {
                     return reference.read(limit);
                 }).then(function (response) {
                     page = response;
-                    
+
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page._data.length).toBe(limit);
-                    
+
                     expect(page.tuples).toBeDefined();
                     tuples = page.tuples;
                     expect(tuples.length).toBe(limit);
-                    
+
                     done();
                 }, function (err) {
                     console.dir(err);
@@ -238,9 +238,9 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-            
+
             it("JSON and JSONB column should return the expected values in Edit Context", function() {
-                
+
                 for( var i=0; i<limit; i++){
                     var values=tuples[i].values;
                     var json=JSON.stringify(expectedValues[i].json_col,undefined,2);

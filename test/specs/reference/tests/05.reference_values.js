@@ -10,10 +10,10 @@ exports.execute = function (options) {
             limit = 7;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
-        
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -58,14 +58,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -89,7 +89,7 @@ exports.execute = function (options) {
          * and a particular column value at the specified valuedIndex
          */
         var checkValueAndIsHTML = function(columnName, tupleIndex, valueIndex, expectedValues, expectedIsHTMLValues) {
-           
+
             it("should check " + columnName + " to be `" + expectedValues[valueIndex] + "`", function() {
                 var tuple = tuples[tupleIndex];
                 var value = tuple.values[valueIndex];
@@ -125,7 +125,7 @@ exports.execute = function (options) {
                 var values = tuples[tupleIndex].values;
                 expect(values.length).toBe(14);
             });
-            
+
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("name", tupleIndex, 1, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("url", tupleIndex, 2, expectedValues, expectedIsHTMLValues);
@@ -133,19 +133,19 @@ exports.execute = function (options) {
             checkValueAndIsHTML("image_with_size", tupleIndex, 4, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("download_link", tupleIndex, 5, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("iframe", tupleIndex, 6, expectedValues, expectedIsHTMLValues);
-            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues, expectedIsHTMLValues);  
-            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);  
-            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);    
-            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);       
+            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("moment_col", tupleIndex, 13, expectedValues, expectedIsHTMLValues);
         };
-        
+
         describe("Testing tuples values", function() {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
 
-            var testObjects ={ 
+            var testObjects ={
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
                         "expectedValue" : [ '4000',
@@ -163,7 +163,7 @@ exports.execute = function (options) {
                                             '',
                                             expectedMomentValue
                                              ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]              
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]
                         },
                 "test2": {
                     "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -285,9 +285,9 @@ exports.execute = function (options) {
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                 }
-                
+
             }
-            
+
             var i = 0;
             for(var key in testObjects){
                 var rowValue = testObjects[key].rowValue;
@@ -296,12 +296,12 @@ exports.execute = function (options) {
                 describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
                     testTupleValidity(i, expectedValue, isHTML);
                 })
-                i++;    
+                i++;
             }
         });
 
     });
-    
+
     describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
         var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n", "col_markdown_blankable": '<p><a href="https://madeby.google.com/static/images/google_g_logo.svg" target="_blank"><img src="https://madeby.google.com/static/images/google_g_logo.svg" alt="" height="90"></a></p>\n'},
@@ -318,12 +318,12 @@ exports.execute = function (options) {
             upperLimit = 2001,
             limit = 6;
 
-        var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+        var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName + "/@sort(id)";
 
         var reference, page, tuples, url;
 
         beforeAll(function(done) {
-            
+
             // Fetch the entities beforehand
             options.ermRest.resolve(multipleEntityUri).then(function (response) {
                 reference = response;
@@ -331,14 +331,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -348,9 +348,9 @@ exports.execute = function (options) {
                 done.fail();
             });
         });
-        
+
         it("JSON column should display pre tags without markdown and should not append pre tag with markdown", function() {
-            
+
             for( var i=0; i<limit; i++){
                 var values=tuples[i].values;
                 var json='<pre>'+JSON.stringify(expectedValues[i].json_col,"undefined",2)+'</pre>';

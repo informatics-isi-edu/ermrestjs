@@ -227,7 +227,7 @@ exports.execute = function(options) {
             });
 
             it('.read should return a Page object that is defined.', function(done) {
-                related[2].sort([{"column":"id"}]).read(limit).then(function(response) {
+                related[2].sort([{"column":"id", "descending": false}]).read(limit).then(function(response) {
                     pageWithToName = response;
 
                     expect(pageWithToName).toEqual(jasmine.any(Object));
