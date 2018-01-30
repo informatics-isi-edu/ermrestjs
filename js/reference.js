@@ -533,7 +533,7 @@
                             }
 
                             // in range we must have one of min, or max.
-                            if (key === 'ranges' && isDefinedAndNotNull(ch.min) && isDefinedAndNotNull(ch.max)) {
+                            if ( key === 'ranges' && (!isDefinedAndNotNull(ch.min) && !isDefinedAndNotNull(ch.max)) ) {
                                 return;
                             }
 
@@ -5231,6 +5231,7 @@
      * @param {ERMrest.Column} column the column that filters will be based on.
      * @param {?object} facetObject The filter object that this FacetColumn will be created based on
      * @param {?ERMrest.FacetFilter[]} filters Array of filters
+     * @memberof ERMrest
      * @constructor
      */
     function FacetColumn (reference, index, column, facetObject, filters) {
@@ -6079,6 +6080,7 @@
      *
      * @param       {String|int} term the valeu of filter
      * @constructor
+     * @memberof ERMrest
      */
     function FacetFilter(term, columnType) {
         this._columnType = columnType;
@@ -6115,6 +6117,7 @@
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
+     * @memberof ERMrest
      */
     function SearchFacetFilter(term, columnType) {
         SearchFacetFilter.superClass.call(this, term, columnType);
@@ -6130,6 +6133,7 @@
      * Extends {@link ERMrest.FacetFilter}.
      * @param       {String|int} term the valeu of filter
      * @constructor
+     * @memberof ERMrest
      */
     function ChoiceFacetFilter(value, columnType) {
         ChoiceFacetFilter.superClass.call(this, value, columnType);
@@ -6146,6 +6150,7 @@
      * @param       {String|int=} min
      * @param       {String|int=} max
      * @constructor
+     * @memberof ERMrest
      */
     function RangeFacetFilter(min, max, columnType) {
         this._columnType = columnType;
@@ -6196,6 +6201,7 @@
      * It doesn't have the same toJSON and toString functions, since
      * the only thing that client would need is question of existence of this type of filter.
      * @constructor
+     * @memberof ERMrest
      */
     function NotNullFacetFilter () {
         this.facetFilterKey = "not_null";
@@ -6289,6 +6295,17 @@
         }
     };
 
+    /**
+     * Can be used to access group aggregate functions.
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.ReferenceColumn
+     *  will access this constructor for purposes of fetching grouped aggregate data
+     *  for a specific column
+     *
+     * @param {ERMrest.ReferenceColumn} column The column that is used for creating grouped aggregate
+     * @memberof ERMrest
+     * @constructor
+     */
     function ColumnGroupAggregateFn (column) {
         this.column = column;
 
