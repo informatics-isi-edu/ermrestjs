@@ -3,10 +3,10 @@ var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
-var importSchemas = function(configFilePaths, defer, catalogId, schemas) {
+var importSchemas = function(configFilePaths, defer, catalogId, entities) {
 
 	if (!configFilePaths.length) {
-		defer.resolve({catalogId: catalogId, schemas: schemas});
+		defer.resolve({catalogId: catalogId, entities: entities});
 		return;
 	}
 
@@ -24,10 +24,14 @@ var importSchemas = function(configFilePaths, defer, catalogId, schemas) {
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
 		if (data.schema) {
-			schemas[data.schema.name] = data.schema;
-			console.log("Attached schema " + data.schema.name);
+			entities[data.schema.name] = {};
+			for (var t in data.schema.tables) {
+                if (!data.schema.tables.hasOwnProperty(t)) continue;
+                entities[data.schema.name][t] = data.schema.tables[t].entities;
+            }
+			console.log("Attached entities of " + data.schema.name + " schema");
 		}
-    	importSchemas(configFilePaths, defer, data.catalogId, schemas);
+    	importSchemas(configFilePaths, defer, data.catalogId, entities);
     }, function (err) {
         defer.reject(err);
     }).catch(function(err) {
@@ -37,13 +41,13 @@ var importSchemas = function(configFilePaths, defer, catalogId, schemas) {
 };
 
 exports.importSchemas = function(configFilePaths, catalogId) {
-	var defer = q.defer(), schemas = {};
+	var defer = q.defer(), entities = {};
 	if (!configFilePaths || !configFilePaths.length) {
-		defer.resolve({catalogId: catalogId, schemas: schemas});
+		defer.resolve({catalogId: catalogId, entities: entities});
 		return defer.promise;
 	}
 
-	importSchemas(configFilePaths.slice(0), defer, catalogId, schemas);
+	importSchemas(configFilePaths.slice(0), defer, catalogId, entities);
 	return defer.promise;
 };
 

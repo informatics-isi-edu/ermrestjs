@@ -55,12 +55,10 @@ exports.execute = function (options) {
             tableNameWoAnnot;
 
         var findRID = function (tableName, id) {
-            return tables[tableName].entities.filter(function (e) {
+            return options.entities[schemaName][tableName].filter(function (e) {
                 return e.id == id;
             })[0].RID;
         };
-
-        var tables;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -99,7 +97,6 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
-            tables = options.schemas[schemaName].tables;
         });
 
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {

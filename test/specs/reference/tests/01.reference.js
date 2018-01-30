@@ -9,7 +9,7 @@ exports.execute = function (options) {
             entityId = 9000,
             lowerLimit = 8999,
             upperLimit = 9010,
-            originalTimeout, tables;
+            originalTimeout;
 
         var entityWithSlash = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableNameWithSlash;
@@ -61,7 +61,6 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
-            tables = options.schemas[schemaName].tables;
         });
 
         // Test Cases:
@@ -271,7 +270,7 @@ exports.execute = function (options) {
                 expect(tuple.isHTML).toBeDefined();
                 expect(tuple.displayname).toEqual(jasmine.any(Object), "tuple.displayname is not an object");
                 expect(tuple.displayname.value).toBe("Hank", "tuple.displayname.value is incorrect");
-                var rid = tables[tableName].entities.filter(function (e) {
+                var rid = options.entities[schemaName][tableName].filter(function (e) {
                     return e.id == "9000";
                 })
                 expect(tuple.uniqueId).toBe(rid, "tuple.uniqueId is incorrect");

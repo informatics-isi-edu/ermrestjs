@@ -28,7 +28,7 @@ exports.runTests = function (options) {
                 .then(function (res) {
                     console.log("Data imported with catalogId " + res.catalogId);
                     testOptions.catalogId = res.catalogId;
-                    testOptions.schemas = res.schemas;
+                    testOptions.entities = res.entities;
                     return server.catalogs.get(process.env.DEFAULT_CATALOG);
                 }).then(function (response) {
                     testOptions.catalog = response;
