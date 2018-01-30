@@ -252,6 +252,10 @@ to use for ERMrest JavaScript agents.
         * [new NoDataChangedError(message)](#new_ERMrest.NoDataChangedError_new)
     * [.NoConnectionError](#ERMrest.NoConnectionError)
         * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
+    * [.InvalidFacetSorting](#ERMrest.InvalidFacetSorting)
+        * [new InvalidFacetSorting(message)](#new_ERMrest.InvalidFacetSorting_new)
+    * [.InvalidPageCriteria](#ERMrest.InvalidPageCriteria)
+        * [new InvalidPageCriteria(message)](#new_ERMrest.InvalidPageCriteria_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -262,6 +266,7 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+        * [.session](#ERMrest.Reference+session)
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -2159,7 +2164,35 @@ no data was changed for update
 <a name="new_ERMrest.NoConnectionError_new"></a>
 
 #### new NoConnectionError(message)
-A no internert was passed to the API.
+A no internet was passed to the API.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.InvalidFacetSorting"></a>
+
+### ERMrest.InvalidFacetSorting
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidFacetSorting_new"></a>
+
+#### new InvalidFacetSorting(message)
+Invalid sorting conditions
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.InvalidPageCriteria"></a>
+
+### ERMrest.InvalidPageCriteria
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidPageCriteria_new"></a>
+
+#### new InvalidPageCriteria(message)
+Invalid page conditions
 
 
 | Param | Type | Description |
@@ -2217,6 +2250,7 @@ Constructor for a ParsedFilter.
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
+    * [.session](#ERMrest.Reference+session)
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ <code>Array.&lt;ERMrest.FacetColumn&gt;</code>
@@ -2305,6 +2339,17 @@ NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers
 Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+session"></a>
+
+#### reference.session
+The session object from the server
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| session | <code>Object</code> | the session object |
+
 <a name="ERMrest.Reference+table"></a>
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
@@ -4189,7 +4234,8 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 [ConflictError](#ERMrest.ConflictError),
 [ForbiddenError](#ERMrest.ForbiddenError),
 [UnauthorizedError](#ERMrest.UnauthorizedError),
-[NotFoundError](#ERMrest.NotFoundError),  
+[NotFoundError](#ERMrest.NotFoundError),
+[InvalidFacetSorting](#ERMrest.InvalidFacetSorting),  
 
 | Param | Type | Description |
 | --- | --- | --- |

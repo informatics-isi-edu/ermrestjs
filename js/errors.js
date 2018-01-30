@@ -17,8 +17,8 @@
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
-    module.InvalidFacetSorting = InvalidFacetSorting
-    module.InvalidPageCriteria = InvalidPageCriteria
+    module.InvalidFacetSorting = InvalidFacetSorting;
+    module.InvalidPageCriteria = InvalidPageCriteria;
 
     /**
      * @memberof ERMrest
@@ -33,7 +33,7 @@
         this.status = status;
         this.message = message;
         this.subMessage = subMessage;
-        if(redirectPath !=='undefined' && redirectPath != ''){
+        if(redirectPath !== undefined && redirectPath !== null){
            this.errorData = {};
            this.errorData.redirectPath = redirectPath;
         }
@@ -211,7 +211,10 @@
      */
     function InvalidFacetOperatorError(message) {
         message = message ? message : module._errorMessage.facetingError;
-        ERMrestError.call(this, '', module._errorStatus.facetingError, message);
+        currentURLHash = window.location.hash;
+        facetFilter = currentURLHash.slice(currentURLHash.search('\\*::'), currentURLHash.search('@'));
+        newPath = currentURLHash.replace(facetFilter, '');
+        ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', newPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
