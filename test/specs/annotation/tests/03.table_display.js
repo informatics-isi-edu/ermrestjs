@@ -475,8 +475,8 @@ exports.execute = function (options) {
         describe('markdown display in case of no annotation is defined', function() {
             it('when no annotation is defiend; content should appear in unordered list format.', function(done){
                 var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName, "20001") + '">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName, "20002") + '">20,002</a></p>\n</li>\n</ul>\n';
+                                                        findRID(tableName1, "20001") + '">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName1, "20002") + '">20,002</a></p>\n</li>\n</ul>\n';
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     return response;
                 }).then(function (reference){

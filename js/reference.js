@@ -1173,12 +1173,22 @@
                 // ermrest requires key columns to be in sort param for paging
                 if (typeof sortObject !== 'undefined') {
                     sortCols = sortObject.map( function(sort) {return sort.column;});
-                    for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
-                        col = this._shortestKey[i].name;
-                        // add if key col is not in the sortby list
-                        if (sortCols.indexOf(col) === -1) {
-                            sortObject.push({"column": col, "descending":false}); // add key to sort
-                            _modifiedSortObject.push({"column": col, "descending":false});
+
+                    // if any of the sortCols is a key, then we don't neede to add the shortest key
+                    var hasKey = this._table.keys.all().some(function (key) {
+                        return key.colset.columns.every(function(c) {
+                            return sortCols.includes(c.name);
+                        });
+                    });
+
+                    if (!hasKey) {
+                        for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
+                            col = this._shortestKey[i].name;
+                            // add if key col is not in the sortby list
+                            if (sortCols.indexOf(col) === -1) {
+                                sortObject.push({"column": col, "descending":false}); // add key to sort
+                                _modifiedSortObject.push({"column": col, "descending":false});
+                            }
                         }
                     }
                 } else { // no sort provieded: use shortest key for sort

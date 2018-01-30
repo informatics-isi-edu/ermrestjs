@@ -94,15 +94,15 @@ exports.execute = function(options) {
                     it('should be properly defiend based on schema and not include faceting.', function() {
                         expect(related[0].location.uri).toBe(uri1);
                     });
-                    
+
                     it('should be encoded.', function() {
                         expect(related[1].location.uri).toBe(uri2);
                     });
                 });
-                
+
                 describe("with tuple defined, ", function () {
                     it('should create the link using faceting.', function() {
-                        
+
                         var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
                             var loc = relatedWithTuple[index].location;
                             expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
@@ -111,12 +111,12 @@ exports.execute = function(options) {
                             expect(loc.queryParams['subset']).toBeDefined();
                             expect(loc.queryParams['subset']).toBe(expectedQueryParam);
                         }
-                        
+
                         checkUri(0, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
                         }], "to_name_value: 9003 and Henry");
-                        
+
                         checkUri(1, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
@@ -139,16 +139,16 @@ exports.execute = function(options) {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
-                        ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                        ["reference_schema", "inbound_related_reference_key"].join("_"),
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), // the fk
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
                         ["reference_schema", "fk_inbound_related_to_reference"].join("_"),
                         'RID', 'RCT', 'RMT', 'RCB', 'RMB'
                 ]}, {
                     ref: related[1].contextualize.compactBrief,
                     expected: [
-                        "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                        "id",
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                 ]}]);
             });
@@ -210,7 +210,7 @@ exports.execute = function(options) {
                   expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
                 });
             });
-            
+
             describe('.uri ', function () {
                 it('.uri should be properly defiend based on schema.', function() {
                     expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
@@ -227,7 +227,7 @@ exports.execute = function(options) {
             });
 
             it('.read should return a Page object that is defined.', function(done) {
-                related[2].read(limit).then(function(response) {
+                related[2].sort([{"column":"id"}]).read(limit).then(function(response) {
                     pageWithToName = response;
 
                     expect(pageWithToName).toEqual(jasmine.any(Object));
@@ -235,7 +235,7 @@ exports.execute = function(options) {
                     expect(pageWithToName._data.length).toBe(limit);
 
 
-                    related[3].read(limit).then(function(response) {
+                    related[3].sort([{"column":"id"}]).read(limit).then(function(response) {
                         pageWithID = response;
 
                         expect(pageWithID).toEqual(jasmine.any(Object));
@@ -253,10 +253,10 @@ exports.execute = function(options) {
                     done.fail();
                 });
 
-                
+
             });
 
-            
+
             it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
                 var url = options.url + "/catalog/" + catalog_id + "/entity/", ref;
 
@@ -318,7 +318,7 @@ exports.execute = function(options) {
         it('when table has alternative tables, should not include self-link to the base.', function (done) {
             var schemaName3 = "reference_schema_2",
                 tableName3 = "table_w_alternate";
-                
+
             var tableWAlternateUri = options.url + "/catalog/" + catalog_id + "/entity/"
                 + schemaName3 + ":" + tableName3;
 

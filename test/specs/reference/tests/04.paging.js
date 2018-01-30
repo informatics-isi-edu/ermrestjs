@@ -53,7 +53,7 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should be sorted by ascending value by default. ', function() {
+            it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
                 var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -61,7 +61,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -85,7 +85,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('tuples should be sorted by ascending id by default. ', function() {
+                it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -93,7 +93,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
 
@@ -136,14 +136,15 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
 
             // limit was changed after paging back
             describe("with navigating back to the first page,", function() {
-                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x)@before(33)?limit=" + limit;
+                //TODO systems_cols_test we're sorting based on id..
+                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x,RID)@before(33,ZZZZZ)?limit=" + limit;
                 var reference5;
 
                 beforeAll(function(done) {
@@ -524,7 +525,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -555,7 +556,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
@@ -589,7 +590,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });

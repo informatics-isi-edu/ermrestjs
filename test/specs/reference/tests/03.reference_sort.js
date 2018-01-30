@@ -207,6 +207,7 @@ exports.execute = function (options) {
             describe('when sorting based on a PseudoColumn, ', function () {
 
                 it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
+                    //TODO systems_cols_test take a look at data.
                     // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=1 will be the first.
                     checkSort([{"column": "columns_schema_outbound_fk_9", "descending": true}], "1", done);
                 });

@@ -9,7 +9,7 @@ exports.execute = function (options) {
             entityId = 9000,
             lowerLimit = 8999,
             upperLimit = 9010,
-            originalTimeout;
+            originalTimeout, tables;
 
         var entityWithSlash = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableNameWithSlash;
@@ -22,7 +22,7 @@ exports.execute = function (options) {
 
         var singleEntityUri = baseUri + "/id=" + entityId;
 
-        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+        var multipleEntityUri = baseUri + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -61,6 +61,7 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
+            tables = options.schemas[schemaName].tables;
         });
 
         // Test Cases:
@@ -270,7 +271,10 @@ exports.execute = function (options) {
                 expect(tuple.isHTML).toBeDefined();
                 expect(tuple.displayname).toEqual(jasmine.any(Object), "tuple.displayname is not an object");
                 expect(tuple.displayname.value).toBe("Hank", "tuple.displayname.value is incorrect");
-                expect(tuple.uniqueId).toBe("9000", "tuple.uniqueId is incorrect");
+                var rid = tables[tableName].entities.filter(function (e) {
+                    return e.id == "9000";
+                })
+                expect(tuple.uniqueId).toBe(rid, "tuple.uniqueId is incorrect");
             });
 
             it('tuple.copy should create a shallow copy of the tuple except for the data.', function() {
