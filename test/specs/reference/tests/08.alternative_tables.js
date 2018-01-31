@@ -89,47 +89,47 @@ exports.execute = function (options) {
          */
 
         var uri1 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded + "/@sort(id)";
+            schemaNameEncoded + ":" + baseTable1Encoded;
 
         var uri2 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId + "/@sort(id)";
+            schemaNameEncoded + ":" + baseTable1Encoded + "/id=" + entityId;
 
         var uri3 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value + "/@sort(id)";
+            schemaNameEncoded + ":" + baseTable2Encoded + "/id=" + entityId + "&value=" + value;
 
         var uri4 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006" + "/@sort(id)";
+            baseTable1Encoded + "/id=00001;id=00002;id=00003;id=00004;id=00005;id=00006";
 
         var uri5 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/@sort(id%20x)";
+            schemaNameEncoded + ":" + altDetailedTable1Encoded;
 
         var uri6 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId + "/@sort(id%20x)";
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
 
         var uri7 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value + "/@sort(id%20x,value%20x)";
+            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value ;
 
         var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006"  + "/@sort(id%20x)";
+            altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
 
         var uri9 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable1Encoded + "/@sort(id%20y)";
+            schemaNameEncoded + ":" + altCompactTable1Encoded;
 
         var uri10 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId + "/@sort(id%20y)";
+            schemaNameEncoded + ":" + altCompactTable1Encoded + "/id%20y=" + entityId;
 
         var uri11 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value + "/@sort(id%20y,value%20y)";
+            schemaNameEncoded + ":" + altCompactTable2Encoded + "/id%20y=" + entityId + "&value%20y=" + value;
 
         var uri12 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006" + "/@sort(id%y)";
+            altCompactTable1Encoded + "/id%20y=00001;id%20y=00002;id%20y=00003;id%20y=00004;id%20y=00005;id%20y=00006";
 
         var uri13 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
-            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)/@sort(id)";
+            relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + baseTable1Encoded + ":fk_to_related)";
 
         var uri14 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
             relatedTable + "/id=1/(id)=(" + schemaNameEncoded + ":" + associatonTable + ":id_related)/(id_base)=(" +
-            schemaNameEncoded + ":" + baseTable1Encoded + ":id)" + "/@sort(id)";
+            schemaNameEncoded + ":" + baseTable1Encoded + ":id)";
 
         var facetObject15 = {
             "and": [
