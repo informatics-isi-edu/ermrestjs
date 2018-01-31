@@ -330,7 +330,7 @@ exports.execute = function (options) {
                 expect(page._data.length).toBe(8);
 
                 tuple = page.tuples[0];
-                expect(tuple._pageRef).toBe(reference2g);
+                expect(tuple._pageRef).toBe(reference2);
                 expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
