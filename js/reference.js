@@ -2308,6 +2308,7 @@
             delete this._canRead;
             delete this._canUpdate;
             delete this._canDelete;
+            delete this._display;
         },
 
         /**
