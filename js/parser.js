@@ -121,6 +121,7 @@
 
         // <sort>/<page>
         // sort and paging
+        var  pathWithCatalog = '#' + this._catalog + '/' + this._path;
         if (modifiers) {
             if (modifiers.indexOf("@sort(") !== -1) {
                 this._sort = modifiers.match(/(@sort\([^\)]*\))/)[1];
@@ -130,7 +131,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    // pathWithCatalog = '#' + this._catalog + '/' + this._path;
                     throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
@@ -139,7 +140,7 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
+                    // pathWithCatalog = '#' + this._catalog + '/' + this._path;
                     throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
@@ -173,7 +174,7 @@
         if (startIndex <= endIndex) {
             match = parts[endIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1]);
+                this._facets = new ParsedFacets(match[1], pathWithCatalog);
 
                 // extract the search term
                 searchTerm = _getSearchTerm(this._facets.decoded);
@@ -195,7 +196,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1]);
+                this._projectionFacets = new ParsedFacets(match[1], pathWithCatalog);
                 startIndex++;
             }
         }
@@ -437,7 +438,7 @@
 
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', uri);
                     uri += "/" + facetFilter;
                 }
 
@@ -449,7 +450,7 @@
 
                 if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', uri);
                     uri += "/" + facetFilter;
                 }
 
@@ -1343,9 +1344,10 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
+     * @param       {String|Object} hash to generate rediretUrl in error module.
      * @constructor
      */
-    function ParsedFacets (str) {
+    function ParsedFacets (str, hash) {
 
         if (typeof str === 'object') {
             /**
@@ -1361,14 +1363,14 @@
             this.encoded = this._encodeJSON(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str);
+            this.decoded = this._decodeJSON(str, hash);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError();
+            throw new module.InvalidFacetOperatorError('', hash);
         }
 
     }
@@ -1392,10 +1394,11 @@
          *
          * @private
          * @param       {string} blob the encoded JSON object.
+         * @param       {String|Object} hash to generate rediretUrl in error module.
          * @return      {object} decoded JSON object.
          */
-        _decodeJSON: function (blob) {
-            return module.decodeFacet(blob);
+        _decodeJSON: function (blob, hash) {
+            return module.decodeFacet(blob, hash);
         }
     };
 

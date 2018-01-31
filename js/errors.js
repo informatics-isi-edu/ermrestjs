@@ -209,11 +209,12 @@
      * @constructor
      * @desc An invalid facet operator
      */
-    function InvalidFacetOperatorError(message) {
+    function InvalidFacetOperatorError(message, hash) {
+
         message = message ? message : module._errorMessage.facetingError;
-        currentURLHash = window.location.hash;
-        facetFilter = currentURLHash.slice(currentURLHash.search('\\*::'), currentURLHash.search('@'));
-        newPath = currentURLHash.replace(facetFilter, '');
+        currentUrlHash = hash;
+        facetFilter = currentUrlHash.slice(currentUrlHash.search('\\*::'), currentUrlHash.search('@'));
+        newPath = currentUrlHash.replace(facetFilter, '');
         ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', newPath);
     }
 
