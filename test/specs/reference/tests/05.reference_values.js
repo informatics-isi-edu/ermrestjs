@@ -144,16 +144,16 @@ exports.execute = function (options) {
         describe("Testing tuples values", function() {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
-
+            var testObjects;
 
             beforeAll(function () {
                 var getRID = function (id) {
-                    return options.entities[schemaName][tableName].filter(function(e) {
+                    return options.entities[schemaName]["table_w_composite_key"].filter(function(e) {
                         return e.id == id;
                     })[0].RID;
                 };
 
-                var testObjects ={
+                testObjects ={
                     "test1": {
                             "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
                             "expectedValue" : [ '4000',

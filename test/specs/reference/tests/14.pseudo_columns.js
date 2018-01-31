@@ -45,12 +45,6 @@ exports.execute = function (options) {
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
 
-        var findRID = function (currTable, keyName, keyValue) {
-            return options.entities[schemaName][currTable].filter(function (e) {
-                return e[keyName] == keyValue;
-            })[0].RID;
-        };
-
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -182,16 +176,6 @@ exports.execute = function (options) {
 
         var assetEntryExpectedValue = [
             '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
-        ];
-
-        var assetCompactExpectedValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
-            '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
-            '',
-            '<h2>filename</h2>\n',
-            '<a href="https://dev.isrd.isi.edu?uinit=1" download="" class="download">filename</a>',
-            '4'
         ];
 
         /**
@@ -349,6 +333,11 @@ exports.execute = function (options) {
                 done.fail();
             });
 
+            var findRID = function (currTable, keyName, keyValue) {
+                return options.entities[schemaName][currTable].filter(function (e) {
+                    return e[keyName] == keyValue;
+                })[0].RID;
+            };
 
             // this is calling findRID which during the runtime will have value not when we define the function
             var compactRefExpectedLinkedValue = [
@@ -368,6 +357,15 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
+            ];
+            var assetCompactExpectedValue = [
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
+                '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
+                '',
+                '<h2>filename</h2>\n',
+                '<a href="https://dev.isrd.isi.edu?uinit=1" download="" class="download">filename</a>',
+                '4'
             ];
         });
 

@@ -1297,7 +1297,7 @@ exports.execute = function (options) {
 
                     it("between 3 entities, one has it's shortest key modified.", function (done) {
                         var reference, tuples,
-                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4";
+                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4/@sort(id)";
 
                         var updateData = [{
                             "ind_key1": 100101110,
