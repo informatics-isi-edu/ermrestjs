@@ -3056,7 +3056,7 @@ exports.execute = function (options) {
             it('15.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithID, "location missmatch.");
             });
 
             it('15.B.4 tuple read should return correct data from base table', function(done) {
@@ -3220,7 +3220,7 @@ exports.execute = function (options) {
             it('16.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithID, "location missmatch.");
             });
 
             it('16.B.4 tuple read should return correct data from base table', function(done) {
