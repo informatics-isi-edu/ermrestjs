@@ -166,19 +166,11 @@ exports.execute = function (options) {
             '9000', '', '4000 : 4002', '1'
         ];
 
-        var tableWSlashData = [
-            '1',
-            '1',
-            '2',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9001">Harold</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">Hank</a>'
-        ];
-
         var assetEntryExpectedValue = [
             '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
-        var compactRefExpectedLinkedValue, assetCompactExpectedValue;
+        var compactRefExpectedLinkedValue, assetCompactExpectedValue, tableWSlashData;
 
         /**
          * This is the structure of the used tables:
@@ -347,7 +339,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "4000") + '">John</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + findRID("table_w_simple_key_2", "id", "9000") + '">Hank</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + findRID("table_w_simple_key_2", "id", "4000") + '">Hank</a>',
                 '4000',
                 '4001',
                 '4002',
@@ -368,6 +360,14 @@ exports.execute = function (options) {
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1" download="" class="download">filename</a>',
                 '4'
+            ];
+
+            tableWSlashData = [
+                '1',
+                '1',
+                '2',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=' + findRID("table_w_simple_key", "id", "9001") + '">Harold</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
         });
 

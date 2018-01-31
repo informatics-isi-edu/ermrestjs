@@ -61,6 +61,7 @@ exports.execute = function (options) {
         };
 
         var data = {
+            "RID": "RND",
             "id": "1",
             "id_1": "2",
             "id_2": "3"
@@ -612,7 +613,7 @@ exports.execute = function (options) {
                     it('should return the correct link.', function () {
                         val = compactColumns[19].formatPresentation(data, 'compact').value;
 
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=RND">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
