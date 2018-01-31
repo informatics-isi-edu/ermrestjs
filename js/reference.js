@@ -2913,6 +2913,7 @@
             delete newRef._related;
             delete newRef._referenceColumns;
             delete newRef._facetColumns;
+            delete newRef._display;
 
             newRef._context = context;
 
