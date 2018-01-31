@@ -45,10 +45,6 @@ exports.execute = function (options) {
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
 
-        console.log("---------------test---------");
-        console.log(options.entities);
-        console.log("---------------test---------");
-
         var findRID = function (currTable, keyName, keyValue) {
             return options.entities[schemaName][currTable].filter(function (e) {
                 return e[keyName] == keyValue;
@@ -138,25 +134,6 @@ exports.execute = function (options) {
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
              ''
-        ];
-
-        var compactRefExpectedLinkedValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>',
-            '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "4000") + '">John</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + findRID("table_w_simple_key_2", "id", "9000") + '">Hank</a>',
-            '4000',
-            '4001',
-            '4002',
-            '4003',
-            '',
-            '<p>12</p>\n',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
-            ''
         ];
 
         var entryRefExpectedPartialValue = [
@@ -371,6 +348,27 @@ exports.execute = function (options) {
                 console.dir(err);
                 done.fail();
             });
+
+
+            // this is calling findRID which during the runtime will have value not when we define the function
+            var compactRefExpectedLinkedValue = [
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>',
+                '',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "4000") + '">John</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + findRID("table_w_simple_key_2", "id", "9000") + '">Hank</a>',
+                '4000',
+                '4001',
+                '4002',
+                '4003',
+                '',
+                '<p>12</p>\n',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
+                ''
+            ];
         });
 
         describe('.columns, ', function () {
