@@ -145,6 +145,10 @@ exports.execute = function (options) {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
 
+            console.log("---------------test---------");
+            console.log(options.entities);
+            console.log("---------------test---------");
+
             var getRID = function (id) {
                 return options.entities[schemaName][tableName].filter(function(e) {
                     return e.id == id;

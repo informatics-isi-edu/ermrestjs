@@ -45,6 +45,10 @@ exports.execute = function (options) {
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
 
+        console.log("---------------test---------");
+        console.log(options.entities);
+        console.log("---------------test---------");
+
         var findRID = function (currTable, keyName, keyValue) {
             return options.entities[schemaName][currTable].filter(function (e) {
                 return e[keyName] == keyValue;
