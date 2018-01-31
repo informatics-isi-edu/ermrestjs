@@ -313,7 +313,7 @@ exports.execute = function (options) {
             });
 
             it('1.C.1 read should return a Page object that is defined.', function(done) {
-                reference2.sort([{"column": "id y", "descending": false}]).read(limit).then(function (response) {
+                reference2.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -330,7 +330,7 @@ exports.execute = function (options) {
                 expect(page._data.length).toBe(8);
 
                 tuple = page.tuples[0];
-                expect(tuple._pageRef).toBe(reference2);
+                expect(tuple._pageRef).toBe(reference2g);
                 expect(tuple._data["id y"]).toBe("00001");
                 expect(tuple._data.summary).toBe("Hank 23");
             });
@@ -343,7 +343,7 @@ exports.execute = function (options) {
             });
 
             it('1.C.4 tuple read should return correct data from base table', function(done) {
-                tuple.sort([{"column": "id", "descending": false}]).reference.read(limit).then(function (response) {
+                tuple.reference.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -400,7 +400,7 @@ exports.execute = function (options) {
             });
 
             it('2.A.1 read should return a Page object that is defined.', function(done) {
-                reference2.sort([{"column": "id", "descending": false}]).read(limit).then(function (response) {
+                reference2.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
@@ -431,7 +431,7 @@ exports.execute = function (options) {
             });
 
             it('2.A.4 tuple read should return correct data from base table', function(done) {
-                tuple.reference.sort([{"column": "g", "descending": false}]).read(limit).then(function (response) {
+                tuple.reference.read(limit).then(function (response) {
                     page = response;
 
                     expect(page).toEqual(jasmine.any(Object));
