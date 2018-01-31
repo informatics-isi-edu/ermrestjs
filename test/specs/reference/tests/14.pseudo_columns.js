@@ -178,6 +178,8 @@ exports.execute = function (options) {
             '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
+        var compactRefExpectedLinkedValue, assetCompactExpectedValue;
+
         /**
          * This is the structure of the used tables:
          *
@@ -340,7 +342,7 @@ exports.execute = function (options) {
             };
 
             // this is calling findRID which during the runtime will have value not when we define the function
-            var compactRefExpectedLinkedValue = [
+            compactRefExpectedLinkedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
@@ -358,7 +360,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
             ];
-            var assetCompactExpectedValue = [
+            assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',

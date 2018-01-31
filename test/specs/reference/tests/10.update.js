@@ -1297,7 +1297,7 @@ exports.execute = function (options) {
 
                     it("between 3 entities, one has it's shortest key modified.", function (done) {
                         var reference, tuples,
-                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4/@sort(id)";
+                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4@sort(ind_key1)";
 
                         var updateData = [{
                             "ind_key1": 100101110,
@@ -1568,7 +1568,7 @@ exports.execute = function (options) {
                 var reference;
 
                 beforeAll(function (done) {
-                    var uri = baseUri + "/key=2;key=3/@sort(key)";
+                    var uri = baseUri + "/key=2;key=3@sort(key)";
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                         reference = response.contextualize.entryEdit;
