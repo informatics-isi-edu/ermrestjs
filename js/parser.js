@@ -131,7 +131,6 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    // pathWithCatalog = '#' + this._catalog + '/' + this._path;
                     throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
@@ -140,7 +139,6 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    // pathWithCatalog = '#' + this._catalog + '/' + this._path;
                     throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
                 }
             }
