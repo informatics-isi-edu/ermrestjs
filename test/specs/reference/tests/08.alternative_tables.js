@@ -144,7 +144,7 @@ exports.execute = function (options) {
         };
 
         var uri15 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15) + "/@sort(id)";
+            schemaNameEncoded + ":" + baseTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject15);
 
         var facetObject16 = {
             "and": [
@@ -160,9 +160,9 @@ exports.execute = function (options) {
         };
 
         var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16) + "/@sort(id)";
+            schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16);
 
-        var firstRowPath, secondRowPath;
+        var firstRowPathWithRID, secondRowPathWithRID, firstRowPathWithID, secondRowPathWithID;
 
         var findRID = function (currTable, keyName, keyValue) {
             return options.entities[schemaName][currTable].filter(function (e) {
@@ -171,8 +171,11 @@ exports.execute = function (options) {
         };
 
         beforeAll(function () {
-            firstRowPath = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00001");
-            secondRowPath = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00002")
+            firstRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00001");
+            firstRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001";
+            secondRowPathWithRIDWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00002");
+            secondRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002";
+
         });
 
         describe('1. base table with no entity filters,', function() {
@@ -243,7 +246,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('1.A.4 tuple read should return correct data from base table', function(done) {
@@ -295,7 +298,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('1.B.4 tuple read should return correct data from base table', function(done) {
@@ -346,7 +349,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('1.C.4 tuple read should return correct data from base table', function(done) {
@@ -434,7 +437,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('2.A.4 tuple read should return correct data from base table', function(done) {
@@ -485,7 +488,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('2.B.4 tuple read should return correct data from base table', function(done) {
@@ -536,7 +539,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('2.C.4 tuple read should return correct data from base table', function(done) {
@@ -723,7 +726,7 @@ exports.execute = function (options) {
                 tuple = page.tuples[0];
                 expect(tuple._pageRef).toBe(reference2);
                 expect(tuple._data["id y"]).toBe("00001");
-                expect(tuple._data.summary).toBe("Hank 23");g
+                expect(tuple._data.summary).toBe("Hank 23");
             });
 
             it('3.C.3 tuple reference should be on the base table with correct filter', function() {
@@ -820,7 +823,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('4.A.4 tuple read should return correct data from base table', function(done) {
@@ -871,7 +874,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('4.B.4 tuple read should return correct data from base table', function(done) {
@@ -922,7 +925,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('4.C.4 tuple read should return correct data from base table', function(done) {
@@ -1008,7 +1011,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('5.A.4 tuple read should return correct data from base table', function(done) {
@@ -1061,7 +1064,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('5.B.4 tuple read should return correct data from base table', function(done) {
@@ -1114,7 +1117,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded  + "/RID=" + findRID(baseTable1, "id", "00001"));
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('5.C.4 tuple read should return correct data from base table', function(done) {
@@ -1201,7 +1204,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('6.A.4 tuple read should return correct data from base table', function(done) {
@@ -1254,7 +1257,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('6.B.3 tuple read should return correct data from base table', function(done) {
@@ -1307,7 +1310,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('6.C.4 tuple read should return correct data from base table', function(done) {
@@ -1594,7 +1597,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('8.A.4 tuple read should return correct data from base table', function(done) {
@@ -1647,7 +1650,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('8.B.4 tuple read should return correct data from base table', function(done) {
@@ -1700,7 +1703,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('8.C.4 tuple read should return correct data from base table', function(done) {
@@ -1785,7 +1788,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('9.A.4 tuple read should return correct data from base table', function(done) {
@@ -1838,7 +1841,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('9.B.4 tuple read should return correct data from base table', function(done) {
@@ -1891,7 +1894,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('9.C.4 tuple read should return correct data from base table', function(done) {
@@ -1978,7 +1981,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('10.A.4 tuple read should return correct data from base table', function(done) {
@@ -2031,7 +2034,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('10.B.3 tuple read should return correct data from base table', function(done) {
@@ -2084,7 +2087,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('10.C.4 tuple read should return correct data from base table', function(done) {
@@ -2367,7 +2370,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('12.A.4 tuple read should return correct data from base table', function(done) {
@@ -2418,7 +2421,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('12.B.4 tuple read should return correct data from base table', function(done) {
@@ -2469,7 +2472,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('12.C.4 tuple read should return correct data from base table', function(done) {
@@ -2556,7 +2559,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('13.A.4 tuple read should return correct data from base table', function(done) {
@@ -2607,7 +2610,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('13.B.4 tuple read should return correct data from base table', function(done) {
@@ -2658,7 +2661,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('13.C.4 tuple read should return correct data from base table', function(done) {
@@ -2709,7 +2712,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('13.D.4 tuple read should return correct data from base table', function(done) {
@@ -2797,7 +2800,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('14.A.4 tuple read should return correct data from base table', function(done) {
@@ -2848,7 +2851,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('14.B.4 tuple read should return correct data from base table', function(done) {
@@ -2899,7 +2902,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(firstRowPath);
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('14.C.4 tuple read should return correct data from base table', function(done) {
@@ -2988,7 +2991,7 @@ exports.execute = function (options) {
             it('15.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPath, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('15.A.4 tuple read should return correct data from base table', function(done) {
@@ -3053,7 +3056,7 @@ exports.execute = function (options) {
             it('15.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPath, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('15.B.4 tuple read should return correct data from base table', function(done) {
@@ -3149,7 +3152,7 @@ exports.execute = function (options) {
             it('16.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPath, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('16.A.4 tuple read should return correct data from base table', function(done) {
@@ -3217,7 +3220,7 @@ exports.execute = function (options) {
             it('16.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(secondRowPath, "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('16.B.4 tuple read should return correct data from base table', function(done) {
