@@ -173,7 +173,7 @@ exports.execute = function (options) {
         beforeAll(function () {
             firstRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00001");
             firstRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001";
-            secondRowPathWithRIDWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00002");
+            secondRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00002");
             secondRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002";
 
         });
