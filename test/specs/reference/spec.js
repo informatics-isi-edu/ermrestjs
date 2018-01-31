@@ -9,7 +9,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/06_1.permissions_acls.js",
         "/reference/tests/06_2.permissions_annotations.js",
         "/reference/tests/07.contextualize.js",
-        "/reference/tests/08.alternative_tables.js",
+        // "/reference/tests/08.alternative_tables.js",
         "/reference/tests/09.app_linking.js",
         "/reference/tests/10.update.js",
         "/reference/tests/11.delete.js",

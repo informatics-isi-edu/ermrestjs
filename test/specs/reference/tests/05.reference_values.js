@@ -145,6 +145,12 @@ exports.execute = function (options) {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
 
+            var getRID = function (id) {
+                return options.entities[schemaName][tableName].filter(function(e) {
+                    return e.id == id;
+                })[0].RID;
+            };
+
             var testObjects ={
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
@@ -180,7 +186,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1" class="class-10">4000 , 4001</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n',
                                     expectedMomentValue
                                 ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -200,7 +206,7 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2" class="class-20">4000 , 4002</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
@@ -220,7 +226,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=3" class="class-30">4000 , 4003</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
@@ -240,7 +246,7 @@ exports.execute = function (options) {
                                     '',
                                     'NA',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4" class="class-40">4001 , 4002</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
@@ -260,7 +266,7 @@ exports.execute = function (options) {
                                     '',
                                     '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5" class="class-50">4002 , 4000</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -280,7 +286,7 @@ exports.execute = function (options) {
                                     '<code>GATCGATCGC GTATT</code>',
                                     '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                     '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=6" class="class-60">4000 , 4000</a></p>\n',
+                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n',
                                     expectedMomentValue
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]

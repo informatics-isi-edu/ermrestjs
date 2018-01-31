@@ -235,7 +235,7 @@ exports.execute = function(options) {
                     expect(pageWithToName._data.length).toBe(limit);
 
 
-                    related[3].sort([{"column":"id"}]).read(limit).then(function(response) {
+                    related[3].sort([{"column":"id", "descending": false}]).read(limit).then(function(response) {
                         pageWithID = response;
 
                         expect(pageWithID).toEqual(jasmine.any(Object));
