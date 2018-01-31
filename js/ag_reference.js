@@ -15,7 +15,7 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * underlying reference to server-side resources could change.
  *
  * Usage:
- *  - Clients _do not_ directly access this constructor.
+ *  - Clients can use this constructor to create attribute group references if needed.
  *  - This will currently be used by the aggregateGroup functions to return a
  *    AttributeGroupReference rather than a {@link ERMrest.Reference}
  *
@@ -24,6 +24,7 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @param       {ERMRest.AttributeGroupLocation} location  The location object.
  * @param       {ERMRest.Catalog} catalog  The catalog object.
  * @constructor
+ * @memberof ERMrest
  */
 function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
 
@@ -185,9 +186,10 @@ AttributeGroupReference.prototype = {
     /**
      *
      * @param  {int=} limit
+     * @param {Object} contextHeaderParams the object that we want to log.
      * @return {ERMRest.AttributeGroupPage}
      */
-    read: function (limit) {
+    read: function (limit, contextHeaderParams) {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
@@ -198,7 +200,18 @@ AttributeGroupReference.prototype = {
             }
 
             var currRef = this;
-            this._server._http.get(uri).then(function (response) {
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                contextHeaderParams = {"action": "read"};
+            }
+
+            contextHeaderParams.page_size = limit;
+
+            var headers = {};
+            headers[module._contextHeaderName] = contextHeaderParams;
+            var config = {
+                headers: headers
+            };
+            this._server._http.get(uri, config).then(function (response) {
 
                 //determine hasNext and hasPrevious
                 var hasPrevious, hasNext = false;
@@ -338,6 +351,21 @@ AttributeGroupReference.prototype = {
     }
 };
 
+/**
+ * Constructor for creating a attribute group page. It has similar functionalities
+ * as {@link ERMrest.Page}
+ *
+ * Usage:
+ *   Clients _do not_ directly access this constructor.
+ *   {@link ERMrest.AttributeGroupReference} will access this constructor for returning page of data.
+ *
+ * @param       {ERMrest.AttributeGroupReference}  reference the reference that this page belongs to
+ * @param       {Object}  data        the raw data
+ * @param       {Boolean} hasPrevious Whether database has some data before current page
+ * @param       {Boolean} hasNext     Whether database has some data after current page
+ * @constructor
+ * @memberof ERMrest
+ */
 function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
     /**
      * The page's associated reference.
@@ -450,6 +478,19 @@ AttributeGroupPage.prototype = {
     }
 };
 
+/**
+ * Constructor for creating a attribute group page. It has similar functionalities
+ * as {@link ERMrest.Tuple}
+ *
+ * Usage:
+ *   Clients _do not_ directly access this constructor.
+ *   {@link ERMrest.AttributeGroupPage} will access this constructor for returning tuples of a page.
+ *
+ * @param       {ERMrest.AttributeGroupPage}  page the page that tuple is part of
+ * @param       {Object}  data tuple's raw data
+ * @constructor
+ * @memberof ERMrest
+ */
 function AttributeGroupTuple(page, data) {
     this._page = page;
     this._data = data;
@@ -559,6 +600,18 @@ AttributeGroupTuple.prototype = {
     }
 };
 
+/**
+ * Constructor for creating a column for creating a {@link ERMrest.AttributeGroupReference}
+ *
+ * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
+ * @param       {string} term  the term string, e.g., cnt(*) or col1.
+ * @param       {Object|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
+ * @param       {ERMrset.Type} colType    type of column
+ * @param       {string} comment     The string for comment (tooltip)
+ * @param       {Boolean} sortable   Whether the column is sortable
+ * @param       {Boolean} visible    Whether we want this column be returned in the tuples
+ * @constructor
+ */
 function AttributeGroupColumn(alias, term, displayname, colType, comment, sortable, visible) {
     /**
      * The alias for the column.
@@ -672,6 +725,18 @@ AttributeGroupColumn.prototype = {
     }
 };
 
+/**
+ * Constructor for creating location object for creating a {@link ERMrest.AttributeGroupReference}
+
+ * @param       {string} service      the service part of url
+ * @param       {string} catalog      the catalog name
+ * @param       {String} path         the whole path string
+ * @param       {Object} searchObject search obect, it should have `term`, and `column`.
+ * @param       {Object[]} sortObject sort object, An array of objects with `column`, and `descending` as attribute.
+ * @param       {Object[]} afterObject  the object that will be used for paging to define after. It's an array of data
+ * @param       {Object[]} beforeObject the object that will be used for paging to define before. It's an array of data
+ * @constructor
+ */
 function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, afterObject, beforeObject) {
     /**
      * The uri to ermrest service
@@ -810,7 +875,17 @@ AttributeGroupLocation.prototype = {
     }
 };
 
-
+/**
+ * Can be used to access group aggregate functions.
+ * Usage:
+ *  Clients _do not_ directly access this constructor. {@link ERMrest.AttributeGroupReference}
+ *  will access this constructor for purposes of fetching grouped aggregate data
+ *  for a specific column
+ *
+ * @param {ERMrest.AttributeGroupReference} reference The reference that this aggregate function belongs to
+ * @memberof ERMrest
+ * @constructor
+ */
 function AttributeGroupReferenceAggregateFn (reference) {
     this._ref = reference;
 }
