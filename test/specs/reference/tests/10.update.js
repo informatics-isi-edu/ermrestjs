@@ -1568,7 +1568,7 @@ exports.execute = function (options) {
                 var reference;
 
                 beforeAll(function (done) {
-                    var uri = baseUri + "/key=2;key=3";
+                    var uri = baseUri + "/key=2;key=3/@sort(key)";
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                         reference = response.contextualize.entryEdit;

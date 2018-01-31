@@ -364,7 +364,7 @@ exports.execute = function (options) {
                 });
 
                 it ('should return a rowname with correct context if it is possible to generate one with default values.', function () {
-                    expect(compactColumns[14].default).toEqual('col 4 default , col 5 default');
+                    expect(compactColumns[19].default).toEqual('col 4 default , col 5 default');
                 });
 
                 it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {

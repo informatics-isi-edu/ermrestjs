@@ -241,7 +241,7 @@
       ],
       "entityCount": 0,
       "foreign_keys": [  {
-          "names" : [["error_schema", "fk_test"]],
+          "names" : [["error_schema", "fk_test2"]],
           "comment": null,
           "foreign_key_columns": [
             {

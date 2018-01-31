@@ -10,7 +10,7 @@ exports.execute = function (options) {
             limit = 3;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
 
@@ -23,14 +23,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -53,7 +53,7 @@ exports.execute = function (options) {
          * and a particular column value at the specified valuedIndex
          */
         var checkValue = function(columnName, tupleIndex, valueIndex, expectedValues) {
-           
+
             it("should check " + columnName + " to be `" + expectedValues[valueIndex] + "`", function() {
                 var tuple = tuples[tupleIndex];
                 var value = tuple.values[valueIndex];
@@ -89,7 +89,7 @@ exports.execute = function (options) {
                 i++;
             });
         });
-        
+
     });
 
 };

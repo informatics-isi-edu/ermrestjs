@@ -45,6 +45,12 @@ exports.execute = function (options) {
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
 
+        var findRID = function (currTable, keyName, keyValue) {
+            return options.entities[schemaName][currTable].filter(function (e) {
+                return e[keyName] == keyValue;
+            })[0].RID;
+        };
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -132,20 +138,20 @@ exports.execute = function (options) {
 
         var compactRefExpectedLinkedValue = [
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">Hank</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>',
             '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">John</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">Hank</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "4000") + '">John</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + findRID("table_w_simple_key_2", "id", "9000") + '">Hank</a>',
             '4000',
             '4001',
             '4002',
             '4003',
             '',
             '<p>12</p>\n',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">4000 , 4001</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=2">4000 , 4002</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=4">4001 , 4002</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
             ''
         ];
 
@@ -199,7 +205,7 @@ exports.execute = function (options) {
 
         var assetCompactExpectedValue = [
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
             '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
             '',
             '<h2>filename</h2>\n',
@@ -521,7 +527,7 @@ exports.execute = function (options) {
             describe('when visible-columns annotation is not present for the context, ', function () {
                 describe('PseudoColumn for key, ', function () {
 
-                    // TODO: Update this testcase because of changes related to system columns 
+                    // TODO: Update this testcase because of changes related to system columns
                     xit('if key is simple and its constituent columns are part of simple foreign key, should not be added (instead it should apply the PseudoColumn for foreignkey logic.)', function(done) {
                         options.ermRest.resolve(singleEnitityUriSimpleKeyFK, {cid:"test"}).then(function(ref) {
                             expect(ref.columns[0].isPseudo).toBe(true);
@@ -556,7 +562,7 @@ exports.execute = function (options) {
                             expect(compactColumns[0].name).toEqual(["columns_schema", "ref_table_outbound_fks_key"].join("_"));
                         });
 
-                        // TODO: Update this testcase because of changes related to system columns 
+                        // TODO: Update this testcase because of changes related to system columns
                         xit("if table has several keys with same size, should pick the one with most text columns.", function (done) {
                             options.ermRest.resolve(singleEnitityUriCompositeKey3, {cid:"test"}).then(function(ref) {
                                 expect(ref.columns[0].isPseudo).toBe(true);
