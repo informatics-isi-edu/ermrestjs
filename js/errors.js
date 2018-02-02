@@ -317,11 +317,11 @@
 
     function removePageCondition(path){
       var newPath;
-      if (path != 'undefined' && path.indexOf("@before") !== -1) {
+      if (path != undefined && path.indexOf("@before") !== -1) {
         beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
           path = path.replace(beforerLiteral, '');
       }
-      if (path != 'undefined' && path.indexOf("@after") !== -1) {
+      if (path != undefined && path.indexOf("@after") !== -1) {
         afterLiteral = path.match(/(@after\([^\)]*\))/)[1];
           path = path.replace(afterLiteral, '');
       }
@@ -329,7 +329,7 @@
     }
     function removeSortCondition(path){
       var newPath;
-      if (path != 'undefined' && path.indexOf("@before") !== -1) {
+      if (path != undefined && path.indexOf("@before") !== -1) {
         beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
           newPath = path.replace(beforerLiteral, '');
       }

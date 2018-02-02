@@ -1153,7 +1153,7 @@
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.InvalidFacetSorting("", "Column " + sortObject[i].column + " is not sortable.");
+                            throw new module.InvalidFacetSorting("Column " + sortObject[i].column + " is not sortable.");
                         }
 
                         // use the sort columns instead of the actual column.
