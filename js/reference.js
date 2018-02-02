@@ -3600,7 +3600,7 @@
     function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
         this._page = page;
-        this._data = data;
+        this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
 
