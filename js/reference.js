@@ -3601,7 +3601,7 @@
     function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
         this._page = page;
-        this._data = data;
+        this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
 
@@ -4980,11 +4980,21 @@
         var template = "[{{{caption}}}]({{{url}}}){download .download}";
         var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
         var url = data[this._baseCol.name];
+        var caption = col.formatvalue(data[col.name], context, options);
+
+        // if filenameColumn exists, then we want to show that value
+        if (!this.filenameColumn) {
+            // if value matches the expected format, just show the file name
+            var parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
+            if (parts && parts.length === 4) {
+                caption = parts[2];
+            }
+        }
 
         // add the uinit=1 query params
         url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
         var keyValues = {
-            "caption": col.formatvalue(data[col.name], context, options),
+            "caption": caption,
             "url": url
         };
         var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
