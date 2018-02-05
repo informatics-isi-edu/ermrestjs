@@ -305,16 +305,6 @@
     NoConnectionError.prototype = Object.create(Error.prototype);
     NoConnectionError.prototype.constructor = NoConnectionError;
 
-
-    // function findAndReplace(path, replace){
-    //   if (path != 'undefined' && path.indexOf(replace) !== -1) {
-    //      newReg = new RegExp('/('+replace+'\([^\)]*\))/')
-    //      match = newReg[Symbol.match](replace);
-    //      console.log(match);
-    //       // newPath = path.replace(afterLiteral, '');
-    //   }
-    // }
-
     function removePageCondition(path){
       var newPath;
       if (path != undefined && path.indexOf("@before") !== -1) {
