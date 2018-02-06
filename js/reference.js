@@ -5615,7 +5615,7 @@
             // in scalar mode, use the their toString as displayname.
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: {}});
                 });
                 defer.resolve(filters);
             }
@@ -5629,7 +5629,7 @@
                 this.choiceFilters.forEach(function (f) {
                     if (f.term == null) {
                         // term can be null, in this case we don't need to make a request for it.
-                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}});
+                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}, tuple: null});
                     } else {
                         filterStr.push(
                             module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
@@ -5658,7 +5658,7 @@
                     page.tuples.forEach(function (t) {
 
                         // create the response
-                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
+                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                     });
                     defer.resolve(filters);
                 }).catch(function (err) {
@@ -6336,13 +6336,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             // the reference
@@ -6367,13 +6367,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.COUNT, "descending": true}, {"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             var countName = "cnt(*)";
@@ -6382,7 +6382,7 @@
             }
 
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);

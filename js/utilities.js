@@ -2418,7 +2418,13 @@
     module._facetUnsupportedTypes = [
         "json"
     ];
-
+    
+      
+    module._groupAggregateColumnNames = Object.freeze({
+        VALUE: "value",
+        COUNT: "count"
+    });
+    
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
