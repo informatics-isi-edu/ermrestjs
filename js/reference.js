@@ -5615,7 +5615,8 @@
             // in scalar mode, use the their toString as displayname.
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: {}});
+                    // we don't have access to the tuple, so we cannot send it.
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null);
                 });
                 defer.resolve(filters);
             }
