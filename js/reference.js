@@ -5616,7 +5616,7 @@
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
                     // we don't have access to the tuple, so we cannot send it.
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null);
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
                 });
                 defer.resolve(filters);
             }
