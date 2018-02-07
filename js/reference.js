@@ -47,7 +47,7 @@
      * {@link ERMrest.ForbiddenError},
      * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
-     * {@link ERMrest.InvalidFacetSorting},
+     * {@link ERMrest.InvalidSortCriteria},
      */
     module.resolve = function (uri, contextHeaderParams) {
         try {
@@ -1153,7 +1153,7 @@
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.InvalidFacetSorting("Column " + sortObject[i].column + " is not sortable.");
+                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.");
                         }
 
                         // use the sort columns instead of the actual column.

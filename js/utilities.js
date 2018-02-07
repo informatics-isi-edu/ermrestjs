@@ -2443,7 +2443,7 @@
       invalidURI : "Invalid URI",
       noDataChanged : "No Data Changed",
       noConnectionError : "No Connection Error",
-      invalidFacetSorting : "Invalid Facet Sorting",
+      InvalidSortCriteria : "Invalid Facet Sorting",
       invalidPageCriteria : "Invalid Page Criteria"
       });
 

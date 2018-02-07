@@ -137,7 +137,7 @@
      */
     function UnaryPredicate (column, operator) {
         if (!module.isValidOperator(operator)) {
-            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._uri, '');
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._path, '');
         }
         this.column = column; // pathcolumn or column
         this.operator = operator;
@@ -170,7 +170,7 @@
      */
     function BinaryPredicate (column, operator, rvalue) {
         if (!module.isValidOperator(operator)) {
-            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._uri, '');
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._path, '');
         }
         this.column = column; // either pathcolumn or column
         this.operator = operator;

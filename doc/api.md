@@ -252,8 +252,8 @@ to use for ERMrest JavaScript agents.
         * [new NoDataChangedError(message)](#new_ERMrest.NoDataChangedError_new)
     * [.NoConnectionError](#ERMrest.NoConnectionError)
         * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
-    * [.InvalidFacetSorting](#ERMrest.InvalidFacetSorting)
-        * [new InvalidFacetSorting(message)](#new_ERMrest.InvalidFacetSorting_new)
+    * [.InvalidSortCriteria](#ERMrest.InvalidSortCriteria)
+        * [new InvalidSortCriteria(message)](#new_ERMrest.InvalidSortCriteria_new)
     * [.InvalidPageCriteria](#ERMrest.InvalidPageCriteria)
         * [new InvalidPageCriteria(message)](#new_ERMrest.InvalidPageCriteria_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
@@ -2256,13 +2256,13 @@ A no internet was passed to the API.
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 
-<a name="ERMrest.InvalidFacetSorting"></a>
+<a name="ERMrest.InvalidSortCriteria"></a>
 
-### ERMrest.InvalidFacetSorting
+### ERMrest.InvalidSortCriteria
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
-<a name="new_ERMrest.InvalidFacetSorting_new"></a>
+<a name="new_ERMrest.InvalidSortCriteria_new"></a>
 
-#### new InvalidFacetSorting(message)
+#### new InvalidSortCriteria(message)
 Invalid sorting conditions
 
 
@@ -5231,7 +5231,7 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 [ForbiddenError](#ERMrest.ForbiddenError),
 [UnauthorizedError](#ERMrest.UnauthorizedError),
 [NotFoundError](#ERMrest.NotFoundError),
-[InvalidFacetSorting](#ERMrest.InvalidFacetSorting),  
+[InvalidSortCriteria](#ERMrest.InvalidSortCriteria),  
 
 | Param | Type | Description |
 | --- | --- | --- |

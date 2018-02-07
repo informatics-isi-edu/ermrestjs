@@ -218,7 +218,7 @@
 
                 // if a single filter
                 if (items.length === 1) {
-                    this._filter = _processSingleFilterString(items[0], this._uri);
+                    this._filter = _processSingleFilterString(items[0], this._uri, this._path);
 
                 } else {
                     var filters = [];
@@ -241,7 +241,7 @@
                                 }
                             }
 
-                            filters.push(_processMultiFilterString(subfilters, this._uri));
+                            filters.push(_processMultiFilterString(subfilters, this._uri, this._path));
 
                         } else if (type === null && items[i] === "&") {
                             // first level filter type
@@ -251,13 +251,13 @@
                             type = module.filterTypes.DISJUNCTION;
                         } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._uri,'');
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,'');
                         } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._uri,'');
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,'');
                         } else if (items[i] !== "&" && items[i] !== ";") {
                             // single filter on the first level
-                            var binaryFilter = _processSingleFilterString(items[i], this._uri);
+                            var binaryFilter = _processSingleFilterString(items[i], this._uri, this._path);
                             filters.push(binaryFilter);
                         }
                     }
@@ -821,7 +821,7 @@
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
                         pathWithCatalog = '#' + this.catalog + '/' + this.path;
-                        throw new module.InvalidFacetSorting("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", pathWithCatalog);
+                        throw new module.InvalidSortCriteria("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", pathWithCatalog);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -1154,10 +1154,11 @@
      *
      * @param {stirng} filterString
      * @param {string} fullURI used for loggin purposes
+     * @param {string} path used for redirect link generation
      * @returns {ParsedFilter} returns the parsed representation of the filter
      * @desc converts a filter string to ParsedFilter
      */
-    function _processSingleFilterString(filterString, fullURI) {
+    function _processSingleFilterString(filterString, fullURI, path) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
@@ -1176,7 +1177,7 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
+        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
     }
 
     /**
@@ -1184,10 +1185,11 @@
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
      * @param {string} fullURI used for logging purposes
+     * @param {string} path used for redirect link generation
      * @return {ParsedFilter}
      *
      */
-    function _processMultiFilterString(filterStrings, fullURI) {
+    function _processMultiFilterString(filterStrings, fullURI, path) {
         var filters = [];
         var type = null;
         for (var i = 0; i < filterStrings.length; i++) {
@@ -1199,10 +1201,10 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", fullURI, filterString);
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);

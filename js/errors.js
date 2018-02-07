@@ -17,7 +17,7 @@
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
-    module.InvalidFacetSorting = InvalidFacetSorting;
+    module.InvalidSortCriteria = InvalidSortCriteria;
     module.InvalidPageCriteria = InvalidPageCriteria;
 
     /**
@@ -26,6 +26,7 @@
      * @param  {string} status      message status/title in the modal box
      * @param  {string} message     main user error message
      * @param  {string} subMessage  technical details about the error. Appear in collapsible span in the modal box
+     * @param  {string} redirectPath path that would be added to the host to create full redirect link in Chaise
      * @constructor
      */
     function ERMrestError(code, status, message, subMessage, redirectPath) {
@@ -317,6 +318,7 @@
       }
       return path;
     }
+
     function removeSortCondition(path){
       var newPath;
       if (path != undefined && path.indexOf("@before") !== -1) {
@@ -333,13 +335,13 @@
      * @constructor
      * @desc Invalid sorting conditions
      */
-    function InvalidFacetSorting(message, path) {
+    function InvalidSortCriteria(message, path) {
         var newPath = removePageCondition(removeSortCondition(path));
-        ERMrestError.call(this, '', module._errorStatus.invalidFacetSorting, message, '', newPath);
+        ERMrestError.call(this, '', module._errorStatus.InvalidSortCriteria, message, '', newPath);
     }
 
-    InvalidFacetSorting.prototype = Object.create(ERMrestError.prototype);
-    InvalidFacetSorting.prototype.constructor = InvalidFacetSorting;
+    InvalidSortCriteria.prototype = Object.create(ERMrestError.prototype);
+    InvalidSortCriteria.prototype.constructor = InvalidSortCriteria;
 
     /**
      * @memberof ERMrest
