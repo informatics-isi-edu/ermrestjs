@@ -675,13 +675,29 @@ exports.execute = function (options) {
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 
-                    it("otherwise return a download link with query parameter", function() {
-                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
 
-                        val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
-                        //NOTE this is the output but it will be displayed correctly.
-                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                    describe("otherwise, ", function () {
+                        it ("if asset column has a filenameColumn defined, use that as the caption, and return a download link with query parameter.", function () {
+                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                            expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+
+                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                            //NOTE this is the output but it will be displayed correctly.
+                            expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                        });
+
+                        describe ("if asset column doesn't have filenameColumn", function () {
+                            it ("if value matches the expected format, just return the filename.", function () {
+                                var hatracSampleURL = "/hatrac/Zf/ZfDsy20170915D/file-test.csv:2J7IIX63WQRUDIALUGYDKDO36A";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": hatracSampleURL}).value;
+                                expect(val).toEqual('<a href="' + hatracSampleURL +'?uinit=1" download="" class="download">file-test.csv</a>', "value missmatch.");
+                            });
+
+                            it ("otherwise return the whole url.", function () {
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                            });
+                        });
                     });
                  });
 

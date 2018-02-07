@@ -3600,7 +3600,7 @@
     function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
         this._page = page;
-        this._data = data;
+        this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
 
@@ -4979,11 +4979,21 @@
         var template = "[{{{caption}}}]({{{url}}}){download .download}";
         var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
         var url = data[this._baseCol.name];
+        var caption = col.formatvalue(data[col.name], context, options);
+
+        // if filenameColumn exists, then we want to show that value
+        if (!this.filenameColumn) {
+            // if value matches the expected format, just show the file name
+            var parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
+            if (parts && parts.length === 4) {
+                caption = parts[2];
+            }
+        }
 
         // add the uinit=1 query params
         url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
         var keyValues = {
-            "caption": col.formatvalue(data[col.name], context, options),
+            "caption": caption,
             "url": url
         };
         var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
@@ -5642,7 +5652,8 @@
             // in scalar mode, use the their toString as displayname.
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
+                    // we don't have access to the tuple, so we cannot send it.
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
                 });
                 defer.resolve(filters);
             }
@@ -5656,7 +5667,7 @@
                 this.choiceFilters.forEach(function (f) {
                     if (f.term == null) {
                         // term can be null, in this case we don't need to make a request for it.
-                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}});
+                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}, tuple: null});
                     } else {
                         filterStr.push(
                             module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
@@ -5685,7 +5696,7 @@
                     page.tuples.forEach(function (t) {
 
                         // create the response
-                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
+                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                     });
                     defer.resolve(filters);
                 }).catch(function (err) {
@@ -6363,13 +6374,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             // the reference
@@ -6394,13 +6405,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.COUNT, "descending": true}, {"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             var countName = "cnt(*)";
@@ -6409,7 +6420,7 @@
             }
 
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
