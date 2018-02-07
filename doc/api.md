@@ -374,7 +374,7 @@ to use for ERMrest JavaScript agents.
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
-        * [.showHistogram](#ERMrest.FacetColumn+showHistogram) : <code>Boolean</code>
+        * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
         * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
         * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -424,7 +424,7 @@ to use for ERMrest JavaScript agents.
         * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
         * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-        * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+        * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
@@ -3614,7 +3614,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
-    * [.showHistogram](#ERMrest.FacetColumn+showHistogram) : <code>Boolean</code>
+    * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
     * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
     * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3720,9 +3720,9 @@ If facetObject['entity'] is defined as false, it will return false,
 otherwise it will true if filter is based on key.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
-<a name="ERMrest.FacetColumn+showHistogram"></a>
+<a name="ERMrest.FacetColumn+barPlot"></a>
 
-#### facetColumn.showHistogram : <code>Boolean</code>
+#### facetColumn.barPlot : <code>Boolean</code>
 Returns true if the plotly histogram graph should be shown in the UI
 If _facetObject.barPlot is not defined, the value is true. By default
 the histogram should be shown unless specified otherwise
@@ -4186,7 +4186,7 @@ distinct count aggregate representation
     * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
     * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-    * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+    * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 
 <a name="new_ERMrest.ColumnGroupAggregateFn_new"></a>
 
@@ -4218,11 +4218,10 @@ NOTE: Will create a new reference by each call.
 **Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
 <a name="ERMrest.ColumnGroupAggregateFn+histogram"></a>
 
-#### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ <code>obj</code>
+#### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 Given number of buckets, min and max will return bin of results.
 
 **Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
-**Returns**: <code>obj</code> - //TODO What should be ther returned object?  
 
 | Param | Type | Description |
 | --- | --- | --- |

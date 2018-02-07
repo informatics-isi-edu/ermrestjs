@@ -359,18 +359,16 @@ exports.execute = function (options) {
                     });
 
                     it("the histogram function should return a proper bucket AG reference.", function () {
-                        var histogramOptions = {
-                            bucketCount: bucketCount,
-                            absMin: min,
-                            absMax: calculatedMax,
-                            binWidth: calculatedWidth
-                        };
-
                         bucketAgRef = reference.columns[1].groupAggregate.histogram(bucketCount, min, max);
 
                         expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
                         expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
-                        expect(bucketAgRef._options).toEqual(histogramOptions, "Histogram options was not set properly on reference");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(calculatedMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
                     });
 
                     it("should read the histogram data and return it in a proper format for plotly.", function (done) {
@@ -397,18 +395,16 @@ exports.execute = function (options) {
                     });
 
                     it("the histogram function should return a proper bucket AG reference.", function () {
-                        var histogramOptions = {
-                            bucketCount: bucketCount,
-                            absMin: min,
-                            absMax: max,
-                            binWidth: calculatedWidth
-                        };
-
                         bucketAgRef = reference.columns[2].groupAggregate.histogram(bucketCount, min, max);
 
                         expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
                         expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
-                        expect(bucketAgRef._options).toEqual(histogramOptions, "Histogram options was not set properly on reference");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(max, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
                     });
 
                     it("should read the histogram data and return it in a proper format for plotly.", function (done) {
@@ -436,18 +432,16 @@ exports.execute = function (options) {
                     });
 
                     it("the histogram function should return a proper bucket AG reference.", function () {
-                        var histogramOptions = {
-                            bucketCount: bucketCount,
-                            absMin: min,
-                            absMax: calculatedMax,
-                            binWidth: calculatedWidth
-                        };
-
                         bucketAgRef = reference.columns[4].groupAggregate.histogram(bucketCount, min, max);
 
                         expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
                         expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
-                        expect(bucketAgRef._options).toEqual(histogramOptions, "Histogram options was not set properly on reference");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(calculatedMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
                     });
 
                     it("should read the histogram data and return it in a proper format for plotly.", function (done) {
@@ -479,19 +473,17 @@ exports.execute = function (options) {
                     });
 
                     it("the histogram function should return a proper bucket AG reference.", function () {
-                        var histogramOptions = {
-                            bucketCount: bucketCount,
-                            absMin: submissionMin,
-                            absMax: submissionMax,
-                            binWidth: calculatedWidth
-                        };
-
                         // different submission values because they are formatted differently
                         bucketAgRef = reference.columns[5].groupAggregate.histogram(bucketCount, submissionMin, submissionMax);
 
                         expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
                         expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
-                        expect(bucketAgRef._options).toEqual(histogramOptions, "Histogram options was not set properly on reference");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(submissionMin, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(submissionMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
                     });
 
                     it("should read the histogram data and return it in a proper format for plotly.", function (done) {

@@ -5408,17 +5408,17 @@
          *
          * @type {Boolean}
          */
-        get showHistogram() {
-            if (this._showHistogram === undefined) {
-                this._showHistogram = (this._facetObject.barPlot === false) ? false : true;
+        get barPlot() {
+            if (this._barPlot === undefined) {
+                this._barPlot = (this._facetObject.bar_plot === false) ? false : true;
 
                 // if it's not in the list of spported types we won't show it even if the user defined it in the annotation
                 if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
-                    this._showHistogram = false;
+                    this._barPlot = false;
                 }
 
             }
-            return this._showHistogram;
+            return this._barPlot;
         },
 
         /**
@@ -5430,8 +5430,9 @@
         get histogramBucketCount() {
             if (this._numBuckets === undefined) {
                 this._numBuckets = 30;
-                if (this._facetObject.barPlot && this._facetObject.barPlot.nBins) {
-                    this._numBuckets = this._facetObject.barPlot.nBins;
+                var barPlot = this._facetObject.bar_plot;
+                if (barPlot && barPlot.n_bins) {
+                    this._numBuckets = barPlot.n_bins;
                 }
             }
             return this._numBuckets;
@@ -6419,32 +6420,58 @@
          * @param  {int} bucketCount number of buckets
          * @param  {int} min         minimum value
          * @param  {int} max         maximum value
-         * @return {obj}
-         * //TODO What should be ther returned object?
+         * @return {ERMrest.BucketAttributeGroupReference}
          */
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            verify(max >= min, "Maximum must be greater than the minimum");
+            var column = this.column;
+            var reference = this._ref;
+
+            if (column.isPseudo) {
+                throw new Error("Cannot use this API on pseudo-column.");
+            }
+
+            if (module._histogramSupportedTypes.indexOf(column.type.rootName) === -1) {
+                throw new Error("Binning is not supported on column type " + column.type.name);
+            }
+
+            if (reference.location.hasJoin && reference.table.shortestKey.length > 1) {
+                throw new Error("Table must have a simple key.");
+            }
+
             var width, range, minMoment, maxMoment;
 
             var absMax = max,
                 moment = module._moment;
 
-            if (this.column.type.rootName.indexOf("date") > -1) {
+            if (column.type.rootName.indexOf("date") > -1) {
+                // we don't want to make a request for date aggregates that split in the middle of a day, so the max
+                // value used is adjusted so that the range between min and max divided by number of buckets is a whole
+                // integer after converted back to days ( (max-min)/width )
                 minMoment = moment(min);
                 maxMoment = moment(max);
 
+                // bin API does not support using an equivalent min and max
                 if (maxMoment.diff(minMoment) === 0) {
                     maxMoment.add(1, 'd');
                 }
 
+                // moment.diff() returns the number of milliseconds between the 2 moments in time.
+                // moment.duration(milliseconds).asDays() creates a duration from the milliseconds value and converts
+                //   that to the number of days that milliseconds value reprsents
+                // We don't want a bucket to represent a portion of a day, so define our width as the next largest number of days
                 width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
+                // This is adjusted so that if we have 30 buckets and a range of 2 days, one day isn't split into multiple buckets (dates represent a whole day)
                 absMax = minMoment.add(width*bucketCount, 'd').format(module._dataFormats.DATE);
-            } else if (this.column.type.rootName.indexOf("timestamp") > -1) {
+            } else if (column.type.rootName.indexOf("timestamp") > -1) {
                 minMoment = moment(min);
                 maxMoment = moment(max);
 
+                // bin API does not support using an equivalent min and max
                 if (maxMoment.diff(minMoment) === 0) {
+                    // generate a new max value so each bucket represents a 10 second period of time
                     maxMoment.add(10*bucketCount, 's');
                     absMax = maxMoment.format(module._dataFormats.DATETIME.submission);
                 }
@@ -6456,52 +6483,20 @@
                     width = 1;
                 }
             } else {
+                // bin API does not support using an equivalent min and max
                 if (max-min === 0) {
                     max++;
                 }
 
                 width = (max-min)/bucketCount;
-                if (this.column.type.rootName.indexOf("int") > -1) {
+                if (column.type.rootName.indexOf("int") > -1) {
+                    // we don't want to make a request for int aggregates that create float values for bucket min/max values, so the max
+                    // value used is adjusted so that the range between min and max divided by number of buckets is a whole integer
                     width = Math.ceil(width);
                     absMax = (min + (width*bucketCount));
                 }
             }
 
-            var options = {
-                bucketCount: bucketCount,
-                absMin: min,
-                absMax: absMax,
-                binWidth: width
-            };
-
-            if (this.column.isPseudo) {
-                throw new Error("Cannot use this API on pseudo-column.");
-            }
-
-            if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
-                throw new Error("Binning is not supported on column type " + this.column.type.name);
-            }
-
-            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
-                throw new Error("Table must have a simple key.");
-            }
-
-            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
-
-            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + module._fixedEncodeURIComponent(options.absMin) + ";" + module._fixedEncodeURIComponent(options.absMax) + ")";
-            var keyColumns = [
-                new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
-            ];
-
-            var countName = "cnt(*)";
-            if (this._ref.location.hasJoin) {
-                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
-            }
-
-            var aggregateColumns = [
-                new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
-            ];
-
-            return new BucketAttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog, options);
+            return new BucketAttributeGroupReference(column, reference, min, absMax, bucketCount, width);
         }
     };

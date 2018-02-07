@@ -941,18 +941,39 @@ module.BucketAttributeGroupReference = BucketAttributeGroupReference;
  *  - This will currently be used by the aggregateGroup histogram function to return a
  *    BucketAttributeGroupReference rather than a {@link ERMrest.Reference}
  *
- * @param       {ERMRest.AttributeGroupColumn[]} keyColumns List of columns that will be used as keys for the attributegroup request.
- * @param       {?ERMRest.AttributeGroupColumn[]} aggregateColumns List of columns that will create the aggreagte columns list in the request.
- * @param       {ERMRest.AttributeGroupLocation} location  The location object.
- * @param       {ERMRest.Catalog} catalog  The catalog object.
- * @param       {Object} options contains bucketCount, min, max
+ * @param       {ERMrest.ReferenceColumn} baseColumn The column that is used for creating grouped aggregate
+ * @param       {ERMrest.Reference} baseRef The reference representing the column
+ * @param       {String} min The min value for the key column request
+ * @param       {String} max The max value for the key column request
+ * @param       {Integer} numberOfBuckets  The number of buckets for the request
+ * @param       {String} bucketWidth the width of each bucket
  * @constructor
  */
-function BucketAttributeGroupReference(keyColumns, aggregateColumns, location, catalog, options) {
-    // call the parent constructor
-    BucketAttributeGroupReference.superClass.call(this, keyColumns, aggregateColumns, location, catalog);
+function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {
+    var location = new AttributeGroupLocation(baseRef.location.service, baseRef.table.schema.catalog.id, baseRef.location.ermrestCompactPath);
+    var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
 
-    this._options = options;
+    var keyColumns = [
+        new AttributeGroupColumn("c1", binTerm, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
+    ];
+
+    var countName = "cnt(*)";
+    if (baseRef.location.hasJoin) {
+        countName = "cnt_d(" + module._fixedEncodeURIComponent(baseRef.table.shortestKey[0].name) + ")";
+    }
+
+    var aggregateColumns = [
+        new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+    ];
+
+    // call the parent constructor
+    BucketAttributeGroupReference.superClass.call(this, keyColumns, aggregateColumns, location, baseRef.table.schema.catalog);
+
+    this._baseColumn = baseColumn;
+    this._min = min;
+    this._max = max;
+    this._numberOfBuckets = numberOfBuckets;
+    this._bucketWidth = bucketWidth;
 }
 
 // extend the prototype
@@ -968,21 +989,23 @@ BucketAttributeGroupReference.prototype.search = function (term) {
 };
 
 /**
- * @return {ERMRest.BucketAttributeGroupPage}
+ * Makes a request to the server to fetch the corresponding data for the given key
+ * column and aggregate column. The returned data is then formatted for direct use
+ * in the plotly APIs.
+ *
+ * The return object includes an array of x axis labels and another array of y axis
+ * values used to represent the bars in the histogram. A third object is returned called
+ * labels that includes an array of the min values for each bucket and another array
+ * for the max values of each bucket. Together, labels.min[x] and labels.min[y],
+ * represent the range for each bucket (bar in the histogram) at that particular index.
+ *
+ * @return {Object} data object that contains 2 arrays and another object with 2 arrays
  */
 BucketAttributeGroupReference.prototype.read = function () {
     var moment = module._moment;
 
-    // function decimals_s(num){
-    //     var num_s = "" + num;
-    //     return num_s.split(".")[1].length;
-    // }
-    //
-    // function addFloats(min, width) {
-    //     var precision = Math.max(decimals_s(min), decimals_s(width));
-    //     return ((min*1) + (width*1)).toFixed(precision);
-    // }
-
+    // uses the current known min value and adds the binWidth to it to generate the max label
+    // which is then used as the next min label (because we didn't have a next min)
     function calculateWidthLabel(min, binWidth) {
         var nextLabel;
         if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
@@ -1014,6 +1037,12 @@ BucketAttributeGroupReference.prototype.read = function () {
 
             var min, max;
 
+            /**
+             * Loops through the returned response data and defines the values in x, y, labels.min, and labels.max
+             * this only considers rows that are returned with values. Each row returned has a `c1` and `c2` value
+             *   - c1: an array with 3 values, [bucketIndex, min, max]
+             *   - c2: an integer representing the number of rows with a value between the min and max for that bucket index
+             **/
             for (var i=0; i<response.data.length; i++) {
                 var index = response.data[i].c1[0];
                 if (index !== null) {
@@ -1038,8 +1067,9 @@ BucketAttributeGroupReference.prototype.read = function () {
                 // we currently don't want to do anything with the null values
             }
 
-            // This should be set to 12 to include the # of bins we want to display + the above max and below min bucket
-            for (var j=0; j<currRef._options.bucketCount+2; j++) {
+            // This should be set to the number of buckets to include the # of bins we want to display + the above max and below min bucket
+            // loops through the data and generates the labels for rows that did not return with a value from the bin API
+            for (var j=0; j<currRef._numberOfBuckets+2; j++) {
                 // if no value is present (null is a value), we didn't get a bucket back for this index
                 if (data.x[j] === undefined) {
                     // determine x axis label
@@ -1058,7 +1088,7 @@ BucketAttributeGroupReference.prototype.read = function () {
                         max = labels.min[j+1];
                     } else {
                         if (j == 0) {
-                            max = currRef._options.absMin;
+                            max = currRef._min;
 
                             if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
                                 max = moment(max).format(module._dataFormats.DATE);
@@ -1066,7 +1096,7 @@ BucketAttributeGroupReference.prototype.read = function () {
                                 max = moment(max).format(module._dataFormats.DATETIME.display);
                             }
                         } else {
-                            max = calculateWidthLabel(min, currRef._options.binWidth);
+                            max = calculateWidthLabel(min, currRef._bucketWidth);
                         }
                     }
 
