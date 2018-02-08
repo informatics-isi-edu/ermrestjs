@@ -265,7 +265,14 @@
                     this._filter.setFilters(filters);
                 }
 
-                //NOTE: might need to replace columns based on join
+                // if facet is understanable by the current
+                // logic, then change it to facet...
+                if (!this._facets && this._filter && this._filter.depth === 1 && this._filter.facet && this._filter.facet.and) {
+                    this._facets = new ParsedFacets(this._filter.facet);
+                    delete this._filter;
+                    delete this._filtersString;
+                }
+
             }
         }
 
@@ -1127,7 +1134,11 @@
           */
          setFilters: function(filters) {
              this.filters = filters;
-             this.facet = _filterToFacet(this);
+             var f = _filterToFacet(this, 0);
+             if (f) {
+               this.facet = f.facet;
+               this.depth = f.depth;
+             }
          },
 
          /**
@@ -1140,8 +1151,11 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
-
-             this.facet = {and: [_filterToFacet(this)]};
+             var f = _filterToFacet(this, 0);
+             if (f) {
+               this.facet = f.facet;
+               this.depth = f.depth;
+             }
          }
      };
 
@@ -1213,10 +1227,11 @@
     /**
      * Turn filter into facet, will return null if it's not possible to do so.
      * @param       {ParsedFilter} parsedFilte
+     * @param       {integer} depth
      * @return      {Object}
      */
-    function _filterToFacet(parsedFilter) {
-        var facet = {}, orSources = {}, parsed, op, i, f;
+    function _filterToFacet(parsedFilter, depth) {
+        var facet = {}, orSources = {}, parsed, op, i, f, nextRes;
 
         // base for binary predicate filters
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
@@ -1240,11 +1255,21 @@
                 default:
                     return null;
             }
-            return facet;
+
+            if (depth === 0) {
+              facet = {and: [facet]};
+              depth = 1;
+            }
+
+            return {facet: facet, depth: depth};
         }
 
         // if it's an array of filters
         if (Array.isArray(parsedFilter.filters)) {
+            // we're going one level deeper
+            depth++;
+
+            // set the filter type
             if (parsedFilter.type === module.filterTypes.DISJUNCTION) {
                 op = "or";
             } else if (parsedFilter.type === module.filterTypes.CONJUNCTION) {
@@ -1263,10 +1288,12 @@
             facet[op] = [];
             for (i = 0; i < parsedFilter.filters.length; i++) {
                 f = parsedFilter.filters[i];
-                parsed = _filterToFacet(f);
-
+                nextRes = _filterToFacet(f, depth);
                 // couldn't parse it.
-                if (!parsed) return null;
+                if (!nextRes) return null;
+
+                parsed = nextRes.facet;
+                depth = nextRes.depth;
 
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
@@ -1281,7 +1308,13 @@
                 facet[op].push(parsed);
             }
 
-            return facet;
+            // and is more preferable to or
+            // if (depth === 1 && facet.or && facet.or.length === 1) {
+            //     facet.and = facet.or;
+            //     delete facet.or;
+            // }
+
+            return {facet: facet, depth: depth};
         }
 
        // invalid filter
