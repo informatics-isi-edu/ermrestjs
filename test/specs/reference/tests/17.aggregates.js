@@ -12,7 +12,8 @@ exports.execute = function (options) {
             schemaName = "aggregate_schema",
             tableName = "aggregate_table",
             tableNameWithCompKey = "table_w_only_composite_key",
-            tableNameWithSimpleKey = "table_w_simple_key";
+            tableNameWithSimpleKey = "table_w_simple_key",
+            tableNameHistogramAnnotation = "histogram_annotation";
 
         var encodedMain = "u%E1%B4%89%C9%90%C9%AF",
             decodedMain = "uᴉɐɯ",
@@ -44,6 +45,9 @@ exports.execute = function (options) {
 
         var tableWithUnicodeAttrGroupUri = options.url + "/catalog/" + catalog_id + "/attributegroup/T:=" +
             schemaName + ":" + tableName + "/M:=(id)=(" + schemaName + ":" + encodedMain + ":" + encodedID + ")";
+
+        var histogramAnnotationUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableNameHistogramAnnotation;
 
 
         beforeAll(function (done) {
@@ -347,6 +351,26 @@ exports.execute = function (options) {
                         }
                     }
                 }
+
+                it("should set properties properly based on anotation value.", function (done) {
+                    options.ermRest.resolve(histogramAnnotationUri, {cid: "test"}).then(function (response) {
+                        facetColumns = response.facetColumns;
+                        // no_histogram_int column
+                        expect(facetColumns[0].barPlot).toBeFalsy("no_histogram_int column shows a histogram");
+                        expect(facetColumns[0].histogramBucketCount).toBe(30, "no_histogram_int column bucket count is not the default");
+                        // dif_num_buckets_float column
+                        expect(facetColumns[1].barPlot).toBeTruthy("dif_num_buckets_float column does not show a histogram");
+                        expect(facetColumns[1].histogramBucketCount).toBe(50, "dif_num_buckets_float column bucket count is not the same as what is defined in the annotation");
+                        // default_date column
+                        expect(facetColumns[2].barPlot).toBeTruthy("default_date column does not show a histogram");
+                        expect(facetColumns[2].histogramBucketCount).toBe(30, "default_date column bucket count is not the default");
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
 
                 describe("for an integer column,", function () {
 

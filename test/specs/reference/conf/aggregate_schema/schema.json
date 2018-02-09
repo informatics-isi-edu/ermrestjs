@@ -207,6 +207,52 @@
                     "*": ["pᴉ", "loɔ"]
                 }
             }
+        },
+        "histogram_annotation": {
+            "kind": "table",
+            "table_name": "histogram_annotation",
+            "schema_name": "aggregate_schema",
+            "comment": "has the histogram annotation for faceting",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "no_histogram_int",
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "dif_num_buckets_float",
+                    "type": {
+                        "typename": "float4"
+                    }
+                },
+                {
+                    "name": "default_date",
+                    "type": {
+                        "typename": "date"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "filter": {
+                        "and": [
+                            {"source": "no_histogram_int", "bar_plot": false},
+                            {"source": "dif_num_buckets_float", "bar_plot": { "n_bins": 50}},
+                            {"source": "default_date"}
+                        ]
+                    }
+                }
+            }
         }
     },
     "table_names": [
