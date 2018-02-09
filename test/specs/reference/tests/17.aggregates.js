@@ -3,8 +3,12 @@ exports.execute = function (options) {
     describe("for testing aggregate functions on tables and columns,", function () {
         var moment = options.ermRest._moment;
 
-        function formatTimestamp(value) {
-            return moment(value).format(options.ermRest._dataFormats.DATETIME.returnFormat);
+        function formatTimestampReturn(value) {
+            return moment(value).format(options.ermRest._dataFormats.DATETIME.return);
+        }
+
+        function formatTimestampSubmission(value) {
+            return moment(value).format(options.ermRest._dataFormats.DATETIME.submission);
         }
 
         var reference;
@@ -183,8 +187,8 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(5, "Timestamp count not null is incorrect");
                     expect(response[1]).toBe(5, "Timestamp unique count is incorrect");
-                    expect(formatTimestamp(response[2])).toBe(formatTimestamp("2010-05-22T17:44:00-07:00"), "Timestamp min value is incorrect");
-                    expect(formatTimestamp(response[3])).toBe(formatTimestamp("2017-04-13T14:10:00-07:00"), "Timestamp max value is incorrect");
+                    expect(formatTimestampReturn(response[2])).toBe(formatTimestampReturn("2010-05-22T17:44:00-07:00"), "Timestamp min value is incorrect");
+                    expect(formatTimestampReturn(response[3])).toBe(formatTimestampReturn("2017-04-13T14:10:00-07:00"), "Timestamp max value is incorrect");
 
                     done();
                 }).catch(function (error) {
@@ -406,6 +410,15 @@ exports.execute = function (options) {
                             done.fail();
                         });
                     });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[1].groupAggregate.histogram(bucketCount, 1, 1);
+
+                        expect(bucketAgRef._min).toBe(1, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(31, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(1, "Histogram bucket width was not set properly on reference");
+                    });
                 });
 
                 describe("for a float column,", function () {
@@ -441,6 +454,15 @@ exports.execute = function (options) {
                             console.dir(error);
                             done.fail();
                         });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[2].groupAggregate.histogram(bucketCount, 1.1, 1.1);
+
+                        expect(bucketAgRef._min).toBe(1.1, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(2.1, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth.toFixed(4)).toBe("0.0333", "Histogram bucket width was not set properly on reference");
                     });
                 });
 
@@ -479,14 +501,23 @@ exports.execute = function (options) {
                             done.fail();
                         });
                     });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[4].groupAggregate.histogram(bucketCount, "2011-11-11", "2011-11-11");
+
+                        expect(bucketAgRef._min).toBe("2011-11-11", "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe("2011-12-11", "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(1, "Histogram bucket width was not set properly on reference");
+                    });
                 });
 
                 describe("for a timestamp column,", function () {
                     var submissionMin, submissionMax;
 
                     beforeAll(function () {
-                        submissionMin = formatTimestamp("2010-05-22T17:44:00-07:00");
-                        submissionMax = formatTimestamp("2017-04-13T14:10:00-07:00");
+                        submissionMin = formatTimestampSubmission("2010-05-22T17:44:00-07:00");
+                        submissionMax = formatTimestampSubmission("2017-04-13T14:10:00-07:00");
 
                         min = "2010-05-22 17:44:00";
                         max = "2017-04-13 14:10:00";
@@ -504,8 +535,8 @@ exports.execute = function (options) {
                         expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
 
                         // verify histoggram required properties
-                        expect(bucketAgRef._min).toBe(submissionMin, "Histogram min was not set properly on reference");
-                        expect(bucketAgRef._max).toBe(submissionMax, "Histogram max was not set properly on reference");
+                        expect(formatTimestampSubmission(bucketAgRef._min)).toBe(submissionMin, "Histogram min was not set properly on reference");
+                        expect(formatTimestampSubmission(bucketAgRef._max)).toBe(submissionMax, "Histogram max was not set properly on reference");
                         expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
                         expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
                     });
@@ -520,6 +551,19 @@ exports.execute = function (options) {
                             console.dir(error);
                             done.fail();
                         });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        submission = formatTimestampSubmission("2011-11-11T11:11:00-07:00");
+                        // with width of 10 seconds and 30 buckets, max should be adjusted to +5 minutes
+                        maxAfter = formatTimestampSubmission("2011-11-11T11:16:00-07:00");
+
+                        bucketAgRef = reference.columns[5].groupAggregate.histogram(bucketCount, submission, submission);
+
+                        expect(formatTimestampSubmission(bucketAgRef._min)).toBe(submission, "Histogram min was not set properly on reference");
+                        expect(formatTimestampSubmission(bucketAgRef._max)).toBe(maxAfter, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(10, "Histogram bucket width was not set properly on reference");
                     });
                 });
             });

@@ -6497,6 +6497,7 @@
                 // bin API does not support using an equivalent min and max
                 if (max-min === 0) {
                     max++;
+                    absMax = max;
                 }
 
                 width = (max-min)/bucketCount;

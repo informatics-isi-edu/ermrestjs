@@ -2394,7 +2394,7 @@
         TIME: "HH:mm:ss",
         DATETIME:  {
             display: "YYYY-MM-DD HH:mm:ss",
-            returnFormat: "YYYY-MM-DDTHH:mm:ssZ", // the format that the database returns when there are no fractional seconds to show
+            return: "YYYY-MM-DDTHH:mm:ssZ", // the format that the database returns when there are no fractional seconds to show
             submission: "YYYY-MM-DDTHH:mm:ss.SSSZ"
         }
     });
@@ -2433,13 +2433,13 @@
     module._facetUnsupportedTypes = [
         "json"
     ];
-    
-      
+
+
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
         COUNT: "count"
     });
-    
+
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
