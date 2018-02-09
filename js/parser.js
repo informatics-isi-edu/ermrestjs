@@ -1447,7 +1447,7 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(valueToString(range.min));
+                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.GREATER_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.min));
                     hasFilter = true;
                 }
 
@@ -1455,7 +1455,7 @@
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(valueToString(range.max));
+                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.LESS_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.max));
                     hasFilter = true;
                 }
             });
