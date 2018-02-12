@@ -242,8 +242,7 @@
      * @desc An invalid filter operator
      */
     function InvalidFilterOperatorError(message, path, invalidFilter) {
-        var message = message,
-            redirectPath = removeInvalidFilter(path, invalidFilter);
+        var redirectPath = removeInvalidFilter(path, invalidFilter);
         ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', redirectPath);
     }
 
