@@ -228,19 +228,14 @@
      * @constructor
      * @desc An invalid filter operator
      */
-    function InvalidFilterOperatorError(message, fullURI, invalidFilter) {
+    function InvalidFilterOperatorError(message, path, invalidFilter) {
         message = message;
-        //get path out of fullURI
-        fullURI = fullURI.replace("entity/", '');
-        fullURI = fullURI.replace("catalog/", '#');
-        var pathStart = fullURI.search('#');
         if (invalidFilter != ''){
-          newPath = fullURI.slice(pathStart, fullURI.search(invalidFilter));
+          newPath = path.slice(path, path.search(invalidFilter));
         } else{
-          fullURI = fullURI.slice(pathStart);
-          dummyURI = fullURI.replace('/', '@');
-          newPath = fullURI.slice(0, dummyURI.indexOf('/'));
-
+          path = path.slice(path);
+          dummyPath = path.replace('/', '@');
+          newPath = path.slice(0, dummyPath.indexOf('/'));
         }
         ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', newPath);
     }
@@ -321,8 +316,8 @@
 
     function removeSortCondition(path){
       var newPath;
-      if (path != undefined && path.indexOf("@before") !== -1) {
-        beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
+      if (path != undefined && path.indexOf("@sort") !== -1) {
+        beforerLiteral = path.match(/(@sort\([^\)]*\))/)[1];
           newPath = path.replace(beforerLiteral, '');
       }
       return newPath;

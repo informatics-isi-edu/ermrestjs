@@ -137,7 +137,7 @@
      */
     function UnaryPredicate (column, operator) {
         if (!module.isValidOperator(operator)) {
-            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._path, '');
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
         }
         this.column = column; // pathcolumn or column
         this.operator = operator;

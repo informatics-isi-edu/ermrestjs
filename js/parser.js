@@ -121,7 +121,7 @@
 
         // <sort>/<page>
         // sort and paging
-        var  pathWithCatalog = '#' + this._catalog + '/' + this._path;
+        var  pathString = this._path;
         if (modifiers) {
             if (modifiers.indexOf("@sort(") !== -1) {
                 this._sort = modifiers.match(/(@sort\([^\)]*\))/)[1];
@@ -131,7 +131,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
 
@@ -139,7 +139,7 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", pathWithCatalog);
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
         }
@@ -172,7 +172,7 @@
         if (startIndex <= endIndex) {
             match = parts[endIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1], pathWithCatalog);
+                this._facets = new ParsedFacets(match[1], pathString);
 
                 // extract the search term
                 searchTerm = _getSearchTerm(this._facets.decoded);
@@ -194,7 +194,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1], pathWithCatalog);
+                this._projectionFacets = new ParsedFacets(match[1], pathString);
                 startIndex++;
             }
         }
@@ -820,8 +820,7 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        pathWithCatalog = '#' + this.catalog + '/' + this.path;
-                        throw new module.InvalidSortCriteria("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", pathWithCatalog);
+                        throw new module.InvalidSortCriteria("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", this.path);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -850,8 +849,7 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    pathWithCatalog = '#' + this.catalog + '/' + this.path;
-                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", pathWithCatalog);
+                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -872,8 +870,7 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        pathWithCatalog = '#' + this._catalog + '/' + this._path;
-                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.", pathWithCatalog);
+                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.", this.path);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -902,8 +899,7 @@
                     this._afterObject = values;
                     this._after = _getPagingModifier(values, false);
                 } else {
-                    pathWithCatalog = '#' + this._catalog + '/' + this._path;
-                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", pathWithCatalog);
+                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", this.path);
                 }
             }
 
