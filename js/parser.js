@@ -1251,19 +1251,19 @@
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case "::gt::":
+                case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
                     facet.ranges = [{min: parsedFilter.value}];
                     break;
-                case "::lt::":
+                case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
                     facet.ranges = [{max: parsedFilter.value}];
                     break;
-                case "::null::":
+                case module.OPERATOR.NULL:
                     facet.choices = [null];
                     break;
-                case "::ciregexp::":
+                case module.OPERATOR.CASE_INS_REG_EXP:
                     facet.search = [parsedFilter.value];
                     break;
-                case "=":
+                case module.OPERATOR.EQUAL:
                     facet.choices = [parsedFilter.value];
                     break;
                 default:
@@ -1490,7 +1490,7 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + "::gt::" + module._fixedEncodeURIComponent(valueToString(range.min));
+                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.GREATER_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.min));
                     hasFilter = true;
                 }
 
@@ -1498,7 +1498,7 @@
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += module._fixedEncodeURIComponent(column) + "::lt::" + module._fixedEncodeURIComponent(valueToString(range.max));
+                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.LESS_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.max));
                     hasFilter = true;
                 }
             });
