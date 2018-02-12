@@ -202,7 +202,7 @@
         // If there are filters appended after projection table
         // modify the columns to the linked table
         this._filtersString = '';
-        if (parts[1] && !this._facets) {
+        if (parts[1]) {
             // TODO should refactor these checks into one match statement
             var isJoin = parts[1].match(joinRegExp);
             var isFacet = parts[1].match(facetsRegExp);
@@ -264,15 +264,15 @@
                     this._filter = new ParsedFilter(type);
                     this._filter.setFilters(filters);
                 }
+            }
 
-                // if facet is understanable by the current
-                // logic, then change it to facet...
-                if (!this._facets && this._filter && this._filter.depth === 1 && this._filter.facet && this._filter.facet.and) {
-                    this._facets = new ParsedFacets(this._filter.facet);
-                    delete this._filter;
-                    delete this._filtersString;
+            // change filter to facet if possible
+            if (this._filter) {
+                var f = _filterToFacet(this._filter);
+                if (f) {
+                    this._filter.facet = f.facet;
+                    this._filter.depth = f.depth;
                 }
-
             }
         }
 
@@ -557,6 +557,12 @@
 
         get filtersString() {
             return this._filtersString;
+        },
+
+        removeFilters: function () {
+          delete this._filter;
+          delete this._filtersString;
+          this._setDirty();
         },
 
         /**
@@ -1134,11 +1140,6 @@
           */
          setFilters: function(filters) {
              this.filters = filters;
-             var f = _filterToFacet(this, 0);
-             if (f) {
-               this.facet = f.facet;
-               this.depth = f.depth;
-             }
          },
 
          /**
@@ -1151,11 +1152,6 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
-             var f = _filterToFacet(this, 0);
-             if (f) {
-               this.facet = f.facet;
-               this.depth = f.depth;
-             }
          }
      };
 
@@ -1225,12 +1221,30 @@
     }
 
     /**
-     * Turn filter into facet, will return null if it's not possible to do so.
-     * @param       {ParsedFilter} parsedFilte
-     * @param       {integer} depth
+     * Given a parsedFilter object will return the corresponding facet.
+     * If we cannot represent it with facet, it will return `null`.
+     *
+     * @private
+     * @param       {Object} parsedFilter the filter
      * @return      {Object}
      */
-    function _filterToFacet(parsedFilter, depth) {
+    function _filterToFacet(parsedFilter) {
+        var res = _filterToFacetRec(parsedFilter, 0);
+
+        if (!res) return null;
+
+        var depth = res.depth, facet = res.facet;
+
+        if (!("or" in facet) && !("and" in facet)) {
+          facet = {and: [module._simpleDeepCopy(facet)]};
+          depth = 1;
+        }
+
+        return {facet: facet, depth: depth};
+    }
+
+    // does the process of changing filter to facet
+    function _filterToFacetRec(parsedFilter, depth) {
         var facet = {}, orSources = {}, parsed, op, i, f, nextRes;
 
         // base for binary predicate filters
@@ -1254,11 +1268,6 @@
                     break;
                 default:
                     return null;
-            }
-
-            if (depth === 0) {
-              facet = {and: [facet]};
-              depth = 1;
             }
 
             return {facet: facet, depth: depth};
@@ -1288,7 +1297,7 @@
             facet[op] = [];
             for (i = 0; i < parsedFilter.filters.length; i++) {
                 f = parsedFilter.filters[i];
-                nextRes = _filterToFacet(f, depth);
+                nextRes = _filterToFacetRec(f, depth);
                 // couldn't parse it.
                 if (!nextRes) return null;
 
@@ -1308,11 +1317,12 @@
                 facet[op].push(parsed);
             }
 
-            // and is more preferable to or
-            // if (depth === 1 && facet.or && facet.or.length === 1) {
-            //     facet.and = facet.or;
-            //     delete facet.or;
-            // }
+            // if it's just one value, then we can just flatten the array
+            // and return that value.
+            if (facet[op].length === 1) {
+              facet = facet[op][0];
+              depth--;
+            }
 
             return {facet: facet, depth: depth};
         }
