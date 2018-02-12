@@ -177,8 +177,8 @@
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
 
-    module.decodeFacet = function (blob, hash) {
-        var err = new module.InvalidFacetOperatorError('', hash);
+    module.decodeFacet = function (blob, path) {
+        var err = new module.InvalidFacetOperatorError('', path);
 
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);

@@ -436,7 +436,7 @@
 
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', uri);
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -447,8 +447,10 @@
                 }
 
                 if (this.facets) {
+                  console.log(uri);
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', uri);
+                    if (!facetFilter)
+                     throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -1340,10 +1342,10 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String|Object} hash to generate rediretUrl in error module.
+     * @param       {String|Object} path to generate rediretUrl in error module.
      * @constructor
      */
-    function ParsedFacets (str, hash) {
+    function ParsedFacets (str, path) {
 
         if (typeof str === 'object') {
             /**
@@ -1359,14 +1361,14 @@
             this.encoded = this._encodeJSON(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str, hash);
+            this.decoded = this._decodeJSON(str, path);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError('', hash);
+            throw new module.InvalidFacetOperatorError('', path);
         }
 
     }
@@ -1390,11 +1392,11 @@
          *
          * @private
          * @param       {string} blob the encoded JSON object.
-         * @param       {String|Object} hash to generate rediretUrl in error module.
+         * @param       {String|Object} path to generate rediretUrl in error module.
          * @return      {object} decoded JSON object.
          */
-        _decodeJSON: function (blob, hash) {
-            return module.decodeFacet(blob, hash);
+        _decodeJSON: function (blob, path) {
+            return module.decodeFacet(blob, path);
         }
     };
 
