@@ -190,27 +190,139 @@ exports.execute = function(options) {
 
 
         describe("regarding changing filter to facet,", function () {
-            var baseURI = "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+            var baseURI = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+
+            var testFilterToFacet = function (title, filterString, depth, facetObj) {
+                var location = options.ermRest.parse(baseURI + "/" + filterString);
+                expect(location).toBeDefined(title + ": location undefined.");
+
+                var filter = location.filter;
+                expect(filter).toBeDefined(title + ": filter undefined");
+                expect(location.filtersString).toBe(filterString, title + ": filtersString missmatch.");
+                expect(JSON.stringify(filter.facet)).toEqual(JSON.stringify(facetObj), title + ": facet missmatch.");
+                expect(filter.depth).toBe(depth, title + ": depth missmatch");
+            };
 
             it ("should handle single filters.", function () {
+                testFilterToFacet(
+                    "equality",
+                    "col=2", 1,
+                    {and: [{"source": "col", "choices": ["2"]}]}
+                );
 
+                testFilterToFacet(
+                    "leq",
+                    "col::leq::12", 1,
+                    {and: [{"source": "col", "ranges": [{max: "12"}]}]}
+                );
+
+                testFilterToFacet(
+                    "geq",
+                    "col::geq::12", 1, {
+                    and: [{"source": "col", "ranges": [{min: "12"}]}]
+                });
+
+                testFilterToFacet("null", "col::null::", 1, {
+                    and: [{"source": "col", "choices": [null]}]
+                });
+
+                testFilterToFacet("search", "col::ciregexp::test", 1, {
+                    and: [{"source": "col", "search": ["test"]}]
+                });
             });
 
             it ("should handle conjunction filter.", function () {
+                testFilterToFacet(
+                    "same column",
+                    "col=1&col::null::", 1,
+                    {and:[
+                        {"source": "col", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
 
-            });
-
-            it ("should handle conjunction filter.", function () {
-
+                testFilterToFacet(
+                    "different columns",
+                    "id=1&col::null::", 1,
+                    {and:[
+                        {"source": "id", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
             });
 
             it ("should handle disjunction filter.", function () {
+                testFilterToFacet(
+                    "same column, same operator",
+                    "col=1;col::null::", 1,
+                    {and:[{"source": "col", "choices": ["1", null]}]}
+                );
 
+                testFilterToFacet(
+                    "same column, different operator",
+                    "col=1;col::geq::12", 1,
+                    {and:[{"source": "col", "choices": ["1"], "ranges": [{min: "12"}]}]}
+                );
+
+                testFilterToFacet(
+                    "different columns",
+                    "id=1;col::null::", 1,
+                    {or:[
+                        {"source": "id", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
+
+                testFilterToFacet(
+                    "combination of same and differnt columns",
+                    "col=1;id=2;col::leq::12", 1,
+                    {or:[
+                        {"source": "col", "choices": ["1"], "ranges": [{max: "12"}]},
+                        {"source": "id", "choices": ["2"]}
+                    ]}
+                );
             });
 
-            it ("should handle conjunction of disjunction filter.", function () {
+            it ("should handle conjunction of disjunction filters.", function () {
+                testFilterToFacet(
+                    "disjunction of same column, and then conjunction",
+                    "(col=1;col::leq::5)&(id=2;id::ciregexp::test)", 1,
+                    {and:[
+                        {"source": "col", "choices": ["1"], "ranges": [{max: "5"}]},
+                        {"source": "id", "choices": ["2"], "search": ["test"]}
+                    ]}
+                );
 
+                testFilterToFacet(
+                    "combination",
+                    "(col=1;col2::leq::5;col=5)&(col3=2;col3::ciregexp::test)", 2,
+                    {and: [
+                        {or: [
+                            {"source": "col", "choices": ["1", "5"]},
+                            {"source": "col2", "ranges": [{max: "5"}]}
+                        ]},
+                        {"source": "col3", "choices": ["2"], "search": ["test"]}
+                    ]}
+                );
             });
+
+            it ("should handle disjunction of conjunction filters.", function () {
+                testFilterToFacet(
+                    "combination",
+                    "(col1=1&col2::null::);(col3::ciregexp::123&col4=test)", 2,
+                    {or: [
+                        {and: [
+                            {"source": "col1", "choices": ["1"]},
+                            {"source": "col2", "choices": [null]}
+                        ]},
+                        {and: [
+                            {"source": "col3", "search": ["123"]},
+                            {"source": "col4", "choices": ["test"]}
+                        ]}
+                    ]}
+                );
+            });
+
         });
     });
 

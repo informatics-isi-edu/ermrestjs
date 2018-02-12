@@ -1245,7 +1245,7 @@
 
     // does the process of changing filter to facet
     function _filterToFacetRec(parsedFilter, depth) {
-        var facet = {}, orSources = {}, parsed, op, i, f, nextRes;
+        var facet = {}, orSources = {}, parsed, op, i, f, nextRes, parentDepth;
 
         // base for binary predicate filters
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
@@ -1294,15 +1294,16 @@
                 facet[op][index][c].push(parsed[c][0]);
             };
 
+            parentDepth = depth;
             facet[op] = [];
             for (i = 0; i < parsedFilter.filters.length; i++) {
                 f = parsedFilter.filters[i];
-                nextRes = _filterToFacetRec(f, depth);
+                nextRes = _filterToFacetRec(f, parentDepth);
                 // couldn't parse it.
                 if (!nextRes) return null;
 
                 parsed = nextRes.facet;
-                depth = nextRes.depth;
+                depth = Math.max(depth, nextRes.depth);
 
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
