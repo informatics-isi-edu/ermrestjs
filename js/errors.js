@@ -221,6 +221,20 @@
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
 
+    // path consits of facet filter alongwith table and schemaName
+    // invalidFilter is removed from the path
+    function removeInvalidFilter(path, invalidFilter){
+      var newPath;
+      if (invalidFilter != ''){
+        newPath = path.slice(path, path.search(invalidFilter));
+      } else{
+        path = path.slice(path);
+        dummyPath = path.replace('/', '@');
+        newPath = path.slice(0, dummyPath.indexOf('/'));
+      }
+      return newPath;
+    }
+
     /**
      * @memberof ERMrest
      * @param {string} message error message
@@ -228,15 +242,9 @@
      * @desc An invalid filter operator
      */
     function InvalidFilterOperatorError(message, path, invalidFilter) {
-        message = message;
-        if (invalidFilter != ''){
-          newPath = path.slice(path, path.search(invalidFilter));
-        } else{
-          path = path.slice(path);
-          dummyPath = path.replace('/', '@');
-          newPath = path.slice(0, dummyPath.indexOf('/'));
-        }
-        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', newPath);
+        var message = message,
+            redirectPath = removeInvalidFilter(path, invalidFilter);
+        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', redirectPath);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -290,7 +298,7 @@
      * @memberof ERMrest
      * @param {string} message error message
      * @constructor
-     * @desc A no internet was passed to the API.
+     * @desc A No Connection or No Internet Connection was passed to the API.
      */
     function NoConnectionError(message) {
         message = message;
