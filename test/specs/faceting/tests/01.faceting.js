@@ -68,7 +68,7 @@ exports.execute = function (options) {
             tableWFacetAlt = "main_w_facets_w_alt";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
-        var refMainMoreFilters, refNotNullFilter, refWUnknwonFilters;
+        var refMainMoreFilters, refNotNullFilter, refWCustomFilters;
         var unsupportedFilter = "id=1;int_col::geq::5";
         var mainFacets;
         var i, facetObj;
@@ -479,7 +479,7 @@ exports.execute = function (options) {
 
                     it ("otherwise should not change the filter.", function (done) {
                         options.ermRest.resolve(createURL(tableMain) + "/" + unsupportedFilter).then(function (ref) {
-                            refWUnknwonFilters = ref;
+                            refWCustomFilters = ref;
 
                             expect(ref.facetColumns.length).toBe(16, "length missmatch.");
                             expect(ref.location.facets).toBeUndefined("facets is defined.");
@@ -569,13 +569,38 @@ exports.execute = function (options) {
             });
         });
 
-        it("Reference.removeAllFacetFilters, should return a new reference without any filters.", function () {
-            var newRef = refMain.removeAllFacetFilters();
-            expect(newRef).not.toBe(refMain, "reference didn't change.");
-            expect(newRef.location.facets).toBeUndefined("facets was defined.");
-            expect(newRef.facetColumns.filter(function (f) {
-                return f.filters.length !== 0;
-            }).length).toBe(0, "some of the facetColumns have facet.");
+        describe('Reference.removeAllFacetFilters, ', function () {
+            var ref;
+
+            var testRemoveAllFilters = function (removeFacet) {
+                var newRef = ref.removeAllFacetFilters(removeFacet);
+                expect(newRef).not.toBe(refMain, "reference didn't change.");
+                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
+
+                if (removeFacet) {
+                    expect(newRef.location.facets).toBeUndefined("facets was defined.");
+                    expect(newRef.facetColumns.filter(function (f) {
+                        return f.filters.length !== 0;
+                    }).length).toBe(0, "some of the facetColumns have facet.");
+                } else {
+                    expect(newRef.location.facets).toBeDefined("facets was defined.");
+                    expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
+                        {and: [{"source": "id", "choices": ["1"]}]}
+                    ));
+                }
+            };
+
+            beforeAll(function () {
+                ref = refWCustomFilters.facetColumns[0].addChoiceFilters(["1"]);
+            });
+
+            it ("should return all facets and filters if input is true.", function () {
+                testRemoveAllFilters(true);
+            });
+
+            it ("otherwise should only remove the filters.", function () {
+                testRemoveAllFilters();
+            });
         });
 
         describe("FacetColumn APIs, ", function () {
@@ -1159,9 +1184,9 @@ exports.execute = function (options) {
                 });
 
                 it ("should handle filter (not facet) on the main reference.", function () {
-                    var sr = refWUnknwonFilters.facetColumns[0].sourceReference;
+                    var sr = refWCustomFilters.facetColumns[0].sourceReference;
                     expect(sr.location.ermrestCompactPath).toBe("M:=faceting_schema:main/" + unsupportedFilter, "compactPath missmatch.");
-                    sr = refWUnknwonFilters.facetColumns[11].sourceReference;
+                    sr = refWCustomFilters.facetColumns[11].sourceReference;
                     expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=left(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
                 });
             });

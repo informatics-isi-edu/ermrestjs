@@ -767,16 +767,17 @@
 
         /**
          * Remove all the fitlers from facets
+         * @param {boolean} removeFacet if true will remove facets too.
          * @return {ERMrest.reference} A reference without facet filters
          */
-        removeAllFacetFilters: function () {
+        removeAllFacetFilters: function (removeFacet) {
             var newReference = _referenceCopy(this);
 
             // update the facetColumns list
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, [])
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, removeFacet ? [] : fc.filters.slice())
                 );
             });
 
@@ -784,31 +785,10 @@
             newReference._location = this._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
-            newReference._location.facets = null;
+            if (removeFacet) {
+                newReference._location.facets = null;
+            }
             newReference._location.removeFilters();
-
-
-            return newReference;
-        },
-
-        removeAllFilters: function () {
-            var newReference = _referenceCopy(this);
-
-            // update the facetColumns list
-            newReference._facetColumns = [];
-            this.facetColumns.forEach(function (fc) {
-                newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, f.filters.slice())
-                );
-            });
-
-            // update the location objectcd
-            newReference._location = this._location._clone();
-            newReference._location.beforeObject = null;
-            newReference._location.afterObject = null;
-            newReference._location.facets = null;
-            newReference._location.removeFilters();
-
 
             return newReference;
         },
