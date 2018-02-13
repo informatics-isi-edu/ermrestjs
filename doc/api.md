@@ -276,7 +276,7 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-        * [.removeAllFacetFilters(removeFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2330,7 +2330,7 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-    * [.removeAllFacetFilters(removeFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2588,7 +2588,7 @@ The default information that we want to be logged including catalog, schema_tabl
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters(removeFacet) ⇒ <code>ERMrest.reference</code>
+#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
 Remove all the fitlers from facets
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -2596,7 +2596,7 @@ Remove all the fitlers from facets
 
 | Param | Type | Description |
 | --- | --- | --- |
-| removeFacet | <code>boolean</code> | if true will remove facets too. |
+| sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
 <a name="ERMrest.Reference+create"></a>
 

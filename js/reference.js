@@ -767,17 +767,17 @@
 
         /**
          * Remove all the fitlers from facets
-         * @param {boolean} removeFacet if true will remove facets too.
+         * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
          * @return {ERMrest.reference} A reference without facet filters
          */
-        removeAllFacetFilters: function (removeFacet) {
+        removeAllFacetFilters: function (sameFacet) {
             var newReference = _referenceCopy(this);
 
             // update the facetColumns list
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, removeFacet ? [] : fc.filters.slice())
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, sameFacet ? fc.filters.slice() : [])
                 );
             });
 
@@ -785,7 +785,7 @@
             newReference._location = this._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
-            if (removeFacet) {
+            if (!sameFacet) {
                 newReference._location.facets = null;
             }
             newReference._location.removeFilters();

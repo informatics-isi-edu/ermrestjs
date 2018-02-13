@@ -571,35 +571,28 @@ exports.execute = function (options) {
 
         describe('Reference.removeAllFacetFilters, ', function () {
             var ref;
-
-            var testRemoveAllFilters = function (removeFacet) {
-                var newRef = ref.removeAllFacetFilters(removeFacet);
-                expect(newRef).not.toBe(refMain, "reference didn't change.");
-                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
-
-                if (removeFacet) {
-                    expect(newRef.location.facets).toBeUndefined("facets was defined.");
-                    expect(newRef.facetColumns.filter(function (f) {
-                        return f.filters.length !== 0;
-                    }).length).toBe(0, "some of the facetColumns have facet.");
-                } else {
-                    expect(newRef.location.facets).toBeDefined("facets was defined.");
-                    expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
-                        {and: [{"source": "id", "choices": ["1"]}]}
-                    ));
-                }
-            };
-
             beforeAll(function () {
                 ref = refWCustomFilters.facetColumns[0].addChoiceFilters(["1"]);
             });
 
-            it ("should return all facets and filters if input is true.", function () {
-                testRemoveAllFilters(true);
+            it ("should return all facets and filters if input is not true.", function () {
+                var newRef = ref.removeAllFacetFilters();
+                expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
+                expect(newRef.location.facets).toBeUndefined("facets was defined.");
+                expect(newRef.facetColumns.filter(function (f) {
+                    return f.filters.length !== 0;
+                }).length).toBe(0, "some of the facetColumns have facet.");
             });
 
             it ("otherwise should only remove the filters.", function () {
-                testRemoveAllFilters();
+                var newRef = ref.removeAllFacetFilters(true);
+                expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
+                expect(newRef.location.facets).toBeDefined("facets was defined.");
+                expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
+                    {and: [{"source": "id", "choices": ["1"]}]}
+                ));
             });
         });
 
