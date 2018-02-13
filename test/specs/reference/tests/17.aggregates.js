@@ -222,11 +222,7 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[0].groupAggregate.entityCounts,
-<<<<<<< HEAD
                             tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(RID)@sort(count::desc::,value)",
-=======
-                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(simple_id)@sort(count::desc::,value)",
->>>>>>> master
                             ["col", "Number of Occurences"]
                         );
                         done();
@@ -240,11 +236,7 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithUnicode, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[1].groupAggregate.entityCounts,
-<<<<<<< HEAD
                             tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(RID)@sort(count::desc::,value)",
-=======
-                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d("+ encodedID +")@sort(count::desc::,value)",
->>>>>>> master
                             [decodedCol, "Number of Occurences"]
                         );
                         done();
@@ -294,10 +286,6 @@ exports.execute = function (options) {
                         ["timestamp_agg", "Number of Occurences"]
                     );
                 });
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 
 
             });
@@ -566,12 +554,7 @@ exports.execute = function (options) {
                 });
             });
 
-<<<<<<< HEAD
-            //TODO add test cases for entityValues and histogram
-
-=======
             //TODO add test cases for entityValues
->>>>>>> master
         });
     });
 };
