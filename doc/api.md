@@ -241,9 +241,9 @@ to use for ERMrest JavaScript agents.
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
-        * [new InvalidFacetOperatorError(message)](#new_ERMrest.InvalidFacetOperatorError_new)
+        * [new InvalidFacetOperatorError(message, path)](#new_ERMrest.InvalidFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
-        * [new InvalidFilterOperatorError(message)](#new_ERMrest.InvalidFilterOperatorError_new)
+        * [new InvalidFilterOperatorError(message, path, invalidFilter)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
@@ -253,9 +253,9 @@ to use for ERMrest JavaScript agents.
     * [.NoConnectionError](#ERMrest.NoConnectionError)
         * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
     * [.InvalidSortCriteria](#ERMrest.InvalidSortCriteria)
-        * [new InvalidSortCriteria(message)](#new_ERMrest.InvalidSortCriteria_new)
+        * [new InvalidSortCriteria(message, path)](#new_ERMrest.InvalidSortCriteria_new)
     * [.InvalidPageCriteria](#ERMrest.InvalidPageCriteria)
-        * [new InvalidPageCriteria(message)](#new_ERMrest.InvalidPageCriteria_new)
+        * [new InvalidPageCriteria(message, path)](#new_ERMrest.InvalidPageCriteria_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -2179,13 +2179,14 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
 
-#### new InvalidFacetOperatorError(message)
+#### new InvalidFacetOperatorError(message, path)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
 
 <a name="ERMrest.InvalidFilterOperatorError"></a>
 
@@ -2193,13 +2194,15 @@ An invalid facet operator
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFilterOperatorError_new"></a>
 
-#### new InvalidFilterOperatorError(message)
+#### new InvalidFilterOperatorError(message, path, invalidFilter)
 An invalid filter operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
+| invalidFilter | <code>string</code> | filter that should be removed |
 
 <a name="ERMrest.InvalidInputError"></a>
 
@@ -2263,13 +2266,14 @@ A No Connection or No Internet Connection was passed to the API.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidSortCriteria_new"></a>
 
-#### new InvalidSortCriteria(message)
+#### new InvalidSortCriteria(message, path)
 Invalid sorting conditions
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
 
 <a name="ERMrest.InvalidPageCriteria"></a>
 
@@ -2277,13 +2281,14 @@ Invalid sorting conditions
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidPageCriteria_new"></a>
 
-#### new InvalidPageCriteria(message)
+#### new InvalidPageCriteria(message, path)
 Invalid page conditions
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
 
 <a name="ERMrest.ParsedFilter"></a>
 

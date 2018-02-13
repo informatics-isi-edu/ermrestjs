@@ -212,6 +212,7 @@
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
      * @constructor
      * @desc An invalid facet operator
      */
@@ -242,6 +243,8 @@
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
+     * @param {string} invalidFilter filter that should be removed
      * @constructor
      * @desc An invalid filter operator
      */
@@ -337,6 +340,7 @@
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
      * @constructor
      * @desc Invalid sorting conditions
      */
@@ -351,6 +355,7 @@
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
      * @constructor
      * @desc Invalid page conditions
      */
