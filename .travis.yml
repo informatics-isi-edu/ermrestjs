@@ -22,6 +22,8 @@ cache:
   - bower_components
 
 before_install:
+  - timedatectl
+  - sudo timedatectl set-timezone America/Los_Angeles
   - export TZ=America/Los_Angeles
   - sudo apt-get -y update
   - sudo service postgresql stop
@@ -67,6 +69,7 @@ before_install:
   - git clone https://github.com/informatics-isi-edu/ErmrestDataUtils.git
   - cd ErmrestDataUtils
   - sudo npm install
+  - timedatectl
   - cd ..
   - cd ermrestjs
   - sudo cp test/ermrest_config.json /home/ermrest
@@ -75,6 +78,7 @@ before_install:
   - sudo service apache2 restart
 
 install:
+  - timedatectl
   - sudo make build
 
 before_script:
