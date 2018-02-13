@@ -1028,8 +1028,7 @@ BucketAttributeGroupReference.prototype.read = function () {
             var data = {
                 x: [],
                 xPadding: [],
-                y: [],
-                test: response.data
+                y: []
             };
 
             var labels = {
@@ -1051,6 +1050,8 @@ BucketAttributeGroupReference.prototype.read = function () {
                     min = response.data[i].c1[1];
                     max = response.data[i].c1[2];
 
+                    data.xPadding[index] = response.data[i].c1[1];
+
                     if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
                         min = min !== null ? moment(min).format(module._dataFormats.DATE) : null;
                         max = max !== null ? moment(max).format(module._dataFormats.DATE) : null;
@@ -1063,7 +1064,6 @@ BucketAttributeGroupReference.prototype.read = function () {
                     labels.max[index] = max;
 
                     data.x[index] = min;
-                    data.xPadding[index] = min;
                     data.y[index] = response.data[i].c2;
                 }
                 // else if null (this is the null bin)
