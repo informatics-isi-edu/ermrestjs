@@ -306,8 +306,8 @@ exports.execute = function(options) {
         var location, uri;
         var invalidPageCondition = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging.";
         var invalidFilterOperator = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.";
-        var invalidPageConditionTravis = "Invalid uri: [secure]/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging";
-        var invalidFilterOperatorTravis = "Invalid uri: [secure]/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter."
+        var invalidPageConditionTravis = "Invalid uri: http://travis-job-0175d07f-d735-44c2-9ade-245d8338ae28/ermrest/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging";
+        var invalidFilterOperatorTravis = "Invalid uri: http://travis-job-0175d07f-d735-44c2-9ade-245d8338ae28/ermrest/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter."
 
 
         describe("when uri doesn't have any facets, ", function() {
