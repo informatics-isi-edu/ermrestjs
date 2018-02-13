@@ -446,8 +446,7 @@
                     }, "");
                 }
 
-                if (this.facets) {
-                  console.log(uri);
+                if (this.facets) {                  
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
                     if (!facetFilter)
                      throw new module.InvalidFacetOperatorError('', this.path);
