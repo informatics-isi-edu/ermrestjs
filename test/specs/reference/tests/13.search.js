@@ -33,18 +33,18 @@ exports.execute = function (options) {
             var limit = 20;
 
             it('search() using a single term. ', function(done) {
-                reference2 = reference1.search("hank");
-                expect(reference2.location.searchTerm).toBe("hank");
+                reference2 = reference1.search("hanks");
+                expect(reference2.location.searchTerm).toBe("hanks", "searchTerm missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
 
-                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page).toEqual(jasmine.any(Object), "page is not an object");
 
                     tuples = page.tuples;
-                    expect(tuples.length).toBe(2);
+                    expect(tuples.length).toBe(2, "tuple length missmatch");
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(tuples[i]._data["name x"]).toMatch("Hank");
+                        expect(tuples[i]._data["name x"]).toMatch("Hanks", "name x missmatch for tuple " + i);
                     }
 
                     done();
@@ -56,16 +56,16 @@ exports.execute = function (options) {
 
             it('clear search. ', function(done) {
                 reference2 = reference1.search();
-                expect(reference2.location.searchTerm).toBeNull();
-                expect(reference2.location.facets).not.toBeDefined();
+                expect(reference2.location.searchTerm).toBeNull("searchTerm missmatch.");
+                expect(reference2.location.facets).not.toBeDefined("facets missmatch.");
 
                 reference2.read(limit).then(function (response) {
                     page = response;
 
-                    expect(page).toEqual(jasmine.any(Object));
+                    expect(page).toEqual(jasmine.any(Object), "page is not an object.");
 
                     tuples = page.tuples;
-                    expect(tuples.length).toBe(20);
+                    expect(tuples.length).toBe(20, "tuple length missmatch.");
 
                     done();
                 }, function (err) {
@@ -75,10 +75,10 @@ exports.execute = function (options) {
             });
 
             it('search() using conjunction of words. ', function(done) {
-                reference2 = reference1.search("\"hank\" 11");
-                expect(reference2.location.searchTerm).toBe("\"hank\" 11", "searchTerm missmatch.");
+                reference2 = reference1.search("\"hanks\" 111111");
+                expect(reference2.location.searchTerm).toBe("\"hanks\" 111111", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hank&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::hanks&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix) + "/$M",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -88,9 +88,11 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     tuples = page.tuples;
-
-                    expect(tuples[0]._data["name x"]).toMatch("Hank");
-                    expect(tuples[0]._data["id x"]).toMatch("11");
+                    expect(tuples.length).toBe(1);
+                    for(var i = 0; i < tuples.length; i++) {
+                        expect(tuples[i]._data["name x"]).toMatch("Hanks", "name x missmatch for tuple " + i);
+                        expect(tuples[i]._data["id x"]).toMatch("111111", "id x missmatch for tuple " + i);
+                    }
 
                     done();
                 }, function (err) {
@@ -103,7 +105,7 @@ exports.execute = function (options) {
                 // values with `id x` between 21 and 34 are specifically for this case
                 // `id x` == 21-25, 27, and 28 should all match; 26, 29-34 are negative cases
                 // rows with `name x` == "int" are notating that the int value is what is being tested for
-                searchTerm = "1";
+                searchTerm = "11111";
                 reference2 = reference1.search(searchTerm);
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
@@ -117,9 +119,9 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     tuples = page.tuples;
-                    //expect(tuples.length).toBe(16);
+                    expect(tuples.length).toBe(16, "length missmatch");
                     for(var i = 0; i < tuples.length; i++) {
-                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy();
+                        expect(matchInAnyColumn(tuples[i], searchTerm)).toBeTruthy("didn't match the columns for tuple " + i);
                     }
 
                     done();
@@ -278,10 +280,10 @@ exports.execute = function (options) {
             });
 
             it("with two words in 1 quoted term.", function(done) {
-                reference2 = reference1.search("\"wallace II\"");
-                expect(reference2.location.searchTerm).toBe("\"wallace II\"", "searchTerm missmatch.");
+                reference2 = reference1.search("\"wallace VIIII\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace VIIII\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace%20II" + "/$M",
+                    path + "*::ciregexp::wallace%20VIIII" + "/$M",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -293,7 +295,7 @@ exports.execute = function (options) {
                     tuples = page.tuples;
                     expect(tuples.length).toBe(1);
                     for(var j=0; j<tuples.length; j++) {
-                        expect(tuples[j]._data["name x"]).toMatch("Wallace II");
+                        expect(tuples[j]._data["name x"]).toMatch("Wallace VIIII");
                     }
 
                     done();
@@ -304,10 +306,10 @@ exports.execute = function (options) {
             });
 
             it("with multiple quoted terms split by a space.", function(done) {
-                reference2 = reference1.search("\"wallace\" \"II\"");
-                expect(reference2.location.searchTerm).toBe("\"wallace\" \"II\"", "searchTerm missmatch.");
+                reference2 = reference1.search("\"wallace\" \"VIIII\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace\" \"VIIII\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace&*::ciregexp::II" + "/$M",
+                    path + "*::ciregexp::wallace&*::ciregexp::VIIII" + "/$M",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -331,10 +333,10 @@ exports.execute = function (options) {
 
             it("with multiple quoted terms split by a space across multiple columns.", function(done) {
                 // searching for integer values converts them into a regular expressio
-                reference2 = reference1.search("\"william\" \"17\"");
-                expect(reference2.location.searchTerm).toBe("\"william\" \"17\"", "searchTerm missmatch.");
+                reference2 = reference1.search("\"william\" \"171717\"");
+                expect(reference2.location.searchTerm).toBe("\"william\" \"171717\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "17" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix) + "/$M",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -344,12 +346,9 @@ exports.execute = function (options) {
                     expect(page).toEqual(jasmine.any(Object));
 
                     tuples = page.tuples;
+                    expect(tuples.length).toBe(1, "length missmatch.");
+                    expect(tuples[0]._data["name x"]).toEqual("Steven William Jones", "name x missmatch");
 
-                    for(var j=0; j<tuples.length; j++) {
-                        console.log(tuples[j]._data);
-                        // expect(tuples[j]._data["name x"]).toMatch("William");
-                    }
-                    expect(tuples.length).toBe(1);
                     done();
                 }, function (err) {
                     console.dir(err);
@@ -358,10 +357,10 @@ exports.execute = function (options) {
             });
 
             it("with multiple quoted terms split by a '|'.", function(done) {
-                reference2 = reference1.search("\"wallace|II\"");
-                expect(reference2.location.searchTerm).toBe("\"wallace|II\"");
+                reference2 = reference1.search("\"wallace|VIIII\"");
+                expect(reference2.location.searchTerm).toBe("\"wallace|VIIII\"");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace%7CII" + "/$M",
+                    path + "*::ciregexp::wallace%7CVIIII" + "/$M",
                     "ermrestCompactPath missmatch.");
 
                 reference2.read(limit).then(function (response) {
@@ -412,7 +411,7 @@ exports.execute = function (options) {
         describe('Start reference uri with search filters, ', function() {
             var page, tuples;
             var limit = 20;
-            var searchFacet = {"and": [{"source": "*", "search": ["hank 11"]}]}
+            var searchFacet = {"and": [{"source": "*", "search": ["hanks 111111"]}]}
 
             beforeAll(function (done) {
                 var searchEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -428,9 +427,9 @@ exports.execute = function (options) {
             })
 
             it('location should have correct search parameters ', function() {
-                expect(reference3.location.searchTerm).toBe("hank 11", "searchTerm missmatch.");
+                expect(reference3.location.searchTerm).toBe("hanks 111111", "searchTerm missmatch.");
                 expect(reference3.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hank" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "11" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::hanks" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix) + "/$M",
                     "ermrestCompactPath missmatch."
                 );
             });
@@ -450,8 +449,11 @@ exports.execute = function (options) {
 
             it('tuples should have correct row values. ', function() {
                 tuples = page.tuples;
-                expect(tuples[0]._data["name x"]).toMatch("Hank");
-                expect(tuples[0]._data["id x"]).toMatch("11");
+                expect(tuples.length).toBe(1);
+                for(var i = 0; i < tuples.length; i++) {
+                    expect(tuples[i]._data["name x"]).toMatch("Hank");
+                    expect(tuples[i]._data["id x"]).toMatch("111111");
+                }
             });
 
             it('clear search. ', function() {
