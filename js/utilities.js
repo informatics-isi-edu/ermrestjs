@@ -1027,7 +1027,11 @@
             case 503:
                 return new module.ServiceUnavailableError(response.statusText, response.data);
             default:
-                return new Error(response.statusText, response.data);
+                if (response.statusText || response.data) {
+                    return new Error(response.statusText, response.data);
+                } else {
+                    return new Error(response);
+                }
         }
     };
 
@@ -1111,7 +1115,7 @@
                 throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
             }
 
-            return moment(value).format('YYYY-MM-DD HH:mm:ss');
+            return moment(value).format(module._dataFormats.DATETIME.display);
         },
 
         /**
@@ -1141,7 +1145,7 @@
                 throw new module.InvalidInputError("Couldn't transform input to a valid date");
             }
 
-            return moment(value).format('YYYY-MM-DD');
+            return moment(value).format(module._dataFormats.DATE);
         },
 
         /**
@@ -2385,6 +2389,16 @@
         COMPACT_BRIEF_INLINE: 'compact/brief/inline'
     });
 
+    module._dataFormats = Object.freeze({
+        DATE: "YYYY-MM-DD",
+        TIME: "HH:mm:ss",
+        DATETIME:  {
+            display: "YYYY-MM-DD HH:mm:ss",
+            return: "YYYY-MM-DDTHH:mm:ssZ", // the format that the database returns when there are no fractional seconds to show
+            submission: "YYYY-MM-DDTHH:mm:ss.SSSZ"
+        }
+    });
+
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
@@ -2404,9 +2418,10 @@
         MODULE: 'module'
     });
 
+    // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
-        'serial2', 'serial4', 'serial8', 'timestamptz', 'date'
+        'serial2', 'serial4', 'serial8', 'timestamptz', 'timestamp', 'date'
     ];
 
     // these types should be ignored for usage in heuristic for facet
@@ -2418,6 +2433,12 @@
     module._facetUnsupportedTypes = [
         "json"
     ];
+
+
+    module._groupAggregateColumnNames = Object.freeze({
+        VALUE: "value",
+        COUNT: "count"
+    });
 
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];

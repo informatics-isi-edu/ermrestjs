@@ -295,7 +295,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
-        * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
+        * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -379,6 +379,8 @@ to use for ERMrest JavaScript agents.
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+        * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
+        * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
         * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
@@ -427,7 +429,7 @@ to use for ERMrest JavaScript agents.
         * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
         * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-        * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+        * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
@@ -443,7 +445,7 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
         * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
-        * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+        * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
         * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
         * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple)
@@ -520,6 +522,20 @@ to use for ERMrest JavaScript agents.
         * [.session](#ERMrest.AttributeGroupReference+session)
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
+        * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
+        * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
+        * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
+        * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+        * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+        * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+    * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple) : <code>object</code>
+        * [new AttributeGroupTuple(page, data)](#new_ERMrest.AttributeGroupTuple_new)
+        * [.isHTML](#ERMrest.AttributeGroupTuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+        * [.uniqueId](#ERMrest.AttributeGroupTuple+uniqueId) : <code>string</code>
+        * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
+    * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
@@ -2881,7 +2897,7 @@ NOTE:
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Page](#ERMrest.Page)
-    * [new Page(reference, etag, data, hasNext, hasPrevious, extraData)](#new_ERMrest.Page_new)
+    * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
@@ -2892,7 +2908,7 @@ NOTE:
 
 <a name="new_ERMrest.Page_new"></a>
 
-#### new Page(reference, etag, data, hasNext, hasPrevious, extraData)
+#### new Page(reference, etag, data, hasPrevious, hasNext, extraData)
 Constructs a new Page. A _page_ represents a set of results returned from
 ERMrest. It may not represent the complete set of results. There is an
 iterator pattern used here, where its [previous](#ERMrest.Page+previous) and
@@ -2910,8 +2926,8 @@ Usage:
 | reference | [<code>Reference</code>](#ERMrest.Reference) | The reference object from which this data was acquired. |
 | etag | <code>String</code> | The etag from the reference object that produced this page |
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
-| hasNext | <code>boolean</code> | Whether there is more data before this Page |
-| hasPrevious | <code>boolean</code> | Whether there is more data after this Page |
+| hasPrevious | <code>boolean</code> | Whether there is more data before this Page |
+| hasNext | <code>boolean</code> | Whether there is more data after this Page |
 | extraData | <code>Object</code> | if |
 
 <a name="ERMrest.Page+reference"></a>
@@ -3651,6 +3667,8 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+    * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
+    * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
     * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
@@ -3753,6 +3771,21 @@ This should be used if we're not in entity mode.
 Returns true if the source is on a key column.
 If facetObject['entity'] is defined as false, it will return false,
 otherwise it will true if filter is based on key.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+barPlot"></a>
+
+#### facetColumn.barPlot : <code>Boolean</code>
+Returns true if the plotly histogram graph should be shown in the UI
+If _facetObject.barPlot is not defined, the value is true. By default
+the histogram should be shown unless specified otherwise
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+histogramBucketCount"></a>
+
+#### facetColumn.histogramBucketCount : <code>Integer</code>
+Returns the value of `barPlot.nBins` if it was defined as part of the
+`facetObject` in the annotation. If undefined, the default # of buckets is 30
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+column"></a>
@@ -4206,7 +4239,7 @@ distinct count aggregate representation
     * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
     * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-    * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ <code>obj</code>
+    * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 
 <a name="new_ERMrest.ColumnGroupAggregateFn_new"></a>
 
@@ -4238,11 +4271,10 @@ NOTE: Will create a new reference by each call.
 **Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
 <a name="ERMrest.ColumnGroupAggregateFn+histogram"></a>
 
-#### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ <code>obj</code>
+#### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 Given number of buckets, min and max will return bin of results.
 
 **Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
-**Returns**: <code>obj</code> - //TODO What should be ther returned object?  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -4361,25 +4393,31 @@ NOTE:
     * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
     * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
-    * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+    * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
     * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
 
 <a name="new_ERMrest.AttributeGroupPage_new"></a>
 
 #### new AttributeGroupPage(reference, data, hasPrevious, hasNext)
-Constructor for creating a attribute group page. It has similar functionalities
-as [Page](#ERMrest.Page)
+Constructs a AttributeGroupPage object. A _page_ represents a set of results returned from
+ERMrest. It may not represent the complete set of results. There is an
+iterator pattern used here, where its [previous](#ERMrest.AttributeGroupPage+previous) and
+[next](#ERMrest.AttributeGroupPage+next) properties will give the client a
+[AttributeGroupReference](#ERMrest.AttributeGroupReference) to the previous and next set of results,
+respectively.
 
 Usage:
-  Clients _do not_ directly access this constructor.
-  [AttributeGroupReference](#ERMrest.AttributeGroupReference) will access this constructor for returning page of data.
+ - Clients _do not_ directly access this constructor.
+ - This will currently be used by the AggregateGroupReference to return a
+   AttributeGroupPage rather than a [Page](#ERMrest.Page)
+ See [read](#ERMrest.AttributeGroupReference+read).
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reference | [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) | the reference that this page belongs to |
-| data | <code>Object</code> | the raw data |
+| reference | <code>ERMRest.AttributeGroupReference</code> | aggregate reference representing the data for this page |
+| data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest |
 | hasPrevious | <code>Boolean</code> | Whether database has some data before current page |
 | hasNext | <code>Boolean</code> | Whether database has some data after current page |
 
@@ -4403,7 +4441,7 @@ Whether there is more entities after this page
 **Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
 <a name="ERMrest.AttributeGroupPage+tuples"></a>
 
-#### attributeGroupPage.tuples : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+#### attributeGroupPage.tuples : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
 An array of processed tuples.
 
 Usage:
@@ -4461,18 +4499,18 @@ if (reference.previous) {
 <a name="new_ERMrest.AttributeGroupTuple_new"></a>
 
 #### new AttributeGroupTuple(page, data)
-Constructor for creating a attribute group page. It has similar functionalities
-as [Tuple](#ERMrest.Tuple)
+Constructs a new Tuple. In database jargon, a tuple is a row in a
+relation. This object represents a row returned by a query to ERMrest.
 
 Usage:
-  Clients _do not_ directly access this constructor.
-  [AttributeGroupPage](#ERMrest.AttributeGroupPage) will access this constructor for returning tuples of a page.
+ Clients _do not_ directly access this constructor.
+ See [tuples](#ERMrest.AttributeGroupPage+tuples).
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| page | [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage) | the page that tuple is part of |
-| data | <code>Object</code> | tuple's raw data |
+| page | [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage) | The Page object from which this data was acquired. |
+| data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
 
 <a name="ERMrest.AttributeGroupTuple+isHTML"></a>
 
@@ -5153,6 +5191,167 @@ NOTE:
 | [limit] | <code>int</code> |  |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
+<a name="ERMrest.AttributeGroupPage"></a>
+
+### ERMrest.AttributeGroupPage : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
+    * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
+    * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
+    * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
+    * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+    * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+    * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+
+<a name="new_ERMrest.AttributeGroupPage_new"></a>
+
+#### new AttributeGroupPage(reference, data, hasPrevious, hasNext)
+Constructs a AttributeGroupPage object. A _page_ represents a set of results returned from
+ERMrest. It may not represent the complete set of results. There is an
+iterator pattern used here, where its [previous](#ERMrest.AttributeGroupPage+previous) and
+[next](#ERMrest.AttributeGroupPage+next) properties will give the client a
+[AttributeGroupReference](#ERMrest.AttributeGroupReference) to the previous and next set of results,
+respectively.
+
+Usage:
+ - Clients _do not_ directly access this constructor.
+ - This will currently be used by the AggregateGroupReference to return a
+   AttributeGroupPage rather than a [Page](#ERMrest.Page)
+ See [read](#ERMrest.AttributeGroupReference+read).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | <code>ERMRest.AttributeGroupReference</code> | aggregate reference representing the data for this page |
+| data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest |
+| hasPrevious | <code>Boolean</code> | Whether database has some data before current page |
+| hasNext | <code>Boolean</code> | Whether database has some data after current page |
+
+<a name="ERMrest.AttributeGroupPage+reference"></a>
+
+#### attributeGroupPage.reference : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+The page's associated reference.
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+hasPrevious"></a>
+
+#### attributeGroupPage.hasPrevious ⇒ <code>boolean</code>
+Whether there is more entities before this page
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+hasNext"></a>
+
+#### attributeGroupPage.hasNext ⇒ <code>boolean</code>
+Whether there is more entities after this page
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+tuples"></a>
+
+#### attributeGroupPage.tuples : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+An array of processed tuples.
+
+Usage:
+```
+for (var i=0, len=page.tuples.length; i<len; i++) {
+  var tuple = page.tuples[i];
+  console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+next"></a>
+
+#### attributeGroupPage.next : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+A reference to the next set of results.
+
+Usage:
+```
+if (reference.next) {
+  // more tuples in the 'next' direction are available
+  reference.next.read(10).then(
+    ...
+  );
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+previous"></a>
+
+#### attributeGroupPage.previous : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
+A reference to the previous set of results.
+
+Usage:
+```
+if (reference.previous) {
+  // more tuples in the 'previous' direction are available
+  reference.previous.read(10).then(
+    ...
+  );
+}
+```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupTuple"></a>
+
+### ERMrest.AttributeGroupTuple : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
+
+* [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple) : <code>object</code>
+    * [new AttributeGroupTuple(page, data)](#new_ERMrest.AttributeGroupTuple_new)
+    * [.isHTML](#ERMrest.AttributeGroupTuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+    * [.uniqueId](#ERMrest.AttributeGroupTuple+uniqueId) : <code>string</code>
+    * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
+
+<a name="new_ERMrest.AttributeGroupTuple_new"></a>
+
+#### new AttributeGroupTuple(page, data)
+Constructs a new Tuple. In database jargon, a tuple is a row in a
+relation. This object represents a row returned by a query to ERMrest.
+
+Usage:
+ Clients _do not_ directly access this constructor.
+ See [tuples](#ERMrest.AttributeGroupPage+tuples).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| page | [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage) | The Page object from which this data was acquired. |
+| data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
+
+<a name="ERMrest.AttributeGroupTuple+isHTML"></a>
+
+#### attributeGroupTuple.isHTML : <code>Array.&lt;boolean&gt;</code>
+The array of boolean values of this tuple speicifying the value is HTML or not. The ordering of the
+values in the array matches the ordering of the columns in the
+reference (see [columns](#ERMrest.Reference+columns)).
+TODO Eventually should be refactored (https://github.com/informatics-isi-edu/ermrestjs/issues/189).
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.AttributeGroupTuple+uniqueId"></a>
+
+#### attributeGroupTuple.uniqueId : <code>string</code>
+The unique identifier for this tuple composed of the values for each
+of the shortest key columns concatenated together by an '_'
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.AttributeGroupTuple+displayname"></a>
+
+#### attributeGroupTuple.displayname : <code>string</code>
+The _display name_ of this tuple. currently it will be values of
+key columns concatenated together by `_`.
+
+Usage:
+```
+console.log("This tuple has a displayable name of ", tuple.displayname.value);
+```
+
+**Kind**: instance property of [<code>AttributeGroupTuple</code>](#ERMrest.AttributeGroupTuple)  
+<a name="ERMrest.BucketAttributeGroupReference"></a>
+
+### ERMrest.BucketAttributeGroupReference : <code>object</code>
+**Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
 <a name="ERMrest.configure"></a>
 
 ### ERMrest.configure(http, q)

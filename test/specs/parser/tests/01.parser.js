@@ -583,13 +583,13 @@ exports.execute = function(options) {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXwF1O2g",
                         {"and": [ {"source": "c", "ranges": [{"min":1}]} ]},
-                        "c::gt::1/$M"
+                        "c::geq::1/$M"
                     );
 
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA98AXEAXwF0v2g",
                         {"and": [ {"source": "c", "ranges": [{"max":"t"}]} ]},
-                        "c::lt::t/$M"
+                        "c::leq::t/$M"
                     );
                 });
 
@@ -597,7 +597,7 @@ exports.execute = function(options) {
                     expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhA0gHMck5EQBbASwn2LMubAA9OpEAF8AumOFA",
                             {"and": [ {"source": unicodeSample, "ranges": [{"min": unicodeSample, "max": unicodeSample}] } ]},
-                            encodedUnicodeSample + "::gt::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::lt::" + encodedUnicodeSample + "/$M"
+                            encodedUnicodeSample + "::geq::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::leq::" + encodedUnicodeSample + "/$M"
                     );
                 });
 
@@ -605,7 +605,7 @@ exports.execute = function(options) {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXyNDrAA98AXEBy5M4AWhYlufWAFY2AXUVsgA",
                         {"and": [ {"source": "c", "ranges": [{"min":1}, {"max":"t"}, {"min": -1, "max": 5}]} ]},
-                        "c::gt::1;c::lt::t;c::gt::-1&c::lt::5/$M"
+                        "c::geq::1;c::leq::t;c::geq::-1&c::leq::5/$M"
                     );
                 });
             });

@@ -351,16 +351,27 @@ AttributeGroupReference.prototype = {
     }
 };
 
+
 /**
- * Constructor for creating a attribute group page. It has similar functionalities
- * as {@link ERMrest.Page}
+ * @namespace ERMrest.AttributeGroupPage
+ */
+
+/**
+ * Constructs a AttributeGroupPage object. A _page_ represents a set of results returned from
+ * ERMrest. It may not represent the complete set of results. There is an
+ * iterator pattern used here, where its {@link ERMrest.AttributeGroupPage#previous} and
+ * {@link ERMrest.AttributeGroupPage#next} properties will give the client a
+ * {@link ERMrest.AttributeGroupReference} to the previous and next set of results,
+ * respectively.
  *
  * Usage:
- *   Clients _do not_ directly access this constructor.
- *   {@link ERMrest.AttributeGroupReference} will access this constructor for returning page of data.
+ *  - Clients _do not_ directly access this constructor.
+ *  - This will currently be used by the AggregateGroupReference to return a
+ *    AttributeGroupPage rather than a {@link ERMrest.Page}
+ *  See {@link ERMrest.AttributeGroupReference#read}.
  *
- * @param       {ERMrest.AttributeGroupReference}  reference the reference that this page belongs to
- * @param       {Object}  data        the raw data
+ * @param       {ERMRest.AttributeGroupReference} reference aggregate reference representing the data for this page
+ * @param       {!Object[]} data The data returned from ERMrest
  * @param       {Boolean} hasPrevious Whether database has some data before current page
  * @param       {Boolean} hasNext     Whether database has some data after current page
  * @constructor
@@ -400,7 +411,7 @@ AttributeGroupPage.prototype = {
      *   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
      * }
      * ```
-     * @type {ERMrest.Tuple[]}
+     * @type {ERMrest.AttributeGroupTuple[]}
      */
     get tuples () {
         if (this._tuples === undefined) {
@@ -478,16 +489,21 @@ AttributeGroupPage.prototype = {
     }
 };
 
+
 /**
- * Constructor for creating a attribute group page. It has similar functionalities
- * as {@link ERMrest.Tuple}
+ * @namespace ERMrest.AttributeGroupTuple
+ */
+
+/**
+ * Constructs a new Tuple. In database jargon, a tuple is a row in a
+ * relation. This object represents a row returned by a query to ERMrest.
  *
  * Usage:
- *   Clients _do not_ directly access this constructor.
- *   {@link ERMrest.AttributeGroupPage} will access this constructor for returning tuples of a page.
+ *  Clients _do not_ directly access this constructor.
+ *  See {@link ERMrest.AttributeGroupPage#tuples}.
  *
- * @param       {ERMrest.AttributeGroupPage}  page the page that tuple is part of
- * @param       {Object}  data tuple's raw data
+ * @param        {!ERMrest.AttributeGroupPage} page The Page object from which this data was acquired.
+ * @param        {!Object} data The unprocessed tuple of data returned from ERMrest.
  * @constructor
  * @memberof ERMrest
  */
@@ -903,5 +919,213 @@ AttributeGroupReferenceAggregateFn.prototype = {
         }
 
         return "cnt_d(" + this._ref.shortestKey[0].term + ")";
+    }
+};
+
+
+module.BucketAttributeGroupReference = BucketAttributeGroupReference;
+/**
+ * @namespace ERMrest.BucketAttributeGroupReference
+ */
+
+/**
+ * Constructs a Reference object based on {@link ERMrest.AttributeGroupReference}.
+ *
+ * This object will be the main object that client will interact with, when we want
+ * to use ermrset `attributegroup` api with the bin aggregate. References are immutable
+ * and therefore can be safely passed around and used between multiple client components
+ * without risk that the underlying reference to server-side resources could change.
+ *
+ * Usage:
+ *  - Clients _do not_ directly access this constructor.
+ *  - This will currently be used by the aggregateGroup histogram function to return a
+ *    BucketAttributeGroupReference rather than a {@link ERMrest.Reference}
+ *
+ * @param       {ERMrest.ReferenceColumn} baseColumn The column that is used for creating grouped aggregate
+ * @param       {ERMrest.Reference} baseRef The reference representing the column
+ * @param       {String} min The min value for the key column request
+ * @param       {String} max The max value for the key column request
+ * @param       {Integer} numberOfBuckets  The number of buckets for the request
+ * @param       {String} bucketWidth the width of each bucket
+ * @constructor
+ */
+function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {
+    var location = new AttributeGroupLocation(baseRef.location.service, baseRef.table.schema.catalog.id, baseRef.location.ermrestCompactPath);
+    var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
+
+    var keyColumns = [
+        new AttributeGroupColumn("c1", binTerm, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
+    ];
+
+    var countName = "cnt(*)";
+    if (baseRef.location.hasJoin) {
+        countName = "cnt_d(" + module._fixedEncodeURIComponent(baseRef.table.shortestKey[0].name) + ")";
+    }
+
+    var aggregateColumns = [
+        new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+    ];
+
+    // call the parent constructor
+    BucketAttributeGroupReference.superClass.call(this, keyColumns, aggregateColumns, location, baseRef.table.schema.catalog);
+
+    this._baseColumn = baseColumn;
+    this._min = min;
+    this._max = max;
+    this._numberOfBuckets = numberOfBuckets;
+    this._bucketWidth = bucketWidth;
+}
+
+// extend the prototype
+module._extends(BucketAttributeGroupReference, AttributeGroupReference);
+
+// properties to be overriden:
+BucketAttributeGroupReference.prototype.sort = function (sort) {
+    verify(true == false, "Invalid function");
+};
+
+BucketAttributeGroupReference.prototype.search = function (term) {
+    verify(true == false, "Invalid function");
+};
+
+/**
+ * Makes a request to the server to fetch the corresponding data for the given key
+ * column and aggregate column. The returned data is then formatted for direct use
+ * in the plotly APIs.
+ *
+ * The return object includes an array of x axis labels and another array of y axis
+ * values used to represent the bars in the histogram. A third object is returned called
+ * labels that includes an array of the min values for each bucket and another array
+ * for the max values of each bucket. Together, labels.min[x] and labels.min[y],
+ * represent the range for each bucket (bar in the histogram) at that particular index.
+ *
+ * @return {Object} data object that contains 2 arrays and another object with 2 arrays
+ */
+BucketAttributeGroupReference.prototype.read = function () {
+    var moment = module._moment;
+
+    // uses the current known min value and adds the binWidth to it to generate the max label
+    // which is then used as the next min label (because we didn't have a next min)
+    function calculateWidthLabel(min, binWidth) {
+        var nextLabel;
+        if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
+            nextLabel = moment(min).add(binWidth, 'd').format(module._dataFormats.DATE);
+        } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
+            nextLabel = moment(min).add(binWidth, 's').format(module._dataFormats.DATETIME.display);
+        } else {
+            nextLabel = (min + binWidth);
+        }
+        return nextLabel;
+    }
+
+    try {
+        var defer = module._q.defer();
+
+        var uri = this.uri;
+
+        var currRef = this;
+        this._server._http.get(uri).then(function (response) {
+            var data = {
+                x: [],
+                y: []
+            };
+
+            var labels = {
+                min: [],
+                max: []
+            };
+
+            var min, max;
+
+            /**
+             * Loops through the returned response data and defines the values in x, y, labels.min, and labels.max
+             * this only considers rows that are returned with values. Each row returned has a `c1` and `c2` value
+             *   - c1: an array with 3 values, [bucketIndex, min, max]
+             *   - c2: an integer representing the number of rows with a value between the min and max for that bucket index
+             **/
+            for (var i=0; i<response.data.length; i++) {
+                var index = response.data[i].c1[0];
+                if (index !== null) {
+                    min = response.data[i].c1[1];
+                    max = response.data[i].c1[2];
+
+                    if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
+                        min = min !== null ? moment(min).format(module._dataFormats.DATE) : null;
+                        max = max !== null ? moment(max).format(module._dataFormats.DATE) : null;
+                    } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
+                        min = min !== null ? moment(min).format(module._dataFormats.DATETIME.display) : null;
+                        max = max !== null ? moment(max).format(module._dataFormats.DATETIME.display) : null;
+                    }
+
+                    labels.min[index] = min;
+                    labels.max[index] = max;
+
+                    data.x[index] = min;
+                    data.y[index] = response.data[i].c2;
+                }
+                // else if null (this is the null bin)
+                // we currently don't want to do anything with the null values
+            }
+
+            // This should be set to the number of buckets to include the # of bins we want to display + the above max and below min bucket
+            // loops through the data and generates the labels for rows that did not return with a value from the bin API
+            for (var j=0; j<currRef._numberOfBuckets+2; j++) {
+                // if no value is present (null is a value), we didn't get a bucket back for this index
+                if (data.x[j] === undefined) {
+                    // determine x axis label
+
+                    // figure out min first
+                    // no label for index 0
+                    if (j==0) {
+                        min = null;
+                    } else {
+                        min = labels.max[j-1];
+                    }
+
+                    // use min to determine max
+                    // if there was a response row for next index, get min of next value
+                    if (labels.min[j+1]) {
+                        max = labels.min[j+1];
+                    } else {
+                        if (j == 0) {
+                            max = currRef._min;
+
+                            if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
+                                max = moment(max).format(module._dataFormats.DATE);
+                            } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
+                                max = moment(max).format(module._dataFormats.DATETIME.display);
+                            }
+                        } else {
+                            max = calculateWidthLabel(min, currRef._bucketWidth);
+                        }
+                    }
+
+                    labels.min[j] = min;
+                    labels.max[j] = max;
+
+                    data.x[j] = min;
+                    data.y[j] = 0;
+                }
+            }
+
+            // remove the first bin (null-min)
+            data.x.splice(0, 1);
+            data.y.splice(0, 1);
+            labels.min.splice(0, 1);
+            labels.max.splice(0, 1);
+
+            data.labels = labels;
+
+            defer.resolve(data);
+
+        }).catch(function (response) {
+            var error = module._responseToError(response);
+            defer.reject(error);
+        });
+
+        return defer.promise;
+
+    } catch (e) {
+        return module._q.reject(e);
     }
 };
