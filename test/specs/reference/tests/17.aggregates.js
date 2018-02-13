@@ -1,12 +1,23 @@
 exports.execute = function (options) {
     // Test Cases:
     describe("for testing aggregate functions on tables and columns,", function () {
+        var moment = options.ermRest._moment;
+
+        function formatTimestampReturn(value) {
+            return moment(value).format(options.ermRest._dataFormats.DATETIME.return);
+        }
+
+        function formatTimestampSubmission(value) {
+            return moment(value).format(options.ermRest._dataFormats.DATETIME.submission);
+        }
+
         var reference;
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "aggregate_schema",
             tableName = "aggregate_table",
             tableNameWithCompKey = "table_w_only_composite_key",
-            tableNameWithSimpleKey = "table_w_simple_key";
+            tableNameWithSimpleKey = "table_w_simple_key",
+            tableNameHistogramAnnotation = "histogram_annotation";
 
         var encodedMain = "u%E1%B4%89%C9%90%C9%AF",
             decodedMain = "uᴉɐɯ",
@@ -38,6 +49,9 @@ exports.execute = function (options) {
 
         var tableWithUnicodeAttrGroupUri = options.url + "/catalog/" + catalog_id + "/attributegroup/T:=" +
             schemaName + ":" + tableName + "/M:=(id)=(" + schemaName + ":" + encodedMain + ":" + encodedID + ")";
+
+        var histogramAnnotationUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableNameHistogramAnnotation;
 
 
         beforeAll(function (done) {
@@ -104,7 +118,7 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(4, "Float count not null is incorrect");
                     expect(response[1]).toBe(4, "Float unique count is incorrect");
-                    expect(response[2]).toBe(0.4222, "Float min value is incorrect");
+                    expect(response[2]).toBe(0.4221, "Float min value is incorrect");
                     expect(response[3]).toBe(36.9201, "Float max value is incorrect");
 
                     done();
@@ -173,8 +187,8 @@ exports.execute = function (options) {
 
                     expect(response[0]).toBe(5, "Timestamp count not null is incorrect");
                     expect(response[1]).toBe(5, "Timestamp unique count is incorrect");
-                    expect(response[2]).toBe("2010-05-22T17:44:00", "Timestamp min value is incorrect");
-                    expect(response[3]).toBe("2017-04-13T14:10:00", "Timestamp max value is incorrect");
+                    expect(formatTimestampReturn(response[2])).toBe(formatTimestampReturn("2010-05-22T17:44:00-07:00"), "Timestamp min value is incorrect");
+                    expect(formatTimestampReturn(response[3])).toBe(formatTimestampReturn("2017-04-13T14:10:00-07:00"), "Timestamp max value is incorrect");
 
                     done();
                 }).catch(function (error) {
@@ -208,7 +222,11 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[0].groupAggregate.entityCounts,
+<<<<<<< HEAD
                             tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(RID)@sort(count::desc::,value)",
+=======
+                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(simple_id)@sort(count::desc::,value)",
+>>>>>>> master
                             ["col", "Number of Occurences"]
                         );
                         done();
@@ -222,7 +240,11 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithUnicode, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[1].groupAggregate.entityCounts,
+<<<<<<< HEAD
                             tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(RID)@sort(count::desc::,value)",
+=======
+                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d("+ encodedID +")@sort(count::desc::,value)",
+>>>>>>> master
                             [decodedCol, "Number of Occurences"]
                         );
                         done();
@@ -272,12 +294,284 @@ exports.execute = function (options) {
                         ["timestamp_agg", "Number of Occurences"]
                     );
                 });
+<<<<<<< HEAD
+
+=======
+>>>>>>> master
 
 
             });
 
+            describe("histograms, ", function () {
+                var bucketAgRef, min, max, calculatedMax, calculatedWidth, maxBucketIndex,
+                    bucketCount = 30,
+                    errorThreshold = 0.01; // 1%
+
+                function calulatePrecision(currVal, nextVal, type) {
+                    var marginOfError;
+                    if (type == "date") {
+                        marginOfError = moment.duration(moment(nextVal).diff(moment(currVal))).asDays();
+                    } else if (type == "timestamp") {
+                        marginOfError = moment.duration(moment(nextVal).diff(moment(currVal))).asSeconds();
+                    } else {
+                        marginOfError = nextVal - currVal;
+                    }
+                    return marginOfError/calculatedWidth - 1;
+                }
+
+                function testHistogramRead(graphData, precisionMarginOfError, type) {
+                    var labels = graphData.labels;
+
+                    expect(graphData.x[0]).toBe(min, "First x axis label is incorrect");
+                    expect(graphData.x[graphData.x.length-1]).toBe(calculatedMax, "Last x axis label is incorrect");
+                    expect(graphData.x).toEqual(graphData.labels.min, "X and label.min arrays don't match");
+
+                    expect(graphData.y[0]).toBeGreaterThan(0, "No values in the bucket representing the min group");
+                    // the max being adjusted to 'calculated max', the actual max value falls into a different bucket than the very last one.
+                    expect(graphData.y[maxBucketIndex]).toBeGreaterThan(0, "No values in the bucket representing the max group");
+
+                    expect(labels.min[0]).toBe(min, "First label is incorrect in labels");
+                    expect(labels.min[labels.min.length-1]).toBe(calculatedMax, "Last label is incorrect in labels");
+                    expect(labels.min).toEqual(graphData.x, "X axis values and labels array are not the same");
+
+                    for (var i=0; i<labels.min.length; i++) {
+                        if (i != labels.min.length-1) {
+                            // verify that each x value is lessthan the next one
+                            expect(graphData.x[i]).toBeLessThan(graphData.x[i+1], "X value at index " + i + " ");
+
+                            // verify each range is within a percentage of the expected width value
+                            var precisionPercent = calulatePrecision(graphData.x[i], graphData.x[i+1], type);
+                            var errorMess = "Bucket range for indices: (" + i + "," + (i+1) + ") is not within the margin of error";
+                            if (type === "integer") {
+                                expect(precisionPercent).toBe(precisionMarginOfError, errorMess);
+                            } else {
+                                expect(precisionPercent).toBeLessThan(precisionMarginOfError, errorMess);
+                            }
+
+                            // verify that each max is the next min label
+                            expect(labels.max[i]).toBe(labels.min[i+1], "max label is not consistent with the next min label");
+                        }
+                    }
+                }
+
+                it("should set properties properly based on anotation value.", function (done) {
+                    options.ermRest.resolve(histogramAnnotationUri, {cid: "test"}).then(function (response) {
+                        facetColumns = response.facetColumns;
+                        // no_histogram_int column
+                        expect(facetColumns[0].barPlot).toBeFalsy("no_histogram_int column shows a histogram");
+                        expect(facetColumns[0].histogramBucketCount).toBe(30, "no_histogram_int column bucket count is not the default");
+                        // dif_num_buckets_float column
+                        expect(facetColumns[1].barPlot).toBeTruthy("dif_num_buckets_float column does not show a histogram");
+                        expect(facetColumns[1].histogramBucketCount).toBe(50, "dif_num_buckets_float column bucket count is not the same as what is defined in the annotation");
+                        // default_date column
+                        expect(facetColumns[2].barPlot).toBeTruthy("default_date column does not show a histogram");
+                        expect(facetColumns[2].histogramBucketCount).toBe(30, "default_date column bucket count is not the default");
+
+                        done();
+                    }).catch(function (error) {
+                        console.dir(error);
+                        done.fail();
+                    });
+                });
+
+                describe("for an integer column,", function () {
+
+                    beforeAll(function () {
+                        min = 2;
+                        max = 215;
+                        calculatedMax = 242;
+                        calculatedWidth = 8;
+                        maxBucketIndex = Math.floor( (max-min)/calculatedWidth );
+                    });
+
+                    it("the histogram function should return a proper bucket AG reference.", function () {
+                        bucketAgRef = reference.columns[1].groupAggregate.histogram(bucketCount, min, max);
+
+                        expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
+                        expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(calculatedMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
+                    });
+
+                    it("should read the histogram data and return it in a proper format for plotly.", function (done) {
+
+                        bucketAgRef.read().then(function (response) {
+                            testHistogramRead(response, 0, "integer");
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[1].groupAggregate.histogram(bucketCount, 1, 1);
+
+                        expect(bucketAgRef._min).toBe(1, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(31, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(1, "Histogram bucket width was not set properly on reference");
+                    });
+                });
+
+                describe("for a float column,", function () {
+
+                    beforeAll(function () {
+                        min = 0.4221;
+                        max = 36.9201;
+                        calculatedMax = max;
+                        calculatedWidth = 1.2166;
+                        maxBucketIndex = Math.floor( (max-min)/calculatedWidth );
+                    });
+
+                    it("the histogram function should return a proper bucket AG reference.", function () {
+                        bucketAgRef = reference.columns[2].groupAggregate.histogram(bucketCount, min, max);
+
+                        expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
+                        expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(max, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
+                    });
+
+                    it("should read the histogram data and return it in a proper format for plotly.", function (done) {
+
+                        bucketAgRef.read().then(function (response) {
+                            testHistogramRead(response, errorThreshold, "float");
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[2].groupAggregate.histogram(bucketCount, 1.1, 1.1);
+
+                        expect(bucketAgRef._min).toBe(1.1, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(2.1, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth.toFixed(4)).toBe("0.0333", "Histogram bucket width was not set properly on reference");
+                    });
+                });
+
+                describe("for a date column,", function () {
+
+                    beforeAll(function () {
+                        min = "2015-01-11";
+                        max = "2017-07-17";
+                        calculatedMax = "2017-07-29";
+                        calculatedWidth = 31;
+                        var dayDiff = moment.duration(moment(max).diff(moment(min))).asDays();
+                        maxBucketIndex = Math.floor( dayDiff/calculatedWidth );
+                    });
+
+                    it("the histogram function should return a proper bucket AG reference.", function () {
+                        bucketAgRef = reference.columns[4].groupAggregate.histogram(bucketCount, min, max);
+
+                        expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
+                        expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
+
+                        // verify histoggram required properties
+                        expect(bucketAgRef._min).toBe(min, "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe(calculatedMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
+                    });
+
+                    it("should read the histogram data and return it in a proper format for plotly.", function (done) {
+
+                        bucketAgRef.read().then(function (response) {
+                            testHistogramRead(response, errorThreshold, "date");
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        bucketAgRef = reference.columns[4].groupAggregate.histogram(bucketCount, "2011-11-11", "2011-11-11");
+
+                        expect(bucketAgRef._min).toBe("2011-11-11", "Histogram min was not set properly on reference");
+                        expect(bucketAgRef._max).toBe("2011-12-11", "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(1, "Histogram bucket width was not set properly on reference");
+                    });
+                });
+
+                describe("for a timestamp column,", function () {
+                    var submissionMin, submissionMax;
+
+                    beforeAll(function () {
+                        submissionMin = formatTimestampSubmission("2010-05-22T17:44:00-07:00");
+                        submissionMax = formatTimestampSubmission("2017-04-13T14:10:00-07:00");
+
+                        min = "2010-05-22 17:44:00";
+                        max = "2017-04-13 14:10:00";
+                        calculatedMax = max;
+                        calculatedWidth = 7251412;
+                        var secondsDiff = moment.duration(moment(max).diff(moment(min))).asSeconds();
+                        maxBucketIndex = Math.floor( secondsDiff/calculatedWidth );
+                    });
+
+                    it("the histogram function should return a proper bucket AG reference.", function () {
+                        // different submission values because they are formatted differently
+                        bucketAgRef = reference.columns[5].groupAggregate.histogram(bucketCount, submissionMin, submissionMax);
+
+                        expect(bucketAgRef instanceof options.ermRest.BucketAttributeGroupReference).toBeTruthy("Reference returned by histogram is not an instance of BucketAttributeGroupReference");
+                        expect(bucketAgRef.isAttributeGroup).toBeTruthy("Reference is not of type attribute group");
+
+                        // verify histoggram required properties
+                        expect(formatTimestampSubmission(bucketAgRef._min)).toBe(submissionMin, "Histogram min was not set properly on reference");
+                        expect(formatTimestampSubmission(bucketAgRef._max)).toBe(submissionMax, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(calculatedWidth, "Histogram bucket width was not set properly on reference");
+                    });
+
+                    it("should read the histogram data and return it in a proper format for plotly.", function (done) {
+
+                        bucketAgRef.read().then(function (response) {
+                            testHistogramRead(response, errorThreshold, "timestamp");
+
+                            done();
+                        }).catch(function (error) {
+                            console.dir(error);
+                            done.fail();
+                        });
+                    });
+
+                    it("should work even with min and max the same.", function () {
+                        submission = formatTimestampSubmission("2011-11-11T11:11:00-07:00");
+                        // with width of 10 seconds and 30 buckets, max should be adjusted to +5 minutes
+                        maxAfter = formatTimestampSubmission("2011-11-11T11:16:00-07:00");
+
+                        bucketAgRef = reference.columns[5].groupAggregate.histogram(bucketCount, submission, submission);
+
+                        expect(formatTimestampSubmission(bucketAgRef._min)).toBe(submission, "Histogram min was not set properly on reference");
+                        expect(formatTimestampSubmission(bucketAgRef._max)).toBe(maxAfter, "Histogram max was not set properly on reference");
+                        expect(bucketAgRef._numberOfBuckets).toBe(bucketCount, "Histogram bucket count was not set properly on reference");
+                        expect(bucketAgRef._bucketWidth).toBe(10, "Histogram bucket width was not set properly on reference");
+                    });
+                });
+            });
+
+<<<<<<< HEAD
             //TODO add test cases for entityValues and histogram
 
+=======
+            //TODO add test cases for entityValues
+>>>>>>> master
         });
     });
 };

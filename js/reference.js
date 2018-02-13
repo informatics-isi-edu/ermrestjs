@@ -3261,8 +3261,8 @@
      * this data was acquired.
      * @param {String} etag The etag from the reference object that produced this page
      * @param {!Object[]} data The data returned from ERMrest.
-     * @param {boolean} hasNext Whether there is more data before this Page
-     * @param {boolean} hasPrevious Whether there is more data after this Page
+     * @param {boolean} hasPrevious Whether there is more data before this Page
+     * @param {boolean} hasNext Whether there is more data after this Page
      * @param {!Object} extraData if
      *
      */
@@ -3615,7 +3615,7 @@
     function Tuple(pageReference, page, data, linkedData) {
         this._pageRef = pageReference;
         this._page = page;
-        this._data = data;
+        this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
     }
 
@@ -5427,6 +5427,43 @@
         },
 
         /**
+         * Returns true if the plotly histogram graph should be shown in the UI
+         * If _facetObject.barPlot is not defined, the value is true. By default
+         * the histogram should be shown unless specified otherwise
+         *
+         * @type {Boolean}
+         */
+        get barPlot() {
+            if (this._barPlot === undefined) {
+                this._barPlot = (this._facetObject.bar_plot === false) ? false : true;
+
+                // if it's not in the list of spported types we won't show it even if the user defined it in the annotation
+                if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
+                    this._barPlot = false;
+                }
+
+            }
+            return this._barPlot;
+        },
+
+        /**
+         * Returns the value of `barPlot.nBins` if it was defined as part of the
+         * `facetObject` in the annotation. If undefined, the default # of buckets is 30
+         *
+         * @type {Integer}
+         */
+        get histogramBucketCount() {
+            if (this._numBuckets === undefined) {
+                this._numBuckets = 30;
+                var barPlot = this._facetObject.bar_plot;
+                if (barPlot && barPlot.n_bins) {
+                    this._numBuckets = barPlot.n_bins;
+                }
+            }
+            return this._numBuckets;
+        },
+
+        /**
          * ReferenceColumn that this facetColumn is based on
          * @type {ERMrest.ReferenceColumn}
          */
@@ -5630,7 +5667,8 @@
             // in scalar mode, use the their toString as displayname.
             else if (!this.isEntityMode) {
                 this.choiceFilters.forEach(function (f) {
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}});
+                    // we don't have access to the tuple, so we cannot send it.
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
                 });
                 defer.resolve(filters);
             }
@@ -5644,7 +5682,7 @@
                 this.choiceFilters.forEach(function (f) {
                     if (f.term == null) {
                         // term can be null, in this case we don't need to make a request for it.
-                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}});
+                        filters.push({uniqueId: null, displayname: {value: null, isHTML: false}, tuple: null});
                     } else {
                         filterStr.push(
                             module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
@@ -5673,7 +5711,7 @@
                     page.tuples.forEach(function (t) {
 
                         // create the response
-                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname});
+                        filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                     });
                     defer.resolve(filters);
                 }).catch(function (err) {
@@ -6351,13 +6389,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             // the reference
@@ -6382,13 +6420,13 @@
             var searchObj = {"column": this.column.name, "term": null};
 
             // sort will be on the aggregated results.
-            var sortObj = [{"column": "count", "descending": true}, {"column": "value", "descending": false}];
+            var sortObj = [{"column": module._groupAggregateColumnNames.COUNT, "descending": true}, {"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
 
             var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
 
             // key columns
             var keyColumns = [
-                new AttributeGroupColumn("value", module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
             ];
 
             var countName = "cnt(*)";
@@ -6397,7 +6435,7 @@
             }
 
             var aggregateColumns = [
-                new AttributeGroupColumn("count", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+                new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
             ];
 
             return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
@@ -6408,42 +6446,84 @@
          * @param  {int} bucketCount number of buckets
          * @param  {int} min         minimum value
          * @param  {int} max         maximum value
-         * @return {obj}
-         * //TODO What should be ther returned object?
+         * @return {ERMrest.BucketAttributeGroupReference}
          */
         histogram: function (bucketCount, min, max) {
             verify(typeof bucketCount === "number", "Invalid bucket count type.");
             verify(min !== undefined && max !== undefined, "Minimum and maximum are required.");
+            verify(max >= min, "Maximum must be greater than the minimum");
+            var column = this.column;
+            var reference = this._ref;
 
-            if (this.column.isPseudo) {
+            if (column.isPseudo) {
                 throw new Error("Cannot use this API on pseudo-column.");
             }
 
-            if (module._histogramSupportedTypes.indexOf(this.column.type.name) === -1) {
-                throw new Error("Binning is not supported on column type " + this.column.type.name);
+            if (module._histogramSupportedTypes.indexOf(column.type.rootName) === -1) {
+                throw new Error("Binning is not supported on column type " + column.type.name);
             }
 
-            if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
+            if (reference.location.hasJoin && reference.table.shortestKey.length > 1) {
                 throw new Error("Table must have a simple key.");
             }
 
-            var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath);
+            var width, range, minMoment, maxMoment;
 
-            var binTerm = "bin(" + module._fixedEncodeURIComponent(this.column.name) + ";" + bucketCount + ";" + min + ";" + max + ")";
-            var keyColumns = [
-                new AttributeGroupColumn("c1", binTerm, this.column.displayname, this.column.type, this.column.comment, true, true)
-            ];
+            var absMax = max,
+                moment = module._moment;
 
-            var countName = "cnt(*)";
-            if (this._ref.location.hasJoin) {
-                countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+            if (column.type.rootName.indexOf("date") > -1) {
+                // we don't want to make a request for date aggregates that split in the middle of a day, so the max
+                // value used is adjusted so that the range between min and max divided by number of buckets is a whole
+                // integer after converted back to days ( (max-min)/width )
+                minMoment = moment(min);
+                maxMoment = moment(max);
+
+                // bin API does not support using an equivalent min and max
+                if (maxMoment.diff(minMoment) === 0) {
+                    maxMoment.add(1, 'd');
+                }
+
+                // moment.diff() returns the number of milliseconds between the 2 moments in time.
+                // moment.duration(milliseconds).asDays() creates a duration from the milliseconds value and converts
+                //   that to the number of days that milliseconds value reprsents
+                // We don't want a bucket to represent a portion of a day, so define our width as the next largest number of days
+                width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
+                // This is adjusted so that if we have 30 buckets and a range of 2 days, one day isn't split into multiple buckets (dates represent a whole day)
+                absMax = minMoment.add(width*bucketCount, 'd').format(module._dataFormats.DATE);
+            } else if (column.type.rootName.indexOf("timestamp") > -1) {
+                minMoment = moment(min);
+                maxMoment = moment(max);
+
+                // bin API does not support using an equivalent min and max
+                if (maxMoment.diff(minMoment) === 0) {
+                    // generate a new max value so each bucket represents a 10 second period of time
+                    maxMoment.add(10*bucketCount, 's');
+                    absMax = maxMoment.format(module._dataFormats.DATETIME.submission);
+                }
+
+                width = Math.round( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds() );
+
+                // increase width to be minimum of 1 second
+                if (width < 1) {
+                    width = 1;
+                }
+            } else {
+                // bin API does not support using an equivalent min and max
+                if (max-min === 0) {
+                    max++;
+                    absMax = max;
+                }
+
+                width = (max-min)/bucketCount;
+                if (column.type.rootName.indexOf("int") > -1) {
+                    // we don't want to make a request for int aggregates that create float values for bucket min/max values, so the max
+                    // value used is adjusted so that the range between min and max divided by number of buckets is a whole integer
+                    width = Math.ceil(width);
+                    absMax = (min + (width*bucketCount));
+                }
             }
 
-            var aggregateColumns = [
-                new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
-            ];
-
-            //TODO this should just return the results, but I'm not sure about the datastructure.
-            return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
+            return new BucketAttributeGroupReference(column, reference, min, absMax, bucketCount, width);
         }
     };
