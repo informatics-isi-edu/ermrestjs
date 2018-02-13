@@ -1028,7 +1028,7 @@ BucketAttributeGroupReference.prototype.read = function () {
             var data = {
                 x: [],
                 y: [],
-                test: response
+                test: response.data
             };
 
             var labels = {
@@ -1062,12 +1062,12 @@ BucketAttributeGroupReference.prototype.read = function () {
                     labels.max[index] = max;
 
                     data.x[index] = min;
+                    data.xPadding[index] = min;
                     data.y[index] = response.data[i].c2;
                 }
                 // else if null (this is the null bin)
                 // we currently don't want to do anything with the null values
             }
-            data.beforePadding = data.x;
 
             // This should be set to the number of buckets to include the # of bins we want to display + the above max and below min bucket
             // loops through the data and generates the labels for rows that did not return with a value from the bin API
