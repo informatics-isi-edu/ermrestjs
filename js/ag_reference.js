@@ -1028,7 +1028,8 @@ BucketAttributeGroupReference.prototype.read = function () {
             var data = {
                 x: [],
                 xPadding: [],
-                y: []
+                y: [],
+                uri: currRef.uri
             };
 
             var labels = {
