@@ -304,6 +304,9 @@ exports.execute = function(options) {
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
         var facetError = "Given encoded string for facets is not valid.";
         var location, uri;
+        var invalidPageCondition = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging.";
+        var invalidFilterOperator = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.";
+
 
         describe("when uri doesn't have any facets, ", function() {
             it("Location.facets should be undefined.", function() {
@@ -317,6 +320,22 @@ exports.execute = function(options) {
                 expect(function () {
                     options.ermRest.parse(baseUri + "/*::facets::invalidblob");
                 }).toThrow(facetError);
+            });
+        });
+
+        describe("when uri have invalid paging Criteria", function() {
+            it("it should throw an error.", function() {
+                expect(function () {
+                    options.ermRest.parse(baseUri + "@after()");
+                }).toThrow(invalidPageCondition);
+            });
+        });
+
+        describe("when uri have invalid paging Criteria", function() {
+            it("it should throw an error.", function() {
+                expect(function () {
+                    options.ermRest.parse(baseUri + "/id::gt:269");
+                }).toThrow(invalidFilterOperator);
             });
         });
 

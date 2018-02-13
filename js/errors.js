@@ -202,6 +202,11 @@
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
 
+    //remove invalid facet filterString from path
+    function removeInvalidFacetFilter(path){
+      var facetFilter = path.slice(path.search('\\*::facets::'), path.search('@'));
+      return path.replace(facetFilter, '');
+    }
     // Errors not associated with http status codes
     // these are errors that we defined to manage errors in the API
     /**
@@ -213,9 +218,8 @@
     function InvalidFacetOperatorError(message, path) {
 
         message = message ? message : module._errorMessage.facetingError;
-        facetFilter = path.slice(path.search('\\*::facets::'), path.search('@'));
-        newPath = path.replace(facetFilter, '');
-        ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', newPath);
+        var redirectPath = removeInvalidFacetFilter(path);
+        ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', redirectPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
