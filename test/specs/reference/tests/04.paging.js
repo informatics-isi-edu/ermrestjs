@@ -143,7 +143,6 @@ exports.execute = function (options) {
 
             // limit was changed after paging back
             describe("with navigating back to the first page,", function() {
-                //TODO systems_cols_test we're sorting based on id..
                 var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x,RID)@before(33,ZZZZZ)?limit=" + limit;
                 var reference5;
 

@@ -207,9 +207,11 @@ exports.execute = function (options) {
             describe('when sorting based on a PseudoColumn, ', function () {
 
                 it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
-                    //TODO systems_cols_test take a look at data.
-                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=1 will be the first.
-                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": true}], "1", done);
+                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=3 will be the first.
+                    // because col 5: 4001, col_7: 4002 is the first one that exists on the table
+                    // if we sort descending the null value will come up. And since there are multiple null, then shortestkeys will be compared
+                    // since we don't know the value of shortestkey (RID), we cannot assume the position of
+                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": false}], "3", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
