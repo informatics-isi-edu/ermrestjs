@@ -217,7 +217,7 @@ to use for ERMrest JavaScript agents.
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
     * [.ERMrestError](#ERMrest.ERMrestError)
-        * [new ERMrestError(code, status, message, subMessage)](#new_ERMrest.ERMrestError_new)
+        * [new ERMrestError(code, status, message, subMessage, redirectPath)](#new_ERMrest.ERMrestError_new)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -2013,7 +2013,7 @@ will be a type understandable by database.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.ERMrestError_new"></a>
 
-#### new ERMrestError(code, status, message, subMessage)
+#### new ERMrestError(code, status, message, subMessage, redirectPath)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2021,6 +2021,7 @@ will be a type understandable by database.
 | status | <code>string</code> | message status/title in the modal box |
 | message | <code>string</code> | main user error message |
 | subMessage | <code>string</code> | technical details about the error. Appear in collapsible span in the modal box |
+| redirectPath | <code>string</code> | path that would be added to the host to create full redirect link in Chaise |
 
 <a name="ERMrest.TimedOutError"></a>
 
@@ -2249,7 +2250,7 @@ no data was changed for update
 <a name="new_ERMrest.NoConnectionError_new"></a>
 
 #### new NoConnectionError(message)
-A no internet was passed to the API.
+A No Connection or No Internet Connection was passed to the API.
 
 
 | Param | Type | Description |
