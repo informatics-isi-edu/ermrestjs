@@ -306,6 +306,8 @@ exports.execute = function(options) {
         var location, uri;
         var invalidPageCondition = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging.";
         var invalidFilterOperator = "Invalid uri: https://dev.isrd.isi.edu/ermrest/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.";
+        var invalidPageConditionTravis = "Invalid uri: [secure]/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging";
+        var invalidFilterOperatorTravis = "Invalid uri: [secure]/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter."
 
 
         describe("when uri doesn't have any facets, ", function() {
@@ -325,17 +327,19 @@ exports.execute = function(options) {
 
         describe("when uri have invalid paging Criteria", function() {
             it("it should throw an error.", function() {
+              var  pageConditionError  = process.env.TRAVIS ? invalidPageConditionTravis : invalidPageCondition ;
                 expect(function () {
                     options.ermRest.parse(baseUri + "@after()");
-                }).toThrow(invalidPageCondition);
+                }).toThrow(pageConditionError);
             });
         });
 
         describe("when uri have invalid paging Criteria", function() {
             it("it should throw an error.", function() {
+                var  filterOperatorError  = process.env.TRAVIS ? invalidFilterOperatorTravis : invalidFilterOperator ;
                 expect(function () {
                     options.ermRest.parse(baseUri + "/id::gt:269");
-                }).toThrow(invalidFilterOperator);
+                }).toThrow(filterOperatorError);
             });
         });
 
