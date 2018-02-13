@@ -1027,6 +1027,7 @@ BucketAttributeGroupReference.prototype.read = function () {
         this._server._http.get(uri).then(function (response) {
             var data = {
                 x: [],
+                xPadding: [],
                 y: [],
                 test: response.data
             };
