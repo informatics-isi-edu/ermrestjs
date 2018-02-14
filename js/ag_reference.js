@@ -1011,7 +1011,7 @@ BucketAttributeGroupReference.prototype.read = function () {
         if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
             nextLabel = moment(min).add(binWidth, 'd').format(module._dataFormats.DATE);
         } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-            nextLabel = moment(min).add(binWidth, 's').format(module._dataFormats.DATETIME.return);
+            nextLabel = moment.utc(min).add(binWidth, 's').format(module._dataFormats.DATETIME.return);
         } else {
             nextLabel = (min + binWidth);
         }
@@ -1057,8 +1057,8 @@ BucketAttributeGroupReference.prototype.read = function () {
                         min = min !== null ? moment(min).format(module._dataFormats.DATE) : null;
                         max = max !== null ? moment(max).format(module._dataFormats.DATE) : null;
                     } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                        min = min !== null ? moment(min).format(module._dataFormats.DATETIME.return) : null;
-                        max = max !== null ? moment(max).format(module._dataFormats.DATETIME.return) : null;
+                        min = min !== null ? moment.utc(min).format(module._dataFormats.DATETIME.return) : null;
+                        max = max !== null ? moment.utc(max).format(module._dataFormats.DATETIME.return) : null;
                     }
 
                     labels.min[index] = min;
@@ -1097,7 +1097,7 @@ BucketAttributeGroupReference.prototype.read = function () {
                             if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
                                 max = moment(max).format(module._dataFormats.DATE);
                             } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                                max = moment(max).format(module._dataFormats.DATETIME.return);
+                                max = moment.utc(max).format(module._dataFormats.DATETIME.return);
                             }
                         } else {
                             max = calculateWidthLabel(min, currRef._bucketWidth);

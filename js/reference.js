@@ -6477,8 +6477,8 @@
                 // This is adjusted so that if we have 30 buckets and a range of 2 days, one day isn't split into multiple buckets (dates represent a whole day)
                 absMax = minMoment.add(width*bucketCount, 'd').format(module._dataFormats.DATE);
             } else if (column.type.rootName.indexOf("timestamp") > -1) {
-                minMoment = moment(min);
-                maxMoment = moment(max);
+                minMoment = moment.utc(min);
+                maxMoment = moment.utc(max);
 
                 // bin API does not support using an equivalent min and max
                 if (maxMoment.diff(minMoment) === 0) {
