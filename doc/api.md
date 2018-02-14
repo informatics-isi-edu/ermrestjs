@@ -276,7 +276,7 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-        * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2330,7 +2330,7 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-    * [.removeAllFacetFilters()](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2588,11 +2588,16 @@ The default information that we want to be logged including catalog, schema_tabl
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters() ⇒ <code>ERMrest.reference</code>
+#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
 Remove all the fitlers from facets
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
+
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>

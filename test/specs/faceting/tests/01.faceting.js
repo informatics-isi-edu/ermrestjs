@@ -68,7 +68,8 @@ exports.execute = function (options) {
             tableWFacetAlt = "main_w_facets_w_alt";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
-        var refMainMoreFilters, refNotNullFilter;
+        var refMainMoreFilters, refNotNullFilter, refWCustomFilters;
+        var unsupportedFilter = "id=1;int_col::geq::5";
         var mainFacets;
         var i, facetObj;
 
@@ -323,7 +324,7 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("if reference already has facets applied, ", function () {
+            describe("if reference already has facets or filters applied, ", function () {
                 it ("should merge the facet lists, but get the filters from uri.", function (done) {
                     facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
@@ -452,6 +453,49 @@ exports.execute = function (options) {
                         });
                     });
                 });
+
+                describe("if reference has filters,", function () {
+                    var filter;
+                    it ("if filter can be represented in facet syntax, should change the location's filter into facet.", function (done) {
+                        filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15)";
+                        options.ermRest.resolve(createURL(tableMain) + "/" + filter).then(function (ref) {
+                            var facetColumns = ref.facetColumns;
+                            expect(ref.facetColumns.length).toBe(16, "length missmatch.");
+                            expect(ref.location.facets).toBeDefined("facets is undefined.");
+                            expect(ref.location.filter).toBeUndefined("filter was defined.");
+                            expect(ref.location.filtersString).toBeUndefined("filtersString was defined.");
+                            expect(ref.facetColumns[0].filters.length).toBe(2, "# of filters defined for id is incorrect");
+                            expect(ref.facetColumns[1].filters.length).toBe(2, "# of filters defined for int_col is incorrect.");
+                            expect(ref.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/id=1;id=2/$M/int_col::geq::5;int_col::leq::15/$M",
+                                "path missmatch."
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+
+                    it ("otherwise should not change the filter.", function (done) {
+                        options.ermRest.resolve(createURL(tableMain) + "/" + unsupportedFilter).then(function (ref) {
+                            refWCustomFilters = ref;
+
+                            expect(ref.facetColumns.length).toBe(16, "length missmatch.");
+                            expect(ref.location.facets).toBeUndefined("facets is defined.");
+                            expect(ref.location.filter).toBeDefined("filter was undefined.");
+                            expect(ref.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/" + unsupportedFilter,
+                                "path missmatch."
+                            );
+                            expect(ref.facetColumns[0].filters.length).toBe(0, "# of filters defined is incorrect");
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+                });
             });
 
             describe("regarding alternative tables for main table, ", function () {
@@ -525,13 +569,31 @@ exports.execute = function (options) {
             });
         });
 
-        it("Reference.removeAllFacetFilters, should return a new reference without any filters.", function () {
-            var newRef = refMain.removeAllFacetFilters();
-            expect(newRef).not.toBe(refMain, "reference didn't change.");
-            expect(newRef.location.facets).toBeUndefined("facets was defined.");
-            expect(newRef.facetColumns.filter(function (f) {
-                return f.filters.length !== 0;
-            }).length).toBe(0, "some of the facetColumns have facet.");
+        describe('Reference.removeAllFacetFilters, ', function () {
+            var ref;
+            beforeAll(function () {
+                ref = refWCustomFilters.facetColumns[0].addChoiceFilters(["1"]);
+            });
+
+            it ("should return all facets and filters if input is not true.", function () {
+                var newRef = ref.removeAllFacetFilters();
+                expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
+                expect(newRef.location.facets).toBeUndefined("facets was defined.");
+                expect(newRef.facetColumns.filter(function (f) {
+                    return f.filters.length !== 0;
+                }).length).toBe(0, "some of the facetColumns have facet.");
+            });
+
+            it ("otherwise should only remove the filters.", function () {
+                var newRef = ref.removeAllFacetFilters(true);
+                expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(newRef.location.filter).toBeUndefined("filter missmatch.");
+                expect(newRef.location.facets).toBeDefined("facets was defined.");
+                expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
+                    {and: [{"source": "id", "choices": ["1"]}]}
+                ));
+            });
         });
 
         describe("FacetColumn APIs, ", function () {
@@ -1112,6 +1174,13 @@ exports.execute = function (options) {
                         },
                         "id"
                     );
+                });
+
+                it ("should handle filter (not facet) on the main reference.", function () {
+                    var sr = refWCustomFilters.facetColumns[0].sourceReference;
+                    expect(sr.location.ermrestCompactPath).toBe("M:=faceting_schema:main/" + unsupportedFilter, "compactPath missmatch.");
+                    sr = refWCustomFilters.facetColumns[11].sourceReference;
+                    expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=left(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
                 });
             });
 
