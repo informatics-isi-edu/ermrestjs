@@ -2,6 +2,7 @@
  * @namespace ERMrest.Reference
  */
 
+
  /**
   * @memberof ERMrest
   * @constructor
@@ -1425,6 +1426,10 @@
                  table = this.reference.table;
 
              pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
+
+             if (this.reference.location.filtersString) {
+                 pathFromSource.push(this.reference.location.filtersString);
+             }
 
              // create a path from reference to this facetColumn
              this.foreignKeys.forEach(function (fkObj) {

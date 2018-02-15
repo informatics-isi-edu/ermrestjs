@@ -202,7 +202,7 @@
         // If there are filters appended after projection table
         // modify the columns to the linked table
         this._filtersString = '';
-        if (parts[1] && !this._facets) {
+        if (parts[1]) {
             // TODO should refactor these checks into one match statement
             var isJoin = parts[1].match(joinRegExp);
             var isFacet = parts[1].match(facetsRegExp);
@@ -264,8 +264,15 @@
                     this._filter = new ParsedFilter(type);
                     this._filter.setFilters(filters);
                 }
+            }
 
-                //NOTE: might need to replace columns based on join
+            // change filter to facet if possible
+            if (this._filter) {
+                var f = _filterToFacet(this._filter);
+                if (f) {
+                    this._filter.facet = f.facet;
+                    this._filter.depth = f.depth;
+                }
             }
         }
 
@@ -550,6 +557,15 @@
 
         get filtersString() {
             return this._filtersString;
+        },
+
+        /**
+         * Remove the filters from the location
+         */
+        removeFilters: function () {
+          delete this._filter;
+          delete this._filtersString;
+          this._setDirty();
         },
 
         /**
@@ -1127,7 +1143,6 @@
           */
          setFilters: function(filters) {
              this.filters = filters;
-             this.facet = _filterToFacet(this);
          },
 
          /**
@@ -1140,8 +1155,6 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
-
-             this.facet = {and: [_filterToFacet(this)]};
          }
      };
 
@@ -1211,40 +1224,70 @@
     }
 
     /**
-     * Turn filter into facet, will return null if it's not possible to do so.
-     * @param       {ParsedFilter} parsedFilte
+     * Given a parsedFilter object will return the corresponding facet.
+     * If we cannot represent it with facet, it will return `null`.
+     * Otherwise will return an object with
+     *  - depth: showing the depth of filter.
+     *  - facet: facet equivalent of the given filter
+     *
+     * @private
+     * @param       {Object} parsedFilter the filter
      * @return      {Object}
      */
     function _filterToFacet(parsedFilter) {
-        var facet = {}, orSources = {}, parsed, op, i, f;
+        var res = _filterToFacetRec(parsedFilter, 0);
+
+        // could not be parsed
+        if (!res) return null;
+
+        var depth = res.depth, facet = res.facet;
+
+        // if facet didn't have any operator, then we create one with and
+        if (!("or" in facet) && !("and" in facet)) {
+          facet = {and: [module._simpleDeepCopy(facet)]};
+          depth = 1;
+        }
+
+        return {facet: facet, depth: depth};
+    }
+
+    // does the process of changing filter to facet recursively
+    function _filterToFacetRec(parsedFilter, depth) {
+        var facet = {}, orSources = {}, parsed, op, i, f, nextRes, parentDepth;
 
         // base for binary predicate filters
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case "::gt::":
+                case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
                     facet.ranges = [{min: parsedFilter.value}];
                     break;
-                case "::lt::":
+                case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
                     facet.ranges = [{max: parsedFilter.value}];
                     break;
-                case "::null::":
+                case module.OPERATOR.NULL:
                     facet.choices = [null];
                     break;
-                case "::ciregexp::":
+                case module.OPERATOR.CASE_INS_REG_EXP:
                     facet.search = [parsedFilter.value];
                     break;
-                case "=":
+                case module.OPERATOR.EQUAL:
                     facet.choices = [parsedFilter.value];
                     break;
                 default:
+                    // operator is not supported by facet
                     return null;
             }
-            return facet;
+
+            return {facet: facet, depth: depth};
         }
 
-        // if it's an array of filters
         if (Array.isArray(parsedFilter.filters)) {
+
+            // we're going one level deeper (since it's an array it will be turned into object of sources)
+            depth++;
+
+            // set the filter type
             if (parsedFilter.type === module.filterTypes.DISJUNCTION) {
                 op = "or";
             } else if (parsedFilter.type === module.filterTypes.CONJUNCTION) {
@@ -1260,16 +1303,29 @@
                 facet[op][index][c].push(parsed[c][0]);
             };
 
+            parentDepth = depth;
             facet[op] = [];
             for (i = 0; i < parsedFilter.filters.length; i++) {
                 f = parsedFilter.filters[i];
-                parsed = _filterToFacet(f);
+
+                // get the facet for this child filter
+                nextRes = _filterToFacetRec(f, parentDepth);
 
                 // couldn't parse it.
-                if (!parsed) return null;
+                if (!nextRes) return null;
 
+                parsed = nextRes.facet;
+
+                // depth of the parent will be the maximum depth of its children
+                depth = Math.max(depth, nextRes.depth);
+
+
+                // if operator is or and the filter is binary we can merge them
+                // for example id=1;id=2 can turned into {source: "id", choices: ["1", "2"]}
+                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], :ranges: {min: 2}}
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
+                        // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
                         ["ranges", "choices", "search"].forEach(mergeFacets);
                         continue;
@@ -1278,10 +1334,18 @@
                     }
                 }
 
+                // add the facet into the list
                 facet[op].push(parsed);
             }
 
-            return facet;
+            // if it's just one value, then we can just flatten the array and return that value.
+            // the wrapper function will take care of adding the op, if it didn't exist
+            if (facet[op].length === 1) {
+              facet = facet[op][0];
+              depth--;
+            }
+
+            return {facet: facet, depth: depth};
         }
 
        // invalid filter
