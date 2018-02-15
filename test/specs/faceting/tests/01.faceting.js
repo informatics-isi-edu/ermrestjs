@@ -1191,7 +1191,7 @@ exports.execute = function (options) {
                     "and": [
                         {"source": "id", "choices":["1"]},
                         {"source":"int_col","ranges":[{"min":-2}]},
-                        {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                        {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
                         {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
                         {
                             "source": [
@@ -1230,7 +1230,7 @@ exports.execute = function (options) {
                     {
                         "and": [
                             {"source":"int_col","ranges":[{"min":-2}]},
-                            {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                            {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
                             {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
                             {
                                 "source": [
@@ -1267,7 +1267,7 @@ exports.execute = function (options) {
                         "and": [
                             {"source": "id", "choices":["1"]},
                             {"source":"int_col","ranges":[{"min":-2}]},
-                            {"source":"float_col","ranges":[{"max":20.2,"min":-1}]},
+                            {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
                             {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
                             {
                                 "source": [

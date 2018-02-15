@@ -381,62 +381,10 @@
                         return false;
                     }
 
-                    var table = self.table, source = obj.source;
-                    var colName, col;
+                    var col = _getFacetSourceColumn(obj.source, self.table, module._constraintNames);
 
-                    // from 0 to source.length-1 we have paths
-                    if (Array.isArray(source)) {
-                        var fk, i, isInbound, constraint, fkObj;
-                        for (i = 0; i < source.length - 1; i++) {
-
-                            if ("inbound" in source[i]) {
-                                constraint = source[i].inbound;
-                                isInbound = true;
-                            } else if ("outbound" in source[i]) {
-                                constraint = source[i].outbound;
-                                isInbound = false;
-                            } else {
-                                // given object was invalid
-                                return false;
-                            }
-
-                            fkObj = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]);
-
-                            // constraint name was not valid
-                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                                return false;
-                            }
-
-                            fk = fkObj.object;
-
-                            // inbound
-                            if (isInbound && fk.key.table === table) {
-                                table = fk._table;
-                            }
-                            // outbound
-                            else if (!isInbound && fk._table === table) {
-                                table = fk.key.table;
-                            }
-                            else {
-                                // the given object was not valid
-                                return false;
-                            }
-                        }
-                        colName = source[source.length-1];
-                    } else {
-                        colName = source;
-                    }
-
-                    try {
-                        col = table.columns.get(colName);
-
-                        // if column is a type that we don't support
-                        if (module._facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
-                            return false;
-                        }
+                    if (col && module._facetUnsupportedTypes.indexOf(col.type.name) === -1) {
                         return col;
-                    } catch(exp) {
-                        return false;
                     }
                 };
 
@@ -473,8 +421,8 @@
                  * - [{"inbound":['s', 'c']}, {"outbound": ['s', 'c2']}, 'col']
                  */
                 var sameSource = function (source, filterSource) {
-                    if (!Array.isArray(source)) {
-                        return source === filterSource;
+                    if (!_isFacetSourcePath(source)) {
+                        return !_isFacetSourcePath(filterSource) && _getFacetSourceColumnStr(source) === _getFacetSourceColumnStr(filterSource);
                     }
 
                     if (source.length !== filterSource.length) {
@@ -3009,13 +2957,11 @@
                     // Therefore we should go based on the facets on the location object, not facetColumns.
                     var modifyFacetFilters = function (funct) {
                         currentFacets.forEach(function (f) {
-                            // TODO parse might need to run this first, to avoid checking for invalid input
                             if (!f.source) return;
 
                             var fk = null;
 
-                            //TODO needs refactoring, can be a method in parser
-                            if (Array.isArray(f.source)) {
+                            if (_isFacetSourcePath(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {
@@ -5302,26 +5248,9 @@
             return this._isOpen;
         },
 
-        get foreginKeys() {
+        get foreignKeys() {
             if (this._foreignKeys === undefined) {
-                this._foreignKeys = [];
-                if (Array.isArray(this.dataSource)) {
-                    var isInbound, constraint;
-                    for (var i = 0; i < this.dataSource.length - 1; i++) {
-                        if ("inbound" in this.dataSource[i]) {
-                            isInbound = true;
-                            constraint = this.dataSource[i].inbound;
-                        } else {
-                            isInbound = false;
-                            constraint = this.dataSource[i].outbound;
-                        }
-
-                        this._foreignKeys.push({
-                            "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
-                            "isInbound": isInbound
-                        });
-                    }
-                }
+                this._foreignKeys = _getFacetSourceForeignKeys(this.dataSource, this._column.table.schema.catalog.id, module._constraintNames);
             }
             return this._foreignKeys;
         },
@@ -5329,24 +5258,7 @@
         // returns the last foreignkey object in the path
         get _lastForeignKey() {
             if (this._lastForeignKey_cached === undefined) {
-                if (!Array.isArray(this.dataSource)) {
-                    this._lastForeignKey_cached = null;
-                } else {
-                    var lastJoin = this.dataSource[this.dataSource.length-2];
-                    var isInbound = false, constraint;
-
-                    if ("inbound" in lastJoin) {
-                        isInbound = true;
-                        constraint = lastJoin.inbound;
-                    } else {
-                        constraint = lastJoin.outbound;
-                    }
-
-                    this._lastForeignKey_cached = {
-                        "obj": module._getConstraintObject(this._column.table.schema.catalog.id, constraint[0], constraint[1]).object,
-                        "isInbound": isInbound
-                    };
-                }
+                this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.dataSource, this._column.table.schema.catalog.id, module._constraintNames);
             }
             return this._lastForeignKey_cached;
         },
@@ -5495,23 +5407,9 @@
                 pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
 
                 // create a path from reference to this facetColumn
-                if (Array.isArray(this.dataSource)) {
-                    var constraint, isOutbound, fk;
-                    this.dataSource.forEach(function (ds, index) {
-                        // the last element is the column name
-                        if (index === self.dataSource.length - 1) return;
-
-                        if ("inbound" in ds) {
-                            constraint = ds.inbound;
-                            isOutbound = false;
-                        } else {
-                            constraint = ds.outbound;
-                            isOutbound = true;
-                        }
-                        fk = module._getConstraintObject(table.schema.catalog.id, constraint[0], constraint[1]).object;
-                        pathFromSource.push(fk.toString(isOutbound, true));
-                    });
-                }
+                this.foreignKeys.forEach(function (fkObj) {
+                    pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, true));
+                });
 
                 // TODO might be able to improve this
                 if (typeof this.reference.location.searchTerm === "string") {
