@@ -315,27 +315,18 @@
     NoConnectionError.prototype.constructor = NoConnectionError;
 
     function removePageCondition(path){
-      var newPath;
-      if (path != undefined && path.indexOf("@before") !== -1) {
-        beforerLiteral = path.match(/(@before\([^\)]*\))/)[1];
-          path = path.replace(beforerLiteral, '');
-      }
-      if (path != undefined && path.indexOf("@after") !== -1) {
-        afterLiteral = path.match(/(@after\([^\)]*\))/)[1];
-          path = path.replace(afterLiteral, '');
-      }
+      if (path != undefined){
+        path = path.replace(/(@before\([^\)]*\))/, '');
+        path = path.replace(/(@after\([^\)]*\))/, '');
+     }
       return path;
     }
 
     function removeSortCondition(path){
-      var newPath;
-      if (path != undefined && path.indexOf("@sort") !== -1) {
-        beforerLiteral = path.match(/(@sort\([^\)]*\))/)[1];
-          newPath = path.replace(beforerLiteral, '');
+      if (path != undefined) {
+          return path.replace(/(@sort\([^\)]*\))/, '');
       }
-      return newPath;
     }
-
 
     /**
      * @memberof ERMrest

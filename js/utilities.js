@@ -2464,7 +2464,7 @@
       invalidURI : "Invalid URI",
       noDataChanged : "No Data Changed",
       noConnectionError : "No Connection Error",
-      InvalidSortCriteria : "Invalid Facet Sorting",
+      InvalidSortCriteria : "Invalid Sort Criteria",
       invalidPageCriteria : "Invalid Page Criteria"
       });
 

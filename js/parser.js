@@ -121,7 +121,6 @@
 
         // <sort>/<page>
         // sort and paging
-        var  pathString = this._path;
         if (modifiers) {
             if (modifiers.indexOf("@sort(") !== -1) {
                 this._sort = modifiers.match(/(@sort\([^\)]*\))/)[1];
@@ -172,7 +171,7 @@
         if (startIndex <= endIndex) {
             match = parts[endIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1], pathString);
+                this._facets = new ParsedFacets(match[1], this._path);
 
                 // extract the search term
                 searchTerm = _getSearchTerm(this._facets.decoded);
@@ -194,7 +193,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1], pathString);
+                this._projectionFacets = new ParsedFacets(match[1], this._path);
                 startIndex++;
             }
         }
@@ -446,7 +445,7 @@
                     }, "");
                 }
 
-                if (this.facets) {                  
+                if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
                     if (!facetFilter)
                      throw new module.InvalidFacetOperatorError('', this.path);
