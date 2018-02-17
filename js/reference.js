@@ -601,11 +601,18 @@
                 };
 
 
-                // extract the filters from the url
-                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
+                // extract the filters and facets from the url
+                var hasFilterOrFacet =this.location.facets || this.location.filter;
                 var andFilters = [];
+                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
                     andFilters = jsonFilters[andOperator];
+                }
+
+                // change filters to facet NOTE can be optimized to actually merge instead of just appending to list
+                if (this.location.filter && this.location.filter.depth === 1 && Array.isArray(this.location.filter.facet.and)) {
+                    Array.prototype.push.apply(andFilters, this.location.filter.facet.and);
+                    this._location.removeFilters();
                 }
 
                 var annotationCols = -1, usedAnnotation = false;
@@ -640,7 +647,7 @@
                         obj = module._simpleDeepCopy(obj);
 
                         // if we have filters in the url, we will get the filters only from url
-                        if (andFilters.length > 0) {
+                        if (hasFilterOrFacet) {
                             delete obj.not_null;
                             delete obj.choices;
                             delete obj.search;
@@ -761,16 +768,17 @@
 
         /**
          * Remove all the fitlers from facets
+         * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
          * @return {ERMrest.reference} A reference without facet filters
          */
-        removeAllFacetFilters: function () {
+        removeAllFacetFilters: function (sameFacet) {
             var newReference = _referenceCopy(this);
 
             // update the facetColumns list
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, [])
+                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, sameFacet ? fc.filters.slice() : [])
                 );
             });
 
@@ -778,8 +786,10 @@
             newReference._location = this._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
-            newReference._location.facets = null;
-
+            if (!sameFacet) {
+                newReference._location.facets = null;
+            }
+            newReference._location.removeFilters();
 
             return newReference;
         },
@@ -5494,6 +5504,10 @@
                     table = this.reference.table;
 
                 pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
+
+                if (this.reference.location.filtersString) {
+                    pathFromSource.push(this.reference.location.filtersString);
+                }
 
                 // create a path from reference to this facetColumn
                 if (Array.isArray(this.dataSource)) {
