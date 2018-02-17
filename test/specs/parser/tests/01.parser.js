@@ -441,8 +441,22 @@ exports.execute = function(options) {
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
         var facetError = "Given encoded string for facets is not valid.";
         var location, uri;
-        var invalidPageCondition = "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging.";
-        var invalidFilterOperator = "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.";
+        var invalidPageConditionErrorObj = {
+                       'status': 'Invalid Page Criteria',
+                       'messageWithCondition': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table@after(). Sort modifier is required with paging.",
+                       'messageWithConditions': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table@after(3)@before(7). Sort modifier is required with paging.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table' }
+       };
+        var invalidFilterOperatorErrorObj = {
+                       'status': 'Invalid Filter',
+                       'message': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/' }
+       };
+        var invalidFacetFilterErrorObj = {
+                       'status': 'Invalid Facet Filters',
+                       'message': "Given encoded string for facets is not valid.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/@sort()' }
+      };
 
         describe("when uri doesn't have any facets, ", function() {
             it("Location.facets should be undefined.", function() {
@@ -457,21 +471,53 @@ exports.execute = function(options) {
                     options.ermRest.parse(baseUri + "/*::facets::invalidblob");
                 }).toThrow(facetError);
             });
-        });
 
-        describe("when uri have invalid paging Criteria", function() {
-            it("it should throw an error.", function() {
-                expect(function () {
-                    options.ermRest.parse(baseUri + "@after()");
-                }).toThrow(invalidPageCondition);
+            it("should throw an error for invalid facet filter errors.", function() {
+                try{
+                      options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()");
+                } catch(e){
+                  expect(e).toEqual(jasmine.any(Object));
+                  expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
+                  expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
+                  expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorData, "errorData attribute did not match");
+                }
             });
         });
 
-        describe("when uri have invalid paging Criteria", function() {
-            it("it should throw an error.", function() {
-                expect(function () {
+        describe("when uri has invalid paging Criteria", function() {
+            it("it should throw an error for invalid pageing criteria.", function() {
+                try{
+                      options.ermRest.parse(baseUri + "@after()");
+                } catch(e){
+                  expect(e).toEqual(jasmine.any(Object));
+                  expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                  expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithCondition, "Error message did not match");
+                  expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+
+            it("it should throw an error for invalid pageing criteria with both after() and before().", function() {
+                try{
+                      options.ermRest.parse(baseUri + "@after(3)@before(7)");
+                } catch(e){
+                  expect(e).toEqual(jasmine.any(Object));
+                  expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                  expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithConditions, "Error message did not match");
+                  expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+        });
+
+        describe("when uri has invalid filter", function() {
+            it("it should throw an error for invalid filter.", function() {
+                try{
                     options.ermRest.parse(baseUri + "/id::gt:269");
-                }).toThrow(invalidFilterOperator);
+                } catch(e){
+                  expect(e).toEqual(jasmine.any(Object));
+                  expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
+                  expect(e.message).toEqual(invalidFilterOperatorErrorObj.message, "Error message did not match");
+                  expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorData, "errorData attribute did not match");
+                }
             });
         });
 
