@@ -50,9 +50,9 @@
      * {@link ERMrest.InvalidSortCriteria},
      */
     module.resolve = function (uri, contextHeaderParams) {
+        var defer = module._q.defer();
         try {
             verify(uri, "'uri' must be specified");
-            var defer = module._q.defer();
             var location;
 
             // make sure all the dependencies are loaded
@@ -66,19 +66,14 @@
 
                 //create Reference
                 defer.resolve(new Reference(location, catalog));
-            }, function (error) {
-
-                throw error;
             }).catch(function(exception) {
-
                 defer.reject(exception);
             });
+        } catch (e) {
+            defer.reject(e);
+        }
 
-            return defer.promise;
-        }
-        catch (e) {
-            return module._q.reject(e);
-        }
+        return defer.promise;
     };
 
     /**
@@ -1101,9 +1096,9 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit, contextHeaderParams) {
-            try {
+            var defer = module._q.defer();
 
-                var defer = module._q.defer();
+            try {
 
                 // if this reference came from a tuple, use tuple object's data
                 if (this._tuple) {
@@ -1338,22 +1333,20 @@
                             defer.resolve(rereadPage);
                         }, function error(response) {
                             var error = module._responseToError(response);
-                            return defer.reject(error);
+                            defer.reject(error);
                         });
                     } else {
                         defer.resolve(page);
                     }
 
-                }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                }).catch(function (e) {
+                    defer.reject(module._responseToError(e));
                 });
+            } catch (e) {
+                defer.reject(e);
+            }
 
-                return defer.promise;
-            }
-            catch (e) {
-                return module._q.reject(e);
-            }
+            return defer.promise;
         },
 
         /**
