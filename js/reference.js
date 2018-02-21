@@ -57,7 +57,11 @@
 
             // make sure all the dependencies are loaded
             module._onload().then(function () {
+              try{
                 location = module.parse(uri);
+              } catch (error){
+                return defer.reject(error);
+              }
                 var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
