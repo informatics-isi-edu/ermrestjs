@@ -58,6 +58,7 @@ before_install:
   - sudo chown hatrac /var/www/hatrac
   - cd ..
   - git clone https://github.com/informatics-isi-edu/ermrest.git
+  - git checkout facetingErrors
   - cd ermrest
   - sudo make install PLATFORM=ubuntu1204
   - sudo make deploy PLATFORM=ubuntu1204
