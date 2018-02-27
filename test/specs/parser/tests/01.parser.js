@@ -475,8 +475,8 @@ exports.execute = function(options) {
             it("should throw an error for invalid facet filter errors.", function() {
                 try{
                       options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()");
+                      expect(false).toBe(true, "invalid facet filter didn't throw any errors.");
                 } catch(e){
-                  expect(e).toEqual(jasmine.any(Object));
                   expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
                   expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
                   expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorData, "errorData attribute did not match");
@@ -488,8 +488,8 @@ exports.execute = function(options) {
             it("it should throw an error for invalid pageing criteria.", function() {
                 try{
                       options.ermRest.parse(baseUri + "@after()");
+                      expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
                 } catch(e){
-                  expect(e).toEqual(jasmine.any(Object));
                   expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
                   expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithCondition, "Error message did not match");
                   expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
@@ -499,8 +499,8 @@ exports.execute = function(options) {
             it("it should throw an error for invalid pageing criteria with both after() and before().", function() {
                 try{
                       options.ermRest.parse(baseUri + "@after(3)@before(7)");
+                      expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
                 } catch(e){
-                  expect(e).toEqual(jasmine.any(Object));
                   expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
                   expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithConditions, "Error message did not match");
                   expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
@@ -512,8 +512,8 @@ exports.execute = function(options) {
             it("it should throw an error for invalid filter.", function() {
                 try{
                     options.ermRest.parse(baseUri + "/id::gt:269");
+                    expect(false).toBe(true, "invalid filter didn't throw any errors.");
                 } catch(e){
-                  expect(e).toEqual(jasmine.any(Object));
                   expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
                   expect(e.message).toEqual(invalidFilterOperatorErrorObj.message, "Error message did not match");
                   expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorData, "errorData attribute did not match");

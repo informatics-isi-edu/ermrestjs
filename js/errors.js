@@ -233,9 +233,7 @@
       if (invalidFilter != ''){
         newPath = path.slice(path, path.search(invalidFilter));
       } else{
-        path = path.slice(path);
-        dummyPath = path.replace('/', '@');
-        newPath = path.slice(0, dummyPath.indexOf('/'));
+        newPath = path.slice(0, path.indexOf('/'));
       }
       return newPath;
     }
