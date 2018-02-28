@@ -250,10 +250,10 @@
                             type = module.filterTypes.DISJUNCTION;
                         } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,'');
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,  this._filtersString);
                         } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,'');
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path, this._filtersString);
                         } else if (items[i] !== "&" && items[i] !== ";") {
                             // single filter on the first level
                             var binaryFilter = _processSingleFilterString(items[i], this._uri, this._path);

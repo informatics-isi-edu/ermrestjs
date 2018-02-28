@@ -204,8 +204,19 @@
 
     //remove invalid facet filterString from path
     function removeInvalidFacetFilter(path){
-      var facetFilter = path.slice(path.search('\\*::facets::'), path.search('@'));
-      return path.replace(facetFilter, '');
+      // if URI has modifier starting with '@' then find the blob and replace it with blank
+      // else remove entire facetFilter
+      var newPath,
+          modifierStart = path.indexOf('@'),
+          facetBlobStart = path.search('\\*::facets::');
+
+      if(modifierStart > 0){
+        var facetFilter = path.slice(facetBlobStart, modifierStart);
+        newPath = path.replace(facetFilter, '');
+      } else{
+        newPath = path.slice(0, facetBlobStart);
+      }
+      return newPath;
     }
     // Errors not associated with http status codes
     // these are errors that we defined to manage errors in the API
@@ -227,11 +238,12 @@
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
 
     // path consits of facet filter alongwith table and schemaName
-    // invalidFilter is removed from the path
+    // invalidFilter is removed from the path if found else everything is removed after path ends
     function removeInvalidFilter(path, invalidFilter){
       var newPath;
+
       if (invalidFilter != ''){
-        newPath = path.slice(path, path.search(invalidFilter));
+        newPath = path.replace(invalidFilter, '');
       } else{
         newPath = path.slice(0, path.indexOf('/'));
       }
