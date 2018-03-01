@@ -1164,7 +1164,8 @@
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.");
+                            var path = parts = this.uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/)[4];
+                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.", path);
                         }
 
                         // use the sort columns instead of the actual column.
