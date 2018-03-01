@@ -678,12 +678,23 @@ exports.execute = function (options) {
 
                     describe("otherwise, ", function () {
                         it ("if asset column has a filenameColumn defined, use that as the caption, and return a download link with query parameter.", function () {
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                            expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
 
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
-                            //NOTE this is the output but it will be displayed correctly.
-                            expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                        });
+
+                        describe("if asset column has filenameColumn, ", function () {
+                            it ("if its value is empty, use the url for caption.", function () {
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": null}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                            });
+
+                            it ("otherwise use the given caption.", function () {
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                                //NOTE this is the output but it will be displayed correctly.
+                                expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                            });
                         });
 
                         describe ("if asset column doesn't have filenameColumn", function () {
