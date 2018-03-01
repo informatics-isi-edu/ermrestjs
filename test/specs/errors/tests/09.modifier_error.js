@@ -58,19 +58,8 @@ exports.execute = function(options) {
         });
       });
 
-        describe("when uri doesn't have any facets, ", function() {
-            it("Location.facets should be undefined.", function() {
-                location = options.ermRest.parse(baseUri);
-                expect(location.facets).toBeUndefined();
-            });
-        });
 
         describe("when uri have invalid facet blob", function() {
-            it("parser should throw an error.", function() {
-                expect(function () {
-                    options.ermRest.parse(baseUri + "/*::facets::invalidblob");
-                }).toThrow(facetError);
-            });
 
             it("should throw an error for invalid facet filter errors with sort() modifier.", function() {
                 try{
