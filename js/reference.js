@@ -4992,6 +4992,11 @@
         var url = data[this._baseCol.name];
         var caption = col.formatvalue(data[col.name], context, options);
 
+        // if we got the caption from filename and it resulted in empty, try with the data
+        if (this.filenameColumn && (!caption || !data[this.filenameColumn.name])) {
+            caption = col.formatvalue(data[this._baseCol.name], context, options);
+        }
+
         // if filenameColumn exists, then we want to show that value
         if (!this.filenameColumn) {
             // if value matches the expected format, just show the file name
