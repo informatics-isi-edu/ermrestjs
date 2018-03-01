@@ -200,23 +200,6 @@ exports.execute = function(options) {
                 });
             });
 
-            describe(".name ", function () {
-                it('should return the first constraint name value joined with a `_`.', function() {
-                    table1_schema1.foreignKeys.all().forEach(function(fk, index) {
-                        // NOTE: this if statement assumes that foreignKey with annotation in table1_schema1 has defiend names.
-                        if (fk.annotations.length() > 0) {
-                            expect(fk.name).toEqual("common_schema_1_table_1_first_fk_name_1");
-                        }
-                    });
-
-                    // NOTE: ermrest creates a default constraint_name for fks when they are not explicitly defined.
-                    expect(table2_schema1.foreignKeys.all()[0].name).toBeAnyOf([
-                        'common_schema_1_table_2_schema_1_fk_1_from_table_1_schema_21',
-                        'common_schema_1_table_2_schema_1_fk_2_from_table_1_schema_21'
-                    ]);
-                });
-            });
-
             describe('.from_name and .to_name ', function() {
                 it('should return the values that are defined in foreign-key annotation.', function() {
                     table1_schema1.foreignKeys.all().forEach(function(fk, index) {

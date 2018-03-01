@@ -173,6 +173,42 @@
         this.length = 0;
     };
 
+    /**
+     * Given a string representing a hex, turn it into base64
+     * @private
+     * @param  {string} hex
+     * @return {string}
+     */
+    _hexToBase64 = function (hex) {
+        return window.btoa(String.fromCharCode.apply(null,
+          hex.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+        );
+    };
+
+    /**
+     * Given a base64 string, url encode it.
+     *i.e. '+' and '/' are replaced with '-' and '_' also any trailing '=' removed.
+     *
+     * @private
+     * @param  {string} str
+     * @return {string}
+     */
+    _urlEncodeBase64 = function (str) {
+        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
+    };
+
+    /**
+     * Given a url encoded base64 (output of `_urlEncodeBase64`), return the
+     * actual base64 string.
+     *
+     * @param  {string} str
+     * @return {string}
+     */
+    _urlDecodeBase64 = function (str) {
+        str = (str + '===').slice(0, str.length + (str.length % 4));
+        return str.replace(/-/g, '+').replace(/_/g, '/');
+    };
+
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
@@ -590,22 +626,97 @@
         return value;
     };
 
+    _generatePseudoColumnName = function (colObject, column) {
+        var basedOnKey = column.table.keys.all().filter(function (key) {
+            return !column.nullok && key.simple && key.colset.columns[0] === column;
+        }).length > 0;
+
+        var isEntityMode =  (colObject.entity === false) ? false : basedOnKey;
+
+        if (_isFacetSourcePath(colObject) || isEntityMode) {
+            return _generatePseudoColumnHashName(colObject);
+        }
+
+        return column.name;
+    };
+
     /**
-     * @param {string} name the base name. It usually is the constraintName of that object.
+     * @param {string|object} name the base name. It usually is the constraintName of that object.
      * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
+     * @param {string} hashStr if true,
      * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
      */
-    module._generatePseudoColumnName = function (name, table) {
-        /**
-         * make sure that this name is unique:
-         * 1. table doesn't have any columns with that name.
-         * 2. there's no constraint with that name.
-         **/
-        var i = 0;
-        while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
-            name += ++i;
+    _generatePseudoColumnHashName = function (colObject) {
+
+        //we cannot create an object and stringify it, since its order can be different
+        //instead will create a string of `source + aggregate + entity`
+        var str = "";
+
+        // it should have source
+        if (typeof colObject === "object") {
+            if (!colObject.source) return null;
+
+            if (_isFacetSourcePath(colObject.source)) {
+                // since it's an array, it will preserve the order
+                str += JSON.stringify(colObject.source);
+            } else {
+                str += _getFacetSourceColumnStr(colObject.source);
+            }
+
+            if (typeof colObject.aggregate === "string") {
+                str += colObject.aggregate;
+            }
+
+            // entity true doesn't change anything
+            if (colObject.entity === false) {
+                str += colObject.entity;
+            }
+        } else if (typeof colObject === "string"){
+            str = colObject;
+        } else {
+            return null;
         }
-        return name;
+
+        // md5
+        str = ERMrest._SparkMD5.hash(str);
+
+        // base64
+        str = _hexToBase64(str);
+
+        // url safe
+        return _urlEncodeBase64(str);
+    };
+
+    _generateForeignKeyName = function (fk, isInbound) {
+        var eTable = isInbound ? fk._table : fk.key.table;
+
+        if (!fk.simple) {
+            return _generatePseudoColumnHashName(fk._constraintName);
+        }
+
+        if (!isInbound) {
+            return _generatePseudoColumnHashName({
+                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
+            });
+        }
+
+        var source = [{inbound: fk.constraint_names[0]}];
+        if (eTable._isPureBinaryAssociation()) {
+            var otherFK;
+            for (j = 0; j < eTable.foreignKeys.length(); j++) {
+                if(eTable.foreignKeys.all()[j] !== fk) {
+                    otherFK = eTable.foreignKeys.all()[j];
+                    break;
+                }
+            }
+
+            source.push({outbound: otherFK.constraint_names[0]});
+            source.push(otherFK.key.table.shortestKey[0].name);
+        } else {
+            source.push(eTable.shortestKey[0].name);
+        }
+
+        return _generatePseudoColumnHashName({source: source});
     };
 
     /**
@@ -898,6 +1009,59 @@
             caption: caption,
             reference:  new Reference(module.parse(ermrestUri), table.schema.catalog)
         };
+    };
+
+    /**
+     * returns the displayname that should be used for a facetObject
+     *
+     * @function
+     * @private
+     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
+     * @param  {String} context    Current context
+     * @param  {object} data       Data for the table that this foreignKey is referring to.
+     * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
+     */
+    _generatePseudoColumnDisplayname = function (facetObject, column, lastFK, lastFKIsInbound, addColumn) {
+        if (facetObject.markdown_name) {
+            return {
+                value: module._formatUtils.printMarkdown(facetObject.markdown_name, {inline:true}),
+                unformatted: facetObject.markdown_name,
+                isHTML: true
+            };
+        }
+
+        // if is part of the main table, just return the column's displayname
+        if (lastFK === null) {
+            return column.displayname;
+        }
+
+        // Otherwise
+        var value, unformatted, isHTML = false;
+
+        // use from_name of the last fk if it's inbound
+        if (lastFKIsInbound && lastFK.from_name !== "") {
+            value = unformatted = lastFK.from_name;
+        }
+        // use to_name of the last fk if it's outbound
+        else if (!lastFKIsInbound && lastFK.to_name !== "") {
+            value = unformatted = lastFK.to_name;
+        }
+        // use the table name if it was not defined
+        else {
+            value = column.table.displayname.value;
+            unformatted = column.table.displayname.unformatted;
+            isHTML = column.table.displayname.isHTML;
+
+            if (addColumn) {
+                value += " (" + column.displayname.value + ")";
+                unformatted += " (" + column.displayname.unformatted + ")";
+                if (!isHTML) {
+                    isHTML = column.displayname.isHTML;
+                }
+            }
+        }
+
+        return {"value": value, "isHTML": isHTML, "unformatted": unformatted};
     };
 
     /**
@@ -2107,6 +2271,7 @@
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
     module._constraintNames = {};
+    var consIndex = 0;
 
     /**
      * Creaes a map from catalog id, schema name, and constraint names to the actual object.
@@ -2129,7 +2294,8 @@
 
         module._constraintNames[catalogId][schemaName][constraintName] = {
             "subject": subject,
-            "object": obj
+            "object": obj,
+            "code": "c" + (consIndex++)
         };
     };
 
@@ -2433,6 +2599,12 @@
     module._facetUnsupportedTypes = [
         "json"
     ];
+
+    module._pseudoColAggreagteFns = Object.freeze({
+        MIN: "min",
+        MAX: "max",
+        COUNT: "count"
+    });
 
 
     module._groupAggregateColumnNames = Object.freeze({

@@ -94,6 +94,7 @@ to use for ERMrest JavaScript agents.
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+            * [.uri](#ERMrest.Table+uri) : <code>string</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -172,6 +173,7 @@ to use for ERMrest JavaScript agents.
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
+        * [.name](#ERMrest.Key+name) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
         * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
     * [.ColSet](#ERMrest.ColSet)
@@ -206,6 +208,7 @@ to use for ERMrest JavaScript agents.
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+        * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
@@ -288,6 +291,7 @@ to use for ERMrest JavaScript agents.
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
@@ -315,6 +319,9 @@ to use for ERMrest JavaScript agents.
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
         * [.copy()](#ERMrest.Tuple+copy) ⇒ [<code>Tuple</code>](#ERMrest.Tuple)
+    * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
+        * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
+        * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
         * [new ReferenceColumn(reference, baseCols)](#new_ERMrest.ReferenceColumn_new)
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
@@ -411,9 +418,6 @@ to use for ERMrest JavaScript agents.
         * [.toJSON()](#ERMrest.RangeFacetFilter+toJSON) ⇒ <code>Object</code>
     * [.NotNullFacetFilter](#ERMrest.NotNullFacetFilter)
         * [new NotNullFacetFilter()](#new_ERMrest.NotNullFacetFilter_new)
-    * [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
-        * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
-        * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.ColumnAggregateFn](#ERMrest.ColumnAggregateFn)
         * [new ColumnAggregateFn(column)](#new_ERMrest.ColumnAggregateFn_new)
         * [.minAgg](#ERMrest.ColumnAggregateFn+minAgg) : <code>Object</code>
@@ -538,6 +542,7 @@ to use for ERMrest JavaScript agents.
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog)](#new_ERMrest.AttributeGroupReference_new)
@@ -900,6 +905,7 @@ get table by table name
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [.uri](#ERMrest.Table+uri) : <code>string</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1003,6 +1009,12 @@ The columns that create the shortest key
 
 #### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
 The columns that create the shortest key that can be used for display purposes.
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+uri"></a>
+
+#### table.uri : <code>string</code>
+uri to the table in ermrest with entity api
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -1662,6 +1674,7 @@ get the key by the column set
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
+    * [.name](#ERMrest.Key+name) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
     * [.containsColumn(column)](#ERMrest.Key+containsColumn) ⇒ <code>boolean</code>
 
@@ -1700,6 +1713,12 @@ Documentation for this key
 
 #### key.constraint_names : <code>Array</code>
 The exact `names` array in key definition
+
+**Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
+<a name="ERMrest.Key+name"></a>
+
+#### key.name : <code>string</code>
+Unique name that can be used for referring to this key.
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+simple"></a>
@@ -1909,6 +1928,7 @@ get the foreign key of the given column set
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+    * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
@@ -1968,6 +1988,12 @@ The constraint names for this foreign key
 
 #### foreignKeyRef.comment : <code>string</code>
 Documentation for this foreign key reference
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+name"></a>
+
+#### foreignKeyRef.name : <code>string</code>
+A unique nam that can be used for referring to this foreignkey.
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+simple"></a>
@@ -2375,6 +2401,7 @@ Constructor for a ParsedFilter.
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -2827,6 +2854,21 @@ NOTE: Limitations:
 | --- | --- |
 | page | [<code>Page</code>](#ERMrest.Page) | 
 
+<a name="ERMrest.Reference+getColumnByName"></a>
+
+#### reference.getColumnByName(name) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
+Find a column given its name. It will search in this order:
+1. Visible columns
+2. Table columns
+3. search by constraint name in visible foreignkey and keys (backward compatibility)
+Will throw an error if
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | name of column |
+
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
 #### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
@@ -3213,6 +3255,34 @@ the _data attribute. This way _data can be modified in chaise without changing t
 
 **Kind**: instance method of [<code>Tuple</code>](#ERMrest.Tuple)  
 **Returns**: [<code>Tuple</code>](#ERMrest.Tuple) - a shallow copy of _this_ tuple with it's _data de-referenced  
+<a name="ERMrest.ReferenceAggregateFn"></a>
+
+### ERMrest.ReferenceAggregateFn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
+    * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
+    * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
+
+<a name="new_ERMrest.ReferenceAggregateFn_new"></a>
+
+#### new ReferenceAggregateFn()
+Constructs an Aggregate Funciton object
+
+Reference Aggregate Functions is a collection of available aggregates for the
+particular Reference (count for the table). Each aggregate should return the string
+representation for querying that information.
+
+Usage:
+ Clients _do not_ directly access this constructor. ERMrest.Reference will
+ access this constructor for purposes of fetching aggregate data about the table.
+
+<a name="ERMrest.ReferenceAggregateFn+countAgg"></a>
+
+#### referenceAggregateFn.countAgg : <code>Object</code>
+count aggregate representation
+
+**Kind**: instance property of [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)  
 <a name="ERMrest.ReferenceColumn"></a>
 
 ### ERMrest.ReferenceColumn
@@ -4132,34 +4202,6 @@ Represents not_null filter.
 It doesn't have the same toJSON and toString functions, since
 the only thing that client would need is question of existence of this type of filter.
 
-<a name="ERMrest.ReferenceAggregateFn"></a>
-
-### ERMrest.ReferenceAggregateFn
-**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
-
-* [.ReferenceAggregateFn](#ERMrest.ReferenceAggregateFn)
-    * [new ReferenceAggregateFn()](#new_ERMrest.ReferenceAggregateFn_new)
-    * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
-
-<a name="new_ERMrest.ReferenceAggregateFn_new"></a>
-
-#### new ReferenceAggregateFn()
-Constructs an Aggregate Funciton object
-
-Reference Aggregate Functions is a collection of available aggregates for the
-particular Reference (count for the table). Each aggregate should return the string
-representation for querying that information.
-
-Usage:
- Clients _do not_ directly access this constructor. ERMrest.Reference will
- access this constructor for purposes of fetching aggregate data about the table.
-
-<a name="ERMrest.ReferenceAggregateFn+countAgg"></a>
-
-#### referenceAggregateFn.countAgg : <code>Object</code>
-count aggregate representation
-
-**Kind**: instance property of [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)  
 <a name="ERMrest.ColumnAggregateFn"></a>
 
 ### ERMrest.ColumnAggregateFn
@@ -5100,6 +5142,7 @@ get PathColumn object by column name
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -5551,6 +5594,21 @@ NOTE: Limitations:
 | Param | Type |
 | --- | --- |
 | page | [<code>Page</code>](#ERMrest.Page) | 
+
+<a name="ERMrest.Reference+getColumnByName"></a>
+
+#### reference.getColumnByName(name) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
+Find a column given its name. It will search in this order:
+1. Visible columns
+2. Table columns
+3. search by constraint name in visible foreignkey and keys (backward compatibility)
+Will throw an error if
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | name of column |
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 

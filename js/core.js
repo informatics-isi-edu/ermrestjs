@@ -962,6 +962,14 @@
             return this._rowDisplayKeys[context];
         },
 
+        /**
+         * uri to the table in ermrest with entity api
+         * @type {string}
+         */
+        get uri () {
+            return this._uri;
+        },
+
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
@@ -2398,6 +2406,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonKey.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2409,19 +2418,27 @@
             } catch (exception){}
         }
 
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for key.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        this.name = this.constraint_names[0].join("_");
-
         this._wellFormed = {};
         this._display = {};
     }
 
     Key.prototype = {
         constructor: Key,
+
+        /**
+         * Unique name that can be used for referring to this key.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                var obj = this._constraintName;
+                if (this.simple) {
+                    obj = {source: this.colset.columns[0].name};
+                }
+                this._name = _generatePseudoColumnHashName(obj);
+            }
+            return this._name;
+        },
 
         /**
          * Indicates if the key is simple (not composite)
@@ -2876,6 +2893,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonFKR.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2886,16 +2904,6 @@
                 }
             } catch (exception){}
         }
-
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for fk.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
-        // They will produce the same name. Is there any better way to generate this?
-        this.name = this.constraint_names[0].join("_");
-
 
         /**
          * @type {string}
@@ -2950,6 +2958,17 @@
 
     ForeignKeyRef.prototype = {
         constructor: ForeignKeyRef,
+
+        /**
+         * A unique nam that can be used for referring to this foreignkey.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                this._name = _generateForeignKeyName(this);
+            }
+            return this._name;
+        },
 
         /**
          * returns string representation of ForeignKeyRef object

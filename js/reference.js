@@ -1090,28 +1090,15 @@
                     for (i = 0, k = 1; i < sortObject.length; i++) {
 
                         // find the column in ReferenceColumns
-                        col = -1;
-                        for (j = 0; j < this.columns.length; j++) {
-                            if (this.columns[j].name == sortObject[i].column) {
-                                col = this.columns[j];
-                                break;
-                            }
-                        }
-
-                        // column is either invalid or not in visible columns
-                        if (col === -1 ) {
-                            col = this._table.columns.get(sortObject[i].column); // will return error if column is invalid
-                            sortCols = col._getSortColumns(this._context);
-                        }
-                        // column is in visible columns and sortable
-                        else if (col.sortable) {
-                            sortCols = col._sortColumns;
-                        }
+                        col = this.getColumnByName(sortObject[i].column);
+                        sortObject[i].column = col.name;
 
                         // column is not sortable
-                        if (typeof sortCols === 'undefined') {
+                        if (!col.sortable) {
                             throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
                         }
+
+                        sortCols = col._sortColumns;
 
                         // use the sort columns instead of the actual column.
                         for (j = 0; j < sortCols.length; j++) {
@@ -1159,26 +1146,44 @@
 
                 var uri = this._location.ermrestCompactUri; // used for the http request
 
+                // the pseudo-columns that their path is all outbound and Therefore
+                // creates a one-to-one relation between source and destination, hence
+                // we can just add them to the projection list to get the single value.
+                var oneToOnePseudos = this.columns.filter(function (c) {
+                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
+                });
+
                 /** Change api to attributegroup for retrieving extra information
                  * These information include:
                  * - Values for the foreignkeys.
+                 * - Value for one-to-one pseudo-columns. These are the columns
+                 * that their defined path is all in the outbound direction.
                  *
                  * This will just affect the http request and not this._location
                  *
                  * NOTE:
                  * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   0. There is no table called `T`, `M`, `F1`, `F2`, ...
-                 *   1. There is no alias in url (more precisely `F1`, `F2`, `F3`, ...)
+                 *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
+                 *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
-                if (this._table.foreignKeys.length() > 0) {
+                if (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
                     var compactPath = this._location.ermrestCompactPath,
                         mainTableAlias = this._location.mainTableAlias,
                         projectionTableAlias = this._location.projectionTableAlias,
                         aggList = [],
                         sortColumn,
                         addedCols;
+
+                    // generate the projection for given pseudo column
+                    var getPseudoPath = function (l) {
+                        var pseudoPath = [];
+                        oneToOnePseudos[l].foreignKeys.forEach(function (f, index, arr) {
+                            pseudoPath.push(((index === arr.length-1) ? ("P" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                        });
+                        return pseudoPath.join("/");
+                    };
 
                     // create the uri with attributegroup and alias
                     uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/") + "/";
@@ -1190,6 +1195,13 @@
 
                         // F2:array(F2:*),F1:array(F1:*)
                         aggList.push("F" + (k+1) + ":=array(F" + (k+1) + ":*)");
+                    }
+
+                    // add pseudo paths
+                    for (k = oneToOnePseudos.length - 1; k >= 0; k--) {
+                        uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
+
+                        aggList.push("P" + (k+1) + ":=array(P" + (k+1) + ":*)");
                     }
 
                     // add sort columns (it will include the key)
@@ -1911,7 +1923,8 @@
                 this._related = [];
 
                 var visibleFKs = this._table.referredBy._contextualize(this._context),
-                    notSorted;
+                    notSorted,
+                    fkr, fkrName;
                 if (visibleFKs === -1) {
                     notSorted = true;
                     visibleFKs = this._table.referredBy.all();
@@ -1925,9 +1938,10 @@
 
                 for(var i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
+                    fkrName = _generateForeignKeyName(fkr, true);
 
                     // if in the visible columns list
-                    if (this._inboundFKColumns[fkr.name]) {
+                    if (this._inboundFKColumns[fkrName]) {
                         continue;
                     }
 
@@ -2256,6 +2270,51 @@
         },
 
         /**
+         * Find a column given its name. It will search in this order:
+         * 1. Visible columns
+         * 2. Table columns
+         * 3. search by constraint name in visible foreignkey and keys (backward compatibility)
+         * Will throw an error if
+         * @param  {string} name name of column
+         * @return {ERMrest.ReferenceColumn}
+         */
+        getColumnByName: function (name) {
+            var i;
+
+            // given an array of columns, find column by name
+            var findCol = function (list) {
+                for (i = 0; i < list.length; i++) {
+                    if (list[i].name === name) {
+                        return list[i];
+                    }
+                }
+                return false;
+            };
+
+            // search in visible columns
+            var c = findCol(this.columns);
+            if (c) {
+                return c;
+            }
+
+            // search in table columns
+            c = findCol(this.table.columns.all());
+            if (c) {
+                return new ReferenceColumn(this, [c]);
+            }
+
+            // backward compatibility, look at fks and keys using constraint name
+            for (i = 0; i < this.columns.length; i++) {
+                c = this.columns[i];
+                if (c.isPseudo && ((c.isKey && c.key._constraintName === name) || (c.isForeignKey && c.foreignKey._constraintName ===  name))) {
+                    return c;
+                }
+            }
+
+            throw new module.NotFoundError("", "Column " + name + " not found in table " + this.table.name + ".");
+        },
+
+        /**
          * Generates the list of visible columns
          * The logic is as follows:
          *
@@ -2312,14 +2371,17 @@
             var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table._isPureBinaryAssociation();
 
             var columns = -1,
-                addedFKs = {}, // to avoid duplicate foreign keys
-                addedKeys = {}, // to avoid duplicate keys
+                consideredColumns = {}, // to avoid duplicate pseudo columns
+                tableColumns = {}, // to make sure the hashes we genereate are not clashing with table column names
                 compositeFKs = [], // to add composite keys at the end of the list
-                consideredColumns = {},  // to avoid unnecessary process and duplicate columns
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
+                refTable = this._table,
+                invalid,
                 colAdded,
                 fkName,
+                sourceCol,
+                pseudoName,
                 colFks,
                 cols, col, fk, i, j;
 
@@ -2328,6 +2390,9 @@
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
                 return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && fkr == hiddenFKR;
+            };
+            var hideFKRByName = function (hash) {
+                return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hash.name == hiddenFKR.name;
             };
 
             // should hide the columns that are part of origFKR. (only in compact/brief)
@@ -2348,6 +2413,21 @@
                 self._referenceColumns.push(new ReferenceColumn(self, [col]));
             };
 
+            // make sure generated hash is not the name of any columns in the table
+            var nameExistsInTable = function (name, obj) {
+                if (name in tableColumns) {
+                    console.log("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                    console.log("Ignoring the following in visible-columns, " + obj);
+                    return true;
+                }
+                return false;
+            };
+
+            // create a map of tableColumns to make it easier to find one
+            this._table.columns.all().forEach(function (c) {
+                tableColumns[c.name] = true;
+            });
+
             // get column orders from annotation
             if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
@@ -2366,26 +2446,33 @@
                                 case module._constraintTypes.FOREIGN_KEY:
                                     fk = fk.object;
                                     // fk is in this table, avoid duplicate and it's not hidden.
-                                    if (!(fkName in addedFKs) && !hideFKR(fk)) {
+                                    if (!hideFKR(fk)) {
+                                        // outbound foreignkey
                                         if (fk._table == this._table) {
-                                            // outbound foreignkey
-                                            addedFKs[fkName] = true;
-                                            this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                            // avoid duplicate and same name in database
+                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                                consideredColumns[fkName] = true;
+                                                this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                            }
                                         }
-                                         else if (fk.key.table == this._table && !module._isEntryContext(context)) {
-                                            // inbound foreignkey
-                                            addedFKs[fkName] = true;
+                                        // inbound foreignkey
+                                        else if (fk.key.table == this._table && !module._isEntryContext(context)) {
                                             var relatedRef = this._generateRelatedReference(fk, tuple);
-                                            this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef));
-                                            this._inboundFKColumns[fkName] = true;
+                                            // this is inbound foreignkey, so the name must change.
+                                            fkName = _generateForeignKeyName(fk, true);
+                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                                consideredColumns[fkName] = true;
+                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, fkName));
+                                                this._inboundFKColumns[fkName] = true;
+                                            }
                                         }
                                     }
                                     break;
                                 case module._constraintTypes.KEY:
                                     fk = fk.object;
                                     // key is in this table, and avoid duplicate
-                                    if (!(fkName in addedKeys) && fk.table == this._table) {
-                                        addedKeys[fkName] = true;
+                                    if (!(fkName in consideredColumns) && !nameExistsInTable(fkName) && fk.table == this._table) {
+                                        consideredColumns[fkName] = true;
                                         // if in edit context: add its constituent columns
                                         if (module._isEntryContext(this._context)) {
                                             cols = fk.colset.columns;
@@ -2405,6 +2492,34 @@
                                     // visible-columns annotation only supports key, foreignkey and columns.
                             }
                         }
+                    }
+                    // pseudo-column
+                    else if (typeof col === "object") {
+                        // in edit or invalid source
+                        if (module._isEntryContext(this._context) || !col.source) continue;
+
+                        // check the path and get the column object
+                        sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
+
+                        // invalid source
+                        if (!sourceCol) continue;
+
+                        // generate appropriate name for the given object
+                        pseudoName = _generatePseudoColumnName(col, sourceCol);
+
+                        // avoid duplicates, hide the column/foreignkey and make sure
+                        // the generated hash is not in the database
+                        invalid = (pseudoName in consideredColumns) ||
+                                  (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
+                                  (_isFacetSourcePath(col.source) && nameExistsInTable(pseudoName)) ||
+                                  hideFKRByName(pseudoName);
+
+                        // avoid duplciates and hide the column
+                        if (!invalid) {
+                            consideredColumns[pseudoName] = true;
+                            this._referenceColumns.push(new PseudoColumn(this, sourceCol, col, pseudoName, tuple));
+                        }
+
                     }
                     // column
                     else {
@@ -2427,7 +2542,8 @@
                 //add the key
                 if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
-                    if (key !== undefined) {
+                    if (key !== undefined && !nameExistsInTable(key.name)) {
+                        consideredColumns[key.name] = true;
                         this._referenceColumns.push(new KeyPseudoColumn(this, key));
 
                         // make sure key columns won't be added
@@ -2452,7 +2568,6 @@
                         col.memberOfKeys.length === 1 && col.memberOfKeys[0].simple) {
                         continue;
                     }
-                    consideredColumns[col.name] = true;
 
                     // add the column if it's not part of any foreign keys
                     if (col.memberOfForeignKeys.length === 0) {
@@ -2461,38 +2576,42 @@
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
-                                return a.name.localeCompare(b.name);
+                                return a._constraintName.localeCompare(b._constraintName);
                             });
                         } else {
                             colFKs = col.memberOfForeignKeys;
                         }
 
-                        colAdded = false;
                         for (j = 0; j < colFKs.length; j++) {
                             fk = colFKs[j];
                             fkName = fk.name;
-                            // hide the origFKR
+
+                            // hide the origFKR or exists
                             if(hideFKR(fk)) continue;
 
                             if (fk.simple) { // simple FKR
-                                if (!(fkName in addedFKs)) { // if not duplicate add the foreign key
-                                    addedFKs[fkName] = true;
+                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                    consideredColumns[fkName] = true;
                                     this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                 }
                             } else { // composite FKR
+
                                 // add the column if context is not entry and avoid duplicate
-                                if (!colAdded && !module._isEntryContext(this._context)) {
-                                    colAdded = true;
+                                if (!module._isEntryContext(this._context) && !(col.name in consideredColumns)) {
+                                    consideredColumns[col.name] = true;
                                     this._referenceColumns.push(new ReferenceColumn(this, [col]));
                                 }
-                                // hold composite FKR
-                                if (!(fkName in addedFKs)) {
-                                    addedFKs[fkName] = true;
+
+                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                    consideredColumns[fkName] = true;
+                                    // hold composite FKR
                                     compositeFKs.push(new ForeignKeyPseudoColumn(this, fk));
                                 }
                             }
                         }
                     }
+
+                    consideredColumns[col.name] = true;
                 }
 
                 // append composite FKRs
@@ -2620,7 +2739,7 @@
             newRef.origFKR = fkr; // it will be used to trace back the reference
 
             // the name of pseudocolumn that represents origFKR
-            newRef.origColumnName = module._generatePseudoColumnName(fkr.name, fkr._table);
+            newRef.origColumnName = _generateForeignKeyName(fkr);
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
@@ -3216,17 +3335,19 @@
 
         /*
          * This is the structure of this._linkedData
-         * this._linkedData[i] = {`s:constraintName`: data}
+         * this._linkedData[i] = {`pseudo-column-name`: data}
          * That is for retrieving data for a foreign key, you should do the following:
          *
-         * var fkData = this._linkedData[i][foreignKey.name];
+         * var fkData = this._linkedData[i][column.name];
          */
         this._linkedData = [];
 
-
+        var oneToOnePseudos = reference.columns.filter(function (c) {
+            return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
+        });
 
         // linkedData will include foreign key data
-        if (this._ref._table.foreignKeys.length() > 0) {
+        if (this._ref._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
 
             var fks = reference._table.foreignKeys.all(), i, j;
             var mTableAlias = this._ref.location.mainTableAlias,
@@ -3241,6 +3362,10 @@
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j].name] = data[i]["F"+(j+1)][0];
+                    }
+
+                    for (j = oneToOnePseudos.length - 1; j >= 0; j--) {
+                        this._linkedData[i][oneToOnePseudos[j].name] = data[i]["P"+ (j+1)][0];
                     }
                 }
 
@@ -3787,7 +3912,7 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
-                                presentation = column.formatPresentation(this._linkedData[column._constraintName], this._pageRef._context);
+                                presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context);
                             } else {
                                 presentation = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
@@ -3815,8 +3940,8 @@
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            if (column.isForeignKey) {
-                                values[i] = column.formatPresentation(this._linkedData[column._constraintName], this._pageRef._context);
+                            if (column.isForeignKey || (column.isPathColumn && column.hasPath && column.isUnique)) {
+                                values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context);
                             } else {
                                 values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
@@ -3990,4 +4115,39 @@
          }
 
 
+    };
+
+    /**
+     * Constructs an Aggregate Funciton object
+     *
+     * Reference Aggregate Functions is a collection of available aggregates for the
+     * particular Reference (count for the table). Each aggregate should return the string
+     * representation for querying that information.
+     *
+     * Usage:
+     *  Clients _do not_ directly access this constructor. ERMrest.Reference will
+     *  access this constructor for purposes of fetching aggregate data about the table.
+     * @memberof ERMrest
+     * @class
+     */
+    function ReferenceAggregateFn (reference) {
+        this._ref = reference;
+    }
+
+    ReferenceAggregateFn.prototype = {
+        /**
+         * @type {Object}
+         * @desc count aggregate representation
+         */
+        get countAgg() {
+            if (!this._ref.location.hasJoin) {
+                return "cnt(*)";
+            }
+
+            if (this._ref.table.shortestKey.length > 1) {
+                throw new Error("Since reference has a join, table must have a simple key.");
+            }
+
+            return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+        }
     };

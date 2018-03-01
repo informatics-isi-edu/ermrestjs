@@ -20,7 +20,7 @@ exports.execute = function(options) {
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
                 expect(test.ref.columns.map(function(col){
-                    return col.name;
+                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.name;
                 })).toEqual(test.expected);
             });
         }
@@ -63,10 +63,14 @@ exports.execute = function(options) {
         });
 
         it('.origColumnName should have the correct value', function() {
-            expect(related[0].origColumnName).toBe("reference_schema_fromname_fk_inbound_related_to_reference");
-            expect(related[1].origColumnName).toBe("reference_schema_fk_inbound_related_to_reference");
-            expect(related[2].origColumnName).toBe("reference_schema_toname_fk_association_related_to_reference");
-            expect(related[3].origColumnName).toBe("reference_schema_id_fk_association_related_to_reference");
+            // reference_schema_fromname_fk_inbound_related_to_reference
+            expect(related[0].origColumnName).toBe("PR4OZcGXTWC6Ks0M5DyApg", "missmatch for index = 0");
+            // reference_schema_fk_inbound_related_to_reference
+            expect(related[1].origColumnName).toBe("KGpro4yqqeXx-MhE5ffcHw", "missmatch for index = 1");
+            //reference_schema_toname_fk_association_related_to_reference
+            expect(related[2].origColumnName).toBe("Ylt89GKG6OYi-dONpgwnHQ", "missmatch for index = 2");
+            //reference_schema_id_fk_association_related_to_reference
+            expect(related[3].origColumnName).toBe("OuEhMgnMPERmX59V2pkP0Q", "missmatch for index = 3");
         });
 
         describe('for inbound foreign keys, ', function() {
@@ -94,15 +98,15 @@ exports.execute = function(options) {
                     it('should be properly defiend based on schema and not include faceting.', function() {
                         expect(related[0].location.uri).toBe(uri1);
                     });
-                    
+
                     it('should be encoded.', function() {
                         expect(related[1].location.uri).toBe(uri2);
                     });
                 });
-                
+
                 describe("with tuple defined, ", function () {
                     it('should create the link using faceting.', function() {
-                        
+
                         var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
                             var loc = relatedWithTuple[index].location;
                             expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
@@ -111,12 +115,12 @@ exports.execute = function(options) {
                             expect(loc.queryParams['subset']).toBeDefined();
                             expect(loc.queryParams['subset']).toBe(expectedQueryParam);
                         }
-                        
+
                         checkUri(0, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
                         }], "to_name_value: 9003 and Henry");
-                        
+
                         checkUri(1, "inbound_related_reference_table", [{
                             "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
                             "choices":["9003"]
@@ -139,15 +143,15 @@ exports.execute = function(options) {
                 checkReferenceColumns([{
                     ref: related[0],
                     expected: [
-                        ["reference_schema", "inbound_related_reference_key"].join("_"), 
+                        ["reference_schema", "inbound_related_reference_key"].join("_"),
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), // the fk
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
+                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
                         ["reference_schema", "fk_inbound_related_to_reference"].join("_")
                 ]}, {
                     ref: related[1].contextualize.compactBrief,
                     expected: [
-                        "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
+                        "id",
+                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                 ]}]);
             });
@@ -209,7 +213,7 @@ exports.execute = function(options) {
                   expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
                 });
             });
-            
+
             describe('.uri ', function () {
                 it('.uri should be properly defiend based on schema.', function() {
                     expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
@@ -252,10 +256,10 @@ exports.execute = function(options) {
                     done.fail();
                 });
 
-                
+
             });
 
-            
+
             it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
                 var url = options.url + "/catalog/" + catalog_id + "/entity/", ref;
 
@@ -317,7 +321,7 @@ exports.execute = function(options) {
         it('when table has alternative tables, should not include self-link to the base.', function (done) {
             var schemaName3 = "reference_schema_2",
                 tableName3 = "table_w_alternate";
-                
+
             var tableWAlternateUri = options.url + "/catalog/" + catalog_id + "/entity/"
                 + schemaName3 + ":" + tableName3;
 
