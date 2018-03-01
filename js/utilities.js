@@ -1374,9 +1374,16 @@
                 return '';
             }
 
-            if (options.inline) return module._markdownIt.renderInline(value);
-
-            return module._markdownIt.render(value);
+            try {
+                if (options.inline) {
+                    return module._markdownIt.renderInline(value);
+                }
+                return module._markdownIt.render(value);
+            } catch (e) {
+                console.log("Couldn't parse the given markdown value: " + value);
+                console.log(e);
+                return value;
+            }
         },
 
         /**
@@ -1409,49 +1416,57 @@
             if (value === null) {
                 return '';
             }
-            // Default separator is a space.
-            if (!options.separator) {
-                options.separator = ' ';
+
+            try {
+                // Default separator is a space.
+                if (!options.separator) {
+                    options.separator = ' ';
+                }
+                // Default increment is 10
+                if (!options.increment) {
+                    options.increment = 10;
+                }
+                var inc = parseInt(options.increment, 10);
+
+                if (inc === 0) {
+                    return value.toString();
+                }
+
+                // Reset the increment if it's negative
+                if (inc <= -1) {
+                    inc = 1;
+                }
+
+                var formattedSeq = '`';
+                var separator = options.separator;
+                while (value.length >= inc) {
+                    // Get the first inc number of chars
+                    var chunk = value.slice(0, inc);
+                    // Append the chunk and separator
+                    formattedSeq += chunk + separator;
+                    // Remove this chunk from value
+                    value = value.slice(inc);
+                }
+
+                // Append any remaining chars from value that was too small to form an increment
+                formattedSeq += value;
+
+                // Slice off separator at the end
+                if (formattedSeq.slice(-1) == separator) {
+                    formattedSeq = formattedSeq.slice(0, -1);
+                }
+
+                // Add the ending backtick at the end
+                formattedSeq += '`';
+
+                // Run it through printMarkdown to get the sequence in a fixed-width font
+                return module._markdownIt.renderInline(formattedSeq);
+            } catch (e) {
+                console.log("Couldn't parse the given markdown value: " + value);
+                console.log(e);
+                return value;
             }
-            // Default increment is 10
-            if (!options.increment) {
-                options.increment = 10;
-            }
-            var inc = parseInt(options.increment, 10);
 
-            if (inc === 0) {
-                return value.toString();
-            }
-
-            // Reset the increment if it's negative
-            if (inc <= -1) {
-                inc = 1;
-            }
-
-            var formattedSeq = '`';
-            var separator = options.separator;
-            while (value.length >= inc) {
-                // Get the first inc number of chars
-                var chunk = value.slice(0, inc);
-                // Append the chunk and separator
-                formattedSeq += chunk + separator;
-                // Remove this chunk from value
-                value = value.slice(inc);
-            }
-
-            // Append any remaining chars from value that was too small to form an increment
-            formattedSeq += value;
-
-            // Slice off separator at the end
-            if (formattedSeq.slice(-1) == separator) {
-                formattedSeq = formattedSeq.slice(0, -1);
-            }
-
-            // Add the ending backtick at the end
-            formattedSeq += '`';
-
-            // Run it through printMarkdown to get the sequence in a fixed-width font
-            return module._markdownIt.renderInline(formattedSeq);
         }
     };
 

@@ -164,6 +164,10 @@ exports.execute = function (options) {
 
         });
 
+        it ("printMarkdown() should return the input if it's in invalid format.", function () {
+            expect(formatUtils.printMarkdown("[test](test\r.com){.download download}", {inline: true})).toBe("[test](test\r.com){.download download}");
+        });
+
         it('printGeneSeq() should format gene sequences correctly.', function() {
             var printGeneSeq = formatUtils.printGeneSeq;
             expect(printGeneSeq(null)).toBe('');
