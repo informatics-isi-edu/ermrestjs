@@ -698,6 +698,11 @@ exports.execute = function (options) {
                                 expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
                             });
                         });
+
+                        it ('if url has invalid characets in it and markdown cannot be parsed, it should return the produced markdown string.', function () {
+                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://exam\nple.com"}).value;
+                            expect(val).toEqual('[https://exam\nple.com](https://exam\nple.com?uinit=1){download .download}', "value missmatch.");
+                        });
                     });
                  });
 
