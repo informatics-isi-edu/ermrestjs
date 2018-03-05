@@ -9,6 +9,15 @@
     };
 
     /**
+     * set callback function that extends the storage expiration time
+     * @callback extendPromptExpiration
+     * @param {extendPromptExpiration} fn callback function
+     */
+    module.extendPromptExpiration = function(fn) {
+        module._extendPromptExpiration = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a

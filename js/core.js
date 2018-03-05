@@ -33,6 +33,14 @@
     module._appLinkFn = null;
 
     /**
+     * function that resets the storage expiration time
+     * @callback extendPromptExpiration
+     * @type {extendPromptExpiration}
+     * @private
+     */
+    module._extendPromptExpiration = null;
+
+    /**
      * @memberof ERMrest
      * @function
      * @param {Object} http Angular $http service object
