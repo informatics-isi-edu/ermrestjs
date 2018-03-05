@@ -38,7 +38,7 @@
      * @type {extendPromptExpiration}
      * @private
      */
-    module._extendPromptExpiration = null;
+    module._extendPromptExpiration = function () {};
 
     /**
      * @memberof ERMrest
