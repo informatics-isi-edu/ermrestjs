@@ -19,6 +19,9 @@ to use for ERMrest JavaScript agents.</p>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
 <dd><p>set callback function that converts app tag to app URL</p>
 </dd>
+<dt><a href="#onHTTPSuccess">onHTTPSuccess</a> : <code>function</code></dt>
+<dd><p>set callback function that triggers when a request returns with success</p>
+</dd>
 <dt><a href="#onError">onError</a> ⇒ <code>Promise</code></dt>
 <dd><p>Calculates  MD5 checksum for a file using spark-md5 library</p>
 </dd>
@@ -5391,6 +5394,17 @@ set callback function that converts app tag to app URL
 | Param | Type | Description |
 | --- | --- | --- |
 | fn | [<code>appLinkFn</code>](#appLinkFn) | callback function |
+
+<a name="onHTTPSuccess"></a>
+
+## onHTTPSuccess : <code>function</code>
+set callback function that triggers when a request returns with success
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | [<code>onHTTPSuccess</code>](#onHTTPSuccess) | callback function |
 
 <a name="onError"></a>
 

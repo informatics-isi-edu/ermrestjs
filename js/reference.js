@@ -9,6 +9,15 @@
     };
 
     /**
+     * set callback function that triggers when a request returns with success
+     * @callback onHTTPSuccess
+     * @param {onHTTPSuccess} fn callback function
+     */
+    module.onHTTPSuccess = function(fn) {
+        module._onHTTPSuccess = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
