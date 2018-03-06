@@ -168,7 +168,7 @@
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
-                        module._extendPromptExpiration();
+                        module._onHTTPSuccess();
                         module._onload().then(function() {
                             deferred.resolve(response);
                         });

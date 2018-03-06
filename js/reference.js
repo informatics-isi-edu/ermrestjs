@@ -9,12 +9,12 @@
     };
 
     /**
-     * set callback function that extends the storage expiration time
-     * @callback extendPromptExpiration
-     * @param {extendPromptExpiration} fn callback function
+     * set callback function that triggers when a request returns with success
+     * @callback onHTTPSuccess
+     * @param {onHTTPSuccess} fn callback function
      */
-    module.extendPromptExpiration = function(fn) {
-        module._extendPromptExpiration = fn;
+    module.onHTTPSuccess = function(fn) {
+        module._onHTTPSuccess = fn;
     };
 
     /**

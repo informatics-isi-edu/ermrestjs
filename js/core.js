@@ -35,11 +35,11 @@
     /**
      * function that resets the storage expiration time
      * initialized to empty function so function runs properly when not defined in `chaise`
-     * @callback extendPromptExpiration
-     * @type {extendPromptExpiration}
+     * @callback onHTTPSuccess
+     * @type {onHTTPSuccess}
      * @private
      */
-    module._extendPromptExpiration = function () {};
+    module._onHTTPSuccess = function () {};
 
     /**
      * @memberof ERMrest
