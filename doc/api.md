@@ -339,6 +339,16 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+    * [.PseudoColumn](#ERMrest.PseudoColumn)
+        * [new PseudoColumn(reference, column, facetObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
+        * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+        * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
+        * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
+        * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
+        * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+        * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
         * [new ForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.ForeignKeyPseudoColumn_new)
         * [.isPseudo](#ERMrest.ForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
@@ -3429,6 +3439,102 @@ object: input msut be disabled (show .message to user)
 TODO should be removed in favor of inputDisabled
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.PseudoColumn"></a>
+
+### ERMrest.PseudoColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.PseudoColumn](#ERMrest.PseudoColumn)
+    * [new PseudoColumn(reference, column, facetObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
+    * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+    * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
+    * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
+    * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
+    * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+    * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
+
+<a name="new_ERMrest.PseudoColumn_new"></a>
+
+#### new PseudoColumn(reference, column, facetObject, name, mainTuple)
+TODO aggregate is currently ignored since it's not being used.
+We should add suppoort for aggregate to pseudo-columns later
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| column | [<code>Column</code>](#ERMrest.Column) | the column that this pseudo-column is representing |
+| facetObject | <code>object</code> | the whole column object |
+| name | <code>string</code> | to avoid processing the name again, this might be undefined. |
+| mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | if the reference is referring to just one tuple, this is defined. |
+
+<a name="ERMrest.PseudoColumn+isPseudo"></a>
+
+#### pseudoColumn.isPseudo : <code>boolean</code>
+indicates that this object represents a PseudoColumn.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+isUnique"></a>
+
+#### pseudoColumn.isUnique : <code>boolean</code>
+If the pseudoColumn is referring to a unique row (the path is one to one)
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+isEntityMode"></a>
+
+#### pseudoColumn.isEntityMode : <code>boolean</code>
+If the pseudoColumn is in entity mode
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+hasPath"></a>
+
+#### pseudoColumn.hasPath : <code>boolean</code>
+If the pseudo-column is connected via a path to the table or not.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+foreignKeys"></a>
+
+#### pseudoColumn.foreignKeys : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+List of foreignkeys on the path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+reference"></a>
+
+#### pseudoColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
+Returns a reference to the current pseudo-column
+TODO needs to be changed when we get to use it. Currently this is how it behaves:
+1. If pseudo-column has no path, it will return the base reference.
+2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
+3. Otherwise if mainTuple is available, use that to generate list of facets.
+4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+isInboundForeignKey"></a>
+
+#### pseudoColumn.isInboundForeignKey : <code>boolean</code>
+Returns true if its the same as InboundForeignKeyPseudoColumn.
+That means either just a path with inbound fk, or p&b association.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+formatPresentation"></a>
+
+#### pseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+Format the presentation value corresponding to this pseudo-column definition.
+1. If source is not a path to another table, or not in entity mode: use the column's heuristic
+2. Otherwise if path is one to one (all outbound), use the same logic as ForeignKeyPseudoColumn based on last fk.
+3. Otherwise return null value.
+
+**Kind**: instance method of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| context | <code>String</code> | the app context |
+| options | <code>Object</code> | includes `context` and `formattedValues` |
+
 <a name="ERMrest.ForeignKeyPseudoColumn"></a>
 
 ### ERMrest.ForeignKeyPseudoColumn

@@ -1927,38 +1927,51 @@
                     fkr, fkrName;
                 if (visibleFKs === -1) {
                     notSorted = true;
-                    visibleFKs = this._table.referredBy.all();
+                    visibleFKs = this._table.referredBy.all().map(function (fkr) {
+                        return {foreignKey: fkr};
+                    });
                 }
 
                 // if visible columns list is empty, make it.
-                if (this._inboundFKColumns === undefined) {
+                if (this._referenceColumns === undefined) {
                     // will generate the this._inboundFKColumns
                     this.generateColumnsList(tuple);
                 }
 
+                var currentColumns = {};
+                this._referenceColumns.forEach(function (col) {
+                    if (col.isPath || col.isInboundForeignKey) {
+                        currentColumns[col.name] = true;
+                    }
+                });
+
                 for(var i = 0; i < visibleFKs.length; i++) {
                     fkr = visibleFKs[i];
-                    fkrName = _generateForeignKeyName(fkr, true);
-
                     // if in the visible columns list
-                    if (this._inboundFKColumns[fkrName]) {
+                    if (currentColumns[fkr.name]) {
                         continue;
                     }
 
-                    // make sure that this fkr is not from an alternative table to self
-                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
+                    if (fkr.isPath) {
+                        this._related.push(new PseudoColumn(this, fkr.column, fkr.object, fkr.name, tuple).reference);
+                    } else {
+                        fkr = fkr.foreignKey;
+
+                        // make sure that this fkr is not from an alternative table to self
+                        if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
                         fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
-                        continue;
-                    }
+                            continue;
+                        }
 
-                    this._related.push(this._generateRelatedReference(fkr, tuple));
+                        this._related.push(this._generateRelatedReference(fkr, tuple, true));
+                    }
                 }
 
                 if (notSorted && this._related.length !== 0) {
                     return this._related.sort(function (a, b) {
                         // displayname
-                        if (a._displayname.value != b._displayname.value) {
-                            return a._displayname.value.localeCompare(b._displayname.value);
+                        if (a.displayname.value != b.displayname.value) {
+                            return a.displayname.value.localeCompare(b.displayname.value);
                         }
 
                         // columns
@@ -2361,9 +2374,6 @@
 
             this._referenceColumns = [];
 
-            // since it's going to just be used as a look of for existance or not
-            this._inboundFKColumns = {};
-
             var self = this;
 
             // check if we should hide some columns or not.
@@ -2457,13 +2467,12 @@
                                         }
                                         // inbound foreignkey
                                         else if (fk.key.table == this._table && !module._isEntryContext(context)) {
-                                            var relatedRef = this._generateRelatedReference(fk, tuple);
+                                            var relatedRef = this._generateRelatedReference(fk, tuple, true);
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _generateForeignKeyName(fk, true);
                                             if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, fkName));
-                                                this._inboundFKColumns[fkName] = true;
                                             }
                                         }
                                     }
@@ -2714,9 +2723,10 @@
          * @private
          * @param  {ERMrest.ForeignKeyRef} fkr the relationship between these two reference (this fkr must be from another table to the current table)
          * @param  {ERMrest.Tuple=} tuple the current tuple
+         * @param  {boolean} checkForAlternative if it's true, checks p&b association too.
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
-        _generateRelatedReference: function (fkr, tuple) {
+        _generateRelatedReference: function (fkr, tuple, checkForAssociation) {
             var j, col, uri, source, subset = "";
 
             var useFaceting = (typeof tuple === 'object');
@@ -2756,7 +2766,7 @@
             }
 
             var fkrTable = fkr.colset.columns[0].table;
-            if (fkrTable._isPureBinaryAssociation()) { // Association Table
+            if (checkForAssociation && fkrTable._isPureBinaryAssociation()) { // Association Table
 
                 // find the other foreignkey
                 var otherFK;

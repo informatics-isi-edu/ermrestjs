@@ -323,7 +323,20 @@ ReferenceColumn.prototype = {
     }
 };
 
-function PseudoColumn(reference, column, facetObject, name, mainTuple) {
+/**
+ * TODO aggregate is currently ignored since it's not being used.
+ * We should add suppoort for aggregate to pseudo-columns later
+ *
+ * @memberof ERMrest
+ * @param {ERMrest.Reference} reference  column's reference
+ * @param {ERMrest.Column} column      the column that this pseudo-column is representing
+ * @param {object} facetObject the whole column object
+ * @param {string} name        to avoid processing the name again, this might be undefined.
+ * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
+ * @constructor
+ * @class
+ */
+function PseudoColumn(reference, column, columnObject, name, mainTuple) {
     PseudoColumn.superClass.call(this, reference, [column]);
 
     /**
@@ -334,7 +347,7 @@ function PseudoColumn(reference, column, facetObject, name, mainTuple) {
 
     this.isPathColumn = true;
 
-    this._facetObject = facetObject;
+    this._columnObject = columnObject;
 
     this._name = name;
 
@@ -349,7 +362,7 @@ module._extends(PseudoColumn, ReferenceColumn);
 
 /**
  * Format the presentation value corresponding to this pseudo-column definition.
- * 1. If source is not a path to another table: use the column's heuristic
+ * 1. If source is not a path to another table, or not in entity mode: use the column's heuristic
  * 2. Otherwise if path is one to one (all outbound), use the same logic as ForeignKeyPseudoColumn based on last fk.
  * 3. Otherwise return null value.
  *
@@ -359,8 +372,8 @@ module._extends(PseudoColumn, ReferenceColumn);
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
-    // from the same table
-    if (!this.hasPath) {
+    // from the same table or not entity mode,return the same table.
+    if (!this.hasPath || !this.isEntityMode) {
         return PseudoColumn.super.formatPresentation(data, context, options);
     }
 
@@ -447,11 +460,14 @@ PseudoColumn.prototype._determineSortable = function () {
         }
     }
 };
+PseudoColumn.prototype._determineInputDisabled = function () {
+    throw new Error("can not use this type of column in entry mode.");
+};
 
 Object.defineProperty(PseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generatePseudoColumnName(this._facetObject, this._baseCols[0]);
+            this._name = _generatePseudoColumnName(this._columnObject, this._baseCols[0]);
         }
         return this._name;
     }
@@ -461,7 +477,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
             this._displayname = _generatePseudoColumnDisplayname(
-                this._facetObject,
+                this._columnObject,
                 this._baseCols[0],
                 this._lastForeignKey ? this._lastForeignKey.obj : null,
                 this._lastForeignKey ? this._lastForeignKey.isInbound : null,
@@ -480,7 +496,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 Object.defineProperty(PseudoColumn.prototype, "isUnique", {
     get: function () {
         if (this._isUnique === undefined) {
-            this._isUnique = !this.hasPath || this._facetObject.source.every(function (s, index, arr) {
+            this._isUnique = !this.hasPath || this._columnObject.source.every(function (s, index, arr) {
                 return (index === arr.length - 1) || (("outbound" in s) && !("inbound" in s));
             });
         }
@@ -489,8 +505,8 @@ Object.defineProperty(PseudoColumn.prototype, "isUnique", {
 });
 
 /**
- * If the pseudoColumn is referring to a unique row (the path is one to one)
- * @member {boolean} isUnique
+ * If the pseudoColumn is in entity mode
+ * @member {boolean} isEntityMode
  * @memberof ERMrest.PseudoColumn#
  */
 Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
@@ -500,7 +516,7 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
             var basedOnKey = currCol.table.keys.all().filter(function (key) {
                 return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
             }).length > 0;
-            this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
+            this._isEntityMode = (this._columnObject.entity === false) ? false : basedOnKey;
         }
         return this._isEntityMode;
     }
@@ -514,7 +530,7 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
 Object.defineProperty(PseudoColumn.prototype, "hasPath", {
     get: function () {
         if (this._hasPath === undefined) {
-            this._hasPath =_isFacetSourcePath(this._facetObject.source);
+            this._hasPath =_isFacetSourcePath(this._columnObject.source);
         }
         return this._hasPath;
     }
@@ -528,7 +544,7 @@ Object.defineProperty(PseudoColumn.prototype, "hasPath", {
 Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
     get: function () {
         if (this._foreignKeys === undefined) {
-            this._foreignKeys = _getFacetSourceForeignKeys(this._facetObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._foreignKeys = _getFacetSourceForeignKeys(this._columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._foreignKeys;
     }
@@ -543,22 +559,33 @@ Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
 Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
     get: function () {
         if (this._lastForeignKey_cached === undefined) {
-            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this._facetObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this._columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._lastForeignKey_cached;
     }
 });
 
+/**
+ * Returns a reference to the current pseudo-column
+ * TODO needs to be changed when we get to use it. Currently this is how it behaves:
+ * 1. If pseudo-column has no path, it will return the base reference.
+ * 2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
+ * 3. Otherwise if mainTuple is available, use that to generate list of facets.
+ * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
+ * @member {ERMrest.Reference} reference
+ * @memberof ERMrest.PseudoColumn#
+ */
 Object.defineProperty(PseudoColumn.prototype, "reference", {
     get: function () {
         if (this._reference === undefined) {
             var self = this;
+            if (!self.hasPath) {
+                self._reference = self._baseReference;
+            } else if (self.isInboundForeignKey) {
+                self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length !== 1);
+            } else {
+                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
 
-            var uri = self.table.uri;
-            self._reference = new Reference(module.parse(uri), table.schema.catalog);
-
-            // if mainTuple is not defined, or there's no path just return the reference without facet.
-            if (self._mainTuple && self.hasPath) {
                 var source = [], i, fk, columns, noData = false;
 
                 // create the reverse path
@@ -578,30 +605,93 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
 
 
-                var fitlers = [];
+                var filters = [];
+                if (self._mainTuple) {
+                    // create the filters based on the given tuple
+                    columns.forEach(function (col) {
+                        if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
+                            noData = true;
+                            return;
+                        }
 
-                // create the filters based on the given tuple
-                columns.forEach(function (col) {
-                    if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
-                        noData = true;
-                        return;
-                    }
-
-                    filters.push({
-                        "source": source.concat(col.name),
-                        "choices": [self._mainTuple.data[col.name]]
+                        filters.push({
+                            "source": source.concat(col.name),
+                            "choices": [self._mainTuple.data[col.name]]
+                        });
                     });
-                });
+                }
 
                 // make sure data exists
-                if (!noData) {
-                    this._reference.location.facets = {"and": filters};
+                if (!noData && filters.length > 0) {
+                    self._reference.location.facets = {"and": filters};
                 }
             }
+
         }
         return this._reference;
     }
 });
+
+/**
+ * Returns true if its the same as InboundForeignKeyPseudoColumn.
+ * That means either just a path with inbound fk, or p&b association.
+ * @member {boolean} isInboundForeignKey
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "isInboundForeignKey", {
+    get: function () {
+        if (this._isInboundForeignKey === undefined) {
+            var isInbound = function (self) {
+                // make sure path has length one or two
+                if (!self.hasPath || self.foreignKeys.length > 2) {
+                    return false;
+                }
+
+                // if path is length of two: pure and binary association
+                if (self.foreignKeys.length === 2) {
+                    // make sure the first fk is inbound and the next is outbound
+                    if (!self.foreignKeys[0].isInbound || self.foreignKeys[1].isInbound) {
+                        return false;
+                    }
+
+                    var fkr = self.foreignKeys[0].obj,
+                        otherFK = self.foreignKeys[1].obj;
+
+                    var fkrTable = fkr._table,
+                        fks = fkr._table.foreignKeys;
+
+                    // make sure table is p&b association
+                    if (!fkrTable._isPureBinaryAssociation()) {
+                        return false;
+                    }
+
+                    // make sure the second fkr is the same as the one in path.
+                    for (var j = 0; j < fks.length(); j++) {
+                        if(fks.all()[j] !== fkr) {
+                            return fks.all()[j] === otherFK;
+                        }
+                    }
+                }
+
+                // if path has length one, just check for the fk to be inbound
+                return self.foreignKeys[0].isInbound;
+            };
+            this._isInboundForeignKey = isInbound(this);
+        }
+        return this._isInboundForeignKey;
+    }
+});
+Object.defineProperty(PseudoColumn.prototype, "default", {
+    get: function () {
+        throw new Error("can not use this type of column in entry mode.");
+    }
+});
+Object.defineProperty(PseudoColumn.prototype, "nullok", {
+    get: function () {
+        throw new Error("can not use this type of column in entry mode.");
+    }
+});
+
 
 /**
  * @memberof ERMrest
@@ -1833,7 +1923,7 @@ FacetColumn.prototype = {
             var table = this._column.table, columnName = this._column.name;
             var filterStr = [];
 
-            // list of fitlers that we want their displaynames.
+            // list of filters that we want their displaynames.
             this.choiceFilters.forEach(function (f) {
                 if (f.term == null) {
                     // term can be null, in this case we don't need to make a request for it.

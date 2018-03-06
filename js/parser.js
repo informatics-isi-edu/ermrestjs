@@ -1725,6 +1725,7 @@
                     isInbound = true;
                     constraint = source[i].inbound;
                 } else {
+                    isInbound = false;
                     constraint = source[i].outbound;
                 }
 
