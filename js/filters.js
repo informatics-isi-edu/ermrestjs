@@ -179,7 +179,7 @@
      */
     function BinaryPredicate (column, operator, rvalue) {
         if (!module.isValidOperator(operator)) {
-            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._path, '');
         }
         this.column = column; // either pathcolumn or column
         this.operator = operator;

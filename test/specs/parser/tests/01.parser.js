@@ -441,6 +441,25 @@ exports.execute = function(options) {
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
         var facetError = "Given encoded string for facets is not valid.";
         var location, uri;
+        var invalidPageConditionErrorObj = {
+                       'status': 'Invalid Page Criteria',
+                       'messageWithCondition': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(). Sort modifier is required with paging.",
+                       'messageWithConditions': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(3)@before(7). Sort modifier is required with paging.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/id=269' }
+       };
+        var invalidFilterOperatorErrorObj = {
+                       'status': 'Invalid Filter',
+                       'message': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/' },
+                       'messageWithSort': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269@sort(). Couldn't parse 'id::gt:269' filter.",
+                       'errorDataWithSort': { 'redirectPath': 'parse_schema:parse_table/@sort()' }
+       };
+        var invalidFacetFilterErrorObj = {
+                       'status': 'Invalid Facet Filters',
+                       'message': "Given encoded string for facets is not valid.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/@sort()' },
+                       'errorDataWithoutSort': { 'redirectPath': 'parse_schema:parse_table/' }
+      };
 
         describe("when uri doesn't have any facets, ", function() {
             it("Location.facets should be undefined.", function() {
@@ -454,6 +473,75 @@ exports.execute = function(options) {
                 expect(function () {
                     options.ermRest.parse(baseUri + "/*::facets::invalidblob");
                 }).toThrow(facetError);
+            });
+
+            it("should throw an error for invalid facet filter errors with sort() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()");
+                    expect(false).toBe(true, "invalid facet filter didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+            it("should throw an error for invalid facet filter errors without sort() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob");
+                    expect(false).toBe(true, "invalid facet filter without sort() didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorDataWithoutSort, "errorData attribute did not match");
+                }
+            });
+        });
+
+        describe("when uri has invalid paging Criteria", function() {
+            it("it should throw an error for invalid pageing criteria.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id=269@after()");
+                    expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithCondition, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+
+            it("it should throw an error for invalid pageing criteria with both after() and before().", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id=269@after(3)@before(7)");
+                    expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithConditions, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+        });
+
+        describe("when uri has invalid filter", function() {
+            it("it should throw an error for invalid filter.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id::gt:269");
+                    expect(false).toBe(true, "invalid filter didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFilterOperatorErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+
+            it("it should throw an error for invalid filter with sirt() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id::gt:269@sort()");
+                    expect(false).toBe(true, "invalid filter with sort() modifier didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFilterOperatorErrorObj.messageWithSort, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorDataWithSort, "errorData attribute did not match");
+                }
             });
         });
 

@@ -56,16 +56,23 @@
      * {@link ERMrest.ForbiddenError},
      * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
+     * {@link ERMrest.InvalidSortCriteria},
      */
     module.resolve = function (uri, contextHeaderParams) {
+        var defer = module._q.defer();
         try {
             verify(uri, "'uri' must be specified");
-            var defer = module._q.defer();
             var location;
 
             // make sure all the dependencies are loaded
             module._onload().then(function () {
+            //added try block to make sure it rejects all parse() related error
+            // It should have been taken care by outer try but did not work
+              try{
                 location = module.parse(uri);
+              } catch (error){
+                return defer.reject(error);
+              }
                 var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
@@ -74,19 +81,14 @@
 
                 //create Reference
                 defer.resolve(new Reference(location, catalog));
-            }, function (error) {
-
-                throw error;
             }).catch(function(exception) {
-
                 defer.reject(exception);
             });
+        } catch (e) {
+            defer.reject(e);
+        }
 
-            return defer.promise;
-        }
-        catch (e) {
-            return module._q.reject(e);
-        }
+        return defer.promise;
     };
 
     /**
@@ -1109,9 +1111,9 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit, contextHeaderParams) {
-            try {
+            var defer = module._q.defer();
 
-                var defer = module._q.defer();
+            try {
 
                 // if this reference came from a tuple, use tuple object's data
                 if (this._tuple) {
@@ -1171,7 +1173,8 @@
 
                         // column is not sortable
                         if (typeof sortCols === 'undefined') {
-                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
+                            var path  = this.uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/)[4];
+                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.", path);
                         }
 
                         // use the sort columns instead of the actual column.
@@ -1346,22 +1349,20 @@
                             defer.resolve(rereadPage);
                         }, function error(response) {
                             var error = module._responseToError(response);
-                            return defer.reject(error);
+                            defer.reject(error);
                         });
                     } else {
                         defer.resolve(page);
                     }
 
-                }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                }).catch(function (e) {
+                    defer.reject(module._responseToError(e));
                 });
+            } catch (e) {
+                defer.reject(e);
+            }
 
-                return defer.promise;
-            }
-            catch (e) {
-                return module._q.reject(e);
-            }
+            return defer.promise;
         },
 
         /**
