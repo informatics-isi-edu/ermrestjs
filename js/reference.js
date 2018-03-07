@@ -9,6 +9,15 @@
     };
 
     /**
+     * set callback function that triggers when a request returns with success
+     * @callback onHTTPSuccess
+     * @param {onHTTPSuccess} fn callback function
+     */
+    module.onHTTPSuccess = function(fn) {
+        module._onHTTPSuccess = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -47,16 +56,23 @@
      * {@link ERMrest.ForbiddenError},
      * {@link ERMrest.UnauthorizedError},
      * {@link ERMrest.NotFoundError},
+     * {@link ERMrest.InvalidSortCriteria},
      */
     module.resolve = function (uri, contextHeaderParams) {
+        var defer = module._q.defer();
         try {
             verify(uri, "'uri' must be specified");
-            var defer = module._q.defer();
             var location;
 
             // make sure all the dependencies are loaded
             module._onload().then(function () {
+            //added try block to make sure it rejects all parse() related error
+            // It should have been taken care by outer try but did not work
+              try{
                 location = module.parse(uri);
+              } catch (error){
+                return defer.reject(error);
+              }
                 var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
@@ -65,19 +81,14 @@
 
                 //create Reference
                 defer.resolve(new Reference(location, catalog));
-            }, function (error) {
-
-                throw error;
             }).catch(function(exception) {
-
                 defer.reject(exception);
             });
+        } catch (e) {
+            defer.reject(e);
+        }
 
-            return defer.promise;
-        }
-        catch (e) {
-            return module._q.reject(e);
-        }
+        return defer.promise;
     };
 
     /**
@@ -1048,9 +1059,9 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit, contextHeaderParams) {
-            try {
+            var defer = module._q.defer();
 
-                var defer = module._q.defer();
+            try {
 
                 // if this reference came from a tuple, use tuple object's data
                 if (this._tuple) {
@@ -1090,12 +1101,17 @@
                     for (i = 0, k = 1; i < sortObject.length; i++) {
 
                         // find the column in ReferenceColumns
-                        col = this.getColumnByName(sortObject[i].column);
+                        try {
+                            col = this.getColumnByName(sortObject[i].column);
+                        } catch (e) {
+                            // this will throw 404 error which we should change to InvalidSortCriteria
+                            throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  this.location.path);
+                        }
                         sortObject[i].column = col.name;
 
                         // column is not sortable
                         if (!col.sortable) {
-                            throw new module.BadRequestError("", "Column " + sortObject[i].column + " is not sortable.");
+                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  this.location.path);
                         }
 
                         sortCols = col._sortColumns;
@@ -1297,22 +1313,20 @@
                             defer.resolve(rereadPage);
                         }, function error(response) {
                             var error = module._responseToError(response);
-                            return defer.reject(error);
+                            defer.reject(error);
                         });
                     } else {
                         defer.resolve(page);
                     }
 
-                }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
+                }).catch(function (e) {
+                    defer.reject(module._responseToError(e));
                 });
+            } catch (e) {
+                defer.reject(e);
+            }
 
-                return defer.promise;
-            }
-            catch (e) {
-                return module._q.reject(e);
-            }
+            return defer.promise;
         },
 
         /**

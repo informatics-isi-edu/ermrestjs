@@ -17,6 +17,8 @@
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
     module.DuplicateConflictError = DuplicateConflictError;
+    module.InvalidSortCriteria = InvalidSortCriteria;
+    module.InvalidPageCriteria = InvalidPageCriteria;
 
     /**
      * @memberof ERMrest
@@ -24,13 +26,18 @@
      * @param  {string} status      message status/title in the modal box
      * @param  {string} message     main user error message
      * @param  {string} subMessage  technical details about the error. Appear in collapsible span in the modal box
+     * @param  {string} redirectPath path that would be added to the host to create full redirect link in Chaise
      * @constructor
      */
-    function ERMrestError(code, status, message, subMessage) {
+    function ERMrestError(code, status, message, subMessage, redirectPath) {
         this.code = code;
         this.status = status;
         this.message = message;
         this.subMessage = subMessage;
+        if(redirectPath !== undefined && redirectPath !== null){
+           this.errorData = {};
+           this.errorData.redirectPath = redirectPath;
+        }
     }
 
     ERMrestError.prototype = Object.create(Error.prototype);
@@ -195,31 +202,65 @@
     ServiceUnavailableError.prototype.constructor = ServiceUnavailableError;
 
 
+    //remove invalid facet filterString from path
+    function removeInvalidFacetFilter(path){
+      // if URI has modifier starting with '@' then find the blob and replace it with blank
+      // else remove entire facetFilter
+      var newPath,
+          modifierStart = path.indexOf('@'),
+          facetBlobStart = path.search('\\*::facets::');
+
+      if(modifierStart > 0){
+        var facetFilter = path.slice(facetBlobStart, modifierStart);
+        newPath = path.replace(facetFilter, '');
+      } else{
+        newPath = path.slice(0, facetBlobStart);
+      }
+      return newPath;
+    }
     // Errors not associated with http status codes
     // these are errors that we defined to manage errors in the API
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
      * @constructor
      * @desc An invalid facet operator
      */
-    function InvalidFacetOperatorError(message) {
+    function InvalidFacetOperatorError(message, path) {
+
         message = message ? message : module._errorMessage.facetingError;
-        ERMrestError.call(this, '', module._errorStatus.facetingError, message);
+        var redirectPath = removeInvalidFacetFilter(path);
+        ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', redirectPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
     InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
 
+    // path consits of facet filter alongwith table and schemaName
+    // invalidFilter is removed from the path if found else everything is removed after path ends
+    function removeInvalidFilter(path, invalidFilter){
+      var newPath;
+
+      if (invalidFilter != ''){
+        newPath = path.replace(invalidFilter, '');
+      } else{
+        newPath = path.slice(0, path.indexOf('/'));
+      }
+      return newPath;
+    }
+
     /**
      * @memberof ERMrest
      * @param {string} message error message
+     * @param {string} path path for redirectLink
+     * @param {string} invalidFilter filter that should be removed
      * @constructor
      * @desc An invalid filter operator
      */
-    function InvalidFilterOperatorError(message) {
-        message = message;
-        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message);
+    function InvalidFilterOperatorError(message, path, invalidFilter) {
+        var redirectPath = removeInvalidFilter(path, invalidFilter);
+        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', redirectPath);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -273,7 +314,7 @@
      * @memberof ERMrest
      * @param {string} message error message
      * @constructor
-     * @desc A no internert was passed to the API.
+     * @desc A No Connection or No Internet Connection was passed to the API.
      */
     function NoConnectionError(message) {
         message = message;
@@ -283,7 +324,49 @@
     NoConnectionError.prototype = Object.create(Error.prototype);
     NoConnectionError.prototype.constructor = NoConnectionError;
 
+    function removePageCondition(path){
+      if (path != undefined){
+        path = path.replace(/(@before\([^\)]*\))/, '');
+        path = path.replace(/(@after\([^\)]*\))/, '');
+     }
+      return path;
+    }
 
+    function removeSortCondition(path){
+      if (path != undefined) {
+          return path.replace(/(@sort\([^\)]*\))/, '');
+      }
+    }
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @param {string} path path for redirectLink
+     * @constructor
+     * @desc Invalid sorting conditions
+     */
+    function InvalidSortCriteria(message, path) {
+        var newPath = removePageCondition(removeSortCondition(path));
+        ERMrestError.call(this, '', module._errorStatus.InvalidSortCriteria, message, '', newPath);
+    }
+
+    InvalidSortCriteria.prototype = Object.create(ERMrestError.prototype);
+    InvalidSortCriteria.prototype.constructor = InvalidSortCriteria;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @param {string} path path for redirectLink
+     * @constructor
+     * @desc Invalid page conditions
+     */
+    function InvalidPageCriteria(message, path) {
+        var newPath = removePageCondition(path);
+        ERMrestError.call(this, '', module._errorStatus.invalidPageCriteria, message, '', newPath);
+    }
+
+    InvalidPageCriteria.prototype = Object.create(ERMrestError.prototype);
+    InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
     /**
      * Log the error object to the given ermrest location.
      * It will generate a put request to the /terminal_error with the correct headers.

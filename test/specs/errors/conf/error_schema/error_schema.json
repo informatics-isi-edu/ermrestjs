@@ -39,7 +39,14 @@
           "type": {
             "typename": "serial4"
           },
-          "annotations": {}
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "column_order": false
+              }
+
+            }
+          }
         }
       ],
       "annotations": {

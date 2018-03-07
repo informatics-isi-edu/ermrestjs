@@ -33,6 +33,15 @@
     module._appLinkFn = null;
 
     /**
+     * function that resets the storage expiration time
+     * initialized to empty function so function runs properly when not defined in `chaise`
+     * @callback onHTTPSuccess
+     * @type {onHTTPSuccess}
+     * @private
+     */
+    module._onHTTPSuccess = function () {};
+
+    /**
      * @memberof ERMrest
      * @function
      * @param {Object} http Angular $http service object

@@ -19,6 +19,9 @@ to use for ERMrest JavaScript agents.</p>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
 <dd><p>set callback function that converts app tag to app URL</p>
 </dd>
+<dt><a href="#onHTTPSuccess">onHTTPSuccess</a> : <code>function</code></dt>
+<dd><p>set callback function that triggers when a request returns with success</p>
+</dd>
 <dt><a href="#onError">onError</a> ⇒ <code>Promise</code></dt>
 <dd><p>Calculates  MD5 checksum for a file using spark-md5 library</p>
 </dd>
@@ -220,7 +223,7 @@ to use for ERMrest JavaScript agents.
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
     * [.ERMrestError](#ERMrest.ERMrestError)
-        * [new ERMrestError(code, status, message, subMessage)](#new_ERMrest.ERMrestError_new)
+        * [new ERMrestError(code, status, message, subMessage, redirectPath)](#new_ERMrest.ERMrestError_new)
     * [.TimedOutError](#ERMrest.TimedOutError)
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
@@ -244,9 +247,9 @@ to use for ERMrest JavaScript agents.
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
-        * [new InvalidFacetOperatorError(message)](#new_ERMrest.InvalidFacetOperatorError_new)
+        * [new InvalidFacetOperatorError(message, path)](#new_ERMrest.InvalidFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
-        * [new InvalidFilterOperatorError(message)](#new_ERMrest.InvalidFilterOperatorError_new)
+        * [new InvalidFilterOperatorError(message, path, invalidFilter)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
@@ -255,6 +258,10 @@ to use for ERMrest JavaScript agents.
         * [new NoDataChangedError(message)](#new_ERMrest.NoDataChangedError_new)
     * [.NoConnectionError](#ERMrest.NoConnectionError)
         * [new NoConnectionError(message)](#new_ERMrest.NoConnectionError_new)
+    * [.InvalidSortCriteria](#ERMrest.InvalidSortCriteria)
+        * [new InvalidSortCriteria(message, path)](#new_ERMrest.InvalidSortCriteria_new)
+    * [.InvalidPageCriteria](#ERMrest.InvalidPageCriteria)
+        * [new InvalidPageCriteria(message, path)](#new_ERMrest.InvalidPageCriteria_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -2091,7 +2098,7 @@ will be a type understandable by database.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.ERMrestError_new"></a>
 
-#### new ERMrestError(code, status, message, subMessage)
+#### new ERMrestError(code, status, message, subMessage, redirectPath)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2099,6 +2106,7 @@ will be a type understandable by database.
 | status | <code>string</code> | message status/title in the modal box |
 | message | <code>string</code> | main user error message |
 | subMessage | <code>string</code> | technical details about the error. Appear in collapsible span in the modal box |
+| redirectPath | <code>string</code> | path that would be added to the host to create full redirect link in Chaise |
 
 <a name="ERMrest.TimedOutError"></a>
 
@@ -2256,13 +2264,14 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
 
-#### new InvalidFacetOperatorError(message)
+#### new InvalidFacetOperatorError(message, path)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
 
 <a name="ERMrest.InvalidFilterOperatorError"></a>
 
@@ -2270,13 +2279,15 @@ An invalid facet operator
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFilterOperatorError_new"></a>
 
-#### new InvalidFilterOperatorError(message)
+#### new InvalidFilterOperatorError(message, path, invalidFilter)
 An invalid filter operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
+| invalidFilter | <code>string</code> | filter that should be removed |
 
 <a name="ERMrest.InvalidInputError"></a>
 
@@ -2327,12 +2338,42 @@ no data was changed for update
 <a name="new_ERMrest.NoConnectionError_new"></a>
 
 #### new NoConnectionError(message)
-A no internert was passed to the API.
+A No Connection or No Internet Connection was passed to the API.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
+
+<a name="ERMrest.InvalidSortCriteria"></a>
+
+### ERMrest.InvalidSortCriteria
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidSortCriteria_new"></a>
+
+#### new InvalidSortCriteria(message, path)
+Invalid sorting conditions
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
+
+<a name="ERMrest.InvalidPageCriteria"></a>
+
+### ERMrest.InvalidPageCriteria
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidPageCriteria_new"></a>
+
+#### new InvalidPageCriteria(message, path)
+Invalid page conditions
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
 
 <a name="ERMrest.ParsedFilter"></a>
 
@@ -6098,7 +6139,8 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 [ConflictError](#ERMrest.ConflictError),
 [ForbiddenError](#ERMrest.ForbiddenError),
 [UnauthorizedError](#ERMrest.UnauthorizedError),
-[NotFoundError](#ERMrest.NotFoundError),  
+[NotFoundError](#ERMrest.NotFoundError),
+[InvalidSortCriteria](#ERMrest.InvalidSortCriteria),  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -6126,6 +6168,17 @@ set callback function that converts app tag to app URL
 | Param | Type | Description |
 | --- | --- | --- |
 | fn | [<code>appLinkFn</code>](#appLinkFn) | callback function |
+
+<a name="onHTTPSuccess"></a>
+
+## onHTTPSuccess : <code>function</code>
+set callback function that triggers when a request returns with success
+
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fn | [<code>onHTTPSuccess</code>](#onHTTPSuccess) | callback function |
 
 <a name="onError"></a>
 

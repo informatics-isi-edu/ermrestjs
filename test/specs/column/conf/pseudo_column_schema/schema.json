@@ -1,0 +1,22 @@
+{
+    "schema_name": "pseudo_column_schema",
+    "tables": {
+        "main": {
+            "table_name": "main",
+            "schema_name": "pseudo_column_schema",
+            "kind": "table",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        }
+    }
+}

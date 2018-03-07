@@ -415,7 +415,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 };
 
 PseudoColumn.prototype._determineSortable = function () {
-    if (!this.hasPath) {
+    if (!this.hasPath || !this.isEntityMode) {
         PseudoColumn.super._determineSortable.call(this);
         return;
     }
@@ -437,8 +437,6 @@ PseudoColumn.prototype._determineSortable = function () {
             return;
         }
 
-        // use row-order of the table if entity mode
-        // TODO
         if (this.reference.display._rowOrder !== undefined) {
             var rowOrder = this.reference.display._rowOrder;
             for (var i = 0; i < rowOrder.length; i++) {
@@ -588,6 +586,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
 
                 var source = [], i, fk, columns, noData = false;
 
+                // TODO if mainTuple is not defined.
                 // create the reverse path
                 for (i = self.foreignKeys.length -1; i >= 0; i--) {
                     fk = self.foreignKeys[i];

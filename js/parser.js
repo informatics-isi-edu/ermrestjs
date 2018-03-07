@@ -130,7 +130,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
 
@@ -138,7 +138,7 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
         }
@@ -171,7 +171,7 @@
         if (startIndex <= endIndex) {
             match = parts[endIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1]);
+                this._facets = new ParsedFacets(match[1], this._path);
 
                 // extract the search term
                 searchTerm = _getSearchTerm(this._facets.decoded);
@@ -193,7 +193,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1]);
+                this._projectionFacets = new ParsedFacets(match[1], this._path);
                 startIndex++;
             }
         }
@@ -217,7 +217,7 @@
 
                 // if a single filter
                 if (items.length === 1) {
-                    this._filter = _processSingleFilterString(items[0], this._uri);
+                    this._filter = _processSingleFilterString(items[0], this._uri, this._path);
 
                 } else {
                     var filters = [];
@@ -240,7 +240,7 @@
                                 }
                             }
 
-                            filters.push(_processMultiFilterString(subfilters, this._uri));
+                            filters.push(_processMultiFilterString(subfilters, this._uri, this._path));
 
                         } else if (type === null && items[i] === "&") {
                             // first level filter type
@@ -250,13 +250,13 @@
                             type = module.filterTypes.DISJUNCTION;
                         } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,  this._filtersString);
                         } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path, this._filtersString);
                         } else if (items[i] !== "&" && items[i] !== ";") {
                             // single filter on the first level
-                            var binaryFilter = _processSingleFilterString(items[i], this._uri);
+                            var binaryFilter = _processSingleFilterString(items[i], this._uri, this._path);
                             filters.push(binaryFilter);
                         }
                     }
@@ -442,7 +442,7 @@
 
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -454,7 +454,8 @@
 
                 if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter)
+                     throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -835,7 +836,7 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.");
+                        throw new module.InvalidSortCriteria("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", this.path);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -864,7 +865,7 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    throw new module.MalformedURIError("Error setting before: Paging not allowed without sort");
+                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -885,7 +886,7 @@
 
                     if (row.length !== this.sortObject.length) {
                         //TODO test this
-                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.");
+                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.", this.path);
                     }
 
                     for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
@@ -914,7 +915,7 @@
                     this._afterObject = values;
                     this._after = _getPagingModifier(values, false);
                 } else {
-                    throw new module.MalformedURIError("Error setting after: Paging not allowed without sort");
+                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -1162,10 +1163,11 @@
      *
      * @param {stirng} filterString
      * @param {string} fullURI used for loggin purposes
+     * @param {string} path used for redirect link generation
      * @returns {ParsedFilter} returns the parsed representation of the filter
      * @desc converts a filter string to ParsedFilter
      */
-    function _processSingleFilterString(filterString, fullURI) {
+    function _processSingleFilterString(filterString, fullURI, path) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
@@ -1184,7 +1186,7 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
     }
 
     /**
@@ -1192,10 +1194,11 @@
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
      * @param {string} fullURI used for logging purposes
+     * @param {string} path used for redirect link generation
      * @return {ParsedFilter}
      *
      */
-    function _processMultiFilterString(filterStrings, fullURI) {
+    function _processMultiFilterString(filterStrings, fullURI, path) {
         var filters = [];
         var type = null;
         for (var i = 0; i < filterStrings.length; i++) {
@@ -1207,10 +1210,10 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
@@ -1401,9 +1404,10 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
+     * @param       {String|Object} path to generate rediretUrl in error module.
      * @constructor
      */
-    function ParsedFacets (str) {
+    function ParsedFacets (str, path) {
 
         if (typeof str === 'object') {
             /**
@@ -1419,14 +1423,14 @@
             this.encoded = this._encodeJSON(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str);
+            this.decoded = this._decodeJSON(str, path);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError();
+            throw new module.InvalidFacetOperatorError('', path);
         }
 
     }
@@ -1450,10 +1454,11 @@
          *
          * @private
          * @param       {string} blob the encoded JSON object.
+         * @param       {String|Object} path to generate rediretUrl in error module.
          * @return      {object} decoded JSON object.
          */
-        _decodeJSON: function (blob) {
-            return module.decodeFacet(blob);
+        _decodeJSON: function (blob, path) {
+            return module.decodeFacet(blob, path);
         }
     };
 

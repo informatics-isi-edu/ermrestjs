@@ -15,12 +15,10 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/11.delete.js",
         "/reference/tests/12.reference_values_edit.js",
         "/reference/tests/13.search.js",
-        "/reference/tests/14.columns_list.js",
-        "/reference/tests/15.reference_column.js",
-        "/reference/tests/16.default_value.js",
-        "/reference/tests/17.aggregates.js",
-        "/reference/tests/18.disabled_system_columns.js",
-        "/reference/tests/19.reference_pre_format_values.js"
+        "/reference/tests/14.default_value.js",
+        "/reference/tests/15.aggregates.js",
+        "/reference/tests/16.disabled_system_columns.js",
+        "/reference/tests/17.reference_pre_format_values.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",
@@ -33,7 +31,6 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/update.conf.json",
         "/reference/conf/delete.conf.json",
         "/reference/conf/default_value.conf.json",
-        "/reference/conf/columns.conf.json",
         "/reference/conf/aggregate.conf.json",
         "/reference/conf/permission.conf.json"
     ]

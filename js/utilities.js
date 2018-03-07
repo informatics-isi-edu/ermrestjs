@@ -213,8 +213,8 @@
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
 
-    module.decodeFacet = function (blob) {
-        var err = new module.InvalidFacetOperatorError();
+    module.decodeFacet = function (blob, path) {
+        var err = new module.InvalidFacetOperatorError('', path);
 
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
@@ -2650,7 +2650,9 @@
       invalidInput : "Invalid Input",
       invalidURI : "Invalid URI",
       noDataChanged : "No Data Changed",
-      noConnectionError : "No Connection Error"
+      noConnectionError : "No Connection Error",
+      InvalidSortCriteria : "Invalid Sort Criteria",
+      invalidPageCriteria : "Invalid Page Criteria"
       });
 
     module._errorMessage = Object.freeze({
