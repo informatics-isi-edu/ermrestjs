@@ -627,13 +627,13 @@
     };
 
     _generatePseudoColumnName = function (colObject, column) {
-        var basedOnKey = column.table.keys.all().filter(function (key) {
-            return !column.nullok && key.simple && key.colset.columns[0] === column;
+        var basedOnKey = !column.nullok && column.memberOfKeys.filter(function (key) {
+            return key.simple;
         }).length > 0;
 
         var isEntityMode =  (colObject.entity === false) ? false : basedOnKey;
 
-        if (_isFacetSourcePath(colObject) || isEntityMode) {
+        if (_isFacetSourcePath(colObject.source) || isEntityMode) {
             return _generatePseudoColumnHashName(colObject);
         }
 
@@ -917,6 +917,96 @@
             "isHTML": true
         };
 
+    };
+
+    module._generateKeyPresentation = function (key, data, context, options) {
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return null;
+        }
+
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+            var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+         return keyPair;
+        };
+
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+         return true;
+        };
+
+        var value, caption, unformatted, i;
+        var cols = key.colset.columns,
+            addLink = true;
+
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(cols)) {
+            return null;
+        }
+
+        // use the markdown_pattern that is defiend in key-display annotation
+        var display = key.getDisplay(context);
+        if (display.isMarkdownPattern) {
+
+            // make sure that formattedValues is defined
+            if (options === undefined || options.formattedValues === undefined) {
+               options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
+            }
+
+            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
+            unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
+            caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
+            addLink = false;
+        } else {
+            var values = [], unformattedValues = [];
+
+            // create the caption
+            var presentation;
+            for (i = 0; i < cols.length; i++) {
+                try {
+                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], context, {formattedValues: options.formattedValues});
+                    values.push(presentation.value);
+                    unformattedValues.push(presentation.unformatted);
+                    // if one of the values isHTMl, should not add link
+                    addLink = addLink ? !presentation.isHTML : false;
+                } catch (exception) {
+                    // the value doesn't exist
+                    return null;
+                }
+            }
+            caption = values.join(":");
+            unformatted = unformattedValues.join(":");
+
+            // if the caption is empty we cannot add any link to that.
+            if (caption.trim() === '') {
+                return null;
+            }
+        }
+
+        if (addLink) {
+            var keyRef = new Reference(module.parse(key.table._uri + "/" + createKeyPair(cols)), key.table.schema.catalog);
+            var appLink = keyRef.contextualize.detailed.appLink;
+
+            value = '<a href="' + appLink +'">' + caption + '</a>';
+            unformatted = "[" + unformatted + "](" + appLink + ")";
+        } else {
+            value = caption;
+        }
+
+        return {isHTML: true, value: value, unformatted: unformatted};
     };
 
     /**

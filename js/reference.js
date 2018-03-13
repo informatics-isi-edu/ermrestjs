@@ -400,6 +400,10 @@
                 };
 
                 var checkRefColumn = function (col) {
+                    if (col.isPathColumn) {
+                        return {"obj": col.columnObject, "column": col._baseCols[0]};
+                    }
+
                     // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
                     if ((col.isKey && !col._simple) || col.isAsset) {
                         return false;
@@ -1074,12 +1078,19 @@
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
+                // the pseudo-columns that their path is all outbound and Therefore
+                // creates a one-to-one relation between source and destination, hence
+                // we can just add them to the projection list to get the single value.
+                var oneToOnePseudos = this.columns.filter(function (c) {
+                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
+                });
+
                 var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                     _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                     sortMap = {}, // maps an alias to PseudoColumn, used for sorting
                     sortObject,  // the sort that will be accessible by this._location.sortObject
                     sortCols,
-                    col, i, j, k;
+                    col, i, j, k, l;
 
                 /** Check the sort object. Does not change the `this._location` object.
                  *   - Throws an error if the column doesn't exist or is not sortable.
@@ -1096,9 +1107,9 @@
 
                     var foreignKeys = this._table.foreignKeys,
                         colName,
-                        fkIndex;
+                        fkIndex, fk;
 
-                    for (i = 0, k = 1; i < sortObject.length; i++) {
+                    for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
 
                         // find the column in ReferenceColumns
                         try {
@@ -1118,13 +1129,20 @@
 
                         // use the sort columns instead of the actual column.
                         for (j = 0; j < sortCols.length; j++) {
-                            if (col.isPseudo && col.isForeignKey) {
-                                fkIndex = foreignKeys.all().indexOf(col.foreignKey);
+                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
+                                fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
                                 colName = "F" + (foreignKeys.length() + k++);
-                                sortMap[colName] = ["F" + (fkIndex+1) , module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
+                                sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
+                            } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
+                                // we have added it to the projection list
+                                fkIndex = oneToOnePseudos.indexOf(col);
+                                colName = "P" + (oneToOnePseudos.length + l++);
+                                sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
                             } else {
                                 colName = sortCols[j].name;
                             }
+
+                            // TODO need to manipulate the sort man!!!
 
                             _modifiedSortObject.push({
                                 "column": colName,
@@ -1161,13 +1179,6 @@
                 this._location.sortObject = sortObject;
 
                 var uri = this._location.ermrestCompactUri; // used for the http request
-
-                // the pseudo-columns that their path is all outbound and Therefore
-                // creates a one-to-one relation between source and destination, hence
-                // we can just add them to the projection list to get the single value.
-                var oneToOnePseudos = this.columns.filter(function (c) {
-                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
-                });
 
                 /** Change api to attributegroup for retrieving extra information
                  * These information include:
@@ -2441,7 +2452,7 @@
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
                     console.log("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                    console.log("Ignoring the following in visible-columns, " + obj);
+                    console.log("Ignoring the following in visible-columns: ", obj);
                     return true;
                 }
                 return false;
@@ -2474,7 +2485,7 @@
                                         // outbound foreignkey
                                         if (fk._table == this._table) {
                                             // avoid duplicate and same name in database
-                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                             }
@@ -2484,7 +2495,7 @@
                                             var relatedRef = this._generateRelatedReference(fk, tuple, true);
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _generateForeignKeyName(fk, true);
-                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, fkName));
                                             }
@@ -2494,7 +2505,7 @@
                                 case module._constraintTypes.KEY:
                                     fk = fk.object;
                                     // key is in this table, and avoid duplicate
-                                    if (!(fkName in consideredColumns) && !nameExistsInTable(fkName) && fk.table == this._table) {
+                                    if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col) && fk.table == this._table) {
                                         consideredColumns[fkName] = true;
                                         // if in edit context: add its constituent columns
                                         if (module._isEntryContext(this._context)) {
@@ -2525,7 +2536,9 @@
                         sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
 
                         // invalid source
-                        if (!sourceCol) continue;
+                        if (!sourceCol) {
+                            continue;
+                        }
 
                         // generate appropriate name for the given object
                         pseudoName = _generatePseudoColumnName(col, sourceCol);
@@ -2534,7 +2547,7 @@
                         // the generated hash is not in the database
                         invalid = (pseudoName in consideredColumns) ||
                                   (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
-                                  (_isFacetSourcePath(col.source) && nameExistsInTable(pseudoName)) ||
+                                  (_isFacetSourcePath(col.source) && nameExistsInTable(pseudoName, col)) ||
                                   hideFKRByName(pseudoName);
 
                         // avoid duplciates and hide the column
@@ -2565,7 +2578,7 @@
                 //add the key
                 if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
-                    if (key !== undefined && !nameExistsInTable(key.name)) {
+                    if (key !== undefined && !nameExistsInTable(key.name, "display key")) {
                         consideredColumns[key.name] = true;
                         this._referenceColumns.push(new KeyPseudoColumn(this, key));
 
@@ -2613,7 +2626,7 @@
                             if(hideFKR(fk)) continue;
 
                             if (fk.simple) { // simple FKR
-                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
                                     consideredColumns[fkName] = true;
                                     this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                 }
@@ -2625,7 +2638,7 @@
                                     this._referenceColumns.push(new ReferenceColumn(this, [col]));
                                 }
 
-                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName)) {
+                                if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
                                     consideredColumns[fkName] = true;
                                     // hold composite FKR
                                     compositeFKs.push(new ForeignKeyPseudoColumn(this, fk));
@@ -3370,10 +3383,22 @@
             return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
         });
 
+        var singleFKPaths = reference.columns.filter(function (c) {
+            return c.isPathColumn && c.isUnique && c.foreignKeys.length === 1;
+        });
+
+        var attachSingleFKs = function (selfPage, fk, data, i) {
+            singleFKPaths.filter(function (c) {
+                return c.foreignKeys[0].obj === fk;
+            }).forEach(function (c) {
+                selfPage._linkedData[i][c.name] = data;
+            });
+        };
+
         // linkedData will include foreign key data
         if (this._ref._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
 
-            var fks = reference._table.foreignKeys.all(), i, j;
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs;
             var mTableAlias = this._ref.location.mainTableAlias,
                 pTabeAlias = this._ref.location.projectionTableAlias;
 
@@ -3386,6 +3411,9 @@
                     this._linkedData.push({});
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._linkedData[i][fks[j].name] = data[i]["F"+(j+1)][0];
+
+                        // we're not adding these to projection list, so we have to map them.
+                        attachSingleFKs(this, fks[j], data[i]["F"+(j+1)][0], i);
                     }
 
                     for (j = oneToOnePseudos.length - 1; j >= 0; j--) {
@@ -3513,44 +3541,47 @@
                 var newReference = _referenceCopy(this._ref);
 
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
-
                 // update paging by creating a new location
-                var values = [];
-                for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var colName = newReference._location.sortObject[i].column;
-
-                    // first row
-                    var data = this._data[0][colName];
-                    if (typeof data !== 'undefined') {
-                        // normal column
-                        values.push(data);
-                    } else {
-                        // pseudo column
-                        var pseudoCol, j, fkData;
-                        for (j = 0; j < this._ref.columns.length; j++) {
-                            if (this._ref.columns[j].name == colName) {
-                                pseudoCol = this._ref.columns[j];
-                                break;
-                            }
-                        }
-
-                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            if (pseudoCol.isForeignKey) {
-                                data = null;
-                                fkData = this._linkedData[0][colName];
-                                if (isObjectAndNotNull(fkData)) {
-                                    data = fkData[pseudoCol._sortColumns[j].name];
-                                }
-                            } else {
-                                data = this._data[0][pseudoCol._sortColumns[j].name];
-                            }
-                            values.push(data);
-                        }
-                    }
-                }
 
                 newReference._location = this._ref._location._clone();
-                newReference._location.beforeObject = values;
+                if (!this._data || this._data.length === 0) {
+                    newReference._location.beforeObject = null;
+                } else {
+                    var values = [];
+                    for (var i = 0; i < newReference._location.sortObject.length; i++) {
+                        var colName = newReference._location.sortObject[i].column;
+
+                        // first row
+                        var data = this._data[0][colName];
+                        if (typeof data !== 'undefined') {
+                            // normal column
+                            values.push(data);
+                        } else {
+                            // pseudo column
+                            var pseudoCol, j, fkData;
+                            for (j = 0; j < this._ref.columns.length; j++) {
+                                if (this._ref.columns[j].name == colName) {
+                                    pseudoCol = this._ref.columns[j];
+                                    break;
+                                }
+                            }
+
+                            for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                                if (pseudoCol.isForeignKey || (pseudoCol.isPathColumn && pseudoCol.isUnique && pseudoCol.hasPath)) {
+                                    data = null;
+                                    fkData = this._linkedData[0][colName];
+                                    if (isObjectAndNotNull(fkData)) {
+                                        data = fkData[pseudoCol._sortColumns[j].name];
+                                    }
+                                } else {
+                                    data = this._data[0][pseudoCol._sortColumns[j].name];
+                                }
+                                values.push(data);
+                            }
+                        }
+                    }
+                    newReference._location.beforeObject = values;
+                }
                 newReference._location.afterObject = null;
                 return newReference;
             }
@@ -3586,43 +3617,45 @@
                 // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
 
                 // update paging by creating a new location
-                var values = [];
-                for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                    var colName = newReference._location.sortObject[i].column;
+                newReference._location = this._ref._location._clone();
+                if (!this._data || this._data.length === 0) {
+                    newReference._location.afterObject = null;
+                } else {
+                    var values = [];
+                    for (var i = 0; i < newReference._location.sortObject.length; i++) {
+                        var colName = newReference._location.sortObject[i].column;
 
-                    // last row
-                    var data = this._data[this._data.length-1][colName];
-                    if (typeof data !== 'undefined') {
-                        // normal column
-                        values.push(data);
-                    } else {
-                        // pseudo column
-                        var pseudoCol, j, fkData;
-                        for (j = 0; j < this._ref.columns.length; j++) {
-                            if (this._ref.columns[j].name == colName) {
-                                pseudoCol = this._ref.columns[j];
-                                break;
-                            }
-                        }
-                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            if (pseudoCol.isForeignKey) {
-                                data = null;
-                                fkData = this._linkedData[this._linkedData.length-1][colName];
-                                if (isObjectAndNotNull(fkData)) {
-                                    data =  fkData[pseudoCol._sortColumns[j].name];
-                                }
-                            } else {
-                                data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
-                            }
+                        // last row
+                        var data = this._data[this._data.length-1][colName];
+                        if (typeof data !== 'undefined') {
+                            // normal column
                             values.push(data);
+                        } else {
+                            // pseudo column
+                            var pseudoCol, j, fkData;
+                            for (j = 0; j < this._ref.columns.length; j++) {
+                                if (this._ref.columns[j].name == colName) {
+                                    pseudoCol = this._ref.columns[j];
+                                    break;
+                                }
+                            }
+                            for(j = 0; j < pseudoCol._sortColumns.length; j++) {
+                                if (pseudoCol.isForeignKey || (pseudoCol.isPathColumn && pseudoCol.isUnique && pseudoCol.hasPath)) {
+                                    data = null;
+                                    fkData = this._linkedData[this._linkedData.length-1][colName];
+                                    if (isObjectAndNotNull(fkData)) {
+                                        data =  fkData[pseudoCol._sortColumns[j].name];
+                                    }
+                                } else {
+                                    data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
+                                }
+                                values.push(data);
+                            }
                         }
                     }
-
+                    newReference._location.afterObject = values;
                 }
-
-                newReference._location = this._ref._location._clone();
                 newReference._location.beforeObject = null;
-                newReference._location.afterObject = values;
                 return newReference;
             }
             return null;
@@ -3964,7 +3997,7 @@
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
-                            if (column.isForeignKey || (column.isPathColumn && column.hasPath && column.isUnique)) {
+                            if (column.isForeignKey || (column.isPathColumn && column.hasPath)) {
                                 values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context);
                             } else {
                                 values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});

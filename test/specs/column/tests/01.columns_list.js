@@ -752,6 +752,7 @@ exports.execute = function (options) {
         describe('tuple.values, ', function () {
             describe('when linked data is available, ', function () {
                 it('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
+                    options.ermRest.appLinkFn(appLinkFn);
                     compactRef.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(compactRefExpectedLinkedValue);

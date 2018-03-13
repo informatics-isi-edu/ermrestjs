@@ -3,7 +3,7 @@ exports.execute = function(options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
-            inboudTableName = "inbound_related_reference_table",
+            inboundTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
             associationTableWithIDDisplayname = "association table displayname",
             AssociationTableWithExtra = "association_table_with_extra",
@@ -128,8 +128,8 @@ exports.execute = function(options) {
                         checkRelated(
                             pathRelated[1], "reference_schema", "reference_table",
                             {"and":[{"source":[
-                                {"inboud": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
-                                {"inboud":["reference_schema","fk_to_inbound_related_reference_table"]},
+                                {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
+                                {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
                                 "id"
                             ], "choices":["9003"]}]}
@@ -166,7 +166,7 @@ exports.execute = function(options) {
                 it('should have the correct catalog, schema, and table.', function() {
                     expect(related[0]._location.catalog).toBe(catalog_id.toString());
                     expect(related[0]._table.schema.name).toBe(schemaName);
-                    expect(related[0]._table.name).toBe(inboudTableName);
+                    expect(related[0]._table.name).toBe(inboundTableName);
                 });
 
                 describe('.displayname, ', function() {
@@ -290,7 +290,7 @@ exports.execute = function(options) {
 
                         it('should have the correct catalog, schema, and table.', function (){
                             expect(related[2]._location.catalog).toBe(catalog_id.toString());
-                            expect(related[2]._table.name).toBe(inboudTableName);
+                            expect(related[2]._table.name).toBe(inboundTableName);
                         });
 
                         describe('.displayname, ', function () {

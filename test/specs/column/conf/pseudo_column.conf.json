@@ -9,7 +9,7 @@
         "createNew": true
     },
     "entities": {
-        "createNew": false,
+        "createNew": true,
         "path": "test/specs/column/conf/pseudo_column_schema/data"
     }
 }

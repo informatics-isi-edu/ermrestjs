@@ -202,7 +202,7 @@ exports.execute = function (options) {
                 expect(compactColumns[15].table.name).toBe("table_w_composite_key");
             });
 
-            it('for pseudoColumns that are inboud foreign key, should return the foreign key table.', function () {
+            it('for pseudoColumns that are inbound foreign key, should return the foreign key table.', function () {
                 expect(detailedColumns[3].table.name).toEqual("inbound_related_to_columns_table_2");
             });
 

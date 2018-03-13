@@ -351,6 +351,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
+        * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
         * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -370,6 +371,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
         * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.formatPresentation(data, context, options)](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.AssetPseudoColumn](#ERMrest.AssetPseudoColumn)
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
@@ -3490,6 +3492,7 @@ TODO should be removed in favor of inputDisabled
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
+    * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
     * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3527,6 +3530,13 @@ If the pseudoColumn is referring to a unique row (the path is one to one)
 
 #### pseudoColumn.isEntityMode : <code>boolean</code>
 If the pseudoColumn is in entity mode
+This includes columns without path too.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+key"></a>
+
+#### pseudoColumn.key : <code>boolean</code>
+If the pseudoColumn is in entity mode will return the key that this column represents
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+hasPath"></a>
@@ -3563,7 +3573,8 @@ That means either just a path with inbound fk, or p&b association.
 
 #### pseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Format the presentation value corresponding to this pseudo-column definition.
-1. If source is not a path to another table, or not in entity mode: use the column's heuristic
+1. If source is not in entity mode: use the column's heuristic
+2. Otherwise if it's not a path, apply the same logic as KeyPseudoColumn presentation based on the key.
 2. Otherwise if path is one to one (all outbound), use the same logic as ForeignKeyPseudoColumn based on last fk.
 3. Otherwise return null value.
 
@@ -3574,7 +3585,7 @@ Format the presentation value corresponding to this pseudo-column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | includes `context` and `formattedValues` |
+| options | <code>Object</code> | include `formattedValues` |
 
 <a name="ERMrest.ForeignKeyPseudoColumn"></a>
 
@@ -3665,6 +3676,7 @@ annotation doesn't exist, it returns this (reference)
     * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
     * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.formatPresentation(data, context, options)](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.KeyPseudoColumn_new"></a>
 
@@ -3696,6 +3708,27 @@ Indicates that this ReferenceColumn is a key.
 The Foreign key object that this PseudoColumn is created based on
 
 **Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
+<a name="ERMrest.KeyPseudoColumn+formatPresentation"></a>
+
+#### keyPseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+Return the value that should be presented for this column.
+It usually is a self-link to the given row of data.
+
+The following is the logic:
+1. if the key data is not present, return null.
+2. Otherwise if key has markdown pattern, return it.
+3. Otherwise try to generate the value in `col1:col2` format. if it resulted in empty string return null.
+   - If any of the constituent columnhas markdown don't add self-link, otherwise add the self-link.
+
+**Kind**: instance method of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | given raw data for the table columns |
+| context | <code>String</code> | the app context |
+| options | <code>Object</code> | might include `formattedValues` |
+
 <a name="ERMrest.AssetPseudoColumn"></a>
 
 ### ERMrest.AssetPseudoColumn

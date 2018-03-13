@@ -2,7 +2,7 @@
     "schema_name": "columns_schema",
     "tables": {
         "columns_table" : {
-            "comment": "reference table with multiple outboud FKRs",
+            "comment": "reference table with multiple outbound FKRs",
             "kind": "table",
             "table_name": "columns_table",
             "schema_name": "columns_schema",

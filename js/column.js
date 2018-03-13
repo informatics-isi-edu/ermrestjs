@@ -336,7 +336,7 @@ ReferenceColumn.prototype = {
  * @constructor
  * @class
  */
-function PseudoColumn(reference, column, columnObject, name, mainTuple) {
+function PseudoColumn (reference, column, columnObject, name, mainTuple) {
     PseudoColumn.superClass.call(this, reference, [column]);
 
     /**
@@ -347,7 +347,7 @@ function PseudoColumn(reference, column, columnObject, name, mainTuple) {
 
     this.isPathColumn = true;
 
-    this._columnObject = columnObject;
+    this.columnObject = columnObject;
 
     this._name = name;
 
@@ -362,36 +362,56 @@ module._extends(PseudoColumn, ReferenceColumn);
 
 /**
  * Format the presentation value corresponding to this pseudo-column definition.
- * 1. If source is not a path to another table, or not in entity mode: use the column's heuristic
+ * 1. If source is not in entity mode: use the column's heuristic
+ * 2. Otherwise if it's not a path, apply the same logic as KeyPseudoColumn presentation based on the key.
  * 2. Otherwise if path is one to one (all outbound), use the same logic as ForeignKeyPseudoColumn based on last fk.
  * 3. Otherwise return null value.
  *
  * @param {Object} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
  * @param {String} context the app context
- * @param {Object} options includes `context` and `formattedValues`
+ * @param {Object} options include `formattedValues`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
-    // from the same table or not entity mode,return the same table.
-    if (!this.hasPath || !this.isEntityMode) {
-        return PseudoColumn.super.formatPresentation(data, context, options);
-    }
-
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
         unformatted: this._getNullValue(context)
     };
 
+
     if (module._isEntryContext(context)) {
         return nullValue;
     }
 
-    // this is only valid for the one-to-one path
+    // not representing a row
     if (!this.isUnique) {
         return nullValue;
     }
 
+    // make sure formattedValues is valid
+    if (!options) options = {};
+    if (options.formattedValues === undefined) {
+        options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
+    }
+
+    // from the same table
+    if (!this.hasPath) {
+        // entity mode but from the same table, same as key
+        if (this.isEntityMode) {
+            var pres = module._generateKeyPresentation(this.key, data, context, options);
+            return pres ? pres : nullValue;
+        }
+
+        return PseudoColumn.super.formatPresentation.call(this, options.formattedValues[this._baseCols[0].name], context, options);
+    }
+
+    // not in entity mode, just return the column value.
+    if (!this.isEntityMode) {
+        return PseudoColumn.super.formatPresentation.call(this, options.formattedValues[this._baseCols[0].name], context, options);
+    }
+
+    // in entity mode, return the foreignkey value
     var presentation = module._generateForeignKeyPresentation(this._lastForeignKey.obj, context, data);
 
     if (!presentation) {
@@ -415,37 +435,55 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 };
 
 PseudoColumn.prototype._determineSortable = function () {
-    if (!this.hasPath || !this.isEntityMode) {
+    this._sortColumns_cached = [];
+    this._sortable = false;
+
+    if (!this.hasPath) {
+        if (this.isEntityMode) {
+            var keyDisplay = this.key.getDisplay(this._context);
+            if (keyDisplay !== undefined && keyDisplay.columnOrder !== undefined)  {
+                if (keyDisplay.columnOrder === false) {
+                    return; // disbaled
+                }
+
+                if (keyDisplay.columnOrder.length !== 0) {
+                    this._sortColumns_cached = keyDisplay.columnOrder;
+                    this._sortable = true;
+                    return;
+                }
+            }
+        }
+
         PseudoColumn.super._determineSortable.call(this);
         return;
     }
 
-    this._sortColumns_cached = [];
-    this._sortable = false;
-
     if (this.isUnique) {
-        var fk = this._lastForeignKey.obj;
-        var display = fk.getDisplay(this._context), useColumn = false, baseCol;
 
-        // disable the sort
-        if (display !== undefined && display.columnOrder === false) return;
+        if (this.isEntityMode) {
+            var fk = this._lastForeignKey.obj;
+            var display = fk.getDisplay(this._context), useColumn = false, baseCol;
 
-        // use the column_order
-        if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
-            this._sortColumns_cached = display.columnOrder;
-            this._sortable = true;
-            return;
-        }
+            // disable the sort
+            if (display !== undefined && display.columnOrder === false) return;
 
-        if (this.reference.display._rowOrder !== undefined) {
-            var rowOrder = this.reference.display._rowOrder;
-            for (var i = 0; i < rowOrder.length; i++) {
-                try{
-                    this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-                } catch(exception) {}
+            // use the column_order
+            if (display !== undefined && display.columnOrder !== undefined && display.columnOrder.length !== 0) {
+                this._sortColumns_cached = display.columnOrder;
+                this._sortable = true;
+                return;
             }
-            this._sortable = true;
-            return;
+
+            if (this.reference.display._rowOrder !== undefined) {
+                var rowOrder = this.reference.display._rowOrder;
+                for (var i = 0; i < rowOrder.length; i++) {
+                    try{
+                        this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
+                    } catch(exception) {}
+                }
+                this._sortable = true;
+                return;
+            }
         }
 
         // use the column's
@@ -465,7 +503,7 @@ PseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(PseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generatePseudoColumnName(this._columnObject, this._baseCols[0]);
+            this._name = _generatePseudoColumnName(this.columnObject, this._baseCols[0]);
         }
         return this._name;
     }
@@ -474,13 +512,45 @@ Object.defineProperty(PseudoColumn.prototype, "name", {
 Object.defineProperty(PseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
-            this._displayname = _generatePseudoColumnDisplayname(
-                this._columnObject,
-                this._baseCols[0],
-                this._lastForeignKey ? this._lastForeignKey.obj : null,
-                this._lastForeignKey ? this._lastForeignKey.isInbound : null,
-                !this.isEntityMode
-            );
+            var attachDisplayname = function (self) {
+                if (self.columnObject.markdown_name) {
+                    self._displayname = {
+                        value: module._formatUtils.printMarkdown(self.columnObject.markdown_name, {inline:true}),
+                        unformatted: self.columnObject.markdown_name,
+                        isHTML: true
+                    };
+                    return;
+                }
+
+                if (!self.hasPath) {
+                    if (self.isEntityMode) {
+                        self._displayname = module._determineDisplayName(self.key, false);
+                    }
+
+                    // if was undefined, fall back to default
+                    if (!self._displayname || self._displayname.value === undefined || self._displayname.value.trim() === "") {
+                        self._displayname = undefined;
+                        Object.getOwnPropertyDescriptor(PseudoColumn.super,"displayname").get.call(self);
+                    }
+                    return;
+                }
+
+                if (self.isUnique && !self.isEntityMode) {
+                    Object.getOwnPropertyDescriptor(PseudoColumn.super,"displayname").get.call(self);
+                    return;
+                }
+
+                self._displayname = _generatePseudoColumnDisplayname(
+                    self.columnObject,
+                    self._baseCols[0],
+                    self._lastForeignKey ? self._lastForeignKey.obj : null,
+                    self._lastForeignKey ? self._lastForeignKey.isInbound : null,
+                    !self.isEntityMode
+                );
+                return;
+            };
+
+            attachDisplayname(this);
         }
         return this._displayname;
     }
@@ -494,7 +564,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 Object.defineProperty(PseudoColumn.prototype, "isUnique", {
     get: function () {
         if (this._isUnique === undefined) {
-            this._isUnique = !this.hasPath || this._columnObject.source.every(function (s, index, arr) {
+            this._isUnique = !this.hasPath || this.columnObject.source.every(function (s, index, arr) {
                 return (index === arr.length - 1) || (("outbound" in s) && !("inbound" in s));
             });
         }
@@ -504,19 +574,41 @@ Object.defineProperty(PseudoColumn.prototype, "isUnique", {
 
 /**
  * If the pseudoColumn is in entity mode
+ * This includes columns without path too.
  * @member {boolean} isEntityMode
  * @memberof ERMrest.PseudoColumn#
  */
 Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
     get: function () {
         if (this._isEntityMode === undefined) {
-            var currCol = this._baseCols[0];
-            var basedOnKey = currCol.table.keys.all().filter(function (key) {
-                return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
-            }).length > 0;
-            this._isEntityMode = (this._columnObject.entity === false) ? false : basedOnKey;
+            this._isEntityMode = false;
+
+            var currCol = this._baseCols[0], key;
+            if (this.columnObject.entity !== false && !currCol.nullok) {
+                key = currCol.memberOfKeys.filter(function (key) {
+                    return key.simple;
+                })[0];
+                this._isEntityMode = (key !== undefined);
+            }
+
+            this._key = this._isEntityMode ? key : null;
         }
         return this._isEntityMode;
+    }
+});
+
+/**
+ * If the pseudoColumn is in entity mode will return the key that this column represents
+ * @member {boolean} key
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "key", {
+    get: function () {
+        if (this._key === undefined) {
+            // will populate the this._key
+            var isEntityMode = this.isEntityMode;
+        }
+        return this._key;
     }
 });
 
@@ -528,7 +620,7 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
 Object.defineProperty(PseudoColumn.prototype, "hasPath", {
     get: function () {
         if (this._hasPath === undefined) {
-            this._hasPath =_isFacetSourcePath(this._columnObject.source);
+            this._hasPath =_isFacetSourcePath(this.columnObject.source);
         }
         return this._hasPath;
     }
@@ -542,7 +634,7 @@ Object.defineProperty(PseudoColumn.prototype, "hasPath", {
 Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
     get: function () {
         if (this._foreignKeys === undefined) {
-            this._foreignKeys = _getFacetSourceForeignKeys(this._columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._foreignKeys = _getFacetSourceForeignKeys(this.columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._foreignKeys;
     }
@@ -557,7 +649,7 @@ Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
 Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
     get: function () {
         if (this._lastForeignKey_cached === undefined) {
-            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this._columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._lastForeignKey_cached;
     }
@@ -580,13 +672,12 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             if (!self.hasPath) {
                 self._reference = self._baseReference;
             } else if (self.isInboundForeignKey) {
-                self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length !== 1);
+                self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length === 2);
             } else {
                 self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
 
                 var source = [], i, fk, columns, noData = false;
 
-                // TODO if mainTuple is not defined.
                 // create the reverse path
                 for (i = self.foreignKeys.length -1; i >= 0; i--) {
                     fk = self.foreignKeys[i];
@@ -596,7 +687,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                             columns = fk.obj.key.colset.columns;
                         }
                     } else {
-                        source.push({"inboud": fk.obj.constraint_names[0]});
+                        source.push({"inbound": fk.obj.constraint_names[0]});
                         if (i === 0) {
                             columns = fk.obj.colset.columns;
                         }
@@ -628,6 +719,10 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
 
         }
         return this._reference;
+    },
+    set: function (ref) {
+        //TODO this should be revisited, chaise is mutating the reference!
+        this._reference = ref;
     }
 });
 
@@ -666,10 +761,14 @@ Object.defineProperty(PseudoColumn.prototype, "isInboundForeignKey", {
 
                     // make sure the second fkr is the same as the one in path.
                     for (var j = 0; j < fks.length(); j++) {
-                        if(fks.all()[j] !== fkr) {
-                            return fks.all()[j] === otherFK;
+                        if(fks.all()[j] !== fkr && fks.all()[j] !== otherFK) {
+                            return false;
                         }
                     }
+
+                    // this is expected when isInboundForeignKey is true
+                    this._constraintName = fkr._constraintName;
+                    return true;
                 }
 
                 // if path has length one, just check for the fk to be inbound
@@ -1065,104 +1164,25 @@ function KeyPseudoColumn (reference, key, name) {
 module._extends(KeyPseudoColumn, ReferenceColumn);
 
 // properties to be overriden:
+
+/**
+ * Return the value that should be presented for this column.
+ * It usually is a self-link to the given row of data.
+ *
+ * The following is the logic:
+ * 1. if the key data is not present, return null.
+ * 2. Otherwise if key has markdown pattern, return it.
+ * 3. Otherwise try to generate the value in `col1:col2` format. if it resulted in empty string return null.
+ *    - If any of the constituent columnhas markdown don't add self-link, otherwise add the self-link.
+ * @param  {Object} data    given raw data for the table columns
+ * @param  {String} context the app context
+ * @param  {Object} options might include `formattedValues`
+ * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
+ */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
-
     var nullValue = this._getNullValue(context);
-    nullValue = {isHTML: false, value: nullValue, unformatted: nullValue};
-
-    // if data is empty
-    if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
-        return nullValue;
-    }
-
-    // used to create key pairs in uri
-    var createKeyPair = function (cols) {
-        var keyPair = "", col;
-        for (i = 0; i < cols.length; i++) {
-            col = cols[i].name;
-            keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-            if (i != cols.length - 1) {
-                keyPair +="&";
-            }
-        }
-     return keyPair;
-    };
-
-    // check if we have data for the given columns
-    var hasData = function (kCols) {
-        for (var i = 0; i < kCols.length; i++) {
-            if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                return false;
-            }
-        }
-     return true;
-    };
-
-    var value, caption, unformatted, i;
-    var cols = this.key.colset.columns,
-        addLink = true;
-
-    // if any of key columns don't have data, this link is not valid.
-    if (!hasData(cols)) {
-        return nullValue;
-    }
-
-    // use the markdown_pattern that is defiend in key-display annotation
-    var display = this.key.getDisplay(context);
-    if (display.isMarkdownPattern) {
-
-        // make sure that formattedValues is defined
-        if (options === undefined || options.formattedValues === undefined) {
-           options.formattedValues = module._getFormattedKeyValues(this.table, this._context, data);
-        }
-
-        unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, this.table, this._context, {formatted:true});
-        unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
-        caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
-        addLink = false;
-    } else {
-        var values = [], unformattedValues = [];
-
-        // create the caption
-        var presentation;
-        for (i = 0; i < cols.length; i++) {
-            try {
-                presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], context, {formattedValues: options.formattedValues});
-                values.push(presentation.value);
-                unformattedValues.push(presentation.unformatted);
-                // if one of the values isHTMl, should not add link
-                addLink = addLink ? !presentation.isHTML : false;
-            } catch (exception) {
-                // the value doesn't exist
-                return nullValue;
-            }
-        }
-        caption = values.join(":");
-        unformatted = unformattedValues.join(":");
-
-        // if the caption is empty we cannot add any link to that.
-        if (caption.trim() === '') {
-            return nullValue;
-        }
-    }
-
-    if (addLink) {
-        var table = this.key.table;
-        var refURI = [
-            table.schema.catalog.server.uri ,"catalog" ,
-            module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
-            [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-            createKeyPair(cols)
-        ].join("/");
-        var keyRef = new Reference(module.parse(refURI), table.schema.catalog);
-        var appLink = keyRef.contextualize.detailed.appLink;
-        value = '<a href="' + appLink +'">' + caption + '</a>';
-        unformatted = "[" + unformatted + "](" + appLink + ")";
-    } else {
-        value = caption;
-    }
-
-    return {isHTML: true, value: value, unformatted: unformatted};
+    var pres = module._generateKeyPresentation(this.key, data, context, options);
+    return pres ? pres : {isHTML: false, value: nullValue, unformatted: nullValue};
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
     var display = this._display, useColumn = false, baseCol;
@@ -1290,7 +1310,7 @@ AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
     if (typeof pat !== "string" || pat.length === 0 || this._annotation.browser_upload === false) {
         return true;
     }
-    // TODO not sure
+
     return AssetPseudoColumn.super._determineInputDisabled.call(this, context);
 };
 
@@ -1710,8 +1730,8 @@ FacetColumn.prototype = {
                 // if from the same table, don't use entity picker
                 this._isEntityMode = false;
             } else {
-                var basedOnKey = currCol.table.keys.all().filter(function (key) {
-                    return !currCol.nullok && key.simple && key.colset.columns[0] === currCol;
+                var basedOnKey = !currCol.nullok && currCol.memberOfKeys.filter(function (key) {
+                    return key.simple;
                 }).length > 0;
 
                 this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
