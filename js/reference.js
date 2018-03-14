@@ -248,7 +248,7 @@
         /**
          * The string form of the `URI` for this reference.
          * NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
-         * Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
+         * Should not be used for sending requests to ermrest, use this.location.ermrestCompactUri instead.
          * @type {string}
          */
         get uri() {
@@ -1780,6 +1780,9 @@
 
         /**
          * Deletes the referenced resources.
+         * NOTE This will ignore the provided sort and paging on the reference, make
+         * sure you are calling this on specific set or rows (filtered).
+         *
          * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1808,7 +1811,7 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-                this._server._http.delete(this.location.ermrestUri, config).then(function (deleteResponse) {
+                this._server._http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
@@ -2055,11 +2058,12 @@
 
         /**
          * Returns a uri that will properly generate the download link for a csv document
+         * NOTE It will not have the same sort and paging as the reference.
          *
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**
