@@ -128,10 +128,12 @@ exports.execute = function (options) {
         it("should format dates, timestamps, timestamptz values properly.", function () {
             // Date
             expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22", "date")).toBe("2016-11-22", "'2016-11-22' is not reformatted properly");
-            expect(printf({ format: 'YYYY-MM-DD HH:mm:ss.SSSZ'}, "2016-11-22", "date")).toBe("2016-11-22 00:00:00.000-08:00", "'2016-11-22' is not reformatted properly");
             expect(printf({ format: 'MM-DD-YYYY'}, "2014-06-22", "date")).toBe("06-22-2014", "'2014-06-22' is not reformatted properly");
             expect(printf({ format: 'MMM Do'}, "2017-03-12", "date")).toBe("Mar 12th", "'2017-03-12' is not reformatted properly");
             expect(printf({ format: 'YY-M-D'}, "2012-01-06", "date")).toBe("12-1-6", "'2012-01-06' is not reformatted properly");
+                // make sure time values can still be output from a "date"
+            expect(printf({ format: 'YYYY-MM-DD HH:mm:ss.SSSZ'}, "2016-11-22", "date")).toBe("2016-11-22 00:00:00.000-08:00", "'2016-11-22' is not reformatted properly");
+
             // Timestamp
             expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22 12:26:08", "timestamp")).toBe("2016-11-22", "'2016-11-22 12:26:08' is not reformatted properly");
             expect(printf({ format: 'MM-DD-YYYY'}, "2014-06-22 18:03:56", "timestamp")).toBe("06-22-2014", "'2014-06-22 18:03:56' is not reformatted properly");
@@ -141,7 +143,18 @@ exports.execute = function (options) {
             expect(printf({ format: 'hh:mm a'}, "2016-09-27 13:26:06", "timestamp")).toBe("01:26 pm", "'2016-09-27 13:26:06' is not reformatted properly");
             expect(printf({ format: 'hh:mm A'}, "2016-09-27 13:26:06", "timestamp")).toBe("01:26 PM", "'2016-09-27 13:26:06' is not reformatted properly");
             expect(printf({ format: 'HH:mm:ss.SSS'}, "2016-09-27 13:26:06", "timestamp")).toBe("13:26:06.000", "'2016-09-27 13:26:06' is not reformatted properly");
+            expect(printf({ format: 'HH:mm:ss.SSSZ'}, "2016-09-27 13:26:06", "timestamp")).toBe("13:26:06.000-07:00", "'2016-09-27 13:26:06' is not reformatted properly");
+
             // Timestamptz
+            expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22 12:26:08-08:00", "timestamptz")).toBe("2016-11-22", "'2016-11-22 12:26:08' is not reformatted properly");
+            expect(printf({ format: 'MM-DD-YYYY'}, "2014-06-22 18:03:56-07:00", "timestamptz")).toBe("06-22-2014", "'2014-06-22 18:03:56' is not reformatted properly");
+            expect(printf({ format: 'MMM Do'}, "2017-03-12 02:03:04-07:00", "timestamptz")).toBe("Mar 12th", "'2017-03-12 02:03:04' is not reformatted properly");
+                // verify just time values show properly with
+            expect(printf({ format: 'HH:mm'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26", "'2016-09-27 13:26:06' is not reformatted properly");
+            expect(printf({ format: 'hh:mm a'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("01:26 pm", "'2016-09-27 13:26:06' is not reformatted properly");
+            expect(printf({ format: 'hh:mm A'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("01:26 PM", "'2016-09-27 13:26:06' is not reformatted properly");
+            expect(printf({ format: 'HH:mm:ss.SSS'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26:06.000", "'2016-09-27 13:26:06' is not reformatted properly");
+            expect(printf({ format: 'HH:mm:ss.SSSZ'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26:06.000-07:00", "'2016-09-27 13:26:06' is not reformatted properly");
         });
 
     });
