@@ -1785,7 +1785,7 @@
 
             if (display.isPreformat) {
                 try {
-                    return module._printf(display.preformatConfig, data);
+                    return module._printf(display.preformatConfig, data, this.type.rootName);
                 } catch(e) {
                     console.log(e);
                 }
