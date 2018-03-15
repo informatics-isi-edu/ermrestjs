@@ -349,6 +349,8 @@ function PseudoColumn (reference, column, columnObject, name, mainTuple) {
 
     this.columnObject = columnObject;
 
+    this.baseColumn = column;
+
     this._name = name;
 
     this._currentTable = reference.table;
@@ -509,6 +511,23 @@ Object.defineProperty(PseudoColumn.prototype, "name", {
     }
 });
 
+/**
+ * The displayname that should be used for this column.
+ * It will return the first applicable rule:
+ * 1. markdown_name that is defined on the columnObject.
+ * 2. If column doesn't have any paths
+ *   2.1. If it's in entity mode, return the key displayname.
+ *   2.2. Return the column displayname.
+ * 3. If it's all outbound and in non entity mode,return the column displayname.
+ * 4. If it's inbound foreignkey, apply the same logic as InboundforeignKey.
+ * 5. Otherwise use the last foreignkey to find the displayname.
+ *   5.1. If it's inbound, use the from_name.
+ *   5.2. If it's outbound, use the to_name.
+ *   5.3. Otherwise use the table name (add the column name in non-entity mode).
+ *
+ * @member {Object} displayname
+ * @memberof ERMrest.PseudoColumn#
+ */
 Object.defineProperty(PseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
@@ -537,6 +556,27 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 
                 if (self.isUnique && !self.isEntityMode) {
                     Object.getOwnPropertyDescriptor(PseudoColumn.super,"displayname").get.call(self);
+                    return;
+                }
+
+                if (self.isInboundForeignKey) {
+                    var fkr;
+                    if (self.foreignKeys.length === 1) {
+                        fkr = self.foreignKeys[0].obj;
+                        if (fkr.from_name) {
+                            self._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
+                        } else {
+                            self_displayname = self.table.displayname;
+                        }
+                    } else {
+                        fkr = self.foreignKeys[1].obj;
+                        if (fkr.to_name) {
+                            self._displayname = {"isHTML": false, "value": fkr.to_name, "unformatted": fkr.to_name};
+                        } else {
+                            // the association table name
+                            self._displayname = fkr.colset.columns[0].table.displayname;
+                        }
+                    }
                     return;
                 }
 
@@ -717,6 +757,13 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
             }
 
+            // attach the current pseudo-column to the reference
+            self._reference.pseudoColumn = self;
+
+            // make sure the refernece has the correct displayname
+            if (self.hasPath) {
+                self._reference._displayname = self.displayname;
+            }
         }
         return this._reference;
     },

@@ -349,6 +349,7 @@ to use for ERMrest JavaScript agents.
     * [.PseudoColumn](#ERMrest.PseudoColumn)
         * [new PseudoColumn(reference, column, facetObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+        * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
@@ -2514,7 +2515,7 @@ displayname.value has the value
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
 NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
-Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
+Should not be used for sending requests to ermrest, use this.location.ermrestCompactUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+table"></a>
@@ -2690,6 +2691,7 @@ App-specific URL
 
 #### reference.csvDownloadLink ⇒ <code>String</code>
 Returns a uri that will properly generate the download link for a csv document
+NOTE It will not have the same sort and paging as the reference.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
@@ -2814,6 +2816,8 @@ or rejected with any of these errors:
 
 #### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resources.
+NOTE This will ignore the provided sort and paging on the reference, make
+sure you are calling this on specific set or rows (filtered).
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
@@ -3490,6 +3494,7 @@ TODO should be removed in favor of inputDisabled
 * [.PseudoColumn](#ERMrest.PseudoColumn)
     * [new PseudoColumn(reference, column, facetObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
+    * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
@@ -3518,6 +3523,23 @@ We should add suppoort for aggregate to pseudo-columns later
 
 #### pseudoColumn.isPseudo : <code>boolean</code>
 indicates that this object represents a PseudoColumn.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+displayname"></a>
+
+#### pseudoColumn.displayname : <code>Object</code>
+The displayname that should be used for this column.
+It will return the first applicable rule:
+1. markdown_name that is defined on the columnObject.
+2. If column doesn't have any paths
+  2.1. If it's in entity mode, return the key displayname.
+  2.2. Return the column displayname.
+3. If it's all outbound and in non entity mode,return the column displayname.
+4. If it's inbound foreignkey, apply the same logic as InboundforeignKey.
+5. Otherwise use the last foreignkey to find the displayname.
+  5.1. If it's inbound, use the from_name.
+  5.2. If it's outbound, use the to_name.
+  5.3. Otherwise use the table name (add the column name in non-entity mode).
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+isUnique"></a>
@@ -5382,7 +5404,7 @@ displayname.value has the value
 #### reference.uri : <code>string</code>
 The string form of the `URI` for this reference.
 NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
-Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
+Should not be used for sending requests to ermrest, use this.location.ermrestCompactUri instead.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+table"></a>
@@ -5558,6 +5580,7 @@ App-specific URL
 
 #### reference.csvDownloadLink ⇒ <code>String</code>
 Returns a uri that will properly generate the download link for a csv document
+NOTE It will not have the same sort and paging as the reference.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
@@ -5682,6 +5705,8 @@ or rejected with any of these errors:
 
 #### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resources.
+NOTE This will ignore the provided sort and paging on the reference, make
+sure you are calling this on specific set or rows (filtered).
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:

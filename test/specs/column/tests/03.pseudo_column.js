@@ -13,6 +13,11 @@
  * 8: association (entity mode) - gNTPCP0bGB0GRwFKEATipw
  * 9: association -> inbound_2_fk1 (entity mode) - nGwW9Kpx5sLf8cpX-24WNQ
  * 10: main -> association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic)
+ *
+ * - related entities:
+ * 0: inbound_3_outbound_1_fk1 (length 1)
+ * 1: inbound_3 association
+ * 1: inbound_3_outbound_1 (association -> fk)
  */
 
 
@@ -135,7 +140,7 @@ exports.execute = function (options) {
                 }]);
             });
 
-            it ("should ignore the column objects that their equivalent Column, Key, ForeignKey, or InbounDforeignKey exists.", function () {
+            it ("should ignore the column objects that their equivalent Column, Key, ForeignKey, or InboundforeignKey exists.", function () {
                 checkReferenceColumns([{
                     "ref": mainRef.contextualize.compactSelect,
                     "expected": [
@@ -257,6 +262,43 @@ exports.execute = function (options) {
 
             });
 
+            describe(".related, ", function () {
+                var related;
+                beforeAll(function () {
+                    related = mainRefDetailed.related(mainTuple);
+                });
+
+                it ("should not add duplicate sources, and create the list as expected.", function () {
+                    expect(related.length).toBe(3);
+                });
+
+                it ("related reference displayname should use the pseudo-column's displayname (markdown_name).", function () {
+                    var names = [
+                        "<strong>length 1 inbound</strong>",
+                        "<strong>association</strong>",
+                        "<strong>length 3 inbound</strong>"
+                    ];
+
+                    for (var i = 0; i < 3; i++) {
+                        expect(related[i].displayname.value).toBe(names[i], "missmatch for index="+  i);
+                    }
+                });
+
+                it ("if it's related with length one should have the expected attributes.", function () {
+                    expect(related[0].derivedAssociationReference).toBeUndefined();
+                });
+
+                it ("If it's association should have the expected attributes.", function () {
+                    expect(related[1].derivedAssociationReference).toBeDefined("undefined");
+                    expect(related[1].derivedAssociationReference.table.name).toBe("main_inbound_3_association");
+                });
+
+
+                it ("other attributes must be as expected.", function () {
+
+                });
+            });
+
             it("generateColumnsList, passing tuple should not change the column list.", function () {
                 detailedColsWTuple = mainRefDetailed.generateColumnsList(mainTuple);
                 areSameColumnList(detailedColsWTuple, detailedCols);
@@ -264,7 +306,7 @@ exports.execute = function (options) {
 
             it ("faceting should be able to handle these new type of columns.", function () {
                 var facetColumns = mainRef.facetColumns;
-                expect(facetColumns.length).toBe(11, "length missmatch.");
+                expect(facetColumns.length).toBe(14, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
                     return fc.dataSource;
                 })).toEqual(
@@ -294,7 +336,19 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
                             "id",
                         ],
-                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"]
+                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
+                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "id"],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                            "id"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                            {"outbound": ["pseudo_column_schema", "inbound_3_fk1"]},
+                            "id"
+                        ]
                     ],
                     "array missmatch."
                 );
@@ -576,7 +630,7 @@ exports.execute = function (options) {
                         ]},
                         "(id)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
                         "Ke1VPpRHeyXkuW4ohygQ9A",
-                        "main_inbound_2_association",
+                        "<strong>association table</strong>",
                         "main",
                         "association"
                     );

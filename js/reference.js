@@ -248,7 +248,7 @@
         /**
          * The string form of the `URI` for this reference.
          * NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
-         * Should not be used for sending requests to ermrest, use this.location.ermrestUri instead.
+         * Should not be used for sending requests to ermrest, use this.location.ermrestCompactUri instead.
          * @type {string}
          */
         get uri() {
@@ -355,8 +355,6 @@
                                     {"outbound": constraint},
                                     refCol.table.shortestKey[0].name
                                 ],
-                                // TODO here I am passing unformatted, because we are going to pass it through the markdown
-                                // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                                 "markdown_name": refCol.displayname.unformatted,
                                 "entity": true
                             },
@@ -378,8 +376,6 @@
                         }
                         res.push(column.name);
 
-                        // TODO here I am passing unformatted, because we are going to pass it through the markdown
-                        // renderer, but I should pass the actual markdown that is used for .value, and not unformatted
                         return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
 
@@ -634,7 +630,12 @@
 
                     // all the realted in detailed context
                     detailedRef.related().forEach(function (relRef) {
-                        var fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
+                        var fcObj;
+                        if (relRef.pseudoColumn) {
+                            fcObj = {"obj": relRef.pseudoColumn.columnObject, "column": relRef.pseudoColumn.baseColumn};
+                        } else {
+                            fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
+                        }
                         if (!fcObj) return;
 
                         /*
@@ -1755,6 +1756,9 @@
 
         /**
          * Deletes the referenced resources.
+         * NOTE This will ignore the provided sort and paging on the reference, make
+         * sure you are calling this on specific set or rows (filtered).
+         *
          * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1783,7 +1787,7 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-                this._server._http.delete(this.location.ermrestUri, config).then(function (deleteResponse) {
+                this._server._http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
@@ -2045,11 +2049,12 @@
 
         /**
          * Returns a uri that will properly generate the download link for a csv document
+         * NOTE It will not have the same sort and paging as the reference.
          *
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**

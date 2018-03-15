@@ -372,6 +372,9 @@
          * should only be used for internal usage and sending request to ermrest
          * NOTE: returns a uri that ermrest understands
          *
+         * TODO This might produce a url that is not understandable by ermrest (because of sort).
+         * TODO should be removed or changed.
+         *
          * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
          * @returns {String} The full URI of the location for ermrest
          */
