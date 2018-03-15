@@ -484,6 +484,7 @@ exports.execute = function (options) {
                     });
 
                     it ("if to_name and from_name are not defined, should return the table's name.", function () {
+                        checkDisplayname(detailedColsWTuple[10], "main_inbound_2_association", false, "index=10");
                         checkDisplayname(detailedColsWTuple[9], "inbound_2_outbound_1", false, "index=9");
                         checkDisplayname(detailedColsWTuple[3], "outbound_1", false, "index=3");
                     });

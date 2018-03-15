@@ -566,7 +566,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                         if (fkr.from_name) {
                             self._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
                         } else {
-                            self_displayname = self.table.displayname;
+                            self._displayname = self.table.displayname;
                         }
                     } else {
                         fkr = self.foreignKeys[1].obj;
