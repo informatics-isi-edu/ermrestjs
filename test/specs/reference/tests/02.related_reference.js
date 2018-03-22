@@ -132,7 +132,8 @@ exports.execute = function(options) {
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
                                 "id"
-                            ], "choices":["9003"]}]}
+                            ], "choices":["9003"]}]},
+                            "reference_table: 9003 and Henry"
                         );
                     });
                 });

@@ -714,7 +714,26 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             } else if (self.isInboundForeignKey) {
                 self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length === 2);
             } else {
-                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
+
+                // attach the parent displayname TODO test this
+                var firstFk = self.foreignKeys[0], parentDisplayname;
+                if (firstFk.isInbound && firstFk.obj.to_name) {
+                    parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
+                } else if (!firstFk.isInbound && firstFk.obj.from_name) {
+                    parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
+                } else {
+                    parentDisplayname = this._baseReference.table.displayname;
+                }
+
+                var subset = "";
+                if (typeof self._mainTuple !== 'undefined') {
+                    subset = "?subset=" + module._fixedEncodeURIComponent(
+                        parentDisplayname.unformatted + ": " + self._mainTuple.displayname.unformatted
+                    );
+                }
+
+                self._reference = new Reference(module.parse(self.table.uri + subset), self.table.schema.catalog);
+                self._reference.parentDisplayname = parentDisplayname;
 
                 var source = [], i, fk, columns, noData = false;
 
