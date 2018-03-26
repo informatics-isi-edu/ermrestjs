@@ -126,10 +126,25 @@
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
                     "detailed": [
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
-                        ["reference_schema", "fk_inbound_related_to_reference"],
+                        {"source": [{"inbound": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"]},
                         ["reference_schema", "toname_fk_association_related_to_reference"],
-                        ["reference_schema", "id_fk_association_related_to_reference"],
+                        {"source": [
+                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                            "id"
+                        ]},
                         ["reference_schema", "extra_fk_association_related_to_reference"]
+                    ],
+                    "compact/select": [
+                        {"invalid": true},
+                        {"source": "id"},
+                        {"source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"]},
+                        {"source": [
+                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
+                            "id"
+                        ]}
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
@@ -321,6 +336,9 @@
                 },
                 {
                     "comment": "fk to inbound_related_reference_table",
+                    "names": [
+                        ["reference_schema", "fk_to_inbound_related_reference_table"]
+                    ],
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
                         "table_name": "association table with id",
@@ -482,6 +500,169 @@
                     "*" : {
                         "row_order": [{"column":"name", "descending":false}]
                     }
+                }
+            }
+        },
+        "sorted_table_w_fk": {
+            "table_name": "sorted_table_w_fk",
+            "schema_name": "reference_schema",
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "comment": "has column order",
+                    "names": [["reference_schema", "sorted_table_w_fk_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table_w_fk",
+                            "column_name": "fk1_col_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table_w_fk",
+                            "column_name": "fk1_col_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "*":  {
+                                    "column_order": ["id"]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "comment": "doesnt have column_order but referred table has row_order",
+                    "names": [["reference_schema", "sorted_table_w_fk_fk2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table_w_fk",
+                            "column_name": "fk2_col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table",
+                            "column_name": "id"
+                        }
+                    ]
+                },
+                {
+                    "comment": "doesnt have column_order",
+                    "names": [["reference_schema", "sorted_table_w_fk_fk3"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table_w_fk",
+                            "column_name": "fk3_col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id"
+                        }
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk1_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk1_col_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk2_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk3_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_w_order",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["col"]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_not_sortable",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col w space",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_w_slash/",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*": ["id", ["reference_schema", "sorted_table_w_fk_fk1"], ["reference_schema", "sorted_table_w_fk_fk2"], ["reference_schema", "sorted_table_w_fk_fk3"]]
                 }
             }
         },

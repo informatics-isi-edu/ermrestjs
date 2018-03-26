@@ -596,8 +596,10 @@ exports.execute = function (options) {
         });
 
         describe("Paging with sort based on foreignkey with null data ", function () {
+            // reference_schema_paging_table_no_sort_fk1
+            var fkHash = "bITRC1H37ph9chTodns5cw";
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-                      tableNameNoSort + "@sort(reference_schema_paging_table_no_sort_fk1,value%20x)";
+                      tableNameNoSort + "@sort(" + fkHash + ",value%20x)";
 
             var page, newRef;
             beforeAll(function (done) {

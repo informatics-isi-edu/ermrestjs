@@ -3,7 +3,7 @@ exports.execute = function(options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "reference_table",
-            inboudTableName = "inbound_related_reference_table",
+            inboundTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
             associationTableWithIDDisplayname = "association table displayname",
             AssociationTableWithExtra = "association_table_with_extra",
@@ -20,7 +20,7 @@ exports.execute = function(options) {
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
                 expect(test.ref.columns.map(function(col){
-                    return col.name;
+                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.name;
                 })).toEqual(test.expected);
             });
         }
@@ -42,294 +42,351 @@ exports.execute = function(options) {
             });
         });
 
-        it('should be defined and not empty.', function() {
-            expect(reference.related).toBeDefined();
-            expect(related).not.toEqual([]);
-        });
+        describe("related reference list, ", function () {
 
-        it('should only include visible foreign keys that are defined in the annotation.', function() {
-            expect(related.length).toBe(5);
-        });
+            describe('when visible foreign keys are not defined, ', function() {
+                var schemaName2 = "reference_schema_2",
+                tableName2 = "reference_table_no_order",
+                related2;
 
-        it('should not be labeled as association when table has extra columns.', function (){
-            expect(related[4]._table.name).toBe(AssociationTableWithExtra);
-        });
+                var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName2 + ":" + tableName2;
 
-        it('.origFKR should have the correct value', function() {
-            expect(related[0].origFKR.toString()).toBe("(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
-            expect(related[1].origFKR.toString()).toBe('(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)');
-            expect(related[2].origFKR.toString()).toBe('(id)=(reference_schema:association_table_with_toname:id_from_ref_table)');
-            expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
-        });
-
-        it('.origColumnName should have the correct value', function() {
-            expect(related[0].origColumnName).toBe("reference_schema_fromname_fk_inbound_related_to_reference");
-            expect(related[1].origColumnName).toBe("reference_schema_fk_inbound_related_to_reference");
-            expect(related[2].origColumnName).toBe("reference_schema_toname_fk_association_related_to_reference");
-            expect(related[3].origColumnName).toBe("reference_schema_id_fk_association_related_to_reference");
-        });
-
-        describe('for inbound foreign keys, ', function() {
-            it('should have the correct catalog, schema, and table.', function() {
-                expect(related[0]._location.catalog).toBe(catalog_id.toString());
-                expect(related[0]._table.schema.name).toBe(schemaName);
-                expect(related[0]._table.name).toBe(inboudTableName);
-            });
-
-            describe('.displayname, ', function() {
-                it('should use from_name when annotation is present.', function() {
-                    expect(related[0].displayname.value).toBe("from_name_value");
-                });
-
-                it('should use the name of the table when annotation is not present.', function() {
-                    expect(related[1].displayname.value).toBe("inbound_related_reference_table");
-                });
-            });
-
-            describe('.uri, ', function() {
-                var uri1 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
-                var uri2 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)";
-
-                describe("without tuple, ", function() {
-                    it('should be properly defiend based on schema and not include faceting.', function() {
-                        expect(related[0].location.uri).toBe(uri1);
-                    });
-                    
-                    it('should be encoded.', function() {
-                        expect(related[1].location.uri).toBe(uri2);
-                    });
-                });
-                
-                describe("with tuple defined, ", function () {
-                    it('should create the link using faceting.', function() {
-                        
-                        var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
-                            var loc = relatedWithTuple[index].location;
-                            expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
-                            expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
-                            expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
-                            expect(loc.queryParams['subset']).toBeDefined();
-                            expect(loc.queryParams['subset']).toBe(expectedQueryParam);
-                        }
-                        
-                        checkUri(0, "inbound_related_reference_table", [{
-                            "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
-                            "choices":["9003"]
-                        }], "to_name_value: 9003 and Henry");
-                        
-                        checkUri(1, "inbound_related_reference_table", [{
-                            "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
-                            "choices":["9003"]
-                        }], "reference_table: 9003 and Henry");
-                    });
-                });
-            });
-
-            describe(".parentDisplayname", function () {
-                it('should use to_name when annotation is present.', function () {
-                    expect(related[0].parentDisplayname.value).toBe("to_name_value");
-                });
-
-                it("should return current reference displayname when to_name is not defined.", function () {
-                    expect(related[1].parentDisplayname.value).toBe("reference_table");
-                });
-            });
-
-            it('.columns should be properly defiend based on schema and only in compact/brief context should not include foreign key columns that created the link.', function() {
-                checkReferenceColumns([{
-                    ref: related[0],
-                    expected: [
-                        ["reference_schema", "inbound_related_reference_key"].join("_"), 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), // the fk
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"), 
-                        ["reference_schema", "fk_inbound_related_to_reference"].join("_")
-                ]}, {
-                    ref: related[1].contextualize.compactBrief,
-                    expected: [
-                        "id", 
-                        ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), 
-                        ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
-                ]}]);
-            });
-
-            it('.derivedAssociationReference should be undefined', function() {
-                expect(related[0].derivedAssociationReference).toBeUndefined();
-                expect(related[1].derivedAssociationReference).toBeUndefined();
-            });
-
-            it('.read should return a Page object that is defined.', function(done) {
-                related[0].read(limit).then(function(response) {
-                    page = response;
-
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page._data[0].id).toBe(relatedEntityWithToNameId.toString());
-                    expect(page._data.length).toBe(limit);
-
-                    done();
-                }, function(err) {
-                    console.dir(err);
-                    done.fail();
-                });
-
-                related[1].read(limit).then(function(response) {
-                    page = response;
-
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page._data[0].id).toBe(relatedEntityId.toString());
-                    expect(page._data.length).toBe(limit);
-
-                    done();
-                }, function(err) {
-                    console.dir(err);
-                    done.fail();
-                });
-            });
-
-            it('Tuple.getAssociationRef should return null.', function() {
-                var a = page.tuples[0].getAssociationRef({});
-                expect(a).toBe(null);
-            });
-
-        });
-
-        describe('for pure and binary association foreign keys, ', function() {
-            var pageWithToName, pageWithID;
-
-            it('should have the correct catalog, schema, and table.', function (){
-                expect(related[2]._location.catalog).toBe(catalog_id.toString());
-                expect(related[2]._table.name).toBe(inboudTableName);
-            });
-
-            describe('.displayname, ', function () {
-                it('should use to_name when annotation is present.', function() {
-                  expect(related[2].displayname.value).toBe("to_name_value");
-                });
-
-                it('should use the displayname of assocation table when annotation is not present.', function() {
-                  expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
-                });
-            });
-            
-            describe('.uri ', function () {
-                it('.uri should be properly defiend based on schema.', function() {
-                    expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-                });
-
-                it('should be encoded.', function() {
-                    expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-                });
-            });
-
-            it('.derivedAssociationReference should be defined.', function() {
-                expect(related[2].derivedAssociationReference._table.name).toBe("association_table_with_toname");
-                expect(related[3].derivedAssociationReference._table.name).toBe("association table with id");
-            });
-
-            it('.read should return a Page object that is defined.', function(done) {
-                related[2].read(limit).then(function(response) {
-                    pageWithToName = response;
-
-                    expect(pageWithToName).toEqual(jasmine.any(Object));
-                    expect(pageWithToName._data[0].id).toBe("1");
-                    expect(pageWithToName._data.length).toBe(limit);
-
-
-                    related[3].read(limit).then(function(response) {
-                        pageWithID = response;
-
-                        expect(pageWithID).toEqual(jasmine.any(Object));
-                        expect(pageWithID._data[0].id).toBe("2");
-                        expect(pageWithID._data.length).toBe(limit);
-
+                beforeAll(function(done) {
+                    options.ermRest.resolve(noOrderUri, {
+                        cid: "test"
+                    }).then(function(response) {
+                        related2 = response.contextualize.detailed.related();
                         done();
                     }, function(err) {
                         console.dir(err);
                         done.fail();
                     });
-
-                }, function(err) {
-                    console.dir(err);
-                    done.fail();
                 });
 
-                
+                it('should include all foreign keys.', function() {
+                    expect(related2.length).toBe(4);
+                });
+
+                it('should be sorted by displayname.', function() {
+                    expect(related2[0].displayname.value).toBe("first_related");
+                });
+
+                it('should be sorted by order of key columns when displayname is the same.', function (){
+                    //NOTE: using the compactPath for checking the equality of reference
+                    var expected = "reference_schema_2:reference_table_no_order/(id_1,id_2)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_1,col_from_ref_no_order_2)";
+                    expect(related2[1].location.compactPath).toEqual(expected);
+                });
+
+                it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
+                    var expected = "reference_schema_2:reference_table_no_order/(id_2,id_3)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_3,col_from_ref_no_order_4)";
+                    expect(related2[2].location.compactPath).toEqual(expected);
+                });
             });
 
-            
-            it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
-                var url = options.url + "/catalog/" + catalog_id + "/entity/", ref;
+            describe("when visible foreign keys are defined, ", function () {
+                it('should be defined and not empty.', function() {
+                    expect(reference.related).toBeDefined();
+                    expect(related).not.toEqual([]);
+                });
 
-                ref = pageWithID.tuples[0].getAssociationRef({"id":9003});
-                expect(ref).not.toBe(null);
-                expect(ref.uri).toEqual(url+"reference_schema:association%20table%20with%20id/id%20from%20ref%20table=9003&id_from_inbound_related_table=2");
+                it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
+                    expect(related.length).toBe(5);
+                });
 
-                ref = pageWithToName.tuples[0].getAssociationRef({"id":9003});
-                expect(ref).not.toBe(null);
-                expect(ref.uri).toEqual(url + "reference_schema:association_table_with_toname/id_from_ref_table=9003&id_from_inbound_related_table=1");
-            });
+                describe("regarding column objects defining path.", function () {
+                    var pathRelated, compactSelectRef;
+                    var checkRelated = function (ref, schema, table, facet, subset) {
+                        expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
+                        expect(ref.table.name).toBe(table, "table missmatch.");
+                        expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
+                        expect(ref.location.queryParams['subset']).toBe(subset, "subset missmatch.");
+                    };
+                    beforeAll(function (done) {
+                        compactSelectRef = reference.contextualize.compactSelect;
+                        compactSelectRef.read(1).then(function (page) {
+                            pathRelated = compactSelectRef.related(page.tuples[0]);
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
 
-            it('Tuple.getAssociationRef should return null, if the given data is incomplete.', function() {
-                var ref = pageWithToName.tuples[0].getAssociationRef({"not the id":9003});
-                expect(ref).toBe(null);
+                    it ('should ignore the object if it doesn\'t have source or it is not a path (is from the same table).', function () {
+                        expect(pathRelated.length).toBe(2);
+                    });
+
+                    it ('should create the reference based on the given path and ignore the pure and binary assocation logic.', function () {
+                        checkRelated(
+                            pathRelated[0], "reference_schema", "association table with id",
+                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "id"], "choices": ["9003"]}]},
+                            "reference_table: 9003 and Henry"
+                        );
+                    });
+
+                    it ('should be able to support path with longer length.', function () {
+                        checkRelated(
+                            pathRelated[1], "reference_schema", "reference_table",
+                            {"and":[{"source":[
+                                {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
+                                {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
+                                {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
+                                "id"
+                            ], "choices":["9003"]}]},
+                            "reference_table: 9003 and Henry"
+                        );
+                    });
+                });
             });
         });
 
-        describe('when visible foreign keys are not defined, ', function() {
-            var schemaName2 = "reference_schema_2",
-                tableName2 = "reference_table_no_order",
-                related2;
+        describe("related reference APIs, ", function () {
+            it('should not be labeled as association when table has extra columns.', function (){
+                expect(related[4]._table.name).toBe(AssociationTableWithExtra);
+            });
 
-            var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/"
-                + schemaName2 + ":" + tableName2;
+            it('.origFKR should have the correct value', function() {
+                expect(related[0].origFKR.toString()).toBe("(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)");
+                expect(related[1].origFKR.toString()).toBe('(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)');
+                expect(related[2].origFKR.toString()).toBe('(id)=(reference_schema:association_table_with_toname:id_from_ref_table)');
+                expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
+            });
 
-            beforeAll(function(done) {
-                options.ermRest.resolve(noOrderUri, {
-                    cid: "test"
-                }).then(function(response) {
-                    related2 = response.contextualize.detailed.related();
+            it('.origColumnName should have the correct value', function() {
+                // reference_schema_fromname_fk_inbound_related_to_reference
+                expect(related[0].origColumnName).toBe("PR4OZcGXTWC6Ks0M5DyApg", "missmatch for index = 0");
+                // reference_schema_fk_inbound_related_to_reference
+                expect(related[1].origColumnName).toBe("KGpro4yqqeXx-MhE5ffcHw", "missmatch for index = 1");
+                //reference_schema_toname_fk_association_related_to_reference
+                expect(related[2].origColumnName).toBe("Ylt89GKG6OYi-dONpgwnHQ", "missmatch for index = 2");
+                //reference_schema_id_fk_association_related_to_reference
+                expect(related[3].origColumnName).toBe("OuEhMgnMPERmX59V2pkP0Q", "missmatch for index = 3");
+            });
+
+            describe('for inbound foreign keys, ', function() {
+                it('should have the correct catalog, schema, and table.', function() {
+                    expect(related[0]._location.catalog).toBe(catalog_id.toString());
+                    expect(related[0]._table.schema.name).toBe(schemaName);
+                    expect(related[0]._table.name).toBe(inboundTableName);
+                });
+
+                describe('.displayname, ', function() {
+                    it('should use from_name when annotation is present.', function() {
+                        expect(related[0].displayname.value).toBe("from_name_value");
+                    });
+
+                    it('should use the name of the table when annotation is not present.', function() {
+                        expect(related[1].displayname.value).toBe("inbound_related_reference_table");
+                    });
+                });
+
+                describe('.uri, ', function() {
+                    var uri1 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
+                    var uri2 = singleEnitityUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference%20with%20space)";
+
+                    describe("without tuple, ", function() {
+                        it('should be properly defiend based on schema and not include faceting.', function() {
+                            expect(related[0].location.uri).toBe(uri1);
+                        });
+
+                        it('should be encoded.', function() {
+                            expect(related[1].location.uri).toBe(uri2);
+                        });
+                    });
+
+                    describe("with tuple defined, ", function () {
+                        it('should create the link using faceting.', function() {
+
+                            var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
+                                var loc = relatedWithTuple[index].location;
+                                expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
+                                expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
+                                expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
+                                expect(loc.queryParams['subset']).toBeDefined();
+                                expect(loc.queryParams['subset']).toBe(expectedQueryParam);
+                            }
+
+                            checkUri(0, "inbound_related_reference_table", [{
+                                "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
+                                "choices":["9003"]
+                            }], "to_name_value: 9003 and Henry");
+
+                            checkUri(1, "inbound_related_reference_table", [{
+                                "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
+                                "choices":["9003"]
+                            }], "reference_table: 9003 and Henry");
+                        });
+                    });
+                });
+
+                describe(".parentDisplayname", function () {
+                    it('should use to_name when annotation is present.', function () {
+                        expect(related[0].parentDisplayname.value).toBe("to_name_value");
+                    });
+
+                    it("should return current reference displayname when to_name is not defined.", function () {
+                        expect(related[1].parentDisplayname.value).toBe("reference_table");
+                    });
+                });
+
+                it('.columns should be properly defiend based on schema and only in compact/brief context should not include foreign key columns that created the link.', function() {
+                    checkReferenceColumns([{
+                        ref: related[0],
+                        expected: [
+                            ["reference_schema", "inbound_related_reference_key"].join("_"),
+                            ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"), // the fk
+                            ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_"),
+                            ["reference_schema", "fk_inbound_related_to_reference"].join("_")
+                        ]}, {
+                            ref: related[1].contextualize.compactBrief,
+                            expected: [
+                                "id",
+                                ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
+                                ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
+                            ]}]);
+                        });
+
+                        it('.derivedAssociationReference should be undefined', function() {
+                            expect(related[0].derivedAssociationReference).toBeUndefined();
+                            expect(related[1].derivedAssociationReference).toBeUndefined();
+                        });
+
+                        it('.read should return a Page object that is defined.', function(done) {
+                            related[0].read(limit).then(function(response) {
+                                page = response;
+
+                                expect(page).toEqual(jasmine.any(Object));
+                                expect(page._data[0].id).toBe(relatedEntityWithToNameId.toString());
+                                expect(page._data.length).toBe(limit);
+
+                                done();
+                            }, function(err) {
+                                console.dir(err);
+                                done.fail();
+                            });
+
+                            related[1].read(limit).then(function(response) {
+                                page = response;
+
+                                expect(page).toEqual(jasmine.any(Object));
+                                expect(page._data[0].id).toBe(relatedEntityId.toString());
+                                expect(page._data.length).toBe(limit);
+
+                                done();
+                            }, function(err) {
+                                console.dir(err);
+                                done.fail();
+                            });
+                        });
+
+                        it('Tuple.getAssociationRef should return null.', function() {
+                            var a = page.tuples[0].getAssociationRef({});
+                            expect(a).toBe(null);
+                        });
+
+                    });
+
+            describe('for pure and binary association foreign keys, ', function() {
+                        var pageWithToName, pageWithID;
+
+                        it('should have the correct catalog, schema, and table.', function (){
+                            expect(related[2]._location.catalog).toBe(catalog_id.toString());
+                            expect(related[2]._table.name).toBe(inboundTableName);
+                        });
+
+                        describe('.displayname, ', function () {
+                            it('should use to_name when annotation is present.', function() {
+                                expect(related[2].displayname.value).toBe("to_name_value");
+                            });
+
+                            it('should use the displayname of assocation table when annotation is not present.', function() {
+                                expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
+                            });
+                        });
+
+                        describe('.uri ', function () {
+                            it('.uri should be properly defiend based on schema.', function() {
+                                expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                            });
+
+                            it('should be encoded.', function() {
+                                expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                            });
+                        });
+
+                        it('.derivedAssociationReference should be defined.', function() {
+                            expect(related[2].derivedAssociationReference._table.name).toBe("association_table_with_toname");
+                            expect(related[3].derivedAssociationReference._table.name).toBe("association table with id");
+                        });
+
+                        it('.read should return a Page object that is defined.', function(done) {
+                            related[2].read(limit).then(function(response) {
+                                pageWithToName = response;
+
+                                expect(pageWithToName).toEqual(jasmine.any(Object));
+                                expect(pageWithToName._data[0].id).toBe("1");
+                                expect(pageWithToName._data.length).toBe(limit);
+
+
+                                related[3].read(limit).then(function(response) {
+                                    pageWithID = response;
+
+                                    expect(pageWithID).toEqual(jasmine.any(Object));
+                                    expect(pageWithID._data[0].id).toBe("2");
+                                    expect(pageWithID._data.length).toBe(limit);
+
+                                    done();
+                                }, function(err) {
+                                    console.dir(err);
+                                    done.fail();
+                                });
+
+                            }, function(err) {
+                                console.dir(err);
+                                done.fail();
+                            });
+
+
+                        });
+
+
+                        it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {
+                            var url = options.url + "/catalog/" + catalog_id + "/entity/", ref;
+
+                            ref = pageWithID.tuples[0].getAssociationRef({"id":9003});
+                            expect(ref).not.toBe(null);
+                            expect(ref.uri).toEqual(url+"reference_schema:association%20table%20with%20id/id%20from%20ref%20table=9003&id_from_inbound_related_table=2");
+
+                            ref = pageWithToName.tuples[0].getAssociationRef({"id":9003});
+                            expect(ref).not.toBe(null);
+                            expect(ref.uri).toEqual(url + "reference_schema:association_table_with_toname/id_from_ref_table=9003&id_from_inbound_related_table=1");
+                        });
+
+                        it('Tuple.getAssociationRef should return null, if the given data is incomplete.', function() {
+                            var ref = pageWithToName.tuples[0].getAssociationRef({"not the id":9003});
+                            expect(ref).toBe(null);
+                        });
+                    });
+
+            it('when table has alternative tables, should not include self-link to the base.', function (done) {
+                var schemaName3 = "reference_schema_2",
+                tableName3 = "table_w_alternate";
+
+                var tableWAlternateUri = options.url + "/catalog/" + catalog_id + "/entity/"
+                + schemaName3 + ":" + tableName3;
+
+                options.ermRest.resolve(tableWAlternateUri, {cid: "test"}).then(function(response) {
+                    var rel = response.related();
+                    expect(rel.length).toBe(0);
                     done();
                 }, function(err) {
                     console.dir(err);
                     done.fail();
                 });
             });
-
-            it('should include all foreign keys.', function() {
-                expect(related2.length).toBe(4);
-            });
-
-            it('should be sorted by displayname.', function() {
-                expect(related2[0].displayname.value).toBe("first_related");
-            });
-
-            it('should be sorted by order of key columns when displayname is the same.', function (){
-                //NOTE: using the compactPath for checking the equality of reference
-                var expected = "reference_schema_2:reference_table_no_order/(id_1,id_2)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_1,col_from_ref_no_order_2)";
-                expect(related2[1].location.compactPath).toEqual(expected);
-            });
-
-            it('should be sorted by order of foreign key columns when displayname and order of key columns is the same.', function() {
-                var expected = "reference_schema_2:reference_table_no_order/(id_2,id_3)=(reference_schema_2:related_reference_no_order:col_from_ref_no_order_3,col_from_ref_no_order_4)";
-                expect(related2[2].location.compactPath).toEqual(expected);
-            });
         });
 
-        it('when table has alternative tables, should not include self-link to the base.', function (done) {
-            var schemaName3 = "reference_schema_2",
-                tableName3 = "table_w_alternate";
-                
-            var tableWAlternateUri = options.url + "/catalog/" + catalog_id + "/entity/"
-                + schemaName3 + ":" + tableName3;
 
-            options.ermRest.resolve(tableWAlternateUri, {cid: "test"}).then(function(response) {
-                var rel = response.related();
-                expect(rel.length).toBe(0);
-                done();
-            }, function(err) {
-                console.dir(err);
-                done.fail();
-            });
-        });
 
     });
 };

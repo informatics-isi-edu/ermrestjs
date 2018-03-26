@@ -202,7 +202,7 @@ exports.execute = function (options) {
                 expect(compactColumns[15].table.name).toBe("table_w_composite_key");
             });
 
-            it('for pseudoColumns that are inboud foreign key, should return the foreign key table.', function () {
+            it('for pseudoColumns that are inbound foreign key, should return the foreign key table.', function () {
                 expect(detailedColumns[3].table.name).toEqual("inbound_related_to_columns_table_2");
             });
 
@@ -218,19 +218,18 @@ exports.execute = function (options) {
         });
 
         describe('.name, ', function () {
-            it('for pseudoColumns, ', function () {
-                it('should use constraint name.', function () {
-                    expect(compactColumns[0].name).toBe(["columns_schema", "ref_table_outbound_fks_key"].join(":"));
-                    expect(compactColumns[13].name).toBe(["columns_schema", "outbound_fk_8"].join(":"));
-                    expect(detailedColumns[3].name).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"));
-                });
-
-                it('should make sure that the chosen name is unique.', function () {
-                    expect(compactColumns[14].name).toBe(["columns_schema", "outbound_fk_7"].join(":")+"1");
-                });
+            it('for pseudoColumns, should return a unique and deterministic string.', function () {
+                //ref_table_outbound_fks_key
+                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw");
+                //outbound_fk_8
+                expect(compactColumns[13].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ");
+                //inbound_related_to_columns_table_2_fkey
+                expect(detailedColumns[3].name).toBe("9o1FsRzRkFNpnwdeNpXRQQ");
+                //outbound_fk_7
+                expect(compactColumns[14].name).toBe("9CKS172K3jKYzR5qgRLvVw");
             });
 
-            it('for other columns should return the base column\'s type.', function () {
+            it('for other columns should return the base column\'s name.', function () {
                 expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
             });
         });
@@ -262,7 +261,7 @@ exports.execute = function (options) {
                             checkDisplayname(compactColumns[13].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
                             checkDisplayname(compactColumns[14].displayname, "table_w_composite_key (col 5, col_4)", false);
                         });
-                    })
+                    });
 
                 });
             });
@@ -578,12 +577,15 @@ exports.execute = function (options) {
 
                         it("otherwise should use the provided data.", function () {
                             mainEntityData = {"fk1": 1234};
+
+                            // [columns_schema, fk_position_predefined]: MyksuZoB9y39uSQrFB0qww
+                            // [columns_schema, fk_position_user_defined]: WiH8M8FkXJN2qlywr826jA
                             foreignKeyData = {
-                                "columns_schema_fk_position_predefined": {
+                                "MyksuZoB9y39uSQrFB0qww": {
                                     "int_value": 4321,
                                     "id": 1
                                 },
-                                "columns_schema_fk_position_user_defined": {
+                                "WiH8M8FkXJN2qlywr826jA": {
                                     "int_value": 1235,
                                     "id": 2
                                 }

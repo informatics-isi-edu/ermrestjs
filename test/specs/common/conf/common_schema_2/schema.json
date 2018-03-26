@@ -1,7 +1,7 @@
 {
     "tables": {
         "table_1_schema_2": {
-            "comment": "has inboud fk from table_2_schema_1",
+            "comment": "has inbound fk from table_2_schema_1",
             "kind": "table",
             "table_name": "table_1_schema_2",
             "keys": [

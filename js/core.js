@@ -971,6 +971,14 @@
             return this._rowDisplayKeys[context];
         },
 
+        /**
+         * uri to the table in ermrest with entity api
+         * @type {string}
+         */
+        get uri () {
+            return this._uri;
+        },
+
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
@@ -2407,6 +2415,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonKey.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2418,19 +2427,27 @@
             } catch (exception){}
         }
 
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for key.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        this.name = this.constraint_names[0].join("_");
-
         this._wellFormed = {};
         this._display = {};
     }
 
     Key.prototype = {
         constructor: Key,
+
+        /**
+         * Unique name that can be used for referring to this key.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                var obj = this._constraintName;
+                if (this.simple) {
+                    obj = {source: this.colset.columns[0].name};
+                }
+                this._name = _generatePseudoColumnHashName(obj);
+            }
+            return this._name;
+        },
 
         /**
          * Indicates if the key is simple (not composite)
@@ -2707,32 +2724,65 @@
             return this._foreignKeys.length;
         },
 
+        /**
+         * It will return array of objects with the following attributes:
+         * - isPath: if true then source and column have values, otherwise the foreignKey
+         * - foreignKey: the foreignkey object
+         * - object: The facet object if it's a path.
+         * - column: the column object if it's a path.
+         * - name: the pseudo column name
+         * @private
+         * @param  {String} context
+         * @return {Object}
+         */
         _contextualize: function (context) {
             if(context in this._contextualize_cached) {
                 return this._contextualize_cached[context];
             }
 
-            var orders = -1;
+            var orders = -1, result = [];
             if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
             if (orders == -1) {
                 this._contextualize_cached[context] = -1;
-                return -1; // no annoation
+                return -1;
             }
 
-            for (var i = 0, result = [], fk; i < orders.length; i++) {
-                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
-                    continue; // the annotation value is not correct.
+            var fkNames = {}, col, colName, fk, i;
+            var addToList = function (obj) {
+                if (obj.name in fkNames) {
+                    return; // avoid duplicates
                 }
-                fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
-                if (fk !== null && result.indexOf(fk.object) == -1 && this._foreignKeys.indexOf(fk.object) != -1) {
-                    // avoid duplicate and if it's a valid inbound fk of this table.
-                    result.push(fk.object);
+                fkNames[obj.name] = true; // make sure we don't add twice
+                result.push(obj);
+            };
+
+            for (i = 0; i < orders.length; i++) {
+                // inbound foreignkey
+                if(Array.isArray(orders[i])) {
+                    // valid input
+                    if (orders[i].length !== 2) continue;
+
+                    // valid fk
+                    fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
+                    if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
+                        colName = _generateForeignKeyName(fk.object, true);
+                        addToList({foreignKey: fk.object, name: colName});
+                    }
+                }
+                // path
+                else if (typeof orders[i] === "object" && orders[i].source) {
+                    col = _getFacetSourceColumn(orders[i].source, this._table, module._constraintNames);
+
+                    // valid source and also a path
+                    if (!col || !_isFacetSourcePath(orders[i].source)) continue;
+
+                    colName = _generatePseudoColumnName(orders[i], col);
+                    addToList({isPath: true, object: orders[i], column: col, name: colName});
                 }
             }
-
             this._contextualize_cached[context] = result;
             return result;
         }
@@ -2885,6 +2935,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonFKR.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2895,16 +2946,6 @@
                 }
             } catch (exception){}
         }
-
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for fk.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
-        // They will produce the same name. Is there any better way to generate this?
-        this.name = this.constraint_names[0].join("_");
-
 
         /**
          * @type {string}
@@ -2959,6 +3000,17 @@
 
     ForeignKeyRef.prototype = {
         constructor: ForeignKeyRef,
+
+        /**
+         * A unique nam that can be used for referring to this foreignkey.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                this._name = _generateForeignKeyName(this);
+            }
+            return this._name;
+        },
 
         /**
          * returns string representation of ForeignKeyRef object

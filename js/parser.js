@@ -1609,13 +1609,14 @@
                 }
 
                 // parse the source
-                if (Array.isArray(term.source)) {
+                if (_isFacetSourcePath(term.source)) {
                     path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
-                } else if (typeof term.source === "string"){
-                    col = term.source;
                 } else {
-                    return "";
+                    col = _getFacetSourceColumnStr(term.source);
+                    if (typeof col !== "string") {
+                        return "";
+                    }
                 }
 
                 // if the data-path was invalid, ignore this facet
@@ -1671,6 +1672,165 @@
         var ermrestFilter = parseAnd(json[andOperator]);
 
         return !ermrestFilter ? "" : ermrestFilter;
+    };
+
+    _isFacetSourcePath = function (source) {
+        return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
+    };
+
+    /**
+     * Returns the last foreignkey in the source path.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     * @param  {Object} source    the source object (path)
+     * @param  {String} catalogId catalog id
+     * @param  {Object} consNames constraint names defined (take a look at the note)
+     * @return {Object} has `obj` (the actual fk object), and `isInbound`
+     * @private
+     */
+    _getFacetSourceLastForeignKey = function (source, catalogId, consNames) {
+        if (!_isFacetSourcePath(source)) {
+            return null;
+        }
+
+        var lastJoin = source[source.length-2];
+        var isInbound = false, constraint;
+
+        if ("inbound" in lastJoin) {
+            isInbound = true;
+            constraint = lastJoin.inbound;
+        } else {
+            constraint = lastJoin.outbound;
+        }
+
+        return {
+            "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
+            "isInbound": isInbound
+        };
+    };
+
+    /**
+     * Returns an array of foreignkeys that are in the given source path.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     *
+     * @param  {Object} source    the source object (path)
+     * @param  {String} catalogId catalog id
+     * @param  {Object} consNames constraint names defined (take a look at the note)
+     * @return {Object[]} each object has `obj` (the actual fk object), and `isInbound`
+     * @private
+     */
+    _getFacetSourceForeignKeys = function (source, catalogId, consNames) {
+        var res = [];
+        if (_isFacetSourcePath(source)) {
+            var isInbound = false, constraint;
+            for (var i = 0; i < source.length - 1; i++) {
+                if ("inbound" in source[i]) {
+                    isInbound = true;
+                    constraint = source[i].inbound;
+                } else {
+                    isInbound = false;
+                    constraint = source[i].outbound;
+                }
+
+                res.push({
+                    "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
+                    "isInbound": isInbound
+                });
+            }
+        }
+        return res;
+    };
+
+    /**
+     * get facet's source column string
+     * @param  {Object} source source object
+     * @return {string|Object}
+     * @private
+     */
+    _getFacetSourceColumnStr = function (source) {
+        return Array.isArray(source) ? source[source.length-1] : source;
+    };
+
+    /**
+     * Given the source object, validates the path and returns the corresponding column object.
+     * It will return `false` if the source is invalid.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     *
+     * @private
+     *
+     * @param  {Object} source    source object
+     * @param  {ERMrest.Table} table the starting table of the path
+     * @param  {object} consNames The constraint names (will be used for constraint lookup)
+     * @return {ERMrest.Column|false}
+     */
+    _getFacetSourceColumn = function (source, table, consNames) {
+        var colName, colTable = table;
+
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+
+        // from 0 to source.length-1 we have paths
+        if (_isFacetSourcePath(source)) {
+            var fk, i, isInbound, constraint, fkObj;
+            for (i = 0; i < source.length - 1; i++) {
+
+                if ("inbound" in source[i]) {
+                    constraint = source[i].inbound;
+                    isInbound = true;
+                } else if ("outbound" in source[i]) {
+                    constraint = source[i].outbound;
+                    isInbound = false;
+                } else {
+                    // given object was invalid
+                    return false;
+                }
+
+                fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
+
+                // constraint name was not valid
+                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    return false;
+                }
+
+                fk = fkObj.object;
+
+                // inbound
+                if (isInbound && fk.key.table === colTable) {
+                    colTable = fk._table;
+                }
+                // outbound
+                else if (!isInbound && fk._table === colTable) {
+                    colTable = fk.key.table;
+                }
+                else {
+                    // the given object was not valid
+                    return false;
+                }
+            }
+            colName = source[source.length-1];
+        } else {
+            colName = _getFacetSourceColumnStr(source);
+        }
+
+        try {
+            return colTable.columns.get(colName);
+        } catch (exp) {
+            return false;
+        }
+
     };
 
     /**

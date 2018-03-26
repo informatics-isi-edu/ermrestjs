@@ -23,7 +23,7 @@ HEADER=$(JS)/header.js
 FOOTER=$(JS)/footer.js
 HEADER_FOOTER= $(HEADER) \
 			   $(FOOTER)
-			   
+
 SOURCE=$(HEADER) \
 	   $(JS)/core.js \
 	   $(JS)/datapath.js \
@@ -33,6 +33,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
+	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \
 	   $(FOOTER) \
 	   $(JS)/hatrac.js \

@@ -151,15 +151,15 @@
                             {"source": "*", "choices": ["test"]},
                             {"source": "id", "ux_mode": "choices", "choices": ["1"]},
                             {"source": "int_col", "ranges": [{"min": -2}]},
-                            {"source": "float_col", "ux_mode": "invalid mode"},
+                            {"source": ["float_col"], "ux_mode": "invalid mode"},
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
                             {"source": "text_col", "ux_mode": "invalid mode"},
                             {"source": "longtext_col"},
                             {"source": "markdown_col"},
                             {"source": "boolean_col"},
-                            {"source": "json_col"},
-                            {"source": "jsonb_col"},
+                            {"source": ["json_col"]},
+                            {"source": ["jsonb_col"]},
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "open": true},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "term"]},
@@ -211,7 +211,7 @@
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "filter": [["faceting_schema", "main_fk1"], "id", "term"]
                 }
-            }  
+            }
         },
         "f2": {
             "kind": "table",
@@ -225,7 +225,7 @@
             "foreign_keys": [],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -301,7 +301,7 @@
             ],
             "column_definitions": [
                 {
-                    "name": "id_main", 
+                    "name": "id_main",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -327,7 +327,7 @@
             "foreign_keys": [],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -377,7 +377,7 @@
             ],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "int4"
