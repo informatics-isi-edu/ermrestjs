@@ -4202,12 +4202,8 @@
          * @desc count aggregate representation
          */
         get countAgg() {
-            if (!this._ref.location.hasJoin) {
-                return "cnt(*)";
-            }
-
             if (this._ref.table.shortestKey.length > 1) {
-                throw new Error("Since reference has a join, table must have a simple key.");
+                throw new Error("Table `" + this._ref.table.name + "`" + "doesn't have any simple keys. For getting count simple key is required.");
             }
 
             return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
