@@ -185,8 +185,6 @@
 
         this._location = location;
 
-        this._meta = catalog.meta;
-
         this._server = catalog.server;
 
         // if schema was not provided in the URI, find the schema

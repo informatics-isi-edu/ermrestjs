@@ -179,8 +179,6 @@
 
                 var catalog = new Catalog(self._server, id);
                 catalog._introspect().then(function () {
-                    return catalog._meta();
-                }).then(function getMeta() {
                     self._catalogs[id] = catalog;
                     defer.resolve(catalog);
                 }, function (error) {
@@ -223,12 +221,6 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
-
-        /*
-         * Value that holds the meta resource object returned from the server for the catalog
-         * @type null
-         */
-        this.meta = null;
     }
 
     Catalog.prototype = {
@@ -282,26 +274,6 @@
                 }
 
                 return self.schemas;
-            }, function (response) {
-                var error = module._responseToError(response);
-                return module._q.reject(error);
-            });
-        },
-
-        /**
-         *
-         * @private
-         * @return {Promise} a promise that returns the meta object if resolved or
-         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
-         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
-         */
-        _meta: function () {
-            // load all meta data
-            var self = this;
-            return this.server._http.get(this._uri + "/meta").then(function (response) {
-                self.meta = response.data;
-
-                return self.meta;
             }, function (response) {
                 var error = module._responseToError(response);
                 return module._q.reject(error);
