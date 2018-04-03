@@ -3589,65 +3589,7 @@
          */
         get previous() {
             if (this._hasPrevious) {
-                var loc = this._ref.location;
-                if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
-                    return null;
-                }
-
-                var newReference = _referenceCopy(this._ref);
-
-                // update paging by creating a new location
-                newReference._location = this._ref._location._clone();
-                if (!this._data || this._data.length === 0) {
-                    newReference._location.beforeObject = null;
-                } else {
-                    var firstRowData = this._data[0];
-                    var firstRowLinkedData = this._linkedData[0];
-                    var values = [], addedCols = {}, sortObjectNames = {};
-                    var col, fkData, data, i, j, sortCol, colName;
-
-                    for (i = 0; i < loc.sortObject.length; i++) {
-                        colName = loc.sortObject[i].column;
-
-                        try {
-                            col = newReference.getColumnByName(loc.sortObject[i].column);
-                        } catch (e) {
-                            return null; // column doesn't exist return null.
-                        }
-
-                        // avoid duplicate sort columns
-                       if (col.name in sortObjectNames) continue;
-                       sortObjectNames[col.name] = true;
-
-                        if (!col.sortable) {
-                            return null;
-                        }
-
-                        for (j = 0; j < col._sortColumns.length; j++) {
-                            sortCol = col._sortColumns[j];
-
-                            // avoid duplciate columns
-                            if (sortCol in addedCols) continue;
-                            addedCols[sortCol] = true;
-
-                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
-                                fkData = firstRowLinkedData[col.name];
-                                data = null;
-                                if (isObjectAndNotNull(fkData)) {
-                                    data =  fkData[sortCol.name];
-                                }
-                            } else {
-                                data = firstRowData[sortCol.name];
-                            }
-                            values.push(data);
-                        }
-
-                    }
-
-                    newReference._location.beforeObject = values;
-                }
-                newReference._location.afterObject = null;
-                return newReference;
+                return this._getSiblingReference(false);
             }
             return null;
         },
@@ -3677,67 +3619,99 @@
          */
         get next() {
             if (this._hasNext) {
-                var loc = this._ref.location;
-                if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
+                return this._getSiblingReference(true);
+            }
+            return null;
+        },
+
+        /**
+         * Returns previous or next page
+         * Clients should not directly use this. This is used in next and previous getters.
+         * @private
+         * @param  {Boolean} next whether we want the next page or previous
+         * @return {ERMrest.Reference}
+         */
+        _getSiblingReference: function(next) {
+            var loc = this._ref.location;
+
+            if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
+                return null;
+            }
+
+            /* This will return the values that should be used for after/before
+             * Let's assume the current page of data for the sort column is  [v1, v2, v3],
+             * - the next page will be anything after v3
+             * - the previous page will be anything before v1
+             * Based on this, the function will return the first/last value of
+             * the sort columns. So that it will be used for after/before in location object.
+             * It is also taking care of duplicate columns, so it will be aligned with the read logic.
+             */
+            var getNewPageValues = function (self) {
+
+                // if data doesn't exist, then we cannot get the next/previous page
+                if (!self._data || self._data.length === 0) {
                     return null;
                 }
 
-                var newReference = _referenceCopy(this._ref);
+                var rowIndex = next ? (self._data.length - 1) : 0;
+                var rowData = self._data[rowIndex];
+                var rowLinkedData = self._linkedData[rowIndex];
 
-                // update paging by creating a new location
-                newReference._location = this._ref._location._clone();
-                if (!this._data || this._data.length === 0) {
-                    newReference._location.afterObject = null;
-                } else {
-                    var lastRowData = this._data[this._data.length-1];
-                    var lastRowLinkedData = this._linkedData[this._linkedData.length-1];
-                    var values = [], addedCols = {}, sortObjectNames = {};
-                    var col, fkData, data, i, j, sortCol, colName;
+                var values = [], addedCols = {}, sortObjectNames = {};
+                var col, fkData, data, i, j, sortCol, colName;
 
-                    for (i = 0; i < loc.sortObject.length; i++) {
-                        colName = loc.sortObject[i].column;
+                for (i = 0; i < loc.sortObject.length; i++) {
+                    colName = loc.sortObject[i].column;
 
-                        try {
-                            col = newReference.getColumnByName(colName);
-                        } catch (e) {
-                            return null; // column doesn't exist return null.
-                        }
-
-                        // avoid duplicate sort columns
-                       if (col.name in sortObjectNames) continue;
-                       sortObjectNames[col.name] = true;
-
-                        if (!col.sortable) {
-                            return null;
-                        }
-
-                        for (j = 0; j < col._sortColumns.length; j++) {
-                            sortCol = col._sortColumns[j];
-
-                            // avoid duplciate columns
-                            if (sortCol in addedCols) continue;
-                            addedCols[sortCol] = true;
-
-                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
-                                fkData = lastRowLinkedData[col.name];
-                                data = null;
-                                if (isObjectAndNotNull(fkData)) {
-                                    data =  fkData[sortCol.name];
-                                }
-                            } else {
-                                data = lastRowData[sortCol.name];
-                            }
-                            values.push(data);
-                        }
-
+                    try {
+                        col = self._ref.getColumnByName(colName);
+                    } catch (e) {
+                        return null; // column doesn't exist return null.
                     }
 
-                    newReference._location.afterObject = values;
+                    // avoid duplicate sort columns
+                    if (col.name in sortObjectNames) continue;
+                    sortObjectNames[col.name] = true;
+
+                    if (!col.sortable) {
+                        return null;
+                    }
+
+                    for (j = 0; j < col._sortColumns.length; j++) {
+                        sortCol = col._sortColumns[j];
+
+                        // avoid duplciate columns
+                        if (sortCol in addedCols) continue;
+                        addedCols[sortCol] = true;
+
+                        if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
+                            fkData = rowLinkedData[col.name];
+                            data = null;
+                            if (isObjectAndNotNull(fkData)) {
+                                data =  fkData[sortCol.name];
+                            }
+                        } else {
+                            data = rowData[sortCol.name];
+                        }
+                        values.push(data);
+                    }
                 }
-                newReference._location.beforeObject = null;
-                return newReference;
+                return values;
+            };
+
+            var newReference = _referenceCopy(this._ref);
+
+            // update paging by creating a new location
+            newReference._location = this._ref._location._clone();
+
+            var pageValues = getNewPageValues(this);
+            if (pageValues === null) {
+                return null;
             }
-            return null;
+
+            newReference._location.afterObject = next ? pageValues : null;
+            newReference._location.beforeObject = next ? null : pageValues;
+            return newReference;
         },
 
         /**
