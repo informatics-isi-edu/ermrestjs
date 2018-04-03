@@ -837,12 +837,9 @@
                     this._beforeObject = [];
                     row = this._before.match(/@before\(([^\)]*)\)/)[1].split(",");
 
-                    if (row.length !== this.sortObject.length) {
-                        //TODO test this
-                        throw new module.InvalidSortCriteria("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.", this.path);
-                    }
-
-                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                    // NOTE the number of values might be different from the sort
+                    // because columns can be sorted based on value of multiple columns
+                    for (i = 0; i < row.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
                         value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         this._beforeObject.push(value);
@@ -887,12 +884,9 @@
                     this._afterObject = [];
                     row = this._after.match(/@after\(([^\)]*)\)/)[1].split(",");
 
-                    if (row.length !== this.sortObject.length) {
-                        //TODO test this
-                        throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.", this.path);
-                    }
-
-                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                    // NOTE the number of values might be different from the sort
+                    // because columns can be sorted based on value of multiple columns
+                    for (i = 0; i < row.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
                         value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         this._afterObject.push(value);

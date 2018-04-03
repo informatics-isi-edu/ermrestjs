@@ -2085,6 +2085,11 @@
                                 continue;
                             }
 
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
+                                continue;
+                            }
+
                             columnOrder.push(col);
                         } catch(exception) {}
                     }
@@ -2486,7 +2491,19 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             // column-order is just a list of column names
-                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                            var col = this.table.columns.get(annotation.column_order[i]);
+
+                            // json and jsonb are not sortable.
+                            if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
+                                continue;
+                            }
+
+                            columnOrder.push(col);
                         } catch(exception) {}
                     }
                 } else {
@@ -3049,7 +3066,19 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             // column-order is just a list of column names
-                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
+                            var col = this.key.table.columns.get(annotation.column_order[i]);
+
+                            // json and jsonb are not sortable.
+                            if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
+                                continue;
+                            }
+
+                            columnOrder.push(col);
                         } catch(exception) {}
                     }
                 } else {

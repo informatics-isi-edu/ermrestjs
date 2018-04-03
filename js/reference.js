@@ -1062,7 +1062,7 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit, contextHeaderParams) {
-            var defer = module._q.defer();
+            var defer = module._q.defer(), self = this;
 
             try {
 
@@ -1085,11 +1085,29 @@
                 });
 
                 var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
+                    locationPath = this.location.path,
                     _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                     sortMap = {}, // maps an alias to PseudoColumn, used for sorting
                     sortObject,  // the sort that will be accessible by this._location.sortObject
+                    sortColNames = {}, // to avoid adding duplciate columns
+                    sortObjectNames = {}, // to avoid computing sortObject logic more than once
+                    addSort,
                     sortCols,
                     col, i, j, k, l;
+
+                // make sure the page and modified sort object have teh same length
+                var checkPageObject = function (loc, sortObject) {
+                    sortObject = sortObject || loc.sortObject;
+                    if (loc.afterObject && loc.afterObject.length !== sortObject.length) {
+                        throw new module.InvalidPageCriteria("sort and after should have the same number of columns.", locationPath);
+                    }
+
+                    if (loc.beforeObject && loc.beforeObject.length !== sortObject.length) {
+                        throw new module.InvalidPageCriteria("sort and before should have the same number of columns.", locationPath);
+                    }
+
+                    return true;
+                };
 
                 /** Check the sort object. Does not change the `this._location` object.
                  *   - Throws an error if the column doesn't exist or is not sortable.
@@ -1114,15 +1132,21 @@
                         try {
                             col = this.getColumnByName(sortObject[i].column);
                         } catch (e) {
-                            // this will throw 404 error which we should change to InvalidSortCriteria
-                            throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  this.location.path);
+                            throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
                         }
-                        sortObject[i].column = col.name;
+                        // sortObject[i].column = col.name;
 
                         // column is not sortable
                         if (!col.sortable) {
-                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  this.location.path);
+                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  locationPath);
                         }
+
+                        // avoid computing columns twice
+                        if (sortObject[i].column in sortObjectNames) {
+                            continue;
+                        }
+                        sortObjectNames[sortObject[i].column] = true;
+                        addSort = true;
 
                         sortCols = col._sortColumns;
 
@@ -1139,14 +1163,18 @@
                                 sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
                             } else {
                                 colName = sortCols[j].name;
+                                if (colName in sortColNames) {
+                                    addSort = false;
+                                }
+                                sortColNames[colName] = true;
                             }
 
-                            // TODO need to manipulate the sort man!!!
-
-                            _modifiedSortObject.push({
-                                "column": colName,
-                                "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
-                            });
+                            if (addSort) {
+                                _modifiedSortObject.push({
+                                    "column": colName,
+                                    "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
+                                });
+                            }
                          }
                     }
                 }
@@ -1157,13 +1185,21 @@
 
                 // ermrest requires key columns to be in sort param for paging
                 if (typeof sortObject !== 'undefined') {
-                    sortCols = sortObject.map( function(sort) {return sort.column;});
-                    for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
-                        col = this._shortestKey[i].name;
-                        // add if key col is not in the sortby list
-                        if (sortCols.indexOf(col) === -1) {
-                            sortObject.push({"column": col, "descending":false}); // add key to sort
-                            _modifiedSortObject.push({"column": col, "descending":false});
+                    // if any of the sortCols is a key, then we don't neede to add the shortest key
+                    var hasKey = this._table.keys.all().some(function (key) {
+                        return key.colset.columns.every(function(c) {
+                            return (c.name in sortColNames);
+                        });
+                    });
+
+                    if (!hasKey) {
+                        for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
+                            col = this._shortestKey[i].name;
+                            // add if key col is not in the sortby list
+                            if (!(col in sortColNames)) {
+                                sortObject.push({"column": col, "descending":false}); // add key to sort
+                                _modifiedSortObject.push({"column": col, "descending":false});
+                            }
                         }
                     }
                 } else { // no sort provieded: use shortest key for sort
@@ -1256,15 +1292,20 @@
                 }
 
                 // insert @sort()
-                if (hasSort) {
+                if (hasSort) { // then we have modified the sort
                     // if sort is modified, we should use the modified sort Object for uri,
                     // and the actual sort object for this._location.sortObject
                     this._location.sortObject = _modifiedSortObject; // this will change the this._location.sort
                     uri = uri + this._location.sort;
+
                     this._location.sortObject = sortObject;
-                } else if (this._location.sort) {
+                } else if (this._location.sort) { // still there will be sort (shortestkey)
                     uri = uri + this._location.sort;
                 }
+
+                // check that page object is valid
+                checkPageObject(this._location, hasSort ? _modifiedSortObject : null);
+
 
                 // insert paging
                 if (this._location.paging) {
@@ -1341,6 +1382,8 @@
 
         /**
          * Return a new Reference with the new sorting
+         * TODO this should validate the given sort objects,
+         * but I'm not sure how much adding that validation will affect other apis and client
          *
          * @param {Object[]} sort an array of objects in the format
          * {"column":columname, "descending":true|false}
@@ -3381,6 +3424,7 @@
          * var fkData = this._linkedData[i][column.name];
          */
         this._linkedData = [];
+        this._data = [];
 
         var oneToOnePseudos = reference.columns.filter(function (c) {
             return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
@@ -3407,7 +3451,6 @@
 
             try {
                 // the attributegroup output
-                this._data = [];
                 for (i = 0; i < data.length; i++) {
                     this._data.push(data[i][mTableAlias][0]);
 
@@ -3430,6 +3473,10 @@
                     this._extraLinkedData = {};
                     for (j = fks.length - 1; j >= 0 ; j--) {
                         this._extraLinkedData[fks[j].name] = extraData["F"+(j+1)][0];
+                    }
+
+                    for (j = oneToOnePseudos.length - 1; j >= 0; j--) {
+                        this._extraLinkedData[oneToOnePseudos[j].name] = extraData["P"+ (j+1)][0];
                     }
                 }
 
@@ -3527,6 +3574,7 @@
 
         /**
          * A reference to the previous set of results.
+         * Will return null if the sortObject of reference is missing or is invalid
          *
          * Usage:
          * ```
@@ -3541,48 +3589,61 @@
          */
         get previous() {
             if (this._hasPrevious) {
+                var loc = this._ref.location;
+                if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
+                    return null;
+                }
+
                 var newReference = _referenceCopy(this._ref);
 
-                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
                 // update paging by creating a new location
-
                 newReference._location = this._ref._location._clone();
                 if (!this._data || this._data.length === 0) {
                     newReference._location.beforeObject = null;
                 } else {
-                    var values = [];
-                    for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                        var colName = newReference._location.sortObject[i].column;
+                    var firstRowData = this._data[0];
+                    var firstRowLinkedData = this._linkedData[0];
+                    var values = [], addedCols = {}, sortObjectNames = {};
+                    var col, fkData, data, i, j, sortCol, colName;
 
-                        // first row
-                        var data = this._data[0][colName];
-                        if (typeof data !== 'undefined') {
-                            // normal column
-                            values.push(data);
-                        } else {
-                            // pseudo column
-                            var pseudoCol, j, fkData;
-                            for (j = 0; j < this._ref.columns.length; j++) {
-                                if (this._ref.columns[j].name == colName) {
-                                    pseudoCol = this._ref.columns[j];
-                                    break;
-                                }
-                            }
+                    for (i = 0; i < loc.sortObject.length; i++) {
+                        colName = loc.sortObject[i].column;
 
-                            for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                                if (pseudoCol.isForeignKey || (pseudoCol.isPathColumn && pseudoCol.isUnique && pseudoCol.hasPath)) {
-                                    data = null;
-                                    fkData = this._linkedData[0][colName];
-                                    if (isObjectAndNotNull(fkData)) {
-                                        data = fkData[pseudoCol._sortColumns[j].name];
-                                    }
-                                } else {
-                                    data = this._data[0][pseudoCol._sortColumns[j].name];
-                                }
-                                values.push(data);
-                            }
+                        try {
+                            col = newReference.getColumnByName(loc.sortObject[i].column);
+                        } catch (e) {
+                            return null; // column doesn't exist return null.
                         }
+
+                        // avoid duplicate sort columns
+                       if (col.name in sortObjectNames) continue;
+                       sortObjectNames[col.name] = true;
+
+                        if (!col.sortable) {
+                            return null;
+                        }
+
+                        for (j = 0; j < col._sortColumns.length; j++) {
+                            sortCol = col._sortColumns[j];
+
+                            // avoid duplciate columns
+                            if (sortCol in addedCols) continue;
+                            addedCols[sortCol] = true;
+
+                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
+                                fkData = firstRowLinkedData[col.name];
+                                data = null;
+                                if (isObjectAndNotNull(fkData)) {
+                                    data =  fkData[sortCol.name];
+                                }
+                            } else {
+                                data = firstRowData[sortCol.name];
+                            }
+                            values.push(data);
+                        }
+
                     }
+
                     newReference._location.beforeObject = values;
                 }
                 newReference._location.afterObject = null;
@@ -3601,6 +3662,7 @@
 
         /**
          * A reference to the next set of results.
+         * Will return null if the sortObject of reference is missing or is invalid
          *
          * Usage:
          * ```
@@ -3615,47 +3677,61 @@
          */
         get next() {
             if (this._hasNext) {
-                var newReference = _referenceCopy(this._ref);
+                var loc = this._ref.location;
+                if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
+                    return null;
+                }
 
-                // NOTE: this code assumes that sortObject is wellformed and correct (column names are valid).
+                var newReference = _referenceCopy(this._ref);
 
                 // update paging by creating a new location
                 newReference._location = this._ref._location._clone();
                 if (!this._data || this._data.length === 0) {
                     newReference._location.afterObject = null;
                 } else {
-                    var values = [];
-                    for (var i = 0; i < newReference._location.sortObject.length; i++) {
-                        var colName = newReference._location.sortObject[i].column;
+                    var lastRowData = this._data[this._data.length-1];
+                    var lastRowLinkedData = this._linkedData[this._linkedData.length-1];
+                    var values = [], addedCols = {}, sortObjectNames = {};
+                    var col, fkData, data, i, j, sortCol, colName;
 
-                        // last row
-                        var data = this._data[this._data.length-1][colName];
-                        if (typeof data !== 'undefined') {
-                            // normal column
-                            values.push(data);
-                        } else {
-                            // pseudo column
-                            var pseudoCol, j, fkData;
-                            for (j = 0; j < this._ref.columns.length; j++) {
-                                if (this._ref.columns[j].name == colName) {
-                                    pseudoCol = this._ref.columns[j];
-                                    break;
-                                }
-                            }
-                            for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                                if (pseudoCol.isForeignKey || (pseudoCol.isPathColumn && pseudoCol.isUnique && pseudoCol.hasPath)) {
-                                    data = null;
-                                    fkData = this._linkedData[this._linkedData.length-1][colName];
-                                    if (isObjectAndNotNull(fkData)) {
-                                        data =  fkData[pseudoCol._sortColumns[j].name];
-                                    }
-                                } else {
-                                    data = this._data[this._data.length-1][pseudoCol._sortColumns[j].name];
-                                }
-                                values.push(data);
-                            }
+                    for (i = 0; i < loc.sortObject.length; i++) {
+                        colName = loc.sortObject[i].column;
+
+                        try {
+                            col = newReference.getColumnByName(colName);
+                        } catch (e) {
+                            return null; // column doesn't exist return null.
                         }
+
+                        // avoid duplicate sort columns
+                       if (col.name in sortObjectNames) continue;
+                       sortObjectNames[col.name] = true;
+
+                        if (!col.sortable) {
+                            return null;
+                        }
+
+                        for (j = 0; j < col._sortColumns.length; j++) {
+                            sortCol = col._sortColumns[j];
+
+                            // avoid duplciate columns
+                            if (sortCol in addedCols) continue;
+                            addedCols[sortCol] = true;
+
+                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
+                                fkData = lastRowLinkedData[col.name];
+                                data = null;
+                                if (isObjectAndNotNull(fkData)) {
+                                    data =  fkData[sortCol.name];
+                                }
+                            } else {
+                                data = lastRowData[sortCol.name];
+                            }
+                            values.push(data);
+                        }
+
                     }
+
                     newReference._location.afterObject = values;
                 }
                 newReference._location.beforeObject = null;
