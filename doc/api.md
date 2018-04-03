@@ -2783,6 +2783,8 @@ or rejected with any of these errors:
 
 #### reference.sort(sort) ⇒ <code>Reference</code>
 Return a new Reference with the new sorting
+TODO this should validate the given sort objects,
+but I'm not sure how much adding that validation will affect other apis and client
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Reference</code> - A new reference with the new sorting  
@@ -3045,6 +3047,7 @@ Whether there is more entities before this page
 
 #### page.previous : [<code>Reference</code>](#ERMrest.Reference) \| <code>undefined</code>
 A reference to the previous set of results.
+Will return null if the sortObject of reference is missing or is invalid
 
 Usage:
 ```
@@ -3067,6 +3070,7 @@ Whether there is more entities after this page
 
 #### page.next : [<code>Reference</code>](#ERMrest.Reference) \| <code>undefined</code>
 A reference to the next set of results.
+Will return null if the sortObject of reference is missing or is invalid
 
 Usage:
 ```
@@ -5672,6 +5676,8 @@ or rejected with any of these errors:
 
 #### reference.sort(sort) ⇒ <code>Reference</code>
 Return a new Reference with the new sorting
+TODO this should validate the given sort objects,
+but I'm not sure how much adding that validation will affect other apis and client
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Reference</code> - A new reference with the new sorting  

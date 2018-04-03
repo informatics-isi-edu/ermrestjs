@@ -2080,8 +2080,13 @@
                         try {
                             col = this.table.columns.get(annotation.column_order[i]);
 
-                            // json and jsonb are not sortable.
-                            if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
+                            // make sure it's sortable
+                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
                                 continue;
                             }
 
@@ -2125,7 +2130,7 @@
                 return display.columnOrder;
             }
 
-            if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
+            if (module._nonSortableTypes.indexOf(this.type.name) !== -1) {
                 return undefined;
             }
 
@@ -2486,7 +2491,19 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             // column-order is just a list of column names
-                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
+                            var col = this.table.columns.get(annotation.column_order[i]);
+
+                            // make sure it's sortable
+                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
+                                continue;
+                            }
+
+                            columnOrder.push(col);
                         } catch(exception) {}
                     }
                 } else {
@@ -3049,7 +3066,19 @@
                     for (var i = 0 ; i < annotation.column_order.length; i++) {
                         try {
                             // column-order is just a list of column names
-                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
+                            var col = this.key.table.columns.get(annotation.column_order[i]);
+
+                            // make sure it's sortable
+                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                                continue;
+                            }
+
+                            // avoid duplicates
+                            if (columnOrder.indexOf(col) !== -1) {
+                                continue;
+                            }
+
+                            columnOrder.push(col);
                         } catch(exception) {}
                     }
                 } else {
