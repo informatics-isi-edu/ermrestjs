@@ -397,6 +397,7 @@
 
                 var checkRefColumn = function (col) {
                     if (col.isPathColumn) {
+                        if (col.hasAggregate) return false;
                         return {"obj": col.columnObject, "column": col._baseCols[0]};
                     }
 
@@ -1083,7 +1084,7 @@
                 // creates a one-to-one relation between source and destination, hence
                 // we can just add them to the projection list to get the single value.
                 var oneToOnePseudos = this.columns.filter(function (c) {
-                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
+                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique && c.foreignKeys.length > 1;
                 });
 
                 var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
@@ -2421,9 +2422,10 @@
                 colAdded,
                 fkName,
                 sourceCol,
-                pseudoName,
+                pseudoNameObj, pseudoName, isHash,
+                isEntityMode,
                 colFks,
-                cols, col, fk, i, j;
+                ignore, cols, col, fk, i, j;
 
             var context = this._context;
 
@@ -2463,6 +2465,16 @@
                 return false;
             };
 
+            var pf = module._printf;
+            var wm = module._warningMessages;
+            var logCol = function (bool, message, i) {
+                if (bool) {
+                    console.log("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
+                    console.log(message);
+                }
+                return bool;
+            };
+
             // create a map of tableColumns to make it easier to find one
             this._table.columns.all().forEach(function (c) {
                 tableColumns[c.name] = true;
@@ -2490,7 +2502,7 @@
                                         // outbound foreignkey
                                         if (fk._table == this._table) {
                                             // avoid duplicate and same name in database
-                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol((fkName in consideredColumns), wm.DUPLICATE_FK, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                             }
@@ -2504,13 +2516,15 @@
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, fkName));
                                             }
+                                        } else {
+                                            console.log(wm.FK_NOT_RELATED);
                                         }
                                     }
                                     break;
                                 case module._constraintTypes.KEY:
                                     fk = fk.object;
                                     // key is in this table, and avoid duplicate
-                                    if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col) && fk.table == this._table) {
+                                    if (!logCol((fkName in consideredColumns), wm.DUPLICATE_KEY, i) && !nameExistsInTable(fkName, col) && fk.table == this._table) {
                                         consideredColumns[fkName] = true;
                                         // if in edit context: add its constituent columns
                                         if (module._isEntryContext(this._context)) {
@@ -2535,28 +2549,39 @@
                     // pseudo-column
                     else if (typeof col === "object") {
                         // in edit or invalid source
-                        if (module._isEntryContext(this._context) || !col.source) continue;
+                        ignore = logCol(module._isEntryContext(this._context), wm.NO_PSEUDO_IN_ENTRY, i) ||
+                                 logCol(!col.source, wm.INVALID_SOURCE, i);
+
+                        if (ignore) continue;
 
                         // check the path and get the column object
                         sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
 
                         // invalid source
-                        if (!sourceCol) {
+                        if (logCol(!sourceCol, wm.INVALID_SOURCE)) {
                             continue;
                         }
 
                         // generate appropriate name for the given object
-                        pseudoName = _generatePseudoColumnName(col, sourceCol);
+                        pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
+                        pseudoName = pseudoNameObj.name;
+                        isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
 
-                        // avoid duplicates, hide the column/foreignkey and make sure
-                        // the generated hash is not in the database
-                        invalid = (pseudoName in consideredColumns) ||
-                                  (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
-                                  (_isFacetSourcePath(col.source) && nameExistsInTable(pseudoName, col)) ||
-                                  hideFKRByName(pseudoName);
+                        // invalid/hidden pseudo-column:
+                        // 1. duplicate
+                        // 2. column/foreignkey that needs to be hidden.
+                        // 3. The generated hash is a column for the table in database
+                        // 4. invalid aggregate function
+                        // 5. in entity mode with scalar aggregate functions
+                        ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
+                                 hideFKRByName(pseudoName) ||
+                                 (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
+                                 logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
+                                 logCol((module._pseudoColScalarAggregateFns.indexOf(col.aggregate) !== -1 && _isFacetEntityMode(col, sourceCol)), wm.NO_SCALAR_AGG_IN_ENT, i) ||
+                                 (isHash && nameExistsInTable(pseudoName, col));
 
                         // avoid duplciates and hide the column
-                        if (!invalid) {
+                        if (!ignore) {
                             consideredColumns[pseudoName] = true;
                             this._referenceColumns.push(new PseudoColumn(this, sourceCol, col, pseudoName, tuple));
                         }
@@ -2569,11 +2594,14 @@
                         } catch (exception) {}
 
                         // if column is not defined, processed before, or should be hidden
-                        if (typeof col != "object" || col === null || (col.name in consideredColumns) || hideColumn(col)) {
-                                continue;
+                        ignore = logCol(typeof col != "object" || col === null, wm.INVALID_COLUMN, i) ||
+                                 logCol((col.name in consideredColumns), wm.DUPLICATE_COLUMN, i) ||
+                                 hideColumn(col);
+
+                        if (!ignore) {
+                            consideredColumns[col.name] = true;
+                            addColumn(col);
                         }
-                        consideredColumns[col.name] = true;
-                        addColumn(col);
                     }
                 }
             }

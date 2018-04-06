@@ -2,7 +2,7 @@
  * The structure of table and contexts used:
  * main -> f1 -> f2
  * - detailed context visible columns:
- * 0: id (none pseudo)
+ * 0: main_table_id_col (none pseudo)
  * 1: col
  * 2: id (entity mode) - uAu3dAKI_aHyAYkDdaYMjw
  * 3: main_fk1 (entity mode) - xRrChcQgxGIr0CNyYQtQ0Q
@@ -13,6 +13,11 @@
  * 8: association (entity mode) - gNTPCP0bGB0GRwFKEATipw
  * 9: association -> inbound_2_fk1 (entity mode) - nGwW9Kpx5sLf8cpX-24WNQ
  * 10: main -> association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic)
+ * 11: same as 8 with `cnt` aggregate
+ * 12: same as 9 with `cnt_d` aggregate
+ * 13: same as 10 in non-entity mode with `min` aggregate
+ * 14: col - max
+ * 15: inbound for testing long aggregate request
  *
  * - related entities:
  * 0: inbound_3_outbound_1_fk1 (length 1)
@@ -33,10 +38,10 @@ exports.execute = function (options) {
             detailedContext = "detailed";
 
         var mainEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + tableName + "@sort(id)";
+            schemaName + ":" + tableName + "@sort(main_table_id_col)";
 
         var invalidEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + invalidAnnotTableName + "/id=01";
+            schemaName + ":" + invalidAnnotTableName + "/main_table_id_col=01";
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -75,20 +80,21 @@ exports.execute = function (options) {
 
         var detailedExpectedValue = [
             '01', '<p>01: col val 01</p>\n',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/id=01">01</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/id=01">01</a>',
             '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=01">01</a>',
-            '01', '', '', '', ''
+            '01', '', '', '', '', '', '', '', '', ''
         ];
 
         var detailedExpectedNames = [
-            'id', 'col', 'uAu3dAKI_aHyAYkDdaYMjw', 'xRrChcQgxGIr0CNyYQtQ0Q',
-            'o7Gpk7dRlnzNv3_JjhqDIg', 'CaEhWBd7gSjuYCLun-8D-A', '1EC_6-rbhKc3tIjczjq1fQ',
-            'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
-            "0utuimdZvz8kTU4GI7tzWw"
+             'main_table_id_col', 'col', '06fr6g_9dDm8WuAmEirSRg', 'xRrChcQgxGIr0CNyYQtQ0Q',
+             'o7Gpk7dRlnzNv3_JjhqDIg', 'CaEhWBd7gSjuYCLun-8D-A', '1EC_6-rbhKc3tIjczjq1fQ',
+             'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
+             '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
+             'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'MJVZnQ5mBRdCFPfjIOMvkA'
         ];
 
-        var mainRef, mainRefDetailed, invalidRef, detailedCols, detailedColsWTuple, mainTuple;
+        var mainRef, mainRefDetailed, invalidRef, detailedCols, detailedColsWTuple, mainTuple, mainPage;
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
@@ -121,14 +127,18 @@ exports.execute = function (options) {
                 }]);
             });
 
-            it ("should avoid duplicates (based on source, and entity).", function () {
+            it ("should avoid duplicates (based on source, entity, and aggregate).", function () {
                 checkReferenceColumns([{
                     "ref": invalidRef.contextualize.compactSelect,
                     "expected": [
-                        "col",
+                        "col", "col", "col", "col", "col", // normal, min, max, cnt, cnt_d
                         "id",
-                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"],
-                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"] // entity false
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"],
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // entity false
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // cnt
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // cnt_d
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // min
+                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"]  // max
                     ]
                 }]);
             });
@@ -145,7 +155,7 @@ exports.execute = function (options) {
                     "ref": mainRef.contextualize.compactSelect,
                     "expected": [
                         "col",
-                        "id",
+                        "main_table_id_col",
                         ["pseudo_column_schema", "main_key1"].join("_"),
                         ["pseudo_column_schema", "main_fk1"].join("_"),
                         ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"),
@@ -155,8 +165,8 @@ exports.execute = function (options) {
                     "ref": mainRef.contextualize.compactBrief,
                     "expected": [
                         "col",
-                        "id", // this is the normal column
-                        "id", // this is the path column
+                        "main_table_id_col", // this is the normal column
+                        "main_table_id_col", // this is the path column
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             "id"
@@ -178,7 +188,7 @@ exports.execute = function (options) {
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
-                        "id", "col", "id", // the key
+                        "main_table_id_col", "col", "main_table_id_col", // the key
                         [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                         [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                         [
@@ -203,7 +213,21 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
                             "id",
                         ],
-                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"]
+                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                            "id",
+                        ],
+                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
+                        "col",
+                        [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"]
                     ]
                 }]);
             });
@@ -213,6 +237,7 @@ exports.execute = function (options) {
             describe ("reading a reference with path columns, ", function () {
                 it("read should handle path columns.", function (done) {
                     mainRefDetailed.read(1).then(function (page) {
+                        mainPage = page;
                         mainTuple = page.tuples[0];
                         expect(page.tuples[0].values).toEqual(detailedExpectedValue);
                         done();
@@ -311,7 +336,7 @@ exports.execute = function (options) {
                     return fc.dataSource;
                 })).toEqual(
                     [
-                        "id", "col", "id", // the key
+                        "main_table_id_col", "col", "main_table_id_col", // the key
                         [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                         [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                         [
@@ -384,6 +409,20 @@ exports.execute = function (options) {
                 });
             });
 
+            describe ('hasAggregate, ', function () {
+                it ("should return false if pseudo-column doesn't have aggregate function.", function () {
+                    for (var i = 1; i <= 10; i++) {
+                        expect(detailedColsWTuple[i].hasAggregate).toBe(false, "missmatch for index =" + i);
+                    }
+                });
+
+                it ("otherwise should return true.", function () {
+                    for (var i = 11; i <= 15; i++) {
+                        expect(detailedColsWTuple[i].hasAggregate).toBe(true, "missmatch for index =" + i);
+                    }
+                });
+            });
+
             describe('isUnique, ', function () {
                 it ('should return true if source doesn\'t have path', function () {
                     for (var i = 1; i < 3; i++) {
@@ -394,6 +433,12 @@ exports.execute = function (options) {
                 it ('should return true if source has path of all outbound fks.', function () {
                     for (var i = 3; i <= 6; i++) {
                         expect(detailedColsWTuple[i].isUnique).toBe(true, "missmatch for index =" + i);
+                    }
+                });
+
+                it ('should return false if it has aggregate', function () {
+                    for (var i = 11; i <= 15; i++) {
+                        expect(detailedColsWTuple[i].isUnique).toBe(false, "missmatch for index =" + i);
                     }
                 });
 
@@ -434,6 +479,12 @@ exports.execute = function (options) {
                     expect(detailedColsWTuple[8].isInboundForeignKey).toBe(true);
                 });
 
+                it ('should return false if hasAggregate.', function () {
+                    for (var i = 11; i <= 15; i++) {
+                        expect(detailedColsWTuple[i].isInboundForeignKey).toBe(false, "missmatch for index =" + i);
+                    }
+                });
+
                 it ("otherwise should return false.", function () {
                     detailedColsWTuple.forEach(function (col, i) {
                         if (i === 0) return;
@@ -458,6 +509,17 @@ exports.execute = function (options) {
             describe ("displayname, ", function () {
                 it ("if `markdown_name` is defined, should use it.", function () {
                     checkDisplayname(detailedColsWTuple[8], "<strong>association table</strong>", true);
+                });
+
+                describe("if it has aggreagte.", function () {
+                    it ('should append the aggregate function to the displayname.', function () {
+                        var aggregateDisplaynames = [
+                            'Number # id', 'Count Distinct id', 'Minimum id', 'Maximum col name', 'Number # foreign key column name to main'
+                        ];
+                        for (var i = 11; i <= 15; i++) {
+                            expect(detailedColsWTuple[i].displayname.value).toBe(aggregateDisplaynames[i-11], "missmatch for index =" + i);
+                        }
+                    });
                 });
 
                 describe("if it's not a path,", function () {
@@ -499,7 +561,9 @@ exports.execute = function (options) {
                         'main', 'main', 'main', 'outbound_1', 'outbound_1',
                         'outbound_1_outbound_1', 'outbound_1_outbound_1',
                         'inbound_1', 'inbound_2', 'inbound_2_outbound_1',
-                        'main_inbound_2_association'
+                        'main_inbound_2_association', 'inbound_2',
+                        'inbound_2_outbound_1', 'main_inbound_2_association',
+                        'main', 'inbound 4 long table name'
                     ]);
                 });
             });
@@ -511,7 +575,7 @@ exports.execute = function (options) {
                     });
 
                     it ("otherwise should return the column sort settings.", function () {
-                        checkSortable(detailedColsWTuple[0], true, ["id"]);
+                        checkSortable(detailedColsWTuple[0], true, ["main_table_id_col"]);
                     });
                 });
 
@@ -531,7 +595,7 @@ exports.execute = function (options) {
                 });
 
                 it ("otherwise should not be sortable.", function () {
-                    for (var i = 7; i <= 10; i++) {
+                    for (var i = 7; i <= 15; i++) {
                         checkSortable(detailedColsWTuple[i], false, [], "index=" + i);
                     }
                 });
@@ -545,12 +609,18 @@ exports.execute = function (options) {
                     });
                 });
 
+                it ("if aggregate is defined should return null.", function () {
+                    for (var i = 7; i <= 10; i++) {
+                        expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                    }
+                });
+
                 describe("if it doesn't have path.", function () {
                     it ("if in entity mode, should return the key value.", function () {
                         expect(detailedColsWTuple[2].formatPresentation(
-                            {"id": "121"},
+                            {"main_table_id_col": "121"},
                             "detailed"
-                        ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/id=121">121</a>');
+                        ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=121">121</a>');
                     });
 
                     it ("otherwise should return the underlying column value.", function () {
@@ -562,7 +632,7 @@ exports.execute = function (options) {
                         expect(detailedColsWTuple[1].formatPresentation(
                             "A col value",
                             "detailed",
-                            {formattedValues: {"col":"A value", "id": "1"}}
+                            {formattedValues: {"col":"A value", "main_table_id_col": "1"}}
                         ).value).toEqual('<p>1: A value</p>\n', "col missmatch.");
                     });
                 });
@@ -594,9 +664,77 @@ exports.execute = function (options) {
                 });
 
                 it ("otherwise (path), should return null.", function () {
-                    for (var i = 7; i <= 10; i++) {
-                        expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                    for (var i = 11; i < 15; i++) {
+                        expect(detailedColsWTuple[i].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
                     }
+                });
+            });
+
+            describe("getAggregatedValue, ", function () {
+                it ("should throw an error if column doesn't have aggregate.", function (done) {
+                    detailedColsWTuple[10].getAggregatedValue(mainPage).then(function () {
+                        done.fail("expected function to throw error");
+                    }).catch(function (e) {
+                        expect(e.message).toBe("this function should only be used when `hasAggregate` is true.", "error message missmatch.");
+                        done();
+                    });
+                });
+
+                it ("page should be given.", function (done) {
+                    detailedColsWTuple[11].getAggregatedValue().then(function () {
+                        done.fail("expected function to throw error");
+                    }).catch(function (e) {
+                        expect(e.message).toBe("page is required.", "error message missmatch.");
+                        done();
+                    });
+                });
+
+                it ("should return a list of values the same size as the given array.", function (done) {
+                    detailedColsWTuple[11].getAggregatedValue(mainPage).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual("5", "missmatch for column index=11");
+                        return detailedColsWTuple[12].getAggregatedValue(mainPage);
+                    }).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual("5", "missmatch for column index=12");
+                        return detailedColsWTuple[13].getAggregatedValue(mainPage);
+                    }).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual("1", "missmatch for column index=13");
+                        done();
+                    }).catch(function (e) {
+                        console.log(e);
+                        done.fail();
+                    });
+                });
+
+                it ("should handle aggregate from the same table.", function (done) {
+                    detailedColsWTuple[14].getAggregatedValue(mainPage).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual("col val 01");
+                        done();
+                    }).catch(function (e) {
+                        console.log(e);
+                        done.fail();
+                    });
+                });
+
+                it ("should handle big page of data.", function (done) {
+                    mainRefDetailed.read(22).then(function (page) {
+                        return detailedColsWTuple[15].getAggregatedValue(page);
+                    }).then(function (val) {
+                        // the whole intention of test was testing the logic of url limitation,
+                        // the values is not important. since all of them are just one row, it will
+                        // all be 1s.
+                        expect(val.length).toBe(22);
+                        val.forEach(function (v, i) {
+                            expect(v.value).toBe("1", "missmatch for value of index=" + i);
+                        });
+                        done();
+                    }).catch(function (e) {
+                        console.log(e);
+                        done.fail();
+                    });
                 });
             });
 
@@ -611,9 +749,9 @@ exports.execute = function (options) {
                     checkRelatedReference(
                         detailedColsWTuple[7].reference,
                         "inbound_1",
-                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'inbound_1_fk1' ]}, "id"], "choices": ["01"]}]},
-                        "(id)=(pseudo_column_schema:inbound_1:id)",
-                        "8Xgp-B0t26q61nJsPj8K2Q",
+                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'inbound_1_fk1' ]}, "main_table_id_col"], "choices": ["01"]}]},
+                        "(main_table_id_col)=(pseudo_column_schema:inbound_1:id)",
+                        "PVRyOIK9bsJ-vZIb2KQbqg",
                         "inbound_1 from_name",
                         "inbound_1 to_name",
                         "inbound related"
@@ -626,11 +764,11 @@ exports.execute = function (options) {
                             {"source": [
                                 {"inbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk2' ]},
                                 {"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]},
-                                "id"],
+                                "main_table_id_col"],
                             "choices": ["01"]}
                         ]},
-                        "(id)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
-                        "Ke1VPpRHeyXkuW4ohygQ9A",
+                        "(main_table_id_col)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
+                        "R_mEKSGa1TYGyQHxRu3fHg",
                         "<strong>association table</strong>",
                         "main",
                         "association"
@@ -639,9 +777,9 @@ exports.execute = function (options) {
                     checkRelatedReference(
                         detailedColsWTuple[10].reference,
                         "main_inbound_2_association",
-                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]}, "id"], "choices": ["01"]}]},
-                        "(id)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
-                        "Ke1VPpRHeyXkuW4ohygQ9A",
+                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]}, "main_table_id_col"], "choices": ["01"]}]},
+                        "(main_table_id_col)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
+                        "R_mEKSGa1TYGyQHxRu3fHg",
                         "main_inbound_2_association",
                         "main",
                         "inbound related 2"
@@ -682,7 +820,7 @@ exports.execute = function (options) {
                                 {"inbound":[ 'pseudo_column_schema', 'inbound_2_fk1' ]},
                                 {"inbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk2' ]},
                                 {"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]},
-                                "id"],
+                                "main_table_id_col"],
                             "choices": ["01"]}
                         ]},
                         "index=9"

@@ -355,9 +355,11 @@ to use for ERMrest JavaScript agents.
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
         * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+        * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
         * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
         * [new ForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.ForeignKeyPseudoColumn_new)
         * [.isPseudo](#ERMrest.ForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
@@ -3500,9 +3502,11 @@ TODO should be removed in favor of inputDisabled
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.hasPath](#ERMrest.PseudoColumn+hasPath) : <code>boolean</code>
     * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+    * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
     * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
@@ -3573,6 +3577,12 @@ If the pseudo-column is connected via a path to the table or not.
 List of foreignkeys on the path
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+hasAggregate"></a>
+
+#### pseudoColumn.hasAggregate : <code>boolean</code>
+If aggregate function is defined on the column.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+reference"></a>
 
 #### pseudoColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
@@ -3608,6 +3618,19 @@ Format the presentation value corresponding to this pseudo-column definition.
 | data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
 | context | <code>String</code> | the app context |
 | options | <code>Object</code> | include `formattedValues` |
+
+<a name="ERMrest.PseudoColumn+getAggregatedValue"></a>
+
+#### pseudoColumn.getAggregatedValue(page, contextHeaderParams) ⇒ <code>Promise</code>
+Returns a promise that gets resolved with list of aggregated values in the same
+order of tuples of the page that is passed.
+
+**Kind**: instance method of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| page | [<code>Page</code>](#ERMrest.Page) | the page object of main (current) refernece |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.ForeignKeyPseudoColumn"></a>
 

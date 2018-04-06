@@ -386,6 +386,11 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
         return nullValue;
     }
 
+    // has aggregate, we should get the value by calling aggregate function
+    if (this.hasAggregate) {
+        return nullValue;
+    }
+
     // not representing a row
     if (!this.isUnique) {
         return nullValue;
@@ -436,9 +441,171 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     return {isHTML: true, value: value, unformatted: unformatted};
 };
 
+/**
+ * Returns a promise that gets resolved with list of aggregated values in the same
+ * order of tuples of the page that is passed.
+ * @param  {ERMrest.Page} page               the page object of main (current) refernece
+ * @param {Object} contextHeaderParams the object that we want to log.
+ * @return {Promise}
+ */
+PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
+    var defer = module._q.defer(),
+        self = this,
+        promises = [], values = [],
+        mainTable = this._currentTable,
+        location = this._baseReference.location,
+        http = this._baseReference._server._http,
+        column = this._baseCols[0],
+        keyColName, keyColNameEncoded,
+        baseUri, uri, i, fk, str, projection;
+
+    // verify the input
+    try {
+        verify(this.hasAggregate, "this function should only be used when `hasAggregate` is true.");
+        verify(page && (page instanceof Page), "page is required.");
+        verify(page.reference.table === mainTable, "given page object must be from the base table.");
+    } catch (e) {
+        defer.reject(e);
+        return defer.promise;
+    }
+
+    // create the header
+    if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+        contextHeaderParams = {"action": "read/aggregate"};
+    }
+    var config = {
+        headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
+    };
+
+    var URL_LENGTH_LIMIT = 2048;
+
+    // return empty list if page is empty
+    if (page.tuples.length === 0) {
+        defer.resolve(values);
+        return defer.promise;
+    }
+
+    // make sure table has shortestkey of length 1
+    if (mainTable.shortestKey.length > 1) {
+        console.log("This function only works with tables that have at least a simple key.");
+        defer.resolve(values);
+        return defer.promise;
+    }
+
+    keyColName = mainTable.shortestKey[0].name;
+    keyColNameEncoded = module._fixedEncodeURIComponent(mainTable.shortestKey[0].name);
+
+    // generate the base url in the following format:
+    // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
+    var currTable = "T";
+    var baseTable = self.hasPath ? "M": currTable;
+    projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
+                 ";v:=" + self.columnObject.aggregate +
+                 "(" + currTable + ":" + module._fixedEncodeURIComponent(column.name) + ")";
+
+    baseUri =  [
+        location.service, "catalog", location.catalog, "attributegroup",
+        currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" +module._fixedEncodeURIComponent(self.table.name)
+    ].join("/") + "/";
+
+    // add the join (path from pseudoColumn's table to current table)
+    for (i = self.foreignKeys.length - 1; i >= 0; i--) {
+        fk = self.foreignKeys[i];
+        if (i === 0) baseUri += baseTable + ":=";
+        baseUri += fk.obj.toString(fk.isInbound, true) + "/";
+    }
+
+    // make sure just projection and base uri doesn't go over limit.
+    if (baseUri.length + projection.length >= URL_LENGTH_LIMIT) {
+        console.log("couldn't generate the requests because of url limitation");
+        defer.resolve(values);
+        return defer.promise;
+    }
+
+    // creates http request with the current uri
+    var addPromise = function () {
+        if (uri.charAt(uri.length-1) === ";") {
+            uri = uri.slice(0, -1);
+        }
+        promises.push(http.get(uri + projection, config));
+    };
+
+    // create the request urls
+    uri = baseUri;
+    for (i = 0; i < page.tuples.length; i++) {
+        str = keyColNameEncoded + "=" + page.tuples[i].data[keyColName] + ";";
+
+        // adding this will go over limit, create a request with the previous uri
+        if ((uri.length + str.length + projection.length > URL_LENGTH_LIMIT)) {
+            if (uri.length !== baseUri.length) {
+                addPromise();
+                uri = baseUri + str;
+            }
+        } else {
+            uri += str;
+
+            // if this was the last one, create a promise with it
+            if (i === page.tuples.length-1) {
+                addPromise();
+            }
+        }
+    }
+
+    // if adding any of the filters would go over url limit
+    if (promises.length === 0) {
+        console.log("couldn't generate the requests because of url limitation");
+        defer.resolve(values);
+        return defer.promise;
+    }
+
+    module._q.all(promises).then(function (response) {
+        var values = [],
+            result = [],
+            value, res, isHTML;
+
+        response.forEach(function (r) {
+            values = values.concat(r.data);
+        });
+
+        // make sure we're returning the result in the same order as input
+        page.tuples.forEach(function (t) {
+            // find the corresponding value in result
+            value = values.find(function (v) {
+                return v.c == t.data[keyColName];
+            });
+
+            // format the value
+            res = ""; isHTML = false;
+            if (value && value.v) {
+                if (["cnt", "cnt_d"].indexOf(self.columnObject.aggregate) !== -1) {
+                    res = module._formatUtils.printInteger(value.v);
+                } else {
+                    res = column.formatvalue(value.v, self._context);
+                    if (column.type.name === "markdown") {
+                        isHTML = true;
+                        res = module._formatUtils.printMarkdown(res);
+                    }
+                }
+            }
+            result.push({isHTML: isHTML, value: res});
+        });
+
+        defer.resolve(result);
+    }).catch(function (err) {
+        defer.reject(module._responseToError(err));
+    });
+
+    return defer.promise;
+};
+
 PseudoColumn.prototype._determineSortable = function () {
     this._sortColumns_cached = [];
     this._sortable = false;
+
+    // disable sort if it has aggregate
+    if (this.hasAggregate) {
+        return;
+    }
 
     if (!this.hasPath) {
         if (this.isEntityMode) {
@@ -505,7 +672,7 @@ PseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(PseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generatePseudoColumnName(this.columnObject, this._baseCols[0]);
+            this._name = _generatePseudoColumnName(this.columnObject, this._baseCols[0]).name;
         }
         return this._name;
     }
@@ -537,6 +704,19 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                         value: module._formatUtils.printMarkdown(self.columnObject.markdown_name, {inline:true}),
                         unformatted: self.columnObject.markdown_name,
                         isHTML: true
+                    };
+                    return;
+                }
+
+                if (self.hasAggregate) {
+                    Object.getOwnPropertyDescriptor(PseudoColumn.super, "displayname").get.call(self);
+                    var agIndex = module._pseudoColAggregateFns.indexOf(self.columnObject.aggregate);
+                    var name = module._pseudoColAggregateNames[agIndex];
+
+                    self._displayname =  {
+                        value: [name, self._displayname.value].join(" "),
+                        unformatted: [name, self._displayname.unformatted].join(" "),
+                        isHTML: self._displayname.isHTML
                     };
                     return;
                 }
@@ -604,9 +784,9 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 Object.defineProperty(PseudoColumn.prototype, "isUnique", {
     get: function () {
         if (this._isUnique === undefined) {
-            this._isUnique = !this.hasPath || this.columnObject.source.every(function (s, index, arr) {
+            this._isUnique = !this.hasAggregate && (!this.hasPath || this.columnObject.source.every(function (s, index, arr) {
                 return (index === arr.length - 1) || (("outbound" in s) && !("inbound" in s));
-            });
+            }));
         }
         return this._isUnique;
     }
@@ -696,6 +876,20 @@ Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
 });
 
 /**
+ * If aggregate function is defined on the column.
+ * @member {boolean} hasAggregate
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
+    get: function () {
+        if (this._hasAggregate === undefined) {
+            this._hasAggregate = module._pseudoColAggregateFns.indexOf(this.columnObject.aggregate) !== -1;
+        }
+        return this._hasAggregate;
+    }
+});
+
+/**
  * Returns a reference to the current pseudo-column
  * TODO needs to be changed when we get to use it. Currently this is how it behaves:
  * 1. If pseudo-column has no path, it will return the base reference.
@@ -715,7 +909,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length === 2);
             } else {
 
-                // attach the parent displayname TODO test this
+                // attach the parent displayname
                 var firstFk = self.foreignKeys[0], parentDisplayname;
                 if (firstFk.isInbound && firstFk.obj.to_name) {
                     parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
@@ -803,7 +997,7 @@ Object.defineProperty(PseudoColumn.prototype, "isInboundForeignKey", {
         if (this._isInboundForeignKey === undefined) {
             var isInbound = function (self) {
                 // make sure path has length one or two
-                if (!self.hasPath || self.foreignKeys.length > 2) {
+                if (!self.hasPath || !self.isEntityMode || self.hasAggregate ||self.foreignKeys.length > 2) {
                     return false;
                 }
 

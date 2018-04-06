@@ -112,7 +112,7 @@ exports.execute = function(options) {
                         });
                     });
 
-                    it ('should ignore the object if it doesn\'t have source or it is not a path (is from the same table).', function () {
+                    it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
                         expect(pathRelated.length).toBe(2);
                     });
 

@@ -321,6 +321,9 @@ var ERMrest = (function(module) {
       * @returns {String}
       **/
     module._printf = function(options, value, type) {
+        if (typeof options === "string") {
+            options = {format: options};
+        }
         if (typeof options.format !== 'string') throw new SyntaxError("[printf] should be supplied with proper pre_format annotation with format string. Eg: { format: '%d' }");
         if (type == 'date' || type == 'timestamp' || type == 'timestamptz') {
             return module._moment(value).format(options.format);
