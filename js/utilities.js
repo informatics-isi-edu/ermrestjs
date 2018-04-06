@@ -2691,6 +2691,10 @@
         MODULE: 'module'
     });
 
+    module._nonSortableTypes = [
+        "json", "jsonb"
+    ];
+
     // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',

@@ -18,6 +18,8 @@ exports.execute = function (options) {
             tableNameReference = "reference_table",
             tableNameInboundRelated = "inbound_related_reference_table";
 
+        var tableNoSortUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+                      schemaName + ":" + tableNameNoSort;
 
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -656,6 +658,39 @@ exports.execute = function (options) {
             });
         });
 
+        describe("Paging with sort based on columns with column_order annotation.", function () {
+
+            describe("for normal columns, ", function () {
+                testNextPrevious(
+                    tableNoSortUri + "@sort(col_w_order)@after(04,23)",
+                    5, "id x",
+                    ["02", "01", "10", "05", "04"], //previous
+                    ["16", "09", "03", "08", "15",], //current
+                    ["07", "14", "06", "12", "13"]  //next
+                );
+            });
+
+            describe("for pseudo columns, ", function () {
+                testNextPrevious(
+                    tableNoSortUri + "@sort(reference_schema_paging_table_no_sort_fk2,id%20x)@after(23,Harry,05)",
+                    5, "id x",
+                    ["11", "02", "01", "10", "05"], //previous
+                    ["04", "16", "09", "03", "08",], //current
+                    ["15", "07", "14", "06", "12"]  //next
+                );
+            });
+        });
+
+        describe("when there are duplicate column names in the sort criteria, ", function () {
+            testNextPrevious(
+                tableNoSortUri + "@sort(reference_schema_paging_table_no_sort_fk2,id%20x,reference_schema_paging_table_no_sort_fk2)@after(23,Harry,05)",
+                5, "id x",
+                ["11", "02", "01", "10", "05"], //previous
+                ["04", "16", "09", "03", "08",], //current
+                ["15", "07", "14", "06", "12"]  //next
+            );
+        });
+
         // Test Cases:
         describe("Sorting, ", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -836,4 +871,53 @@ exports.execute = function (options) {
         });
 
     });
+
+    function testNextPrevious (uri, limit, idCol, prevExpectedIds, expectedIds, nextExpectedIds) {
+        var page;
+        it ('read should handle having sort and paging in the url.', function (done) {
+            options.ermRest.resolve(uri, {cid: "test"}).then(function (ref) {
+                return ref.read(limit);
+            }).then(function (res) {
+                page = res;
+
+                expect(page.tuples.length).toBe(expectedIds.length, "length missmatch.");
+                expect(page.tuples.map(function (t) {
+                    return t.data[idCol];
+                })).toEqual(expectedIds, "data missmatch.");
+
+                done();
+            }).catch(function (err) {
+                console.log(err);
+                done.fail();
+            });
+        });
+
+        it ('next should return the correct reference.', function (done) {
+            page.next.read(limit).then(function (p) {
+                expect(p.tuples.length).toBe(nextExpectedIds.length, "length missmatch for next.");
+                expect(p.tuples.map(function (t) {
+                    return t.data[idCol];
+                })).toEqual(nextExpectedIds, "data missmatch for next.");
+
+                done();
+            }).catch(function (err) {
+                console.log(err);
+                done.fail();
+            });
+        });
+
+        it ("previous shoudl return the correct reference.", function (done) {
+            page.previous.read(limit).then(function (p) {
+                expect(p.tuples.length).toBe(prevExpectedIds.length, "length missmatch for previous.");
+                expect(p.tuples.map(function (t) {
+                    return t.data[idCol];
+                })).toEqual(prevExpectedIds, "data missmatch for previous.");
+
+                done();
+            }).catch(function (err) {
+                console.log(err);
+                done.fail();
+            });
+        });
+    }
 };

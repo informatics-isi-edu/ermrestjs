@@ -710,6 +710,28 @@
                     "schema_name": "reference_schema",
                     "column_name": "id"
                 }]
+            }, {
+                "comment": "has column_order",
+                "names": [["reference_schema", "paging_table_no_sort_fk2"]],
+                "foreign_key_columns": [{
+                    "table_name": "paging table no sort",
+                    "schema_name": "reference_schema",
+                    "column_name": "fk_col_2"
+                }],
+                "referenced_columns": [{
+                    "table_name": "reference_table",
+                    "schema_name": "reference_schema",
+                    "column_name": "id"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "display": {
+                            "*":  {
+                                "column_order": ["value", "name"]
+                            }
+                        }
+                    }
+                }
             }],
             "table_name": "paging table no sort",
             "schema_name": "reference_schema",
@@ -746,6 +768,34 @@
                     "nullok": true,
                     "type": {
                         "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_x",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col_x_2",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col_w_order",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["col_x", "value x"]
+                            }
+                        }
                     }
                 }
             ],
