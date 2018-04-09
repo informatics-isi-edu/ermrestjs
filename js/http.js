@@ -138,7 +138,12 @@
                 // if no default contextHeaderParams, then just call the fn
                 if (this.contextHeaderParams) {
                     // Iterate over headers iff they do not collide
-                    var contextHeader = config.headers[module._contextHeaderName] = config.headers[module._contextHeaderName] ||  {};
+                    var contextHeader;
+                    if (typeof config.headers[module._contextHeaderName] === "object" && config.headers[module._contextHeaderName]) {
+                        contextHeader = config.headers[module._contextHeaderName];
+                    } else {
+                        contextHeader = config.headers[module._contextHeaderName] = {};
+                    }
                     for (var key in this.contextHeaderParams) {
                         if (!(key in contextHeader)) {
                             contextHeader[key] = this.contextHeaderParams[key];

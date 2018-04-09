@@ -626,21 +626,23 @@
         return value;
     };
 
+    /**
+     * @private
+     * @param  {Object} colObject the column definition
+     * @param  {ERMrest.Column} column
+     * @return {Object} the returned object has `name` and `isHash` attributes.
+     * @desc generates a name for the given pseudo-column
+     */
     _generatePseudoColumnName = function (colObject, column) {
-        var basedOnKey = !column.nullok && column.memberOfKeys.filter(function (key) {
-            return key.simple;
-        }).length > 0;
-
-        var isEntityMode =  (colObject.entity === false) ? false : basedOnKey;
-
-        if (_isFacetSourcePath(colObject.source) || isEntityMode) {
-            return _generatePseudoColumnHashName(colObject);
+        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+            return {name: _generatePseudoColumnHashName(colObject), isHash: true};
         }
 
-        return column.name;
+        return {name: column.name, isHash: false};
     };
 
     /**
+     * @private
      * @param {string|object} name the base name. It usually is the constraintName of that object.
      * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
      * @param {string} hashStr if true,
@@ -2709,12 +2711,9 @@
         "json"
     ];
 
-    module._pseudoColAggreagteFns = Object.freeze({
-        MIN: "min",
-        MAX: "max",
-        COUNT: "count"
-    });
-
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
+    module._pseudoColAggregateNames = ["Minimum", "Maximum", "Number #", "Count Distinct", "Array of"];
+    module._pseudoColScalarAggregateFns = ["min", "max"];
 
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
@@ -2766,3 +2765,20 @@
       SERVIVE_UNAVAILABLE: 503
 
       });
+
+    module._warningMessages = Object.freeze({
+        NO_PSEUDO_IN_ENTRY: "pseudo-columns are not allowed in entry contexts.",
+        INVALID_SOURCE: "given object is invalid. `source` is required and it must be valid",
+        DUPLICATE_COLUMN: "ignoring duplicate column definition.",
+        DUPLICATE_KEY: "ignoring duplicate key definition.",
+        DUPLICATE_FK: "ignoring duplicate foreign key definition.",
+        DUPLICATE_PC: "ignoring duplicate pseudo-column definition.",
+        INVALID_COLUMN: "column name must be a string.",
+        INVALID_AGG: "given aggregate function is invalid.",
+        NO_SCALAR_AGG_IN_ENT: "scalar aggreagte functions are not allowed in entity mode",
+        FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
+        INVALID_FK: "given foreignkey definition is invalid.",
+        AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
+        SCALAR_NOT_ALLOWED: "only entity mode is allowed here."
+
+    });

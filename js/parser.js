@@ -1828,6 +1828,23 @@
     };
 
     /**
+     * If the column that the facetObject is representing is in entity mode
+     * @param  {Object} facetObject the facet object
+     * @param  {ERMrest.Column} column      the column objKey
+     * @return {boolean} true if entity mode otherwise false.
+     */
+    _isFacetEntityMode = function (facetObject, column) {
+        if (facetObject.entity === false) {
+            return false;
+        }
+
+        // column is part of simple key
+        return !column.nullok && column.memberOfKeys.filter(function (key) {
+            return key.simple;
+        }).length > 0;
+    };
+
+    /**
      * List of logical operators that parser accepts in JSON facets.
      * @type {Object}
      */

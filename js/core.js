@@ -2739,7 +2739,17 @@
                 return -1;
             }
 
-            var fkNames = {}, col, colName, fk, i;
+            var self = this, fkNames = {}, col, colName, invalid, fk, i;
+
+            var wm = module._warningMessages;
+            var logErr = function (bool, message, i) {
+                if (bool) {
+                    console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    console.log(message);
+                }
+                return bool;
+            };
+
             var addToList = function (obj) {
                 if (obj.name in fkNames) {
                     return; // avoid duplicates
@@ -2759,17 +2769,26 @@
                     if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
                         colName = _generateForeignKeyName(fk.object, true);
                         addToList({foreignKey: fk.object, name: colName});
+                    } else {
+                        logErr(true, wm.INVALID_FK, i);
                     }
                 }
                 // path
                 else if (typeof orders[i] === "object" && orders[i].source) {
                     col = _getFacetSourceColumn(orders[i].source, this._table, module._constraintNames);
 
-                    // valid source and also a path
-                    if (!col || !_isFacetSourcePath(orders[i].source)) continue;
+                    // invalid if:
+                    // 1. invalid source and not a path.
+                    // 2. not entity mode
+                    // 3. has aggregate
+                    invalid = logErr(!col || !_isFacetSourcePath(orders[i].source), wm.INVALID_FK, i) ||
+                              logErr(!_isFacetEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
+                              logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
 
-                    colName = _generatePseudoColumnName(orders[i], col);
-                    addToList({isPath: true, object: orders[i], column: col, name: colName});
+                    if (!invalid) {
+                        colName = _generatePseudoColumnName(orders[i], col).name;
+                        addToList({isPath: true, object: orders[i], column: col, name: colName});
+                    }
                 }
             }
             this._contextualize_cached[context] = result;
