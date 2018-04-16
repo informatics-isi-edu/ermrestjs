@@ -122,7 +122,7 @@ exports.execute = function (options) {
 
             it ("should ignore the invalid column objects.", function () {
                 checkReferenceColumns([{
-                    "ref": invalidRef.contextualize.detailed,
+                    "ref": invalidRef.contextualize.compact,
                     "expected": []
                 }]);
             });
@@ -157,9 +157,7 @@ exports.execute = function (options) {
                         "col",
                         "main_table_id_col",
                         ["pseudo_column_schema", "main_key1"].join("_"),
-                        ["pseudo_column_schema", "main_fk1"].join("_"),
-                        ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"),
-                        ["pseudo_column_schema", "inbound_1_fk1"].join("_")
+                        ["pseudo_column_schema", "main_fk1"].join("_")
                     ]
                 }, {
                     "ref": mainRef.contextualize.compactBrief,
@@ -170,14 +168,18 @@ exports.execute = function (options) {
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             "id"
-                        ],
+                        ]
+                    ]
+                }]);
+            });
+
+            it ("should allow entity non-aggregate pseudo column with path in detailed context.", function () {
+                checkReferenceColumns([{
+                    "ref": invalidRef.contextualize.detailed,
+                    "expected": [
                         [
+                            {"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]},
                             {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]},
-                            "id"
-                        ],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ]
                     ]
@@ -331,7 +333,9 @@ exports.execute = function (options) {
 
             it ("faceting should be able to handle these new type of columns.", function () {
                 var facetColumns = mainRef.facetColumns;
-                expect(facetColumns.length).toBe(14, "length missmatch.");
+                // since it's going to use the heuristic and in compact we don't
+                // allow inbound fk without aggregate, this won't be exactly the same list.
+                expect(facetColumns.length).toBe(10, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
                     return fc.dataSource;
                 })).toEqual(
@@ -349,19 +353,6 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ],
-                        [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            "id"
-                        ],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
-                            "id",
-                        ],
-                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
                         [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "id"],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
@@ -514,7 +505,7 @@ exports.execute = function (options) {
                 describe("if it has aggreagte.", function () {
                     it ('should append the aggregate function to the displayname.', function () {
                         var aggregateDisplaynames = [
-                            'Number # id', 'Count Distinct id', 'Minimum id', 'Maximum col name', 'Number # foreign key column name to main'
+                            '# id', '# id', 'Min id', 'Max col name', '# foreign key column name to main'
                         ];
                         for (var i = 11; i <= 15; i++) {
                             expect(detailedColsWTuple[i].displayname.value).toBe(aggregateDisplaynames[i-11], "missmatch for index =" + i);

@@ -2711,9 +2711,10 @@
         "json"
     ];
 
-    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
-    module._pseudoColAggregateNames = ["Minimum", "Maximum", "Number #", "Count Distinct", "Array of"];
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d"];
     module._pseudoColScalarAggregateFns = ["min", "max"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#"];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct"];
 
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
@@ -2779,6 +2780,7 @@
         FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
         INVALID_FK: "given foreignkey definition is invalid.",
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
-        SCALAR_NOT_ALLOWED: "only entity mode is allowed here."
-
+        SCALAR_NOT_ALLOWED: "only entity mode is allowed here.",
+        MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
+        MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts."
     });

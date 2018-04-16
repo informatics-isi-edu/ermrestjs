@@ -2463,7 +2463,7 @@
                 colAdded,
                 fkName,
                 sourceCol,
-                pseudoNameObj, pseudoName, isHash,
+                pseudoNameObj, pseudoName, isHash, hasInbound, isEntity,
                 isEntityMode,
                 colFks,
                 ignore, cols, col, fk, i, j;
@@ -2607,6 +2607,8 @@
                         pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
                         pseudoName = pseudoNameObj.name;
                         isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
+                        hasInbound = _sourceHasInbound(col.source);
+                        isEntity = _isFacetEntityMode(col, sourceCol);
 
                         // invalid/hidden pseudo-column:
                         // 1. duplicate
@@ -2618,7 +2620,9 @@
                                  hideFKRByName(pseudoName) ||
                                  (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
-                                 logCol((module._pseudoColScalarAggregateFns.indexOf(col.aggregate) !== -1 && _isFacetEntityMode(col, sourceCol)), wm.NO_SCALAR_AGG_IN_ENT, i) ||
+                                 logCol((module._pseudoColScalarAggregateFns.indexOf(col.aggregate) !== -1 && isEntity), wm.NO_SCALAR_AGG_IN_ENT, i) ||
+                                 logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
+                                 logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED), wm.MULTI_ENT_NEED_AGG, i) ||
                                  (isHash && nameExistsInTable(pseudoName, col));
 
                         // avoid duplciates and hide the column

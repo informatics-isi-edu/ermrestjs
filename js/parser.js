@@ -1844,6 +1844,13 @@
         }).length > 0;
     };
 
+    _sourceHasInbound = function (source) {
+        if (!_isFacetSourcePath(source)) return false;
+        return source.some(function (n, index) {
+            return (index != source.length-1) && ("inbound" in n);
+        });
+    };
+
     /**
      * List of logical operators that parser accepts in JSON facets.
      * @type {Object}
