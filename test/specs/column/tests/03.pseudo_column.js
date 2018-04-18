@@ -210,7 +210,7 @@ exports.execute = function (options) {
             });
 
             it ("in entry context, should ignore the pseudoColumns that are not supported.", function () {
-                expect(mainRefEntry.columns.length).toBe(5);
+                expect(mainRefEntry.columns.length).toBe(4, "length missmatch.");
                 checkReferenceColumns([{
                     "ref": mainRefEntry,
                     "expected": [
