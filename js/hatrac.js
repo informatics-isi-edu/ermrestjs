@@ -181,6 +181,22 @@ var ERMrest = (function(module) {
 
     var allowedHttpErrors = [500, 503, 408, 401];
 
+    var _generateContextHeader = function(logInfo, contextHeaderParams) {
+        if (!contextHeaderParams || !(contextHeaderParams === Object(contextHeaderParams) && !Array.isArray(contextHeaderParams))) {
+            contextHeaderParams = {};
+        }
+
+        for (var key in logInfo) {
+            // only add the values that are not defined.
+            if (key in contextHeaderParams) continue;
+            contextHeaderParams[key] = logInfo[key];
+        }
+
+        var headers = {};
+        headers[module._contextHeaderName] = contextHeaderParams;
+        return headers;
+    }
+
     /**
      * @desc upload Object
      * Create a new instance with new upload(file, otherInfo)
@@ -306,9 +322,7 @@ var ERMrest = (function(module) {
             self._generateURL(row);
             deferred.resolve(self.url);
         }, function(err) {
-            deferred.reject(new Error(((err && err.message) ?
-                                        err.message :
-                                        "Unable to calculate checksum for file") + " " + self.file.name));
+            deferred.reject(new Error( ((err && err.message) ? err.message : "Unable to calculate checksum for file") + " " + self.file.name ));
         });
 
         return deferred.promise;
@@ -345,6 +359,14 @@ var ERMrest = (function(module) {
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";upload?parents=true");
 
+                var contextHeaderParams = {
+                    file: self.file.name,
+                    type: self.file.type,
+                    size: self.file.size,
+                    lastModified: self.file.lastModified,
+                    md5: self.hash.md5_hex
+                }
+
                 var data = {
                     "chunk-length" : self.PART_SIZE,
                     "content-length": self.file.size,
@@ -354,8 +376,9 @@ var ERMrest = (function(module) {
                 };
 
                 var config = {
-                    headers: { 'content-type' : 'application/json' }
+                    headers: _generateContextHeader(self.reference.defaultLogInfo, contextHeaderParams)
                 };
+                config.headers['content-type'] = 'application/json';
 
                 return self.http.post(url, data, config);
             }
@@ -500,7 +523,21 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        this.http.post(this._getAbsoluteUrl(this.chunkUrl)).then(function(response) {
+        var contextHeaderParams = {
+            file: this.file.name,
+            type: this.file.type,
+            size: this.file.size,
+            lastModified: this.file.lastModified,
+            md5: this.hash.md5_hex
+        }
+
+        var config = {
+            headers: _generateContextHeader(this.reference.defaultLogInfo, contextHeaderParams)
+        };
+        config.headers['content-type'] = 'application/json';
+
+        // get's the versioned hatrac url
+        this.http.post(this._getAbsoluteUrl(this.chunkUrl), {}, config).then(function(response) {
             self.jobDone = true;
 
             if (response.headers('location')) {
