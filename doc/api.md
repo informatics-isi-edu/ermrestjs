@@ -357,7 +357,6 @@ to use for ERMrest JavaScript agents.
         * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
-        * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
         * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
@@ -3508,15 +3507,19 @@ TODO should be removed in favor of inputDisabled
     * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
-    * [.isInboundForeignKey](#ERMrest.PseudoColumn+isInboundForeignKey) : <code>boolean</code>
     * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
 
 #### new PseudoColumn(reference, column, facetObject, name, mainTuple)
-TODO aggregate is currently ignored since it's not being used.
-We should add suppoort for aggregate to pseudo-columns later
+If you want to create an object of this type, use the `module._createPseudoColumn` method.
+This will only be used for general purpose pseudo-columns, using that method ensures That
+we're creating the more specific object instead. Therefore only these cases should
+be using this type of object:
+1. When sourceObject has aggregate
+2. When sourceObject has a path that is not just an outbound fk, or it doesn't define a related
+entity (inbound or p&b association)
 
 
 | Param | Type | Description |
@@ -3538,16 +3541,10 @@ indicates that this object represents a PseudoColumn.
 #### pseudoColumn.displayname : <code>Object</code>
 The displayname that should be used for this column.
 It will return the first applicable rule:
-1. markdown_name that is defined on the columnObject.
-2. If column doesn't have any paths
-  2.1. If it's in entity mode, return the key displayname.
-  2.2. Return the column displayname.
-3. If it's all outbound and in non entity mode,return the column displayname.
-4. If it's inbound foreignkey, apply the same logic as InboundforeignKey.
-5. Otherwise use the last foreignkey to find the displayname.
-  5.1. If it's inbound, use the from_name.
-  5.2. If it's outbound, use the to_name.
-  5.3. Otherwise use the table name (add the column name in non-entity mode).
+1. markdown_name that is defined on the sourceObject.
+2. if aggregate use the {function} col_displayname.
+3. In entity mode, return the table's displayname.
+4. In scalar return the column's displayname.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+isUnique"></a>
@@ -3596,13 +3593,6 @@ TODO needs to be changed when we get to use it. Currently this is how it behaves
 2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
 3. Otherwise if mainTuple is available, use that to generate list of facets.
 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
-
-**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
-<a name="ERMrest.PseudoColumn+isInboundForeignKey"></a>
-
-#### pseudoColumn.isInboundForeignKey : <code>boolean</code>
-Returns true if its the same as InboundForeignKeyPseudoColumn.
-That means either just a path with inbound fk, or p&b association.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>

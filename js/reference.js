@@ -396,7 +396,7 @@
                 var checkRefColumn = function (col) {
                     if (col.isPathColumn) {
                         if (col.hasAggregate) return false;
-                        return {"obj": col.columnObject, "column": col._baseCols[0]};
+                        return {"obj": col.sourceObject, "column": col._baseCols[0]};
                     }
 
                     // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
@@ -631,7 +631,7 @@
                     detailedRef.related().forEach(function (relRef) {
                         var fcObj;
                         if (relRef.pseudoColumn) {
-                            fcObj = {"obj": relRef.pseudoColumn.columnObject, "column": relRef.pseudoColumn.baseColumn};
+                            fcObj = {"obj": relRef.pseudoColumn.sourceObject, "column": relRef.pseudoColumn.baseColumn};
                         } else {
                             fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
                         }
@@ -2024,7 +2024,9 @@
                     }
 
                     if (fkr.isPath) {
-                        this._related.push(new PseudoColumn(this, fkr.column, fkr.object, fkr.name, tuple).reference);
+                        // since we're sure that the pseudoColumn either going to be
+                        // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
+                        this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, fkr.name, tuple, true).reference);
                     } else {
                         fkr = fkr.foreignKey;
 
@@ -2462,13 +2464,15 @@
                 invalid,
                 colAdded,
                 fkName,
-                sourceCol,
-                pseudoNameObj, pseudoName, isHash, hasInbound, isEntity,
-                isEntityMode,
+                sourceCol, refCol,
+                pseudoNameObj, pseudoName, isHash,
+                hasInbound, isEntity, hasPath, isEntityMode,
+                isEntry,
                 colFks,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
+            isEntry = module._isEntryContext(context);
 
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
@@ -2549,13 +2553,13 @@
                                             }
                                         }
                                         // inbound foreignkey
-                                        else if (fk.key.table == this._table && !module._isEntryContext(context)) {
+                                        else if (fk.key.table == this._table && !isEntry) {
                                             var relatedRef = this._generateRelatedReference(fk, tuple, true);
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _generateForeignKeyName(fk, true);
                                             if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, fkName));
+                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
                                             }
                                         } else {
                                             console.log(wm.FK_NOT_RELATED);
@@ -2568,7 +2572,7 @@
                                     if (!logCol((fkName in consideredColumns), wm.DUPLICATE_KEY, i) && !nameExistsInTable(fkName, col) && fk.table == this._table) {
                                         consideredColumns[fkName] = true;
                                         // if in edit context: add its constituent columns
-                                        if (module._isEntryContext(this._context)) {
+                                        if (isEntry) {
                                             cols = fk.colset.columns;
                                             for (j = 0; j < cols.length; j++) {
                                                 col = cols[j];
@@ -2589,11 +2593,8 @@
                     }
                     // pseudo-column
                     else if (typeof col === "object") {
-                        // in edit or invalid source
-                        ignore = logCol(module._isEntryContext(this._context), wm.NO_PSEUDO_IN_ENTRY, i) ||
-                                 logCol(!col.source, wm.INVALID_SOURCE, i);
-
-                        if (ignore) continue;
+                        // invalid source
+                        if (logCol(!col.source, wm.INVALID_SOURCE, i)) continue;
 
                         // check the path and get the column object
                         sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
@@ -2607,6 +2608,7 @@
                         pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
                         pseudoName = pseudoNameObj.name;
                         isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
+                        hasPath = _isFacetSourcePath(col.source);
                         hasInbound = _sourceHasInbound(col.source);
                         isEntity = _isFacetEntityMode(col, sourceCol);
 
@@ -2618,17 +2620,41 @@
                         // 5. in entity mode with scalar aggregate functions
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  hideFKRByName(pseudoName) ||
-                                 (!_isFacetSourcePath(col.source) && hideColumn(sourceCol)) ||
+                                 (!hasPath && hideColumn(sourceCol)) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
                                  logCol((module._pseudoColScalarAggregateFns.indexOf(col.aggregate) !== -1 && isEntity), wm.NO_SCALAR_AGG_IN_ENT, i) ||
                                  logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol(col.aggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
+                                 logCol(isEntry && hasPath && (col.source.length > 2 || col.source[0].inbound), wm.NO_PATH_IN_ENTRY, i) ||
                                  (isHash && nameExistsInTable(pseudoName, col));
 
                         // avoid duplciates and hide the column
                         if (!ignore) {
                             consideredColumns[pseudoName] = true;
-                            this._referenceColumns.push(new PseudoColumn(this, sourceCol, col, pseudoName, tuple));
+                            refCol = module._createPseudoColumn(this, sourceCol, col, pseudoName, tuple, isEntity);
+
+                            // to make sure we're removing asset related (filename, size, etc.) column in entry
+                            if (refCol.isAsset) {
+                                assetColumns.push(refCol);
+                            }
+
+                            // if entity and KeyPseudoColumn, we should instead add the underlying columns
+                            if (isEntry && refCol.isKey) {
+                                cols = refCol.key.colset.columns;
+                                for (j = 0; j < cols.length; j++) {
+                                    col = cols[j];
+                                    if (!(col.name in consideredColumns) && !hideColumn(col)) {
+                                        consideredColumns[col.name] = true;
+                                        this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
+                                    }
+                                }
+                            }
+
+                            // in entry mode, pseudo-column, inbound fk, and key are not allowed
+                            if (!(isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) )) {
+                                this._referenceColumns.push(refCol);
+                            }
                         }
 
                     }
@@ -2654,7 +2680,7 @@
             else {
 
                 //add the key
-                if (!module._isEntryContext(this._context) && this._context != module._contexts.DETAILED ) {
+                if (!isEntry && this._context != module._contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined && !nameExistsInTable(key.name, "display key")) {
                         consideredColumns[key.name] = true;
@@ -2711,7 +2737,7 @@
                             } else { // composite FKR
 
                                 // add the column if context is not entry and avoid duplicate
-                                if (!module._isEntryContext(this._context) && !(col.name in consideredColumns)) {
+                                if (!isEntry && !(col.name in consideredColumns)) {
                                     consideredColumns[col.name] = true;
                                     this._referenceColumns.push(new ReferenceColumn(this, [col]));
                                 }
@@ -2735,7 +2761,7 @@
             }
 
             // if edit context remove filename, bytecount, md5, and sha256 from visible columns
-            if (module._isEntryContext(this._context) && assetColumns.length !== 0) {
+            if (isEntry && assetColumns.length !== 0) {
 
                 // given a column will remove it from visible columns
                 // this function is used for removing filename, bytecount, md5, and sha256 from visible columns
@@ -2770,11 +2796,11 @@
             }
 
             // If not in edit context i.e in read context remove the hidden columns which cannot be selected.
-            if (!module._isEntryContext(this._context)) {
+            if (!isEntry) {
 
                 // Iterate over all reference columns
                 for (i = 0; i < this._referenceColumns.length; i++) {
-                    var refCol = this._referenceColumns[i];
+                    refCol = this._referenceColumns[i];
                     var isHidden = false;
 
                     // Iterate over the base columns. If any of them are hidden then hide the column
@@ -2829,9 +2855,10 @@
          * @param  {ERMrest.ForeignKeyRef} fkr the relationship between these two reference (this fkr must be from another table to the current table)
          * @param  {ERMrest.Tuple=} tuple the current tuple
          * @param  {boolean} checkForAlternative if it's true, checks p&b association too.
+         * @param  {Object=} sourceObject The object that defines the fkr
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
-        _generateRelatedReference: function (fkr, tuple, checkForAssociation) {
+        _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
             var j, col, uri, source, subset = "";
 
             var useFaceting = (typeof tuple === 'object');
@@ -2940,6 +2967,15 @@
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
                 newRef._related_fk_column_positions = fkr.colset._getColumnPositions();
+            }
+
+            // if markdown_name in source object is defined
+            if (sourceObject && sourceObject.markdown_name) {
+                newRef._displayname = {
+                    "value": module._formatUtils.printMarkdown(sourceObject.markdown_name, {inline:true}),
+                    "unformatted": sourceObject.markdown_name,
+                    "isHTML": true
+                };
             }
 
             if (useFaceting) {

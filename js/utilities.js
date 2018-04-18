@@ -1105,7 +1105,7 @@
 
     /**
      * returns the displayname that should be used for a facetObject
-     *
+     * TODO update this!
      * @function
      * @private
      * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
@@ -2782,5 +2782,7 @@
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
         SCALAR_NOT_ALLOWED: "only entity mode is allowed here.",
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
-        MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts."
+        MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
+        NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
+        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
     });

@@ -66,14 +66,33 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "asset",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_asset.md5_hex}}}",
+                            "filename_column": "asset_filename"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_filename",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "compact": "detailed",
                     "detailed": [
-                        "main_table_id_col", {"source": "col"}, {"source": "main_table_id_col"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"]},
+                        "main_table_id_col", {"source": "col", "markdown_name": "new name", "comment": "new comment"},
+                        {"source": "main_table_id_col", "markdown_name": "main table key", "comment": "main table key"},
+                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "markdown_name": "main fk", "comment": "main fk cm"},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "entity": false},
                         {"source": [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
@@ -84,13 +103,13 @@
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
-                        ], "entity": false},
-                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]},
+                        ], "entity": false, "markdown_name": "**Outbound Len 2**", "comment": "outbound len 2 cm"},
+                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "markdown_name": "inbound", "comment": "inbound cm"},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
-                        ], "markdown_name": "**association table**"},
+                        ], "markdown_name": "**association table**", "comment": "association table cm"},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
@@ -111,12 +130,11 @@
                         ], "aggregate": "cnt_d"},
                         {"source": [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"], "aggregate": "min", "entity": false},
                         {"source": "col", "aggregate": "max"},
-                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt"}
+                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
+                        {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
+                        {"source": "asset_filename", "markdown_name": "filename"}
                     ],
-                    "entry": [
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"]},
-                        {"source": "col"}, {"source": "id"}
-                    ],
+                    "entry": "detailed",
                     "compact/select": [
                         "col",
                         "main_table_id_col",
@@ -329,6 +347,7 @@
             ],
             "column_definitions": [
                 {
+                    "comment": "id of outbound_1",
                     "name": "id",
                     "nullok": false,
                     "type": {"typename": "text"},
@@ -358,6 +377,7 @@
             }
         },
         "outbound_1_outbound_1": {
+            "comment": "outbound_1_outbound_1 comment",
             "table_name": "outbound_1_outbound_1",
             "schema_name": "pseudo_column_schema",
             "kind": "table",

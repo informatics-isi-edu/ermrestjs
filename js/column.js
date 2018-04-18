@@ -3,6 +3,89 @@
  */
 
 /**
+ * Will create the appropriate ReferenceColumn object based on the given sourceObject.
+ * It will return the follwing objects:
+ * - If aggregate: PseudoColumn
+ * - If no path, scalar, asset annot:AssetPseudoColumn
+ * - If no path, scalar (or entity in entry context): ReferenceColumn
+ * - If no path, entity, non-entry context: KeyPseudoColumn
+ * - If path, entity, outbound length 1: ForeignKeyPseudoColumn
+ * - If path, entity, inbound length 1: InboundForeignKeyPseudoColumn
+ * - If path, entity, p&b association: InboundForeignKeyPseudoColumn
+ * - Otherwise: PseudoColumn
+ *
+ * @private
+ * @param  {ERMrest.Reference}  reference    [description]
+ * @param  {ERMrest.Column}  column       [description]
+ * @param  {Object}  sourceObject the column definition
+ * @param  {String}  name         the name to avoid computing it again.
+ * @param  {ERMrest.Tuple}  mainTuple    the main tuple
+ * @param  {Boolean} isEntity     whether it's entity mode or not (to avoid computing it again)
+ * @return {ERMrest.ReferenceColumn}
+ */
+module._createPseudoColumn = function (reference, column, sourceObject, name, mainTuple, isEntity) {
+    var generalPseudo = function () {
+        return new PseudoColumn(reference, column, sourceObject, name, mainTuple);
+    };
+
+    var getFK = function (constraint) {
+        return module._getConstraintObject(reference.table.schema.catalog.id, constraint[0], constraint[1]).object;
+    };
+
+    var source = sourceObject.source,
+        context = reference._context,
+        relatedRef, fk;
+
+    // has aggregate
+    if (sourceObject.aggregate) {
+        return generalPseudo();
+    }
+
+    if (!_isFacetSourcePath(source)) {
+        if (!isEntity) {
+            // no path, scalar, asset
+            if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
+                return new AssetPseudoColumn(reference, column, sourceObject);
+            }
+
+            // no path, scalar
+            return new ReferenceColumn(reference, [column], sourceObject);
+        }
+
+        // no path, entity
+        var key = column.memberOfKeys.filter(function (key) {
+            return key.simple;
+        })[0];
+        return new KeyPseudoColumn(reference, key, sourceObject, name);
+    }
+
+    // path, entity, outbound length 1,
+    if (isEntity && source.length === 2 && source[0].outbound) {
+        fk = getFK(source[0].outbound);
+        return new ForeignKeyPseudoColumn(reference, fk, sourceObject, name);
+    }
+
+    // path, entity, inbound length 1
+    if (isEntity&& source.length === 2 && source[0].inbound) {
+        fk = getFK(source[0].inbound);
+        relatedRef = reference._generateRelatedReference(fk, mainTuple, false, sourceObject);
+        return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
+    }
+
+    // path, entity, inbound outbound p&b
+    if (isEntity && source.length === 3 && source[0].inbound && source[1].outbound) {
+        fk = getFK(source[0].inbound);
+        relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObject);
+        if (fk._table._isPureBinaryAssociation()) {
+            return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
+        }
+    }
+
+    return generalPseudo();
+};
+
+
+/**
  * @memberof ERMrest
  * @constructor
  * @param {ERMrest.Reference} reference column's reference
@@ -10,10 +93,11 @@
  * @desc
  * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
  */
-function ReferenceColumn(reference, cols) {
+function ReferenceColumn(reference, cols, sourceObject, name) {
     this._baseReference = reference;
     this._context = reference._context;
     this._baseCols = cols;
+    this.sourceObject =  isObjectAndNotNull(sourceObject) ? sourceObject : {};
 
     /**
      * @type {boolean}
@@ -26,6 +110,7 @@ function ReferenceColumn(reference, cols) {
      */
     this.table = this._baseCols[0].table;
 
+    this._name = name;
 }
 
 ReferenceColumn.prototype = {
@@ -49,17 +134,25 @@ ReferenceColumn.prototype = {
      */
     get displayname() {
         if (this._displayname === undefined) {
-            this._displayname = {
-                "value": this._baseCols.reduce(function(prev, curr, index) {
-                    return prev + (index>0 ? ":" : "") + curr.displayname.value;
-                }, ""),
-                "isHTML": this._baseCols.some(function (col) {
-                    return col.displayname.isHTML;
-                }),
-                "unformatted": this._baseCols.reduce(function(prev, curr, index) {
-                    return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
-                }, ""),
-            };
+            if (this.sourceObject.markdown_name) {
+                this._displayname = {
+                    value: module._formatUtils.printMarkdown(this.sourceObject.markdown_name, {inline:true}),
+                    unformatted: this.sourceObject.markdown_name,
+                    isHTML: true
+                };
+            } else {
+                this._displayname = {
+                    "value": this._baseCols.reduce(function(prev, curr, index) {
+                        return prev + (index>0 ? ":" : "") + curr.displayname.value;
+                    }, ""),
+                    "isHTML": this._baseCols.some(function (col) {
+                        return col.displayname.isHTML;
+                    }),
+                    "unformatted": this._baseCols.reduce(function(prev, curr, index) {
+                        return prev + (index>0 ? ":" : "") + curr.displayname.unformatted;
+                    }, ""),
+                };
+            }
         }
         return this._displayname;
     },
@@ -126,7 +219,11 @@ ReferenceColumn.prototype = {
      */
     get comment() {
         if (this._comment === undefined) {
-            this._comment = this._simple ? this._baseCols[0].comment : null;
+            if (this.sourceObject.comment) {
+                this._comment = this.sourceObject.comment;
+            } else {
+                this._comment = this._simple ? this._baseCols[0].comment : null;
+            }
         }
         return this._comment;
     },
@@ -324,8 +421,13 @@ ReferenceColumn.prototype = {
 };
 
 /**
- * TODO aggregate is currently ignored since it's not being used.
- * We should add suppoort for aggregate to pseudo-columns later
+ * If you want to create an object of this type, use the `module._createPseudoColumn` method.
+ * This will only be used for general purpose pseudo-columns, using that method ensures That
+ * we're creating the more specific object instead. Therefore only these cases should
+ * be using this type of object:
+ * 1. When sourceObject has aggregate
+ * 2. When sourceObject has a path that is not just an outbound fk, or it doesn't define a related
+ * entity (inbound or p&b association)
  *
  * @memberof ERMrest
  * @param {ERMrest.Reference} reference  column's reference
@@ -336,7 +438,7 @@ ReferenceColumn.prototype = {
  * @constructor
  * @class
  */
-function PseudoColumn (reference, column, columnObject, name, mainTuple) {
+function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
     PseudoColumn.superClass.call(this, reference, [column]);
 
     /**
@@ -347,7 +449,7 @@ function PseudoColumn (reference, column, columnObject, name, mainTuple) {
 
     this.isPathColumn = true;
 
-    this.columnObject = columnObject;
+    this.sourceObject = sourceObject;
 
     this.baseColumn = column;
 
@@ -381,7 +483,6 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
         unformatted: this._getNullValue(context)
     };
 
-
     if (module._isEntryContext(context)) {
         return nullValue;
     }
@@ -400,17 +501,6 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     if (!options) options = {};
     if (options.formattedValues === undefined) {
         options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
-    }
-
-    // from the same table
-    if (!this.hasPath) {
-        // entity mode but from the same table, same as key
-        if (this.isEntityMode) {
-            var pres = module._generateKeyPresentation(this.key, data, context, options);
-            return pres ? pres : nullValue;
-        }
-
-        return PseudoColumn.super.formatPresentation.call(this, options.formattedValues[this._baseCols[0].name], context, options);
     }
 
     // not in entity mode, just return the column value.
@@ -500,7 +590,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var currTable = "T";
     var baseTable = self.hasPath ? "M": currTable;
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
-                 ";v:=" + self.columnObject.aggregate +
+                 ";v:=" + self.sourceObject.aggregate +
                  "(" + currTable + ":" + module._fixedEncodeURIComponent(column.name) + ")";
 
     baseUri =  [
@@ -577,7 +667,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             // format the value
             res = ""; isHTML = false;
             if (value && value.v) {
-                if (["cnt", "cnt_d"].indexOf(self.columnObject.aggregate) !== -1) {
+                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                     res = module._formatUtils.printInteger(value.v);
                 } else {
                     res = column.formatvalue(value.v, self._context);
@@ -604,26 +694,6 @@ PseudoColumn.prototype._determineSortable = function () {
 
     // disable sort if it has aggregate
     if (this.hasAggregate) {
-        return;
-    }
-
-    if (!this.hasPath) {
-        if (this.isEntityMode) {
-            var keyDisplay = this.key.getDisplay(this._context);
-            if (keyDisplay !== undefined && keyDisplay.columnOrder !== undefined)  {
-                if (keyDisplay.columnOrder === false) {
-                    return; // disbaled
-                }
-
-                if (keyDisplay.columnOrder.length !== 0) {
-                    this._sortColumns_cached = keyDisplay.columnOrder;
-                    this._sortable = true;
-                    return;
-                }
-            }
-        }
-
-        PseudoColumn.super._determineSortable.call(this);
         return;
     }
 
@@ -672,25 +742,45 @@ PseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(PseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generatePseudoColumnName(this.columnObject, this._baseCols[0]).name;
+            this._name = _generatePseudoColumnName(this.sourceObject, this._baseCols[0]).name;
         }
         return this._name;
+    }
+});
+
+Object.defineProperty(PseudoColumn.prototype, "comment", {
+    get: function () {
+        if (this._comment === undefined) {
+            var getComment = function (self) {
+                if (self.sourceObject.markdown_name) {
+                    return self.sourceObject.comment;
+                }
+
+                if (self.hasAggregate) {
+                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
+                    return [module._pseudoColAggregateExplicitName[agIndex], self._baseCols[0].displayname.value].join(" ");
+                }
+
+                if (!self.isEntityMode) {
+                    return self._baseCols[0].comment;
+                }
+
+                 return self._baseCols[0].table.comment;
+            };
+
+            this._comment = getComment(this);
+        }
+        return this._comment;
     }
 });
 
 /**
  * The displayname that should be used for this column.
  * It will return the first applicable rule:
- * 1. markdown_name that is defined on the columnObject.
- * 2. If column doesn't have any paths
- *   2.1. If it's in entity mode, return the key displayname.
- *   2.2. Return the column displayname.
- * 3. If it's all outbound and in non entity mode,return the column displayname.
- * 4. If it's inbound foreignkey, apply the same logic as InboundforeignKey.
- * 5. Otherwise use the last foreignkey to find the displayname.
- *   5.1. If it's inbound, use the from_name.
- *   5.2. If it's outbound, use the to_name.
- *   5.3. Otherwise use the table name (add the column name in non-entity mode).
+ * 1. markdown_name that is defined on the sourceObject.
+ * 2. if aggregate use the {function} col_displayname.
+ * 3. In entity mode, return the table's displayname.
+ * 4. In scalar return the column's displayname.
  *
  * @member {Object} displayname
  * @memberof ERMrest.PseudoColumn#
@@ -699,10 +789,10 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
             var attachDisplayname = function (self) {
-                if (self.columnObject.markdown_name) {
+                if (self.sourceObject.markdown_name) {
                     self._displayname = {
-                        value: module._formatUtils.printMarkdown(self.columnObject.markdown_name, {inline:true}),
-                        unformatted: self.columnObject.markdown_name,
+                        value: module._formatUtils.printMarkdown(self.sourceObject.markdown_name, {inline:true}),
+                        unformatted: self.sourceObject.markdown_name,
                         isHTML: true
                     };
                     return;
@@ -710,7 +800,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 
                 if (self.hasAggregate) {
                     Object.getOwnPropertyDescriptor(PseudoColumn.super, "displayname").get.call(self);
-                    var agIndex = module._pseudoColAggregateFns.indexOf(self.columnObject.aggregate);
+                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var name = module._pseudoColAggregateNames[agIndex];
 
                     self._displayname =  {
@@ -721,53 +811,14 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                     return;
                 }
 
-                if (!self.hasPath) {
-                    if (self.isEntityMode) {
-                        self._displayname = module._determineDisplayName(self.key, false);
-                    }
-
-                    // if was undefined, fall back to default
-                    if (!self._displayname || self._displayname.value === undefined || self._displayname.value.trim() === "") {
-                        self._displayname = undefined;
-                        Object.getOwnPropertyDescriptor(PseudoColumn.super,"displayname").get.call(self);
-                    }
-                    return;
-                }
-
-                if (self.isUnique && !self.isEntityMode) {
+                if (!self.isEntityMode) {
                     Object.getOwnPropertyDescriptor(PseudoColumn.super,"displayname").get.call(self);
                     return;
                 }
 
-                if (self.isInboundForeignKey) {
-                    var fkr;
-                    if (self.foreignKeys.length === 1) {
-                        fkr = self.foreignKeys[0].obj;
-                        if (fkr.from_name) {
-                            self._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
-                        } else {
-                            self._displayname = self.table.displayname;
-                        }
-                    } else {
-                        fkr = self.foreignKeys[1].obj;
-                        if (fkr.to_name) {
-                            self._displayname = {"isHTML": false, "value": fkr.to_name, "unformatted": fkr.to_name};
-                        } else {
-                            // the association table name
-                            self._displayname = fkr.colset.columns[0].table.displayname;
-                        }
-                    }
-                    return;
-                }
-
-                self._displayname = _generatePseudoColumnDisplayname(
-                    self.columnObject,
-                    self._baseCols[0],
-                    self._lastForeignKey ? self._lastForeignKey.obj : null,
-                    self._lastForeignKey ? self._lastForeignKey.isInbound : null,
-                    !self.isEntityMode
-                );
-                return;
+                // displayname of the table.
+                 self._displayname = self._baseCols[0].table.displayname;
+                 return;
             };
 
             attachDisplayname(this);
@@ -784,7 +835,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 Object.defineProperty(PseudoColumn.prototype, "isUnique", {
     get: function () {
         if (this._isUnique === undefined) {
-            this._isUnique = !this.hasAggregate && (!this.hasPath || this.columnObject.source.every(function (s, index, arr) {
+            this._isUnique = !this.hasAggregate && (!this.hasPath || this.sourceObject.source.every(function (s, index, arr) {
                 return (index === arr.length - 1) || (("outbound" in s) && !("inbound" in s));
             }));
         }
@@ -804,7 +855,7 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
             this._isEntityMode = false;
 
             var currCol = this._baseCols[0], key;
-            if (this.columnObject.entity !== false && !currCol.nullok) {
+            if (this.sourceObject.entity !== false && !currCol.nullok) {
                 key = currCol.memberOfKeys.filter(function (key) {
                     return key.simple;
                 })[0];
@@ -840,7 +891,7 @@ Object.defineProperty(PseudoColumn.prototype, "key", {
 Object.defineProperty(PseudoColumn.prototype, "hasPath", {
     get: function () {
         if (this._hasPath === undefined) {
-            this._hasPath =_isFacetSourcePath(this.columnObject.source);
+            this._hasPath =_isFacetSourcePath(this.sourceObject.source);
         }
         return this._hasPath;
     }
@@ -854,7 +905,7 @@ Object.defineProperty(PseudoColumn.prototype, "hasPath", {
 Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
     get: function () {
         if (this._foreignKeys === undefined) {
-            this._foreignKeys = _getFacetSourceForeignKeys(this.columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._foreignKeys = _getFacetSourceForeignKeys(this.sourceObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._foreignKeys;
     }
@@ -869,7 +920,7 @@ Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
 Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
     get: function () {
         if (this._lastForeignKey_cached === undefined) {
-            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.columnObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
+            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.sourceObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
         }
         return this._lastForeignKey_cached;
     }
@@ -883,7 +934,7 @@ Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
 Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
     get: function () {
         if (this._hasAggregate === undefined) {
-            this._hasAggregate = module._pseudoColAggregateFns.indexOf(this.columnObject.aggregate) !== -1;
+            this._hasAggregate = module._pseudoColAggregateFns.indexOf(this.sourceObject.aggregate) !== -1;
         }
         return this._hasAggregate;
     }
@@ -905,8 +956,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             var self = this;
             if (!self.hasPath) {
                 self._reference = self._baseReference;
-            } else if (self.isInboundForeignKey) {
-                self._reference = self._baseReference._generateRelatedReference(self.foreignKeys[0].obj, self._mainTuple, self.foreignKeys.length === 2);
             } else {
 
                 // attach the parent displayname
@@ -985,60 +1034,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
         this._reference = ref;
     }
 });
-
-/**
- * Returns true if its the same as InboundForeignKeyPseudoColumn.
- * That means either just a path with inbound fk, or p&b association.
- * @member {boolean} isInboundForeignKey
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "isInboundForeignKey", {
-    get: function () {
-        if (this._isInboundForeignKey === undefined) {
-            var isInbound = function (self) {
-                // make sure path has length one or two
-                if (!self.hasPath || !self.isEntityMode || self.hasAggregate ||self.foreignKeys.length > 2) {
-                    return false;
-                }
-
-                // if path is length of two: pure and binary association
-                if (self.foreignKeys.length === 2) {
-                    // make sure the first fk is inbound and the next is outbound
-                    if (!self.foreignKeys[0].isInbound || self.foreignKeys[1].isInbound) {
-                        return false;
-                    }
-
-                    var fkr = self.foreignKeys[0].obj,
-                        otherFK = self.foreignKeys[1].obj;
-
-                    var fkrTable = fkr._table,
-                        fks = fkr._table.foreignKeys;
-
-                    // make sure table is p&b association
-                    if (!fkrTable._isPureBinaryAssociation()) {
-                        return false;
-                    }
-
-                    // make sure the second fkr is the same as the one in path.
-                    for (var j = 0; j < fks.length(); j++) {
-                        if(fks.all()[j] !== fkr && fks.all()[j] !== otherFK) {
-                            return false;
-                        }
-                    }
-
-                    // this is expected when isInboundForeignKey is true
-                    this._constraintName = fkr._constraintName;
-                    return true;
-                }
-
-                // if path has length one, just check for the fk to be inbound
-                return self.foreignKeys[0].isInbound;
-            };
-            this._isInboundForeignKey = isInbound(this);
-        }
-        return this._isInboundForeignKey;
-    }
-});
 Object.defineProperty(PseudoColumn.prototype, "default", {
     get: function () {
         throw new Error("can not use this type of column in entry mode.");
@@ -1061,9 +1056,9 @@ Object.defineProperty(PseudoColumn.prototype, "nullok", {
  * Constructor for ForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function ForeignKeyPseudoColumn (reference, fk, name) {
+function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
     // call the parent constructor
-    ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns);
+    ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObject);
 
     /**
      * @type {boolean}
@@ -1304,7 +1299,11 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
             var foreignKey = this.foreignKey, value, isHTML, unformatted;
-            if (foreignKey.to_name !== "") {
+            if (this.sourceObject.markdown_name) {
+                unformatted = this.sourceObject.markdown_name;
+                value = module._formatUtils.printMarkdown(unformatted, {inline:true});
+                isHTML = true;
+            } else if (foreignKey.to_name !== "") {
                 value = unformatted = foreignKey.to_name;
                 isHTML = false;
             } else if (foreignKey.simple) {
@@ -1392,9 +1391,9 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "_display", {
  * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function KeyPseudoColumn (reference, key, name) {
+function KeyPseudoColumn (reference, key, sourceObject, name) {
     // call the parent constructor
-    KeyPseudoColumn.superClass.call(this, reference, key.colset.columns);
+    KeyPseudoColumn.superClass.call(this, reference, key.colset.columns, sourceObject);
 
     /**
      * @type {boolean}
@@ -1481,14 +1480,21 @@ Object.defineProperty(KeyPseudoColumn.prototype, "name", {
 Object.defineProperty(KeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
-            this._displayname = module._determineDisplayName(this.key, false);
+            if (this.sourceObject.markdown_name) {
+                this._displayname = {
+                    value: module._formatUtils.printMarkdown(this.sourceObject.markdown_name, {inline:true}),
+                    unformatted: this.sourceObject.markdown_name,
+                    isHTML: true
+                };
+            } else {
+                this._displayname = module._determineDisplayName(this.key, false);
 
-            // if was undefined, fall back to default
-            if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
-                this._displayname = undefined;
-                Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"displayname").get.call(this);
+                // if was undefined, fall back to default
+                if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
+                    this._displayname = undefined;
+                    Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"displayname").get.call(this);
+                }
             }
-
         }
         return this._displayname;
     }
@@ -1537,9 +1543,9 @@ Object.defineProperty(KeyPseudoColumn.prototype, "_display", {
  * This class is a wrapper for {@link ERMrest.Column} objects that have asset annotation.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function AssetPseudoColumn (reference, column) {
+function AssetPseudoColumn (reference, column, sourceObject) {
     // call the parent constructor
-    AssetPseudoColumn.superClass.call(this, reference, [column]);
+    AssetPseudoColumn.superClass.call(this, reference, [column], sourceObject);
 
     this._baseCol = column;
 
@@ -1753,11 +1759,11 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
  *
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function InboundForeignKeyPseudoColumn (reference, relatedReference, name) {
+function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObject, name) {
     var fk = relatedReference.origFKR;
 
     // call the parent constructor
-    InboundForeignKeyPseudoColumn.superClass.call(this, relatedReference, fk.colset.columns);
+    InboundForeignKeyPseudoColumn.superClass.call(this, relatedReference, fk.colset.columns, sourceObject);
 
     /**
      * The reference that can be used to get the data for this pseudo-column
@@ -1816,7 +1822,7 @@ InboundForeignKeyPseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = module._generateForeignKeyName(this.foreignKey, true);
+            this._name = _generateForeignKeyName(this.foreignKey, true);
         }
         return this._name;
     }
@@ -1832,7 +1838,11 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            this._comment = this.table.comment;
+            if (this.sourceObject.comment) {
+                this._comment = this.sourceObject.comment;
+            } else {
+                this._comment = this.table.comment;
+            }
         }
         return this._comment;
     }
