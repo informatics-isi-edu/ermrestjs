@@ -195,7 +195,7 @@ var ERMrest = (function(module) {
         var headers = {};
         headers[module._contextHeaderName] = contextHeaderParams;
         return headers;
-    }
+    };
 
     /**
      * @desc upload Object
@@ -365,7 +365,7 @@ var ERMrest = (function(module) {
                     size: self.file.size,
                     lastModified: self.file.lastModified,
                     md5: self.hash.md5_hex
-                }
+                };
 
                 var data = {
                     "chunk-length" : self.PART_SIZE,
@@ -529,7 +529,7 @@ var ERMrest = (function(module) {
             size: this.file.size,
             lastModified: this.file.lastModified,
             md5: this.hash.md5_hex
-        }
+        };
 
         var config = {
             headers: _generateContextHeader(this.reference.defaultLogInfo, contextHeaderParams)
