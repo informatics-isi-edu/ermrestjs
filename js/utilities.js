@@ -1104,59 +1104,6 @@
     };
 
     /**
-     * returns the displayname that should be used for a facetObject
-     *
-     * @function
-     * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
-     * @param  {String} context    Current context
-     * @param  {object} data       Data for the table that this foreignKey is referring to.
-     * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
-     */
-    _generatePseudoColumnDisplayname = function (facetObject, column, lastFK, lastFKIsInbound, addColumn) {
-        if (facetObject.markdown_name) {
-            return {
-                value: module._formatUtils.printMarkdown(facetObject.markdown_name, {inline:true}),
-                unformatted: facetObject.markdown_name,
-                isHTML: true
-            };
-        }
-
-        // if is part of the main table, just return the column's displayname
-        if (lastFK === null) {
-            return column.displayname;
-        }
-
-        // Otherwise
-        var value, unformatted, isHTML = false;
-
-        // use from_name of the last fk if it's inbound
-        if (lastFKIsInbound && lastFK.from_name !== "") {
-            value = unformatted = lastFK.from_name;
-        }
-        // use to_name of the last fk if it's outbound
-        else if (!lastFKIsInbound && lastFK.to_name !== "") {
-            value = unformatted = lastFK.to_name;
-        }
-        // use the table name if it was not defined
-        else {
-            value = column.table.displayname.value;
-            unformatted = column.table.displayname.unformatted;
-            isHTML = column.table.displayname.isHTML;
-
-            if (addColumn) {
-                value += " (" + column.displayname.value + ")";
-                unformatted += " (" + column.displayname.unformatted + ")";
-                if (!isHTML) {
-                    isHTML = column.displayname.isHTML;
-                }
-            }
-        }
-
-        return {"value": value, "isHTML": isHTML, "unformatted": unformatted};
-    };
-
-    /**
      * @function
      * @param  {string} errorStatusText    http error status text
      * @param  {string} generatedErrMessage response data returned by http request
@@ -2711,9 +2658,10 @@
         "json"
     ];
 
-    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
-    module._pseudoColAggregateNames = ["Minimum", "Maximum", "Number #", "Count Distinct", "Array of"];
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d"];
     module._pseudoColScalarAggregateFns = ["min", "max"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#"];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct"];
 
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
@@ -2779,6 +2727,9 @@
         FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
         INVALID_FK: "given foreignkey definition is invalid.",
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
-        SCALAR_NOT_ALLOWED: "only entity mode is allowed here."
-
+        SCALAR_NOT_ALLOWED: "only entity mode is allowed here.",
+        MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
+        MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
+        NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
+        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
     });
