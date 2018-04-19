@@ -183,7 +183,7 @@ var ERMrest = (function(module) {
 
     var _isObject = function(obj) {
         return obj === Object(obj) && !Array.isArray(obj);
-    }
+    };
 
     var _generateContextHeader = function(contextHeaderParams) {
         if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
@@ -943,7 +943,7 @@ var ERMrest = (function(module) {
         };
         contextHeaderParams.referrer.column = upload.column.name;
 
-        var headers = _generateContextHeader(contextHeaderParams)
+        var headers = _generateContextHeader(contextHeaderParams);
         headers["content-type"] = "application/octet-stream";
 
         self.xhr  = module._q.defer();
