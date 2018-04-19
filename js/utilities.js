@@ -1104,59 +1104,6 @@
     };
 
     /**
-     * returns the displayname that should be used for a facetObject
-     * TODO update this!
-     * @function
-     * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
-     * @param  {String} context    Current context
-     * @param  {object} data       Data for the table that this foreignKey is referring to.
-     * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
-     */
-    _generatePseudoColumnDisplayname = function (facetObject, column, lastFK, lastFKIsInbound, addColumn) {
-        if (facetObject.markdown_name) {
-            return {
-                value: module._formatUtils.printMarkdown(facetObject.markdown_name, {inline:true}),
-                unformatted: facetObject.markdown_name,
-                isHTML: true
-            };
-        }
-
-        // if is part of the main table, just return the column's displayname
-        if (lastFK === null) {
-            return column.displayname;
-        }
-
-        // Otherwise
-        var value, unformatted, isHTML = false;
-
-        // use from_name of the last fk if it's inbound
-        if (lastFKIsInbound && lastFK.from_name !== "") {
-            value = unformatted = lastFK.from_name;
-        }
-        // use to_name of the last fk if it's outbound
-        else if (!lastFKIsInbound && lastFK.to_name !== "") {
-            value = unformatted = lastFK.to_name;
-        }
-        // use the table name if it was not defined
-        else {
-            value = column.table.displayname.value;
-            unformatted = column.table.displayname.unformatted;
-            isHTML = column.table.displayname.isHTML;
-
-            if (addColumn) {
-                value += " (" + column.displayname.value + ")";
-                unformatted += " (" + column.displayname.unformatted + ")";
-                if (!isHTML) {
-                    isHTML = column.displayname.isHTML;
-                }
-            }
-        }
-
-        return {"value": value, "isHTML": isHTML, "unformatted": unformatted};
-    };
-
-    /**
      * @function
      * @param  {string} errorStatusText    http error status text
      * @param  {string} generatedErrMessage response data returned by http request

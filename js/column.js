@@ -2137,7 +2137,7 @@ FacetColumn.prototype = {
 
     /**
      * Returns the displayname object that should be used for this facetColumn.
-     *
+     * TODO the heuristics should be changed to be aligned with PseudoColumn
      * Heuristics are as follows (first applicable rule):
      *  0. If markdown_name is defined, use it.
      *  1. If column is part of the main table (there's no join), use the column's displayname.
@@ -2150,13 +2150,53 @@ FacetColumn.prototype = {
      */
     get displayname() {
         if (this._displayname === undefined) {
-            this._displayname = _generatePseudoColumnDisplayname(
-                this._facetObject,
-                this.column,
-                this._lastForeignKey ? this._lastForeignKey.obj : null,
-                this._lastForeignKey ? this._lastForeignKey.isInbound : null,
-                !this.isEntityMode
-            );
+            var getDisplayname = function (self) {
+                if (self._facetObject.markdown_name) {
+                    return {
+                        value: module._formatUtils.printMarkdown(self._facetObject.markdown_name, {inline:true}),
+                        unformatted: self._facetObject.markdown_name,
+                        isHTML: true
+                    };
+                }
+
+                var lastFK = self._lastForeignKey ? self._lastForeignKey.obj : null;
+                var lastFKIsInbound = self._lastForeignKey ? self._lastForeignKey.isInbound : null;
+
+                // if is part of the main table, just return the column's displayname
+                if (lastFK === null) {
+                    return self.column.displayname;
+                }
+
+                // Otherwise
+                var value, unformatted, isHTML = false;
+
+                // use from_name of the last fk if it's inbound
+                if (lastFKIsInbound && lastFK.from_name !== "") {
+                    value = unformatted = lastFK.from_name;
+                }
+                // use to_name of the last fk if it's outbound
+                else if (!lastFKIsInbound && lastFK.to_name !== "") {
+                    value = unformatted = lastFK.to_name;
+                }
+                // use the table name if it was not defined
+                else {
+                    value = self.column.table.displayname.value;
+                    unformatted = self.column.table.displayname.unformatted;
+                    isHTML = self.column.table.displayname.isHTML;
+
+                    if (!self.isEntityMode) {
+                        value += " (" + self.column.displayname.value + ")";
+                        unformatted += " (" + self.column.displayname.unformatted + ")";
+                        if (!isHTML) {
+                            isHTML = self.column.displayname.isHTML;
+                        }
+                    }
+                }
+
+                return {"value": value, "isHTML": isHTML, "unformatted": unformatted};
+            };
+
+            this._displayname = getDisplayname(this);
         }
         return this._displayname;
     },
