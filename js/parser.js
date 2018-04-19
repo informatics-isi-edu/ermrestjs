@@ -1844,6 +1844,41 @@
         }).length > 0;
     };
 
+    _sourceHasInbound = function (source) {
+        if (!_isFacetSourcePath(source)) return false;
+        return source.some(function (n, index) {
+            return (index != source.length-1) && ("inbound" in n);
+        });
+    };
+
+    _sourceIsInboundForeignKey = function (sourceObject, column, consNames) {
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+
+        var invalid = !_isFacetSourcePath(sourceObject.source) || !_isFacetEntityMode(sourceObject, column) ||
+                      sourceObject.aggregate || sourceObject.source.length > 3;
+
+        if (invalid) {
+            return false;
+        }
+
+        var source = sourceObject.source;
+        var fks = _getFacetSourceForeignKeys(source, column.table.schema.catalog.id, consNames);
+        if (fks.length === 2) {
+            if (!fks[0].isInbound || fks[1].isInbound) {
+                return false;
+            }
+
+            return fks[0].obj._table._isPureBinaryAssociation();
+        }
+        return fks[0].isInbound;
+    };
+
     /**
      * List of logical operators that parser accepts in JSON facets.
      * @type {Object}

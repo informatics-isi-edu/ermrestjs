@@ -2,22 +2,41 @@
  * The structure of table and contexts used:
  * main -> f1 -> f2
  * - detailed context visible columns:
- * 0: main_table_id_col (none pseudo)
+ * 0: main_table_id_col (none pseudo) (ReferenceColumn)
+ * 1: col  (ReferenceColumn)
+ * 2: id (entity mode) - uAu3dAKI_aHyAYkDdaYMjw   (KeyPseudoColumn)
+ * 3: main_fk1 (entity mode) - xRrChcQgxGIr0CNyYQtQ0Q (ForeignKeyPseudoColumn)
+ * 4: main_fk1 - o7Gpk7dRlnzNv3_JjhqDIg (PseudoColumn)
+ * 5: main_fk1 -> outbound_1_fk1 (entity mode) - CaEhWBd7gSjuYCLun-8D-A  (PseudoColumn)
+ * 6: main_fk1 -> outbound_1_fk1 - 1EC_6-rbhKc3tIjczjq1fQ (PseudoColumn)
+ * 7: inbound_1_fk1 (entity mode) - GUABhSm2h_kaHHPGkzYWeA (InboundForeignKeyPseudoColumn)
+ * 8: association (entity mode) - gNTPCP0bGB0GRwFKEATipw (InboundForeignKeyPseudoColumn)
+ * 9: association -> inbound_2_fk1 (entity mode) - nGwW9Kpx5sLf8cpX-24WNQ (PseudoColumn)
+ * 10: main -> association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic) (InboundForeignKeyPseudoColumn)
+ * 11: same as 8 with `cnt` aggregate (PseudoColumn)
+ * 12: same as 9 with `cnt_d` aggregate (PseudoColumn)
+ * 13: same as 10 in non-entity mode with `min` aggregate (PseudoColumn)
+ * 14: col - max (PseudoColumn)
+ * 15: inbound for testing long aggregate request (PseudoColumn)
+ * 16: asset (AssetPseudoColumn)
+ * 17: asset_filename (ReferenceColumn)
+ *
+ * Only the followin indeces are PseudoColumn:
+ * 4 (outbound len 1, scalar)
+ * 5 (outbound len 2)
+ * 6 (outbound len 2, scalar)
+ * 9 (inbound, outbound, outbound, entity)
+ * 11(association, agg cnt)
+ * 12(same as 9, agg cnt_d)
+ * 13(inbound, scalar, agg min)
+ * 14(col - agg max)
+ * 15 (inbound, agg cnt)
+ *
+ * For entry:
+ * 0: main_table_id_col
  * 1: col
- * 2: id (entity mode) - uAu3dAKI_aHyAYkDdaYMjw
- * 3: main_fk1 (entity mode) - xRrChcQgxGIr0CNyYQtQ0Q
- * 4: main_fk1 - o7Gpk7dRlnzNv3_JjhqDIg
- * 5: main_fk1 -> outbound_1_fk1 (entity mode) - CaEhWBd7gSjuYCLun-8D-A
- * 6: main_fk1 -> outbound_1_fk1 - 1EC_6-rbhKc3tIjczjq1fQ
- * 7: inbound_1_fk1 (entity mode) - GUABhSm2h_kaHHPGkzYWeA
- * 8: association (entity mode) - gNTPCP0bGB0GRwFKEATipw
- * 9: association -> inbound_2_fk1 (entity mode) - nGwW9Kpx5sLf8cpX-24WNQ
- * 10: main -> association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic)
- * 11: same as 8 with `cnt` aggregate
- * 12: same as 9 with `cnt_d` aggregate
- * 13: same as 10 in non-entity mode with `min` aggregate
- * 14: col - max
- * 15: inbound for testing long aggregate request
+ * 3: main_fk1
+ * 4: asset
  *
  * - related entities:
  * 0: inbound_3_outbound_1_fk1 (length 1)
@@ -83,7 +102,7 @@ exports.execute = function (options) {
             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/id=01">01</a>',
             '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=01">01</a>',
-            '01', '', '', '', '', '', '', '', '', ''
+            '01', '', '', '', '', '', '', '', '', '', '', ''
         ];
 
         var detailedExpectedNames = [
@@ -91,10 +110,23 @@ exports.execute = function (options) {
              'o7Gpk7dRlnzNv3_JjhqDIg', 'CaEhWBd7gSjuYCLun-8D-A', '1EC_6-rbhKc3tIjczjq1fQ',
              'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
-             'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'MJVZnQ5mBRdCFPfjIOMvkA'
+             'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'MJVZnQ5mBRdCFPfjIOMvkA',
+             "asset", "asset_filename"
         ];
 
-        var mainRef, mainRefDetailed, invalidRef, detailedCols, detailedColsWTuple, mainTuple, mainPage;
+        var detailedPseudoColumnIndices = [
+            4, 5, 6, 9, 11,12, 13, 14, 15
+        ];
+
+        var detailedColumnTypes = [
+            "", "", "isKey", "isForeignKey", "isPathColumn", "isPathColumn",
+            "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
+            "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
+            "isPathColumn", "isAsset", ""
+        ];
+
+        var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
+            detailedCols, detailedColsWTuple, mainTuple, mainPage;
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
@@ -102,6 +134,7 @@ exports.execute = function (options) {
                 mainRef = response;
                 mainRefDetailed = response.contextualize.detailed;
                 detailedCols = mainRefDetailed.columns;
+                mainRefEntry = response.contextualize.entry;
                 return options.ermRest.resolve(invalidEntityUri, {cid: "test"});
             }).then(function (response) {
                 invalidRef = response;
@@ -113,16 +146,9 @@ exports.execute = function (options) {
         });
 
         describe("columns list, ", function () {
-            it ("should ignore column objects in entry mode.", function () {
-                checkReferenceColumns([{
-                    "ref": mainRef.contextualize.entry,
-                    "expected": []
-                }]);
-            });
-
             it ("should ignore the invalid column objects.", function () {
                 checkReferenceColumns([{
-                    "ref": invalidRef.contextualize.detailed,
+                    "ref": invalidRef.contextualize.compact,
                     "expected": []
                 }]);
             });
@@ -132,8 +158,8 @@ exports.execute = function (options) {
                     "ref": invalidRef.contextualize.compactSelect,
                     "expected": [
                         "col", "col", "col", "col", "col", // normal, min, max, cnt, cnt_d
-                        "id",
-                        [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"],
+                        ["pseudo_column_schema", "table_w_invalid_pseudo_cols_key1"].join("_"),
+                        ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"].join("_"),
                         [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // entity false
                         [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // cnt
                         [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], // cnt_d
@@ -157,39 +183,49 @@ exports.execute = function (options) {
                         "col",
                         "main_table_id_col",
                         ["pseudo_column_schema", "main_key1"].join("_"),
-                        ["pseudo_column_schema", "main_fk1"].join("_"),
-                        ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"),
-                        ["pseudo_column_schema", "inbound_1_fk1"].join("_")
+                        ["pseudo_column_schema", "main_fk1"].join("_")
                     ]
                 }, {
                     "ref": mainRef.contextualize.compactBrief,
                     "expected": [
                         "col",
                         "main_table_id_col", // this is the normal column
-                        "main_table_id_col", // this is the path column
+                        ["pseudo_column_schema", "main_key1"].join("_"),
+                        ["pseudo_column_schema", "main_fk1"].join("_")
+                    ]
+                }]);
+            });
+
+            it ("should allow entity non-aggregate pseudo column with path in detailed context.", function () {
+                checkReferenceColumns([{
+                    "ref": invalidRef.contextualize.detailed,
+                    "expected": [
                         [
-                            {"outbound": ["pseudo_column_schema", "main_fk1"]},
-                            "id"
-                        ],
-                        [
+                            {"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]},
                             {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]},
-                            "id"
-                        ],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ]
                     ]
                 }]);
             });
 
+            it ("in entry context, should ignore the pseudoColumns that are not supported.", function () {
+                expect(mainRefEntry.columns.length).toBe(4, "length missmatch.");
+                checkReferenceColumns([{
+                    "ref": mainRefEntry,
+                    "expected": [
+                        "main_table_id_col", "col", ["pseudo_column_schema", "main_fk1"].join("_"), "asset"
+                    ]
+                }]);
+            });
+
             it ("should create the correct columns for valid list of sources.", function () {
+                expect(mainRefDetailed.columns.length).toBe(18, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
-                        "main_table_id_col", "col", "main_table_id_col", // the key
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                        "main_table_id_col", "col", ["pseudo_column_schema", "main_key1"].join("_"),
+                        ["pseudo_column_schema", "main_fk1"].join("_"),
                         [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
@@ -201,19 +237,15 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ],
-                        [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            "id"
-                        ],
+                        ["pseudo_column_schema", "inbound_1_fk1"].join("_"),
+                        ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"),
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
                             "id",
                         ],
-                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
+                        ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"),
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
@@ -227,7 +259,9 @@ exports.execute = function (options) {
                         ],
                         [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
                         "col",
-                        [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"]
+                        [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"],
+                        "asset",
+                        "asset_filename"
                     ]
                 }]);
             });
@@ -331,7 +365,9 @@ exports.execute = function (options) {
 
             it ("faceting should be able to handle these new type of columns.", function () {
                 var facetColumns = mainRef.facetColumns;
-                expect(facetColumns.length).toBe(14, "length missmatch.");
+                // since it's going to use the heuristic and in compact we don't
+                // allow inbound fk without aggregate, this won't be exactly the same list.
+                expect(facetColumns.length).toBe(11, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
                     return fc.dataSource;
                 })).toEqual(
@@ -349,19 +385,7 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ],
-                        [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            "id"
-                        ],
-                        [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
-                            "id",
-                        ],
-                        [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
+                        "asset_filename",
                         [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "id"],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
@@ -381,37 +405,79 @@ exports.execute = function (options) {
         });
 
         describe("column APIs, ", function () {
+            it ("should create the right type of ReferenceColumn.", function () {
+                detailedColumnTypes.forEach(function (type, i) {
+                    if (type === "") {
+                        expect(detailedColsWTuple[i].isPseudo).toBe(false,  "type missmatch for index=" + i);
+                    } else {
+                        expect(detailedColsWTuple[i][type]).toBe(true, "type missmatch for index=" + i);
+                    }
+                });
+            });
+
+            describe("for more specific pseudo-columns (ReferenceColumn, Key, ForeignKey, InboundforeignKey, Asset), ", function () {
+                it ("comment, should come from the comment defined on the sourceObject.", function () {
+                    var expectedComments = {
+                        "1": "new comment",
+                        "2": "main table key",
+                        "3": "main fk cm",
+                        "7": "inbound cm",
+                        "8": "association table cm",
+                        "16": "asset cm"
+                    };
+
+                    for (var i in expectedComments) {
+                        expect(detailedColsWTuple[i].comment).toBe(expectedComments[i],"missmatch for index=" + i);
+                    }
+                });
+
+                it ("displayname, should come from the markdown_name defined on the sourceObject.", function () {
+                    var expectedComments = {
+                        "1": "new name",
+                        "2": "main table key",
+                        "3": "main fk",
+                        "7": "inbound",
+                        "8": "<strong>association table</strong>",
+                        "16": "<strong>asset</strong>"
+                    };
+
+                    for (var i in expectedComments) {
+                        expect(detailedColsWTuple[i].displayname.value).toBe(expectedComments[i],"missmatch for index=" + i);
+                    }
+                });
+            });
+
             describe ('isPathColumn, .', function () {
                 it ("should be true for pseudo column", function () {
-                    detailedColsWTuple.forEach(function (col, i) {
-                        // first column is the id
-                        if (i === 0) return;
-                        expect(col.isPathColumn).toBe(true, "missmatch for with tuple and index =" + i);
+                    detailedPseudoColumnIndices.forEach(function (i) {
+                        expect(detailedColsWTuple[i].isPathColumn).toBe(true, "missmatch for with tuple and index =" + i);
                     });
                 });
 
                 it ("otherwise should not be defined.", function () {
-                    expect(detailedColsWTuple[0].isPathColumn).toBeUndefined();
+                    detailedColsWTuple.forEach(function (col, i) {
+                        if (detailedPseudoColumnIndices.indexOf(i) !== -1) return;
+                        expect(detailedColsWTuple[i].isPathColumn).toBeUndefined("missmatch for with tuple and index = " + i);
+                    });
                 });
             });
 
             describe ('hasPath, ', function () {
                 it ('should be true if source has path.', function () {
-                    for (var i = 3; i <= 10; i++) {
+                    detailedPseudoColumnIndices.forEach(function (i) {
+                        if (i === 14) return;
                         expect(detailedColsWTuple[i].hasPath).toBe(true, "missmatch for index =" + i);
-                    }
+                    });
                 });
 
                 it ('otherwise it should be false.', function () {
-                    for (var i = 1; i < 3; i++) {
-                        expect(detailedColsWTuple[i].hasPath).toBe(false, "missmatch for index =" + i);
-                    }
+                    expect(detailedColsWTuple[14].hasPath).toBe(false, "missmatch for index =" + i);
                 });
             });
 
             describe ('hasAggregate, ', function () {
                 it ("should return false if pseudo-column doesn't have aggregate function.", function () {
-                    for (var i = 1; i <= 10; i++) {
+                    for (var i = 4; i <= 6; i++) {
                         expect(detailedColsWTuple[i].hasAggregate).toBe(false, "missmatch for index =" + i);
                     }
                 });
@@ -424,14 +490,8 @@ exports.execute = function (options) {
             });
 
             describe('isUnique, ', function () {
-                it ('should return true if source doesn\'t have path', function () {
-                    for (var i = 1; i < 3; i++) {
-                        expect(detailedColsWTuple[i].isUnique).toBe(true, "missmatch for index =" + i);
-                    }
-                });
-
                 it ('should return true if source has path of all outbound fks.', function () {
-                    for (var i = 3; i <= 6; i++) {
+                    for (var i = 4; i <= 6; i++) {
                         expect(detailedColsWTuple[i].isUnique).toBe(true, "missmatch for index =" + i);
                     }
                 });
@@ -443,113 +503,71 @@ exports.execute = function (options) {
                 });
 
                 it ('otherwise should return false.', function () {
-                    for (var i = 7; i <= 10; i++) {
-                        expect(detailedColsWTuple[i].isUnique).toBe(false, "missmatch for index =" + i);
-                    }
+                    expect(detailedColsWTuple[9].isUnique).toBe(false, "missmatch for index =" + i);
                 });
             });
 
             describe('isEntityMode, ', function () {
                 it ("should return true if column is not-null and part of simple key, and entity is not false.", function () {
-                    expect(detailedColsWTuple[1].isEntityMode).toBe(false, "missmatch for index=" + i);
-                    expect(detailedColsWTuple[4].isEntityMode).toBe(false, "missmatch for index=4");
-                    expect(detailedColsWTuple[6].isEntityMode).toBe(false, "missmatch for index=6");
+                    var i;
+                    expect(detailedColsWTuple[5].isEntityMode).toBe(true, "missmatch for index=5");
+                    expect(detailedColsWTuple[9].isEntityMode).toBe(true, "missmatch for index=5");
                 });
 
                 it ("otherwise it should return true", function () {
-                    var i;
-                    for (i = 2; i <= 3; i++) {
-                        expect(detailedColsWTuple[i].isEntityMode).toBe(true, "missmatch for index=" + i);
-                    }
-                    expect(detailedColsWTuple[5].isEntityMode).toBe(true, "missmatch for index=5");
-                    for (i = 7; i <= 10; i++) {
-                        expect(detailedColsWTuple[i].isEntityMode).toBe(true, "missmatch for index=" + i);
-                    }
-                });
-            });
-
-            describe("isInboundForeignKey, ", function () {
-                it ("should return true if path is a single inbound fk.", function () {
-                    expect(detailedColsWTuple[7].isInboundForeignKey).toBe(true, "missmatch for index=7");
-
-                    expect(detailedColsWTuple[10].isInboundForeignKey).toBe(true, "missmatch for index=10");
-                });
-
-                it ("should return true if path is a p&b association.", function () {
-                    expect(detailedColsWTuple[8].isInboundForeignKey).toBe(true);
-                });
-
-                it ('should return false if hasAggregate.', function () {
-                    for (var i = 11; i <= 15; i++) {
-                        expect(detailedColsWTuple[i].isInboundForeignKey).toBe(false, "missmatch for index =" + i);
-                    }
-                });
-
-                it ("otherwise should return false.", function () {
-                    detailedColsWTuple.forEach(function (col, i) {
-                        if (i === 0) return;
-                        if (i === 7 || i === 8 || i === 10) return;
-                        expect(col.isInboundForeignKey).toBe(false, "missmatch for index =" + i);
-                    });
-                });
-            });
-
-            describe ("name, ", function () {
-                it ("if column doesn't have any path and is not entity mode, should return the underlying column's name.", function () {
-                    expect(detailedColsWTuple[1].name).toBe("col");
-                });
-
-                it ("otherwise should return a deterministic and unique hash.", function () {
-                    expect(detailedColsWTuple.map(function (col) {
-                        return col.name;
-                    })).toEqual(detailedExpectedNames);
+                    expect(detailedColsWTuple[4].isEntityMode).toBe(false, "missmatch for index=4");
+                    expect(detailedColsWTuple[6].isEntityMode).toBe(false, "missmatch for index=6");
                 });
             });
 
             describe ("displayname, ", function () {
                 it ("if `markdown_name` is defined, should use it.", function () {
-                    checkDisplayname(detailedColsWTuple[8], "<strong>association table</strong>", true);
+                    checkDisplayname(detailedColsWTuple[6], "<strong>Outbound Len 2</strong>", true, "for index=6");
+
+                    checkDisplayname(detailedColsWTuple[15], "<strong>Count Agg</strong>", true, "for index=15");
                 });
 
                 describe("if it has aggreagte.", function () {
                     it ('should append the aggregate function to the displayname.', function () {
                         var aggregateDisplaynames = [
-                            'Number # id', 'Count Distinct id', 'Minimum id', 'Maximum col name', 'Number # foreign key column name to main'
+                            '# id', '# id', 'Min id', 'Max col name'
                         ];
-                        for (var i = 11; i <= 15; i++) {
+                        for (var i = 11; i <= 14; i++) {
                             expect(detailedColsWTuple[i].displayname.value).toBe(aggregateDisplaynames[i-11], "missmatch for index =" + i);
                         }
                     });
                 });
 
-                describe("if it's not a path,", function () {
-                    it ("if it's entity mode, should return the key displayname.", function () {
-                        checkDisplayname(detailedColsWTuple[2], "<strong>key name</strong>", true);
-                    });
-
-                    it ("otherwise should apply column's displayname logic.", function () {
-                        checkDisplayname(detailedColsWTuple[1], "col name", false);
-                    });
+                it ("if it's in entity mode, should return the table's name.", function () {
+                    expect(detailedColsWTuple[5].displayname.value).toBe("outbound_1_outbound_1");
                 });
 
-                it ("if it's a one-to-one path in non-entity mode, should use the column's displayname logic.", function () {
-                    checkDisplayname(detailedColsWTuple[6], "outbound_1_outbound_1 id name", false);
+                it ("if it's in scalar mode, should return the column's name.", function () {
+                    expect(detailedColsWTuple[4].displayname.value).toBe("id");
+                });
+            });
+
+            describe("comment, ", function () {
+                it ('if `comment` is defined, should use it.', function () {
+                    expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
+                    expect(detailedColsWTuple[15].comment).toBe("has long values", "missmatch for index=6");
                 });
 
-                describe ("otherwise should apply the same logic as FacetColumn", function () {
-                    it ("if last foreignkey is outbound should use its to_name.", function () {
-                        checkDisplayname(detailedColsWTuple[5], "outbound_1_fk1 to_name", false);
-                    });
+                it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
+                    var aggregateComments = [
+                        'Number of id', 'Number of distinct id', 'Minimum id', 'Maximum col name'
+                    ];
+                    for (var i = 11; i <= 14; i++) {
+                        expect(detailedColsWTuple[i].comment).toBe(aggregateComments[i-11], "missmatch for index =" + i);
+                    }
+                });
 
-                    it ("if last foreignkey is inbound should use its from_name.", function () {
-                        checkDisplayname(detailedColsWTuple[7], "inbound_1 from_name", false);
-                    });
+                it ("if it's in entity mode, should return the table's comment.", function () {
+                    expect(detailedColsWTuple[5].comment).toBe("outbound_1_outbound_1 comment");
+                });
 
-                    it ("if to_name and from_name are not defined, should return the table's name.", function () {
-                        checkDisplayname(detailedColsWTuple[10], "main_inbound_2_association", false, "index=10");
-                        checkDisplayname(detailedColsWTuple[9], "inbound_2_outbound_1", false, "index=9");
-                        checkDisplayname(detailedColsWTuple[3], "outbound_1", false, "index=3");
-                    });
+                it ("if it's in scalar mode, should return the column's comment.", function () {
+                    expect(detailedColsWTuple[4].comment).toBe("id of outbound_1");
                 });
             });
 
@@ -563,29 +581,15 @@ exports.execute = function (options) {
                         'inbound_1', 'inbound_2', 'inbound_2_outbound_1',
                         'main_inbound_2_association', 'inbound_2',
                         'inbound_2_outbound_1', 'main_inbound_2_association',
-                        'main', 'inbound 4 long table name'
+                        'main', 'inbound 4 long table name', 'main', 'main'
                     ]);
                 });
             });
 
             describe("sortable, ", function () {
-                describe("if it's not a path.", function () {
-                    it ("if in entity mode, should return the key sort settings.", function () {
-                        checkSortable(detailedColsWTuple[2], true, ["col"]);
-                    });
-
-                    it ("otherwise should return the column sort settings.", function () {
-                        checkSortable(detailedColsWTuple[0], true, ["main_table_id_col"]);
-                    });
-                });
-
                 describe("if it's unique (one-to-one) path should apply the same logic as foreignkey. ", function () {
                     it ("use the column_order defined on last foreignkey.", function () {
                         checkSortable(detailedColsWTuple[5], true, ["col"]);
-                    });
-
-                    it ("use the row_order of table in entity_mode.", function () {
-                        checkSortable(detailedColsWTuple[3], true, ["col"]);
                     });
 
                     it ("use the column's column_order if none-entity or row_order is not defined.", function () {
@@ -595,7 +599,8 @@ exports.execute = function (options) {
                 });
 
                 it ("otherwise should not be sortable.", function () {
-                    for (var i = 7; i <= 15; i++) {
+                    checkSortable(detailedColsWTuple[9], false, [], "index=9");
+                    for (var i = 11; i <= 15; i++) {
                         checkSortable(detailedColsWTuple[i], false, [], "index=" + i);
                     }
                 });
@@ -603,47 +608,23 @@ exports.execute = function (options) {
 
             describe ("formatPresentation, ", function () {
                 it ("in entity mode should return null.", function () {
-                    detailedColsWTuple.forEach(function (col, i) {
-                        if (i === 0) return;
-                        expect(col.formatPresentation({"id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
+                    detailedPseudoColumnIndices.forEach(function (i) {
+                        expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
                     });
                 });
 
                 it ("if aggregate is defined should return null.", function () {
-                    for (var i = 7; i <= 10; i++) {
+                    for (var i = 11; i <= 15; i++) {
                         expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
                     }
                 });
 
-                describe("if it doesn't have path.", function () {
-                    it ("if in entity mode, should return the key value.", function () {
-                        expect(detailedColsWTuple[2].formatPresentation(
-                            {"main_table_id_col": "121"},
-                            "detailed"
-                        ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=121">121</a>');
-                    });
-
-                    it ("otherwise should return the underlying column value.", function () {
-                        expect(detailedColsWTuple[0].formatPresentation(
-                            "test",
-                            "detailed"
-                        ).value).toEqual('test', "id missmatch.");
-
-                        expect(detailedColsWTuple[1].formatPresentation(
-                            "A col value",
-                            "detailed",
-                            {formattedValues: {"col":"A value", "main_table_id_col": "1"}}
-                        ).value).toEqual('<p>1: A value</p>\n', "col missmatch.");
-                    });
+                it ("if it's not a one-to-one path, should return null.", function () {
+                    expect(detailedColsWTuple[9].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
                 });
 
                 describe("if it's a one-to-one path", function () {
                     it ("if in entity mode, should apply the foreignkey logic.", function () {
-                        expect(detailedColsWTuple[3].formatPresentation(
-                            {"col": "A value", "id": "101"},
-                            "detailed"
-                        ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/id=101">101</a>', "index=3 missmatch.");
-
                         expect(detailedColsWTuple[5].formatPresentation(
                             {"col": "A value", "id": "101"},
                             "detailed"
@@ -662,17 +643,11 @@ exports.execute = function (options) {
                         ).value).toEqual('101', "index=6 missmatch.");
                     });
                 });
-
-                it ("otherwise (path), should return null.", function () {
-                    for (var i = 11; i < 15; i++) {
-                        expect(detailedColsWTuple[i].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
-                    }
-                });
             });
 
             describe("getAggregatedValue, ", function () {
                 it ("should throw an error if column doesn't have aggregate.", function (done) {
-                    detailedColsWTuple[10].getAggregatedValue(mainPage).then(function () {
+                    detailedColsWTuple[9].getAggregatedValue(mainPage).then(function () {
                         done.fail("expected function to throw error");
                     }).catch(function (e) {
                         expect(e.message).toBe("this function should only be used when `hasAggregate` is true.", "error message missmatch.");
@@ -740,65 +715,10 @@ exports.execute = function (options) {
 
             describe("reference, ", function () {
                 it ("should return the main reference if source doesn't have path", function () {
-                    for (var i = 1; i <= 2; i++) {
-                        expect(detailedColsWTuple[i].reference.location.ermrestUri).toBe(mainRefDetailed.location.ermrestUri, "missmatch for index=" + i);
-                    }
-                });
-
-                it ("should apply the same logic as related reference if it's inbound fk.", function() {
-                    checkRelatedReference(
-                        detailedColsWTuple[7].reference,
-                        "inbound_1",
-                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'inbound_1_fk1' ]}, "main_table_id_col"], "choices": ["01"]}]},
-                        "(main_table_id_col)=(pseudo_column_schema:inbound_1:id)",
-                        "PVRyOIK9bsJ-vZIb2KQbqg",
-                        "inbound_1 from_name",
-                        "inbound_1 to_name",
-                        "inbound related"
-                    );
-
-                    checkRelatedReference(
-                        detailedColsWTuple[8].reference,
-                        "inbound_2",
-                        {"and": [
-                            {"source": [
-                                {"inbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk2' ]},
-                                {"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]},
-                                "main_table_id_col"],
-                            "choices": ["01"]}
-                        ]},
-                        "(main_table_id_col)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
-                        "R_mEKSGa1TYGyQHxRu3fHg",
-                        "<strong>association table</strong>",
-                        "main",
-                        "association"
-                    );
-
-                    checkRelatedReference(
-                        detailedColsWTuple[10].reference,
-                        "main_inbound_2_association",
-                        {"and": [{"source": [{"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]}, "main_table_id_col"], "choices": ["01"]}]},
-                        "(main_table_id_col)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)",
-                        "R_mEKSGa1TYGyQHxRu3fHg",
-                        "main_inbound_2_association",
-                        "main",
-                        "inbound related 2"
-                    );
+                    expect(detailedColsWTuple[14].reference.location.ermrestUri).toBe(mainRefDetailed.location.ermrestUri, "missmatch for index=" + i);
                 });
 
                 it ("should be generated based on mainTuple.", function () {
-                    checkReference(
-                        detailedColsWTuple[3].reference,
-                        "outbound_1",
-                        {"and": [
-                            {"source": [
-                                {"inbound":[ 'pseudo_column_schema', 'main_fk1' ]},
-                                "fk1"],
-                            "choices": ["01"]}
-                        ]},
-                        "index=3"
-                    );
-
                     checkReference(
                         detailedColsWTuple[6].reference,
                         "outbound_1_outbound_1",
@@ -828,8 +748,6 @@ exports.execute = function (options) {
                 });
 
                 it ("if mainTuple is not passed, should return an unfiltered referene.", function () {
-                    checkReference(detailedCols[3].reference, "outbound_1", undefined, "index=3");
-
                     checkReference(detailedCols[6].reference, "outbound_1_outbound_1", undefined, "index=6");
 
                     checkReference(detailedCols[9].reference, "inbound_2_outbound_1", undefined, "index=9");
@@ -838,9 +756,7 @@ exports.execute = function (options) {
 
             describe("foreignKeys, ", function () {
                 it ("if there's no path it should return an empty array.", function () {
-                    for (var i = 1; i <= 2; i++) {
-                        checkForeignKeys(detailedColsWTuple[i], [], "index="+ i);
-                    }
+                    checkForeignKeys(detailedColsWTuple[14], [], "index="+ i);
                 });
 
                 it ("otherwise it should return a list of objects that have fk and its direction", function () {
@@ -852,20 +768,24 @@ exports.execute = function (options) {
                 });
             });
 
+            it ("name, should return a deterministic and unique hash.", function () {
+                expect(detailedColsWTuple.map(function (col) {
+                    return col.name;
+                })).toEqual(detailedExpectedNames);
+            });
+
             it ("default, should throw error as this column should not be used in entity mode.",  function () {
-                detailedColsWTuple.forEach(function (col, i) {
-                    if (i === 0) return;
+                detailedPseudoColumnIndices.forEach(function (i) {
                     expect(function () {
-                        var def = col.default;
+                        var def = detailedColsWTuple[i].default;
                     }).toThrow("can not use this type of column in entry mode.", "missmatch for index=" + i);
                 });
             });
 
             it ("nullok, should throw error as this column should not be used in entity mode.", function () {
-                detailedColsWTuple.forEach(function (col, i) {
-                    if (i === 0) return;
+                detailedPseudoColumnIndices.forEach(function (i) {
                     expect(function () {
-                        var nullok = col.nullok;
+                        var nullok = detailedColsWTuple[i].nullok;
                     }).toThrow("can not use this type of column in entry mode.", "missmatch for index=" + i);
                 });
             });
@@ -886,7 +806,7 @@ exports.execute = function (options) {
             expect(test.ref.columns.map(function (col) {
                 // the name for pseudoColumns is a hash, this way of testing it is easier to read
                 if (col.isPathColumn) {
-                    return col.columnObject.source;
+                    return col.sourceObject.source;
                 }
                 if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
                     return col._constraintName;
