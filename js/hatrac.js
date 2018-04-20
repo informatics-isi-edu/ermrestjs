@@ -367,7 +367,7 @@ var ERMrest = (function(module) {
 
                 if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
                     contextHeaderParams = {
-                        action: "create-upload-job",
+                        action: "upload/create",
                         referrer: self.reference.defaultLogInfo
                     };
                     contextHeaderParams.referrer.column = self.column.name;
@@ -408,7 +408,7 @@ var ERMrest = (function(module) {
 
         if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
             contextHeaderParams = {
-                action: "file-exists",
+                action: "upload/file-exists",
                 referrer: this.reference.defaultLogInfo
             };
             contextHeaderParams.referrer.column = this.column.name;
@@ -535,7 +535,7 @@ var ERMrest = (function(module) {
 
         if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
             contextHeaderParams = {
-                action: "complete-upload",
+                action: "upload/complete",
                 referrer: this.reference.defaultLogInfo
             };
             contextHeaderParams.referrer.column = this.column.name;
@@ -651,7 +651,7 @@ var ERMrest = (function(module) {
 
         if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
             contextHeaderParams = {
-                action: "delete-file",
+                action: "upload/delete",
                 referrer: this.reference.defaultLogInfo
             };
             contextHeaderParams.referrer.column = this.column.name;
@@ -761,7 +761,7 @@ var ERMrest = (function(module) {
 
 
         var contextHeaderParams = {
-            action: "existing-status",
+            action: "upload/status",
             referrer: this.reference.defaultLogInfo
         };
         contextHeaderParams.referrer.column = this.column.name;
@@ -844,7 +844,7 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         var contextHeaderParams = {
-            action: "cancel-upload-job",
+            action: "upload/cancel",
             referrer: this.reference.defaultLogInfo
         };
         contextHeaderParams.referrer.column = this.column.name;
@@ -938,7 +938,7 @@ var ERMrest = (function(module) {
 
         // set content-type to "application/octet-stream"
         var contextHeaderParams = {
-            action: "file-exists",
+            action: "upload/chunk",
             referrer: upload.reference.defaultLogInfo
         };
         contextHeaderParams.referrer.column = upload.column.name;
