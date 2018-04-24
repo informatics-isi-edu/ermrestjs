@@ -4099,7 +4099,7 @@ NOTE: assumptions:
 
 #### facetColumn.displayname : <code>object</code>
 Returns the displayname object that should be used for this facetColumn.
-TODO the heuristics should be changed to be align with PseudoColumn
+TODO the heuristics should be changed to be aligned with PseudoColumn
 Heuristics are as follows (first applicable rule):
  0. If markdown_name is defined, use it.
  1. If column is part of the main table (there's no join), use the column's displayname.

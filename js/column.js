@@ -752,7 +752,7 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
             var getComment = function (self) {
-                if (self.sourceObject.markdown_name) {
+                if (self.sourceObject.comment) {
                     return self.sourceObject.comment;
                 }
 
