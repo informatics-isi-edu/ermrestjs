@@ -2071,7 +2071,7 @@
             var table = this._table;
             var refURI = [
                 table.schema.catalog.server.uri ,"catalog" ,
-                module._fixedEncodeURIComponent(table.schema.catalog.id), this.location.api,
+                table.schema.catalog.id, this.location.api,
                 [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             ].join("/");
             return new Reference(module.parse(refURI), table.schema.catalog);
@@ -2941,7 +2941,7 @@
 
                 var domainUri = [
                     fkrTable.schema.catalog.server.uri ,"catalog" ,
-                    module._fixedEncodeURIComponent(fkrTable.schema.catalog.id), this.location.api,
+                    fkrTable.schema.catalog.id, this.location.api,
                     [module._fixedEncodeURIComponent(fkrTable.schema.name),module._fixedEncodeURIComponent(fkrTable.name)].join(":"),
                     "right" + otherFK.toString(true)
                 ].join("/");
@@ -2982,7 +2982,7 @@
                 var table = newRef._table;
                 newRef._location = module.parse([
                     table.schema.catalog.server.uri ,"catalog" ,
-                    module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                    table.schema.catalog.id, "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
                 ].join("/") + subset);
 
@@ -3314,13 +3314,13 @@
                         });
                     }
 
-                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                         source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                 }
                 else {
                     if (source._location.filter === undefined) {
                         // 4.1 no filter
-                        newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                        newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                             source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                     } else {
                         // 4.2.1 single entity key filter (without any join), swap table and switch to mapping key
@@ -3346,7 +3346,7 @@
                                     filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                                 }
 
-                                newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                                     source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                                     filterString;
                             }
@@ -3414,7 +3414,7 @@
                                         filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
                                     }
 
-                                    newLocationString = source._location.service + "/catalog/" + module._fixedEncodeURIComponent(source._location.catalog) + "/" +
+                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
                                         source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
@@ -3875,7 +3875,7 @@
             if (this._ref === undefined) {
                 this._ref = _referenceCopy(this._pageRef);
 
-                var uri = this._pageRef._location.service + "/catalog/" + module._fixedEncodeURIComponent(this._pageRef._location.catalog) + "/" +
+                var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
                     this._pageRef._location.api + "/";
 
                 // if this is an alternative table, use base table

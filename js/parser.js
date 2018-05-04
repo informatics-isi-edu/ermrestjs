@@ -39,7 +39,7 @@
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
 
-        var compactPath = "#" + module._fixedEncodeURIComponent(catalogId) + "/";
+        var compactPath = "#" + catalogId + "/";
         if (schemaName) {
             compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
         }

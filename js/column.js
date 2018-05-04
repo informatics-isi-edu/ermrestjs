@@ -1076,7 +1076,7 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
     var table = fk.key.table;
     var ermrestURI = [
         table.schema.catalog.server.uri ,"catalog" ,
-        module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+        table.schema.catalog.id, "entity",
         [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
     ].join("/");
 
@@ -1185,7 +1185,7 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
 
         var refURI = [
             table.schema.catalog.server.uri ,"catalog" ,
-            module._fixedEncodeURIComponent(table.schema.catalog.id), this._baseReference.location.api,
+            table.schema.catalog.id, this._baseReference.location.api,
             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             keyPairs.join("&")
         ].join("/");
@@ -2120,7 +2120,7 @@ FacetColumn.prototype = {
 
             var uri = [
                 table.schema.catalog.server.uri ,"catalog" ,
-                module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                table.schema.catalog.id, "entity",
                 pathFromSource.join("/")
             ].join("/");
 
@@ -2272,7 +2272,7 @@ FacetColumn.prototype = {
             // create a url
             var uri = [
                 table.schema.catalog.server.uri ,"catalog" ,
-                module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+                table.schema.catalog.id, "entity",
                 module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
                 filterStr.join(";")
             ].join("/");
