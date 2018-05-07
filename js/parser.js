@@ -106,7 +106,7 @@
         this._service = parts[1];
 
         // catalog id
-        this._catalog = decodeURIComponent(parts[2]);
+        this._catalog = parts[2];
 
         // api
         this._api = parts[3];
