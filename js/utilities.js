@@ -1091,7 +1091,7 @@
         // create a url that points to the current ReferenceColumn
         var ermrestUri = [
             table.schema.catalog.server.uri ,"catalog" ,
-            module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+            table.schema.catalog.id, "entity",
             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             createKeyPair(uriKey)
         ].join("/");
