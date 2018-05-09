@@ -4261,7 +4261,7 @@
             }
             var loc = associationRef._location;
             var uri = [
-                loc.service, "catalog", encoder(loc.catalog), loc.api,
+                loc.service, "catalog", loc.catalog, loc.api,
                 encoder(associationRef._table.schema.name) + ":" + encoder(associationRef._table.name),
                 newFilter.join("&")
             ].join("/");
