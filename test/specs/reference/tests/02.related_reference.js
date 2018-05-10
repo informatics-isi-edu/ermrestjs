@@ -95,11 +95,10 @@ exports.execute = function(options) {
 
                 describe("regarding column objects defining path.", function () {
                     var pathRelated, compactSelectRef;
-                    var checkRelated = function (ref, schema, table, facet, subset) {
+                    var checkRelated = function (ref, schema, table, facet) {
                         expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
                         expect(ref.table.name).toBe(table, "table missmatch.");
                         expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
-                        expect(ref.location.queryParams['subset']).toBe(subset, "subset missmatch.");
                     };
                     beforeAll(function (done) {
                         compactSelectRef = reference.contextualize.compactSelect;
@@ -119,9 +118,7 @@ exports.execute = function(options) {
                     it ('should create the reference based on the given path and ignore the pure and binary assocation logic.', function () {
                         checkRelated(
                             pathRelated[0], "reference_schema", "association table with id",
-                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "id"], "choices": ["9003"]}]},
-                            "reference_table: 9003 and Henry"
-                        );
+                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "id"], "choices": ["9003"]}]}                        );
                     });
 
                     it ('should be able to support path with longer length.', function () {
@@ -132,8 +129,7 @@ exports.execute = function(options) {
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
                                 "id"
-                            ], "choices":["9003"]}]},
-                            "reference_table: 9003 and Henry"
+                            ], "choices":["9003"]}]}
                         );
                     });
                 });
@@ -197,24 +193,22 @@ exports.execute = function(options) {
                     describe("with tuple defined, ", function () {
                         it('should create the link using faceting.', function() {
 
-                            var checkUri = function (index, expectedTable, expectedFacets, expectedQueryParam) {
+                            var checkUri = function (index, expectedTable, expectedFacets) {
                                 var loc = relatedWithTuple[index].location;
                                 expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
                                 expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
                                 expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
-                                expect(loc.queryParams['subset']).toBeDefined();
-                                expect(loc.queryParams['subset']).toBe(expectedQueryParam);
                             }
 
                             checkUri(0, "inbound_related_reference_table", [{
                                 "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
                                 "choices":["9003"]
-                            }], "to_name_value: 9003 and Henry");
+                            }]);
 
                             checkUri(1, "inbound_related_reference_table", [{
                                 "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
                                 "choices":["9003"]
-                            }], "reference_table: 9003 and Henry");
+                            }]);
                         });
                     });
                 });
