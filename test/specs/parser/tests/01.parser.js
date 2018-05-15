@@ -389,7 +389,7 @@ exports.execute = function(options) {
     });
 
     describe("Query parameters", function() {
-        var queryParamsString = "subset=SOMESUBSET&limit=2";
+        var queryParamsString = "qp=SOMEVAL&limit=2";
         var path = schemaName + ":" + tableName;
         var uriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" + path;
         var ermrestUriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" + "M:=" + path;
@@ -415,7 +415,7 @@ exports.execute = function(options) {
 
         it("parser should create a dictionary of query params.", function() {
             expect(location.queryParams).toBeDefined("queryParams is not defined.");
-            expect(location.queryParams.subset).toBe("SOMESUBSET", "subset mismatch.");
+            expect(location.queryParams.qp).toBe("SOMEVAL", "qp mismatch.");
             expect(location.queryParams.limit).toBe("2", "limit mismatch.");
         });
     });

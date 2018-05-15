@@ -2011,7 +2011,7 @@
 
                 var currentColumns = {};
                 this._referenceColumns.forEach(function (col) {
-                    if (col.isPath || col.isInboundForeignKey) {
+                    if (col.isPathColumn || col.isInboundForeignKey) {
                         currentColumns[col.name] = true;
                     }
                 });
@@ -2830,7 +2830,7 @@
          * 0. keep track of the linkage and save some attributes:
          *      0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
          *      0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
-         *      0.3 parentDisplayname: the displayname of parent (used in subset to show in chaise)
+         *      0.3 parentDisplayname: the displayname of parent
          *          - logic: foriengkey's to_name or this.displayname
          *
          *
@@ -2840,15 +2840,13 @@
          *      1.3 derivedAssociationReference: points to the association table (A)
          *      1.4 location (uri):
          *          2.1.4.1 Uses the linkage to get to the T2.
-         *          2.1.4.2 if tuple was given, it will include a subset queryparam that proviedes more information
-         *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+         *          2.1.4.2 if tuple was given, it will use the value of shortestKey to create the facet
          * 2. Otherwise.
          *      2.1 displayname: F1.from_name or T2.displayname
          *      2.2 table: T2
          *      2.3 location (uri):
          *          2.3.1 Uses the linkage to get to the T2.
-         *          2.3.2 if tuple was given, it will include a subset queryparam that proviedes more information
-         *                  the subset is in form of `for "parentDisplayname" = "tuple.displayname"`
+         *          2.3.2 if tuple was given, it will use the value of shortestKey to create the facet
          *
          *
          * @private
@@ -2859,7 +2857,7 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
-            var j, col, uri, source, subset = "";
+            var j, col, uri, source;
 
             var useFaceting = (typeof tuple === 'object');
 
@@ -2890,13 +2888,6 @@
                 newRef.parentDisplayname = this.displayname;
             }
 
-            // create the subset that will be added for visibility
-            if (typeof tuple !== 'undefined') {
-                subset = "?subset=" + module._fixedEncodeURIComponent(
-                    newRef.parentDisplayname.unformatted + ": " + tuple.displayname.unformatted
-                );
-            }
-
             var fkrTable = fkr.colset.columns[0].table;
             if (checkForAssociation && fkrTable._isPureBinaryAssociation()) { // Association Table
 
@@ -2921,7 +2912,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true) + subset);
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
                 } else {
                     // build source
                     source = [
@@ -2959,7 +2950,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + subset);
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
                 } else {
                     source = [];
                 }
@@ -2984,18 +2975,19 @@
                     table.schema.catalog.server.uri ,"catalog" ,
                     table.schema.catalog.id, "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
-                ].join("/") + subset);
+                ].join("/"));
 
                 //filters
                 var filters = [];
                 source.push({"outbound": fkr.constraint_names[0]});
-                fkr.key.colset.columns.forEach(function (col) {
+                fkr.key.table.shortestKey.forEach(function (col) {
                     filters.push({
                         "source": source.concat(col.name),
                         "choices": [tuple.data[col.name]]
                     });
                 });
 
+                // the facets are basd on the value of shortest key of current table
                 newRef._location.facets = {"and": filters};
             }
 
