@@ -62,6 +62,7 @@ to use for ERMrest JavaScript agents.
         * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
         * [.get(name)](#ERMrest.Schemas+get) ⇒ [<code>Schema</code>](#ERMrest.Schema)
         * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
+        * [.findTable(tableName, [schemaName])](#ERMrest.Schemas+findTable) ⇒ [<code>Table</code>](#ERMrest.Table)
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
         * [.catalog](#ERMrest.Schema+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
@@ -273,6 +274,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -538,6 +540,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -740,6 +743,7 @@ Given tableName, and schemaName find the table
     * [.names()](#ERMrest.Schemas+names) ⇒ <code>Array</code>
     * [.get(name)](#ERMrest.Schemas+get) ⇒ [<code>Schema</code>](#ERMrest.Schema)
     * [.has(name)](#ERMrest.Schemas+has) ⇒ <code>boolean</code>
+    * [.findTable(tableName, [schemaName])](#ERMrest.Schemas+findTable) ⇒ [<code>Table</code>](#ERMrest.Table)
 
 <a name="new_ERMrest.Schemas_new"></a>
 
@@ -788,6 +792,24 @@ check for schema name existence
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | schmea name |
+
+<a name="ERMrest.Schemas+findTable"></a>
+
+#### schemas.findTable(tableName, [schemaName]) ⇒ [<code>Table</code>](#ERMrest.Table)
+**Kind**: instance method of [<code>Schemas</code>](#ERMrest.Schemas)  
+**Throws**:
+
+- [<code>MalformedURIError</code>](#ERMrest.MalformedURIError) 
+- [<code>NotFoundError</code>](#ERMrest.NotFoundError) Given table name and schema will find the table object.
+If schema name is not given, it will still try to find the table.
+If the table name exists in multiple schemas or it doesn't exist,
+it will throw an error
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tableName | <code>string</code> | the name of table |
+| [schemaName] | <code>string</code> | the name of schema (optional) |
 
 <a name="ERMrest.Schema"></a>
 
@@ -2431,6 +2453,7 @@ Constructor for a ParsedFilter.
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2523,6 +2546,13 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
 The table object for this reference
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+projectionTable"></a>
+
+#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
+The projection table object,
+if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+columns"></a>
@@ -4512,6 +4542,8 @@ NOTE: Will create a new reference by each call.
 
 #### columnGroupAggregateFn.entityCounts : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
 Will return an appropriate reference which can be used to show distinct values and their counts
+The result is based on shortest key of the parent table. If we have join
+in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
 
 **Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
@@ -4519,6 +4551,9 @@ NOTE: Will create a new reference by each call.
 
 #### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 Given number of buckets, min and max will return bin of results.
+The result is based on shortest key of the parent table. If we have join
+in the path, we are creating the histogram based on shortest key of the
+parent table (not the end table).
 
 **Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
 
@@ -5336,6 +5371,7 @@ get PathColumn object by column name
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -5428,6 +5464,13 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 
 #### reference.table : [<code>Table</code>](#ERMrest.Table)
 The table object for this reference
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+projectionTable"></a>
+
+#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
+The projection table object,
+if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+columns"></a>

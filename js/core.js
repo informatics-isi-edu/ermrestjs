@@ -401,6 +401,39 @@
          */
         has: function (name) {
             return name in this._schemas;
+        },
+
+        /**
+         * @param  {string} tableName  the name of table
+         * @param  {string=} schemaName the name of schema (optional)
+         * @return {ERMrest.Table}
+         * @throws {ERMrest.MalformedURIError}
+         * @throws  {ERMrest.NotFoundError}
+         * Given table name and schema will find the table object.
+         * If schema name is not given, it will still try to find the table.
+         * If the table name exists in multiple schemas or it doesn't exist,
+         * it will throw an error
+         */
+        findTable: function (tableName, schemaName) {
+            if (schemaName) {
+                return this.get(schemaName).tables.get(tableName);
+            }
+
+            var schemas = this.all(), schema;
+            for (var i = 0; i < schemas.length; i++) {
+                if (schemas[i].tables.names().indexOf(tableName) !== -1) {
+                    if (!schema){
+                        schema = schemas[i];
+                    } else{
+                        throw new module.MalformedURIError("Ambiguous table name " + tableName + ". Schema name is required.");
+                    }
+                }
+            }
+            if (!schema) {
+                throw new module.MalformedURIError("Table " + tableName + " not found");
+            }
+
+            return schema.tables.get(tableName);
         }
     };
 
