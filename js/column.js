@@ -955,7 +955,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
         if (this._reference === undefined) {
             var self = this;
             if (!self.hasPath) {
-                self._reference = self._baseReference;
+                self._reference = _referenceCopy(self._baseReference);
             } else {
 
                 // attach the parent displayname
@@ -968,14 +968,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
 
-                var subset = "";
-                if (typeof self._mainTuple !== 'undefined') {
-                    subset = "?subset=" + module._fixedEncodeURIComponent(
-                        parentDisplayname.unformatted + ": " + self._mainTuple.displayname.unformatted
-                    );
-                }
-
-                self._reference = new Reference(module.parse(self.table.uri + subset), self.table.schema.catalog);
+                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
                 self._reference.parentDisplayname = parentDisplayname;
 
                 var source = [], i, fk, columns, noData = false;
