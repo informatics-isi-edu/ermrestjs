@@ -652,13 +652,18 @@
                 var checkedObjects = {};
 
                 // if we have filters in the url, we should just get the structure from annotation
+                var j, facetLen = facetObjects.length;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].source === "*") continue;
 
                     found = false;
-                    for (var j = 0; j < facetObjects.length; j++) {
-                        // has matched with another facet (assumption: no duplicate facets in url)
+
+                    // find the facet corresponding to the filter
+                    for (j = 0; j < facetLen; j++) {
+
+                        // it can be merged only once, since in a facet the filter is
+                        // `or` and outside it's `and`.
                         if (checkedObjects[j]) continue;
 
                         if (sameSource(facetObjects[j].obj.source, andFilters[i].source)) {
@@ -669,6 +674,7 @@
                         }
                     }
 
+                    // couldn't find the facet, create a new facet object
                     if (!found) {
                         var filterCol = checkFacetObject(andFilters[i]);
                         if (filterCol) {
