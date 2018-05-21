@@ -505,12 +505,25 @@
                     "type": {
                         "typename": "integer"
                     }
+                },
+                {
+                    "name": "row_order_col",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["name"]
+                            }
+                        }
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*" : {
-                        "row_order": [{"column":"name", "descending":false}]
+                        "row_order": [{"column":"row_order_col", "descending":false}]
                     }
                 }
             }
