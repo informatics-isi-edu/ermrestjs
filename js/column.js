@@ -2936,6 +2936,8 @@ ColumnGroupAggregateFn.prototype = {
 
     /**
      * Will return an appropriate reference which can be used to show distinct values and their counts
+     * The result is based on shortest key of the parent table. If we have join
+     * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
      * @type {ERMrest.AttributeGroupReference}
      */
@@ -2944,8 +2946,8 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Cannot use this API on pseudo-column.");
         }
 
-        if (this._ref.location.hasJoin && this._ref.table.shortestKey.length > 1) {
-            throw new Error("Table must have a simple key for entity counts: " + this._ref.table.name);
+        if (this._ref.location.hasJoin && this._ref.projectionTable.shortestKey.length > 1) {
+            throw new Error("Table must have a simple key for entity counts: " + this._ref.projectionTable.name);
         }
 
         // search will be on the table not the aggregated results, so the column name must be the column name in the database
@@ -2963,7 +2965,7 @@ ColumnGroupAggregateFn.prototype = {
 
         var countName = "cnt(*)";
         if (this._ref.location.hasJoin) {
-            countName = "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+            countName = "cnt_d(" + this._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(this._ref.projectionTable.shortestKey[0].name) + ")";
         }
 
         var aggregateColumns = [
@@ -2975,6 +2977,9 @@ ColumnGroupAggregateFn.prototype = {
 
     /**
      * Given number of buckets, min and max will return bin of results.
+     * The result is based on shortest key of the parent table. If we have join
+     * in the path, we are creating the histogram based on shortest key of the
+     * parent table (not the end table).
      * @param  {int} bucketCount number of buckets
      * @param  {int} min         minimum value
      * @param  {int} max         maximum value
@@ -2995,7 +3000,7 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Binning is not supported on column type " + column.type.name);
         }
 
-        if (reference.location.hasJoin && reference.table.shortestKey.length > 1) {
+        if (reference.location.hasJoin && reference.projectionTable.shortestKey.length > 1) {
             throw new Error("Table must have a simple key.");
         }
 

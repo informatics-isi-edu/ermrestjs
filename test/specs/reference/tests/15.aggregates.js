@@ -36,7 +36,7 @@ exports.execute = function (options) {
             schemaName + ":" + tableName;
 
         var compositeTableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithCompKey + ":col)";
+            schemaName + ":" + tableNameWithCompKey + "/(col)=(" + schemaName + ":" + tableName + ":id)";
 
         var tableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithSimpleKey + ":simple_id)";
@@ -219,10 +219,10 @@ exports.execute = function (options) {
                 };
 
 
-                it ("if there's a join in the path should and table doesn't have single keys, should throw an error.", function (done) {
+                it ("if there's a join in the path and projection table doesn't have single keys, should throw an error.", function (done) {
                     options.ermRest.resolve(compositeTableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expect(function () {
-                            var ec = reference.columns[0].groupAggregate.entityCounts;
+                            var ec = reference.columns[1].groupAggregate.entityCounts;
                         }).toThrow("Table must have a simple key for entity counts: table_w_only_composite_key");
 
                         done();
@@ -232,11 +232,11 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(shortestKey) for count.", function (done) {
+                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(T:shortestKey) for count.", function (done) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[0].groupAggregate.entityCounts,
-                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(simple_id)@sort(count::desc::,value)",
+                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(T:id)@sort(count::desc::,value)",
                             ["col", "Number of Occurences"]
                         );
                         done();
@@ -250,7 +250,7 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithUnicode, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[1].groupAggregate.entityCounts,
-                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d("+ encodedID +")@sort(count::desc::,value)",
+                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(T:id)@sort(count::desc::,value)",
                             [decodedCol, "Number of Occurences"]
                         );
                         done();
