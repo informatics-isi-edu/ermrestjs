@@ -537,9 +537,9 @@ exports.execute = function (options) {
                 describe("if it has aggreagte.", function () {
                     it ('should append the aggregate function to the displayname.', function () {
                         var aggregateDisplaynames = [
-                            '# id', '# id', 'Min id', 'Max col name'
+                            '# id', '# id', 'Min id', 'Max col name', 'id'
                         ];
-                        for (var i = 11; i <= 14; i++) {
+                        for (var i = 11; i <= 15; i++) {
                             expect(detailedColsWTuple[i].displayname.value).toBe(aggregateDisplaynames[i-11], "missmatch for index =" + i);
                         }
                     });
@@ -562,9 +562,9 @@ exports.execute = function (options) {
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
                     var aggregateComments = [
-                        'Number of id', 'Number of distinct id', 'Minimum id', 'Maximum col name'
+                        'Number of id', 'Number of distinct id', 'Minimum id', 'Maximum col name', "List of id"
                     ];
-                    for (var i = 11; i <= 14; i++) {
+                    for (var i = 11; i <= 15; i++) {
                         expect(detailedColsWTuple[i].comment).toBe(aggregateComments[i-11], "missmatch for index =" + i);
                     }
                 });
