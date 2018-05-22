@@ -1322,7 +1322,7 @@
 
                 // if operator is or and the filter is binary we can merge them
                 // for example id=1;id=2 can turned into {source: "id", choices: ["1", "2"]}
-                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], :ranges: {min: 2}}
+                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], "ranges": [{min: 2}]}
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
                         // the source existed before, so it can be merged
