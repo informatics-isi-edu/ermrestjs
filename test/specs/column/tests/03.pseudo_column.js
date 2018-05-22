@@ -17,9 +17,10 @@
  * 12: same as 9 with `cnt_d` aggregate (PseudoColumn)
  * 13: same as 10 in non-entity mode with `min` aggregate (PseudoColumn)
  * 14: col - max (PseudoColumn)
- * 15: inbound for testing long aggregate request (PseudoColumn)
- * 16: asset (AssetPseudoColumn)
- * 17: asset_filename (ReferenceColumn)
+ * 15: same as 8 with `array` in non entity mode
+ * 16: inbound for testing long aggregate request (PseudoColumn)
+ * 17: asset (AssetPseudoColumn)
+ * 18: asset_filename (ReferenceColumn)
  *
  * Only the followin indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -30,7 +31,8 @@
  * 12(same as 9, agg cnt_d)
  * 13(inbound, scalar, agg min)
  * 14(col - agg max)
- * 15 (inbound, agg cnt)
+ * 15 (same as 8, agg array)
+ * 16 (inbound, agg cnt)
  *
  * For entry:
  * 0: main_table_id_col
@@ -102,7 +104,7 @@ exports.execute = function (options) {
             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/id=01">01</a>',
             '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=01">01</a>',
-            '01', '', '', '', '', '', '', '', '', '', '', ''
+            '01', '', '', '', '', '', '', '', '', '', '', '', ''
         ];
 
         var detailedExpectedNames = [
@@ -110,19 +112,19 @@ exports.execute = function (options) {
              'o7Gpk7dRlnzNv3_JjhqDIg', 'CaEhWBd7gSjuYCLun-8D-A', '1EC_6-rbhKc3tIjczjq1fQ',
              'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
-             'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'MJVZnQ5mBRdCFPfjIOMvkA',
-             "asset", "asset_filename"
+             'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
+             'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename"
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16
         ];
 
         var detailedColumnTypes = [
             "", "", "isKey", "isForeignKey", "isPathColumn", "isPathColumn",
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isAsset", ""
+            "isPathColumn", "isPathColumn", "isAsset", ""
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
@@ -220,7 +222,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(18, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(19, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -259,6 +261,11 @@ exports.execute = function (options) {
                         ],
                         [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
                         "col",
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ],
                         [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"],
                         "asset",
                         "asset_filename"
@@ -423,7 +430,7 @@ exports.execute = function (options) {
                         "3": "main fk cm",
                         "7": "inbound cm",
                         "8": "association table cm",
-                        "16": "asset cm"
+                        "17": "asset cm"
                     };
 
                     for (var i in expectedComments) {
@@ -438,7 +445,7 @@ exports.execute = function (options) {
                         "3": "main fk",
                         "7": "inbound",
                         "8": "<strong>association table</strong>",
-                        "16": "<strong>asset</strong>"
+                        "17": "<strong>asset</strong>"
                     };
 
                     for (var i in expectedComments) {
@@ -524,7 +531,7 @@ exports.execute = function (options) {
                 it ("if `markdown_name` is defined, should use it.", function () {
                     checkDisplayname(detailedColsWTuple[6], "<strong>Outbound Len 2</strong>", true, "for index=6");
 
-                    checkDisplayname(detailedColsWTuple[15], "<strong>Count Agg</strong>", true, "for index=15");
+                    checkDisplayname(detailedColsWTuple[16], "<strong>Count Agg</strong>", true, "for index=15");
                 });
 
                 describe("if it has aggreagte.", function () {
@@ -550,7 +557,7 @@ exports.execute = function (options) {
             describe("comment, ", function () {
                 it ('if `comment` is defined, should use it.', function () {
                     expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
-                    expect(detailedColsWTuple[15].comment).toBe("has long values", "missmatch for index=6");
+                    expect(detailedColsWTuple[16].comment).toBe("has long values", "missmatch for index=6");
                 });
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
@@ -581,7 +588,7 @@ exports.execute = function (options) {
                         'inbound_1', 'inbound_2', 'inbound_2_outbound_1',
                         'main_inbound_2_association', 'inbound_2',
                         'inbound_2_outbound_1', 'main_inbound_2_association',
-                        'main', 'inbound 4 long table name', 'main', 'main'
+                        'main', 'inbound_2', 'inbound 4 long table name', 'main', 'main'
                     ]);
                 });
             });
@@ -694,9 +701,19 @@ exports.execute = function (options) {
                     });
                 });
 
+                it ("should handle array aggregate.", function (done) {
+                    detailedColsWTuple[15].getAggregatedValue(mainPage).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual('02 ,01 ,04 ,03 ,05', "value missmatch.");
+                        done();
+                    }).catch(function (e) {
+                        done.fail(e);
+                    });
+                });
+
                 it ("should handle big page of data.", function (done) {
                     mainRefDetailed.read(22).then(function (page) {
-                        return detailedColsWTuple[15].getAggregatedValue(page);
+                        return detailedColsWTuple[16].getAggregatedValue(page);
                     }).then(function (val) {
                         // the whole intention of test was testing the logic of url limitation,
                         // the values is not important. since all of them are just one row, it will

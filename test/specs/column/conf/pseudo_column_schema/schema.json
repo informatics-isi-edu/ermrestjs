@@ -130,6 +130,11 @@
                         ], "aggregate": "cnt_d"},
                         {"source": [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"], "aggregate": "min", "entity": false},
                         {"source": "col", "aggregate": "max"},
+                        {"source": [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ], "aggregate": "array", "entity": false},
                         {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
                         {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
                         {"source": "asset_filename", "markdown_name": "filename"}

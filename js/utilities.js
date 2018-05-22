@@ -2658,10 +2658,10 @@
         "json"
     ];
 
-    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d"];
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
     module._pseudoColScalarAggregateFns = ["min", "max"];
-    module._pseudoColAggregateNames = ["Min", "Max", "#", "#"];
-    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
 
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
