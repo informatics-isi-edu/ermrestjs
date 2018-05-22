@@ -1108,21 +1108,16 @@
                  *       - for PseudoColumns we need
                  *           - A new alias: F# where the # is a positive integer.
                  *           - The sort column name must be the "foreignkey_alias:column_name".
-                 *
-                 * Assumption: there is no column/alias with `F#` name where # is a positive integer.
                  * */
-                if (hasSort) {
-                    sortObject = this._location.sortObject;
-
-                    var foreignKeys = this._table.foreignKeys,
+                var processSortObject= function (self) {
+                    var foreignKeys = self._table.foreignKeys,
                         colName,
                         fkIndex, fk;
 
                     for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
-
                         // find the column in ReferenceColumns
                         try {
-                            col = this.getColumnByName(sortObject[i].column);
+                            col = self.getColumnByName(sortObject[i].column);
                         } catch (e) {
                             throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
                         }
@@ -1169,10 +1164,18 @@
                             }
                          }
                     }
+                };
+
+                if (hasSort) {
+                    sortObject = this._location.sortObject;
+                    processSortObject(this);
                 }
                 // use row-order if sort was not provided
                 else if (this.display._rowOrder){
                     sortObject = this.display._rowOrder;
+                    sortColNames = sortObject.map(function (so) {
+                        return so.column;
+                    });
                 }
 
                 // ermrest requires key columns to be in sort param for paging
@@ -1897,15 +1900,27 @@
                 if (annotation) {
 
                     // Set row_order value
+                    // columns defined in row_order can have column_order
+                    // This will take care of that and will return the actual columns that
+                    // we want sort to be based on.
                     if (Array.isArray(annotation.row_order)) {
-                        var rowOrder = [];
+                        var rowOrder = [], col, sortObjectNames = {}, sortColNames = {};
                         annotation.row_order.forEach(function (ro) {
-                            // make sure column exists
-                            if (!self.table.columns.has(ro.column)) return;
+                            if (!ro.column || ro.column in sortObjectNames) return;
+                            sortObjectNames[ro.column] = true;
 
-                            rowOrder.push({
-                                "column": ro.column,
-                                "descending": (ro.descending === true) ? true : false
+                            // make sure column exists and is sortable
+                            if (!self.table.columns.has(ro.column)) return;
+                            col = self.getColumnByName(ro.column);
+                            if (!col.sortable) return;
+
+                            col._sortColumns.forEach(function (sc) {
+                                if (sc.name in sortColNames) return;
+                                sortColNames[sc.name] = true;
+                                rowOrder.push({
+                                    "column": sc.name,
+                                    "descending": (ro.descending === true) ? true : false
+                                });
                             });
                         });
                         this._display._rowOrder = rowOrder;
@@ -2291,37 +2306,7 @@
 
             // if we have extra data, and one of before/after is not available
             if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
-                var pageValues = [], colName, data, pseudoCol, j, i;
-
-                // get list of values based on sort list
-                for (i = 0; i < newRef._location.sortObject.length; i++) {
-                    colName = newRef._location.sortObject[i].column;
-
-                    // if data is from a non-pseudo column
-                    data = page._extraData[colName];
-                    if (typeof data !== 'undefined') { // normal column
-                        pageValues.push(data);
-                    } else { // pseudo column
-
-                        // find the column
-                        for (j = 0; j < newRef.columns.length; j++) {
-                            if (this.columns[j].name == colName) {
-                                pseudoCol = newRef.columns[j];
-                                break;
-                            }
-                        }
-
-                        // find the values from the sortColumn
-                        for(j = 0; j < pseudoCol._sortColumns.length; j++) {
-                            if (pseudoCol.isForeignKey) {
-                                data = page._extraLinkedData[colName][pseudoCol._sortColumns[j].name];
-                            } else {
-                                data = page._extraData[pseudoCol._sortColumns[j].name];
-                            }
-                            pageValues.push(data);
-                        }
-                    }
-                }
+                var pageValues = _getPagingValues(newRef, page._extraData, page._extraLinkedData);
 
                 // add before based on extra data
                 if (!pageRef._location.beforeObject) {
@@ -3686,9 +3671,21 @@
         _getSiblingReference: function(next) {
             var loc = this._ref.location;
 
+            // there's no sort, so no paging is possible
             if (!Array.isArray(loc.sortObject) || (loc.sortObject.length === 0)) {
                 return null;
             }
+
+            // data is not available
+            if (!this._data || this._data.length === 0) {
+                return null;
+            }
+
+            var newReference = _referenceCopy(this._ref);
+
+            // update paging by creating a new location
+            newReference._location = this._ref._location._clone();
+
 
             /* This will return the values that should be used for after/before
              * Let's assume the current page of data for the sort column is  [v1, v2, v3],
@@ -3698,65 +3695,8 @@
              * the sort columns. So that it will be used for after/before in location object.
              * It is also taking care of duplicate columns, so it will be aligned with the read logic.
              */
-            var getNewPageValues = function (self) {
-
-                // if data doesn't exist, then we cannot get the next/previous page
-                if (!self._data || self._data.length === 0) {
-                    return null;
-                }
-
-                var rowIndex = next ? (self._data.length - 1) : 0;
-                var rowData = self._data[rowIndex];
-                var rowLinkedData = self._linkedData[rowIndex];
-
-                var values = [], addedCols = {}, sortObjectNames = {};
-                var col, fkData, data, i, j, sortCol, colName;
-
-                for (i = 0; i < loc.sortObject.length; i++) {
-                    colName = loc.sortObject[i].column;
-
-                    try {
-                        col = self._ref.getColumnByName(colName);
-                    } catch (e) {
-                        return null; // column doesn't exist return null.
-                    }
-
-                    // avoid duplicate sort columns
-                    if (col.name in sortObjectNames) continue;
-                    sortObjectNames[col.name] = true;
-
-                    if (!col.sortable) {
-                        return null;
-                    }
-
-                    for (j = 0; j < col._sortColumns.length; j++) {
-                        sortCol = col._sortColumns[j];
-
-                        // avoid duplciate columns
-                        if (sortCol in addedCols) continue;
-                        addedCols[sortCol] = true;
-
-                        if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
-                            fkData = rowLinkedData[col.name];
-                            data = null;
-                            if (isObjectAndNotNull(fkData)) {
-                                data =  fkData[sortCol.name];
-                            }
-                        } else {
-                            data = rowData[sortCol.name];
-                        }
-                        values.push(data);
-                    }
-                }
-                return values;
-            };
-
-            var newReference = _referenceCopy(this._ref);
-
-            // update paging by creating a new location
-            newReference._location = this._ref._location._clone();
-
-            var pageValues = getNewPageValues(this);
+            var rowIndex = next ? (this._data.length - 1) : 0;
+            var pageValues = _getPagingValues(this._ref, this._data[rowIndex], this._linkedData[rowIndex]);
             if (pageValues === null) {
                 return null;
             }

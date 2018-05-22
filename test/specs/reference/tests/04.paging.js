@@ -779,6 +779,7 @@ exports.execute = function (options) {
         describe("setSamePaging, ", function () {
             var baseUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
             var refUri = baseUri + tableNameInboundRelated + "@sort(id)",
+                refUriWithoutSort = baseUri + tableNameInboundRelated,
                 refUriJoin = baseUri + "reference_table/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
 
             var currRef, newRef;
@@ -866,6 +867,22 @@ exports.execute = function (options) {
                 }).catch(function (err) {
                     done.fail();
                     console.log(err);
+                });
+            });
+
+
+            describe("when page is sorted based on foreignkey column, ", function () {
+                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference)";
+                it ("if page didn't have any paging options should return a reference with before.", function (done) {
+                    testUri(done, url, 5, null, ["9005", "6"]); // since the fk value is not the key, its appending the shortestkey
+                });
+
+                it ("if page had before, should return a reference with same before and new after.", function (done) {
+                    testUri(done, url + "@before(9005,7)", 5, ["9001", "1"], ["9005", "7"]);
+                });
+
+                it ("if page had after, should return a reference with same after and new before.", function (done) {
+                    testUri(done, url + "@after(9003,3)", 5, ["9003", "3"], ["9005", "9"]);
                 });
             });
         });
