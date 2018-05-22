@@ -404,6 +404,44 @@ exports.execute = function (options) {
                     });
                 });
 
+                describe ("should be able to handle and filter on same source", function () {
+                    it ("when the facet exists in the annotation.", function (done) {
+                        facetObj = { "and": [ {"source": "id", "choices": ["1"]}, {"source": "id", "choices": ["2"]} ] };
+                        options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                            expect(ref.facetColumns.length).toBe(17, "length missmatch.");
+                            expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect for index=0");
+                            expect(ref.facetColumns[16].filters.length).toBe(1, "# of filters defined is incorrect for index=16");
+                            expect(ref.location.facets).toBeDefined("facets is undefined.");
+                            expect(ref.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/id=1/$M/id=2/$M",
+                                "path missmatch."
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+
+                    it ("when the facet does not exist in the annotation.", function (done) {
+                        facetObj = { "and": [ {"source": "unfaceted_column", "choices": ["1"]}, {"source": "unfaceted_column", "choices": ["2"]} ] };
+                        options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                            expect(ref.facetColumns.length).toBe(18, "length missmatch.");
+                            expect(ref.facetColumns[16].filters.length).toBe(1, "# of filters defined is incorrect for index=0");
+                            expect(ref.facetColumns[17].filters.length).toBe(1, "# of filters defined is incorrect for index=16");
+                            expect(ref.location.facets).toBeDefined("facets is undefined.");
+                            expect(ref.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/unfaceted_column=1/$M/unfaceted_column=2/$M",
+                                "path missmatch."
+                            );
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+                });
+
                 it ("if annotation has default search and so does the uri, the uri should take precedence.", function (done) {
                     facetObj = {"and": [{"source": "*", "search": ["newTerm"]}]};
                     options.ermRest.resolve(createURL(tableSecondPath2, facetObj)).then(function (ref) {
