@@ -292,6 +292,7 @@ to use for ERMrest JavaScript agents.
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+            * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -558,6 +559,7 @@ to use for ERMrest JavaScript agents.
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
             * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+            * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -2471,6 +2473,7 @@ Constructor for a ParsedFilter.
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -2810,6 +2813,18 @@ or rejected with any of these errors:
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
+<a name="ERMrest.Reference+read..processSortObject"></a>
+
+##### read~processSortObject()
+Check the sort object. Does not change the `this._location` object.
+  - Throws an error if the column doesn't exist or is not sortable.
+  - maps the sorting to its sort columns.
+      - for columns it's straighforward and uses the actual column name.
+      - for PseudoColumns we need
+          - A new alias: F# where the # is a positive integer.
+          - The sort column name must be the "foreignkey_alias:column_name".
+
+**Kind**: inner method of [<code>read</code>](#ERMrest.Reference+read)  
 <a name="ERMrest.Reference+sort"></a>
 
 #### reference.sort(sort) ⇒ <code>Reference</code>
@@ -5389,6 +5404,7 @@ get PathColumn object by column name
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -5728,6 +5744,18 @@ or rejected with any of these errors:
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
+<a name="ERMrest.Reference+read..processSortObject"></a>
+
+##### read~processSortObject()
+Check the sort object. Does not change the `this._location` object.
+  - Throws an error if the column doesn't exist or is not sortable.
+  - maps the sorting to its sort columns.
+      - for columns it's straighforward and uses the actual column name.
+      - for PseudoColumns we need
+          - A new alias: F# where the # is a positive integer.
+          - The sort column name must be the "foreignkey_alias:column_name".
+
+**Kind**: inner method of [<code>read</code>](#ERMrest.Reference+read)  
 <a name="ERMrest.Reference+sort"></a>
 
 #### reference.sort(sort) ⇒ <code>Reference</code>

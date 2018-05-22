@@ -721,6 +721,55 @@
         return _generatePseudoColumnHashName({source: source});
     };
 
+    // given a reference and associated data to it, will return a list of Values
+    // corresponding to its sort object
+    _getPagingValues = function (ref, rowData, rowLinkedData) {
+        if (!rowData) {
+            return null;
+        }
+        var loc = ref.location,
+            values = [], addedCols = {}, sortObjectNames = {},
+            col, i, j, sortCol, colName, data, fkData;
+
+        for (i = 0; i < loc.sortObject.length; i++) {
+            colName = loc.sortObject[i].column;
+
+            try {
+                col = ref.getColumnByName(colName);
+            } catch (e) {
+                return null; // column doesn't exist return null.
+            }
+
+            // avoid duplicate sort columns
+            if (col.name in sortObjectNames) continue;
+            sortObjectNames[col.name] = true;
+
+            if (!col.sortable) {
+                return null;
+            }
+
+            for (j = 0; j < col._sortColumns.length; j++) {
+                sortCol = col._sortColumns[j];
+
+                // avoid duplciate columns
+                if (sortCol in addedCols) continue;
+                addedCols[sortCol] = true;
+
+                if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
+                    fkData = rowLinkedData[col.name];
+                    data = null;
+                    if (isObjectAndNotNull(fkData)) {
+                        data =  fkData[sortCol.name];
+                    }
+                } else {
+                    data = rowData[sortCol.name];
+                }
+                values.push(data);
+            }
+        }
+        return values;
+    };
+
     /**
      * @function
      * @private
