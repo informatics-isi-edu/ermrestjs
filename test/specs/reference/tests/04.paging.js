@@ -780,7 +780,7 @@ exports.execute = function (options) {
             var baseUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
             var refUri = baseUri + tableNameInboundRelated + "@sort(id)",
                 refUriWithoutSort = baseUri + tableNameInboundRelated,
-                refUriJoin = baseUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
+                refUriJoin = baseUri + "reference_table/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
 
             var currRef, newRef;
 

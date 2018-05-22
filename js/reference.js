@@ -188,27 +188,9 @@
         this._server = catalog.server;
 
         // if schema was not provided in the URI, find the schema
-        var schema;
-        if (!location.schemaName) {
-            var schemas = catalog.schemas.all();
-            for (var i = 0; i < schemas.length; i++) {
-                if (schemas[i].tables.names().indexOf(location.tableName) !== -1) {
-                    if (!schema){
-                        schema = schemas[i];
-                    } else{
-                        throw new module.MalformedURIError("Ambiguous table name " + location.tableName + ". Schema name is required.");
-                    }
-                }
-            }
-            if (!schema) {
-                throw new module.MalformedURIError("Table " + location.tableName + " not found");
-            }
+        this._table = catalog.schemas.findTable(location.tableName, location.schemaName);
 
-            this._table = schema.tables.get(location.tableName);
-
-        } else{
-            this._table = catalog.schemas.get(location.schemaName).tables.get(location.tableName);
-        }
+        this._projectionTable = catalog.schemas.findTable(location.projectionTableName, location.projectionSchemaName);
 
         this._shortestKey = this._table.shortestKey;
 
@@ -269,6 +251,15 @@
          */
          get table() {
             return this._table;
+         },
+
+         /**
+          * The projection table object,
+          * if there's a join in path, this will return a different object from .table
+          * @type {ERMrest.Table}
+          */
+         get projectionTable() {
+             return this._projectionTable;
          },
 
         /**
@@ -2331,6 +2322,7 @@
 
         setNewTable: function(table) {
             this._table = table;
+            this._projectionTable = table;
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
             delete this._referenceColumns;
