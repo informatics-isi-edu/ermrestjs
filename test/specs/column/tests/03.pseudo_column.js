@@ -704,7 +704,7 @@ exports.execute = function (options) {
                 it ("should handle array aggregate.", function (done) {
                     detailedColsWTuple[15].getAggregatedValue(mainPage).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual('02 ,01 ,04 ,03 ,05', "value missmatch.");
+                        expect(val[0].value).toEqual('01 ,02 ,03 ,04 ,05', "value missmatch.");
                         done();
                     }).catch(function (e) {
                         done.fail(e);

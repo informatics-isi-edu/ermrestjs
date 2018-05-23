@@ -678,6 +678,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                     res = module._formatUtils.printInteger(value.v);
                 } else if (self.sourceObject.aggregate === "array"){
+                    try {
+                        value.v.sort(function (a, b) {
+                            return a.localeCompare(b);
+                        });
+                    } catch(e) {
+                        // if sort threw any erros, we just leave it as is
+                    }
+                    
                     res = value.v.map(function (v) {
                         return getFormattedValue(v);
                     }).join(" ,");
