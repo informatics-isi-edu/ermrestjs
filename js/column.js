@@ -648,6 +648,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
+    var getFormattedValue = function (val) {
+        var fv = column.formatvalue(val, self._context);
+        if (column.type.name === "markdown") {
+            fv = module._formatUtils.printMarkdown(res);
+        }
+        return fv;
+    };
+
     module._q.all(promises).then(function (response) {
         var values = [],
             result = [],
@@ -665,16 +673,24 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             });
 
             // format the value
-            res = ""; isHTML = false;
+            res = ""; isHTML = (column.type.name === "markdown");
             if (value && value.v) {
                 if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                     res = module._formatUtils.printInteger(value.v);
-                } else {
-                    res = column.formatvalue(value.v, self._context);
-                    if (column.type.name === "markdown") {
-                        isHTML = true;
-                        res = module._formatUtils.printMarkdown(res);
+                } else if (self.sourceObject.aggregate === "array"){
+                    try {
+                        value.v.sort(function (a, b) {
+                            return a.localeCompare(b);
+                        });
+                    } catch(e) {
+                        // if sort threw any erros, we just leave it as is
                     }
+                    
+                    res = value.v.map(function (v) {
+                        return getFormattedValue(v);
+                    }).join(" ,");
+                } else {
+                    res = getFormattedValue(value.v);
                 }
             }
             result.push({isHTML: isHTML, value: res});
@@ -804,8 +820,8 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                     var name = module._pseudoColAggregateNames[agIndex];
 
                     self._displayname =  {
-                        value: [name, self._displayname.value].join(" "),
-                        unformatted: [name, self._displayname.unformatted].join(" "),
+                        value: (name ? [name, self._displayname.value].join(" ") : self._displayname.value),
+                        unformatted: (name ? [name, self._displayname.unformatted].join(" ") : self._displayname.unformatted),
                         isHTML: self._displayname.isHTML
                     };
                     return;
