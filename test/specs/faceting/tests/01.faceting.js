@@ -892,6 +892,10 @@ exports.execute = function (options) {
                         expect(ref.facetColumns[3].filters.length).toBe(1, "filters length missmatch.");
                         expect(ref.facetColumns[3].filters[0].toString()).toBe("2014-03-03 to 2016-07-11", "toString missmatch.");
                     });
+
+                    it ("should handle exclusive/inclusive ranges.", function () {
+
+                    });
                 });
 
                 describe("removeRangeFilter, ", function () {
@@ -909,6 +913,10 @@ exports.execute = function (options) {
                             "path missmatch."
                         );
                         expect(res.reference.facetColumns[1].filters.length).toBe(0, "filters length missmatch.");
+                    });
+
+                    it ('should handle exclusive/inclusive ranges.', function () {
+
                     });
                 });
 
@@ -990,8 +998,8 @@ exports.execute = function (options) {
                 it ("rangeFilters, should return the range filters.", function () {
                     var filters = refMainMoreFilters.facetColumns[5].rangeFilters;
                     expect(filters.length).toBe(2, "length missmatch.");
-                    expect(filters[0].toString()).toBe("> a", "term index=0 missmatch.");
-                    expect(filters[1].toString()).toBe("< b", "term index=0 missmatch.");
+                    expect(filters[0].toString()).toBe("≥ a", "term index=0 missmatch.");
+                    expect(filters[1].toString()).toBe("≤ b", "term index=0 missmatch.");
                 });
 
                 describe ("hasNotNullFilter,", function () {
@@ -1007,16 +1015,16 @@ exports.execute = function (options) {
                 describe("FacetFilter attributes, ", function () {
                     it("toString should return the appropriate value.", function () {
                         expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].toString()).toBe("a", "missmatch for choices");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("> a", "missmatch for range");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("≥ a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("≤ b", "missmatch for range");
                         expect(refMainMoreFilters.facetColumns[5].searchFilters[0].toString()).toBe("a", "missmatch for search");
 
                     });
 
                     it("uniqueId should return the appropriate value.", function () {
                         expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].uniqueId).toBe("a", "missmatch for choices");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("> a", "missmatch for range");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("≥ a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("≤ b", "missmatch for range");
                         expect(refMainMoreFilters.facetColumns[5].searchFilters[0].uniqueId).toBe("a", "missmatch for search");
                     });
 
