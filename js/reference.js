@@ -1179,8 +1179,9 @@
                 // use row-order if sort was not provided
                 else if (this.display._rowOrder){
                     sortObject = this.display._rowOrder;
-                    sortColNames = sortObject.map(function (so) {
-                        return so.column;
+                    sortColNames = {};
+                    sortObject.forEach(function (so) {
+                        sortColNames[so.column] = true;
                     });
                 }
 
