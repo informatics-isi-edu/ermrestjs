@@ -495,7 +495,7 @@ exports.execute = function (options) {
                 describe("if reference has filters,", function () {
                     var filter;
                     it ("if filter can be represented in facet syntax, should change the location's filter into facet.", function (done) {
-                        filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15)";
+                        filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15;int_col::gt::6)";
                         options.ermRest.resolve(createURL(tableMain) + "/" + filter).then(function (ref) {
                             var facetColumns = ref.facetColumns;
                             expect(ref.facetColumns.length).toBe(16, "length missmatch.");
@@ -503,9 +503,9 @@ exports.execute = function (options) {
                             expect(ref.location.filter).toBeUndefined("filter was defined.");
                             expect(ref.location.filtersString).toBeUndefined("filtersString was defined.");
                             expect(ref.facetColumns[0].filters.length).toBe(2, "# of filters defined for id is incorrect");
-                            expect(ref.facetColumns[1].filters.length).toBe(2, "# of filters defined for int_col is incorrect.");
+                            expect(ref.facetColumns[1].filters.length).toBe(3, "# of filters defined for int_col is incorrect.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/id=1;id=2/$M/int_col::geq::5;int_col::leq::15/$M",
+                                "M:=faceting_schema:main/id=1;id=2/$M/int_col::geq::5;int_col::leq::15;int_col::gt::6/$M",
                                 "path missmatch."
                             );
                             done();
