@@ -2846,16 +2846,15 @@ RangeFacetFilter.prototype.toJSON = function () {
         res.max = this.max;
     }
     if (this.maxExclusive === true) {
-        this.max_exclusive = true;
+        res.max_exclusive = true;
     }
 
     if (isDefinedAndNotNull(this.min)) {
         res.min = this.min;
     }
     if (this.minExclusive === true) {
-        this.min_exclusive = true;
+        res.min_exclusive = true;
     }
-
 
     return res;
 };
