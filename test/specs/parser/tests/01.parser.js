@@ -817,6 +817,18 @@ exports.execute = function(options) {
                         {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5, "max_exclusive": true}]} ]},
                         "c::gt::1&c::lt::5/$M", "min and max exclusive"
                     );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGEusADzgFZ2uA+jk5YANmiQMAbnlgAXDGhwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "max":5, "max_exclusive": true}]} ]},
+                        "c::geq::1&c::lt::5/$M", "min and max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5}]} ]},
+                        "c::gt::1&c::leq::5/$M", "min and max exclusive"
+                    );
                 });
 
                 it("should handle unicode characters.", function () {
