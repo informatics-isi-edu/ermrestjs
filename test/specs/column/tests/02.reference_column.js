@@ -890,8 +890,8 @@ exports.execute = function (options) {
             });
 
             describe('.filenameExtFilter', function() {
-                it('should return null if file_name_ext is not present.', function () {
-                    expect(assetRefCompactCols[9].filenameExtFilter).toBe(null);
+                it('should return empty array if file_name_ext is not present.', function () {
+                    expect(assetRefCompactCols[9].filenameExtFilter.length).toBe(0, "Returned value is not an empty array");
                 });
 
                 it('otherwise should return the defined array of file name extensions.', function () {

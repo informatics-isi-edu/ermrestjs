@@ -685,7 +685,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                     } catch(e) {
                         // if sort threw any erros, we just leave it as is
                     }
-                    
+
                     res = value.v.map(function (v) {
                         return getFormattedValue(v);
                     }).join(" ,");
@@ -1744,10 +1744,12 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
     get: function () {
         if (this._filenameExtFilter === undefined) {
+            this._filenameExtFilter = [];
+
             var ext = this._annotation.filename_ext_filter;
-            if (typeof ext !== 'string' && !Array.isArray(ext)) {
-                this._filenameExtFilter = null;
-            } else {
+            if (typeof ext == 'string') {
+                this._filenameExtFilter.push(ext);
+            } else if (Array.isArray(ext)) {
                 this._filenameExtFilter = ext;
             }
         }
