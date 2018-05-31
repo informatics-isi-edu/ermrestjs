@@ -824,7 +824,7 @@ exports.execute = function (options) {
                 it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
                     expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
                     expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
-                    expect(compactColumns[0]._sortColumns[0].name).toBe("id", "sort column name missmatch.");
+                    expect(compactColumns[0]._sortColumns[0].column.name).toBe("id", "sort column name missmatch.");
                 });
 
                 it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
