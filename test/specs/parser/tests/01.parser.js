@@ -652,19 +652,19 @@ exports.execute = function(options) {
                 }).toThrow(facetError);
             };
 
-            var expectLocation = function (blob, facetObject, path) {
+            var expectLocation = function (blob, facetObject, path, errMessage) {
                 var url = baseUri + "/*::facets::" + blob;
 
                 var loc = options.ermRest.parse(url);
 
-                expect(loc).toBeDefined("location is not defined.");
+                expect(loc).toBeDefined("location is not defined" + (errMessage ? errMessage : "."));
 
-                expect(loc.uri).toBe(url, "uri missmatch");
+                expect(loc.uri).toBe(url, "uri missmatch" + (errMessage ? errMessage : "."));
 
-                expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch.");
-                expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch.");
+                expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
+                expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
 
-                expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch");
+                expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
             };
 
             describe("regarding source attribute, ", function () {
@@ -797,6 +797,37 @@ exports.execute = function(options) {
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA98AXEAXwF0v2g",
                         {"and": [ {"source": "c", "ranges": [{"max":"t"}]} ]},
                         "c::leq::t/$M"
+                    );
+                });
+
+                it ('should handle exclusive ranges', function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDgC+AXQWygA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true}]} ]},
+                        "c::gt::1/$M", "min exclusive"
+                    );
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA84BWEhxgfR0awBs0SAJYA3PLAAuGNDgC+AXQWygA",
+                        {"and": [ {"source": "c", "ranges": [{"max":5, "max_exclusive": true}]} ]},
+                        "c::lt::5/$M", "max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKxye3PoOFi4UmQF8Augd1A",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5, "max_exclusive": true}]} ]},
+                        "c::gt::1&c::lt::5/$M", "min and max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGEusADzgFZ2uA+jk5YANmiQMAbnlgAXDGhwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "max":5, "max_exclusive": true}]} ]},
+                        "c::geq::1&c::lt::5/$M", "min inclusive, max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5}]} ]},
+                        "c::gt::1&c::leq::5/$M", "min inclusive, max exclusive"
                     );
                 });
 

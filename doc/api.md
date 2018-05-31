@@ -422,8 +422,8 @@ to use for ERMrest JavaScript agents.
         * [.addChoiceFilters()](#ERMrest.FacetColumn+addChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.replaceAllChoiceFilters()](#ERMrest.FacetColumn+replaceAllChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.removeChoiceFilters(terms)](#ERMrest.FacetColumn+removeChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-        * [.addRangeFilter(min, max)](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-        * [.removeRangeFilter(min, max)](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addRangeFilter(min, [minExclusive], max, [maxExclusive])](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.removeRangeFilter(min, [minExclusive], max, [maxExclusive])](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.addNotNullFilter()](#ERMrest.FacetColumn+addNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.removeNotNullFilter()](#ERMrest.FacetColumn+removeNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.removeAllFilters()](#ERMrest.FacetColumn+removeAllFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -437,7 +437,7 @@ to use for ERMrest JavaScript agents.
     * [.ChoiceFacetFilter](#ERMrest.ChoiceFacetFilter)
         * [new ChoiceFacetFilter(term)](#new_ERMrest.ChoiceFacetFilter_new)
     * [.RangeFacetFilter](#ERMrest.RangeFacetFilter)
-        * [new RangeFacetFilter(min, max)](#new_ERMrest.RangeFacetFilter_new)
+        * [new RangeFacetFilter(min, [minExclusive], max, [maxExclusive], columnType)](#new_ERMrest.RangeFacetFilter_new)
         * [.toString()](#ERMrest.RangeFacetFilter+toString) ⇒ <code>string</code>
         * [.toJSON()](#ERMrest.RangeFacetFilter+toJSON) ⇒ <code>Object</code>
     * [.NotNullFacetFilter](#ERMrest.NotNullFacetFilter)
@@ -4003,8 +4003,8 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.addChoiceFilters()](#ERMrest.FacetColumn+addChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.replaceAllChoiceFilters()](#ERMrest.FacetColumn+replaceAllChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.removeChoiceFilters(terms)](#ERMrest.FacetColumn+removeChoiceFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-    * [.addRangeFilter(min, max)](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-    * [.removeRangeFilter(min, max)](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addRangeFilter(min, [minExclusive], max, [maxExclusive])](#ERMrest.FacetColumn+addRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.removeRangeFilter(min, [minExclusive], max, [maxExclusive])](#ERMrest.FacetColumn+removeRangeFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.addNotNullFilter()](#ERMrest.FacetColumn+addNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.removeNotNullFilter()](#ERMrest.FacetColumn+removeNotNullFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.removeAllFilters()](#ERMrest.FacetColumn+removeAllFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -4286,7 +4286,7 @@ Given a term, it will remove any choice filter with that term (if any).
 
 <a name="ERMrest.FacetColumn+addRangeFilter"></a>
 
-#### facetColumn.addRangeFilter(min, max) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### facetColumn.addRangeFilter(min, [minExclusive], max, [maxExclusive]) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Create a new Reference with appending a new range filter to current FacetColumn
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
@@ -4295,11 +4295,13 @@ Create a new Reference with appending a new range filter to current FacetColumn
 | Param | Type | Description |
 | --- | --- | --- |
 | min | <code>String</code> \| <code>int</code> | minimum value. Can be null or undefined. |
+| [minExclusive] | <code>boolean</code> | whether the minimum boundary is exclusive or not. |
 | max | <code>String</code> \| <code>int</code> | maximum value. Can be null or undefined. |
+| [maxExclusive] | <code>boolean</code> | whether the maximum boundary is exclusive or not. |
 
 <a name="ERMrest.FacetColumn+removeRangeFilter"></a>
 
-#### facetColumn.removeRangeFilter(min, max) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### facetColumn.removeRangeFilter(min, [minExclusive], max, [maxExclusive]) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Create a new Reference with removing any range filter that has the given min and max combination.
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
@@ -4308,7 +4310,9 @@ Create a new Reference with removing any range filter that has the given min and
 | Param | Type | Description |
 | --- | --- | --- |
 | min | <code>String</code> \| <code>int</code> | minimum value. Can be null or undefined. |
+| [minExclusive] | <code>boolean</code> | whether the minimum boundary is exclusive or not. |
 | max | <code>String</code> \| <code>int</code> | maximum value. Can be null or undefined. |
+| [maxExclusive] | <code>boolean</code> | whether the maximum boundary is exclusive or not. |
 
 <a name="ERMrest.FacetColumn+addNotNullFilter"></a>
 
@@ -4420,13 +4424,13 @@ Extends [FacetFilter](#ERMrest.FacetFilter).
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.RangeFacetFilter](#ERMrest.RangeFacetFilter)
-    * [new RangeFacetFilter(min, max)](#new_ERMrest.RangeFacetFilter_new)
+    * [new RangeFacetFilter(min, [minExclusive], max, [maxExclusive], columnType)](#new_ERMrest.RangeFacetFilter_new)
     * [.toString()](#ERMrest.RangeFacetFilter+toString) ⇒ <code>string</code>
     * [.toJSON()](#ERMrest.RangeFacetFilter+toJSON) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.RangeFacetFilter_new"></a>
 
-#### new RangeFacetFilter(min, max)
+#### new RangeFacetFilter(min, [minExclusive], max, [maxExclusive], columnType)
 Represent range filters that can be applied to facet.
 JSON representation of this filter:
 "ranges": [{min: v1, max: v2}]
@@ -4434,10 +4438,13 @@ JSON representation of this filter:
 Extends [FacetFilter](#ERMrest.FacetFilter).
 
 
-| Param | Type |
-| --- | --- |
-| min | <code>String</code> \| <code>int</code> | 
-| max | <code>String</code> \| <code>int</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| min | <code>String</code> \| <code>int</code> |  |
+| [minExclusive] | <code>boolean</code> | whether the min filter is exclusive or not |
+| max | <code>String</code> \| <code>int</code> |  |
+| [maxExclusive] | <code>boolean</code> | whether the max filter is exclusive or not |
+| columnType | [<code>Type</code>](#ERMrest.Type) |  |
 
 <a name="ERMrest.RangeFacetFilter+toString"></a>
 

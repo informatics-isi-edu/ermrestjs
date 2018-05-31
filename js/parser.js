@@ -1054,7 +1054,7 @@
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + column + "::ciregexp::" + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + module.OPERATOR.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
             });
         }
 
@@ -1264,6 +1264,12 @@
                     break;
                 case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
                     facet.ranges = [{max: parsedFilter.value}];
+                    break;
+                case module.OPERATOR.GREATER_THAN:
+                    facet.ranges = [{min: parsedFilter.value, min_exclusive: true}];
+                    break;
+                case module.OPERATOR.LESS_THAN:
+                    facet.ranges = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
                 case module.OPERATOR.NULL:
                     facet.choices = [null];
@@ -1505,7 +1511,7 @@
 
         // parse ranges constraint
         var parseRanges = function (ranges, column) {
-            var res = "", hasFilter = false;
+            var res = "", hasFilter = false, operator;
             ranges.forEach(function (range, index) {
                 if (hasFilter) {
                     res += ";";
@@ -1513,15 +1519,25 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.GREATER_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.min));
+                    operator = module.OPERATOR.GREATER_THAN_OR_EQUAL_TO;
+                    if (range.min_exclusive === true) {
+                        operator = module.OPERATOR.GREATER_THAN;
+                    }
+
+                    res += module._fixedEncodeURIComponent(column) + operator + module._fixedEncodeURIComponent(valueToString(range.min));
                     hasFilter = true;
                 }
 
                 if (isDefinedAndNotNull(range.max)) {
+                    operator = module.OPERATOR.LESS_THAN_OR_EQUAL_TO;
+                    if (range.max_exclusive === true) {
+                        operator = module.OPERATOR.LESS_THAN;
+                    }
+
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.LESS_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.max));
+                    res += module._fixedEncodeURIComponent(column) + operator + module._fixedEncodeURIComponent(valueToString(range.max));
                     hasFilter = true;
                 }
             });
