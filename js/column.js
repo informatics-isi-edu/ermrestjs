@@ -263,7 +263,8 @@ ReferenceColumn.prototype = {
 
     /**
      * @private
-     * @desc A list of columns that will be used for sorting
+     * @desc An array of objects that have `column` which is a Column object, and `descending` which is true/false
+     * The `descending` boolean indicates whether we should change the direction of sort or not.
      * @type {Array}
      */
     get _sortColumns() {
@@ -730,12 +731,7 @@ PseudoColumn.prototype._determineSortable = function () {
             }
 
             if (this.reference.display._rowOrder !== undefined) {
-                var rowOrder = this.reference.display._rowOrder;
-                for (var i = 0; i < rowOrder.length; i++) {
-                    try{
-                        this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-                    } catch(exception) {}
-                }
+                this._sortColumns_cached = this.reference.display._rowOrder;
                 this._sortable = true;
                 return;
             }
@@ -1245,12 +1241,7 @@ ForeignKeyPseudoColumn.prototype._determineSortable = function () {
 
     // use row-order of the table
     if (this.reference.display._rowOrder !== undefined) {
-        var rowOrder = this.reference.display._rowOrder;
-        for (var i = 0; i < rowOrder.length; i++) {
-            try{
-                this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-            } catch(exception) {}
-        }
+        this._sortColumns_cached = this.reference.display._rowOrder;
         this._sortable = true;
         return;
     }

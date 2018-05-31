@@ -2673,7 +2673,7 @@ An object which contains row display properties for this reference.
 It is determined based on the `table-display` annotation. It has the
 following properties:
 
-  - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
+  - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
 
 If type is `'markdown'`, the object will also these additional
@@ -5611,7 +5611,7 @@ An object which contains row display properties for this reference.
 It is determined based on the `table-display` annotation. It has the
 following properties:
 
-  - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
+  - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
 
 If type is `'markdown'`, the object will also these additional

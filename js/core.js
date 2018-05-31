@@ -2102,33 +2102,12 @@
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [], hasPreformat;
+                var annotation = -1, columnOrder, hasPreformat;
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    var col;
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            col = this.table.columns.get(annotation.column_order[i]);
-
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
 
                 if (typeof annotation.pre_format === 'object') {
                     if (typeof annotation.pre_format.format !== 'string') {
@@ -2151,7 +2130,15 @@
             return this._display[context];
         },
 
-        // get the sort columns using the context
+        /**
+         * Returns the columns that this column should be sorted based on and its direction.
+         * It will return an array of objects that has:
+         * - `column`: The {@link ERMrest.Column} object.
+         * - `descending`: Whether we should change the order of sort or not.
+         * @private
+         * @param  {string} context the context that we want the sort columns for
+         * @return {Array}
+         */
         _getSortColumns: function (context) {
             var display = this.getDisplay(context);
 
@@ -2167,7 +2154,7 @@
                 return undefined;
             }
 
-            return [this];
+            return [{column: this}];
         }
     };
 
@@ -2514,34 +2501,12 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var annotation = -1, columnOrder;
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            var col = this.table.columns.get(annotation.column_order[i]);
-
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
@@ -3113,29 +3078,7 @@
 
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            var col = this.key.table.columns.get(annotation.column_order[i]);
-
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
