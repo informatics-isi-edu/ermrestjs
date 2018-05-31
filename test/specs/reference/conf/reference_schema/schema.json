@@ -663,6 +663,34 @@
                     }
                 },
                 {
+                    "name": "col_w_order_multiple",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": [
+                                    {"column": "col_w_order_multiple_1", "descending": true},
+                                    "col_w_order_multiple_2"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_w_order_multiple_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_w_order_multiple_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
                     "name": "col_not_sortable",
                     "type": {
                         "typename": "text"
@@ -863,7 +891,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*" : {
-                        "row_order": [{"column":"name x", "descending":false}]
+                        "row_order": ["name x"]
                     }
                 }
             }

@@ -8,7 +8,10 @@
         "col_w_order": "01",
         "col": "04",
         "col w space": "03",
-        "col_w_slash/": "02"
+        "col_w_slash/": "02",
+        "col_w_order_multiple": "01",
+        "col_w_order_multiple_1": "04",
+        "col_w_order_multiple_2": "04"
     },
     {
         "id": "02",
@@ -19,7 +22,10 @@
         "col_w_order": "02",
         "col": "05",
         "col w space": "04",
-        "col_w_slash/": "03"
+        "col_w_slash/": "03",
+        "col_w_order_multiple": "02",
+        "col_w_order_multiple_1": "05",
+        "col_w_order_multiple_2": "05"
     },
     {
         "id": "03",
@@ -30,7 +36,10 @@
         "col_w_order": "03",
         "col": "06",
         "col w space": "05",
-        "col_w_slash/": "04"
+        "col_w_slash/": "04",
+        "col_w_order_multiple": "03",
+        "col_w_order_multiple_1": "06",
+        "col_w_order_multiple_2": "06"
     },
     {
         "id": "04",
@@ -41,7 +50,10 @@
         "col_w_order": "04",
         "col": "07",
         "col w space": "06",
-        "col_w_slash/": "05"
+        "col_w_slash/": "05",
+        "col_w_order_multiple": "04",
+        "col_w_order_multiple_1": "07",
+        "col_w_order_multiple_2": "07"
     },
     {
         "id": "05",
@@ -52,7 +64,10 @@
         "col_w_order": "05",
         "col": "08",
         "col w space": "07",
-        "col_w_slash/": "06"
+        "col_w_slash/": "06",
+        "col_w_order_multiple": "05",
+        "col_w_order_multiple_1": "01",
+        "col_w_order_multiple_2": "08"
     },
     {
         "id": "06",
@@ -63,7 +78,10 @@
         "col_w_order": "06",
         "col": "01",
         "col w space": "08",
-        "col_w_slash/": "07"
+        "col_w_slash/": "07",
+        "col_w_order_multiple": "06",
+        "col_w_order_multiple_1": "01",
+        "col_w_order_multiple_2": "01"
     },
     {
         "id": "07",
@@ -74,7 +92,10 @@
         "col_w_order": "07",
         "col": "02",
         "col w space": "01",
-        "col_w_slash/": "08"
+        "col_w_slash/": "08",
+        "col_w_order_multiple": "07",
+        "col_w_order_multiple_1": "02",
+        "col_w_order_multiple_2": "02"
     },
     {
         "id": "08",
@@ -85,6 +106,9 @@
         "col_w_order": "08",
         "col": "03",
         "col w space": "02",
-        "col_w_slash/": "01"
+        "col_w_slash/": "01",
+        "col_w_order_multiple": "08",
+        "col_w_order_multiple_1": "03",
+        "col_w_order_multiple_2": "03"
     }
 ]
