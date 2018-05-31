@@ -490,7 +490,10 @@
                                 if (key !== 'ranges') {
                                     if (source[key].indexOf(ch) !== -1) return;
                                 } else {
-                                    if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                                    var exist = source[key].some(function (s) {
+                                        return (s.min === ch.min && s.max == ch.max && s.max_exclusive == ch.max_exclusive && s.min_exclusive == ch.min_exclusive);
+                                    });
+                                    if (exist) return;
                                 }
                             }
 
