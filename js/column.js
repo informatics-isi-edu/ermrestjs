@@ -509,26 +509,8 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     // in entity mode, return the foreignkey value
-    var presentation = module._generateForeignKeyPresentation(this._lastForeignKey.obj, context, data);
-
-    if (!presentation) {
-        return nullValue;
-    }
-
-    var value, unformatted, appLink;
-
-    // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
-    // create the link using reference.
-    if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
-        value = presentation.caption;
-        unformatted = presentation.unformatted;
-    } else {
-        appLink = presentation.reference.contextualize.detailed.appLink;
-        value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
-        unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
-    }
-
-    return {isHTML: true, value: value, unformatted: unformatted};
+    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context);
+    return pres ? pres: {isHTML: false, value: nullValue, unformatted: nullValue};
 };
 
 /**
@@ -589,9 +571,13 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
     var currTable = "T";
     var baseTable = self.hasPath ? "M": currTable;
+
+    // this will dictates whether we should show rowname or not
+    var isRow = self.isEntityMode && self.sourceObject.aggregate === "array";
+
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
                  ";v:=" + self.sourceObject.aggregate +
-                 "(" + currTable + ":" + module._fixedEncodeURIComponent(column.name) + ")";
+                 "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
 
     baseUri =  [
         location.service, "catalog", location.catalog, "attributegroup",
@@ -649,6 +635,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     }
 
     var getFormattedValue = function (val) {
+        if (isRow) {
+            var pres = module._generateRowPresentation(self._key, val, self._context);
+            return pres ? pres.value : self._getNullValue(self._context);
+        }
+
         var fv = column.formatvalue(val, self._context);
         if (column.type.name === "markdown") {
             fv = module._formatUtils.printMarkdown(res);
@@ -673,24 +664,31 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             });
 
             // format the value
-            res = ""; isHTML = (column.type.name === "markdown");
+            res = ""; isHTML = false;
             if (value && value.v) {
                 if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                     res = module._formatUtils.printInteger(value.v);
-                } else if (self.sourceObject.aggregate === "array"){
-                    try {
-                        value.v.sort(function (a, b) {
-                            return a.localeCompare(b);
-                        });
-                    } catch(e) {
-                        // if sort threw any erros, we just leave it as is
-                    }
-
-                    res = value.v.map(function (v) {
-                        return getFormattedValue(v);
-                    }).join(" ,");
                 } else {
-                    res = getFormattedValue(value.v);
+                    isHTML = isRow || (column.type.name === "markdown");
+                    if (self.sourceObject.aggregate === "array"){
+                        try {
+                            value.v.sort(function (a, b) {
+                                // if isRow, a and b will be objects
+                                if (isRow) {
+                                    return a[column.name].localeCompare(b[column.name]);
+                                }
+                                return a.localeCompare(b);
+                            });
+                        } catch(e) {
+                            // if sort threw any erros, we just leave it as is
+                        }
+
+                        res = value.v.map(function (v) {
+                            return getFormattedValue(v);
+                        }).join(", ");
+                    } else {
+                        res = getFormattedValue(value.v);
+                    }
                 }
             }
             result.push({isHTML: isHTML, value: res});
@@ -1206,26 +1204,9 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
     this._defaultReference = defaultRef;
 };
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
-    var presentation = module._generateForeignKeyPresentation(this.foreignKey, context, data);
-
-    if (!presentation) {
-        return {isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context)};
-    }
-
-    var value, unformatted, appLink;
-
-    // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
-    // create the link using reference.
-    if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
-        value = presentation.caption;
-        unformatted = presentation.unformatted;
-    } else {
-        appLink = presentation.reference.contextualize.detailed.appLink;
-        value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
-        unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
-    }
-
-    return {isHTML: true, value: value, unformatted: unformatted};
+    var nullValue = this._getNullValue(context);
+    var pres = module._generateRowPresentation(this.foreignKey.key, data, context);
+    return pres ? pres: {isHTML: false, value: nullValue, unformatted: nullValue};
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
     var display = this._display, useColumn = false, baseCol;
