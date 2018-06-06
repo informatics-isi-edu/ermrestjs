@@ -740,7 +740,7 @@ exports.execute = function (options) {
                     // outbound_fk_4
                     expect(compactColumns[4].sortable).toBe(true);
                     expect(compactColumns[4]._sortColumns.length).toBe(1);
-                    expect(compactColumns[4]._sortColumns[0].name).toBe("name");
+                    expect(compactColumns[4]._sortColumns[0].column.name).toBe("name");
                 });
 
                 it("when foreignKey doesn't have any `column_order` annotation and referenced table has `row_order`, should use the table's row_order.", function () {
@@ -748,7 +748,7 @@ exports.execute = function (options) {
                     expect(compactColumns[12].sortable).toBe(true);
                     expect(compactColumns[12]._sortColumns.length).toBe(1);
                     expect(compactColumns[12]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id_2']);
                 });
 
@@ -757,7 +757,7 @@ exports.execute = function (options) {
                     expect(compactColumns[2].sortable).toBe(true);
                     expect(compactColumns[2]._sortColumns.length).toBe(1);
                     expect(compactColumns[2]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id']);
                 });
 
@@ -787,7 +787,7 @@ exports.execute = function (options) {
                     expect(compactBriefRef.columns[1].sortable).toBe(true);
                     expect(compactBriefRef.columns[1]._sortColumns.length).toBe(2);
                     expect(compactBriefRef.columns[1]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['col_1', 'col_2']);
                 });
 
@@ -795,7 +795,7 @@ exports.execute = function (options) {
                     expect(compactColumns[0].sortable).toBe(true);
                     expect(compactColumns[0]._sortColumns.length).toBe(1);
                     expect(compactColumns[0]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id']);
                 });
 
@@ -817,14 +817,14 @@ exports.execute = function (options) {
                     expect(compactColumns[6].sortable).toBe(true);
                     expect(compactColumns[6]._sortColumns.length).toBe(1);
                     expect(compactColumns[6]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
 
                 it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
                     expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
                     expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
-                    expect(compactColumns[0]._sortColumns[0].name).toBe("id", "sort column name missmatch.");
+                    expect(compactColumns[0]._sortColumns[0].column.name).toBe("id", "sort column name missmatch.");
                 });
 
                 it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
@@ -832,7 +832,7 @@ exports.execute = function (options) {
                     expect(compactColumns[10].sortable).toBe(true);
                     expect(compactColumns[10]._sortColumns.length).toBe(1);
                     expect(compactColumns[10]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
 

@@ -263,7 +263,8 @@ ReferenceColumn.prototype = {
 
     /**
      * @private
-     * @desc A list of columns that will be used for sorting
+     * @desc An array of objects that have `column` which is a Column object, and `descending` which is true/false
+     * The `descending` boolean indicates whether we should change the direction of sort or not.
      * @type {Array}
      */
     get _sortColumns() {
@@ -728,12 +729,7 @@ PseudoColumn.prototype._determineSortable = function () {
             }
 
             if (this.reference.display._rowOrder !== undefined) {
-                var rowOrder = this.reference.display._rowOrder;
-                for (var i = 0; i < rowOrder.length; i++) {
-                    try{
-                        this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-                    } catch(exception) {}
-                }
+                this._sortColumns_cached = this.reference.display._rowOrder;
                 this._sortable = true;
                 return;
             }
@@ -1226,12 +1222,7 @@ ForeignKeyPseudoColumn.prototype._determineSortable = function () {
 
     // use row-order of the table
     if (this.reference.display._rowOrder !== undefined) {
-        var rowOrder = this.reference.display._rowOrder;
-        for (var i = 0; i < rowOrder.length; i++) {
-            try{
-                this._sortColumns_cached.push(this.table.columns.get(rowOrder[i].column));
-            } catch(exception) {}
-        }
+        this._sortColumns_cached = this.reference.display._rowOrder;
         this._sortable = true;
         return;
     }
@@ -2425,7 +2416,7 @@ FacetColumn.prototype = {
                     return; // don't add duplicate
                 }
 
-                self.filters.push(new RangeFacetFilter(ch.min, ch.max, self._column.type));
+                self.filters.push(new RangeFacetFilter(ch.min, ch.min_exclusive, ch.max, ch.max_exclusive, self._column.type));
             });
         }
 
@@ -2563,14 +2554,16 @@ FacetColumn.prototype = {
     /**
      * Create a new Reference with appending a new range filter to current FacetColumn
      * @param  {String|int=} min minimum value. Can be null or undefined.
+     * @param  {boolean=} minExclusive whether the minimum boundary is exclusive or not.
      * @param  {String|int=} max maximum value. Can be null or undefined.
+     * @param  {boolean=} maxExclusive whether the maximum boundary is exclusive or not.
      * @return {ERMrest.Reference} the reference with the new filter
      */
-    addRangeFilter: function (min, max) {
+    addRangeFilter: function (min, minExclusive, max, maxExclusive) {
         verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
 
         var current = this.filters.filter(function (f) {
-            return (f instanceof RangeFacetFilter) && f.min === min && f.max === max;
+            return (f instanceof RangeFacetFilter) && f.min === min && f.max === max && f.minExclusive == minExclusive && f.maxExclusive == maxExclusive;
         })[0];
 
         if (current !== undefined) {
@@ -2578,7 +2571,7 @@ FacetColumn.prototype = {
         }
 
         var filters = this.filters.slice();
-        var newFilter = new RangeFacetFilter(min, max, this._column.type);
+        var newFilter = new RangeFacetFilter(min, minExclusive, max, maxExclusive, this._column.type);
         filters.push(newFilter);
 
         return {
@@ -2590,14 +2583,16 @@ FacetColumn.prototype = {
     /**
      * Create a new Reference with removing any range filter that has the given min and max combination.
      * @param  {String|int=} min minimum value. Can be null or undefined.
+     * @param  {boolean=} minExclusive whether the minimum boundary is exclusive or not.
      * @param  {String|int=} max maximum value. Can be null or undefined.
+     * @param  {boolean=} maxExclusive whether the maximum boundary is exclusive or not.
      * @return {ERMrest.Reference} the reference with the new filter
      */
-    removeRangeFilter: function (min, max) {
+    removeRangeFilter: function (min, minExclusive, max, maxExclusive) {
         //TODO needs refactoring
         verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
         var filters = this.filters.filter(function (f) {
-            return !(f instanceof RangeFacetFilter) || !(f.min === min && f.max === max);
+            return !(f instanceof RangeFacetFilter) || !(f.min === min && f.max === max && f.minExclusive == minExclusive && f.maxExclusive == maxExclusive);
         });
         return {
             reference: this._applyFilters(filters)
@@ -2776,14 +2771,19 @@ module._extends(ChoiceFacetFilter, FacetFilter);
  *
  * Extends {@link ERMrest.FacetFilter}.
  * @param       {String|int=} min
+ * @param       {boolean=} minExclusive whether the min filter is exclusive or not
  * @param       {String|int=} max
+ * @param       {boolean=} maxExclusive whether the max filter is exclusive or not
+ * @param       {ERMrest.Type}
  * @constructor
  * @memberof ERMrest
  */
-function RangeFacetFilter(min, max, columnType) {
+function RangeFacetFilter(min, minExclusive, max, maxExclusive, columnType) {
     this._columnType = columnType;
     this.min = !isDefinedAndNotNull(min) ? null : min;
+    this.minExclusive = (minExclusive === true) ? true: false;
     this.max = !isDefinedAndNotNull(max) ? null : max;
+    this.maxExclusive = (maxExclusive === true) ? true: false;
     this.facetFilterKey = "ranges";
     this.uniqueId = this.toString();
 }
@@ -2799,12 +2799,13 @@ module._extends(RangeFacetFilter, FacetFilter);
  * @return {string}
  */
 RangeFacetFilter.prototype.toString = function () {
+    var opt;
     // assumption: at least one of them is defined
     if (!isDefinedAndNotNull(this.max)) {
-        return "> " + _formatValueByType(this._columnType, this.min);
+        return (this.minExclusive ? "> " : "≥ ") + _formatValueByType(this._columnType, this.min);
     }
     if (!isDefinedAndNotNull(this.min)) {
-        return  "< " + _formatValueByType(this._columnType, this.max);
+        return (this.maxExclusive ? "< " : "≤ ") + _formatValueByType(this._columnType, this.max);
     }
     return _formatValueByType(this._columnType, this.min) + " to " + _formatValueByType(this._columnType, this.max);
 };
@@ -2818,9 +2819,17 @@ RangeFacetFilter.prototype.toJSON = function () {
     if (isDefinedAndNotNull(this.max)) {
         res.max = this.max;
     }
+    if (this.maxExclusive === true) {
+        res.max_exclusive = true;
+    }
+
     if (isDefinedAndNotNull(this.min)) {
         res.min = this.min;
     }
+    if (this.minExclusive === true) {
+        res.min_exclusive = true;
+    }
+
     return res;
 };
 

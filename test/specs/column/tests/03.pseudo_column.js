@@ -878,7 +878,7 @@ exports.execute = function (options) {
         expect(col._sortColumns.length).toBe(sortColumns ? sortColumns.length : 0, "sortColumns length missmatch" + (colStr ? (" for " + colStr) : "."));
         if (sortColumns) {
             expect(col._sortColumns.map(function (col) {
-                return col.name;
+                return col.column.name;
             })).toEqual(sortColumns, "_sortColumn missmatch" +  (colStr ? (" for " + colStr) : "."));
         }
     }

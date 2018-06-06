@@ -208,7 +208,8 @@ exports.execute = function (options) {
                 });
 
                 it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
-                    checkSort([{"column": "reference_schema_sorted_table_w_fk_fk2", "descending": false}], "03", done);
+                    // it should honor the row_order as is, and don't apply column_order to that
+                    checkSort([{"column": "reference_schema_sorted_table_w_fk_fk2", "descending": false}], "02", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
@@ -220,6 +221,12 @@ exports.execute = function (options) {
 
                 it("if column has a `column_order` other than false, should sort based on that.", function (done) {
                     checkSort([{"column": "col_w_order", "descending": false}], "06", done);
+                });
+
+                it ("if column has a `column_order` other than false with descending, should sort based on that column and change the order.", function (done) {
+                    // the column_order has [{col_w_order_multiple_1, descending}, col_w_order_multiple_2] which should turned into
+                    // [col_w_order_multiple_1, {col_w_order_multiple_2, descending}]
+                    checkSort([{"column": "col_w_order_multiple", "descending": true}], "05", done);
                 });
 
                 it("if column doesn't have `column_order`, should sort based on column value.", function (done) {
@@ -250,14 +257,13 @@ exports.execute = function (options) {
                 expect(response.tuples[0].values[0]).toEqual(ExpectedFirstId);
                 done();
             }, function (err) {
-                console.dir(err);
-                done.fail();
+                done.fail(err);
             });
         }
 
         function checkError(sortColumns, error, done) {
             outboundRef.sort(sortColumns).read(1).then(function(response) {
-                done.fail();
+                done.fail("expected function to throw error");
             }).catch(function (err) {
                 expect(err.toString()).toEqual("Error: " + error);
                 done();

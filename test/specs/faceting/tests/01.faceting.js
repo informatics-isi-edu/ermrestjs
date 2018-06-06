@@ -495,7 +495,7 @@ exports.execute = function (options) {
                 describe("if reference has filters,", function () {
                     var filter;
                     it ("if filter can be represented in facet syntax, should change the location's filter into facet.", function (done) {
-                        filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15)";
+                        filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15;int_col::gt::6)";
                         options.ermRest.resolve(createURL(tableMain) + "/" + filter).then(function (ref) {
                             var facetColumns = ref.facetColumns;
                             expect(ref.facetColumns.length).toBe(16, "length missmatch.");
@@ -503,9 +503,9 @@ exports.execute = function (options) {
                             expect(ref.location.filter).toBeUndefined("filter was defined.");
                             expect(ref.location.filtersString).toBeUndefined("filtersString was defined.");
                             expect(ref.facetColumns[0].filters.length).toBe(2, "# of filters defined for id is incorrect");
-                            expect(ref.facetColumns[1].filters.length).toBe(2, "# of filters defined for int_col is incorrect.");
+                            expect(ref.facetColumns[1].filters.length).toBe(3, "# of filters defined for int_col is incorrect.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/id=1;id=2/$M/int_col::geq::5;int_col::leq::15/$M",
+                                "M:=faceting_schema:main/id=1;id=2/$M/int_col::geq::5;int_col::leq::15;int_col::gt::6/$M",
                                 "path missmatch."
                             );
                             done();
@@ -850,7 +850,21 @@ exports.execute = function (options) {
                     });
                 });
 
+                var refWithMin, refWithMax, refWithMinMax, refWithMinExcMax, refWithMinExcMaxAndMinMax;
                 describe("addRangeFilter, ", function () {
+                    var testAddRange = function (min, minExclusive, max, maxExclusive, path, message, reference) {
+                        var ref = refMain;
+                        if (reference) ref = reference;
+                        var res = ref.facetColumns[0].addRangeFilter(min, minExclusive, max, maxExclusive);
+                        expect(res.reference).not.toBe(refMain, "reference didn't change " + (message ? message : "."));
+                        expect(res.reference.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1;" + path + "/$M/int_col::geq::-2/$M",
+                            "path missmatch " + (message ? message : ".")
+                        );
+                        expect(res.reference.facetColumns[0].filters.length).toBe(2, "filters length missmatch " + (message ? message : "."));
+                        return res.reference;
+                    };
+
                     it ("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[0].addRangeFilter();
@@ -858,32 +872,22 @@ exports.execute = function (options) {
                     });
 
                     describe ("should return a new reference with the applied filter.", function () {
-                        var testAddRange = function (min, max, path) {
-                            var res = refMain.facetColumns[0].addRangeFilter(min, max);
-                            expect(res.reference).not.toBe(refMain, "reference didn't change.");
-                            expect(res.reference.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/id=1;" + path + "/$M/int_col::geq::-2/$M",
-                                "path missmatch."
-                            );
-                            expect(res.reference.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
-                        };
-
                         it ("when passing only min.", function () {
-                            testAddRange("1", null, "id::geq::1");
+                            testAddRange("1", false, null, false, "id::geq::1");
                         });
 
                         it ("when passing only max.", function () {
-                            testAddRange(null, "1", "id::leq::1");
+                            testAddRange(null, false, "1", false, "id::leq::1");
                         });
 
                         it ("when passing both min, and max.", function () {
-                            testAddRange("1", "2", "id::geq::1&id::leq::2");
+                            testAddRange("1", false, "2", false, "id::geq::1&id::leq::2");
                         });
 
                     });
 
                     it("should handle facets with path.", function () {
-                        var ref = mainFacets[3].addRangeFilter("2014-03-03", "2016-07-11").reference;
+                        var ref = mainFacets[3].addRangeFilter("2014-03-03", false, "2016-07-11", false).reference;
                         expect(ref).not.toBe(refMain, "reference didn't change.");
                         expect(ref.location.ermrestCompactPath).toBe(
                             "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/date_col::geq::2014-03-03&date_col::leq::2016-07-11/$M",
@@ -892,8 +896,58 @@ exports.execute = function (options) {
                         expect(ref.facetColumns[3].filters.length).toBe(1, "filters length missmatch.");
                         expect(ref.facetColumns[3].filters[0].toString()).toBe("2014-03-03 to 2016-07-11", "toString missmatch.");
                     });
-                });
 
+                    describe ("should handle exclusive/inclusive ranges.", function () {
+                        it ("when passing only min.", function () {
+                            refWithMin = testAddRange("1", true, null, false, "id::gt::1");
+                        });
+
+                        it ("when passing only max.", function () {
+                            refWithMax = testAddRange(null, false, "1", true, "id::lt::1");
+                        });
+
+                        it ("when passing both min, and max inclusive.", function () {
+                            refWithMinMax = testAddRange("1", true, "2", true, "id::gt::1&id::lt::2");
+                        });
+
+                        it ("when passing min and max with exclusive flag.", function () {
+                            refWithMinExcMax = testAddRange("1", true, "2", false, "id::gt::1&id::leq::2", "for min exclusive");
+                            refWithMinMaxExc = testAddRange("1", false, "2", true, "id::geq::1&id::lt::2", "for max exclusive");
+                            refWithMinExcMaxExc = testAddRange("1", true, "2", true, "id::gt::1&id::lt::2", "for min and max exclusive");
+                        });
+                    });
+
+                    describe ("should handle adding duplciate filters.", function () {
+                        it ("when passing only min.", function () {
+                            expect(refWithMin.facetColumns[0].addRangeFilter("1", true, null, false)).toBe(false);
+                        });
+
+                        it ("when passing only max.", function () {
+                            expect(refWithMax.facetColumns[0].addRangeFilter(null, false, "1", true)).toBe(false);
+                        });
+
+                        it ("when passing both min, and max.", function () {
+                            expect(refWithMinMax.facetColumns[0].addRangeFilter("1", true, "2", true)).toBe(false);
+                        });
+
+                        it ("when passing min and max with exclusive flag.", function () {
+                            expect(refWithMinExcMax.facetColumns[0].addRangeFilter("1", true, "2", false)).toBe(false, "for min exclusive");
+                            expect(refWithMinMaxExc.facetColumns[0].addRangeFilter("1", false, "2", true)).toBe(false, "for max exclusive");
+                            expect(refWithMinExcMaxExc.facetColumns[0].addRangeFilter("1", true, "2", true)).toBe(false, "for min and max exclusive");
+                        });
+
+                        it ('and take exclusive attributes into account.', function () {
+                            var res = refWithMinExcMax.facetColumns[0].addRangeFilter("1", false, "2", false);
+                            refWithMinExcMaxAndMinMax = res.reference;
+                            expect(res.reference).not.toBe(refWithMinExcMax, "reference didn't change.");
+                            expect(res.reference.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/id=1;id::gt::1&id::leq::2;id::geq::1&id::leq::2/$M/int_col::geq::-2/$M",
+                                "path missmatch."
+                            );
+                            expect(res.reference.facetColumns[0].filters.length).toBe(3, "filters length missmatch.");
+                        });
+                    });
+                });
                 describe("removeRangeFilter, ", function () {
                     it ("should verify the input.", function () {
                         expect(function () {
@@ -902,13 +956,23 @@ exports.execute = function (options) {
                     });
 
                     it ("should return a new reference with the new filter.", function () {
-                        var res = refMain.facetColumns[1].removeRangeFilter(-2, null);
+                        var res = refMain.facetColumns[1].removeRangeFilter(-2, false, null, false);
                         expect(res.reference).not.toBe(refMain, "reference didn't change.");
                         expect(res.reference.location.ermrestCompactPath).toBe(
                             "M:=faceting_schema:main/id=1/$M",
                             "path missmatch."
                         );
                         expect(res.reference.facetColumns[1].filters.length).toBe(0, "filters length missmatch.");
+                    });
+
+                    it ('should handle exclusive/inclusive ranges.', function () {
+                        var res = refWithMinExcMaxAndMinMax.facetColumns[0].removeRangeFilter("1", false, "2", false);
+                        expect(res.reference).not.toBe(refWithMinExcMaxAndMinMax, "reference didn't change.");
+                        expect(res.reference.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/id=1;id::gt::1&id::leq::2/$M/int_col::geq::-2/$M",
+                            "path missmatch."
+                        );
+                        expect(res.reference.facetColumns[0].filters.length).toBe(2, "filters length missmatch.");
                     });
                 });
 
@@ -990,8 +1054,8 @@ exports.execute = function (options) {
                 it ("rangeFilters, should return the range filters.", function () {
                     var filters = refMainMoreFilters.facetColumns[5].rangeFilters;
                     expect(filters.length).toBe(2, "length missmatch.");
-                    expect(filters[0].toString()).toBe("> a", "term index=0 missmatch.");
-                    expect(filters[1].toString()).toBe("< b", "term index=0 missmatch.");
+                    expect(filters[0].toString()).toBe("≥ a", "term index=0 missmatch.");
+                    expect(filters[1].toString()).toBe("≤ b", "term index=0 missmatch.");
                 });
 
                 describe ("hasNotNullFilter,", function () {
@@ -1007,16 +1071,16 @@ exports.execute = function (options) {
                 describe("FacetFilter attributes, ", function () {
                     it("toString should return the appropriate value.", function () {
                         expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].toString()).toBe("a", "missmatch for choices");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("> a", "missmatch for range");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].toString()).toBe("≥ a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].toString()).toBe("≤ b", "missmatch for range");
                         expect(refMainMoreFilters.facetColumns[5].searchFilters[0].toString()).toBe("a", "missmatch for search");
 
                     });
 
                     it("uniqueId should return the appropriate value.", function () {
                         expect(refMainMoreFilters.facetColumns[5].choiceFilters[0].uniqueId).toBe("a", "missmatch for choices");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("> a", "missmatch for range");
-                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("< b", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[0].uniqueId).toBe("≥ a", "missmatch for range");
+                        expect(refMainMoreFilters.facetColumns[5].rangeFilters[1].uniqueId).toBe("≤ b", "missmatch for range");
                         expect(refMainMoreFilters.facetColumns[5].searchFilters[0].uniqueId).toBe("a", "missmatch for search");
                     });
 
@@ -1287,7 +1351,7 @@ exports.execute = function (options) {
                 ref = refMain.facetColumns[14].addChoiceFilters(["a", "test"]);
                 ref = ref.facetColumns[11].addChoiceFilters(["1", "2"]);
                 ref = ref.facetColumns[12].addSearchFilter("t");
-                ref = ref.facetColumns[2].addRangeFilter(-1, 20.2).reference;
+                ref = ref.facetColumns[2].addRangeFilter(-1, false, 20.2, false).reference;
 
                 uri = "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
                       "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$M/" +

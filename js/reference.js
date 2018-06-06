@@ -490,7 +490,10 @@
                                 if (key !== 'ranges') {
                                     if (source[key].indexOf(ch) !== -1) return;
                                 } else {
-                                    if (source[key].some(function (s) {return (s.min === ch.min && s.max == ch.max);})) return;
+                                    var exist = source[key].some(function (s) {
+                                        return (s.min === ch.min && s.max == ch.max && s.max_exclusive == ch.max_exclusive && s.min_exclusive == ch.min_exclusive);
+                                    });
+                                    if (exist) return;
                                 }
                             }
 
@@ -1118,7 +1121,7 @@
                 var processSortObject= function (self) {
                     var foreignKeys = self._table.foreignKeys,
                         colName,
-                        fkIndex, fk;
+                        fkIndex, fk, desc;
 
                     for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
                         // find the column in ReferenceColumns
@@ -1148,24 +1151,30 @@
                             if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
                                 fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
                                 colName = "F" + (foreignKeys.length() + k++);
-                                sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
+                                sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                             } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
                                 // we have added it to the projection list
                                 fkIndex = oneToOnePseudos.indexOf(col);
                                 colName = "P" + (oneToOnePseudos.length + l++);
-                                sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].name)].join(":");
+                                sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                             } else {
-                                colName = sortCols[j].name;
+                                colName = sortCols[j].column.name;
                                 if (colName in sortColNames) {
                                     addSort = false;
                                 }
                                 sortColNames[colName] = true;
                             }
 
+                            desc = sortObject[i].descending !== undefined ? sortObject[i].descending : false;
+                            // if descending is true on the column_order, then the sort should be reverted
+                            if (sortCols[j].descending) {
+                                desc = !desc;
+                            }
+
                             if (addSort) {
                                 _modifiedSortObject.push({
                                     "column": colName,
-                                    "descending": sortObject[i].descending !== undefined ? sortObject[i].descending : false
+                                    "descending": desc
                                 });
                             }
                          }
@@ -1178,10 +1187,12 @@
                 }
                 // use row-order if sort was not provided
                 else if (this.display._rowOrder){
-                    sortObject = this.display._rowOrder;
+                    sortObject = this.display._rowOrder.map(function (ro) {
+                        return {"column": ro.column.name, "descending": ro.descending};
+                    });
                     sortColNames = {};
                     sortObject.forEach(function (so) {
-                        sortColNames[so.column] = true;
+                        sortColNames[so.column.name] = true;
                     });
                 }
 
@@ -1850,7 +1861,7 @@
          * It is determined based on the `table-display` annotation. It has the
          * following properties:
          *
-         *   - `rowOrder`: `[{ column: '`_column name_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
+         *   - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
          *   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
          *
          * If type is `'markdown'`, the object will also these additional
@@ -1911,26 +1922,7 @@
                     // This will take care of that and will return the actual columns that
                     // we want sort to be based on.
                     if (Array.isArray(annotation.row_order)) {
-                        var rowOrder = [], col, sortObjectNames = {}, sortColNames = {};
-                        annotation.row_order.forEach(function (ro) {
-                            if (!ro.column || ro.column in sortObjectNames) return;
-                            sortObjectNames[ro.column] = true;
-
-                            // make sure column exists and is sortable
-                            if (!self.table.columns.has(ro.column)) return;
-                            col = self.getColumnByName(ro.column);
-                            if (!col.sortable) return;
-
-                            col._sortColumns.forEach(function (sc) {
-                                if (sc.name in sortColNames) return;
-                                sortColNames[sc.name] = true;
-                                rowOrder.push({
-                                    "column": sc.name,
-                                    "descending": (ro.descending === true) ? true : false
-                                });
-                            });
-                        });
-                        this._display._rowOrder = rowOrder;
+                        this._display._rowOrder = _processColumnOrderList(annotation.row_order, this._table);
                     }
 
 

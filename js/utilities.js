@@ -749,7 +749,7 @@
             }
 
             for (j = 0; j < col._sortColumns.length; j++) {
-                sortCol = col._sortColumns[j];
+                sortCol = col._sortColumns[j].column;
 
                 // avoid duplciate columns
                 if (sortCol in addedCols) continue;
@@ -768,6 +768,59 @@
             }
         }
         return values;
+    };
+
+    /**
+     * @private
+     * Process the given list of column order, and return the appropriate list
+     * of objects that have:
+     * - `column`: The {@link ERMrest.Column} object.
+     * - `descending`: The boolean that Indicates whether we should reverse sort order or not.
+     *
+     * @param  {string} columnOrder The object that defines the column/row order
+     * @param  {ERMrest.Table} table
+     * @return {Array=} If it's undefined, the column_order that is defined is not valid
+     */
+    _processColumnOrderList = function (columnOrder, table) {
+        if (columnOrder === false) {
+            return false;
+        }
+
+        var res, colName, descending, colNames = {};
+        if (Array.isArray(columnOrder)) {
+            res = [];
+            for (var i = 0 ; i < columnOrder.length; i++) {
+                try {
+                    if (typeof columnOrder[i] === "string") {
+                        colName = columnOrder[i];
+                    } else if (columnOrder[i] && columnOrder[i].column) {
+                        colName = columnOrder[i].column;
+                    } else {
+                        continue; // invalid syntax
+                    }
+
+                    col = table.columns.get(colName);
+
+                    // make sure it's sortable
+                    if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                        continue;
+                    }
+
+                    // avoid duplicates
+                    if (colName in colNames) {
+                        continue;
+                    }
+                    colNames[colName] = true;
+
+                    descending = (columnOrder[i] && columnOrder[i].descending === true);
+                    res.push({
+                        column: col,
+                        descending: descending,
+                    });
+                } catch(exception) {}
+            }
+        }
+        return res; // it might be undefined
     };
 
     /**
