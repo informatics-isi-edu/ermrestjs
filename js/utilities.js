@@ -1359,7 +1359,7 @@
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
-                return new module.NoConnectionError("No Internet Connection available");
+                return new module.NoConnectionError(response.data);
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
@@ -2831,38 +2831,36 @@
         CREATE: "CRT",   //create
         UPDATE: "UPDT",   //update
         READ: "READ"        //read
-      });
+    });
 
     module._errorStatus = Object.freeze({
-      forbidden : "Forbidden",
-      itemNotFound : "Item Not Found",
-      facetingError: "Invalid Facet Filters",
-      invalidFilter : "Invalid Filter",
-      invalidInput : "Invalid Input",
-      invalidURI : "Invalid URI",
-      noDataChanged : "No Data Changed",
-      noConnectionError : "No Connection Error",
-      InvalidSortCriteria : "Invalid Sort Criteria",
-      invalidPageCriteria : "Invalid Page Criteria"
-      });
+        forbidden : "Forbidden",
+        itemNotFound : "Item Not Found",
+        facetingError: "Invalid Facet Filters",
+        invalidFilter : "Invalid Filter",
+        invalidInput : "Invalid Input",
+        invalidURI : "Invalid URI",
+        noDataChanged : "No Data Changed",
+        noConnectionError : "No Connection Error",
+        InvalidSortCriteria : "Invalid Sort Criteria",
+        invalidPageCriteria : "Invalid Page Criteria"
+    });
 
     module._errorMessage = Object.freeze({
-      facetingError : "Given encoded string for facets is not valid."
+        facetingError : "Given encoded string for facets is not valid."
     });
 
     module._HTTPErrorCodes = Object.freeze({
-      BAD_REQUEST: 400,
-      UNAUTHORIZED: 401,
-      FORBIDDEN : 403,
-      NOT_FOUND: 404,
-      TIMEOUT_ERROR: 408,
-      CONFLICT : 409,
-      PRECONDITION_FAILED: 412,
-      INTERNAL_SERVER_ERROR :500,
-      NO_CONNECTION_ERROR :502,
-      SERVIVE_UNAVAILABLE: 503
-
-      });
+        BAD_REQUEST: 400,
+        UNAUTHORIZED: 401,
+        FORBIDDEN : 403,
+        NOT_FOUND: 404,
+        TIMEOUT_ERROR: 408,
+        CONFLICT : 409,
+        PRECONDITION_FAILED: 412,
+        INTERNAL_SERVER_ERROR :500,
+        SERVIVE_UNAVAILABLE: 503
+    });
 
     module._warningMessages = Object.freeze({
         NO_PSEUDO_IN_ENTRY: "pseudo-columns are not allowed in entry contexts.",

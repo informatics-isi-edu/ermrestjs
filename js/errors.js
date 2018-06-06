@@ -317,8 +317,7 @@
      * @desc A No Connection or No Internet Connection was passed to the API.
      */
     function NoConnectionError(message) {
-        message = message;
-        ERMrestError.call(this, module._HTTPErrorCodes.NO_CONNECTION_ERROR, module._errorStatus.noConnectionError, message);
+        ERMrestError.call(this, -1, module._errorStatus.noConnectionError, message);
     }
 
     NoConnectionError.prototype = Object.create(Error.prototype);
