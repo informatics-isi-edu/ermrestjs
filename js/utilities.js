@@ -2076,6 +2076,41 @@
                 }
             }
         });
+
+        md.use(mdContainer, 'div', {
+
+            /*
+             * Checks whetehr string matches format ":::div CONTENT \n:::"
+             * string inside `{}` is optional, specifies attributes to be applied to element
+             */
+            validate: function (params) {
+                return params.trim().match(/div(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/div(.*)$/i);
+
+                // opening tag
+                if (tokens[idx].nesting === 1) {
+
+                    // if the next tag is a paragraph, we can change the paragraph into a div
+                    var attrs = md.parse(m[1]);
+                    if (attrs && attrs.length > 0 && attrs[0].type === "paragraph_open") {
+                        var html = md.render(m[1]).trim();
+
+                        // this will remove the closing and opening p tag.
+                        return "<div" + html.slice(2, html.length-4);
+                    }
+
+                    // otherwise just add the div tag
+                    return "<div>\n" + md.render(m[1]).trim();
+                }
+                // the closing tag
+                else {
+                    return "</div>\n";
+                }
+            }
+        });
     };
 
     // Characters to replace Markdown special characters
