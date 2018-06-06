@@ -865,8 +865,8 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
-                if (!presentation) return;
+                var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
+                if (!p) return;
 
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
@@ -875,9 +875,9 @@
 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
-                    "rowName": presentation.unformatted,
+                    "rowName": p.unformatted,
                     "uri": {
-                        "detailed": presentation.reference.contextualize.detailed.appLink
+                        "detailed": p.reference.contextualize.detailed.appLink
                     }
                 };
 
@@ -1023,6 +1023,18 @@
 
     };
 
+    /**
+     * @function
+     * @private
+     * @desc Given a key object, will return the presentation object that can bse used for it
+     * @param  {ERMrest.Key} key    the key object
+     * @param  {object} data        the data for the table that key is from
+     * @param  {string} context     the context string
+     * @param  {object=} options
+     * @return {object} the presentation object that can be used for the key
+     * (it has `isHTML`, `value`, and `unformatted`).
+     * NOTE the function might return `null`.
+     */
     module._generateKeyPresentation = function (key, data, context, options) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -1061,15 +1073,15 @@
             return null;
         }
 
+        // make sure that formattedValues is defined
+        options = options || {};
+        if (options.formattedValues === undefined) {
+           options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
+        }
+
         // use the markdown_pattern that is defiend in key-display annotation
         var display = key.getDisplay(context);
         if (display.isMarkdownPattern) {
-
-            // make sure that formattedValues is defined
-            if (options === undefined || options.formattedValues === undefined) {
-               options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
-            }
-
             unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
@@ -1116,12 +1128,51 @@
     /**
      * @function
      * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
+     * @desc Given the key of a table, and data for one row will return the
+     * presentation object for the row.
+     * @param  {ERMrest.Key} key   the key of the table
      * @param  {String} context    Current context
-     * @param  {object} data       Data for the table that this foreignKey is referring to.
+     * @param  {object} data       Data for the table that this key is referring to.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+    module._generateRowPresentation = function (key, data, context) {
+        var presentation = module._generateRowLinkProperties(key, data, context);
+
+        if (!presentation) {
+            return null;
+        }
+
+        var value, unformatted, appLink;
+
+        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        // create the link using reference.
+        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+            value = presentation.caption;
+            unformatted = presentation.unformatted;
+        } else {
+            appLink = presentation.reference.contextualize.detailed.appLink;
+            value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
+            unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
+        }
+
+        return {isHTML: true, value: value, unformatted: unformatted};
+    };
+
+    /**
+     * @function
+     * @private
+     * @param  {ERMrest.Key} key     key of the table
+     * @param  {string} context current context
+     * @param  {object} data    data for the table that this key is referring to
+     * @return {object} an object with the following attributes:
+     * - `caption`: The caption that can be used to refer to this row in a link
+     * - `unformatted`: The unformatted version of caption.
+     * - `refernece`: The reference object that can be used for generating link to the row
+     * @desc
+     * Creates the properies for generating a link to the given row of data.
+     * It might return `null`.
+     */
+    module._generateRowLinkProperties = function (key, data, context) {
 
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -1152,12 +1203,10 @@
         };
 
         var value, rowname, i, caption, unformatted;
-
-        var fkey = foreignKey.key; // the key that creates this PseudoColumn
-        var table = fkey.table;
+        var table = key.table;
 
         // if any of key columns don't have data, this link is not valid.
-        if (!hasData(fkey.colset.columns)) {
+        if (!hasData(key.colset.columns)) {
             return null;
         }
 
@@ -1173,8 +1222,8 @@
                 unformattedKeyCols = [],
                 pres, col;
 
-            for (i = 0; i < fkey.colset.columns.length; i++) {
-                col = fkey.colset.columns[i];
+            for (i = 0; i < key.colset.columns.length; i++) {
+                col = key.colset.columns[i];
                 pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
@@ -1188,7 +1237,7 @@
         }
 
         // use the shortest key if it has data (for shorter url).
-        var uriKey = hasData(table.shortestKey) ? table.shortestKey: fkey.colset.columns;
+        var uriKey = hasData(table.shortestKey) ? table.shortestKey: key.colset.columns;
 
         // create a url that points to the current ReferenceColumn
         var ermrestUri = [
@@ -2761,7 +2810,6 @@
     ];
 
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
-    module._pseudoColScalarAggregateFns = ["min", "max"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
 
@@ -2829,7 +2877,6 @@
         FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
         INVALID_FK: "given foreignkey definition is invalid.",
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
-        SCALAR_NOT_ALLOWED: "only entity mode is allowed here.",
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",

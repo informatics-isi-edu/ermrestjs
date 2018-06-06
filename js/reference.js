@@ -2576,7 +2576,7 @@
                         sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
 
                         // invalid source
-                        if (logCol(!sourceCol, wm.INVALID_SOURCE)) {
+                        if (logCol(!sourceCol, wm.INVALID_SOURCE, i)) {
                             continue;
                         }
 
@@ -2593,12 +2593,10 @@
                         // 2. column/foreignkey that needs to be hidden.
                         // 3. The generated hash is a column for the table in database
                         // 4. invalid aggregate function
-                        // 5. in entity mode with scalar aggregate functions
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  hideFKRByName(pseudoName) ||
                                  (!hasPath && hideColumn(sourceCol)) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
-                                 logCol((module._pseudoColScalarAggregateFns.indexOf(col.aggregate) !== -1 && isEntity), wm.NO_SCALAR_AGG_IN_ENT, i) ||
                                  logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(col.aggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
