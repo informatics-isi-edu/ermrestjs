@@ -627,28 +627,19 @@
     };
 
     /**
-     * @private
-     * @param  {Object} colObject the column definition
-     * @param  {ERMrest.Column} column
-     * @return {Object} the returned object has `name` and `isHash` attributes.
-     * @desc generates a name for the given pseudo-column
-     */
-    _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
-            return {name: _generatePseudoColumnHashName(colObject), isHash: true};
-        }
-
-        return {name: column.name, isHash: false};
-    };
-
-    /**
-     * @private
-     * @param {string|object} name the base name. It usually is the constraintName of that object.
-     * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
-     * @param {string} hashStr if true,
+     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
      * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     * This function can be used to get the name that we're using for :
+     *
+     * - Composite key/foreignkeys:
+     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
+     * - Simple foiregnkey/key:
+     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
+     * - Pseudo-Columns:
+     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
+     *
      */
-    _generatePseudoColumnHashName = function (colObject) {
+    module.generatePseudoColumnHashName = function (colObject) {
 
         //we cannot create an object and stringify it, since its order can be different
         //instead will create a string of `source + aggregate + entity`
@@ -689,15 +680,31 @@
         return _urlEncodeBase64(str);
     };
 
+
+    /**
+     * @private
+     * @param  {Object} colObject the column definition
+     * @param  {ERMrest.Column} column
+     * @return {Object} the returned object has `name` and `isHash` attributes.
+     * @desc generates a name for the given pseudo-column
+     */
+    _generatePseudoColumnName = function (colObject, column) {
+        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
+        }
+
+        return {name: column.name, isHash: false};
+    };
+
     _generateForeignKeyName = function (fk, isInbound) {
         var eTable = isInbound ? fk._table : fk.key.table;
 
         if (!fk.simple) {
-            return _generatePseudoColumnHashName(fk._constraintName);
+            return module.generatePseudoColumnHashName(fk._constraintName);
         }
 
         if (!isInbound) {
-            return _generatePseudoColumnHashName({
+            return module.generatePseudoColumnHashName({
                 source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
             });
         }
@@ -718,7 +725,7 @@
             source.push(eTable.shortestKey[0].name);
         }
 
-        return _generatePseudoColumnHashName({source: source});
+        return module.generatePseudoColumnHashName({source: source});
     };
 
     // given a reference and associated data to it, will return a list of Values

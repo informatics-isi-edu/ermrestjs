@@ -2441,7 +2441,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name};
                 }
-                this._name = _generatePseudoColumnHashName(obj);
+                this._name = module.generatePseudoColumnHashName(obj);
             }
             return this._name;
         },
