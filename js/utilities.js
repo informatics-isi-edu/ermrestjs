@@ -1751,12 +1751,28 @@
             typeof element.descending == 'boolean');
     };
 
-    /*
+    /**
      * @function
      * @private
      * @param {Object} md The markdown-it object
      * @param {Object} md The markdown-it-container object.
      * @desc Sets functionality for custom markdown tags like `iframe` and `dropdown` using `markdown-it-container` plugin.
+     * The functions that are required for each custom tag are
+     * - validate: to match a given token with the new rule that we are adding.
+     * - render: the render rule for the token. This function will be called
+     * for opening and closing block tokens that match. The function should be written
+     * in a way to handle just the current token and its values. It should not try
+     * to modify the whole parse process. Doing so will grant the correct behavior
+     * from the markdown-it. If we don't follow this rule while writing the render
+     * function, we might lose extra features (recursive blocks, etc.) that the parser
+     * can handle. For instance the `iframe` tag is written in a way that you have
+     * to follow the given syntax. You cannot have any other tags in iframe and
+     * we're not supporting recursive iframe tags. the render function is only
+     * handling an iframe with the given syntax. Nothing extra.
+     * But we tried to write the `div` tag in a way that you can have
+     * hierarichy of `div`s. If you look at its implementation, it has two simple rules.
+     * One for the opening tag and the other for the closing.
+     *
      */
     module._bindCustomMarkdownTags = function(md, mdContainer) {
 
@@ -2122,6 +2138,41 @@
                 } else {
                   // closing tag
                   return '';
+                }
+            }
+        });
+
+        md.use(mdContainer, 'div', {
+
+            /*
+             * Checks whetehr string matches format ":::div CONTENT \n:::"
+             * string inside `{}` is optional, specifies attributes to be applied to element
+             */
+            validate: function (params) {
+                return params.trim().match(/div(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/div(.*)$/i);
+
+                // opening tag
+                if (tokens[idx].nesting === 1) {
+
+                    // if the next tag is a paragraph, we can change the paragraph into a div
+                    var attrs = md.parse(m[1]);
+                    if (attrs && attrs.length > 0 && attrs[0].type === "paragraph_open") {
+                        var html = md.render(m[1]).trim();
+
+                        // this will remove the closing and opening p tag.
+                        return "<div" + html.slice(2, html.length-4);
+                    }
+
+                    // otherwise just add the div tag
+                    return "<div>\n" + md.render(m[1]).trim();
+                }
+                // the closing tag
+                else {
+                    return "</div>\n";
                 }
             }
         });
