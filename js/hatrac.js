@@ -350,14 +350,11 @@ var ERMrest = (function(module) {
             headers: _generateContextHeader(contextHeaderParams)
         };
 
-        console.log(this);
         this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
 
             var headers = response.headers();
-            console.log(headers);
             var md5 = headers["content-md5"];
             var length = headers["content-length"];
-            var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
 
             // If the file is not same, then simply resolve the promise without setting completed and jobDone
             if ((md5 != self.hash.md5_base64) || (length != self.file.size)) {
