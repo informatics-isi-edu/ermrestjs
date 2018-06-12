@@ -200,8 +200,8 @@ var ERMrest = (function(module) {
      * Create a new instance with new upload(file, otherInfo)
      * To validate url generation for a file call validateUrl(row) with row of data
      * To calculate checksum call calculateChecksum(row) with row of data
-     * To create an upload call createUploadJob()
      * To check for existing file call fileExists()
+     * To create an upload call createUploadJob()
      * To start uploading, call start()
      * To complete upload job call completeUploadJob()
      * You can pause with pause()
@@ -328,6 +328,61 @@ var ERMrest = (function(module) {
 
 
     /**
+     * @desc Call this function to determine file exists on the server
+     * If it doesn't then resolve the promise with url.
+     * If it does then set isPaused, completed and jobDone to true
+     * @returns {Promise}
+     */
+    upload.prototype.fileExists = function(contextHeaderParams) {
+        var self = this;
+
+        var deferred = module._q.defer();
+
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/file-exists",
+                referrer: this.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = this.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+
+        console.log(this);
+        this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
+
+            var headers = response.headers();
+            console.log(headers);
+            var md5 = headers["content-md5"];
+            var length = headers["content-length"];
+            var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
+
+            // If the file is not same, then simply resolve the promise without setting completed and jobDone
+            if ((md5 != self.hash.md5_base64) || (length != self.file.size)) {
+                deferred.resolve(self.url);
+                return;
+            }
+
+            self.isPaused = false;
+            self.completed = true;
+            self.jobDone = true;
+            deferred.resolve(self.url);
+        }, function(response) {
+
+            if (response.status == 404 || response.status == 409) {
+              deferred.resolve(self.url);
+            } else {
+              deferred.reject(module._responseToError(response));
+            }
+        });
+
+        return deferred.promise;
+    };
+
+
+    /**
      * @desc Call this function to create an upload job for chunked uploading
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
@@ -394,58 +449,6 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
-
-    /**
-     * @desc Call this function to determine file exists on the server
-     * If it doesn't then resolve the promise with url.
-     * If it does then set isPaused, completed and jobDone to true
-     * @returns {Promise}
-     */
-    upload.prototype.fileExists = function(contextHeaderParams) {
-        var self = this;
-
-        var deferred = module._q.defer();
-
-        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
-            contextHeaderParams = {
-                action: "upload/file-exists",
-                referrer: this.reference.defaultLogInfo
-            };
-            contextHeaderParams.referrer.column = this.column.name;
-        }
-
-        var config = {
-            headers: _generateContextHeader(contextHeaderParams)
-        };
-
-        this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
-
-            var headers = response.headers();
-            var md5 = headers["content-md5"];
-            var length = headers["content-length"];
-            var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
-
-            // If the md5, length of filename are not same then simply resolve the promise without setting completed and jobDone
-            if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                deferred.resolve(self.url);
-                return;
-            }
-
-            self.isPaused = false;
-            self.completed = true;
-            self.jobDone = true;
-            deferred.resolve(self.url);
-        }, function(response) {
-
-            if (response.status == 404 || response.status == 409) {
-              deferred.resolve(self.url);
-            } else {
-              deferred.reject(module._responseToError(response));
-            }
-        });
-
-        return deferred.promise;
-    };
 
     /**
      * @desc Call this function to start chunked upload to server. It reads the file and divides in into chunks
