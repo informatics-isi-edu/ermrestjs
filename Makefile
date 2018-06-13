@@ -85,7 +85,7 @@ $(BUILD)/$(PKG): $(SOURCE)
 # Rule to build the minified package
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(BUILD)/$(PKG) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
+	$(BIN)/google-closure-compiler-js $(BUILD)/$(PKG) > $(BUILD)/$(MIN)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
