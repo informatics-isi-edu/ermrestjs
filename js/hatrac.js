@@ -94,13 +94,28 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * This callback will be called for progress during checksum calculation
+     * @callback checksumOnProgres
+     * @param {number} uploaded the amount that has been uploaded
+     * @param {number} fileSize the total size of the file.
+     */
+
+    /**
+     * This callback will be called for success of checksum calculation
+     * @callback checksumOnSuccess
+     */
+
+    /**
+     * This callback will be called when we counter an error during checksum calculation
+     * @callback checksumOnError
+     * @param {Error} err the error object
+     */
+
+    /**
      * @param {number} chunkSize size of the chunks, in which the file is supposed to be broken
-     * @callback onProgress
-     * @param {onProgress} fn callback function to be called for progress
-     * @callback onSuccess
-     * @param {onSuccess} fn callback function to be called for success
-     * @callback onError
-     * @param {onError} fn callback function to be called for error
+     * @param {checksumOnProgress} fn callback function to be called for progress
+     * @param {checksumOnSuccess} fn callback function to be called for success
+     * @param {checksumOnError} fn callback function to be called for error
      * @returns {Promise} if the schema exists or not
      * @desc Calculates  MD5 checksum for a file using spark-md5 library
      */

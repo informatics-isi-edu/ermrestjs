@@ -83,9 +83,10 @@ $(BUILD)/$(PKG): $(SOURCE)
 	cat $(SOURCE) > $(BUILD)/$(PKG)
 
 # Rule to build the minified package
+# we should list all the tags that jsDoc accepst but the gccjs doesn't.
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/google-closure-compiler-js $(BUILD)/$(PKG) > $(BUILD)/$(MIN)
+	$(BIN)/google-closure-compiler-js $(BUILD)/$(PKG) > $(BUILD)/$(MIN) --extraAnnotationNames callback --extraAnnotationNames async
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
