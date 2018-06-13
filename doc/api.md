@@ -13,17 +13,24 @@ to use for ERMrest JavaScript agents.</p>
 ## Typedefs
 
 <dl>
-<dt><a href="#httpUnauthorizedFn">httpUnauthorizedFn</a> : <code>function</code></dt>
-<dd><p>set callback function which will be called when a HTTP 401 Error occurs</p>
-</dd>
 <dt><a href="#appLinkFn">appLinkFn</a> : <code>function</code></dt>
-<dd><p>set callback function that converts app tag to app URL</p>
+<dd><p>Given an app tag, location object and context will return the full url.</p>
 </dd>
 <dt><a href="#onHTTPSuccess">onHTTPSuccess</a> : <code>function</code></dt>
-<dd><p>set callback function that triggers when a request returns with success</p>
+<dd><p>This function will be called on success of http calls.</p>
 </dd>
-<dt><a href="#onError">onError</a> ⇒ <code>Promise</code></dt>
-<dd><p>Calculates  MD5 checksum for a file using spark-md5 library</p>
+<dt><a href="#httpUnauthorizedFn">httpUnauthorizedFn</a> : <code>function</code></dt>
+<dd><p>The callback that will be called whenever 401 HTTP error is encountered,
+unless there is already login flow in progress.</p>
+</dd>
+<dt><a href="#checksumOnProgres">checksumOnProgres</a> : <code>function</code></dt>
+<dd><p>This callback will be called for progress during checksum calculation</p>
+</dd>
+<dt><a href="#checksumOnSuccess">checksumOnSuccess</a> : <code>function</code></dt>
+<dd><p>This callback will be called for success of checksum calculation</p>
+</dd>
+<dt><a href="#checksumOnError">checksumOnError</a> : <code>function</code></dt>
+<dd><p>This callback will be called when we counter an error during checksum calculation</p>
 </dd>
 </dl>
 
@@ -480,6 +487,7 @@ to use for ERMrest JavaScript agents.
         * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
+        * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
     * [.upload](#ERMrest.upload)
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
         * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
@@ -4866,6 +4874,11 @@ Therefore the returned count might not be exactly the same as number of returned
 
 ### ERMrest.Checksum
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.Checksum](#ERMrest.Checksum)
+    * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
+    * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
+
 <a name="new_ERMrest.Checksum_new"></a>
 
 #### new Checksum({file}, {options})
@@ -4874,6 +4887,21 @@ Therefore the returned count might not be exactly the same as number of returned
 | --- | --- | --- |
 | {file} | <code>Object</code> | A browser file object |
 | {options} | <code>Object</code> | An optional parameters object. The (key, value) |
+
+<a name="ERMrest.Checksum+calculate"></a>
+
+#### checksum.calculate(chunkSize, fn, fn, fn) ⇒ <code>Promise</code>
+Calculates  MD5 checksum for a file using spark-md5 library
+
+**Kind**: instance method of [<code>Checksum</code>](#ERMrest.Checksum)  
+**Returns**: <code>Promise</code> - if the schema exists or not  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| chunkSize | <code>number</code> | size of the chunks, in which the file is supposed to be broken |
+| fn | <code>checksumOnProgress</code> | callback function to be called for progress |
+| fn | [<code>checksumOnSuccess</code>](#checksumOnSuccess) | callback function to be called for success |
+| fn | [<code>checksumOnError</code>](#checksumOnError) | callback function to be called for error |
 
 <a name="ERMrest.upload"></a>
 
@@ -6302,51 +6330,58 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
-<a name="httpUnauthorizedFn"></a>
-
-## httpUnauthorizedFn : <code>function</code>
-set callback function which will be called when a HTTP 401 Error occurs
-
-**Kind**: global typedef  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| fn | [<code>httpUnauthorizedFn</code>](#httpUnauthorizedFn) | callback function |
-
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>
-set callback function that converts app tag to app URL
+Given an app tag, location object and context will return the full url.
 
 **Kind**: global typedef  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fn | [<code>appLinkFn</code>](#appLinkFn) | callback function |
+| tag | <code>string</code> | the tag that is defined in the annotation. If null, should use context. |
+| location | <code>ERMrest.Location</code> | the location object that ERMrest will return. |
+| context | <code>string</code> | optional, used to determine default app if tag is null/undefined |
 
 <a name="onHTTPSuccess"></a>
 
 ## onHTTPSuccess : <code>function</code>
-set callback function that triggers when a request returns with success
+This function will be called on success of http calls.
+
+**Kind**: global typedef  
+<a name="httpUnauthorizedFn"></a>
+
+## httpUnauthorizedFn : <code>function</code>
+The callback that will be called whenever 401 HTTP error is encountered,
+unless there is already login flow in progress.
+
+**Kind**: global typedef  
+<a name="checksumOnProgres"></a>
+
+## checksumOnProgres : <code>function</code>
+This callback will be called for progress during checksum calculation
 
 **Kind**: global typedef  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fn | [<code>onHTTPSuccess</code>](#onHTTPSuccess) | callback function |
+| uploaded | <code>number</code> | the amount that has been uploaded |
+| fileSize | <code>number</code> | the total size of the file. |
 
-<a name="onError"></a>
+<a name="checksumOnSuccess"></a>
 
-## onError ⇒ <code>Promise</code>
-Calculates  MD5 checksum for a file using spark-md5 library
+## checksumOnSuccess : <code>function</code>
+This callback will be called for success of checksum calculation
 
 **Kind**: global typedef  
-**Returns**: <code>Promise</code> - if the schema exists or not  
+<a name="checksumOnError"></a>
+
+## checksumOnError : <code>function</code>
+This callback will be called when we counter an error during checksum calculation
+
+**Kind**: global typedef  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| chunkSize | <code>number</code> | size of the chunks, in which the file is supposed to be broken |
-| fn | <code>onProgress</code> | callback function to be called for progress |
-| fn | <code>onSuccess</code> | callback function to be called for success |
-| fn | [<code>onError</code>](#onError) | callback function to be called for error |
+| err | <code>Error</code> | the error object |
 

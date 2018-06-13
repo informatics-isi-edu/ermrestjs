@@ -799,8 +799,7 @@
         },
 
         /**
-         * String representation of before
-         * @before(..)
+         * String representation of before: @before(..)
          * @type {string}
          */
         get before () {
@@ -808,8 +807,7 @@
         },
 
         /**
-         * String representation of before
-         * @after(..)
+         * String representation of before: @after(..)
          * @type {string}
          */
         get after () {

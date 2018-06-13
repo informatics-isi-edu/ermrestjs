@@ -1,7 +1,6 @@
 
     /**
      * set callback function that converts app tag to app URL
-     * @callback appLinkFn
      * @param {appLinkFn} fn callback function
      */
     module.appLinkFn = function(fn) {
@@ -10,7 +9,6 @@
 
     /**
      * set callback function that triggers when a request returns with success
-     * @callback onHTTPSuccess
      * @param {onHTTPSuccess} fn callback function
      */
     module.onHTTPSuccess = function(fn) {
