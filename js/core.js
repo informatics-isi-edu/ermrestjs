@@ -26,20 +26,31 @@
 
     /**
      * function that converts app tag to app URL
-     * @callback appLinkFn
      * @type {appLinkFn}
      * @private
      */
     module._appLinkFn = null;
 
     /**
+     * Given an app tag, location object and context will return the full url.
+     * @callback appLinkFn
+     * @param {string} tag the tag that is defined in the annotation. If null, should use context.
+     * @param {ERMrest.Location} location the location object that ERMrest will return.
+     * @param {string} context - optional, used to determine default app if tag is null/undefined
+     */
+
+    /**
      * function that resets the storage expiration time
      * initialized to empty function so function runs properly when not defined in `chaise`
-     * @callback onHTTPSuccess
      * @type {onHTTPSuccess}
      * @private
      */
     module._onHTTPSuccess = function () {};
+
+    /**
+     * This function will be called on success of http calls.
+     * @callback onHTTPSuccess
+     */
 
     /**
      * @memberof ERMrest
@@ -2441,7 +2452,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name};
                 }
-                this._name = _generatePseudoColumnHashName(obj);
+                this._name = module.generatePseudoColumnHashName(obj);
             }
             return this._name;
         },

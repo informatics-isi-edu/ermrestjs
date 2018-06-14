@@ -627,28 +627,19 @@
     };
 
     /**
-     * @private
-     * @param  {Object} colObject the column definition
-     * @param  {ERMrest.Column} column
-     * @return {Object} the returned object has `name` and `isHash` attributes.
-     * @desc generates a name for the given pseudo-column
-     */
-    _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
-            return {name: _generatePseudoColumnHashName(colObject), isHash: true};
-        }
-
-        return {name: column.name, isHash: false};
-    };
-
-    /**
-     * @private
-     * @param {string|object} name the base name. It usually is the constraintName of that object.
-     * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
-     * @param {string} hashStr if true,
+     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
      * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     * This function can be used to get the name that we're using for :
+     *
+     * - Composite key/foreignkeys:
+     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
+     * - Simple foiregnkey/key:
+     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
+     * - Pseudo-Columns:
+     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
+     *
      */
-    _generatePseudoColumnHashName = function (colObject) {
+    module.generatePseudoColumnHashName = function (colObject) {
 
         //we cannot create an object and stringify it, since its order can be different
         //instead will create a string of `source + aggregate + entity`
@@ -689,15 +680,31 @@
         return _urlEncodeBase64(str);
     };
 
+
+    /**
+     * @private
+     * @param  {Object} colObject the column definition
+     * @param  {ERMrest.Column} column
+     * @return {Object} the returned object has `name` and `isHash` attributes.
+     * @desc generates a name for the given pseudo-column
+     */
+    _generatePseudoColumnName = function (colObject, column) {
+        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
+        }
+
+        return {name: column.name, isHash: false};
+    };
+
     _generateForeignKeyName = function (fk, isInbound) {
         var eTable = isInbound ? fk._table : fk.key.table;
 
         if (!fk.simple) {
-            return _generatePseudoColumnHashName(fk._constraintName);
+            return module.generatePseudoColumnHashName(fk._constraintName);
         }
 
         if (!isInbound) {
-            return _generatePseudoColumnHashName({
+            return module.generatePseudoColumnHashName({
                 source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
             });
         }
@@ -718,7 +725,7 @@
             source.push(eTable.shortestKey[0].name);
         }
 
-        return _generatePseudoColumnHashName({source: source});
+        return module.generatePseudoColumnHashName({source: source});
     };
 
     // given a reference and associated data to it, will return a list of Values
@@ -865,8 +872,8 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
-                if (!presentation) return;
+                var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
+                if (!p) return;
 
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
@@ -875,9 +882,9 @@
 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
-                    "rowName": presentation.unformatted,
+                    "rowName": p.unformatted,
                     "uri": {
-                        "detailed": presentation.reference.contextualize.detailed.appLink
+                        "detailed": p.reference.contextualize.detailed.appLink
                     }
                 };
 
@@ -1023,6 +1030,18 @@
 
     };
 
+    /**
+     * @function
+     * @private
+     * @desc Given a key object, will return the presentation object that can bse used for it
+     * @param  {ERMrest.Key} key    the key object
+     * @param  {object} data        the data for the table that key is from
+     * @param  {string} context     the context string
+     * @param  {object=} options
+     * @return {object} the presentation object that can be used for the key
+     * (it has `isHTML`, `value`, and `unformatted`).
+     * NOTE the function might return `null`.
+     */
     module._generateKeyPresentation = function (key, data, context, options) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -1061,15 +1080,15 @@
             return null;
         }
 
+        // make sure that formattedValues is defined
+        options = options || {};
+        if (options.formattedValues === undefined) {
+           options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
+        }
+
         // use the markdown_pattern that is defiend in key-display annotation
         var display = key.getDisplay(context);
         if (display.isMarkdownPattern) {
-
-            // make sure that formattedValues is defined
-            if (options === undefined || options.formattedValues === undefined) {
-               options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
-            }
-
             unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
@@ -1116,12 +1135,51 @@
     /**
      * @function
      * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
+     * @desc Given the key of a table, and data for one row will return the
+     * presentation object for the row.
+     * @param  {ERMrest.Key} key   the key of the table
      * @param  {String} context    Current context
-     * @param  {object} data       Data for the table that this foreignKey is referring to.
+     * @param  {object} data       Data for the table that this key is referring to.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+    module._generateRowPresentation = function (key, data, context) {
+        var presentation = module._generateRowLinkProperties(key, data, context);
+
+        if (!presentation) {
+            return null;
+        }
+
+        var value, unformatted, appLink;
+
+        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        // create the link using reference.
+        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+            value = presentation.caption;
+            unformatted = presentation.unformatted;
+        } else {
+            appLink = presentation.reference.contextualize.detailed.appLink;
+            value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
+            unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
+        }
+
+        return {isHTML: true, value: value, unformatted: unformatted};
+    };
+
+    /**
+     * @function
+     * @private
+     * @param  {ERMrest.Key} key     key of the table
+     * @param  {string} context current context
+     * @param  {object} data    data for the table that this key is referring to
+     * @return {object} an object with the following attributes:
+     * - `caption`: The caption that can be used to refer to this row in a link
+     * - `unformatted`: The unformatted version of caption.
+     * - `refernece`: The reference object that can be used for generating link to the row
+     * @desc
+     * Creates the properies for generating a link to the given row of data.
+     * It might return `null`.
+     */
+    module._generateRowLinkProperties = function (key, data, context) {
 
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -1152,12 +1210,10 @@
         };
 
         var value, rowname, i, caption, unformatted;
-
-        var fkey = foreignKey.key; // the key that creates this PseudoColumn
-        var table = fkey.table;
+        var table = key.table;
 
         // if any of key columns don't have data, this link is not valid.
-        if (!hasData(fkey.colset.columns)) {
+        if (!hasData(key.colset.columns)) {
             return null;
         }
 
@@ -1173,8 +1229,8 @@
                 unformattedKeyCols = [],
                 pres, col;
 
-            for (i = 0; i < fkey.colset.columns.length; i++) {
-                col = fkey.colset.columns[i];
+            for (i = 0; i < key.colset.columns.length; i++) {
+                col = key.colset.columns[i];
                 pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
@@ -1188,7 +1244,7 @@
         }
 
         // use the shortest key if it has data (for shorter url).
-        var uriKey = hasData(table.shortestKey) ? table.shortestKey: fkey.colset.columns;
+        var uriKey = hasData(table.shortestKey) ? table.shortestKey: key.colset.columns;
 
         // create a url that points to the current ReferenceColumn
         var ermrestUri = [
@@ -1310,7 +1366,7 @@
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
-                return new module.NoConnectionError("No Internet Connection available");
+                return new module.NoConnectionError(response.data);
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
@@ -1702,12 +1758,28 @@
             typeof element.descending == 'boolean');
     };
 
-    /*
+    /**
      * @function
      * @private
      * @param {Object} md The markdown-it object
      * @param {Object} md The markdown-it-container object.
      * @desc Sets functionality for custom markdown tags like `iframe` and `dropdown` using `markdown-it-container` plugin.
+     * The functions that are required for each custom tag are
+     * - validate: to match a given token with the new rule that we are adding.
+     * - render: the render rule for the token. This function will be called
+     * for opening and closing block tokens that match. The function should be written
+     * in a way to handle just the current token and its values. It should not try
+     * to modify the whole parse process. Doing so will grant the correct behavior
+     * from the markdown-it. If we don't follow this rule while writing the render
+     * function, we might lose extra features (recursive blocks, etc.) that the parser
+     * can handle. For instance the `iframe` tag is written in a way that you have
+     * to follow the given syntax. You cannot have any other tags in iframe and
+     * we're not supporting recursive iframe tags. the render function is only
+     * handling an iframe with the given syntax. Nothing extra.
+     * But we tried to write the `div` tag in a way that you can have
+     * hierarichy of `div`s. If you look at its implementation, it has two simple rules.
+     * One for the opening tag and the other for the closing.
+     *
      */
     module._bindCustomMarkdownTags = function(md, mdContainer) {
 
@@ -2073,6 +2145,41 @@
                 } else {
                   // closing tag
                   return '';
+                }
+            }
+        });
+
+        md.use(mdContainer, 'div', {
+
+            /*
+             * Checks whetehr string matches format ":::div CONTENT \n:::"
+             * string inside `{}` is optional, specifies attributes to be applied to element
+             */
+            validate: function (params) {
+                return params.trim().match(/div(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/div(.*)$/i);
+
+                // opening tag
+                if (tokens[idx].nesting === 1) {
+
+                    // if the next tag is a paragraph, we can change the paragraph into a div
+                    var attrs = md.parse(m[1]);
+                    if (attrs && attrs.length > 0 && attrs[0].type === "paragraph_open") {
+                        var html = md.render(m[1]).trim();
+
+                        // this will remove the closing and opening p tag.
+                        return "<div" + html.slice(2, html.length-4);
+                    }
+
+                    // otherwise just add the div tag
+                    return "<div>\n" + md.render(m[1]).trim();
+                }
+                // the closing tag
+                else {
+                    return "</div>\n";
                 }
             }
         });
@@ -2761,7 +2868,6 @@
     ];
 
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
-    module._pseudoColScalarAggregateFns = ["min", "max"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
 
@@ -2783,38 +2889,36 @@
         CREATE: "CRT",   //create
         UPDATE: "UPDT",   //update
         READ: "READ"        //read
-      });
+    });
 
     module._errorStatus = Object.freeze({
-      forbidden : "Forbidden",
-      itemNotFound : "Item Not Found",
-      facetingError: "Invalid Facet Filters",
-      invalidFilter : "Invalid Filter",
-      invalidInput : "Invalid Input",
-      invalidURI : "Invalid URI",
-      noDataChanged : "No Data Changed",
-      noConnectionError : "No Connection Error",
-      InvalidSortCriteria : "Invalid Sort Criteria",
-      invalidPageCriteria : "Invalid Page Criteria"
-      });
+        forbidden : "Forbidden",
+        itemNotFound : "Item Not Found",
+        facetingError: "Invalid Facet Filters",
+        invalidFilter : "Invalid Filter",
+        invalidInput : "Invalid Input",
+        invalidURI : "Invalid URI",
+        noDataChanged : "No Data Changed",
+        noConnectionError : "No Connection Error",
+        InvalidSortCriteria : "Invalid Sort Criteria",
+        invalidPageCriteria : "Invalid Page Criteria"
+    });
 
     module._errorMessage = Object.freeze({
-      facetingError : "Given encoded string for facets is not valid."
+        facetingError : "Given encoded string for facets is not valid."
     });
 
     module._HTTPErrorCodes = Object.freeze({
-      BAD_REQUEST: 400,
-      UNAUTHORIZED: 401,
-      FORBIDDEN : 403,
-      NOT_FOUND: 404,
-      TIMEOUT_ERROR: 408,
-      CONFLICT : 409,
-      PRECONDITION_FAILED: 412,
-      INTERNAL_SERVER_ERROR :500,
-      NO_CONNECTION_ERROR :502,
-      SERVIVE_UNAVAILABLE: 503
-
-      });
+        BAD_REQUEST: 400,
+        UNAUTHORIZED: 401,
+        FORBIDDEN : 403,
+        NOT_FOUND: 404,
+        TIMEOUT_ERROR: 408,
+        CONFLICT : 409,
+        PRECONDITION_FAILED: 412,
+        INTERNAL_SERVER_ERROR :500,
+        SERVIVE_UNAVAILABLE: 503
+    });
 
     module._warningMessages = Object.freeze({
         NO_PSEUDO_IN_ENTRY: "pseudo-columns are not allowed in entry contexts.",
@@ -2829,7 +2933,6 @@
         FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
         INVALID_FK: "given foreignkey definition is invalid.",
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
-        SCALAR_NOT_ALLOWED: "only entity mode is allowed here.",
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",

@@ -135,6 +135,11 @@
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "aggregate": "array", "entity": false},
+                        {"source": [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ], "aggregate": "array"},
                         {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
                         {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
                         {"source": "asset_filename", "markdown_name": "filename"}
@@ -282,8 +287,6 @@
                         {"source": [{"outbound": ["pseudo_column_schema", "invalid constraint name"]}, "id"]},
                         {"source": [{"inbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"]},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "aggregate": "invalid"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "aggregate": "min"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "aggregate": "max"},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "entity": false},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]}
                     ],
@@ -521,7 +524,14 @@
                     "name": "col",
                     "type": {"typename": "text"}
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{{id}}} with {{{col}}}"
+                    }
+                }
+            }
         },
         "inbound_2_outbound_1": {
             "table_name": "inbound_2_outbound_1",
