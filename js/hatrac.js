@@ -382,8 +382,10 @@ var ERMrest = (function(module) {
             self.jobDone = true;
             deferred.resolve(self.url);
         }, function(response) {
-
-            if (response.status == 404 || response.status == 409) {
+            // 403 - file exists but user can't read it -> create a new one
+            // 404 - file doesn't exist -> create new one
+            // 409 - The parent path does not denote a namespace OR the namespace already exists (from hatrac docs)
+            if (response.status == 403 || response.status == 404 || response.status == 409) {
               deferred.resolve(self.url);
             } else {
               deferred.reject(module._responseToError(response));
