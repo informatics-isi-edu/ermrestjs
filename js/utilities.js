@@ -838,7 +838,9 @@
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object} linkedData The object which contains key value paris of foreign key data.
      * @return {object} A formatted keyvalue pair of object
-     * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
+     * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
+     * If you want the formatted value of a single column, you should call formatvalue,
+     * this function is written for the purpose of being used in markdown.
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
@@ -1670,6 +1672,9 @@
          * @param  {Object} options Configuration options. Accepted parameters:
          * - `isMarkdown`: if this is true, we will not esacpe markdown characters
          * @return {string} A string represntation of array.
+         * @desc
+         * Will generate a comma seperated value for an array. It will also change `null` and `""`
+         * to their special presentation.
          * The returned value might return markdown, which then should call printMarkdown on it.
          */
         printArray: function (value, options) {

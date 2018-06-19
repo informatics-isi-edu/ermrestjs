@@ -4004,6 +4004,38 @@
         get values() {
             if (this._values === undefined) {
 
+                /*
+                 * There are multiple annotations involved in getting the value of column,
+                 * one of these annotations is markdown_pattern that can be defined on columns.
+                 * For that annotation, we need the formattedValues of all the columns.
+                 * Therefore at first we're calling `_getFormattedKeyValues` which internally
+                 * will call `formatvalue` for all the columns and also adds the extra attributes.
+                 * We're passing the raw value to the formatPresentation, because that function
+                 * will call the `formatvalue` iself which its value might be different from what
+                 * `_getFormattedKeyValues` is returning for the column. For example, in case of
+                 * array of texts, we should not treat the values as markdown and we should
+                 * escpae markdown characters. This special case exists only for array, because we're
+                 * manipulating some special cases (null and empty string) and we want those to be treated as markdown.
+                 * Then to make it easier for us, we are escaping other markdown characters. For instance
+                 * assume the value of array column is ["", "*Empty*"]. We expect the final returned
+                 * value for the column to be "<p><em>Empty</em>, *Empty*</p>". But if another column
+                 * is using this column in its markdown pattern (assume column name is col therefore
+                 * a markdown_pattern of {{{col}}}) the expected value is "<p><em>Empty</em>, <em>Empty</em>".
+                 * And that's because we're allowing injection of markdown in markdown_pattern even if the
+                 * column type is text.
+                 *
+                 * tl;dr
+                 * - call `_getFormattedKeyValues` to get formmated values of all columns for the usage of markdown_pattern.
+                 * - call formatPresentation for each column.
+                 *   - calls formatvalue for the column to get the formatted value (might be different from `_getFormattedKeyValues` for the column).
+                 *   - if markdown_pattern exists:
+                 *     - use the template with result of `_getFormattedKeyValues` to get the value.
+                 *   - otherwise:
+                 *     - if json, attach <pre> tag to the formatted value.
+                 *     - if array, call printArray which will return an string.
+                 *     - otherwise return the formatted value.
+                 */
+
                 this._values = [];
                 this._isHTML = [];
 

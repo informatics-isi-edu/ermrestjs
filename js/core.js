@@ -1836,6 +1836,9 @@
 
         /**
          * Formats the presentation value corresponding to this column definition.
+         * For getting the value of a column we should use this function and not formatvalue directly.
+         * This will call `formatvalue` for the current column and other columns if necessary.
+         *
          * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
          * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key

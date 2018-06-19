@@ -1548,6 +1548,8 @@ null and value. `null` for arrays is a valid value. [`null`] is different from `
 
 #### column.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
+For getting the value of a column we should use this function and not formatvalue directly.
+This will call `formatvalue` for the current column and other columns if necessary.
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
