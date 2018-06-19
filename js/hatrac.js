@@ -94,13 +94,28 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * This callback will be called for progress during checksum calculation
+     * @callback checksumOnProgres
+     * @param {number} uploaded the amount that has been uploaded
+     * @param {number} fileSize the total size of the file.
+     */
+
+    /**
+     * This callback will be called for success of checksum calculation
+     * @callback checksumOnSuccess
+     */
+
+    /**
+     * This callback will be called when we counter an error during checksum calculation
+     * @callback checksumOnError
+     * @param {Error} err the error object
+     */
+
+    /**
      * @param {number} chunkSize size of the chunks, in which the file is supposed to be broken
-     * @callback onProgress
-     * @param {onProgress} fn callback function to be called for progress
-     * @callback onSuccess
-     * @param {onSuccess} fn callback function to be called for success
-     * @callback onError
-     * @param {onError} fn callback function to be called for error
+     * @param {checksumOnProgress} fn callback function to be called for progress
+     * @param {checksumOnSuccess} fn callback function to be called for success
+     * @param {checksumOnError} fn callback function to be called for error
      * @returns {Promise} if the schema exists or not
      * @desc Calculates  MD5 checksum for a file using spark-md5 library
      */
@@ -367,8 +382,10 @@ var ERMrest = (function(module) {
             self.jobDone = true;
             deferred.resolve(self.url);
         }, function(response) {
-
-            if (response.status == 404 || response.status == 409) {
+            // 403 - file exists but user can't read it -> create a new one
+            // 404 - file doesn't exist -> create new one
+            // 409 - The parent path does not denote a namespace OR the namespace already exists (from hatrac docs)
+            if (response.status == 403 || response.status == 404 || response.status == 409) {
               deferred.resolve(self.url);
             } else {
               deferred.reject(module._responseToError(response));

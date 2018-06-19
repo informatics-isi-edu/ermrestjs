@@ -60,7 +60,6 @@
 
     /**
      * function that is called when a HTTP 401 Error occurs
-     * @callback httpUnauthorizedFn
      * @type {httpUnauthorizedFn}: Should return a promise
      * @private
      */
@@ -68,12 +67,18 @@
 
     /**
      * set callback function which will be called when a HTTP 401 Error occurs
-     * @callback httpUnauthorizedFn
      * @param {httpUnauthorizedFn} fn callback function
      */
     module.setHttpUnauthorizedFn = function(fn) {
         module._httpUnauthorizedFn = fn;
     };
+
+
+    /**
+     * The callback that will be called whenever 401 HTTP error is encountered,
+     * unless there is already login flow in progress.
+     * @callback httpUnauthorizedFn
+     */
 
     /*
      * A flag to determine whether emrest authorization error has occured
