@@ -492,8 +492,8 @@ to use for ERMrest JavaScript agents.
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
         * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
         * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-        * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+        * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
         * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
         * [.pause()](#ERMrest.upload+pause)
@@ -4912,8 +4912,8 @@ Calculates  MD5 checksum for a file using spark-md5 library
     * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
     * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
     * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-    * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+    * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
     * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
     * [.pause()](#ERMrest.upload+pause)
@@ -4928,8 +4928,8 @@ upload Object
 Create a new instance with new upload(file, otherInfo)
 To validate url generation for a file call validateUrl(row) with row of data
 To calculate checksum call calculateChecksum(row) with row of data
-To create an upload call createUploadJob()
 To check for existing file call fileExists()
+To create an upload call createUploadJob()
 To start uploading, call start()
 To complete upload job call completeUploadJob()
 You can pause with pause()
@@ -4968,14 +4968,6 @@ and notified with a progress handler, sending number in bytes done
 | --- | --- | --- |
 | row | <code>object</code> | row object containing keyvalues of entity |
 
-<a name="ERMrest.upload+createUploadJob"></a>
-
-#### upload.createUploadJob() ⇒ <code>Promise</code>
-Call this function to create an upload job for chunked uploading
-
-**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
-**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
-or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+fileExists"></a>
 
 #### upload.fileExists() ⇒ <code>Promise</code>
@@ -4984,6 +4976,14 @@ If it doesn't then resolve the promise with url.
 If it does then set isPaused, completed and jobDone to true
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+<a name="ERMrest.upload+createUploadJob"></a>
+
+#### upload.createUploadJob() ⇒ <code>Promise</code>
+Call this function to create an upload job for chunked uploading
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
+or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+start"></a>
 
 #### upload.start() ⇒ <code>Promise</code>
