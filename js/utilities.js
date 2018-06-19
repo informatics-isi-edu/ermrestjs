@@ -841,7 +841,7 @@
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
-        var keyValues, k, fkData, col, cons, rowname;
+        var keyValues, k, fkData, col, cons, rowname, v;
 
         var findCol = function (colName, currTable) {
             if (Array.isArray(currTable)) {
@@ -855,7 +855,12 @@
             for (k in d) {
                 try {
                     col = findCol(k, currTable);
-                    res[k] = col.formatvalue(d[k], context);
+                    v = col.formatvalue(d[k], context);
+                    if (col.type.isArray) {
+                        res[k] = module._formatUtils.printArray(v, {isMarkdown: true});
+                    } else {
+                        res[k] = v;
+                    }
                 } catch(e) {
                     res[k] = d[k];
                 }
@@ -909,6 +914,8 @@
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
 
+        var formattedValues = module._getFormattedKeyValues(table, context, data, linkedData);
+
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             actualContext = isTitle ? "title" : (typeof context === "string" && context !== "*" ? context : "");
@@ -923,11 +930,8 @@
                 table.annotations.get(module._annotations.TABLE_DISPLAY).content
             );
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
-                // Get formatted keyValues for a table for the data
-                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
-
                 // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues, table, context, {formatted: true});
+                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true});
             }
         }
 
@@ -935,12 +939,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            // Get formatted keyValues for a table for the data
-            if (typeof keyValues === 'undefined') {
-                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
-            }
-
-            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
+            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true});
 
         }
 
@@ -953,8 +952,7 @@
             var setDisplaynameForACol = function (name) {
                 closest = module._getClosest(data, name);
                 if (closest !== undefined && (typeof closest.data === 'string')) {
-                    col = table.columns.get(closest.key);
-                    result = col.formatvalue(closest.data, context);
+                    result = formattedValues[closest.key];
                     return true;
                 }
                 return false;
@@ -981,7 +979,7 @@
                 // If id column exists
                 if (idCol.length && typeof data[idCol[0].name] === 'string') {
 
-                    result = idCol[0].formatvalue(data[idCol[0].name], context);
+                    result = formattedValues[idCol[0].name];
 
                 } else {
 
@@ -997,7 +995,7 @@
 
                     // Iterate over the keycolumns to get their formatted values for `row_name` context
                     keyColumns.forEach(function (c) {
-                        var value = c.formatvalue(data[c.name], context);
+                        var value = formattedValues[c.name];
                         values.push(value);
                     });
 
@@ -1100,7 +1098,7 @@
             var presentation;
             for (i = 0; i < cols.length; i++) {
                 try {
-                    presentation = cols[i].formatPresentation(options.formattedValues[cols[i].name], context, {formattedValues: options.formattedValues});
+                    presentation = cols[i].formatPresentation(data, context, {formattedValues: options.formattedValues});
                     values.push(presentation.value);
                     unformattedValues.push(presentation.unformatted);
                     // if one of the values isHTMl, should not add link
@@ -1231,7 +1229,7 @@
 
             for (i = 0; i < key.colset.columns.length; i++) {
                 col = key.colset.columns[i];
-                pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
+                pres = col.formatPresentation(data, context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
             }
@@ -1664,6 +1662,38 @@
                 return value;
             }
 
+        },
+
+        /**
+         * @function
+         * @param  {Array} value the array of values
+         * @param  {Object} options Configuration options. Accepted parameters:
+         * - `isMarkdown`: if this is true, we will not esacpe markdown characters
+         * @return {string} A string represntation of array.
+         * The returned value might return markdown, which then should call printMarkdown on it.
+         */
+        printArray: function (value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (!value || !Array.isArray(value) || value.length === 0) {
+                return '';
+            }
+
+            return value.map(function (v) {
+                var isMarkdown = (options.isMarkdown === true);
+                var pv = v;
+                if (v === "") {
+                    pv = module._specialPresentation.EMPTY_STR;
+                    isMarkdown = true;
+                }
+                else if (v == null) {
+                    pv = module._specialPresentation.NULL;
+                    isMarkdown = true;
+                }
+
+                if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
+                return module._escapeHTMLCharacters(pv);
+            }).join(", ");
         }
     };
 
@@ -2218,6 +2248,14 @@
         function(text, replacement) {
           return text.replace(replacement[0], replacement[1]);
         }, text);
+    };
+
+    module._escapeHTMLCharacters = function (text) {
+        return text.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
     };
 
     /**
@@ -2889,6 +2927,11 @@
         CREATE: "CRT",   //create
         UPDATE: "UPDT",   //update
         READ: "READ"        //read
+    });
+
+    module._specialPresentation = Object.freeze({
+        NULL: "*No Value*",
+        EMPTY_STR: "*Empty*"
     });
 
     module._errorStatus = Object.freeze({

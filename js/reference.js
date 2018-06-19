@@ -379,12 +379,22 @@
 
                     var col = _getFacetSourceColumn(obj.source, self.table, module._constraintNames);
 
+                    // column type array is not supported
+                    if (!col || col.type.isArray) {
+                        return false;
+                    }
+
                     if (col && module._facetUnsupportedTypes.indexOf(col.type.name) === -1) {
                         return col;
                     }
                 };
 
                 var checkRefColumn = function (col) {
+                    // column type array is not supported
+                    if (col.type.isArray || col._baseCols[0].type.isArray) {
+                        return false;
+                    }
+
                     if (col.isPathColumn) {
                         if (col.hasAggregate) return false;
                         return {"obj": col.sourceObject, "column": col._baseCols[0]};
@@ -2684,6 +2694,7 @@
                     }
 
                     // add the column if it's not part of any foreign keys
+                    // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
                         addColumn(col);
                     } else {
@@ -4045,7 +4056,7 @@
                                 values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
                         } else {
-                            values[i] = column.formatPresentation(keyValues[column.name], this._pageRef._context, { formattedValues: keyValues});
+                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;

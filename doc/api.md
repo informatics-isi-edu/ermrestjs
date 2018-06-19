@@ -149,7 +149,7 @@ to use for ERMrest JavaScript agents.
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
         * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -219,7 +219,7 @@ to use for ERMrest JavaScript agents.
     * [.Type](#ERMrest.Type)
         * [new Type(name)](#new_ERMrest.Type_new)
         * [.name](#ERMrest.Type+name) : <code>string</code>
-        * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+        * [.isArray](#ERMrest.Type+isArray) : <code>boolean</code>
         * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
         * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
         * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
@@ -484,8 +484,8 @@ to use for ERMrest JavaScript agents.
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
         * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
         * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-        * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+        * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
         * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
         * [.pause()](#ERMrest.upload+pause)
@@ -1406,7 +1406,7 @@ Constructor for Columns.
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-    * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code>
+    * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
     * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -1521,13 +1521,15 @@ return the default value for a column after checking whether it's a primitive th
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>
 
-#### column.formatvalue(data, context) ⇒ <code>string</code>
+#### column.formatvalue(data, context) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
 Formats a value corresponding to this column definition.
-If a column display annotation with preformat property is available then use prvided format string
-else use the default formatValue function
+It will take care of pre-formatting and any default formatting based on column type.
+If column is array, the returned value will be array of values. The value is either
+a string or `null`. We're not returning string because we need to distinguish between
+null and value. `null` for arrays is a valid value. [`null`] is different from `null`.
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
-**Returns**: <code>string</code> - The formatted value.  
+**Returns**: <code>string</code> \| <code>Array.&lt;string&gt;</code> - The formatted value. If column is array, it will be an array of values.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1544,7 +1546,7 @@ Formats the presentation value corresponding to this column definition.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>String</code> | The 'formatted' data value. |
+| data | <code>Object</code> | The `raw` data for the table. |
 | context | <code>String</code> | the app context |
 | options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
 
@@ -2080,7 +2082,7 @@ returns string representation of ForeignKeyRef object
 * [.Type](#ERMrest.Type)
     * [new Type(name)](#new_ERMrest.Type_new)
     * [.name](#ERMrest.Type+name) : <code>string</code>
-    * [._isArray](#ERMrest.Type+_isArray) : <code>boolean</code>
+    * [.isArray](#ERMrest.Type+isArray) : <code>boolean</code>
     * [._isDomain](#ERMrest.Type+_isDomain) : <code>boolean</code>
     * [.baseType](#ERMrest.Type+baseType) : [<code>Type</code>](#ERMrest.Type)
     * [.rootName](#ERMrest.Type+rootName) : <code>string</code>
@@ -2097,9 +2099,9 @@ returns string representation of ForeignKeyRef object
 
 #### type.name : <code>string</code>
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
-<a name="ERMrest.Type+_isArray"></a>
+<a name="ERMrest.Type+isArray"></a>
 
-#### type._isArray : <code>boolean</code>
+#### type.isArray : <code>boolean</code>
 Currently used to signal whether there is a base type for this column
 
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
@@ -3522,7 +3524,7 @@ Formats the presentation value corresponding to this reference-column definition
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| data | <code>Object</code> | the raw data of the table. |
 | context | <code>String</code> | the app context |
 | options | <code>Object</code> | includes `context` and `formattedValues` |
 
@@ -3654,7 +3656,7 @@ Format the presentation value corresponding to this pseudo-column definition.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | <code>Object</code> | In case of pseudocolumn it's the raw data, otherwise'formatted' data value. |
+| data | <code>Object</code> | the raw data of the table |
 | context | <code>String</code> | the app context |
 | options | <code>Object</code> | include `formattedValues` |
 
@@ -4884,8 +4886,8 @@ Therefore the returned count might not be exactly the same as number of returned
     * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
     * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
     * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-    * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+    * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
     * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
     * [.pause()](#ERMrest.upload+pause)
@@ -4900,8 +4902,8 @@ upload Object
 Create a new instance with new upload(file, otherInfo)
 To validate url generation for a file call validateUrl(row) with row of data
 To calculate checksum call calculateChecksum(row) with row of data
-To create an upload call createUploadJob()
 To check for existing file call fileExists()
+To create an upload call createUploadJob()
 To start uploading, call start()
 To complete upload job call completeUploadJob()
 You can pause with pause()
@@ -4940,14 +4942,6 @@ and notified with a progress handler, sending number in bytes done
 | --- | --- | --- |
 | row | <code>object</code> | row object containing keyvalues of entity |
 
-<a name="ERMrest.upload+createUploadJob"></a>
-
-#### upload.createUploadJob() ⇒ <code>Promise</code>
-Call this function to create an upload job for chunked uploading
-
-**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
-**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
-or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+fileExists"></a>
 
 #### upload.fileExists() ⇒ <code>Promise</code>
@@ -4956,6 +4950,14 @@ If it doesn't then resolve the promise with url.
 If it does then set isPaused, completed and jobDone to true
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+<a name="ERMrest.upload+createUploadJob"></a>
+
+#### upload.createUploadJob() ⇒ <code>Promise</code>
+Call this function to create an upload job for chunked uploading
+
+**Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+**Returns**: <code>Promise</code> - A promise resolved with a url where we will upload the file
+or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+start"></a>
 
 #### upload.start() ⇒ <code>Promise</code>
