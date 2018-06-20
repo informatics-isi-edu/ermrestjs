@@ -468,6 +468,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
@@ -586,6 +587,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
@@ -4606,6 +4608,7 @@ parent table (not the end table).
     * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
@@ -4665,6 +4668,18 @@ Visible columns
 #### attributeGroupReference.uri : <code>string</code>
 The attributegroup uri.
 <service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+
+NOTE:
+- Since this is the object that has knowledge of columns, this should be here.
+  (we might want to relocate it to the AttributeGroupLocation object.)
+- ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+ermrestPath"></a>
+
+#### attributeGroupReference.ermrestPath : <code>string</code>
+The second part of Attributegroup uri.
+<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
 
 NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
@@ -6002,6 +6017,7 @@ NOTE:
     * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
@@ -6061,6 +6077,18 @@ Visible columns
 #### attributeGroupReference.uri : <code>string</code>
 The attributegroup uri.
 <service>/catalog/<_catalogId>/attributegroup/<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+
+NOTE:
+- Since this is the object that has knowledge of columns, this should be here.
+  (we might want to relocate it to the AttributeGroupLocation object.)
+- ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+ermrestPath"></a>
+
+#### attributeGroupReference.ermrestPath : <code>string</code>
+The second part of Attributegroup uri.
+<path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
 
 NOTE:
 - Since this is the object that has knowledge of columns, this should be here.

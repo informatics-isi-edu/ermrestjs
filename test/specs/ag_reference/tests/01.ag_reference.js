@@ -15,9 +15,11 @@ exports.execute = function (options) {
             encodedID = "p%E1%B4%89";
             decodedID = "pᴉ";
             
+        var mainTableBasePath = schemaName + ":" + mainTable;
+
         var mainTableBaseUri = [
-            options.url, "catalog", catID, "attributegroup", 
-            schemaName + ":" + mainTable
+            options.url, "catalog", catID, "attributegroup",
+            mainTableBasePath
         ].join("/");
         
         var unicodeTableBaseUri = [
@@ -255,6 +257,18 @@ exports.execute = function (options) {
                 
                 expect(refWithModifiers.uri).toBe(
                     mainTableBaseUri + "/col::ciregexp::test/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
+                    "refWithModifiers uri missmatch."
+                );
+            });
+
+            it("ermrestPath should return the path.", function () {
+                expect(ref.ermrestPath).toBe(
+                    mainTableBasePath + "/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)",
+                    "ref uri missmatch."
+                );
+
+                expect(refWithModifiers.ermrestPath).toBe(
+                    mainTableBasePath + "/col::ciregexp::test/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
                     "refWithModifiers uri missmatch."
                 );
             });
