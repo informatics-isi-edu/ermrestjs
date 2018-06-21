@@ -1049,6 +1049,7 @@
         }
 
         // used to create key pairs in uri
+        // NOTE: should probably be factored out into a function of table
         var createKeyPair = function (cols) {
             var keyPair = "", col;
             for (i = 0; i < cols.length; i++) {

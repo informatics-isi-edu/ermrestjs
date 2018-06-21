@@ -1425,7 +1425,7 @@
 
         /**
          * Updates a set of resources.
-         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
+         * @param {Array} tuples array of tuple objects so that the new data and old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
          * @param {Object} contextHeaderParams the object that we want to log.
@@ -1807,17 +1807,18 @@
         },
 
         /**
-         * Deletes the referenced resources.
+         * Deletes the referenced resources. Should be called on an unfiltered reference
+         * tuples passed to create the exact set to be deleted
          * NOTE This will ignore the provided sort and paging on the reference, make
          * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Object} contextHeaderParams the object that we want to log.
+         * @param {Array} tuples optional array of tuple objects used to construct the uri, if not-defined use the reference uri (should only be empty for association reference)
+         * @param {Object} contextHeaderParams optional object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function(contextHeaderParams) {
+        delete: function(tuples, contextHeaderParams) {
             try {
-
                 var defer = module._q.defer();
 
                 /**
@@ -1839,7 +1840,33 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-                this._server._http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
+
+                var uri;
+
+                if (!tuples) {
+                    uri = this.location.ermrestCompactUri;
+                } else {
+                    verify(Array.isArray(tuples), "'tuples' must be an array to delete");
+                    uri = this.table.uri;
+
+                    var keys = [];
+                    //create key for each tuple and push it into the key array
+                    for (var i=0; i<tuples.length; i++) {
+                        // NOTE: should probably be factored out into a function of table
+                        var keyPair = "";
+                        for (var j=0; j<this.table.shortestKey.length; j++) {
+                            var colName = this.table.shortestKey[j].name;
+                            keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i].data[colName]);
+                            if (j != this.table.shortestKey.length - 1) {
+                                keyPair += "&";
+                            }
+                        }
+                        keys.push(keyPair);
+                    }
+
+                    uri += "/" + keys.join(";");
+                }
+                this._server._http.delete(uri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
