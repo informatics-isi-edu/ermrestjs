@@ -2197,11 +2197,10 @@ FacetColumn.prototype = {
      */
     get comment () {
         if (this._comment === undefined) {
-            var fk = this._lastForeignKey ? this._lastForeignKey.obj : null;
-            if (fk === null || !this.isEntityMode) {
-                this._comment = this._column.comment;
-            } else if (typeof fk.comment === "string" && fk.comment !== "") {
-                this._comment = fk.comment;
+            if (this._facetObject.comment) {
+                this._comment = this._facetObject.comment;
+            } else if (!this.isEntityMode) {
+                    this._comment = this._column.comment;
             } else {
                 this._comment = this._column.table.comment;
             }

@@ -155,7 +155,7 @@
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
                             {"source": "text_col", "ux_mode": "invalid mode"},
-                            {"source": "longtext_col"},
+                            {"source": "longtext_col", "comment": "long text comment in facet"},
                             {"source": "markdown_col"},
                             {"source": "boolean_col"},
                             {"source": ["json_col"]},
