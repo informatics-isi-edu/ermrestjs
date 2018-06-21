@@ -743,12 +743,12 @@ exports.execute = function (options) {
             });
 
             describe("comment", function () {
-                it ('if in scalar mode, return column\'s comment', function () {
-                    expect(mainFacets[5].comment).toBe("text comment");
+                it ("return the comment defined on the facet.", function () {
+                    expect(mainFacets[6].comment).toBe("long text comment in facet");
                 });
 
-                it ('in entity mode, if foreignKey has comment return it.', function () {
-                    expect(mainFacets[10].comment).toBe("fk to f1");
+                it ('if in scalar mode, return column\'s comment', function () {
+                    expect(mainFacets[5].comment).toBe("text comment");
                 });
 
                 it ('otherwise return table\'s comment.', function () {
