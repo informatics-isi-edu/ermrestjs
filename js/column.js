@@ -1596,6 +1596,10 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         if (parts && parts.length === 4) {
             caption = parts[2];
         }
+        // in compact contexts, just return the last part of url (filename)
+        else if (typeof context === "string" && context.indexOf("compact") === 0) {
+            caption = caption.split("/").pop();
+        }
     }
 
     // add the uinit=1 query params
