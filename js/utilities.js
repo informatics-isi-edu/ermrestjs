@@ -1697,7 +1697,7 @@
                 }
 
                 if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
-                return module._escapeHTMLCharacters(pv);
+                return pv;
             }).join(", ");
         }
     };
@@ -2253,14 +2253,6 @@
         function(text, replacement) {
           return text.replace(replacement[0], replacement[1]);
         }, text);
-    };
-
-    module._escapeHTMLCharacters = function (text) {
-        return text.replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
     };
 
     /**

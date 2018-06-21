@@ -1858,7 +1858,6 @@
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
                 return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
             }

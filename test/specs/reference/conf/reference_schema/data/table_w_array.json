@@ -29,5 +29,23 @@
         "int2_array": [1245, null, 6242],
         "int4_array": [128361, null, 41234],
         "int8_array": [41245264, null, 1241232]
+    },
+    {
+        "id": "04",
+        "text_array": [null],
+        "boolean_array": [null],
+        "date_array": [null],
+        "timestamp_array": [null],
+        "timestamptz_array": [null],
+        "float4_array": [null],
+        "float8_array": [null],
+        "numeric_array": [null],
+        "int2_array": [null],
+        "int4_array": [null],
+        "int8_array": [null]
+    },
+    {
+        "id": "05",
+        "text_array": [""]
     }
 ]

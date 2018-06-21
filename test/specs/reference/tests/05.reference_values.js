@@ -370,7 +370,7 @@ exports.execute = function (options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "table_w_array",
-            limit = 3;
+            limit = 5;
 
         var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
         var reference, page, tuples;
@@ -433,67 +433,67 @@ exports.execute = function (options) {
                 {
                     "column": "text_array",
                     "values": [
-                        "", "", "<p>*Empty*, &amp;lt;em&amp;gt;Empty&amp;lt;/em&amp;gt;, <em>No Value</em>, <em>Empty</em></p>\n"
+                        "", "", "<p>*Empty*, &lt;em&gt;Empty&lt;/em&gt;, <em>No Value</em>, <em>Empty</em></p>\n", "<p><em>No Value</em></p>\n", "<p><em>Empty</em></p>\n"
                     ]
                 },
                 {
                     "column": "boolean_array",
                     "values": [
-                        "", "", "<p>false, <em>No Value</em>, true</p>\n"
+                        "", "", "<p>false, <em>No Value</em>, true</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "date_array",
                     "values": [
-                        "", "", "<p>2016-01-18, <em>No Value</em>, 2015-04-18</p>\n"
+                        "", "", "<p>2016-01-18, <em>No Value</em>, 2015-04-18</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "timestamp_array",
                     "values": [
-                        "", "", "<p>2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</p>\n"
+                        "", "", "<p>2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "timestamptz_array",
                     "values": [
-                        "", "", "<p>" + formatTZ("2016-01-18T00:00:00-08:00") + ", <em>No Value</em>, " + formatTZ("2016-01-28T00:00:00-08:00") +"</p>\n"
+                        "", "", "<p>" + formatTZ("2016-01-18T00:00:00-08:00") + ", <em>No Value</em>, " + formatTZ("2016-01-28T00:00:00-08:00") +"</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "float4_array",
                     "values": [
-                        "", "", "<p>2.4300, <em>No Value</em>, 5.4213</p>\n"
+                        "", "", "<p>2.4300, <em>No Value</em>, 5.4213</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "float8_array",
                     "values": [
-                        "", "", "<p>5,234.1234, <em>No Value</em>, 4,123.2340</p>\n"
+                        "", "", "<p>5,234.1234, <em>No Value</em>, 4,123.2340</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "numeric_array",
                     "values": [
-                        "", "", "<p>12,345.2340, <em>No Value</em>, -41,232.2300</p>\n"
+                        "", "", "<p>12,345.2340, <em>No Value</em>, -41,232.2300</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "int2_array",
                     "values": [
-                        "", "", "<p>1,245, <em>No Value</em>, 6,242</p>\n"
+                        "", "", "<p>1,245, <em>No Value</em>, 6,242</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "int4_array",
                     "values": [
-                        "", "", "<p>128,361, <em>No Value</em>, 41,234</p>\n"
+                        "", "", "<p>128,361, <em>No Value</em>, 41,234</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 },
                 {
                     "column": "int8_array",
                     "values": [
-                        "", "", "<p>41,245,264, <em>No Value</em>, 1,241,232</p>\n"
+                        "", "", "<p>41,245,264, <em>No Value</em>, 1,241,232</p>\n", "<p><em>No Value</em></p>\n", ""
                     ]
                 }
             ]);
@@ -501,15 +501,33 @@ exports.execute = function (options) {
 
         describe("when used in the markdown_pattern.", function () {
             it ("should be able to inject markdown in markdown (if we have array of text and the text has markdown in it).", function () {
-                testValuesByIndex(11, ["", "", "<p>text array: <em>Empty</em>, &lt;em&gt;Empty&lt;/em&gt;, <em>No Value</em>, <em>Empty</em></p>\n"]);
+                testValuesByIndex(11, [
+                    "",
+                    "",
+                    "<p>text array: <em>Empty</em>, &lt;em&gt;Empty&lt;/em&gt;, <em>No Value</em>, <em>Empty</em></p>\n",
+                    "<p>text array: <em>No Value</em></p>\n",
+                    "<p>text array: <em>Empty</em></p>\n"
+                ]);
             });
 
             it ("should be able to access formatted value (the same output as formatPresentation for column).", function () {
-                testValuesByIndex(12, ["", "", "<ul>\n<li>boolean: false, <em>No Value</em>, true</li>\n<li>timestamp: 2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</li>\n<li>numeric: 12,345.2340, <em>No Value</em>, -41,232.2300</li>\n</ul>\n"]);
+                testValuesByIndex(12, [
+                    "",
+                    "",
+                    "<ul>\n<li>boolean: false, <em>No Value</em>, true</li>\n<li>timestamp: 2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</li>\n<li>numeric: 12,345.2340, <em>No Value</em>, -41,232.2300</li>\n</ul>\n",
+                    "<ul>\n<li>boolean: <em>No Value</em></li>\n<li>timestamp: <em>No Value</em></li>\n<li>numeric: <em>No Value</em></li>\n</ul>\n",
+                    ""
+                ]);
             });
 
             it ("should be able to iterate over array values.", function () {
-                testValuesByIndex(13, ["", "", "<ul>\n<li>41245264</li>\n<li><em>No Value</em></li>\n<li>1241232</li>\n</ul>\n"]);
+                testValuesByIndex(13, [
+                    "",
+                    "",
+                    "<ul>\n<li>41245264</li>\n<li><em>No Value</em></li>\n<li>1241232</li>\n</ul>\n",
+                    "<ul>\n<li><em>No Value</em></li>\n</ul>\n",
+                    ""
+                ]);
             });
         });
     });
