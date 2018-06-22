@@ -1807,12 +1807,11 @@
         },
 
         /**
-         * Deletes the referenced resources. Should be called on an unfiltered reference
-         * tuples passed to create the exact set to be deleted
+         * Deletes the referenced resource's tuples.
          * NOTE This will ignore the provided sort and paging on the reference, make
          * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Array} tuples optional array of tuple objects used to construct the uri, if not-defined use the reference uri (should only be empty for association reference)
+         * @param {Array} tuples optional array of tuple objects used to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference)
          * @param {Object} contextHeaderParams optional object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
