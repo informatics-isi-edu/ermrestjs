@@ -4,6 +4,7 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "delete_schema",
             tableName = "delete_table",
+            tuples = [{data: {key_col: 1}}],
             reference;
 
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
@@ -11,7 +12,6 @@ exports.execute = function (options) {
         describe('when deleting regularly', function() {
             beforeAll(function (done) {
                 var uri = baseUri + "/key_col=1";
-                var tuples;
                 options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
@@ -22,8 +22,9 @@ exports.execute = function (options) {
             });
 
             it("should properly delete the referenced entity from the table.", function (done) {
+
                 // need to read to have the etag
-                reference.delete().then(function (response) {
+                reference.delete(tuples).then(function (response) {
                     // response should be empty
                     expect(response).not.toBeDefined();
 
@@ -41,7 +42,7 @@ exports.execute = function (options) {
 
             // entity with key_col = 1 deleted previously
             it("should return a positive error code when trying to delete an already deleted entity.", function (done) {
-                reference.delete().then(function (response) {
+                reference.delete(tuples).then(function (response) {
                     // response should be a positive status code triggering the success calback
                     // response object should be undefined
                     expect(response).not.toBeDefined();

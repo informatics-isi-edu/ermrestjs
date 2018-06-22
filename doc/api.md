@@ -2882,8 +2882,8 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array</code> | array of tuple objects used to construct the uri, if empty use the reference uri (should only be empty for association reference) |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array</code> | optional array of tuple objects used to construct the uri, if not-defined use the reference uri (should only be empty for association reference) |
+| contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
 
@@ -5842,8 +5842,8 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array</code> | array of tuple objects used to construct the uri, if empty use the reference uri (should only be empty for association reference) |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array</code> | optional array of tuple objects used to construct the uri, if not-defined use the reference uri (should only be empty for association reference) |
+| contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
 
