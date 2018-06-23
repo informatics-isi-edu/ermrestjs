@@ -1438,6 +1438,7 @@
         update: function(tuples, contextHeaderParams) {
             try {
                 verify(tuples, "'tuples' must be specified");
+                verify(Array.isArray(tuples), "'tuples' must be an array to update");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
@@ -1811,7 +1812,7 @@
          * NOTE This will ignore the provided sort and paging on the reference, make
          * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Array} tuples optional array of tuple objects used to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference)
+         * @param {Object[]} tuples optional array of objects with just the data needed to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference)
          * @param {Object} contextHeaderParams optional object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1819,6 +1820,9 @@
         delete: function(tuples, contextHeaderParams) {
             try {
                 var defer = module._q.defer();
+                verify(tuples, "'tuples' must be specified");
+                verify(Array.isArray(tuples), "'tuples' must be an array to delete");
+                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 /**
                  * NOTE: previous implemenation of delete with 412 logic is here:
@@ -1840,31 +1844,24 @@
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
 
-                var uri;
+                var uri = this.table.uri;
 
-                if (!tuples) {
-                    uri = this.location.ermrestCompactUri;
-                } else {
-                    verify(Array.isArray(tuples), "'tuples' must be an array to delete");
-                    uri = this.table.uri;
-
-                    var keys = [];
-                    //create key for each tuple and push it into the key array
-                    for (var i=0; i<tuples.length; i++) {
-                        // NOTE: should probably be factored out into a function of table
-                        var keyPair = "";
-                        for (var j=0; j<this.table.shortestKey.length; j++) {
-                            var colName = this.table.shortestKey[j].name;
-                            keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i].data[colName]);
-                            if (j != this.table.shortestKey.length - 1) {
-                                keyPair += "&";
-                            }
+                var keys = [];
+                //create key for each tuple and push it into the key array
+                for (var i=0; i<tuples.length; i++) {
+                    // NOTE: should probably be factored out into a function of table
+                    var keyPair = "";
+                    for (var j=0; j<this.table.shortestKey.length; j++) {
+                        var colName = this.table.shortestKey[j].name;
+                        keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i][colName]);
+                        if (j != this.table.shortestKey.length - 1) {
+                            keyPair += "&";
                         }
-                        keys.push(keyPair);
                     }
-
-                    uri += "/" + keys.join(";");
+                    keys.push(keyPair);
                 }
+
+                uri += "/" + keys.join(";");
                 this._server._http.delete(uri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {

@@ -4,14 +4,18 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "delete_schema",
             tableName = "delete_table",
-            tuples = [{data: {key_col: 1}}],
-            reference;
+            assocTableName = "association_table";
 
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
 
-        describe('when deleting regularly', function() {
+        var associationUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + assocTableName;
+
+        describe('when deleting one row', function() {
+            var reference, tuples;
+
             beforeAll(function (done) {
                 var uri = baseUri + "/key_col=1";
+                tuples = [{key_col: 1}];
                 options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
@@ -23,7 +27,101 @@ exports.execute = function (options) {
 
             it("should properly delete the referenced entity from the table.", function (done) {
 
-                // need to read to have the etag
+                reference.delete(tuples).then(function (response) {
+                    // response should be empty
+                    expect(response).not.toBeDefined();
+
+                    return reference.read(1);
+                }).then(function (response) {
+                    // Reading an object that doesn't exist should return no data
+                    expect(response._data.length).toBe(0);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            // entity with key_col = 1 deleted previously
+            it("should return a positive error code when trying to delete an already deleted entity.", function (done) {
+                reference.delete(tuples).then(function (response) {
+                    // response should be a positive status code triggering the success calback
+                    // response object should be undefined
+                    expect(response).not.toBeDefined();
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
+        describe('when deleting multiple rows', function() {
+            var reference, tuples;
+
+            beforeAll(function (done) {
+                var uri = baseUri + "/key_col=2;key_col=3";
+                tuples = [{key_col: 2}, {key_col: 3}];
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    done();
+                }).catch(function (error) {
+                    console.dir();
+                    done.fail();
+                });
+            });
+
+            it("should properly delete the referenced entity from the table.", function (done) {
+                reference.delete(tuples).then(function (response) {
+                    // response should be empty
+                    expect(response).not.toBeDefined();
+
+                    return reference.read(2);
+                }).then(function (response) {
+                    // Reading an object that doesn't exist should return no data
+                    expect(response._data.length).toBe(0);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            // entity with key_col = 1 deleted previously
+            it("should return a positive error code when trying to delete an already deleted entity.", function (done) {
+                reference.delete(tuples).then(function (response) {
+                    // response should be a positive status code triggering the success calback
+                    // response object should be undefined
+                    expect(response).not.toBeDefined();
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
+        describe('when deleting one row from an association table', function() {
+            var reference, tuples;
+
+            beforeAll(function (done) {
+                var uri = associationUri + "/delete_id=4&leaf_id=1";
+                tuples = [{delete_id: 4, leaf_id: 1}];
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    done();
+                }).catch(function (error) {
+                    console.dir();
+                    done.fail();
+                });
+            });
+
+            it("should properly delete the referenced entity from the table.", function (done) {
+
                 reference.delete(tuples).then(function (response) {
                     // response should be empty
                     expect(response).not.toBeDefined();

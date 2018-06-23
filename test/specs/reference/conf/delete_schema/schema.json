@@ -38,10 +38,112 @@
                 }
             ],
             "annotations": {}
+        },
+        "association_table": {
+            "comment": "Table to represent deleting an association",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "delete_id",
+                        "leaf_id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names" : [["delete_schema", "delete_assoc_fk"]],
+                    "foreign_key_columns": [
+                        {
+                            "table_name": "association_table",
+                            "schema_name": "delete_schema",
+                            "column_name": "delete_id"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "table_name": "delete_table",
+                            "schema_name": "delete_schema",
+                            "column_name": "key_col"
+                        }
+                    ]
+                },
+                {
+                    "names" : [["delete_schema", "leaf_asoc_fk"]],
+                    "foreign_key_columns": [
+                        {
+                            "table_name": "association_table",
+                            "schema_name": "delete_schema",
+                            "column_name": "leaf_id"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "table_name": "leaf_table",
+                            "schema_name": "delete_schema",
+                            "column_name": "id"
+                        }
+                    ]
+                }
+            ],
+            "table_name": "association_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "delete_id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "leaf_id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "leaf_table": {
+            "comment": "Table to represent the leaf entities of the association",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "leaf_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "text_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
         }
     },
     "table_names": [
-        "delete_table"
+        "delete_table",
+        "association_table",
+        "leaf_table"
     ],
     "comment": null,
     "annotations": {}
