@@ -65,7 +65,8 @@ exports.execute = function (options) {
             tableSecondPath2 = "secondpath_2",
             tableMain = "main",
             tableWAlt = "table_w_alt",
-            tableWFacetAlt = "main_w_facets_w_alt";
+            tableWFacetAlt = "main_w_facets_w_alt",
+            tableWArray = "table_w_array";
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
         var refMainMoreFilters, refNotNullFilter, refWCustomFilters;
@@ -279,6 +280,16 @@ exports.execute = function (options) {
 
                 it ("should ignore invalid facets.", function (done) {
                     options.ermRest.resolve(createURL(tableF2), {cid: "test"}).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(0);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("should ignore array columns.", function (done) {
+                    options.ermRest.resolve(createURL(tableWArray), {cid: "test"}).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(0);
                         done();
                     }).catch(function (err) {

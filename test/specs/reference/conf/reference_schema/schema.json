@@ -1160,6 +1160,16 @@
                           }
                       }
                   }
+              },
+              {
+                  "name": "array_int",
+                  "type": {
+                      "typename": "int4[]",
+                      "is_array": true,
+                      "base_type": {
+                          "typename": "int4"
+                      }
+                  }
               }
             ],
             "annotations": {
@@ -1554,11 +1564,222 @@
                             }
                         }
                     }
+                },
+                {
+                    "name": "boolean_array",
+                    "type": {
+                        "typename": "boolean[]",
+                        "is_array": true,
+                        "base_type": {
+                            "typename": "boolean"
+                        }
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%t",
+                                    "bool_true_value": "YES",
+                                    "bool_false_value": "NOPE"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "float4_array",
+                    "type": {
+                        "typename": "float4[]",
+                        "is_array": true,
+                        "base_type": {
+                            "typename": "float4"
+                        }
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*": {
+                                "pre_format": {
+                                    "format": "%.3f"
+                                }
+                            }
+                        }
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                  "*": ["id", "name", "url", "isvalid", "numeric", "float", "json"]
+                  "*": ["id", "name", "url", "isvalid", "numeric", "float", "json", "boolean_array", "float4_array"]
+                }
+            }
+        },
+        "table_w_array": {
+            "kind": "table",
+            "table_name": "table_w_array",
+            "schema_name": "reference_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "text_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "text[]",
+                        "base_type": {
+                            "typename": "text"
+                        }
+                    }
+                },
+                {
+                    "name": "boolean_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "boolean[]",
+                        "base_type": {
+                            "typename": "boolean"
+                        }
+                    }
+                },
+                {
+                    "name": "date_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "date[]",
+                        "base_type": {
+                            "typename": "date"
+                        }
+                    }
+                },
+                {
+                    "name": "timestamp_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamp[]",
+                        "base_type": {
+                            "typename": "timestamp"
+                        }
+                    }
+                },
+                {
+                    "name": "timestamptz_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamptz[]",
+                        "base_type": {
+                            "typename": "timestamptz"
+                        }
+                    }
+                },
+                {
+                    "name": "float4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float4[]",
+                        "base_type": {
+                            "typename": "float4"
+                        }
+                    }
+                },
+                {
+                    "name": "float8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float8[]",
+                        "base_type": {
+                            "typename": "float8"
+                        }
+                    }
+                },
+                {
+                    "name": "numeric_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "numeric[]",
+                        "base_type": {
+                            "typename": "numeric"
+                        }
+                    }
+                },
+                {
+                    "name": "int2_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int2[]",
+                        "base_type": {
+                            "typename": "int2"
+                        }
+                    }
+                },
+                {
+                    "name": "int4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int4[]",
+                        "base_type": {
+                            "typename": "int4"
+                        }
+                    }
+                },
+                {
+                    "name": "int8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int8[]",
+                        "base_type": {
+                            "typename": "int8"
+                        }
+                    }
+                },
+                {
+                    "name": "md_pattern_text",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "markdown_pattern": "{{#text_array}} text array: {{{text_array}}} {{/text_array}}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "md_pattern_array_values",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "markdown_pattern": "{{#boolean_array}} - boolean: {{{boolean_array}}} \n - timestamp: {{{timestamp_array}}} \n - numeric: {{{numeric_array}}} \n {{/boolean_array}}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "md_pattern_iterate_text",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "markdown_pattern": "{{#_int8_array}} - {{#.}}{{.}}{{/.}}{{^.}}*No Value*{{/.}} \n {{/_int8_array}}"
+                            }
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "text_array", "boolean_array", "date_array", "timestamp_array",
+                        "timestamptz_array", "float4_array", "float8_array", "numeric_array",
+                        "int2_array", "int4_array", "int8_array",
+                        "md_pattern_text", "md_pattern_array_values", "md_pattern_iterate_text"
+                    ]
                 }
             }
         }

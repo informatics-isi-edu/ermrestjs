@@ -377,12 +377,22 @@
 
                     var col = _getFacetSourceColumn(obj.source, self.table, module._constraintNames);
 
+                    // column type array is not supported
+                    if (!col || col.type.isArray) {
+                        return false;
+                    }
+
                     if (col && module._facetUnsupportedTypes.indexOf(col.type.name) === -1) {
                         return col;
                     }
                 };
 
                 var checkRefColumn = function (col) {
+                    // column type array is not supported
+                    if (col.type.isArray || col._baseCols[0].type.isArray) {
+                        return false;
+                    }
+
                     if (col.isPathColumn) {
                         if (col.hasAggregate) return false;
                         return {"obj": col.sourceObject, "column": col._baseCols[0]};
@@ -2682,6 +2692,7 @@
                     }
 
                     // add the column if it's not part of any foreign keys
+                    // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
                         addColumn(col);
                     } else {
@@ -3993,12 +4004,46 @@
         get values() {
             if (this._values === undefined) {
 
+                /*
+                 * There are multiple annotations involved in getting the value of column,
+                 * one of these annotations is markdown_pattern that can be defined on columns.
+                 * For that annotation, we need the formattedValues of all the columns.
+                 * Therefore at first we're calling `_getFormattedKeyValues` which internally
+                 * will call `formatvalue` for all the columns and also adds the extra attributes.
+                 * We're passing the raw value to the formatPresentation, because that function
+                 * will call the `formatvalue` iself which its value might be different from what
+                 * `_getFormattedKeyValues` is returning for the column. For example, in case of
+                 * array of texts, we should not treat the values as markdown and we should
+                 * escpae markdown characters. This special case exists only for array, because we're
+                 * manipulating some special cases (null and empty string) and we want those to be treated as markdown.
+                 * Then to make it easier for us, we are escaping other markdown characters. For instance
+                 * assume the value of array column is ["", "*Empty*"]. We expect the final returned
+                 * value for the column to be "<p><em>Empty</em>, *Empty*</p>". But if another column
+                 * is using this column in its markdown pattern (assume column name is col therefore
+                 * a markdown_pattern of {{{col}}}) the expected value is "<p><em>Empty</em>, <em>Empty</em>".
+                 * And that's because we're allowing injection of markdown in markdown_pattern even if the
+                 * column type is text.
+                 *
+                 * tl;dr
+                 * - call `_getFormattedKeyValues` to get formmated values of all columns for the usage of markdown_pattern.
+                 * - call formatPresentation for each column.
+                 *   - calls formatvalue for the column to get the formatted value (might be different from `_getFormattedKeyValues` for the column).
+                 *   - if markdown_pattern exists:
+                 *     - use the template with result of `_getFormattedKeyValues` to get the value.
+                 *   - otherwise:
+                 *     - if json, attach <pre> tag to the formatted value.
+                 *     - if array, call printArray which will return an string.
+                 *     - otherwise return the formatted value.
+                 */
+
                 this._values = [];
                 this._isHTML = [];
 
                 var column, presentation;
 
                 // key value pair of formmated values, to be used in formatPresentation
+                // TODO it might be better to make sure if there's any column with markdown_pattern and
+                // then call this, becaues the returned value of this is only used in that case.
                 var keyValues = module._getFormattedKeyValues(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
 
                 // If context is entry
@@ -4043,7 +4088,7 @@
                                 values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
                             }
                         } else {
-                            values[i] = column.formatPresentation(keyValues[column.name], this._pageRef._context, { formattedValues: keyValues});
+                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues});
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;

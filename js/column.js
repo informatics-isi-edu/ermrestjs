@@ -318,7 +318,7 @@ ReferenceColumn.prototype = {
 
     /**
      * Formats the presentation value corresponding to this reference-column definition.
-     * @param {Object} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+     * @param {Object} data the raw data of the table.
      * @param {String} context the app context
      * @param {Object} options includes `context` and `formattedValues`
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
@@ -472,7 +472,7 @@ module._extends(PseudoColumn, ReferenceColumn);
  * 2. Otherwise if path is one to one (all outbound), use the same logic as ForeignKeyPseudoColumn based on last fk.
  * 3. Otherwise return null value.
  *
- * @param {Object} data In case of pseudocolumn it's the raw data, otherwise'formatted' data value.
+ * @param {Object} data the raw data of the table
  * @param {String} context the app context
  * @param {Object} options include `formattedValues`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
@@ -506,7 +506,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 
     // not in entity mode, just return the column value.
     if (!this.isEntityMode) {
-        return PseudoColumn.super.formatPresentation.call(this, options.formattedValues[this._baseCols[0].name], context, options);
+        return PseudoColumn.super.formatPresentation.call(this, data, context, options);
     }
 
     // in entity mode, return the foreignkey value
@@ -638,19 +638,18 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var getFormattedValue = function (val) {
         if (isRow) {
             var pres = module._generateRowPresentation(self._key, val, self._context);
-            return pres ? pres.value : self._getNullValue(self._context);
+            return pres ? pres.unformatted : null;
         }
-
-        var fv = column.formatvalue(val, self._context);
-        if (column.type.name === "markdown") {
-            fv = module._formatUtils.printMarkdown(res);
+        if (val == null || val === "") {
+            return val;
         }
-        return fv;
+        return column.formatvalue(val, self._context);
     };
 
     module._q.all(promises).then(function (response) {
         var values = [],
             result = [],
+            printUtils = module._formatUtils,
             value, res, isHTML;
 
         response.forEach(function (r) {
@@ -670,7 +669,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                     res = module._formatUtils.printInteger(value.v);
                 } else {
-                    isHTML = isRow || (column.type.name === "markdown");
                     if (self.sourceObject.aggregate === "array"){
                         try {
                             value.v.sort(function (a, b) {
@@ -684,11 +682,18 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                             // if sort threw any erros, we just leave it as is
                         }
 
-                        res = value.v.map(function (v) {
-                            return getFormattedValue(v);
-                        }).join(", ");
+                        isHTML = true;
+                        res = printUtils.printArray(
+                            value.v.map(getFormattedValue),
+                            { isMarkdown: (column.type.name === "markdown") || isRow }
+                        );
                     } else {
+                        isHTML = (column.type.name === "markdown");
                         res = getFormattedValue(value.v);
+                    }
+
+                    if (isHTML) {
+                        res = printUtils.printMarkdown(res);
                     }
                 }
             }
