@@ -179,7 +179,7 @@ exports.execute = function (options) {
             describe ("when `filter` annotation is not defined, ", function () {
                 describe("when visible columns for `compact` and related entities for `detailed` are wellformed.", function () {
                     it ("it should use the visible columns from `compact` and related entities from `detailed`", function () {
-                        expect(refF4.facetColumns.length).toBe(4, "length missmatch.");
+                        expect(refF4.facetColumns.length).toBe(7, "length missmatch.");
                     });
 
                     it ('should create a scalar picker for simple keys.', function () {
@@ -189,37 +189,50 @@ exports.execute = function (options) {
                         expect(refF4.facetColumns[0].isEntityMode).toBe(false, "entityMode missmatch.");
                     });
 
+
+                    describe("regarding Key pseudo-columns, ", function () {
+                        it ("should attach ux_mode=choices for int/serial key columns.", function () {
+                            expect(refF4.facetColumns[0]._facetObject.ux_mode).toBe("choices", "preferredMode missmatch for index=0");
+                        });
+
+                        it ("should not attach specific ux_mode for other column types.", function () {
+                            expect(refF4.facetColumns[1]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=2");
+                            expect(refF4.facetColumns[2]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=3");
+                            expect(refF4.facetColumns[3]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=4");
+                        });
+                    });
+
                     it ("should create scalar picker for normal columns.", function () {
-                        expect(refF4.facetColumns[1]._column.name).toBe("term", "column name missmatch.");
-                        expect(refF4.facetColumns[1]._column.table.name).toBe("f4", "table name missmatch.");
-                        expect(refF4.facetColumns[1].dataSource).toBe("term", "dataSource missmatch.");
-                        expect(refF4.facetColumns[1].isEntityMode).toBe(false, "entityMode missmatch.");
+                        expect(refF4.facetColumns[4]._column.name).toBe("term", "column name missmatch.");
+                        expect(refF4.facetColumns[4]._column.table.name).toBe("f4", "table name missmatch.");
+                        expect(refF4.facetColumns[4].dataSource).toBe("term", "dataSource missmatch.");
+                        expect(refF4.facetColumns[4].isEntityMode).toBe(false, "entityMode missmatch.");
                     });
 
                     describe("for simple inbound and outbound pusedo columns, ", function () {
                         it ("should create a entity picker facet.", function () {
-                            expect(refF4.facetColumns[2]._column.name).toBe("id", "column name missmatch for outbound.");
-                            expect(refF4.facetColumns[2]._column.table.name).toBe("main", "table name missmatch for outbound.");
-                            expect(JSON.stringify(refF4.facetColumns[2].dataSource)).toBe(
+                            expect(refF4.facetColumns[5]._column.name).toBe("id", "column name missmatch for outbound.");
+                            expect(refF4.facetColumns[5]._column.table.name).toBe("main", "table name missmatch for outbound.");
+                            expect(JSON.stringify(refF4.facetColumns[5].dataSource)).toBe(
                                 '[{"outbound":["faceting_schema","f4_fk1"]},"id"]',
                                 "dataSource missmatch for outbound."
                             );
-                            expect(refF4.facetColumns[2].isEntityMode).toBe(true, "entityMode missmatch for outbound.");
+                            expect(refF4.facetColumns[5].isEntityMode).toBe(true, "entityMode missmatch for outbound.");
 
 
-                            expect(refF4.facetColumns[3]._column.name).toBe("id", "column name missmatch for inbound.");
-                            expect(refF4.facetColumns[3]._column.table.name).toBe("main_wo_faceting_annot_1", "table name missmatch for inbound.");
-                            expect(JSON.stringify(refF4.facetColumns[3].dataSource)).toBe(
+                            expect(refF4.facetColumns[6]._column.name).toBe("id", "column name missmatch for inbound.");
+                            expect(refF4.facetColumns[6]._column.table.name).toBe("main_wo_faceting_annot_1", "table name missmatch for inbound.");
+                            expect(JSON.stringify(refF4.facetColumns[6].dataSource)).toBe(
                                 '[{"inbound":["faceting_schema","main_wo_annot_1_fkey1"]},"id"]',
                                 "dataSource missmatch for outbound."
                             );
-                            expect(refF4.facetColumns[3].isEntityMode).toBe(true, "entityMode missmatch for inbound.");
+                            expect(refF4.facetColumns[6].isEntityMode).toBe(true, "entityMode missmatch for inbound.");
                         });
 
                         it ("should define markdown_name properly.", function () {
-                            expect(refF4.facetColumns[2]._facetObject.markdown_name).toBe("to_name", "missmatch for outbound.");
+                            expect(refF4.facetColumns[5]._facetObject.markdown_name).toBe("to_name", "missmatch for outbound.");
 
-                            expect(refF4.facetColumns[3]._facetObject.markdown_name).toBe("main_wo_faceting_annot_1", "missmatch for inbound.");
+                            expect(refF4.facetColumns[6]._facetObject.markdown_name).toBe("main_wo_faceting_annot_1", "missmatch for inbound.");
                         });
                     });
                 });

@@ -1258,25 +1258,25 @@
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
                 case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
-                    facet.ranges = [{min: parsedFilter.value}];
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
                     break;
                 case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
-                    facet.ranges = [{max: parsedFilter.value}];
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
                     break;
                 case module.OPERATOR.GREATER_THAN:
-                    facet.ranges = [{min: parsedFilter.value, min_exclusive: true}];
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
                     break;
                 case module.OPERATOR.LESS_THAN:
-                    facet.ranges = [{max: parsedFilter.value, max_exclusive: true}];
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
                 case module.OPERATOR.NULL:
-                    facet.choices = [null];
+                    facet[module._facetFilterTypes.CHOICE] = [null];
                     break;
                 case module.OPERATOR.CASE_INS_REG_EXP:
-                    facet.search = [parsedFilter.value];
+                    facet[module._facetFilterTypes.SEARCH] = [parsedFilter.value];
                     break;
                 case module.OPERATOR.EQUAL:
-                    facet.choices = [parsedFilter.value];
+                    facet[[module._facetFilterTypes.CHOICE]] = [parsedFilter.value];
                     break;
                 default:
                     // operator is not supported by facet
@@ -1331,7 +1331,7 @@
                     if (orSources[parsed.source] > -1) {
                         // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
-                        ["ranges", "choices", "search"].forEach(mergeFacets);
+                        Object.values(module._facetFilterTypes).forEach(mergeFacets);
                         continue;
                     } else {
                         orSources[parsed.source] = facet[op].length;
@@ -1633,24 +1633,24 @@
                 }
 
                 // parse the constraints
-                if (Array.isArray(term.choices)) {
-                    parsed = parseChoices(term.choices, col);
+                if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
+                    parsed = parseChoices(term[module._facetFilterTypes.CHOICE], col);
                     if (!parsed) {
                         return "";
                     }
                     constraints.push(parsed);
                 }
 
-                if (Array.isArray(term.ranges)) {
-                    parsed = parseRanges(term.ranges, col);
+                if (Array.isArray(term[module._facetFilterTypes.RANGE])) {
+                    parsed = parseRanges(term[module._facetFilterTypes.RANGE], col);
                     if (!parsed) {
                         return "";
                     }
                     constraints.push(parsed);
                 }
 
-                if (Array.isArray(term.search)) {
-                    parsed = parseSearch(term.search, col);
+                if (Array.isArray(term[module._facetFilterTypes.SEARCH])) {
+                    parsed = parseSearch(term[[module._facetFilterTypes.SEARCH]], col);
                     if (!parsed) {
                         return "";
                     }

@@ -322,10 +322,19 @@
                  *
                  */
                 var refColToFacetObject = function (refCol) {
+                    var obj;
+
                     if (refCol.isKey) {
+                        var baseCol = refCol._baseCols[0];
+                        obj = {"source": baseCol.name};
+
+                        // integer and serial key columns should show choice picker
+                        if (baseCol.type.name.indexOf("int") === 0 || baseCol.type.name.indexOf("serial") === 0) {
+                            obj.ux_mode = module._facetFilterTypes.CHOICE;
+                        }
                         return {
-                            "obj": {"source": refCol._baseCols[0].name},
-                            "column": refCol._baseCols[0]
+                            "obj": obj,
+                            "column": baseCol
                         };
                     }
 
@@ -366,7 +375,15 @@
                         return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
                     }
 
-                    return { "obj": {"source": refCol.name}, "column": refCol._baseCols[0]};
+                    obj = {"source": refCol.name};
+
+                    // integer and serial key columns should show choice picker
+                    if (_isFacetEntityMode(obj, refCol._baseCols[0]) &&
+                       (refCol.type.name.indexOf("int") === 0 || refCol.type.name.indexOf("serial") === 0)) {
+                        obj.ux_mode = module._facetFilterTypes.CHOICE;
+                    }
+
+                    return { "obj": obj, "column": refCol._baseCols[0]};
                 };
 
                 // will return column or false
@@ -2902,13 +2919,6 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
-                var domainUri = [
-                    fkrTable.schema.catalog.server.uri ,"catalog" ,
-                    fkrTable.schema.catalog.id, this.location.api,
-                    [module._fixedEncodeURIComponent(fkrTable.schema.name),module._fixedEncodeURIComponent(fkrTable.name)].join(":"),
-                    "right" + otherFK.toString(true)
-                ].join("/");
-
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;
@@ -2950,13 +2960,14 @@
                 ].join("/"));
 
                 //filters
-                var filters = [];
+                var filters = [], filter;
                 source.push({"outbound": fkr.constraint_names[0]});
                 fkr.key.table.shortestKey.forEach(function (col) {
-                    filters.push({
-                        "source": source.concat(col.name),
-                        "choices": [tuple.data[col.name]]
-                    });
+                    filter = {
+                        source: source.concat(col.name)
+                    };
+                    filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
+                    filters.push(filter);
                 });
 
                 // the facets are basd on the value of shortest key of current table

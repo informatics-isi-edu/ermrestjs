@@ -348,6 +348,9 @@
             "comment": "has fk to main table + has rowname",
             "keys": [
                 {"unique_columns": ["id"], "names": [["faceting_schema", "f4_key_1"]]},
+                {"unique_columns": ["id_text"], "names": [["faceting_schema", "f4_key_2"]]},
+                {"unique_columns": ["id_timestamp"], "names": [["faceting_schema", "f4_key_3"]]},
+                {"unique_columns": ["id_float"], "names": [["faceting_schema", "f4_key_4"]]},
                 {"unique_columns": ["term"]}
             ],
             "foreign_keys": [
@@ -384,6 +387,27 @@
                     }
                 },
                 {
+                    "name": "id_text",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_timestamp",
+                    "nullok": false,
+                    "type": {
+                        "typename": "timestamp"
+                    }
+                },
+                {
+                    "name": "id_float",
+                    "nullok": false,
+                    "type": {
+                        "typename": "float4"
+                    }
+                },
+                {
                     "name": "term",
                     "type": {
                         "typename": "text"
@@ -393,7 +417,9 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "compact": [
-                        ["faceting_schema", "f4_key_1"], "term", ["faceting_schema", "f4_fk1"]
+                        ["faceting_schema", "f4_key_1"],["faceting_schema", "f4_key_2"], ["faceting_schema", "f4_key_3"],
+                         ["faceting_schema", "f4_key_4"],
+                        "term", ["faceting_schema", "f4_fk1"]
                     ]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {

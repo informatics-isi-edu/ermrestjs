@@ -1009,10 +1009,11 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                             return;
                         }
 
-                        filters.push({
-                            "source": source.concat(col.name),
-                            "choices": [self._mainTuple.data[col.name]]
-                        });
+                        var filter = {
+                            "source": source.concat(col.name)
+                        };
+                        filter[module._facetFilterTypes.CHOICE] = [self._mainTuple.data[col.name]];
+                        filters.push(filter);
                     });
                 }
 
@@ -1959,11 +1960,12 @@ FacetColumn.prototype = {
         }
 
         if (this._preferredMode === undefined) {
-            var modes = ['choices', 'ranges', 'search'];
-            if (modes.indexOf(this._facetObject.ux_mode) !== -1) {
+            var modes = module._facetFilterTypes;
+            var modeValues = Object.values(modes);
+            if (modeValues.indexOf(this._facetObject.ux_mode) !== -1) {
                 this._preferredMode = this._facetObject.ux_mode;
             } else {
-                this._preferredMode = (this.isEntityMode ? "choices" : (isRangeMode(this._column) ? "ranges" : "choices") );
+                this._preferredMode = (this.isEntityMode ? modes.CHOICE : (isRangeMode(this._column) ? modes.RANGE : modes.CHOICE) );
             }
         }
         return this._preferredMode;
@@ -2320,7 +2322,7 @@ FacetColumn.prototype = {
              * that's why we're adding two values for null.
              */
             if ((this._column.type.name === "json" || this._column.type.name === "jsonb") &&
-                (f.term === null || f.term === "null") && f.facetFilterKey === "choices") {
+                (f.term === null || f.term === "null") && f.facetFilterKey === module._facetFilterTypes.CHOICE) {
                 if (!hasJSONNull[f.facetFilterKey]) {
                     res[f.facetFilterKey].push(null, "null");
                 }
@@ -2369,8 +2371,8 @@ FacetColumn.prototype = {
         }
 
         // create choice filters
-        if (Array.isArray(json.choices)) {
-            json.choices.forEach(function (ch) {
+        if (Array.isArray(json[module._facetFilterTypes.CHOICE])) {
+            json[module._facetFilterTypes.CHOICE].forEach(function (ch) {
 
                 /*
                  * We cannot distinguish between json `null` in sql and actual `null`,
@@ -2406,8 +2408,8 @@ FacetColumn.prototype = {
         }
 
         // create range filters
-        if (!hasNotNull && Array.isArray(json.ranges)) {
-            json.ranges.forEach(function (ch) {
+        if (!hasNotNull && Array.isArray(json[module._facetFilterTypes.RANGE])) {
+            json[module._facetFilterTypes.RANGE].forEach(function (ch) {
                 current = self.filters.filter(function (f) {
                     return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
                 })[0];
@@ -2421,8 +2423,8 @@ FacetColumn.prototype = {
         }
 
         // create search filters
-        if (!hasNotNull && Array.isArray(json.search)) {
-            json.search.forEach(function (ch) {
+        if (!hasNotNull && Array.isArray(json[module._facetFilterTypes.SEARCH])) {
+            json[module._facetFilterTypes.SEARCH].forEach(function (ch) {
                 current = self.filters.filter(function (f) {
                     return (f instanceof SearchFacetFilter) && f.term === ch;
                 })[0];
@@ -2744,7 +2746,7 @@ FacetFilter.prototype = {
  */
 function SearchFacetFilter(term, columnType) {
     SearchFacetFilter.superClass.call(this, term, columnType);
-    this.facetFilterKey = "search";
+    this.facetFilterKey = module._facetFilterTypes.SEARCH;
 }
 module._extends(SearchFacetFilter, FacetFilter);
 
@@ -2760,7 +2762,7 @@ module._extends(SearchFacetFilter, FacetFilter);
  */
 function ChoiceFacetFilter(value, columnType) {
     ChoiceFacetFilter.superClass.call(this, value, columnType);
-    this.facetFilterKey = "choices";
+    this.facetFilterKey = module._facetFilterTypes.CHOICE;
 }
 module._extends(ChoiceFacetFilter, FacetFilter);
 
@@ -2784,7 +2786,7 @@ function RangeFacetFilter(min, minExclusive, max, maxExclusive, columnType) {
     this.minExclusive = (minExclusive === true) ? true: false;
     this.max = !isDefinedAndNotNull(max) ? null : max;
     this.maxExclusive = (maxExclusive === true) ? true: false;
-    this.facetFilterKey = "ranges";
+    this.facetFilterKey = module._facetFilterTypes.RANGE;
     this.uniqueId = this.toString();
 }
 module._extends(RangeFacetFilter, FacetFilter);

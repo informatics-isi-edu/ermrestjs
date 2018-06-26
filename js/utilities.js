@@ -2867,6 +2867,12 @@
         "json"
     ];
 
+    module._facetFilterTypes = Object.freeze({
+        CHOICE: "choices",
+        RANGE: "ranges",
+        SEARCH: "search"
+    });
+
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
