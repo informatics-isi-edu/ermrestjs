@@ -1,0 +1,51 @@
+[
+    {
+        "id": "01"
+    },
+    {
+        "id": "02",
+        "text_array": [],
+        "boolean_array": [],
+        "date_array": [],
+        "timestamp_array": [],
+        "timestamptz_array": [],
+        "float4_array": [],
+        "float8_array": [],
+        "numeric_array": [],
+        "int2_array": [],
+        "int4_array": [],
+        "int8_array": []
+    },
+    {
+        "id": "03",
+        "text_array": ["*Empty*", "<em>Empty</em>", null, ""],
+        "boolean_array": [false, null, true],
+        "date_array": ["2016-01-18", null, "2015-04-18"],
+        "timestamp_array": ["2016-01-18T13:00:00", null, "2015-02-18T16:00:00"],
+        "timestamptz_array": ["2016-01-18T00:00:00-08:00", null, "2016-01-28T00:00:00-08:00"],
+        "float4_array": [2.43, null, 5.4213],
+        "float8_array": [5234.1234, null, 4123.234],
+        "numeric_array": [12345.234, null, -41232.23],
+        "int2_array": [1245, null, 6242],
+        "int4_array": [128361, null, 41234],
+        "int8_array": [41245264, null, 1241232]
+    },
+    {
+        "id": "04",
+        "text_array": [null],
+        "boolean_array": [null],
+        "date_array": [null],
+        "timestamp_array": [null],
+        "timestamptz_array": [null],
+        "float4_array": [null],
+        "float8_array": [null],
+        "numeric_array": [null],
+        "int2_array": [null],
+        "int4_array": [null],
+        "int8_array": [null]
+    },
+    {
+        "id": "05",
+        "text_array": [""]
+    }
+]

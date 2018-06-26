@@ -712,7 +712,8 @@ exports.execute = function (options) {
                 it ("should handle array aggregate in scalar mode.", function (done) {
                     detailedColsWTuple[15].getAggregatedValue(mainPage).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual('01, 02, 03, 04, 05', "value missmatch.");
+                        expect(val[0].value).toEqual('<p>01, 02, 03, 04, 05</p>\n', "value missmatch.");
+                        expect(val[0].isHTML).toBe(true, "isHTML missmatch.");
                         done();
                     }).catch(function (e) {
                         done.fail(e);
@@ -729,7 +730,8 @@ exports.execute = function (options) {
                             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=04">04 with inbound_2 col 04</a>',
                             '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=05">05 with inbound_2 col 05</a>'
                         ];
-                        expect(val[0].value).toEqual(value.join(", "), "value missmatch.");
+                        expect(val[0].value).toEqual("<p>" + value.join(", ") + "</p>\n", "value missmatch.");
+                        expect(val[0].isHTML).toBe(true, "isHTML missmatch.");
                         done();
                     }).catch(function (e) {
                         done.fail(e);
