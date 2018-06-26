@@ -82,7 +82,7 @@ function renderSpan(state, silent) {
 
 
 module.exports = function sub_plugin(md) {
-  md.inline.ruler.after('emphasis', 'sub', renderSpan);
+  md.inline.ruler.after('emphasis', 'span', renderSpan);
 };
 
 },{}]},{},[1])(1)

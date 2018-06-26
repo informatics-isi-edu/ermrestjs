@@ -258,7 +258,7 @@
             "row_markdown_pattern": "**{{firstname}} {{lastname}}**"
           },
           "row_name/title": {
-              "row_markdown_pattern": "**{{lastname}}**"
+              "row_markdown_pattern": ":span:{{lastname}}:/span:{.new-class}"
           },
           "row_name/unformatted/title": {
               "row_markdown_pattern": "{{lastname}}"
