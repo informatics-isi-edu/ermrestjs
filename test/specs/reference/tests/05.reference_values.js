@@ -1,3 +1,5 @@
+var moment = require('moment');
+
 exports.execute = function (options) {
 
     describe("For determining 'tag:isrd.isi.edu,2016:column-display' presentation,", function () {
@@ -13,7 +15,7 @@ exports.execute = function (options) {
             + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
 
         var reference, page, tuples;
-        
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -58,14 +60,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -89,7 +91,7 @@ exports.execute = function (options) {
          * and a particular column value at the specified valuedIndex
          */
         var checkValueAndIsHTML = function(columnName, tupleIndex, valueIndex, expectedValues, expectedIsHTMLValues) {
-           
+
             it("should check " + columnName + " to be `" + expectedValues[valueIndex] + "`", function() {
                 var tuple = tuples[tupleIndex];
                 var value = tuple.values[valueIndex];
@@ -125,7 +127,7 @@ exports.execute = function (options) {
                 var values = tuples[tupleIndex].values;
                 expect(values.length).toBe(14);
             });
-            
+
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("name", tupleIndex, 1, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("url", tupleIndex, 2, expectedValues, expectedIsHTMLValues);
@@ -133,19 +135,19 @@ exports.execute = function (options) {
             checkValueAndIsHTML("image_with_size", tupleIndex, 4, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("download_link", tupleIndex, 5, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("iframe", tupleIndex, 6, expectedValues, expectedIsHTMLValues);
-            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues, expectedIsHTMLValues);  
-            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);  
-            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);    
-            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);       
+            checkValueAndIsHTML("some_markdown", tupleIndex, 7, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("some_markdown_with_pattern", tupleIndex, 8, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues, expectedIsHTMLValues);
+            checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues, expectedIsHTMLValues);
             checkValueAndIsHTML("moment_col", tupleIndex, 13, expectedValues, expectedIsHTMLValues);
         };
-        
+
         describe("Testing tuples values", function() {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
 
-            var testObjects ={ 
+            var testObjects ={
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
                         "expectedValue" : [ '4000',
@@ -163,7 +165,7 @@ exports.execute = function (options) {
                                             '',
                                             expectedMomentValue
                                              ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]              
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]
                         },
                 "test2": {
                     "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -285,9 +287,9 @@ exports.execute = function (options) {
                                     ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                 }
-                
+
             }
-            
+
             var i = 0;
             for(var key in testObjects){
                 var rowValue = testObjects[key].rowValue;
@@ -296,12 +298,12 @@ exports.execute = function (options) {
                 describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
                     testTupleValidity(i, expectedValue, isHTML);
                 })
-                i++;    
+                i++;
             }
         });
 
     });
-    
+
     describe("Test JSON values with and without markdown,", function() {
         //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
         var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true,"json_col_with_markdownpattern": "<p>Status is: “processed”</p>\n", "col_markdown_blankable": '<p><a href="https://madeby.google.com/static/images/google_g_logo.svg" target="_blank"><img src="https://madeby.google.com/static/images/google_g_logo.svg" alt="" height="90"></a></p>\n'},
@@ -323,7 +325,7 @@ exports.execute = function (options) {
         var reference, page, tuples, url;
 
         beforeAll(function(done) {
-            
+
             // Fetch the entities beforehand
             options.ermRest.resolve(multipleEntityUri).then(function (response) {
                 reference = response;
@@ -331,14 +333,14 @@ exports.execute = function (options) {
                 return reference.read(limit);
             }).then(function (response) {
                 page = response;
-                
+
                 expect(page).toEqual(jasmine.any(Object));
                 expect(page._data.length).toBe(limit);
-                
+
                 expect(page.tuples).toBeDefined();
                 tuples = page.tuples;
                 expect(tuples.length).toBe(limit);
-                
+
                 done();
             }, function (err) {
                 console.dir(err);
@@ -348,9 +350,9 @@ exports.execute = function (options) {
                 done.fail();
             });
         });
-        
+
         it("JSON column should display pre tags without markdown and should not append pre tag with markdown", function() {
-            
+
             for( var i=0; i<limit; i++){
                 var values=tuples[i].values;
                 var json='<pre>'+JSON.stringify(expectedValues[i].json_col,"undefined",2)+'</pre>';
@@ -362,5 +364,171 @@ exports.execute = function (options) {
             }
         });
 
+    });
+
+    describe("Test Array column values,", function () {
+        var catalog_id = process.env.DEFAULT_CATALOG,
+            schemaName = "reference_schema",
+            tableName = "table_w_array",
+            limit = 5;
+
+        var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+        var reference, page, tuples;
+
+        var testValues = function (cases) {
+            cases.forEach(function (c, colIndex) {
+                describe (c.column  + " values,", function () {
+                    c.values.forEach(function (v, rowIndex) {
+                        it ("for row index=`" + rowIndex + "` should be as expected.", function () {
+                            var tuple = tuples[rowIndex];
+                            expect(tuple.isHTML[colIndex]).toBe((v != "" && v != null), "isHTML missmatch.");
+                            expect(tuple.values[colIndex]).toEqual(v, "value missmatch.");
+                        });
+                    });
+                });
+            });
+        };
+
+        var testValuesByIndex = function (colIndex, expectedValues) {
+            expect(tuples.length).toBe(expectedValues.length, "tuple length missmatch.");
+            tuples.forEach(function (t, rowIndex) {
+                var v = expectedValues[rowIndex];
+                expect(t.values[colIndex]).toEqual(v, "value missmatch for row index=" + rowIndex);
+                expect(t.isHTML[colIndex]).toBe((v != "" && v != null), "isHTML missmatch for row index=" + rowIndex);
+            });
+        };
+
+        var formatTZ = function (val) {
+            return moment(val).format("YYYY-MM-DD HH:mm:ss");
+        };
+
+        beforeAll(function (done) {
+            // Fetch the entities beforehand
+            options.ermRest.resolve(tableWArrayUri).then(function (response) {
+                reference = response;
+                expect(reference).toEqual(jasmine.any(Object), "reference is not defined.");
+                return reference.read(limit);
+            }).then(function (response) {
+                page = response;
+
+                expect(page).toEqual(jasmine.any(Object), "page not defined.");
+                expect(page._data.length).toBe(limit, "page length invalid");
+
+                tuples = page.tuples;
+                expect(tuples.length).toBe(limit, "tuples length invalid");
+
+                done();
+            }, function (err) {
+                console.dir(err);
+                done.fail();
+            }).catch(function(err) {
+                console.dir(err);
+                done.fail();
+            });
+        });
+
+        describe("when markdown_pattern is missing.", function () {
+            //NOTE This are based on visible-columns list (columns should be the same order)
+            testValues([
+                {
+                    "column": "text_array",
+                    "values": [
+                        "", "", "<p>*Empty*, &lt;em&gt;Empty&lt;/em&gt;, <em>No Value</em>, <em>Empty</em></p>\n", "<p><em>No Value</em></p>\n", "<p><em>Empty</em></p>\n"
+                    ]
+                },
+                {
+                    "column": "boolean_array",
+                    "values": [
+                        "", "", "<p>false, <em>No Value</em>, true</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "date_array",
+                    "values": [
+                        "", "", "<p>2016-01-18, <em>No Value</em>, 2015-04-18</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "timestamp_array",
+                    "values": [
+                        "", "", "<p>2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "timestamptz_array",
+                    "values": [
+                        "", "", "<p>" + formatTZ("2016-01-18T00:00:00-08:00") + ", <em>No Value</em>, " + formatTZ("2016-01-28T00:00:00-08:00") +"</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "float4_array",
+                    "values": [
+                        "", "", "<p>2.4300, <em>No Value</em>, 5.4213</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "float8_array",
+                    "values": [
+                        "", "", "<p>5,234.1234, <em>No Value</em>, 4,123.2340</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "numeric_array",
+                    "values": [
+                        "", "", "<p>12,345.2340, <em>No Value</em>, -41,232.2300</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "int2_array",
+                    "values": [
+                        "", "", "<p>1,245, <em>No Value</em>, 6,242</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "int4_array",
+                    "values": [
+                        "", "", "<p>128,361, <em>No Value</em>, 41,234</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                },
+                {
+                    "column": "int8_array",
+                    "values": [
+                        "", "", "<p>41,245,264, <em>No Value</em>, 1,241,232</p>\n", "<p><em>No Value</em></p>\n", ""
+                    ]
+                }
+            ]);
+        });
+
+        describe("when used in the markdown_pattern.", function () {
+            it ("should be able to inject markdown in markdown (if we have array of text and the text has markdown in it).", function () {
+                testValuesByIndex(11, [
+                    "",
+                    "",
+                    "<p>text array: <em>Empty</em>, &lt;em&gt;Empty&lt;/em&gt;, <em>No Value</em>, <em>Empty</em></p>\n",
+                    "<p>text array: <em>No Value</em></p>\n",
+                    "<p>text array: <em>Empty</em></p>\n"
+                ]);
+            });
+
+            it ("should be able to access formatted value (the same output as formatPresentation for column).", function () {
+                testValuesByIndex(12, [
+                    "",
+                    "",
+                    "<ul>\n<li>boolean: false, <em>No Value</em>, true</li>\n<li>timestamp: 2016-01-18T13:00:00, <em>No Value</em>, 2015-02-18T16:00:00</li>\n<li>numeric: 12,345.2340, <em>No Value</em>, -41,232.2300</li>\n</ul>\n",
+                    "<ul>\n<li>boolean: <em>No Value</em></li>\n<li>timestamp: <em>No Value</em></li>\n<li>numeric: <em>No Value</em></li>\n</ul>\n",
+                    ""
+                ]);
+            });
+
+            it ("should be able to iterate over array values.", function () {
+                testValuesByIndex(13, [
+                    "",
+                    "",
+                    "<ul>\n<li>41245264</li>\n<li><em>No Value</em></li>\n<li>1241232</li>\n</ul>\n",
+                    "<ul>\n<li><em>No Value</em></li>\n</ul>\n",
+                    ""
+                ]);
+            });
+        });
     });
 };

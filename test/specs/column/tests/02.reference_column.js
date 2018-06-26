@@ -679,10 +679,6 @@ exports.execute = function (options) {
 
 
                     describe("otherwise, ", function () {
-                        it ("if asset column has a filenameColumn defined, use that as the caption, and return a download link with query parameter.", function () {
-
-                        });
-
                         describe("if asset column has filenameColumn, ", function () {
                             it ("if its value is empty, use the url for caption.", function () {
                                 val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": null}).value;
@@ -706,9 +702,22 @@ exports.execute = function (options) {
                                 expect(val).toEqual('<a href="' + hatracSampleURL +'?uinit=1" download="" class="download">file-test.csv</a>', "value missmatch.");
                             });
 
+                            it ("in compact contexts, return the last part of url.", function () {
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact");
+
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact/brief").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact/brief");
+                            });
+
                             it ("otherwise return the whole url.", function () {
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "detailed").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">' + url + '</a>', "value missmatch for detailed");
+
                                 val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}).value;
-                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch for unknown context");
                             });
                         });
 

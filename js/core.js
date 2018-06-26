@@ -1788,14 +1788,18 @@
 
         /**
          * Formats a value corresponding to this column definition.
-         * If a column display annotation with preformat property is available then use prvided format string
-         * else use the default formatValue function
+         * It will take care of pre-formatting and any default formatting based on column type.
+         * If column is array, the returned value will be array of values. The value is either
+         * a string or `null`. We're not returning string because we need to distinguish between
+         * null and value. `null` for arrays is a valid value. [`null`] is different from `null`.
          *
          * @param {Object} data The 'raw' data value.
          * @param {String} context the app context
-         * @returns {string} The formatted value.
+         * @returns {string|string[]} The formatted value. If column is array, it will be an array of values.
          */
         this.formatvalue = function (data, context, options) {
+
+            var self = this;
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
@@ -1807,48 +1811,83 @@
 
             var display = this.getDisplay(context);
 
-            if (display.isPreformat) {
-                try {
-                    return module._printf(display.preformatConfig, data, this.type.rootName);
-                } catch(e) {
-                    console.log(e);
+            var getFormattedValue = function (v) {
+                // in case of array, null and empty strings are valid values and we
+                // need to distinguish them.
+                if (self.type.isArray && (v == null || v === "")) {
+                    return v;
                 }
-            }
 
-            return _formatValueByType(this.type, data, options);
+                if (display.isPreformat) {
+                    try {
+                        return module._printf(display.preformatConfig, v, self.type.rootName);
+                    } catch(e) {
+                        console.log(e);
+                    }
+                }
+                return _formatValueByType(self.type, v, options);
+            };
+
+            if (this.type.isArray) {
+                return data.map(getFormattedValue);
+            }
+            return getFormattedValue(data);
         };
 
         /**
          * Formats the presentation value corresponding to this column definition.
-         * @param {String} data The 'formatted' data value.
+         * For getting the value of a column we should use this function and not formatvalue directly.
+         * This will call `formatvalue` for the current column and other columns if necessary.
+         *
+         * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
          * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
         this.formatPresentation = function(data, context, options) {
+            data = data || {};
 
             var utils = module._formatUtils;
 
             var display = this.getDisplay(context);
 
+            var formattedValue, unformatted;
+            formattedValue = this.formatvalue(data[this.name], context, options);
+
             /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
-                return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
+                return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
+            }
+
+            // in this case data must be an array
+            if (!display.isMarkdownPattern && this.type.isArray) {
+                unformatted = module._formatUtils.printArray(formattedValue, {isMarkdown: display.isHTML});
+
+                // If value is null or empty, return value on basis of `show_nulls`
+                if (unformatted === null || unformatted.trim() === '') {
+                    return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+                }
+
+                return {
+                    isHTML: true,
+                    unformatted: unformatted,
+                    value: utils.printMarkdown(unformatted, options)
+                };
             }
 
             /*
              * If column doesn't has column-display annotation and is not of type markdown
-             * then return data as it is
+             * then return formattedValue as it is
              */
             if (!display.isHTML) {
-                return { isHTML: false, value: data, unformatted: data };
+                return { isHTML: false, value: formattedValue, unformatted: formattedValue };
             }
 
-            var unformatted = data;
+            // the string with markdown syntax in it and not HTML
+            unformatted = formattedValue;
 
             // If there is any markdown pattern then evaluate it
             if (display.isMarkdownPattern) {
@@ -1870,7 +1909,6 @@
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
@@ -2495,12 +2533,17 @@
             return (this.colset.columns.indexOf(column) !== -1);
         },
 
-        // will return true if all the columns are not null and not html.
+        /**
+         * Will return true if all the columns are not not, not html, and not array.
+         * @private
+         * @param  {string} context the context (used for checking the markdown_pattern)
+         * @return {boolean} whether it's well formed or not
+         */
         _isWellFormed: function(context) {
             if (!(context in this._wellFormed)) {
                 var cols = this.colset.columns, result = true;
                 for (var c = 0; c < cols.length; c++) {
-                    if (cols[c].nullok || cols[c].getDisplay(context).isHTML) {
+                    if (cols[c].nullok || cols[c].type.isArray || cols[c].getDisplay(context).isHTML) {
                         result = false;
                         break;
                     }
@@ -3117,7 +3160,7 @@
          * Currently used to signal whether there is a base type for this column
          * @type {boolean}
          */
-        this._isArray = jsonType.is_array;
+        this.isArray = jsonType.is_array;
 
         /**
          * Currently used to signal whether there is a base type for this column

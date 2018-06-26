@@ -560,7 +560,7 @@ AttributeGroupTuple.prototype = {
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(formattedValues[col.name], {formattedValues: formattedValues});
+                presentation = col.formatPresentation(self._data, {formattedValues: formattedValues});
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -745,6 +745,10 @@ AttributeGroupColumn.prototype = {
     },
 
     formatPresentation: function (data, options) {
+        data = data || {};
+
+        var formattedValue = this.formatvalue(data[this.name], options);
+
         /*
          * NOTE: currently will only return the given data. This function exist
          * so it will be the same pattern as Reference and Column apis.
@@ -755,9 +759,9 @@ AttributeGroupColumn.prototype = {
          *
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true }), unformatted: data};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(formattedValue, { inline: true }), unformatted: formattedValue};
         }
-        return {isHTML: false, value: data, unformatted: data};
+        return {isHTML: false, value: formattedValue, unformatted: formattedValue};
     }
 };
 
