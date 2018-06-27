@@ -105,7 +105,7 @@ exports.execute = function (options) {
           });
         });
         it("if it's an integrity error and no displayName was found then use table name passed by ermrest using mock", function (done) {
-          var mockUri = "/ermrest/catalog/"+catalog_id+"/entity/M:=" + schemaName + ":" + tableNameWithoutDisplayName;
+          var mockUri = "/ermrest/catalog/"+catalog_id+"/entity/" + schemaName + ":" + tableNameWithoutDisplayName + "/id=1001";
 
           nock(url, ops)
               .delete(mockUri)
