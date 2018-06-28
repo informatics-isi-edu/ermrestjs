@@ -14,9 +14,8 @@ exports.execute = function (options) {
             var reference, tuples;
 
             beforeAll(function (done) {
-                var uri = baseUri + "/key_col=1";
                 tuples = [{key_col: 1}];
-                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
                 }).catch(function (error) {
@@ -25,15 +24,42 @@ exports.execute = function (options) {
                 });
             });
 
+            it("verify that the reference references multiple rows before deleting any of them.", function (done) {
+                // There are 4 rows so 10 is more than enough
+                reference.read(10).then(function (response) {
+                    expect(response._data.length).toBe(4);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            })
+
             it("should properly delete the referenced entity from the table.", function (done) {
 
                 reference.delete(tuples).then(function (response) {
                     // response should be empty
                     expect(response).not.toBeDefined();
 
-                    return reference.read(1);
+                    return reference.read(10);
                 }).then(function (response) {
-                    // Reading an object that doesn't exist should return no data
+                    // Reading the set should show 1 less than before
+                    expect(response._data.length).toBe(3);
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("verify that the row had been deleted", function (done) {
+                // create a new reference that references only the deleted row
+                options.ermRest.resolve(baseUri + "/key_col=1", {cid: "test"}).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    // no data should be returned because the identified row was deleted
                     expect(response._data.length).toBe(0);
 
                     done();
@@ -62,9 +88,8 @@ exports.execute = function (options) {
             var reference, tuples;
 
             beforeAll(function (done) {
-                var uri = baseUri + "/key_col=2;key_col=3";
                 tuples = [{key_col: 2}, {key_col: 3}];
-                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
                 }).catch(function (error) {
@@ -78,9 +103,19 @@ exports.execute = function (options) {
                     // response should be empty
                     expect(response).not.toBeDefined();
 
-                    return reference.read(2);
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("verify that the rows had been deleted", function (done) {
+                // create a new reference that references only the deleted rows
+                options.ermRest.resolve(baseUri + "/key_col=2;key_col=3", {cid: "test"}).then(function (response) {
+                    return response.read(2);
                 }).then(function (response) {
-                    // Reading an object that doesn't exist should return no data
+                    // no data should be returned because the identified rows were deleted
                     expect(response._data.length).toBe(0);
 
                     done();
@@ -109,9 +144,8 @@ exports.execute = function (options) {
             var reference, tuples;
 
             beforeAll(function (done) {
-                var uri = associationUri + "/delete_id=4&leaf_id=1";
                 tuples = [{delete_id: 4, leaf_id: 1}];
-                options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(associationUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
                 }).catch(function (error) {
@@ -126,9 +160,19 @@ exports.execute = function (options) {
                     // response should be empty
                     expect(response).not.toBeDefined();
 
-                    return reference.read(1);
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("verify that the row had been deleted", function (done) {
+                // create a new reference that references only the deleted row
+                options.ermRest.resolve(associationUri + "/delete_id=4&leaf_id=1", {cid: "test"}).then(function (response) {
+                    return response.read(1);
                 }).then(function (response) {
-                    // Reading an object that doesn't exist should return no data
+                    // no data should be returned because the identified row was deleted
                     expect(response._data.length).toBe(0);
 
                     done();

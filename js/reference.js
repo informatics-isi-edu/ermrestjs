@@ -1809,10 +1809,8 @@
 
         /**
          * Deletes the referenced resource's tuples.
-         * NOTE This will ignore the provided sort and paging on the reference, make
-         * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Object[]} tuples optional array of objects with just the data needed to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference)
+         * @param {Object[]} tuples array of objects with just the data needed to construct the uri
          * @param {Object} contextHeaderParams optional object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1853,6 +1851,7 @@
                     var keyPair = "";
                     for (var j=0; j<this.table.shortestKey.length; j++) {
                         var colName = this.table.shortestKey[j].name;
+                        if (!tuples[i][colName]) throw new module.BadRequestError(400, "tuples[" + i + "] does not have any data for shortest key column: " + colName);
                         keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i][colName]);
                         if (j != this.table.shortestKey.length - 1) {
                             keyPair += "&";

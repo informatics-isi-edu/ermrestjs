@@ -2872,8 +2872,6 @@ or rejected with any of these errors:
 
 #### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resource's tuples.
-NOTE This will ignore the provided sort and paging on the reference, make
-sure you are calling this on specific set or rows (filtered).
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
@@ -2881,7 +2879,7 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array.&lt;Object&gt;</code> | optional array of objects with just the data needed to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference) |
+| tuples | <code>Array.&lt;Object&gt;</code> | array of objects with just the data needed to construct the uri |
 | contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
@@ -5831,8 +5829,6 @@ or rejected with any of these errors:
 
 #### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
 Deletes the referenced resource's tuples.
-NOTE This will ignore the provided sort and paging on the reference, make
-sure you are calling this on specific set or rows (filtered).
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
@@ -5840,7 +5836,7 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array.&lt;Object&gt;</code> | optional array of objects with just the data needed to construct the uri, if not-defined use the reference ermrestCompactUri (should only be empty for association reference) |
+| tuples | <code>Array.&lt;Object&gt;</code> | array of objects with just the data needed to construct the uri |
 | contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
