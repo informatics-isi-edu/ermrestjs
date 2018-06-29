@@ -302,7 +302,7 @@ to use for ERMrest JavaScript agents.
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -571,7 +571,7 @@ to use for ERMrest JavaScript agents.
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+        * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2490,7 +2490,7 @@ Constructor for a ParsedFilter.
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2871,15 +2871,13 @@ or rejected with any of these errors:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array</code> | array of tuple objects so that the new data nd old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
+| tuples | <code>Array</code> | array of tuple objects so that the new data and old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
-Deletes the referenced resources.
-NOTE This will ignore the provided sort and paging on the reference, make
-sure you are calling this on specific set or rows (filtered).
+#### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
+Deletes the referenced resource's tuples.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
@@ -2887,7 +2885,8 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array.&lt;Object&gt;</code> | array of objects with just the data needed to construct the uri |
+| contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
 
@@ -5461,7 +5460,7 @@ get PathColumn object by column name
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
+    * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -5842,15 +5841,13 @@ or rejected with any of these errors:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| tuples | <code>Array</code> | array of tuple objects so that the new data nd old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
+| tuples | <code>Array</code> | array of tuple objects so that the new data and old data can be used to determine key changes. tuple.data has the new data tuple._oldData has the data before changes were made |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
-Deletes the referenced resources.
-NOTE This will ignore the provided sort and paging on the reference, make
-sure you are calling this on specific set or rows (filtered).
+#### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
+Deletes the referenced resource's tuples.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>Promise</code> - A promise resolved with empty object or rejected with any of these errors:
@@ -5858,7 +5855,8 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array.&lt;Object&gt;</code> | array of objects with just the data needed to construct the uri |
+| contextHeaderParams | <code>Object</code> | optional object that we want to log. |
 
 <a name="ERMrest.Reference+delete..self"></a>
 
