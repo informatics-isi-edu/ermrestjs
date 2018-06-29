@@ -399,7 +399,7 @@ exports.execute = function (options) {
                         for(var i = 0; i < limit; i++) {
                             var tuple = page.tuples[i];
                             var expected = tuple.values[2];
-                            expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>", "value missmatch for tuple index="+i);
+                            expect(tuple.displayname.value).toBe("<span class=\"new-class\">" + expected + "</span>", "value missmatch for tuple index="+i);
                             expect(tuple.displayname.unformatted).toBe(expected, "unformatted missmatch for tuple index="+i);
                         }
                         done();

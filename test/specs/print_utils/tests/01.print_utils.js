@@ -89,8 +89,6 @@ exports.execute = function (options) {
                 expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n', "invalid paragraph");
                 expect(printMarkdown("![a random image](random_image.com)"))
                     .toBe('<p><img src="random_image.com" alt="a random image"></p>\n', "invalid image");
-                expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n', "invalid sub");
-                expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n', "invalid sup");
                 // Check for anchor tags
                 expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
                     .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n', "invalid link");
@@ -197,6 +195,19 @@ exports.execute = function (options) {
                 );
 
                 // NOTE currently these are the only two use cases of this.
+            });
+
+            it ("should support superscript and subscript.", function () {
+                expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n', "invalid sub");
+                expect(printMarkdown('H~2~{.test}0')).toBe('<p>H<sub class="test">2</sub>0</p>\n', "invalid sub with attrs");
+                expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n', "invalid sup");
+            });
+
+            it ("should support :span:.", function () {
+                expect(printMarkdown("This is :span: special case:/span:.")).toBe("<p>This is <span> special case</span>.</p>\n", "invalid span");
+                expect(printMarkdown("This is :span: special case:/span:.", {inline: true})).toBe("This is <span> special case</span>.", "invalid inline span");
+                expect(printMarkdown(":span:special:/span:{.test}", {inline: true})).toBe('<span class="test">special</span>', "invalid inline span with attrs");
+                expect(printMarkdown(":span::/span:{.glyph-icon .glyph-danger}", {inline: true})).toBe('<span class="glyph-icon glyph-danger"></span>', "invalid empty inline span with attrs");
             });
         });
 

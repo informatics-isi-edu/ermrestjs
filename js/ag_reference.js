@@ -137,51 +137,71 @@ AttributeGroupReference.prototype = {
      *
      * @type {string}
      */
-    get uri () {
-        if (this._uri === undefined) {
-            var loc = this.location;
+     get uri () {
+         if (this._uri === undefined) {
+             var loc = this.location;
 
-            // generate the url
-            var uri = [
-                loc.service, "catalog", loc.catalogId, "attributegroup", loc.path
-            ];
+             this._uri = [
+                 loc.service, "catalog", loc.catalogId, "attributegroup", this.ermrestPath
+             ].join("/");
+         }
+         return this._uri;
+     },
 
-            if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
-                uri.push(loc.searchFilter);
-            }
+     /**
+      * The second part of Attributegroup uri.
+      * <path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+      *
+      * NOTE:
+      * - Since this is the object that has knowledge of columns, this should be here.
+      *   (we might want to relocate it to the AttributeGroupLocation object.)
+      * - ermrest can processs this uri.
+      *
+      * @type {string}
+      */
+     get ermrestPath () {
+         if (this._ermrestPath === undefined) {
+             var loc = this.location;
 
-            uri = uri.join("/") + "/";
+             // generate the url
+             var uri = loc.path;
 
-            // given an array of columns, return col1,col2,col3
-            var colString = function (colArray) {
-                return colArray.map(function (col) {
-                    return col.toString();
-                }).join(",");
-            };
+             if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+                 uri += "/" + loc.searchFilter;
+             }
 
-            // add group columns
-            uri += colString(this._keyColumns);
+             uri += "/";
+
+             // given an array of columns, return col1,col2,col3
+             var colString = function (colArray) {
+                 return colArray.map(function (col) {
+                     return col.toString();
+                 }).join(",");
+             };
+
+             // add group columns
+             uri += colString(this._keyColumns);
 
 
-            // add aggregate columns
-            if (this._aggregateColumns.length !== 0) {
-                uri += ";" + colString(this._aggregateColumns);
-            }
+             // add aggregate columns
+             if (this._aggregateColumns.length !== 0) {
+                 uri += ";" + colString(this._aggregateColumns);
+             }
 
-            // add sort
-            if (loc.sort && loc.sort.length > 0) {
-                uri += loc.sort;
-            }
+             // add sort
+             if (loc.sort && loc.sort.length > 0) {
+                 uri += loc.sort;
+             }
 
-            // add page
-            if (loc.paging && loc.paging.length > 0) {
-                uri += loc.paging;
-            }
+             // add page
+             if (loc.paging && loc.paging.length > 0) {
+                 uri += loc.paging;
+             }
 
-            this._uri = uri;
-        }
-        return this._uri;
-    },
+             this._ermrestPath = uri;
+         }
+         return this._ermrestPath;
+     },
 
     /**
      *
@@ -540,7 +560,7 @@ AttributeGroupTuple.prototype = {
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(formattedValues[col.name], {formattedValues: formattedValues});
+                presentation = col.formatPresentation(self._data, {formattedValues: formattedValues});
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -725,6 +745,10 @@ AttributeGroupColumn.prototype = {
     },
 
     formatPresentation: function (data, options) {
+        data = data || {};
+
+        var formattedValue = this.formatvalue(data[this.name], options);
+
         /*
          * NOTE: currently will only return the given data. This function exist
          * so it will be the same pattern as Reference and Column apis.
@@ -735,9 +759,9 @@ AttributeGroupColumn.prototype = {
          *
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true }), unformatted: data};
+            return {isHTML: true, value: module._formatUtils.printMarkdown(formattedValue, { inline: true }), unformatted: formattedValue};
         }
-        return {isHTML: false, value: data, unformatted: data};
+        return {isHTML: false, value: formattedValue, unformatted: formattedValue};
     }
 };
 

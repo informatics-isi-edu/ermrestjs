@@ -110,6 +110,10 @@ exports.execute = function(options) {
             describe('the .formatvalue property, ', function() {
                 var formatUtils = options.includes.ermRest._formatUtils;
 
+                var testFormatvalue = function (colName, value, expected, errMessage) {
+                    expect(table1_schema2.columns.get(colName).formatvalue(value)).toEqual(expected, errMessage ? errMessage : "");
+                }
+
                 describe('when column value is null, ', function() {
                     var columnWithAnnotation, columnWithoutAnnotation;
 
@@ -300,6 +304,89 @@ exports.execute = function(options) {
 
                         expect(formattedValue).toEqual(jasmine.any(String));
                         expect(formattedValue).toBe('<code>GATCGATCGC GTATT</code>');
+                    });
+                });
+
+                describe('should handle array columns.', function () {
+                    var cases = [
+                        {
+                            type: "text",
+                            column: "table_1_text_array",
+                            tests: [
+                                {value: ["val 1", "val 2", null, ""], expected: ["val 1", "val 2", null, ""]}
+                            ]
+                        },
+                        {
+                            type: "boolean",
+                            column: "table_1_boolean_array",
+                            tests: [
+                                {value: [true, null, false], expected: ["true", null, "false"]}
+                            ]
+                        },
+                        {
+                            type: "date",
+                            column: "table_1_date_array",
+                            tests: [
+                                {value: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"], expected: ["2016-05-02", null, "2015-03-02"]}
+                            ]
+                        },
+                        {
+                            type: "timestamp",
+                            column: "table_1_timestamp_array",
+                            tests: [
+                                {value: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"], expected: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"]}
+                            ]
+                        },
+                        {
+                            type: "float4",
+                            column: "table_1_float4_array",
+                            tests: [
+                                {value: [31231.1, null, 2413.3], expected: ['31,231.1000', null, '2,413.3000']}
+                            ]
+                        },
+                        {
+                            type: "float8",
+                            column: "table_1_float8_array",
+                            tests: [
+                                {value: [234523523.1, null, 241235.3], expected: ['234,523,523.1000', null, '241,235.3000']}
+                            ]
+                        },
+                        {
+                            type: "numeric",
+                            column: "table_1_numeric_array",
+                            tests: [
+                                {value: [1223, null, 4133], expected: ['1,223.0000', null, '4,133.0000']}
+                            ]
+                        },
+                        {
+                            type: "int2",
+                            column: "table_1_int2_array",
+                            tests: [
+                                {value: [4031, null, 32768], expected: ['4,031', null, '32,768']}
+                            ]
+                        },
+                        {
+                            type: "int4",
+                            column: "table_1_int4_array",
+                            tests: [
+                                {value: [-2147483648, null, 214748364], expected: ['-2,147,483,648', null, '214,748,364']}
+                            ]
+                        },
+                        {
+                            type: "int8",
+                            column: "table_1_int8_array",
+                            tests: [
+                                {value: [9007199254740991, null, 9007199254740990], expected: ['9,007,199,254,740,991', null, '9,007,199,254,740,990']}
+                            ]
+                        }
+                    ];
+
+                    cases.forEach(function (c) {
+                        it ("for column type " + c.type + ".", function () {
+                            c.tests.forEach(function (t) {
+                                testFormatvalue(c.column, t.value, t.expected, t.errMessage);
+                            });
+                        });
                     });
                 });
             });
