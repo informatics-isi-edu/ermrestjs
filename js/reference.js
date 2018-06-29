@@ -1851,7 +1851,7 @@
                     var keyPair = "";
                     for (var j=0; j<this.table.shortestKey.length; j++) {
                         var colName = this.table.shortestKey[j].name;
-                        if (!tuples[i][colName]) throw new module.BadRequestError(400, "tuples[" + i + "] does not have any data for shortest key column: " + colName);
+                        verify(tuples[i][colName], "tuples[" + i + "] does not have any data for shortest key column: " + colName);
                         keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i][colName]);
                         if (j != this.table.shortestKey.length - 1) {
                             keyPair += "&";
