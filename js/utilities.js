@@ -1957,6 +1957,7 @@
 
                                 // Build button html and button dropdown html
                                 var classes = [];
+                                var classNotParsed;
                                 var buttonHtml = '<button type="button" ';
                                 var buttonDDHtml = '<button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ';
 
@@ -1971,7 +1972,16 @@
                                     });
                                 }
 
-                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  cTokens[1].content + '</button>';
+                                var openBracketLastIndex = cTokens[1].content.lastIndexOf('{');
+                                // '{' index > -1, meaning it exists in the string
+                                // '}' index > '{' index, meaning it exists in the string in the right place (i.e. '{...}')
+                                if (openBracketLastIndex > -1 && cTokens[1].content.lastIndexOf('}') > openBracketLastIndex) {
+                                    classNotParsed = cTokens[1].content.slice(0, openBracketLastIndex).trim();
+                                } else {
+                                    classNotParsed = cTokens[1].content;
+                                }
+
+                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  classNotParsed + '</button>';
                                 buttonDDHtml += ' class="btn btn-primary dropdown-toggle ' + classes.join(' ') + '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
 
                                 // Build unordered list
