@@ -64,7 +64,7 @@ exports.execute = function (options) {
         });
 
         it("if it's an integrity error, we should generate a more readable message.", function (done) {
-          reference1.delete([{id: 1001}]).then(null, function (err) {
+          reference1.delete().then(null, function (err) {
               expect(err.message).toBe(integrityErrorMappedMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -76,7 +76,7 @@ exports.execute = function (options) {
 
 
         it("if it's an integrity error and no displayName was found then use table name passed by ermrest", function (done) {
-          reference2.delete([{id: 1001}]).then(null, function (err) {
+          reference2.delete().then(null, function (err) {
               expect(err.message).toBe(integrityErrorMappedMessageWithoutDisplay, "invalid error message");
               done();
           }).catch(function(err) {
@@ -86,7 +86,7 @@ exports.execute = function (options) {
         });
 
         it("if it's an integrity error and pure and binary association then to_name should be displayed", function (done) {
-          reference3.delete([{id: 1}]).then(null, function (err) {
+          reference3.delete().then(null, function (err) {
               expect(err.message).toBe(integrityErrorMappedPureBinaryMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -96,7 +96,7 @@ exports.execute = function (options) {
         });
 
         it("if it's an integrity error and related table then from_name should be displayed", function (done) {
-          reference4.delete([{id: 1001}]).then(null, function (err) {
+          reference4.delete().then(null, function (err) {
               expect(err.message).toBe(integrityErrorMappedFromnameMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -105,13 +105,13 @@ exports.execute = function (options) {
           });
         });
         it("if it's an integrity error and no displayName was found then use table name passed by ermrest using mock", function (done) {
-          var mockUri = "/ermrest/catalog/"+catalog_id+"/entity/" + schemaName + ":" + tableNameWithoutDisplayName + "/id=1001";
+          var mockUri = "/ermrest/catalog/"+catalog_id+"/entity/M:=" + schemaName + ":" + tableNameWithoutDisplayName;
 
           nock(url, ops)
               .delete(mockUri)
               .reply(409, integrityErrorServerResponseArb)
               .persist();
-          reference2.delete([{id: 1001}]).then(null, function (err) {
+          reference2.delete().then(null, function (err) {
               expect(err.message).toBe(integrityErrorMappedSiteAdminMessage, "invalid error message");
               done();
           }).catch(function(err) {

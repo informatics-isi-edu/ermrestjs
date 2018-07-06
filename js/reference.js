@@ -1452,7 +1452,7 @@
 
         /**
          * Updates a set of resources.
-         * @param {Array} tuples array of tuple objects so that the new data and old data can be used to determine key changes.
+         * @param {Array} tuples array of tuple objects so that the new data nd old data can be used to determine key changes.
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
          * @param {Object} contextHeaderParams the object that we want to log.
@@ -1465,7 +1465,6 @@
         update: function(tuples, contextHeaderParams) {
             try {
                 verify(tuples, "'tuples' must be specified");
-                verify(Array.isArray(tuples), "'tuples' must be an array to update");
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
@@ -1835,19 +1834,18 @@
         },
 
         /**
-         * Deletes the referenced resource's tuples.
+         * Deletes the referenced resources.
+         * NOTE This will ignore the provided sort and paging on the reference, make
+         * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Object[]} tuples array of objects with just the data needed to construct the uri
-         * @param {Object} contextHeaderParams optional object that we want to log.
+         * @param {Object} contextHeaderParams the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function(tuples, contextHeaderParams) {
+        delete: function(contextHeaderParams) {
             try {
+
                 var defer = module._q.defer();
-                verify(tuples, "'tuples' must be specified");
-                verify(Array.isArray(tuples), "'tuples' must be an array to delete");
-                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
 
                 /**
                  * NOTE: previous implemenation of delete with 412 logic is here:
@@ -1868,27 +1866,7 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-
-                var uri = this.table.uri;
-
-                var keys = [];
-                //create key for each tuple and push it into the key array
-                for (var i=0; i<tuples.length; i++) {
-                    // NOTE: should probably be factored out into a function of table
-                    var keyPair = "";
-                    for (var j=0; j<this.table.shortestKey.length; j++) {
-                        var colName = this.table.shortestKey[j].name;
-                        verify(tuples[i][colName], "tuples[" + i + "] does not have any data for shortest key column: " + colName);
-                        keyPair += module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(tuples[i][colName]);
-                        if (j != this.table.shortestKey.length - 1) {
-                            keyPair += "&";
-                        }
-                    }
-                    keys.push(keyPair);
-                }
-
-                uri += "/" + keys.join(";");
-                this._server._http.delete(uri, config).then(function (deleteResponse) {
+                this._server._http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
                     return defer.reject(module._responseToError(deleteError, self, delFlag));
