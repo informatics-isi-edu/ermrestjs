@@ -406,7 +406,7 @@ exports.execute = function (options) {
                                 "id", ["columns_schema", "outbound_fk_1"].join("_"),
                                 "col_1", "col_2", "col_3", "col_4","col 5", ["columns_schema","outbound_fk_3"].join("_"),
                                 "col_6", "col_7", ["columns_schema","outbound_fk_5"].join("_"),
-                                "columns_schema_outbound_fk_7", ["columns_schema","outbound_fk_7"].join("_") + "1"
+                                "columns_schema_outbound_fk_7", ["columns_schema","outbound_fk_7"].join("_")
                             ]
                         }]);
                     });
@@ -420,7 +420,7 @@ exports.execute = function (options) {
                                 "col_6", "id", "col_3",
                                 ["columns_schema", "outbound_fk_2"].join("_"),
                                 ["columns_schema", "outbound_fk_3"].join("_"),
-                                ["columns_schema", "outbound_fk_7"].join("_") + "1",
+                                ["columns_schema", "outbound_fk_7"].join("_"),
                                 ["columns_schema", "outbound_fk_8"].join("_"),
                                 ["columns_schema", "outbound_fk_9"].join("_")
                             ]
@@ -506,7 +506,7 @@ exports.execute = function (options) {
                     });
 
                     it('in other columns, should create a pseudo-column for those and remove them from related references.', function () {
-                        expect(detailedRef.columns[3].name).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
+                        expect(detailedRef.columns[3]._constraintName).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
 
                         expect(detailedRef.related().length).toBe(1, "didn't remove the column from related references");
                         expect(detailedRef.related()[0].table.name).toBe("inbound_related_to_columns_table", "the name of related reference is not what was expected");
@@ -536,7 +536,7 @@ exports.execute = function (options) {
                     xit('if key is simple and its constituent columns are part of simple foreign key, should not be added (instead it should apply the PseudoColumn for foreignkey logic.)', function(done) {
                         options.ermRest.resolve(singleEnitityUriSimpleKeyFK, {cid:"test"}).then(function(ref) {
                             expect(ref.columns[0].isPseudo).toBe(true);
-                            expect(ref.columns[0].name).toEqual("columns_schema_table_w_simple_key_as_fk_key_foreignkey");
+                            expect(ref.columns[0]._constraintName).toEqual("columns_schema_table_w_simple_key_as_fk_key_foreignkey");
 
                             done();
                         }, function (err) {
@@ -564,14 +564,14 @@ exports.execute = function (options) {
                     describe('otherwise, ', function () {
                         it ('should pick the shortest notnull and not html key.', function () {
                             expect(compactColumns[0].isPseudo).toBe(true);
-                            expect(compactColumns[0].name).toEqual(["columns_schema", "ref_table_outbound_fks_key"].join("_"));
+                            expect(compactColumns[0]._constraintName).toEqual(["columns_schema", "ref_table_outbound_fks_key"].join("_"));
                         });
 
                         // TODO: Update this testcase because of changes related to system columns
                         xit("if table has several keys with same size, should pick the one with most text columns.", function (done) {
                             options.ermRest.resolve(singleEnitityUriCompositeKey3, {cid:"test"}).then(function(ref) {
                                 expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0].name).toEqual(["columns_schema", "table_w_composite_key_3_key"].join("_"));
+                                expect(ref.columns[0]._constraintName).toEqual(["columns_schema", "table_w_composite_key_3_key"].join("_"));
 
                                 done();
                             }, function (err) {
@@ -583,7 +583,7 @@ exports.execute = function (options) {
                         it('if table has several keys with same size and same number of texts, should pick the key that has lower column positions.', function (done) {
                             options.ermRest.resolve(singleEnitityUriCompositeKey2, {cid:"test"}).then(function(ref) {
                                 expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0].name).toEqual(["columns_schema", "table_w_composite_key_2_key"].join("_"));
+                                expect(ref.columns[0]._constraintName).toEqual(["columns_schema", "table_w_composite_key_2_key"].join("_"));
 
                                 done();
                             }, function (err) {
@@ -618,16 +618,16 @@ exports.execute = function (options) {
                 describe('for columns that are part of a simple FKR, ', function () {
                     it('should replace them with PseudoColumn.', function () {
                         expect(compactColumns[1].isPseudo).toBe(true);
-                        expect(compactColumns[1].name).toBe(["columns_schema", "outbound_fk_1"].join("_"));
+                        expect(compactColumns[1]._constraintName).toBe(["columns_schema", "outbound_fk_1"].join("_"));
 
                         expect(compactColumns[2].isPseudo).toBe(true);
-                        expect(compactColumns[2].name).toBe(["columns_schema", "outbound_fk_2"].join("_"));
+                        expect(compactColumns[2]._constraintName).toBe(["columns_schema", "outbound_fk_2"].join("_"));
 
                         expect(compactColumns[3].isPseudo).toBe(true);
-                        expect(compactColumns[3].name).toBe(["columns_schema", "outbound_fk_3"].join("_"));
+                        expect(compactColumns[3]._constraintName).toBe(["columns_schema", "outbound_fk_3"].join("_"));
 
                         expect(compactColumns[4].isPseudo).toBe(true);
-                        expect(compactColumns[4].name).toBe(["columns_schema", "outbound_fk_4"].join("_"));
+                        expect(compactColumns[4]._constraintName).toBe(["columns_schema", "outbound_fk_4"].join("_"));
                     });
                 });
 
@@ -654,7 +654,7 @@ exports.execute = function (options) {
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
                         var expectedCols = [
                             "id", ["columns_schema", "outbound_fk_1"].join("_"), ["columns_schema", "outbound_fk_2"].join("_"), ["columns_schema", "outbound_fk_3"].join("_"), ["columns_schema", "outbound_fk_4"].join("_"),
-                            "columns_schema_outbound_fk_7", ["columns_schema", "outbound_fk_5"].join("_"), ["columns_schema", "outbound_fk_6"].join("_"), ["columns_schema", "outbound_fk_8"].join("_"), ["columns_schema", "outbound_fk_7"].join("_") + "1", ["columns_schema", "outbound_fk_9"].join("_")
+                            "columns_schema_outbound_fk_7", ["columns_schema", "outbound_fk_5"].join("_"), ["columns_schema", "outbound_fk_6"].join("_"), ["columns_schema", "outbound_fk_8"].join("_"), ["columns_schema", "outbound_fk_7"].join("_"), ["columns_schema", "outbound_fk_9"].join("_")
                         ];
 
                         checkReferenceColumns([{
@@ -665,19 +665,19 @@ exports.execute = function (options) {
 
                     it('should create just one PseudoColumn for the FKR.', function () {
                         expect(compactColumns[16].isPseudo).toBe(true);
-                        expect(compactColumns[16].name).toBe(["columns_schema", "outbound_fk_5"].join("_"));
+                        expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
 
                         expect(compactColumns[17].isPseudo).toBe(true);
-                        expect(compactColumns[17].name).toBe(["columns_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[18].isPseudo).toBe(true);
-                        expect(compactColumns[18].name).toBe(["columns_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[19].isPseudo).toBe(true);
-                        expect(compactColumns[19].name).toBe(["columns_schema", "outbound_fk_7"].join("_") + "1");
+                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
 
                         expect(compactColumns[20].isPseudo).toBe(true);
-                        expect(compactColumns[20].name).toBe(["columns_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 
@@ -725,12 +725,12 @@ exports.execute = function (options) {
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
-                        expect(assetRefCompactCols[0].name).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
+                        expect(assetRefCompactCols[0]._constraintName).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
                         expect(assetRefCompactCols[0].isKey).toBe(true);
                     });
 
                     it('if column is part of any foreignkeys, should ignore the asset annotation.', function() {
-                        expect(assetRefCompactCols[1].name).toBe(["columns_schema", "table_w_asset_fk_to_outbound"].join("_"));
+                        expect(assetRefCompactCols[1]._constraintName).toBe(["columns_schema", "table_w_asset_fk_to_outbound"].join("_"));
                         expect(assetRefCompactCols[1].isForeignKey).toBe(true);
                     });
                 });
@@ -763,6 +763,7 @@ exports.execute = function (options) {
         describe('tuple.values, ', function () {
             describe('when linked data is available, ', function () {
                 it('should return a link for PseudoColumns and value for Columns; and respect null values.', function (done) {
+                    options.ermRest.appLinkFn(appLinkFn);
                     compactRef.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(jasmine.arrayContaining(compactRefExpectedLinkedValue));
@@ -859,7 +860,7 @@ exports.execute = function (options) {
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function (test) {
                 expect(test.ref.columns.map(function (col) {
-                    return col.name;
+                    return (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) ? col._constraintName : col.name;
                 })).toEqual(jasmine.arrayContaining(test.expected));
             });
         }

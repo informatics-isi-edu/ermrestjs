@@ -94,13 +94,28 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * This callback will be called for progress during checksum calculation
+     * @callback checksumOnProgres
+     * @param {number} uploaded the amount that has been uploaded
+     * @param {number} fileSize the total size of the file.
+     */
+
+    /**
+     * This callback will be called for success of checksum calculation
+     * @callback checksumOnSuccess
+     */
+
+    /**
+     * This callback will be called when we counter an error during checksum calculation
+     * @callback checksumOnError
+     * @param {Error} err the error object
+     */
+
+    /**
      * @param {number} chunkSize size of the chunks, in which the file is supposed to be broken
-     * @callback onProgress
-     * @param {onProgress} fn callback function to be called for progress
-     * @callback onSuccess
-     * @param {onSuccess} fn callback function to be called for success
-     * @callback onError
-     * @param {onError} fn callback function to be called for error
+     * @param {checksumOnProgress} fn callback function to be called for progress
+     * @param {checksumOnSuccess} fn callback function to be called for success
+     * @param {checksumOnError} fn callback function to be called for error
      * @returns {Promise} if the schema exists or not
      * @desc Calculates  MD5 checksum for a file using spark-md5 library
      */
@@ -181,13 +196,27 @@ var ERMrest = (function(module) {
 
     var allowedHttpErrors = [500, 503, 408, 401];
 
+    var _isObject = function(obj) {
+        return obj === Object(obj) && !Array.isArray(obj);
+    };
+
+    var _generateContextHeader = function(contextHeaderParams) {
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {};
+        }
+
+        var headers = {};
+        headers[module._contextHeaderName] = contextHeaderParams;
+        return headers;
+    };
+
     /**
      * @desc upload Object
      * Create a new instance with new upload(file, otherInfo)
      * To validate url generation for a file call validateUrl(row) with row of data
      * To calculate checksum call calculateChecksum(row) with row of data
-     * To create an upload call createUploadJob()
      * To check for existing file call fileExists()
+     * To create an upload call createUploadJob()
      * To start uploading, call start()
      * To complete upload job call completeUploadJob()
      * You can pause with pause()
@@ -306,9 +335,61 @@ var ERMrest = (function(module) {
             self._generateURL(row);
             deferred.resolve(self.url);
         }, function(err) {
-            deferred.reject(new Error(((err && err.message) ?
-                                        err.message :
-                                        "Unable to calculate checksum for file") + " " + self.file.name));
+            deferred.reject(new Error( ((err && err.message) ? err.message : "Unable to calculate checksum for file") + " " + self.file.name ));
+        });
+
+        return deferred.promise;
+    };
+
+
+    /**
+     * @desc Call this function to determine file exists on the server
+     * If it doesn't then resolve the promise with url.
+     * If it does then set isPaused, completed and jobDone to true
+     * @returns {Promise}
+     */
+    upload.prototype.fileExists = function(contextHeaderParams) {
+        var self = this;
+
+        var deferred = module._q.defer();
+
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/file-exists",
+                referrer: this.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = this.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+
+        this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
+
+            var headers = response.headers();
+            var md5 = headers["content-md5"];
+            var length = headers["content-length"];
+
+            // If the file is not same, then simply resolve the promise without setting completed and jobDone
+            if ((md5 != self.hash.md5_base64) || (length != self.file.size)) {
+                deferred.resolve(self.url);
+                return;
+            }
+
+            self.isPaused = false;
+            self.completed = true;
+            self.jobDone = true;
+            deferred.resolve(self.url);
+        }, function(response) {
+            // 403 - file exists but user can't read it -> create a new one
+            // 404 - file doesn't exist -> create new one
+            // 409 - The parent path does not denote a namespace OR the namespace already exists (from hatrac docs)
+            if (response.status == 403 || response.status == 404 || response.status == 409) {
+              deferred.resolve(self.url);
+            } else {
+              deferred.reject(module._responseToError(response));
+            }
         });
 
         return deferred.promise;
@@ -321,7 +402,7 @@ var ERMrest = (function(module) {
      * @returns {Promise} A promise resolved with a url where we will upload the file
      * or rejected with error if unable to calculate checkum
      */
-    upload.prototype.createUploadJob = function() {
+    upload.prototype.createUploadJob = function(contextHeaderParams) {
         var self = this;
         this.erred = false;
 
@@ -353,9 +434,18 @@ var ERMrest = (function(module) {
                     "content-disposition": "filename*=UTF-8''" + self.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
                 };
 
+                if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+                    contextHeaderParams = {
+                        action: "upload/create",
+                        referrer: self.reference.defaultLogInfo
+                    };
+                    contextHeaderParams.referrer.column = self.column.name;
+                }
+
                 var config = {
-                    headers: { 'content-type' : 'application/json' }
+                    headers: _generateContextHeader(contextHeaderParams)
                 };
+                config.headers['content-type'] = 'application/json';
 
                 return self.http.post(url, data, config);
             }
@@ -373,46 +463,6 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
-
-    /**
-     * @desc Call this function to determine file exists on the server
-     * If it doesn't then resolve the promise with url.
-     * If it does then set isPaused, completed and jobDone to true
-     * @returns {Promise}
-     */
-    upload.prototype.fileExists = function() {
-        var self = this;
-
-        var deferred = module._q.defer();
-
-        this.http.head(this._getAbsoluteUrl(this.url)).then(function(response) {
-
-            var headers = response.headers();
-            var md5 = headers["content-md5"];
-            var length = headers["content-length"];
-            var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
-
-            // If the md5, length of filename are not same then simply resolve the promise without setting completed and jobDone
-            if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                deferred.resolve(self.url);
-                return;
-            }
-
-            self.isPaused = false;
-            self.completed = true;
-            self.jobDone = true;
-            deferred.resolve(self.url);
-        }, function(response) {
-
-            if (response.status == 404 || response.status == 409) {
-              deferred.resolve(self.url);
-            } else {
-              deferred.reject(module._responseToError(response));
-            }
-        });
-
-        return deferred.promise;
-    };
 
     /**
      * @desc Call this function to start chunked upload to server. It reads the file and divides in into chunks
@@ -490,7 +540,7 @@ var ERMrest = (function(module) {
      *  @returns {Promise} A promise resolved with a url where we uploaded the file
      *  or rejected with error if unable to complete the job
      */
-    upload.prototype.completeUpload = function() {
+    upload.prototype.completeUpload = function(contextHeaderParams) {
         var self = this;
 
         var deferred = module._q.defer();
@@ -500,7 +550,21 @@ var ERMrest = (function(module) {
             return deferred.promise;
         }
 
-        this.http.post(this._getAbsoluteUrl(this.chunkUrl)).then(function(response) {
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/complete",
+                referrer: this.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = this.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+        config.headers['content-type'] = 'application/json';
+
+        // get's the versioned hatrac url
+        this.http.post(this._getAbsoluteUrl(this.chunkUrl), {}, config).then(function(response) {
             self.jobDone = true;
 
             if (response.headers('location')) {
@@ -599,10 +663,22 @@ var ERMrest = (function(module) {
      * @desc deletes the file metadata from the hatrac database and removes it from the namespace
      * @returns {Promise}
      */
-    upload.prototype.deleteFile = function() {
+    upload.prototype.deleteFile = function(contextHeaderParams) {
         var deferred = module._q.defer();
 
-        this.http.delete(this._getAbsoluteUrl(this.url)).then(function (response) {
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/delete",
+                referrer: this.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = this.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+
+        this.http.delete(this._getAbsoluteUrl(this.url), config).then(function (response) {
             deferred.resolve();
         }, function () {
             deferred.reject(module._responseToError(response));
@@ -701,11 +777,20 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
 
+        var contextHeaderParams = {
+            action: "upload/status",
+            referrer: this.reference.defaultLogInfo
+        };
+        contextHeaderParams.referrer.column = this.column.name;
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
         // If chunkUrl is not null then fetch  the status of the uploadJob
         // and resolve promise with it.
         // else just resolved it without any response
         if (this.chunkUrl) {
-            this.http.get(this._getAbsoluteUrl(this.chunkUrl)).then(function(response) {
+            this.http.get(this._getAbsoluteUrl(this.chunkUrl), config).then(function(response) {
                 deferred.resolve(response);
             }, function(response) {
                 deferred.reject(response);
@@ -775,8 +860,18 @@ var ERMrest = (function(module) {
 
         var deferred = module._q.defer();
 
+        var contextHeaderParams = {
+            action: "upload/cancel",
+            referrer: this.reference.defaultLogInfo
+        };
+        contextHeaderParams.referrer.column = this.column.name;
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+
         if (this.chunkUrl) {
-            this.http.delete(this._getAbsoluteUrl(this.chunkUrl)).then(function() {
+            this.http.delete(this._getAbsoluteUrl(this.chunkUrl), config).then(function() {
                 deferred.resolve();
             }, function(err) {
                 deferred.resolve();
@@ -858,10 +953,14 @@ var ERMrest = (function(module) {
         var size = blob.size;
         this.progress = 0;
 
-        var headers = {};
-
         // set content-type to "application/octet-stream"
+        var contextHeaderParams = {
+            action: "upload/chunk",
+            referrer: upload.reference.defaultLogInfo
+        };
+        contextHeaderParams.referrer.column = upload.column.name;
 
+        var headers = _generateContextHeader(contextHeaderParams);
         headers["content-type"] = "application/octet-stream";
 
         self.xhr  = module._q.defer();

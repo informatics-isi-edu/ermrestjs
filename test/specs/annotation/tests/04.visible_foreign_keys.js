@@ -16,9 +16,9 @@ exports.execute = function (options) {
         function runTestCases(table, cases, check_order) {
             Object.keys(cases).forEach(function (context) {
                 var fk_names = schema.tables.get(table).referredBy._contextualize(context).map( function(fk){
-                    return fk.constraint_names[0][1]; // return the actual constraint_name
+                    return fk.foreignKey.constraint_names[0][1]; // return the actual constraint_name
                 });
-                expect(fk_names).toHaveSameItems(cases[context], !check_order);
+                expect(fk_names).toHaveSameItems(cases[context], !check_order, "failed for context: " + context);
             });
         }
 

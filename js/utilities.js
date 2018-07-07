@@ -173,12 +173,48 @@
         this.length = 0;
     };
 
+    /**
+     * Given a string representing a hex, turn it into base64
+     * @private
+     * @param  {string} hex
+     * @return {string}
+     */
+    _hexToBase64 = function (hex) {
+        return window.btoa(String.fromCharCode.apply(null,
+          hex.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+        );
+    };
+
+    /**
+     * Given a base64 string, url encode it.
+     *i.e. '+' and '/' are replaced with '-' and '_' also any trailing '=' removed.
+     *
+     * @private
+     * @param  {string} str
+     * @return {string}
+     */
+    _urlEncodeBase64 = function (str) {
+        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
+    };
+
+    /**
+     * Given a url encoded base64 (output of `_urlEncodeBase64`), return the
+     * actual base64 string.
+     *
+     * @param  {string} str
+     * @return {string}
+     */
+    _urlDecodeBase64 = function (str) {
+        str = (str + '===').slice(0, str.length + (str.length % 4));
+        return str.replace(/-/g, '+').replace(/_/g, '/');
+    };
+
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
 
-    module.decodeFacet = function (blob) {
-        var err = new module.InvalidFacetOperatorError();
+    module.decodeFacet = function (blob, path) {
+        var err = new module.InvalidFacetOperatorError('', path);
 
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
@@ -591,21 +627,207 @@
     };
 
     /**
-     * @param {string} name the base name. It usually is the constraintName of that object.
-     * @param {ERMrest.Table} table Used to make sure that name is not available already in the table.
+     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
      * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     * This function can be used to get the name that we're using for :
+     *
+     * - Composite key/foreignkeys:
+     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
+     * - Simple foiregnkey/key:
+     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
+     * - Pseudo-Columns:
+     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
+     *
      */
-    module._generatePseudoColumnName = function (name, table) {
-        /**
-         * make sure that this name is unique:
-         * 1. table doesn't have any columns with that name.
-         * 2. there's no constraint with that name.
-         **/
-        var i = 0;
-        while(table.columns.has(name) || (i!==0 && table.schema.catalog.constraintByNamePair([table.schema.name, name])!== null) ) {
-            name += ++i;
+    module.generatePseudoColumnHashName = function (colObject) {
+
+        //we cannot create an object and stringify it, since its order can be different
+        //instead will create a string of `source + aggregate + entity`
+        var str = "";
+
+        // it should have source
+        if (typeof colObject === "object") {
+            if (!colObject.source) return null;
+
+            if (_isFacetSourcePath(colObject.source)) {
+                // since it's an array, it will preserve the order
+                str += JSON.stringify(colObject.source);
+            } else {
+                str += _getFacetSourceColumnStr(colObject.source);
+            }
+
+            if (typeof colObject.aggregate === "string") {
+                str += colObject.aggregate;
+            }
+
+            // entity true doesn't change anything
+            if (colObject.entity === false) {
+                str += colObject.entity;
+            }
+        } else if (typeof colObject === "string"){
+            str = colObject;
+        } else {
+            return null;
         }
-        return name;
+
+        // md5
+        str = ERMrest._SparkMD5.hash(str);
+
+        // base64
+        str = _hexToBase64(str);
+
+        // url safe
+        return _urlEncodeBase64(str);
+    };
+
+
+    /**
+     * @private
+     * @param  {Object} colObject the column definition
+     * @param  {ERMrest.Column} column
+     * @return {Object} the returned object has `name` and `isHash` attributes.
+     * @desc generates a name for the given pseudo-column
+     */
+    _generatePseudoColumnName = function (colObject, column) {
+        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
+        }
+
+        return {name: column.name, isHash: false};
+    };
+
+    _generateForeignKeyName = function (fk, isInbound) {
+        var eTable = isInbound ? fk._table : fk.key.table;
+
+        if (!fk.simple) {
+            return module.generatePseudoColumnHashName(fk._constraintName);
+        }
+
+        if (!isInbound) {
+            return module.generatePseudoColumnHashName({
+                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
+            });
+        }
+
+        var source = [{inbound: fk.constraint_names[0]}];
+        if (eTable._isPureBinaryAssociation()) {
+            var otherFK;
+            for (j = 0; j < eTable.foreignKeys.length(); j++) {
+                if(eTable.foreignKeys.all()[j] !== fk) {
+                    otherFK = eTable.foreignKeys.all()[j];
+                    break;
+                }
+            }
+
+            source.push({outbound: otherFK.constraint_names[0]});
+            source.push(otherFK.key.table.shortestKey[0].name);
+        } else {
+            source.push(eTable.shortestKey[0].name);
+        }
+
+        return module.generatePseudoColumnHashName({source: source});
+    };
+
+    // given a reference and associated data to it, will return a list of Values
+    // corresponding to its sort object
+    _getPagingValues = function (ref, rowData, rowLinkedData) {
+        if (!rowData) {
+            return null;
+        }
+        var loc = ref.location,
+            values = [], addedCols = {}, sortObjectNames = {},
+            col, i, j, sortCol, colName, data, fkData;
+
+        for (i = 0; i < loc.sortObject.length; i++) {
+            colName = loc.sortObject[i].column;
+
+            try {
+                col = ref.getColumnByName(colName);
+            } catch (e) {
+                return null; // column doesn't exist return null.
+            }
+
+            // avoid duplicate sort columns
+            if (col.name in sortObjectNames) continue;
+            sortObjectNames[col.name] = true;
+
+            if (!col.sortable) {
+                return null;
+            }
+
+            for (j = 0; j < col._sortColumns.length; j++) {
+                sortCol = col._sortColumns[j].column;
+
+                // avoid duplciate columns
+                if (sortCol in addedCols) continue;
+                addedCols[sortCol] = true;
+
+                if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.hasPath)) {
+                    fkData = rowLinkedData[col.name];
+                    data = null;
+                    if (isObjectAndNotNull(fkData)) {
+                        data =  fkData[sortCol.name];
+                    }
+                } else {
+                    data = rowData[sortCol.name];
+                }
+                values.push(data);
+            }
+        }
+        return values;
+    };
+
+    /**
+     * @private
+     * Process the given list of column order, and return the appropriate list
+     * of objects that have:
+     * - `column`: The {@link ERMrest.Column} object.
+     * - `descending`: The boolean that Indicates whether we should reverse sort order or not.
+     *
+     * @param  {string} columnOrder The object that defines the column/row order
+     * @param  {ERMrest.Table} table
+     * @return {Array=} If it's undefined, the column_order that is defined is not valid
+     */
+    _processColumnOrderList = function (columnOrder, table) {
+        if (columnOrder === false) {
+            return false;
+        }
+
+        var res, colName, descending, colNames = {};
+        if (Array.isArray(columnOrder)) {
+            res = [];
+            for (var i = 0 ; i < columnOrder.length; i++) {
+                try {
+                    if (typeof columnOrder[i] === "string") {
+                        colName = columnOrder[i];
+                    } else if (columnOrder[i] && columnOrder[i].column) {
+                        colName = columnOrder[i].column;
+                    } else {
+                        continue; // invalid syntax
+                    }
+
+                    col = table.columns.get(colName);
+
+                    // make sure it's sortable
+                    if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                        continue;
+                    }
+
+                    // avoid duplicates
+                    if (colName in colNames) {
+                        continue;
+                    }
+                    colNames[colName] = true;
+
+                    descending = (columnOrder[i] && columnOrder[i].descending === true);
+                    res.push({
+                        column: col,
+                        descending: descending,
+                    });
+                } catch(exception) {}
+            }
+        }
+        return res; // it might be undefined
     };
 
     /**
@@ -616,10 +838,12 @@
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object} linkedData The object which contains key value paris of foreign key data.
      * @return {object} A formatted keyvalue pair of object
-     * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatValue`.
+     * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
+     * If you want the formatted value of a single column, you should call formatvalue,
+     * this function is written for the purpose of being used in markdown.
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
-        var keyValues, k, fkData, col, cons, rowname;
+        var keyValues, k, fkData, col, cons, rowname, v;
 
         var findCol = function (colName, currTable) {
             if (Array.isArray(currTable)) {
@@ -633,7 +857,12 @@
             for (k in d) {
                 try {
                     col = findCol(k, currTable);
-                    res[k] = col.formatvalue(d[k], context);
+                    v = col.formatvalue(d[k], context);
+                    if (col.type.isArray) {
+                        res[k] = module._formatUtils.printArray(v, {isMarkdown: true});
+                    } else {
+                        res[k] = v;
+                    }
                 } catch(e) {
                     res[k] = d[k];
                 }
@@ -650,8 +879,8 @@
         if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
             keyValues.$fkeys = {};
             table.foreignKeys.all().forEach(function (fk) {
-                presentation = module._generateForeignKeyPresentation(fk, context, linkedData[fk.name]);
-                if (!presentation) return;
+                var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
+                if (!p) return;
 
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
@@ -660,9 +889,9 @@
 
                 keyValues.$fkeys[cons[0]][cons[1]] = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
-                    "rowName": presentation.unformatted,
+                    "rowName": p.unformatted,
                     "uri": {
-                        "detailed": presentation.reference.contextualize.detailed.appLink
+                        "detailed": p.reference.contextualize.detailed.appLink
                     }
                 };
 
@@ -687,6 +916,8 @@
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
 
+        var formattedValues = module._getFormattedKeyValues(table, context, data, linkedData);
+
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
             actualContext = isTitle ? "title" : (typeof context === "string" && context !== "*" ? context : "");
@@ -701,11 +932,8 @@
                 table.annotations.get(module._annotations.TABLE_DISPLAY).content
             );
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
-                // Get formatted keyValues for a table for the data
-                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
-
                 // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, keyValues, table, context, {formatted: true});
+                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true});
             }
         }
 
@@ -713,12 +941,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            // Get formatted keyValues for a table for the data
-            if (typeof keyValues === 'undefined') {
-                keyValues = module._getFormattedKeyValues(table, context, data, linkedData);
-            }
-
-            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
+            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true});
 
         }
 
@@ -731,8 +954,7 @@
             var setDisplaynameForACol = function (name) {
                 closest = module._getClosest(data, name);
                 if (closest !== undefined && (typeof closest.data === 'string')) {
-                    col = table.columns.get(closest.key);
-                    result = col.formatvalue(closest.data, context);
+                    result = formattedValues[closest.key];
                     return true;
                 }
                 return false;
@@ -759,7 +981,7 @@
                 // If id column exists
                 if (idCol.length && typeof data[idCol[0].name] === 'string') {
 
-                    result = idCol[0].formatvalue(data[idCol[0].name], context);
+                    result = formattedValues[idCol[0].name];
 
                 } else {
 
@@ -775,7 +997,7 @@
 
                     // Iterate over the keycolumns to get their formatted values for `row_name` context
                     keyColumns.forEach(function (c) {
-                        var value = c.formatvalue(data[c.name], context);
+                        var value = formattedValues[c.name];
                         values.push(value);
                     });
 
@@ -811,12 +1033,153 @@
     /**
      * @function
      * @private
-     * @param  {ERMrest.foreignKeyRef} foreignKey the foriengkey object
+     * @desc Given a key object, will return the presentation object that can bse used for it
+     * @param  {ERMrest.Key} key    the key object
+     * @param  {object} data        the data for the table that key is from
+     * @param  {string} context     the context string
+     * @param  {object=} options
+     * @return {object} the presentation object that can be used for the key
+     * (it has `isHTML`, `value`, and `unformatted`).
+     * NOTE the function might return `null`.
+     */
+    module._generateKeyPresentation = function (key, data, context, options) {
+        // if data is empty
+        if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
+            return null;
+        }
+
+        // used to create key pairs in uri
+        var createKeyPair = function (cols) {
+            var keyPair = "", col;
+            for (i = 0; i < cols.length; i++) {
+                col = cols[i].name;
+                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+                if (i != cols.length - 1) {
+                    keyPair +="&";
+                }
+            }
+         return keyPair;
+        };
+
+        // check if we have data for the given columns
+        var hasData = function (kCols) {
+            for (var i = 0; i < kCols.length; i++) {
+                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
+                    return false;
+                }
+            }
+         return true;
+        };
+
+        var value, caption, unformatted, i;
+        var cols = key.colset.columns,
+            addLink = true;
+
+        // if any of key columns don't have data, this link is not valid.
+        if (!hasData(cols)) {
+            return null;
+        }
+
+        // make sure that formattedValues is defined
+        options = options || {};
+        if (options.formattedValues === undefined) {
+           options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
+        }
+
+        // use the markdown_pattern that is defiend in key-display annotation
+        var display = key.getDisplay(context);
+        if (display.isMarkdownPattern) {
+            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
+            unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
+            caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
+            addLink = false;
+        } else {
+            var values = [], unformattedValues = [];
+
+            // create the caption
+            var presentation;
+            for (i = 0; i < cols.length; i++) {
+                try {
+                    presentation = cols[i].formatPresentation(data, context, {formattedValues: options.formattedValues});
+                    values.push(presentation.value);
+                    unformattedValues.push(presentation.unformatted);
+                    // if one of the values isHTMl, should not add link
+                    addLink = addLink ? !presentation.isHTML : false;
+                } catch (exception) {
+                    // the value doesn't exist
+                    return null;
+                }
+            }
+            caption = values.join(":");
+            unformatted = unformattedValues.join(":");
+
+            // if the caption is empty we cannot add any link to that.
+            if (caption.trim() === '') {
+                return null;
+            }
+        }
+
+        if (addLink) {
+            var keyRef = new Reference(module.parse(key.table._uri + "/" + createKeyPair(cols)), key.table.schema.catalog);
+            var appLink = keyRef.contextualize.detailed.appLink;
+
+            value = '<a href="' + appLink +'">' + caption + '</a>';
+            unformatted = "[" + unformatted + "](" + appLink + ")";
+        } else {
+            value = caption;
+        }
+
+        return {isHTML: true, value: value, unformatted: unformatted};
+    };
+
+    /**
+     * @function
+     * @private
+     * @desc Given the key of a table, and data for one row will return the
+     * presentation object for the row.
+     * @param  {ERMrest.Key} key   the key of the table
      * @param  {String} context    Current context
-     * @param  {object} data       Data for the table that this foreignKey is referring to.
+     * @param  {object} data       Data for the table that this key is referring to.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateForeignKeyPresentation = function (foreignKey, context, data) {
+    module._generateRowPresentation = function (key, data, context) {
+        var presentation = module._generateRowLinkProperties(key, data, context);
+
+        if (!presentation) {
+            return null;
+        }
+
+        var value, unformatted, appLink;
+
+        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        // create the link using reference.
+        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+            value = presentation.caption;
+            unformatted = presentation.unformatted;
+        } else {
+            appLink = presentation.reference.contextualize.detailed.appLink;
+            value = '<a href="' + appLink + '">' + presentation.caption + '</a>';
+            unformatted = "[" + presentation.unformatted + "](" + appLink + ")";
+        }
+
+        return {isHTML: true, value: value, unformatted: unformatted};
+    };
+
+    /**
+     * @function
+     * @private
+     * @param  {ERMrest.Key} key     key of the table
+     * @param  {string} context current context
+     * @param  {object} data    data for the table that this key is referring to
+     * @return {object} an object with the following attributes:
+     * - `caption`: The caption that can be used to refer to this row in a link
+     * - `unformatted`: The unformatted version of caption.
+     * - `refernece`: The reference object that can be used for generating link to the row
+     * @desc
+     * Creates the properies for generating a link to the given row of data.
+     * It might return `null`.
+     */
+    module._generateRowLinkProperties = function (key, data, context) {
 
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -847,12 +1210,10 @@
         };
 
         var value, rowname, i, caption, unformatted;
-
-        var fkey = foreignKey.key; // the key that creates this PseudoColumn
-        var table = fkey.table;
+        var table = key.table;
 
         // if any of key columns don't have data, this link is not valid.
-        if (!hasData(fkey.colset.columns)) {
+        if (!hasData(key.colset.columns)) {
             return null;
         }
 
@@ -868,9 +1229,9 @@
                 unformattedKeyCols = [],
                 pres, col;
 
-            for (i = 0; i < fkey.colset.columns.length; i++) {
-                col = fkey.colset.columns[i];
-                pres = col.formatPresentation(formattedValues[col.name], context, {formattedValues: formattedValues});
+            for (i = 0; i < key.colset.columns.length; i++) {
+                col = key.colset.columns[i];
+                pres = col.formatPresentation(data, context, {formattedValues: formattedValues});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
             }
@@ -883,12 +1244,12 @@
         }
 
         // use the shortest key if it has data (for shorter url).
-        var uriKey = hasData(table.shortestKey) ? table.shortestKey: fkey.colset.columns;
+        var uriKey = hasData(table.shortestKey) ? table.shortestKey: key.colset.columns;
 
         // create a url that points to the current ReferenceColumn
         var ermrestUri = [
             table.schema.catalog.server.uri ,"catalog" ,
-            module._fixedEncodeURIComponent(table.schema.catalog.id), "entity",
+            table.schema.catalog.id, "entity",
             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             createKeyPair(uriKey)
         ].join("/");
@@ -1005,7 +1366,7 @@
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
-                return new module.NoConnectionError("No Internet Connection available");
+                return new module.NoConnectionError(response.data);
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
@@ -1210,9 +1571,16 @@
                 return '';
             }
 
-            if (options.inline) return module._markdownIt.renderInline(value);
-
-            return module._markdownIt.render(value);
+            try {
+                if (options.inline) {
+                    return module._markdownIt.renderInline(value);
+                }
+                return module._markdownIt.render(value);
+            } catch (e) {
+                console.log("Couldn't parse the given markdown value: " + value);
+                console.log(e);
+                return value;
+            }
         },
 
         /**
@@ -1245,49 +1613,92 @@
             if (value === null) {
                 return '';
             }
-            // Default separator is a space.
-            if (!options.separator) {
-                options.separator = ' ';
+
+            try {
+                // Default separator is a space.
+                if (!options.separator) {
+                    options.separator = ' ';
+                }
+                // Default increment is 10
+                if (!options.increment) {
+                    options.increment = 10;
+                }
+                var inc = parseInt(options.increment, 10);
+
+                if (inc === 0) {
+                    return value.toString();
+                }
+
+                // Reset the increment if it's negative
+                if (inc <= -1) {
+                    inc = 1;
+                }
+
+                var formattedSeq = '`';
+                var separator = options.separator;
+                while (value.length >= inc) {
+                    // Get the first inc number of chars
+                    var chunk = value.slice(0, inc);
+                    // Append the chunk and separator
+                    formattedSeq += chunk + separator;
+                    // Remove this chunk from value
+                    value = value.slice(inc);
+                }
+
+                // Append any remaining chars from value that was too small to form an increment
+                formattedSeq += value;
+
+                // Slice off separator at the end
+                if (formattedSeq.slice(-1) == separator) {
+                    formattedSeq = formattedSeq.slice(0, -1);
+                }
+
+                // Add the ending backtick at the end
+                formattedSeq += '`';
+
+                // Run it through printMarkdown to get the sequence in a fixed-width font
+                return module._markdownIt.renderInline(formattedSeq);
+            } catch (e) {
+                console.log("Couldn't parse the given markdown value: " + value);
+                console.log(e);
+                return value;
             }
-            // Default increment is 10
-            if (!options.increment) {
-                options.increment = 10;
-            }
-            var inc = parseInt(options.increment, 10);
 
-            if (inc === 0) {
-                return value.toString();
-            }
+        },
 
-            // Reset the increment if it's negative
-            if (inc <= -1) {
-                inc = 1;
-            }
+        /**
+         * @function
+         * @param  {Array} value the array of values
+         * @param  {Object} options Configuration options. Accepted parameters:
+         * - `isMarkdown`: if this is true, we will not esacpe markdown characters
+         * @return {string} A string represntation of array.
+         * @desc
+         * Will generate a comma seperated value for an array. It will also change `null` and `""`
+         * to their special presentation.
+         * The returned value might return markdown, which then should call printMarkdown on it.
+         */
+        printArray: function (value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
 
-            var formattedSeq = '`';
-            var separator = options.separator;
-            while (value.length >= inc) {
-                // Get the first inc number of chars
-                var chunk = value.slice(0, inc);
-                // Append the chunk and separator
-                formattedSeq += chunk + separator;
-                // Remove this chunk from value
-                value = value.slice(inc);
+            if (!value || !Array.isArray(value) || value.length === 0) {
+                return '';
             }
 
-            // Append any remaining chars from value that was too small to form an increment
-            formattedSeq += value;
+            return value.map(function (v) {
+                var isMarkdown = (options.isMarkdown === true);
+                var pv = v;
+                if (v === "") {
+                    pv = module._specialPresentation.EMPTY_STR;
+                    isMarkdown = true;
+                }
+                else if (v == null) {
+                    pv = module._specialPresentation.NULL;
+                    isMarkdown = true;
+                }
 
-            // Slice off separator at the end
-            if (formattedSeq.slice(-1) == separator) {
-                formattedSeq = formattedSeq.slice(0, -1);
-            }
-
-            // Add the ending backtick at the end
-            formattedSeq += '`';
-
-            // Run it through printMarkdown to get the sequence in a fixed-width font
-            return module._markdownIt.renderInline(formattedSeq);
+                if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
+                return pv;
+            }).join(", ");
         }
     };
 
@@ -1382,12 +1793,28 @@
             typeof element.descending == 'boolean');
     };
 
-    /*
+    /**
      * @function
      * @private
      * @param {Object} md The markdown-it object
      * @param {Object} md The markdown-it-container object.
      * @desc Sets functionality for custom markdown tags like `iframe` and `dropdown` using `markdown-it-container` plugin.
+     * The functions that are required for each custom tag are
+     * - validate: to match a given token with the new rule that we are adding.
+     * - render: the render rule for the token. This function will be called
+     * for opening and closing block tokens that match. The function should be written
+     * in a way to handle just the current token and its values. It should not try
+     * to modify the whole parse process. Doing so will grant the correct behavior
+     * from the markdown-it. If we don't follow this rule while writing the render
+     * function, we might lose extra features (recursive blocks, etc.) that the parser
+     * can handle. For instance the `iframe` tag is written in a way that you have
+     * to follow the given syntax. You cannot have any other tags in iframe and
+     * we're not supporting recursive iframe tags. the render function is only
+     * handling an iframe with the given syntax. Nothing extra.
+     * But we tried to write the `div` tag in a way that you can have
+     * hierarichy of `div`s. If you look at its implementation, it has two simple rules.
+     * One for the opening tag and the other for the closing.
+     *
      */
     module._bindCustomMarkdownTags = function(md, mdContainer) {
 
@@ -1529,6 +1956,7 @@
 
                                 // Build button html and button dropdown html
                                 var classes = [];
+                                var classNotParsed;
                                 var buttonHtml = '<button type="button" ';
                                 var buttonDDHtml = '<button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ';
 
@@ -1543,7 +1971,16 @@
                                     });
                                 }
 
-                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  cTokens[1].content + '</button>';
+                                var openBracketLastIndex = cTokens[1].content.lastIndexOf('{');
+                                // '{' index > -1, meaning it exists in the string
+                                // '}' index > '{' index, meaning it exists in the string in the right place (i.e. '{...}')
+                                if (openBracketLastIndex > -1 && cTokens[1].content.lastIndexOf('}') > openBracketLastIndex) {
+                                    classNotParsed = cTokens[1].content.slice(0, openBracketLastIndex).trim();
+                                } else {
+                                    classNotParsed = cTokens[1].content;
+                                }
+
+                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  classNotParsed + '</button>';
                                 buttonDDHtml += ' class="btn btn-primary dropdown-toggle ' + classes.join(' ') + '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
 
                                 // Build unordered list
@@ -1753,6 +2190,41 @@
                 } else {
                   // closing tag
                   return '';
+                }
+            }
+        });
+
+        md.use(mdContainer, 'div', {
+
+            /*
+             * Checks whetehr string matches format ":::div CONTENT \n:::"
+             * string inside `{}` is optional, specifies attributes to be applied to element
+             */
+            validate: function (params) {
+                return params.trim().match(/div(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/div(.*)$/i);
+
+                // opening tag
+                if (tokens[idx].nesting === 1) {
+
+                    // if the next tag is a paragraph, we can change the paragraph into a div
+                    var attrs = md.parse(m[1]);
+                    if (attrs && attrs.length > 0 && attrs[0].type === "paragraph_open") {
+                        var html = md.render(m[1]).trim();
+
+                        // this will remove the closing and opening p tag.
+                        return "<div" + html.slice(2, html.length-4);
+                    }
+
+                    // otherwise just add the div tag
+                    return "<div>\n" + md.render(m[1]).trim();
+                }
+                // the closing tag
+                else {
+                    return "</div>\n";
                 }
             }
         });
@@ -2107,6 +2579,7 @@
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
     module._constraintNames = {};
+    var consIndex = 0;
 
     /**
      * Creaes a map from catalog id, schema name, and constraint names to the actual object.
@@ -2129,7 +2602,8 @@
 
         module._constraintNames[catalogId][schemaName][constraintName] = {
             "subject": subject,
-            "object": obj
+            "object": obj,
+            "code": "c" + (consIndex++)
         };
     };
 
@@ -2418,6 +2892,10 @@
         MODULE: 'module'
     });
 
+    module._nonSortableTypes = [
+        "json", "jsonb"
+    ];
+
     // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
@@ -2434,6 +2912,19 @@
         "json"
     ];
 
+    module._facetFilterTypes = Object.freeze({
+        CHOICE: "choices",
+        RANGE: "ranges",
+        SEARCH: "search"
+    });
+
+    module._facetFilterTypeNames =  Object.keys(module._facetFilterTypes).map(function (k) {
+        return module._facetFilterTypes[k];
+    });
+
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
 
     module._groupAggregateColumnNames = Object.freeze({
         VALUE: "value",
@@ -2453,33 +2944,57 @@
         CREATE: "CRT",   //create
         UPDATE: "UPDT",   //update
         READ: "READ"        //read
-      });
+    });
+
+    module._specialPresentation = Object.freeze({
+        NULL: "*No Value*",
+        EMPTY_STR: "*Empty*"
+    });
 
     module._errorStatus = Object.freeze({
-      forbidden : "Forbidden",
-      itemNotFound : "Item Not Found",
-      facetingError: "Invalid Facet Filters",
-      invalidFilter : "Invalid Filter",
-      invalidInput : "Invalid Input",
-      invalidURI : "Invalid URI",
-      noDataChanged : "No Data Changed",
-      noConnectionError : "No Connection Error"
-      });
+        forbidden : "Forbidden",
+        itemNotFound : "Item Not Found",
+        facetingError: "Invalid Facet Filters",
+        invalidFilter : "Invalid Filter",
+        invalidInput : "Invalid Input",
+        invalidURI : "Invalid URI",
+        noDataChanged : "No Data Changed",
+        noConnectionError : "No Connection Error",
+        InvalidSortCriteria : "Invalid Sort Criteria",
+        invalidPageCriteria : "Invalid Page Criteria"
+    });
 
     module._errorMessage = Object.freeze({
-      facetingError : "Given encoded string for facets is not valid."
+        facetingError : "Given encoded string for facets is not valid."
     });
 
     module._HTTPErrorCodes = Object.freeze({
-      BAD_REQUEST: 400,
-      UNAUTHORIZED: 401,
-      FORBIDDEN : 403,
-      NOT_FOUND: 404,
-      TIMEOUT_ERROR: 408,
-      CONFLICT : 409,
-      PRECONDITION_FAILED: 412,
-      INTERNAL_SERVER_ERROR :500,
-      NO_CONNECTION_ERROR :502,
-      SERVIVE_UNAVAILABLE: 503
+        BAD_REQUEST: 400,
+        UNAUTHORIZED: 401,
+        FORBIDDEN : 403,
+        NOT_FOUND: 404,
+        TIMEOUT_ERROR: 408,
+        CONFLICT : 409,
+        PRECONDITION_FAILED: 412,
+        INTERNAL_SERVER_ERROR :500,
+        SERVIVE_UNAVAILABLE: 503
+    });
 
-      });
+    module._warningMessages = Object.freeze({
+        NO_PSEUDO_IN_ENTRY: "pseudo-columns are not allowed in entry contexts.",
+        INVALID_SOURCE: "given object is invalid. `source` is required and it must be valid",
+        DUPLICATE_COLUMN: "ignoring duplicate column definition.",
+        DUPLICATE_KEY: "ignoring duplicate key definition.",
+        DUPLICATE_FK: "ignoring duplicate foreign key definition.",
+        DUPLICATE_PC: "ignoring duplicate pseudo-column definition.",
+        INVALID_COLUMN: "column name must be a string.",
+        INVALID_AGG: "given aggregate function is invalid.",
+        NO_SCALAR_AGG_IN_ENT: "scalar aggreagte functions are not allowed in entity mode",
+        FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
+        INVALID_FK: "given foreignkey definition is invalid.",
+        AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
+        MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
+        MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
+        NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
+        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
+    });

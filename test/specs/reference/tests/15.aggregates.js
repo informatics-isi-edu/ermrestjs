@@ -36,7 +36,7 @@ exports.execute = function (options) {
             schemaName + ":" + tableName;
 
         var compositeTableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithCompKey + ":col)";
+            schemaName + ":" + tableNameWithCompKey + "/(col)=(" + schemaName + ":" + tableName + ":id)";
 
         var tableWithJoinUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/(id)=(" + schemaName + ":" + tableNameWithSimpleKey + ":simple_id)";
@@ -218,11 +218,12 @@ exports.execute = function (options) {
                     expect(ag_ref.columns.map(function (c) {return c.displayname.value;})).toEqual(colDisplaynames, "column names missmatch.");
                 };
 
-                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(shortestKey) for count.", function (done) {
+
+                it ("if there's a join in the path should return an attributegroup reference, using cnt_d(T:shortestKey) for count.", function (done) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[0].groupAggregate.entityCounts,
-                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(RID)@sort(count::desc::,value)",
+                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(T:RID)@sort(count::desc::,value)",
                             ["col", "Number of Occurences"]
                         );
                         done();
@@ -236,7 +237,7 @@ exports.execute = function (options) {
                     options.ermRest.resolve(tableWithUnicode, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
                             reference.columns[1].groupAggregate.entityCounts,
-                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(RID)@sort(count::desc::,value)",
+                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(T:RID)@sort(count::desc::,value)",
                             [decodedCol, "Number of Occurences"]
                         );
                         done();
@@ -505,8 +506,8 @@ exports.execute = function (options) {
                         submissionMin = formatTimestampSubmission("2010-05-22T17:44:00-07:00");
                         submissionMax = formatTimestampSubmission("2017-04-13T14:10:00-07:00");
 
-                        min = "2010-05-22 17:44:00";
-                        max = "2017-04-13 14:10:00";
+                        min = formatTimestampReturn("2010-05-22 17:44:00");
+                        max = formatTimestampReturn("2017-04-13 14:10:00");
                         calculatedMax = max;
                         calculatedWidth = 7251412;
                         var secondsDiff = moment.duration(moment(max).diff(moment(min))).asSeconds();

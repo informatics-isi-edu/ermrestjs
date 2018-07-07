@@ -39,7 +39,7 @@
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
 
-        var compactPath = "#" + module._fixedEncodeURIComponent(catalogId) + "/";
+        var compactPath = "#" + catalogId + "/";
         if (schemaName) {
             compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
         }
@@ -106,7 +106,7 @@
         this._service = parts[1];
 
         // catalog id
-        this._catalog = decodeURIComponent(parts[2]);
+        this._catalog = parts[2];
 
         // api
         this._api = parts[3];
@@ -130,7 +130,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
 
@@ -138,7 +138,7 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.MalformedURIError("Invalid uri: " + this._uri + ". Sort modifier is required with paging.");
+                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
                 }
             }
         }
@@ -171,7 +171,7 @@
         if (startIndex <= endIndex) {
             match = parts[endIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1]);
+                this._facets = new ParsedFacets(match[1], this._path);
 
                 // extract the search term
                 searchTerm = _getSearchTerm(this._facets.decoded);
@@ -193,7 +193,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1]);
+                this._projectionFacets = new ParsedFacets(match[1], this._path);
                 startIndex++;
             }
         }
@@ -202,7 +202,7 @@
         // If there are filters appended after projection table
         // modify the columns to the linked table
         this._filtersString = '';
-        if (parts[1] && !this._facets) {
+        if (parts[1]) {
             // TODO should refactor these checks into one match statement
             var isJoin = parts[1].match(joinRegExp);
             var isFacet = parts[1].match(facetsRegExp);
@@ -217,7 +217,7 @@
 
                 // if a single filter
                 if (items.length === 1) {
-                    this._filter = _processSingleFilterString(items[0], this._uri);
+                    this._filter = _processSingleFilterString(items[0], this._uri, this._path);
 
                 } else {
                     var filters = [];
@@ -240,7 +240,7 @@
                                 }
                             }
 
-                            filters.push(_processMultiFilterString(subfilters, this._uri));
+                            filters.push(_processMultiFilterString(subfilters, this._uri, this._path));
 
                         } else if (type === null && items[i] === "&") {
                             // first level filter type
@@ -250,13 +250,13 @@
                             type = module.filterTypes.DISJUNCTION;
                         } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,  this._filtersString);
                         } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
                             // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.");
+                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path, this._filtersString);
                         } else if (items[i] !== "&" && items[i] !== ";") {
                             // single filter on the first level
-                            var binaryFilter = _processSingleFilterString(items[i], this._uri);
+                            var binaryFilter = _processSingleFilterString(items[i], this._uri, this._path);
                             filters.push(binaryFilter);
                         }
                     }
@@ -264,8 +264,15 @@
                     this._filter = new ParsedFilter(type);
                     this._filter.setFilters(filters);
                 }
+            }
 
-                //NOTE: might need to replace columns based on join
+            // change filter to facet if possible
+            if (this._filter) {
+                var f = _filterToFacet(this._filter);
+                if (f) {
+                    this._filter.facet = f.facet;
+                    this._filter.depth = f.depth;
+                }
             }
         }
 
@@ -365,6 +372,9 @@
          * should only be used for internal usage and sending request to ermrest
          * NOTE: returns a uri that ermrest understands
          *
+         * TODO This might produce a url that is not understandable by ermrest (because of sort).
+         * TODO should be removed or changed.
+         *
          * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
          * @returns {String} The full URI of the location for ermrest
          */
@@ -435,7 +445,7 @@
 
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -447,7 +457,8 @@
 
                 if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError();
+                    if (!facetFilter)
+                     throw new module.InvalidFacetOperatorError('', this.path);
                     uri += "/" + facetFilter;
                 }
 
@@ -550,6 +561,15 @@
 
         get filtersString() {
             return this._filtersString;
+        },
+
+        /**
+         * Remove the filters from the location
+         */
+        removeFilters: function () {
+          delete this._filter;
+          delete this._filtersString;
+          this._setDirty();
         },
 
         /**
@@ -779,8 +799,7 @@
         },
 
         /**
-         * String representation of before
-         * @before(..)
+         * String representation of before: @before(..)
          * @type {string}
          */
         get before () {
@@ -788,8 +807,7 @@
         },
 
         /**
-         * String representation of before
-         * @after(..)
+         * String representation of before: @after(..)
          * @type {string}
          */
         get after () {
@@ -817,12 +835,9 @@
                     this._beforeObject = [];
                     row = this._before.match(/@before\(([^\)]*)\)/)[1].split(",");
 
-                    if (row.length !== this.sortObject.length) {
-                        //TODO test this
-                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and before should have the same number of columns.");
-                    }
-
-                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                    // NOTE the number of values might be different from the sort
+                    // because columns can be sorted based on value of multiple columns
+                    for (i = 0; i < row.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
                         value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         this._beforeObject.push(value);
@@ -848,7 +863,7 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    throw new module.MalformedURIError("Error setting before: Paging not allowed without sort");
+                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -867,12 +882,9 @@
                     this._afterObject = [];
                     row = this._after.match(/@after\(([^\)]*)\)/)[1].split(",");
 
-                    if (row.length !== this.sortObject.length) {
-                        //TODO test this
-                        throw new module.MalformedURIError("Invalid uri: " + this._uri + ". sort and after should have the same number of columns.");
-                    }
-
-                    for (i = 0; i < this.sortObject.length; i++) { // use getting to force sortobject to be created, it could be undefined
+                    // NOTE the number of values might be different from the sort
+                    // because columns can be sorted based on value of multiple columns
+                    for (i = 0; i < row.length; i++) {
                         // ::null:: to null, empty string to "", otherwise decode value
                         value = (row[i] === "::null::" ? null : decodeURIComponent(row[i]));
                         this._afterObject.push(value);
@@ -898,7 +910,7 @@
                     this._afterObject = values;
                     this._after = _getPagingModifier(values, false);
                 } else {
-                    throw new module.MalformedURIError("Error setting after: Paging not allowed without sort");
+                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -1040,7 +1052,7 @@
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + column + "::ciregexp::" + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + module.OPERATOR.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
             });
         }
 
@@ -1127,7 +1139,6 @@
           */
          setFilters: function(filters) {
              this.filters = filters;
-             this.facet = _filterToFacet(this);
          },
 
          /**
@@ -1140,8 +1151,6 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
-
-             this.facet = {and: [_filterToFacet(this)]};
          }
      };
 
@@ -1149,10 +1158,11 @@
      *
      * @param {stirng} filterString
      * @param {string} fullURI used for loggin purposes
+     * @param {string} path used for redirect link generation
      * @returns {ParsedFilter} returns the parsed representation of the filter
      * @desc converts a filter string to ParsedFilter
      */
-    function _processSingleFilterString(filterString, fullURI) {
+    function _processSingleFilterString(filterString, fullURI, path) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
@@ -1171,7 +1181,7 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
     }
 
     /**
@@ -1179,10 +1189,11 @@
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
      * @param {string} fullURI used for logging purposes
+     * @param {string} path used for redirect link generation
      * @return {ParsedFilter}
      *
      */
-    function _processMultiFilterString(filterStrings, fullURI) {
+    function _processMultiFilterString(filterStrings, fullURI, path) {
         var filters = [];
         var type = null;
         for (var i = 0; i < filterStrings.length; i++) {
@@ -1194,10 +1205,10 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.");
+                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
@@ -1211,40 +1222,76 @@
     }
 
     /**
-     * Turn filter into facet, will return null if it's not possible to do so.
-     * @param       {ParsedFilter} parsedFilte
+     * Given a parsedFilter object will return the corresponding facet.
+     * If we cannot represent it with facet, it will return `null`.
+     * Otherwise will return an object with
+     *  - depth: showing the depth of filter.
+     *  - facet: facet equivalent of the given filter
+     *
+     * @private
+     * @param       {Object} parsedFilter the filter
      * @return      {Object}
      */
     function _filterToFacet(parsedFilter) {
-        var facet = {}, orSources = {}, parsed, op, i, f;
+        var res = _filterToFacetRec(parsedFilter, 0);
+
+        // could not be parsed
+        if (!res) return null;
+
+        var depth = res.depth, facet = res.facet;
+
+        // if facet didn't have any operator, then we create one with and
+        if (!("or" in facet) && !("and" in facet)) {
+          facet = {and: [module._simpleDeepCopy(facet)]};
+          depth = 1;
+        }
+
+        return {facet: facet, depth: depth};
+    }
+
+    // does the process of changing filter to facet recursively
+    function _filterToFacetRec(parsedFilter, depth) {
+        var facet = {}, orSources = {}, parsed, op, i, f, nextRes, parentDepth;
 
         // base for binary predicate filters
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case "::gt::":
-                    facet.ranges = [{min: parsedFilter.value}];
+                case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
                     break;
-                case "::lt::":
-                    facet.ranges = [{max: parsedFilter.value}];
+                case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
                     break;
-                case "::null::":
-                    facet.choices = [null];
+                case module.OPERATOR.GREATER_THAN:
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
                     break;
-                case "::ciregexp::":
-                    facet.search = [parsedFilter.value];
+                case module.OPERATOR.LESS_THAN:
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
-                case "=":
-                    facet.choices = [parsedFilter.value];
+                case module.OPERATOR.NULL:
+                    facet[module._facetFilterTypes.CHOICE] = [null];
+                    break;
+                case module.OPERATOR.CASE_INS_REG_EXP:
+                    facet[module._facetFilterTypes.SEARCH] = [parsedFilter.value];
+                    break;
+                case module.OPERATOR.EQUAL:
+                    facet[[module._facetFilterTypes.CHOICE]] = [parsedFilter.value];
                     break;
                 default:
+                    // operator is not supported by facet
                     return null;
             }
-            return facet;
+
+            return {facet: facet, depth: depth};
         }
 
-        // if it's an array of filters
         if (Array.isArray(parsedFilter.filters)) {
+
+            // we're going one level deeper (since it's an array it will be turned into object of sources)
+            depth++;
+
+            // set the filter type
             if (parsedFilter.type === module.filterTypes.DISJUNCTION) {
                 op = "or";
             } else if (parsedFilter.type === module.filterTypes.CONJUNCTION) {
@@ -1260,28 +1307,49 @@
                 facet[op][index][c].push(parsed[c][0]);
             };
 
+            parentDepth = depth;
             facet[op] = [];
             for (i = 0; i < parsedFilter.filters.length; i++) {
                 f = parsedFilter.filters[i];
-                parsed = _filterToFacet(f);
+
+                // get the facet for this child filter
+                nextRes = _filterToFacetRec(f, parentDepth);
 
                 // couldn't parse it.
-                if (!parsed) return null;
+                if (!nextRes) return null;
 
+                parsed = nextRes.facet;
+
+                // depth of the parent will be the maximum depth of its children
+                depth = Math.max(depth, nextRes.depth);
+
+
+                // if operator is or and the filter is binary we can merge them
+                // for example id=1;id=2 can turned into {source: "id", choices: ["1", "2"]}
+                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], "ranges": [{min: 2}]}
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
+                        // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
-                        ["ranges", "choices", "search"].forEach(mergeFacets);
+                        module._facetFilterTypeNames.forEach(mergeFacets);
                         continue;
                     } else {
                         orSources[parsed.source] = facet[op].length;
                     }
                 }
 
+                // add the facet into the list
                 facet[op].push(parsed);
             }
 
-            return facet;
+            // if it's just one value, then we can just flatten the array and return that value.
+            // the wrapper function will take care of adding the op, if it didn't exist
+            if (facet[op].length === 1) {
+              facet = facet[op][0];
+              depth--;
+            }
+
+            return {facet: facet, depth: depth};
         }
 
        // invalid filter
@@ -1337,9 +1405,10 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
+     * @param       {String|Object} path to generate rediretUrl in error module.
      * @constructor
      */
-    function ParsedFacets (str) {
+    function ParsedFacets (str, path) {
 
         if (typeof str === 'object') {
             /**
@@ -1355,14 +1424,14 @@
             this.encoded = this._encodeJSON(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str);
+            this.decoded = this._decodeJSON(str, path);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError();
+            throw new module.InvalidFacetOperatorError('', path);
         }
 
     }
@@ -1386,10 +1455,11 @@
          *
          * @private
          * @param       {string} blob the encoded JSON object.
+         * @param       {String|Object} path to generate rediretUrl in error module.
          * @return      {object} decoded JSON object.
          */
-        _decodeJSON: function (blob) {
-            return module.decodeFacet(blob);
+        _decodeJSON: function (blob, path) {
+            return module.decodeFacet(blob, path);
         }
     };
 
@@ -1439,7 +1509,7 @@
 
         // parse ranges constraint
         var parseRanges = function (ranges, column) {
-            var res = "", hasFilter = false;
+            var res = "", hasFilter = false, operator;
             ranges.forEach(function (range, index) {
                 if (hasFilter) {
                     res += ";";
@@ -1447,15 +1517,25 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.GREATER_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.min));
+                    operator = module.OPERATOR.GREATER_THAN_OR_EQUAL_TO;
+                    if (range.min_exclusive === true) {
+                        operator = module.OPERATOR.GREATER_THAN;
+                    }
+
+                    res += module._fixedEncodeURIComponent(column) + operator + module._fixedEncodeURIComponent(valueToString(range.min));
                     hasFilter = true;
                 }
 
                 if (isDefinedAndNotNull(range.max)) {
+                    operator = module.OPERATOR.LESS_THAN_OR_EQUAL_TO;
+                    if (range.max_exclusive === true) {
+                        operator = module.OPERATOR.LESS_THAN;
+                    }
+
                     if (hasFilter) {
                         res += "&";
                     }
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.LESS_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.max));
+                    res += module._fixedEncodeURIComponent(column) + operator + module._fixedEncodeURIComponent(valueToString(range.max));
                     hasFilter = true;
                 }
             });
@@ -1537,13 +1617,14 @@
                 }
 
                 // parse the source
-                if (Array.isArray(term.source)) {
+                if (_isFacetSourcePath(term.source)) {
                     path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
-                } else if (typeof term.source === "string"){
-                    col = term.source;
                 } else {
-                    return "";
+                    col = _getFacetSourceColumnStr(term.source);
+                    if (typeof col !== "string") {
+                        return "";
+                    }
                 }
 
                 // if the data-path was invalid, ignore this facet
@@ -1552,24 +1633,24 @@
                 }
 
                 // parse the constraints
-                if (Array.isArray(term.choices)) {
-                    parsed = parseChoices(term.choices, col);
+                if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
+                    parsed = parseChoices(term[module._facetFilterTypes.CHOICE], col);
                     if (!parsed) {
                         return "";
                     }
                     constraints.push(parsed);
                 }
 
-                if (Array.isArray(term.ranges)) {
-                    parsed = parseRanges(term.ranges, col);
+                if (Array.isArray(term[module._facetFilterTypes.RANGE])) {
+                    parsed = parseRanges(term[module._facetFilterTypes.RANGE], col);
                     if (!parsed) {
                         return "";
                     }
                     constraints.push(parsed);
                 }
 
-                if (Array.isArray(term.search)) {
-                    parsed = parseSearch(term.search, col);
+                if (Array.isArray(term[module._facetFilterTypes.SEARCH])) {
+                    parsed = parseSearch(term[[module._facetFilterTypes.SEARCH]], col);
                     if (!parsed) {
                         return "";
                     }
@@ -1599,6 +1680,217 @@
         var ermrestFilter = parseAnd(json[andOperator]);
 
         return !ermrestFilter ? "" : ermrestFilter;
+    };
+
+    _isFacetSourcePath = function (source) {
+        return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
+    };
+
+    /**
+     * Returns the last foreignkey in the source path.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     * @param  {Object} source    the source object (path)
+     * @param  {String} catalogId catalog id
+     * @param  {Object} consNames constraint names defined (take a look at the note)
+     * @return {Object} has `obj` (the actual fk object), and `isInbound`
+     * @private
+     */
+    _getFacetSourceLastForeignKey = function (source, catalogId, consNames) {
+        if (!_isFacetSourcePath(source)) {
+            return null;
+        }
+
+        var lastJoin = source[source.length-2];
+        var isInbound = false, constraint;
+
+        if ("inbound" in lastJoin) {
+            isInbound = true;
+            constraint = lastJoin.inbound;
+        } else {
+            constraint = lastJoin.outbound;
+        }
+
+        return {
+            "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
+            "isInbound": isInbound
+        };
+    };
+
+    /**
+     * Returns an array of foreignkeys that are in the given source path.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     *
+     * @param  {Object} source    the source object (path)
+     * @param  {String} catalogId catalog id
+     * @param  {Object} consNames constraint names defined (take a look at the note)
+     * @return {Object[]} each object has `obj` (the actual fk object), and `isInbound`
+     * @private
+     */
+    _getFacetSourceForeignKeys = function (source, catalogId, consNames) {
+        var res = [];
+        if (_isFacetSourcePath(source)) {
+            var isInbound = false, constraint;
+            for (var i = 0; i < source.length - 1; i++) {
+                if ("inbound" in source[i]) {
+                    isInbound = true;
+                    constraint = source[i].inbound;
+                } else {
+                    isInbound = false;
+                    constraint = source[i].outbound;
+                }
+
+                res.push({
+                    "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
+                    "isInbound": isInbound
+                });
+            }
+        }
+        return res;
+    };
+
+    /**
+     * get facet's source column string
+     * @param  {Object} source source object
+     * @return {string|Object}
+     * @private
+     */
+    _getFacetSourceColumnStr = function (source) {
+        return Array.isArray(source) ? source[source.length-1] : source;
+    };
+
+    /**
+     * Given the source object, validates the path and returns the corresponding column object.
+     * It will return `false` if the source is invalid.
+     *
+     * NOTE since constraint names is an object attached to ERMrest module,
+     * in test environments sometimes it would return null, that's why we are
+     * passing consNames to this function.
+     *
+     * @private
+     *
+     * @param  {Object} source    source object
+     * @param  {ERMrest.Table} table the starting table of the path
+     * @param  {object} consNames The constraint names (will be used for constraint lookup)
+     * @return {ERMrest.Column|false}
+     */
+    _getFacetSourceColumn = function (source, table, consNames) {
+        var colName, colTable = table;
+
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+
+        // from 0 to source.length-1 we have paths
+        if (_isFacetSourcePath(source)) {
+            var fk, i, isInbound, constraint, fkObj;
+            for (i = 0; i < source.length - 1; i++) {
+
+                if ("inbound" in source[i]) {
+                    constraint = source[i].inbound;
+                    isInbound = true;
+                } else if ("outbound" in source[i]) {
+                    constraint = source[i].outbound;
+                    isInbound = false;
+                } else {
+                    // given object was invalid
+                    return false;
+                }
+
+                fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
+
+                // constraint name was not valid
+                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                    return false;
+                }
+
+                fk = fkObj.object;
+
+                // inbound
+                if (isInbound && fk.key.table === colTable) {
+                    colTable = fk._table;
+                }
+                // outbound
+                else if (!isInbound && fk._table === colTable) {
+                    colTable = fk.key.table;
+                }
+                else {
+                    // the given object was not valid
+                    return false;
+                }
+            }
+            colName = source[source.length-1];
+        } else {
+            colName = _getFacetSourceColumnStr(source);
+        }
+
+        try {
+            return colTable.columns.get(colName);
+        } catch (exp) {
+            return false;
+        }
+
+    };
+
+    /**
+     * If the column that the facetObject is representing is in entity mode
+     * @param  {Object} facetObject the facet object
+     * @param  {ERMrest.Column} column      the column objKey
+     * @return {boolean} true if entity mode otherwise false.
+     */
+    _isFacetEntityMode = function (facetObject, column) {
+        if (facetObject.entity === false) {
+            return false;
+        }
+
+        // column is part of simple key
+        return !column.nullok && column.memberOfKeys.filter(function (key) {
+            return key.simple;
+        }).length > 0;
+    };
+
+    _sourceHasInbound = function (source) {
+        if (!_isFacetSourcePath(source)) return false;
+        return source.some(function (n, index) {
+            return (index != source.length-1) && ("inbound" in n);
+        });
+    };
+
+    _sourceIsInboundForeignKey = function (sourceObject, column, consNames) {
+        var findConsName = function (catalogId, schemaName, constraintName) {
+            var result;
+            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                result = consNames[catalogId][schemaName][constraintName];
+            }
+            return (result === undefined) ? null : result;
+        };
+
+        var invalid = !_isFacetSourcePath(sourceObject.source) || !_isFacetEntityMode(sourceObject, column) ||
+                      sourceObject.aggregate || sourceObject.source.length > 3;
+
+        if (invalid) {
+            return false;
+        }
+
+        var source = sourceObject.source;
+        var fks = _getFacetSourceForeignKeys(source, column.table.schema.catalog.id, consNames);
+        if (fks.length === 2) {
+            if (!fks[0].isInbound || fks[1].isInbound) {
+                return false;
+            }
+
+            return fks[0].obj._table._isPureBinaryAssociation();
+        }
+        return fks[0].isInbound;
     };
 
     /**

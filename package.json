@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "bower": "x",
-    "closurecompiler": "x",
+    "google-closure-compiler-js": "x",
     "jasmine": "2.5.3",
     "jasmine-expect": "^3.7.1",
     "jasmine-spec-reporter": "^2.5.0",

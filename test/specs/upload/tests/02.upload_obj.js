@@ -213,7 +213,7 @@ exports.execute = function (options) {
 
         it("should complete the upload.", function (done) {
             uploadObj.completeUpload().then(function(response) {
-                expect(response.startsWith(serverFilePath)).toBeTruthy("Upload job file path is incorrect");
+                expect(response.startsWith(serverFilePath + ":")).toBeTruthy("Upload job file path is incorrect");
                 expect(uploadObj.jobDone).toBeTruthy("Upload job is not complete");
 
                 done();

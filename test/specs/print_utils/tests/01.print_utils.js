@@ -74,95 +74,148 @@ exports.execute = function (options) {
             expect(printJSON(valueToTest)).toBe(expectedJSON);
         });
 
-        it('printMarkdown() should process Markdown into HTML.', function() {
+        describe("printMarkdown(), ", function () {
             var printMarkdown = formatUtils.printMarkdown;
-            expect(printMarkdown(null)).toBe('');
-            expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n');
-            expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n');
-            expect(printMarkdown("![a random image](random_image.com)"))
-                .toBe('<p><img src="random_image.com" alt="a random image"></p>\n');
-            expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n');
-            expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n');
+            var testPrintMarkdown = function (input, expected, error) {
+                expect(printMarkdown(input)).toBe(expected, error);
+            };
 
-            // Check for iframe ith height and width
-            expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                .toBe('<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
+            it ("should return the input if it's invalid format.", function () {
+                expect(formatUtils.printMarkdown("[test](test\r.com){.download download}", {inline: true})).toBe("[test](test\r.com){.download download}");
+            });
 
-            // Check for anchor tags
-            expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
-                .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
+            it ("should support default markdown tags.", function () {
+                expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n', "invalid em");
+                expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n', "invalid paragraph");
+                expect(printMarkdown("![a random image](random_image.com)"))
+                    .toBe('<p><img src="random_image.com" alt="a random image"></p>\n', "invalid image");
+                // Check for anchor tags
+                expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
+                    .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n', "invalid link");
+            });
 
-            // Check for link tag with download attribute
-            expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
-                .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n');
+            it ("should return empty string for null.", function () {
+                expect(printMarkdown(null)).toBe('');
+            });
 
-            // Check for image tag with size
-            expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
-                .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n');
+            it ("should support elements with tags.", function () {
+                // Check for link tag with download attribute
+                expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
+                    .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n', "invalid link with tag");
 
-            // Check for thumbnail with link to original image
-            expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
-                .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n');
+                // Check for image tag with size
+                expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
+                    .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n', "invalid image with tag");
 
-            // Check for thumbnail with link to original image and a caption
-            expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
+                // Check for thumbnail with link to original image
+                expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
+                    .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n', "invalid thumbnail with tag");
+            });
+
+            it ("should support :::iframe.", function () {
+                // Check for iframe ith height and width
+                expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
+                    .toBe('<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
+
+                // Check for iframe tag with a link and caption
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
+                var iframeHTML = '<figure class="embed-block" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+                // Check for iframe tag with a link and caption at the bottom with no iframe-style and iframe-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
+                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+                // Check for iframe tag with a link and caption at the bottom with iframe-style and iframe-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" iframe-class="iclass" iframe-style="border:1px solid;"} \n:::';
+                var iframeHTML = '<figure class="embed-block iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+                // Check for iframe tag with a caption at the bottom with caption-style and caption-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
+                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+
+                // Check for iframe tag with a caption at the bottom with iframe-style and caption-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
+                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
+
+                // Check for dropdown tag
+                var dropdownMarkdown = '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
+                var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
+                expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
+
+                expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
+            });
+
+            it ("should support :::image.", function () {
+                // Check for thumbnail with link to original image and a caption
+                expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
                 .toBe('<figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
+            });
 
-            // Check for iframe tag with a link and caption
-            var iframeMarkdown = ':::iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
-            var iframeHTML = '<figure class="embed-block" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
-            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+            it ("should support :::video", function () {
 
-            // Check for iframe tag with a link and caption at the bottom with no iframe-style and iframe-class
-            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
-            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
-            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+                //Check for proper rendering of video tag with no attributes
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with no attributes ");
 
-            // Check for iframe tag with a link and caption at the bottom with iframe-style and iframe-class
-            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" iframe-class="iclass" iframe-style="border:1px solid;"} \n:::';
-            var iframeHTML = '<figure class="embed-block iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
-            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+                //Check for proper rendering of video tag with height and width attributes
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with height and width attributes ");
 
-            // Check for iframe tag with a caption at the bottom with caption-style and caption-class
-            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
-            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+                //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with boolean attributes ");
 
+                //Check for proper rendering of video tag with some invalid attributes
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
+            });
 
-            // Check for iframe tag with a caption at the bottom with iframe-style and caption-class
-            var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-            var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
-            expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+            it ("should support :::div", function () {
+                testPrintMarkdown(
+                    ":::div value \n:::",
+                    '<div>value</div>\n',
+                    "invalid string"
+                );
 
+                testPrintMarkdown(
+                    ":::div value{.class-name} \n:::",
+                    '<div class="class-name">value</div>\n',
+                    "invalid string with tag"
+                );
 
-            // Check for dropdown tag
-            var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
-            var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
-            expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
+                // NOTE currently these are the only two use cases of this.
+            });
 
-            expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML);
+            it ("should support superscript and subscript.", function () {
+                expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n', "invalid sub");
+                expect(printMarkdown('H~2~{.test}0')).toBe('<p>H<sub class="test">2</sub>0</p>\n', "invalid sub with attrs");
+                expect(printMarkdown('13^th^')).toBe('<p>13<sup>th</sup></p>\n', "invalid sup");
+            });
 
-            //Check for proper rendering of video tag with no attributes
-            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
-            var videoHTML = '<figure><figcaption>caption</figcaption><video controls ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with no attributes ");
+            it ("should support :span:.", function () {
+                expect(printMarkdown("This is :span: special case:/span:.")).toBe("<p>This is <span> special case</span>.</p>\n", "invalid span");
+                expect(printMarkdown("This is :span: special case:/span:.", {inline: true})).toBe("This is <span> special case</span>.", "invalid inline span");
+                expect(printMarkdown(":span:special:/span:{.test}", {inline: true})).toBe('<span class="test">special</span>', "invalid inline span with attrs");
+                expect(printMarkdown(":span::/span:{.glyph-icon .glyph-danger}", {inline: true})).toBe('<span class="glyph-icon glyph-danger"></span>', "invalid empty inline span with attrs");
+            });
 
-            //Check for proper rendering of video tag with height and width attributes
-            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
-            var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with height and width attributes ");
-
-            //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
-            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
-            var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with boolean attributes ");
-
-            //Check for proper rendering of video tag with some invalid attributes
-            var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
-            var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-            expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
-
+            it("should support table with classname attribute.", function () {
+                var mkString = "|heading|\n|-|\n|text|\n{.class-name}";
+                expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
+            });
         });
+
 
         it('printGeneSeq() should format gene sequences correctly.', function() {
             var printGeneSeq = formatUtils.printGeneSeq;

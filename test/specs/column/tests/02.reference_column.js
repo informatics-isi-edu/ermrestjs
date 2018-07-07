@@ -204,7 +204,7 @@ exports.execute = function (options) {
                 expect(compactColumns[20].table.name).toBe("table_w_composite_key");
             });
 
-            it('for pseudoColumns that are inboud foreign key, should return the foreign key table.', function () {
+            it('for pseudoColumns that are inbound foreign key, should return the foreign key table.', function () {
                 expect(detailedColumns[3].table.name).toEqual("inbound_related_to_columns_table_2");
             });
 
@@ -220,19 +220,18 @@ exports.execute = function (options) {
         });
 
         describe('.name, ', function () {
-            it('for pseudoColumns, ', function () {
-                it('should use constraint name.', function () {
-                    expect(compactColumns[0].name).toBe(["columns_schema", "ref_table_outbound_fks_key"].join(":"));
-                    expect(compactColumns[13].name).toBe(["columns_schema", "outbound_fk_8"].join(":"));
-                    expect(detailedColumns[3].name).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"));
-                });
-
-                it('should make sure that the chosen name is unique.', function () {
-                    expect(compactColumns[14].name).toBe(["columns_schema", "outbound_fk_7"].join(":")+"1");
-                });
+            it('for pseudoColumns, should return a unique and deterministic string.', function () {
+                //ref_table_outbound_fks_key
+                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw");
+                //outbound_fk_8
+                expect(compactColumns[13].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ");
+                //inbound_related_to_columns_table_2_fkey
+                expect(detailedColumns[3].name).toBe("9o1FsRzRkFNpnwdeNpXRQQ");
+                //outbound_fk_7
+                expect(compactColumns[14].name).toBe("9CKS172K3jKYzR5qgRLvVw");
             });
 
-            it('for other columns should return the base column\'s type.', function () {
+            it('for other columns should return the base column\'s name.', function () {
                 expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
             });
         });
@@ -264,7 +263,7 @@ exports.execute = function (options) {
                             checkDisplayname(compactColumns[18].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
                             checkDisplayname(compactColumns[19].displayname, "table_w_composite_key (col 5, col_4)", false);
                         });
-                    })
+                    });
 
                 });
             });
@@ -580,12 +579,15 @@ exports.execute = function (options) {
 
                         it("otherwise should use the provided data.", function () {
                             mainEntityData = {"fk1": 1234};
+
+                            // [columns_schema, fk_position_predefined]: MyksuZoB9y39uSQrFB0qww
+                            // [columns_schema, fk_position_user_defined]: WiH8M8FkXJN2qlywr826jA
                             foreignKeyData = {
-                                "columns_schema_fk_position_predefined": {
+                                "MyksuZoB9y39uSQrFB0qww": {
                                     "int_value": 4321,
                                     "id": 1
                                 },
-                                "columns_schema_fk_position_user_defined": {
+                                "WiH8M8FkXJN2qlywr826jA": {
                                     "int_value": 1235,
                                     "id": 2
                                 }
@@ -679,13 +681,20 @@ exports.execute = function (options) {
 
 
                     describe("otherwise, ", function () {
-                        it ("if asset column has a filenameColumn defined, use that as the caption, and return a download link with query parameter.", function () {
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                            expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+                        describe("if asset column has filenameColumn, ", function () {
+                            it ("if its value is empty, use the url for caption.", function () {
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": null}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                            });
 
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
-                            //NOTE this is the output but it will be displayed correctly.
-                            expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                            it ("otherwise use the given caption.", function () {
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                                //NOTE this is the output but it will be displayed correctly.
+                                expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                            });
                         });
 
                         describe ("if asset column doesn't have filenameColumn", function () {
@@ -695,10 +704,28 @@ exports.execute = function (options) {
                                 expect(val).toEqual('<a href="' + hatracSampleURL +'?uinit=1" download="" class="download">file-test.csv</a>', "value missmatch.");
                             });
 
-                            it ("otherwise return the whole url.", function () {
-                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}).value;
-                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                            it ("in compact contexts, return the last part of url.", function () {
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact");
+
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact/brief").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact/brief");
                             });
+
+                            it ("otherwise return the whole url.", function () {
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "detailed").value;
+                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">' + url + '</a>', "value missmatch for detailed");
+
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}).value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch for unknown context");
+                            });
+                        });
+
+                        it ('if url has invalid characets in it and markdown cannot be parsed, it should return the produced markdown string.', function () {
+                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://exam\nple.com"}).value;
+                            expect(val).toEqual('[https://exam\nple.com](https://exam\nple.com?uinit=1){download .download}', "value missmatch.");
                         });
                     });
                  });
@@ -724,7 +751,7 @@ exports.execute = function (options) {
                     // outbound_fk_4
                     expect(compactColumns[4].sortable).toBe(true);
                     expect(compactColumns[4]._sortColumns.length).toBe(1);
-                    expect(compactColumns[4]._sortColumns[0].name).toBe("name");
+                    expect(compactColumns[4]._sortColumns[0].column.name).toBe("name");
                 });
 
                 it("when foreignKey doesn't have any `column_order` annotation and referenced table has `row_order`, should use the table's row_order.", function () {
@@ -732,7 +759,7 @@ exports.execute = function (options) {
                     expect(compactColumns[17].sortable).toBe(true);
                     expect(compactColumns[17]._sortColumns.length).toBe(1);
                     expect(compactColumns[17]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id_2']);
                 });
 
@@ -741,7 +768,7 @@ exports.execute = function (options) {
                     expect(compactColumns[2].sortable).toBe(true);
                     expect(compactColumns[2]._sortColumns.length).toBe(1);
                     expect(compactColumns[2]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id']);
                 });
 
@@ -771,7 +798,7 @@ exports.execute = function (options) {
                     expect(compactBriefRef.columns[1].sortable).toBe(true);
                     expect(compactBriefRef.columns[1]._sortColumns.length).toBe(2);
                     expect(compactBriefRef.columns[1]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['col_1', 'col_2']);
                 });
 
@@ -779,7 +806,7 @@ exports.execute = function (options) {
                     expect(compactColumns[0].sortable).toBe(true);
                     expect(compactColumns[0]._sortColumns.length).toBe(1);
                     expect(compactColumns[0]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['id']);
                 });
 
@@ -801,14 +828,14 @@ exports.execute = function (options) {
                     expect(compactColumns[6].sortable).toBe(true);
                     expect(compactColumns[6]._sortColumns.length).toBe(1);
                     expect(compactColumns[6]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
 
                 it ("if column defined in `column_order` is json or jsonb, should ignore those.", function () {
                     expect(diffColTypeColumns[0].sortable).toBe(true, "sortable missmatch.");
                     expect(compactColumns[0]._sortColumns.length).toBe(1, "sort column length missmatch.");
-                    expect(compactColumns[0]._sortColumns[0].name).toBe("id", "sort column name missmatch.");
+                    expect(compactColumns[0]._sortColumns[0].column.name).toBe("id", "sort column name missmatch.");
                 });
 
                 it("when column doesn't have `column_order ` annotation, should return true and use the presented column for sort.", function () {
@@ -816,7 +843,7 @@ exports.execute = function (options) {
                     expect(compactColumns[10].sortable).toBe(true);
                     expect(compactColumns[10]._sortColumns.length).toBe(1);
                     expect(compactColumns[10]._sortColumns.map(function (col) {
-                        return col.name
+                        return col.column.name
                     })).toEqual(['columns_schema_outbound_fk_7']);
                 });
 
@@ -874,8 +901,8 @@ exports.execute = function (options) {
             });
 
             describe('.filenameExtFilter', function() {
-                it('should return null if file_name_ext is not present.', function () {
-                    expect(assetRefCompactCols[9].filenameExtFilter).toBe(null);
+                it('should return empty array if file_name_ext is not present.', function () {
+                    expect(assetRefCompactCols[9].filenameExtFilter.length).toBe(0, "Returned value is not an empty array");
                 });
 
                 it('otherwise should return the defined array of file name extensions.', function () {

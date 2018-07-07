@@ -40,7 +40,21 @@
             "typename": "serial4"
           },
           "annotations": {}
+        },
+        {
+          "name": "disabled_sort_col",
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "column_order": false
+              }
+            }
+          }
         }
+
       ],
       "annotations": {
         "tag:misd.isi.edu,2015:display": {

@@ -4,15 +4,12 @@ exports.execute = function (options) {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             tableName = "sorted_table",
-            outboundTableName = "columns_table",
-            outboundSchemaName = "columns_schema",
+            outboundTableName = "sorted_table_w_fk",
             tableWSlashName = "table_w_slash";
 
-        var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName;
+        var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
 
-        var tableWSlashEntity = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableWSlashName;
+        var tableWSlashEntity = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableWSlashName;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -180,7 +177,7 @@ exports.execute = function (options) {
         });
 
         describe('sorting based on different columns, ', function () {
-            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + outboundSchemaName + ":"+ outboundTableName,
+            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ outboundTableName,
                 colName;
 
             beforeAll(function(done) {
@@ -196,57 +193,53 @@ exports.execute = function (options) {
 
             it('should return an error if the sort column is invalid', function (done) {
                 colName = "invalid column";
-                checkError([{"column":colName, "descending": false}], "Column " + colName + " not found in table columns_table.", done);
+                checkError([{"column":colName, "descending": false}], "Given column name `" + colName + "` in sort is not valid.", done);
             });
 
             it('should return an error if the sort column is not sortable', function (done) {
-                colName = "col_3";
+                colName = "col_not_sortable";
                 checkError([{"column":colName, "descending": false}], "Column " + colName + " is not sortable.", done);
             });
 
             describe('when sorting based on a PseudoColumn, ', function () {
 
                 it("if foreignkey has a `column_order` other than false, should sort based on that.", function (done) {
-                    // has a sort based on table_w_composite_key:id, and the value with reference_table_outbound_fks:id=3 will be the first.
-                    // because col 5: 4001, col_7: 4002 is the first one that exists on the table
-                    // if we sort descending the null value will come up. And since there are multiple null, then shortestkeys will be compared
-                    // since we don't know the value of shortestkey (RID), we cannot assume the position of
-                    checkSort([{"column": "columns_schema_outbound_fk_9", "descending": false}], "3", done);
+                    checkSort([{"column": "reference_schema_sorted_table_w_fk_fk1", "descending": false}], "02", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` annotation and table has `row_order`, should sort based on table's row_order", function (done) {
-                    checkSort([{"column": "columns_schema_outbound_fk_6", "descending": true}], "3", done);
+                    // it should honor the row_order as is, and don't apply column_order to that
+                    checkSort([{"column": "reference_schema_sorted_table_w_fk_fk2", "descending": false}], "02", done);
                 });
 
                 it("if foreignkey doesn't have `column_order` and is simple, should sort based on the constituent column.", function (done) {
-                    checkSort([{"column": "columns_schema_outbound_fk_2", "descending": true}], "1", done);
+                    checkSort([{"column": "reference_schema_sorted_table_w_fk_fk3", "descending": false}], "04", done);
                 });
-
-                if (!process.env.TRAVIS) {
-                    it('should work with columns with slash(`/`) in their name.', function (done) {
-                        checkSort([{"column":"outbound_col_with_slash/", "descending": false}], "1", done, tableWSlashRef);
-                    });
-                }
-
             });
 
             describe('when sorting based on a column, ', function () {
 
                 it("if column has a `column_order` other than false, should sort based on that.", function (done) {
-                    checkSort([{"column": "col_4", "descending": true}], "5", done);
+                    checkSort([{"column": "col_w_order", "descending": false}], "06", done);
+                });
+
+                it ("if column has a `column_order` other than false with descending, should sort based on that column and change the order.", function (done) {
+                    // the column_order has [{col_w_order_multiple_1, descending}, col_w_order_multiple_2] which should turned into
+                    // [col_w_order_multiple_1, {col_w_order_multiple_2, descending}]
+                    checkSort([{"column": "col_w_order_multiple", "descending": true}], "05", done);
                 });
 
                 it("if column doesn't have `column_order`, should sort based on column value.", function (done) {
-                    checkSort([{"column":"id", "descending": true}], "6", done);
+                    checkSort([{"column":"id", "descending": false}], "01", done);
                 });
 
                 it("it should encode the column names.", function (done) {
-                    checkSort([{"column":"col 5", "descending": false}], "5", done);
+                    checkSort([{"column":"col w space", "descending": false}], "07", done);
                 });
 
                 if (!process.env.TRAVIS) {
                     it('should work with columns with slash(`/`) in their name.', function (done) {
-                        checkSort([{"column":"col_with_slash/", "descending": false}], "2", done, tableWSlashRef);
+                        checkSort([{"column":"col_w_slash/", "descending": false}], "08", done);
                     });
                 }
 
@@ -258,27 +251,19 @@ exports.execute = function (options) {
          * to make the testing easier, I just test id of the first tuple.
          * All the tuples have distinct ids and in each scenario based on the data, one of them must be on top.
          */
-        function checkSort(sortColumns, ExpectedFirstId, done, ref) {
-            var reference = typeof ref === "undefined" ? outboundRef : ref;
-            var isOutbound = typeof ref === "undefined" ? true: false;
+        function checkSort(sortColumns, ExpectedFirstId, done) {
             var val;
-            reference.sort(sortColumns).read(1).then(function (response) {
-                if (isOutbound) {
-                    val = '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=' + ExpectedFirstId + '">' + ExpectedFirstId + '</a>';
-                } else {
-                    val = ExpectedFirstId;
-                }
-                expect(response.tuples[0].values[0]).toEqual(val);
+            outboundRef.sort(sortColumns).read(1).then(function (response) {
+                expect(response.tuples[0].values[0]).toEqual(ExpectedFirstId);
                 done();
             }, function (err) {
-                console.dir(err);
-                done.fail();
+                done.fail(err);
             });
         }
 
         function checkError(sortColumns, error, done) {
             outboundRef.sort(sortColumns).read(1).then(function(response) {
-                done.fail();
+                done.fail("expected function to throw error");
             }).catch(function (err) {
                 expect(err.toString()).toEqual("Error: " + error);
                 done();

@@ -45,12 +45,15 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     ERMrest._markdownIt = require('markdown-it')({ typographer : true, breaks: true })
                             .use(require('markdown-it-sub')) // add subscript support
                             .use(require('markdown-it-sup')) // add superscript support;
+                            .use(require('../vendor/markdown-it-span')) // add span support
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
-    
+
     ERMrest._LZString = require('lz-string');
+
+    ERMrest._SparkMD5 = require('spark-md5');
 
     _scriptsLoaded = true;
 
@@ -107,10 +110,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * NOTE: This function does not always preserve the order of loading scripts
      */
     loadScripts([
-        
+
         // lz-string script
         ermrestJsPath + "vendor/lz-string.min.js",
-        
+
+        ermrestJsPath + "vendor/spark-md5.min.js",
+
         // Moment.js script required for moment-timezone
         // NOTE: Moment-Timezone.js and dependent plugin scripts are attached to the bottom of vendor/moment.min.js because of the above note
         ermrestJsPath + "vendor/moment.min.js",
@@ -122,6 +127,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
         ermrestJsPath + "vendor/markdown-it-sub.min.js",
         ermrestJsPath + "vendor/markdown-it-sup.min.js",
+        ermrestJsPath + "vendor/markdown-it-span.js",
         ermrestJsPath + "vendor/markdown-it-attrs.js",
         ermrestJsPath + "vendor/markdown-it-container.min.js"],
         function() {
@@ -129,7 +135,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
              * Inject _moment-timezone module in ERMrest as moment
              */
             ERMrest._moment = window.moment;
-            
+
             /*
              * Inject _mustache module in Ermrest
              */
@@ -142,12 +148,15 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
             ERMrest._markdownIt = window.markdownit({ typographer : true, breaks: true })
                     .use(window.markdownitSub)
                     .use(window.markdownitSup)
-                    .use(window.markdownItAttrs);
+                    .use(window.markdownItAttrs)
+                    .use(window.markdownitSpan);
 
             // set custom markdown tags using markdown-it-container plugin
             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
-            
+
             ERMrest._LZString = window.LZString;
+
+            ERMrest._SparkMD5 = window.SparkMD5;
 
             _scriptsLoaded = true;
 

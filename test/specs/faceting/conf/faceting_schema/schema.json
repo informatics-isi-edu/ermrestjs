@@ -151,15 +151,15 @@
                             {"source": "*", "choices": ["test"]},
                             {"source": "id", "ux_mode": "choices", "choices": ["1"]},
                             {"source": "int_col", "ranges": [{"min": -2}]},
-                            {"source": "float_col", "ux_mode": "invalid mode"},
+                            {"source": ["float_col"], "ux_mode": "invalid mode"},
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
                             {"source": "text_col", "ux_mode": "invalid mode"},
-                            {"source": "longtext_col"},
+                            {"source": "longtext_col", "comment": "long text comment in facet"},
                             {"source": "markdown_col"},
                             {"source": "boolean_col"},
-                            {"source": "json_col"},
-                            {"source": "jsonb_col"},
+                            {"source": ["json_col"]},
+                            {"source": ["jsonb_col"]},
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "open": true},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "term"]},
@@ -211,7 +211,7 @@
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "filter": [["faceting_schema", "main_fk1"], "id", "term"]
                 }
-            }  
+            }
         },
         "f2": {
             "kind": "table",
@@ -225,7 +225,7 @@
             "foreign_keys": [],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -301,7 +301,7 @@
             ],
             "column_definitions": [
                 {
-                    "name": "id_main", 
+                    "name": "id_main",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -327,7 +327,7 @@
             "foreign_keys": [],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "serial4"
@@ -348,6 +348,9 @@
             "comment": "has fk to main table + has rowname",
             "keys": [
                 {"unique_columns": ["id"], "names": [["faceting_schema", "f4_key_1"]]},
+                {"unique_columns": ["id_text"], "names": [["faceting_schema", "f4_key_2"]]},
+                {"unique_columns": ["id_timestamp"], "names": [["faceting_schema", "f4_key_3"]]},
+                {"unique_columns": ["id_float"], "names": [["faceting_schema", "f4_key_4"]]},
                 {"unique_columns": ["term"]}
             ],
             "foreign_keys": [
@@ -377,10 +380,31 @@
             ],
             "column_definitions": [
                 {
-                    "name": "id", 
+                    "name": "id",
                     "nullok": false,
                     "type": {
                         "typename": "int4"
+                    }
+                },
+                {
+                    "name": "id_text",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id_timestamp",
+                    "nullok": false,
+                    "type": {
+                        "typename": "timestamp"
+                    }
+                },
+                {
+                    "name": "id_float",
+                    "nullok": false,
+                    "type": {
+                        "typename": "float4"
                     }
                 },
                 {
@@ -393,7 +417,9 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "compact": [
-                        ["faceting_schema", "f4_key_1"], "term", ["faceting_schema", "f4_fk1"]
+                        ["faceting_schema", "f4_key_1"],["faceting_schema", "f4_key_2"], ["faceting_schema", "f4_key_3"],
+                         ["faceting_schema", "f4_key_4"],
+                        "term", ["faceting_schema", "f4_fk1"]
                     ]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
@@ -1200,6 +1226,144 @@
                 }
             ],
             "annotations": {}
+        },
+        "table_w_array": {
+            "kind": "table",
+            "table_name": "table_w_array",
+            "schema_name": "faceting_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "text_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "text[]",
+                        "base_type": {
+                            "typename": "text"
+                        }
+                    }
+                },
+                {
+                    "name": "boolean_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "boolean[]",
+                        "base_type": {
+                            "typename": "boolean"
+                        }
+                    }
+                },
+                {
+                    "name": "date_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "date[]",
+                        "base_type": {
+                            "typename": "date"
+                        }
+                    }
+                },
+                {
+                    "name": "timestamp_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamp[]",
+                        "base_type": {
+                            "typename": "timestamp"
+                        }
+                    }
+                },
+                {
+                    "name": "timestamptz_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamptz[]",
+                        "base_type": {
+                            "typename": "timestamptz"
+                        }
+                    }
+                },
+                {
+                    "name": "float4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float4[]",
+                        "base_type": {
+                            "typename": "float4"
+                        }
+                    }
+                },
+                {
+                    "name": "float8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float8[]",
+                        "base_type": {
+                            "typename": "float8"
+                        }
+                    }
+                },
+                {
+                    "name": "numeric_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "numeric[]",
+                        "base_type": {
+                            "typename": "numeric"
+                        }
+                    }
+                },
+                {
+                    "name": "int2_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int2[]",
+                        "base_type": {
+                            "typename": "int2"
+                        }
+                    }
+                },
+                {
+                    "name": "int4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int4[]",
+                        "base_type": {
+                            "typename": "int4"
+                        }
+                    }
+                },
+                {
+                    "name": "int8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int8[]",
+                        "base_type": {
+                            "typename": "int8"
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "filter": {
+                        "and": [
+                            "text_array", "boolean_array", "date_array", "timestamp_array",
+                            "timestamptz_array", "float4_array", "float8_array", "numeric_array",
+                            "int2_array", "int4_array", "int8_array"
+                        ]
+                    }
+                }
+            }
         }
     }
 }

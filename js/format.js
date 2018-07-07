@@ -29,7 +29,7 @@ var ERMrest = (function(module) {
             }
             else if (typeof parse_tree[i] === 'object') {
                 ph = parse_tree[i]; // convenience purposes only
-                
+
                 if (ph.keys) { // keyword argument
                     for (k = 0; k < ph.keys.length; k++) {
                         if (!arg.hasOwnProperty(ph.keys[k])) {
@@ -85,7 +85,7 @@ var ERMrest = (function(module) {
                             if (arg === 'true') arg = true;
                             else if (arg === 'false') arg = false;
                             else if (arg === '0') arg = 0;
-                            else if (arg.length === 0) arg = false; 
+                            else if (arg.length === 0) arg = false;
                         }
                         if (arg) {
                             arg = options.bool_true_value || String(!!arg);
@@ -176,7 +176,7 @@ var ERMrest = (function(module) {
                 }
 
                 flags = match[2] || "";
-                left_align = undefined; 
+                left_align = undefined;
                 pad_char = undefined;
                 sign = undefined;
                 has_thousand_separator = undefined;
@@ -185,7 +185,7 @@ var ERMrest = (function(module) {
                 while (i < flags.length) {
                     var flag = flags[i];
                     switch(flag) {
-                        case "'": 
+                        case "'":
                             if (has_thousand_separator !== undefined) {
                                 throw new SyntaxError("[printf] format syntax " + match[0] + " is invalid as it contains more than 1 (') thousand separator");
                             } else {
@@ -193,7 +193,7 @@ var ERMrest = (function(module) {
                             }
                             break;
 
-                        case "+": 
+                        case "+":
                             if (sign !== undefined) {
                                 throw new SyntaxError("[printf] format syntax " + match[0] + " is invalid as it contains more than 1 (+) signs");
                             } else {
@@ -201,7 +201,7 @@ var ERMrest = (function(module) {
                             }
                             break;
 
-                        case "-": 
+                        case "-":
                             if (left_align !== undefined) {
                                 throw new SyntaxError("[printf] format syntax " + match[0] + " is invalid as it contains more than 1 (-) align operator");
                             } else {
@@ -209,14 +209,14 @@ var ERMrest = (function(module) {
                             }
                             break;
 
-                        case "#": 
+                        case "#":
                             if (pad_char !== undefined) {
                                 throw new SyntaxError("[printf] format syntax " + match[0] + " is invalid as it contains more than 1 (#) pad char syntax");
                             } else {
                                 pad_char = flags[++i];
                             }
                             break;
-                        case "0": 
+                        case "0":
                         case " ":
                             if (pad_char !== undefined) {
                                 throw new SyntaxError("[printf] format syntax " + match[0] + " is invalid as it contains more than 1 pad char syntax");
@@ -258,29 +258,29 @@ var ERMrest = (function(module) {
       * %[flags][width][.precision]type
       *
       * flags field: The Flags field can be zero or more (in any order) of:
-    
-           - (minus) Left-align the output of this placeholder. (The default is to right-align the output.). 
+
+           - (minus) Left-align the output of this placeholder. (The default is to right-align the output.).
                      This is used in conjunction with width field.
            + (plus)  Prepends a plus for positive signed-numeric types. positive = +, negative = -
                      (The default doesn't prepend anything in front of positive numbers.)
            0 (zero)  When the 'width' option is specified, prepends zeros for numeric types. (The default prepends spaces.)
                      For example, printf("%2X",3) produces  3, while printf("%02X",3) produces in 03.
-           ' (quote) It separates numeric types by thousands using a comman(,) or other characters accroding to localization 
-           #{char}   An optional padding specifier that says what character to use for padding (if specified). 
+           ' (quote) It separates numeric types by thousands using a comman(,) or other characters accroding to localization
+           #{char}   An optional padding specifier that says what character to use for padding (if specified).
                      Possible values are any other character precedeed by a # (hash). print("%#_5d",10) produces ___10
-    
-      * Width field: The Width field specifies a minimum number of characters to output, and is typically used to pad fixed-width fields, 
+
+      * Width field: The Width field specifies a minimum number of characters to output, and is typically used to pad fixed-width fields,
                      where the fields would otherwise be smaller, although it does not cause truncation of oversized fields.
                      For example, printf("%*d", 5, 10) will result in "   10" being printed, with a total width of 5 characters.
-                     Though not part of the width field, a leading zero is interpreted as the zero-padding flag mentioned above, 
+                     Though not part of the width field, a leading zero is interpreted as the zero-padding flag mentioned above,
                      and a negative value is treated as the positive value in conjunction with the left-alignment - flag also mentioned above.
                      When used with the j (JSON) type specifier, the padding length specifies the tab size used for indentation.
-      
+
       * Precision field: The Precision field usually specifies a maximum limit on the output, depending on the particular formatting type.
                     For floating point numeric types, it specifies the number of digits to the right of the decimal point that the output should be rounded.
                     For the string type, it limits the number of characters that should be output, after which the string is truncated.
                     For example, printf("%.3s", 3.42134) will result in 3.421 being printed.
-        
+
       * Type field: It can be any of:
                     % — yields a literal % character
                     b — yields an integer as a binary number
@@ -296,8 +296,8 @@ var ERMrest = (function(module) {
                     j — yields a JavaScript object or array as a JSON encoded string
 
       * Named arguments:
-                    Format strings may contain replacement fields rather than positional placeholders. Instead of referring to a certain argument, 
-                    you can now refer to a certain key within an object. Replacement fields are surrounded by rounded parentheses - `(` and `)` - 
+                    Format strings may contain replacement fields rather than positional placeholders. Instead of referring to a certain argument,
+                    you can now refer to a certain key within an object. Replacement fields are surrounded by rounded parentheses - `(` and `)` -
                     and begin with a keyword that refers to a key:
 
                         var user = { name: 'Dolly' }
@@ -313,18 +313,25 @@ var ERMrest = (function(module) {
                         sprintf('Hello %(users[0].name)s, %(users[1].name)s and %(users[2].name)s', {users: users}) // Hello Dolly, Molly and Polly
 
                     Note: mixing positional and named placeholders is not (yet) supported
-                    
-      * @param{Object} options A javascript object that contains format property and optional bool_true_value
-                                and bool_false_value. These will be used to replace true and false in `t` type fields.
-      * @param{String|Number|Object} value This would be the value that needs to be formatted.
 
+      * @param {Object} options A javascript object that contains format property and optional bool_true_value
+                                and bool_false_value. These will be used to replace true and false in `t` type fields.
+      * @param {String|Number|Object} value This would be the value that needs to be formatted.
+      * @param {String} type The column type that the data is being formatted for
       * @returns {String}
       **/
-    module._printf = function(options, value) {
-        if (typeof options.format !== 'string') throw new SyntaxError("[printf] should be supplied with proper per_format annotation with format string. Eg: { format: '%d' }");
-        return printf_format(printf_parse(options.format), value, options);
+    module._printf = function(options, value, type) {
+        if (typeof options === "string") {
+            options = {format: options};
+        }
+        if (typeof options.format !== 'string') throw new SyntaxError("[printf] should be supplied with proper pre_format annotation with format string. Eg: { format: '%d' }");
+        if (type == 'date' || type == 'timestamp' || type == 'timestamptz') {
+            return module._moment(value).format(options.format);
+        } else {
+            return printf_format(printf_parse(options.format), value, options);
+        }
     };
 
     return module;
-    
+
 })(ERMrest || {});
