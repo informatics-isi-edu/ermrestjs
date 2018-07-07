@@ -1973,8 +1973,7 @@ FacetColumn.prototype = {
 
         if (this._preferredMode === undefined) {
             var modes = module._facetFilterTypes;
-            var modeValues = Object.values(modes);
-            if (modeValues.indexOf(this._facetObject.ux_mode) !== -1) {
+            if (module._facetFilterTypeNames.indexOf(this._facetObject.ux_mode) !== -1) {
                 this._preferredMode = this._facetObject.ux_mode;
             } else {
                 this._preferredMode = (this.isEntityMode ? modes.CHOICE : (isRangeMode(this._column) ? modes.RANGE : modes.CHOICE) );

@@ -1331,7 +1331,7 @@
                     if (orSources[parsed.source] > -1) {
                         // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
-                        Object.values(module._facetFilterTypes).forEach(mergeFacets);
+                        module._facetFilterTypeNames.forEach(mergeFacets);
                         continue;
                     } else {
                         orSources[parsed.source] = facet[op].length;

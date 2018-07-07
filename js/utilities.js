@@ -2918,6 +2918,10 @@
         SEARCH: "search"
     });
 
+    module._facetFilterTypeNames =  Object.keys(module._facetFilterTypes).map(function (k) {
+        return module._facetFilterTypes[k];
+    });
+
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
