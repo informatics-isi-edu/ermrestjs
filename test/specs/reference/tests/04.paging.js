@@ -21,12 +21,6 @@ exports.execute = function (options) {
         var tableNoSortUri = options.url + "/catalog/" + catalog_id + "/entity/" +
                       schemaName + ":" + tableNameNoSort;
 
-        var findRID = function (currTable, keyName, keyValue) {
-            return options.entities[schemaName][currTable].filter(function (e) {
-                return e[keyName] == keyValue;
-            })[0].RID;
-        };
-
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                 + tableNameNoSort;
@@ -878,17 +872,19 @@ exports.execute = function (options) {
 
 
             describe("when page is sorted based on foreignkey column, ", function () {
-                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference)";
+                // since the shoretestkey is going to be RID, we cannot know its value therefore, the test case
+                // is sorting based on fk value and a key value.
+                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference,id)";
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
-                    testUri(done, url, 5, null, ["9005", findRID("inbound_related_reference_table" ,"id","6")]); // since the fk value is not the key, its appending the shortestkey
+                    testUri(done, url, 5, null, ["9005", "6"]);
                 });
 
                 it ("if page had before, should return a reference with same before and new after.", function (done) {
-                    testUri(done, url + "@before(9005,7)", 5, ["9001", findRID("inbound_related_reference_table" ,"id","1")], ["9005", findRID("inbound_related_reference_table" ,"id","7")]);
+                    testUri(done, url + "@before(9005,7)", 5, ["9001", "1"], ["9005", "7"]);
                 });
 
                 it ("if page had after, should return a reference with same after and new before.", function (done) {
-                    testUri(done, url + "@after(9003,3)", 5, ["9003", findRID("inbound_related_reference_table" ,"id","3")], ["9005", findRID("inbound_related_reference_table" ,"id","9")]);
+                    testUri(done, url + "@after(9003,3)", 5, ["9003", "3"], ["9005", "9"]);
                 });
             });
         });
