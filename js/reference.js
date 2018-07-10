@@ -619,7 +619,7 @@
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
-                        // make sure their not referring to the annotation object.
+                        // make sure it's not referring to the annotation object.
                         obj = module._simpleDeepCopy(obj);
 
                         // if we have filters in the url, we will get the filters only from url
@@ -3490,12 +3490,14 @@
         });
 
         var singleFKPaths = reference.columns.filter(function (c) {
-            return c.isPathColumn && c.isUnique && c.foreignKeys.length === 1;
+            return (c.isPathColumn && c.isUnique && c.foreignKeys.length === 1) || (c.isForeignKey);
         });
 
+        // the foriegnkey name might be different from the column name because the last column can be different.
+        // the source definition in the column could be based on another key column.
         var attachSingleFKs = function (selfPage, fk, data, i) {
             singleFKPaths.filter(function (c) {
-                return c.foreignKeys[0].obj === fk;
+                return (c.isPathColumn && c.foreignKeys[0].obj === fk) || (c.isForeignKey && c.foreignKey === fk);
             }).forEach(function (c) {
                 selfPage._linkedData[i][c.name] = data;
             });

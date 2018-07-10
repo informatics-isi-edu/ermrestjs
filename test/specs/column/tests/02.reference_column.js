@@ -174,7 +174,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('.isInboundForeignKey', function () {
+        describe('.isInboundForeignKey', function () {``
             it ('for PseudoColumns that are inbound foreign key should return true.', function () {
                 expect(detailedColumns[3].isInboundForeignKey).toEqual(true);
             });
@@ -222,13 +222,13 @@ exports.execute = function (options) {
         describe('.name, ', function () {
             it('for pseudoColumns, should return a unique and deterministic string.', function () {
                 //ref_table_outbound_fks_key
-                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw");
+                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw", "name missmatch for compact, index=0");
                 //outbound_fk_8
-                expect(compactColumns[13].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ");
+                expect(compactColumns[18].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ", "name missmatch for compact, index=13");
                 //inbound_related_to_columns_table_2_fkey
-                expect(detailedColumns[3].name).toBe("9o1FsRzRkFNpnwdeNpXRQQ");
+                expect(detailedColumns[3].name).toBe("tKEjVbHI9RPuBFya-7_j6Q", "name missmatch for detailed, index=3");
                 //outbound_fk_7
-                expect(compactColumns[14].name).toBe("9CKS172K3jKYzR5qgRLvVw");
+                expect(compactColumns[19].name).toBe("9CKS172K3jKYzR5qgRLvVw", "name missmatch for compact, index=14");
             });
 
             it('for other columns should return the base column\'s name.', function () {
@@ -580,14 +580,14 @@ exports.execute = function (options) {
                         it("otherwise should use the provided data.", function () {
                             mainEntityData = {"fk1": 1234};
 
-                            // [columns_schema, fk_position_predefined]: MyksuZoB9y39uSQrFB0qww
-                            // [columns_schema, fk_position_user_defined]: WiH8M8FkXJN2qlywr826jA
+                            // [columns_schema, fk_position_predefined]: KPc9qmb9G8DAyIxeQVpMjg
+                            // [columns_schema, fk_position_user_defined]: stTmPlpgbtPMZ8QZFAhvwg
                             foreignKeyData = {
-                                "MyksuZoB9y39uSQrFB0qww": {
+                                "KPc9qmb9G8DAyIxeQVpMjg": {
                                     "int_value": 4321,
                                     "id": 1
                                 },
-                                "WiH8M8FkXJN2qlywr826jA": {
+                                "stTmPlpgbtPMZ8QZFAhvwg": {
                                     "int_value": 1235,
                                     "id": 2
                                 }

@@ -440,7 +440,7 @@ ReferenceColumn.prototype = {
  * @class
  */
 function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
-    PseudoColumn.superClass.call(this, reference, [column]);
+    PseudoColumn.superClass.call(this, reference, [column], sourceObject);
 
     /**
      * @type {boolean}
@@ -449,8 +449,6 @@ function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
     this.isPseudo = true;
 
     this.isPathColumn = true;
-
-    this.sourceObject = sourceObject;
 
     this.baseColumn = column;
 

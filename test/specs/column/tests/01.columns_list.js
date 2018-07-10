@@ -366,8 +366,8 @@ exports.execute = function (options) {
                 '1',
                 '1',
                 '2',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=' + findRID("table_w_simple_key", "id", "9001") + '">Harold</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>'
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9001") + '">Harold</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
         });
 
