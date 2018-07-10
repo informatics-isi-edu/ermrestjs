@@ -153,13 +153,13 @@
                         {"source": "col"},
                         {"source": "main_table_id_col", "entity": false},
                         {"source": "main_table_id_col"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"]}
+                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"]}
                     ],
                     "compact/brief": [
                         {"source": "col"},
                         {"source": "main_table_id_col", "entity": false},
                         {"source": "main_table_id_col"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"]},
+                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"]},
                         "col",
                         "main_table_id_col",
                         ["pseudo_column_schema", "main_key1"],

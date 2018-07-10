@@ -287,7 +287,7 @@ exports.execute = function (options) {
                     mainRefDetailed.read(1).then(function (page) {
                         mainPage = page;
                         mainTuple = page.tuples[0];
-                        expect(page.tuples[0].values).toEqual(detailedExpectedValue);
+                        expect(page.tuples[0].values).toEqual(jasmine.arrayContaining(detailedExpectedValue));
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -387,30 +387,30 @@ exports.execute = function (options) {
                 })).toEqual(
                     [
                         "main_table_id_col", "col", "main_table_id_col", // the key
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"],
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"],
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
-                            "id"
+                            "RID"
                         ],
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
-                            "id"
+                            "RID"
                         ],
                         "asset_filename",
-                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "id"],
+                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
-                            "id"
+                            "RID"
                         ],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
                             {"outbound": ["pseudo_column_schema", "inbound_3_fk1"]},
-                            "id"
+                            "RID"
                         ]
                     ],
                     "array missmatch."
