@@ -381,7 +381,7 @@ exports.execute = function (options) {
             tableName = "table_w_array",
             limit = 5;
 
-        var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+        var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName + "@sort(id)";
         var reference, page, tuples;
 
         var testValues = function (cases) {
