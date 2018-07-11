@@ -21,8 +21,17 @@ exports.execute = function(options) {
             tesCases.forEach(function(test){
                 expect(test.ref.columns.map(function(col){
                     return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.name;
-                })).toEqual(test.expected);
+                })).toEqual(jasmine.arrayContaining(test.expected));
             });
+        }
+
+        // you should use this function only after options.entities value is populated
+        // (in any of jasmine blocks)
+        function findRID (currSchema, currTable, keyName, keyValue) {
+            var row = options.entities[currSchema][currTable].filter(function (e) {
+                return e[keyName] == keyValue;
+            })[0];
+            return row ? row.RID : "";
         }
 
         beforeAll(function(done) {
@@ -37,8 +46,7 @@ exports.execute = function(options) {
                 relatedWithTuple = reference.related(responsePage.tuples[0]);
                 done();
             }).catch(function(error){
-                console.dir(err);
-                done.fail();
+                done.fail(error);
             });
         });
 
@@ -58,8 +66,7 @@ exports.execute = function(options) {
                         related2 = response.contextualize.detailed.related();
                         done();
                     }, function(err) {
-                        console.dir(err);
-                        done.fail();
+                        done.fail(err);
                     });
                 });
 
@@ -115,10 +122,10 @@ exports.execute = function(options) {
                         expect(pathRelated.length).toBe(2);
                     });
 
-                    it ('should create the reference based on the given path and ignore the pure and binary assocation logic.', function () {
+                    it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
                         checkRelated(
                             pathRelated[0], "reference_schema", "association table with id",
-                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "id"], "choices": ["9003"]}]});
+                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
                     });
 
                     it ('should be able to support path with longer length.', function () {
@@ -150,13 +157,13 @@ exports.execute = function(options) {
 
             it('.origColumnName should have the correct value', function() {
                 // reference_schema_fromname_fk_inbound_related_to_reference
-                expect(related[0].origColumnName).toBe("PR4OZcGXTWC6Ks0M5DyApg", "missmatch for index = 0");
+                expect(related[0].origColumnName).toBe("arrj660yVmGl_vfSb9G4QQ", "missmatch for index = 0");
                 // reference_schema_fk_inbound_related_to_reference
-                expect(related[1].origColumnName).toBe("KGpro4yqqeXx-MhE5ffcHw", "missmatch for index = 1");
+                expect(related[1].origColumnName).toBe("8kRTvQE9l_TdHX86eumVqg", "missmatch for index = 1");
                 //reference_schema_toname_fk_association_related_to_reference
-                expect(related[2].origColumnName).toBe("Ylt89GKG6OYi-dONpgwnHQ", "missmatch for index = 2");
+                expect(related[2].origColumnName).toBe("J-dn3Y5dmuvHdyOXn8Sihw", "missmatch for index = 2");
                 //reference_schema_id_fk_association_related_to_reference
-                expect(related[3].origColumnName).toBe("OuEhMgnMPERmX59V2pkP0Q", "missmatch for index = 3");
+                expect(related[3].origColumnName).toBe("yzGY61pXr0wjqRuOQfHHfw", "missmatch for index = 3");
             });
 
             describe('for inbound foreign keys, ', function() {
@@ -191,7 +198,7 @@ exports.execute = function(options) {
                     });
 
                     describe("with tuple defined, ", function () {
-                        it('should create the link using faceting.', function() {
+                        it('should create the link using faceting (starting from related table with facet based on shortestkey of main table).', function() {
 
                             var checkUri = function (index, expectedTable, expectedFacets) {
                                 var loc = relatedWithTuple[index].location;
@@ -201,13 +208,13 @@ exports.execute = function(options) {
                             }
 
                             checkUri(0, "inbound_related_reference_table", [{
-                                "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"id"],
-                                "choices":["9003"]
+                                "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"RID"],
+                                "choices":[findRID(schemaName, tableName, "id", "9003")]
                             }]);
 
                             checkUri(1, "inbound_related_reference_table", [{
-                                "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"id"],
-                                "choices":["9003"]
+                                "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"RID"],
+                                "choices":[findRID(schemaName, tableName, "id", "9003")]
                             }]);
                         });
                     });
@@ -246,7 +253,7 @@ exports.execute = function(options) {
                         });
 
                         it('.read should return a Page object that is defined.', function(done) {
-                            related[0].read(limit).then(function(response) {
+                            related[0].sort([{"column":"id", "descending":false}]).read(limit).then(function(response) {
                                 page = response;
 
                                 expect(page).toEqual(jasmine.any(Object));
@@ -259,7 +266,7 @@ exports.execute = function(options) {
                                 done.fail();
                             });
 
-                            related[1].read(limit).then(function(response) {
+                            related[1].sort([{"column":"id", "descending":false}]).read(limit).then(function(response) {
                                 page = response;
 
                                 expect(page).toEqual(jasmine.any(Object));
@@ -314,7 +321,7 @@ exports.execute = function(options) {
                         });
 
                         it('.read should return a Page object that is defined.', function(done) {
-                            related[2].read(limit).then(function(response) {
+                            related[2].sort([{"column":"id", "descending":false}]).read(limit).then(function(response) {
                                 pageWithToName = response;
 
                                 expect(pageWithToName).toEqual(jasmine.any(Object));
@@ -322,7 +329,7 @@ exports.execute = function(options) {
                                 expect(pageWithToName._data.length).toBe(limit);
 
 
-                                related[3].read(limit).then(function(response) {
+                                related[3].sort([{"column":"id", "descending":false}]).read(limit).then(function(response) {
                                     pageWithID = response;
 
                                     expect(pageWithID).toEqual(jasmine.any(Object));

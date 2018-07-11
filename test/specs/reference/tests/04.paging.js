@@ -856,8 +856,9 @@ exports.execute = function (options) {
 
             it ("if page had search, it should change the search accordingly.", function (done) {
                 options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
+                    //this might match the values or RID, therefore we are reading all the existing rows
                     ref = ref.search("9");
-                    return ref.read(5);
+                    return ref.read(30);
                 }).then(function (page) {
                     newRef = currRef.setSamePaging(page);
                     expect(newRef.location.beforeObject).toEqual(null, "beforeObject missmatch.");
