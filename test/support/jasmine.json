@@ -1,7 +1,6 @@
 {
   "spec_dir": "test/specs",
   "spec_files": [
-      "column/spec.js",
       "faceting/spec.js"
   ],
   "helpers": ["../../node_modules/jasmine-expect/index.js"],
