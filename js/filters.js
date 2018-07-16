@@ -15,12 +15,21 @@
     module.OPERATOR = {
         EQUAL: "=",
         GREATER_THAN: "::gt::",
+        GREATER_THAN_OR_EQUAL_TO: "::geq::",
         LESS_THAN: "::lt::",
-        NULL: "::null::"
+        LESS_THAN_OR_EQUAL_TO: "::leq::",
+        NULL: "::null::",
+        CASE_INS_REG_EXP: "::ciregexp::"
     };
 
     module.isValidOperator = function(opr) {
-        return (opr === "=" || opr === "::gt::" || opr === "::lt::" || opr === "::null::");
+        var isOperator = false;
+        for (var enumOpr in module.OPERATOR) {
+            if (module.OPERATOR[enumOpr] === opr) {
+                isOperator = true;
+            }
+        }
+        return isOperator;
 
     };
 
@@ -170,7 +179,7 @@
      */
     function BinaryPredicate (column, operator, rvalue) {
         if (!module.isValidOperator(operator)) {
-            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator");
+            throw new module.InvalidFilterOperatorError("'" + operator + "' is not a valid operator", this._path, '');
         }
         this.column = column; // either pathcolumn or column
         this.operator = operator;

@@ -5,6 +5,7 @@
     "parser/spec.js",
     "annotation/spec.js",
     "reference/spec.js",
+    "column/spec.js",
     "ag_reference/spec.js",
     "faceting/spec.js",
     "comment/spec.js",

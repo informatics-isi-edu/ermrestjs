@@ -6,19 +6,18 @@ exports.execute = function (options) {
         beforeAll(function () {
             server = options.server;
             ermRest = options.ermRest;
-            catalogId = options.catalogId
+            catalogId = options.catalogId;
         });
 
         // Test Cases:
         it('should introspect catalog', function(done) {
-            expect(server.catalogs).toBeDefined();
-            expect(server.catalogs.get).toBeDefined();
+            expect(server.catalogs).toBeDefined("catalogs is not defined.");
+            expect(server.catalogs.get).toBeDefined("catalogs get function is not defined.");
             server.catalogs.get(catalogId).then(function(response) {
                 catalog = response;
-                expect(catalog).toBeDefined();
-                expect(catalog.meta).toBeDefined();
-                expect(catalog.schemas).toBeDefined();
-                expect(catalog.schemas.get).toBeDefined();
+                expect(catalog).toBeDefined("catalog is not defined.");
+                expect(catalog.schemas).toBeDefined("schemas is not defined.");
+                expect(catalog.schemas.get).toBeDefined("schemas get function is not defined.");
                 schema = catalog.schemas.get(schemaName);
                 done();
             }, function(err) {
@@ -28,8 +27,8 @@ exports.execute = function (options) {
         });
 
         it('Should have schema name', function () {
-            expect(schema).toBeDefined();
-            expect(schema.name).toBe(schemaName);
+            expect(schema).toBeDefined("schema is not defined");
+            expect(schema.name).toBe(schemaName, "schema name missmatch");
         });
 
         it('should have catalog id', function () {

@@ -1,0 +1,90 @@
+[
+    {
+        "inbound 4 long table name id": "01",
+        "foreign key column name to main": "01"
+    },
+    {
+        "inbound 4 long table name id": "02",
+        "foreign key column name to main": "10"
+    },
+    {
+        "inbound 4 long table name id": "03",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+        "inbound 4 long table name id": "04",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+        "inbound 4 long table name id": "05",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000002"
+    },
+    {
+        "inbound 4 long table name id": "06",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000003"
+    },
+    {
+        "inbound 4 long table name id": "07",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000004"
+    },
+    {
+        "inbound 4 long table name id": "08",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000005"
+    },
+    {
+        "inbound 4 long table name id": "09",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000006"
+    },
+    {
+        "inbound 4 long table name id": "10",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000007"
+    },
+    {
+        "inbound 4 long table name id": "11",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000008"
+    },
+    {
+        "inbound 4 long table name id": "12",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000009"
+    },
+    {
+        "inbound 4 long table name id": "13",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000010"
+    },
+    {
+        "inbound 4 long table name id": "14",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000011"
+    },
+    {
+        "inbound 4 long table name id": "15",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000012"
+    },
+    {
+        "inbound 4 long table name id": "16",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000013"
+    },
+    {
+        "inbound 4 long table name id": "17",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000014"
+    },
+    {
+        "inbound 4 long table name id": "18",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000015"
+    },
+    {
+        "inbound 4 long table name id": "19",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000016"
+    },
+    {
+        "inbound 4 long table name id": "20",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000017"
+    },
+    {
+        "inbound 4 long table name id": "21",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000018"
+    },
+    {
+        "inbound 4 long table name id": "22",
+        "foreign key column name to main": "1000000000000000000000000000000000000000000000000000000000000000000000000000019"
+    }
+]

@@ -28,7 +28,7 @@ exports.execute = function (options) {
             server._http.max_retries = 0;
         });
 
-        it("should be returned as a 503 error.", function (done) {
+        it("should be returned as a 500 error.", function (done) {
             nock(url, ops)
                 .get("/ermrest/catalog/" + id + "/schema")
                 .reply(404, htmlResponseMessage, {"Content-Type": "text/html"});
@@ -36,7 +36,6 @@ exports.execute = function (options) {
             server.catalogs.get(id).then(null, function(err) {
                 expect(err.code).toBe(500);
                 expect(err.message).toBe(terminalErrorMessage);
-
                 done();
             }).catch(function() {
                 expect(false).toBe(true);

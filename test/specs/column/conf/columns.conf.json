@@ -3,13 +3,13 @@
     "schema": {
         "name": "columns_schema",
         "createNew": true,
-        "path": "test/specs/reference/conf/columns_schema/schema.json"
+        "path": "test/specs/column/conf/columns_schema/schema.json"
     },
     "tables": {
         "createNew": true
     },
     "entities": {
         "createNew": true,
-        "path": "test/specs/reference/conf/columns_schema/data"
+        "path": "test/specs/column/conf/columns_schema/data"
     }
 }

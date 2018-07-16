@@ -172,11 +172,12 @@ exports.execute = function (options) {
                 expect(reference.canUpdate).toBeDefined();
                 expect(reference.create()).toBeDefined();
                 expect(reference.read()).toBeDefined();
-                expect(reference.csvDownloadLink).toBe(reference.location.ermrestUri + "?limit=none&accept=csv&download=" + reference.displayname.unformatted);
+                var expectedCSVLink = options.url + "/catalog/" + catalog_id + "/entity/M:=" +
+                    schemaName + ":" + tableName + "/id=" + entityId + "?limit=none&accept=csv&uinit=1&download=" + reference.displayname.unformatted;
+                expect(reference.csvDownloadLink).toBe(expectedCSVLink);
             });
 
             it('reference should be properly defined after the callback is resolved.', function() {
-                expect(reference._meta).toBeDefined();
                 expect(reference._table).toBeDefined();
                 expect(reference._shortestKey).toBeDefined();
             });

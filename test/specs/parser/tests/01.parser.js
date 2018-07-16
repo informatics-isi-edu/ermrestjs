@@ -187,6 +187,143 @@ exports.execute = function(options) {
                 expect(filter2.value).toBe(secondEntityId.toString());
             });
         });
+
+
+        describe("regarding changing filter to facet,", function () {
+            var baseURI = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+
+            var testFilterToFacet = function (title, filterString, depth, facetObj) {
+                var location = options.ermRest.parse(baseURI + "/" + filterString);
+                expect(location).toBeDefined(title + ": location undefined.");
+
+                var filter = location.filter;
+                expect(filter).toBeDefined(title + ": filter undefined");
+                expect(location.filtersString).toBe(filterString, title + ": filtersString missmatch.");
+                expect(JSON.stringify(filter.facet)).toEqual(JSON.stringify(facetObj), title + ": facet missmatch.");
+                expect(filter.depth).toBe(depth, title + ": depth missmatch");
+            };
+
+            it ("should handle single filters.", function () {
+                testFilterToFacet(
+                    "equality",
+                    "col=2", 1,
+                    {and: [{"source": "col", "choices": ["2"]}]}
+                );
+
+                testFilterToFacet(
+                    "leq",
+                    "col::leq::12", 1,
+                    {and: [{"source": "col", "ranges": [{max: "12"}]}]}
+                );
+
+                testFilterToFacet(
+                    "geq",
+                    "col::geq::12", 1, {
+                    and: [{"source": "col", "ranges": [{min: "12"}]}]
+                });
+
+                testFilterToFacet("null", "col::null::", 1, {
+                    and: [{"source": "col", "choices": [null]}]
+                });
+
+                testFilterToFacet("search", "col::ciregexp::test", 1, {
+                    and: [{"source": "col", "search": ["test"]}]
+                });
+            });
+
+            it ("should handle conjunction filter.", function () {
+                testFilterToFacet(
+                    "same column",
+                    "col=1&col::null::", 1,
+                    {and:[
+                        {"source": "col", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
+
+                testFilterToFacet(
+                    "different columns",
+                    "id=1&col::null::", 1,
+                    {and:[
+                        {"source": "id", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
+            });
+
+            it ("should handle disjunction filter.", function () {
+                testFilterToFacet(
+                    "same column, same operator",
+                    "col=1;col::null::", 1,
+                    {and:[{"source": "col", "choices": ["1", null]}]}
+                );
+
+                testFilterToFacet(
+                    "same column, different operator",
+                    "col=1;col::geq::12", 1,
+                    {and:[{"source": "col", "choices": ["1"], "ranges": [{min: "12"}]}]}
+                );
+
+                testFilterToFacet(
+                    "different columns",
+                    "id=1;col::null::", 1,
+                    {or:[
+                        {"source": "id", "choices": ["1"]},
+                        {"source": "col", "choices": [null]}
+                    ]}
+                );
+
+                testFilterToFacet(
+                    "combination of same and differnt columns",
+                    "col=1;id=2;col::leq::12", 1,
+                    {or:[
+                        {"source": "col", "choices": ["1"], "ranges": [{max: "12"}]},
+                        {"source": "id", "choices": ["2"]}
+                    ]}
+                );
+            });
+
+            it ("should handle conjunction of disjunction filters.", function () {
+                testFilterToFacet(
+                    "disjunction of same column, and then conjunction",
+                    "(col=1;col::leq::5)&(id=2;id::ciregexp::test)", 1,
+                    {and:[
+                        {"source": "col", "choices": ["1"], "ranges": [{max: "5"}]},
+                        {"source": "id", "choices": ["2"], "search": ["test"]}
+                    ]}
+                );
+
+                testFilterToFacet(
+                    "combination",
+                    "(col=1;col2::leq::5;col=5)&(col3=2;col3::ciregexp::test)", 2,
+                    {and: [
+                        {or: [
+                            {"source": "col", "choices": ["1", "5"]},
+                            {"source": "col2", "ranges": [{max: "5"}]}
+                        ]},
+                        {"source": "col3", "choices": ["2"], "search": ["test"]}
+                    ]}
+                );
+            });
+
+            it ("should handle disjunction of conjunction filters.", function () {
+                testFilterToFacet(
+                    "combination",
+                    "(col1=1&col2::null::);(col3::ciregexp::123&col4=test)", 2,
+                    {or: [
+                        {and: [
+                            {"source": "col1", "choices": ["1"]},
+                            {"source": "col2", "choices": [null]}
+                        ]},
+                        {and: [
+                            {"source": "col3", "search": ["123"]},
+                            {"source": "col4", "choices": ["test"]}
+                        ]}
+                    ]}
+                );
+            });
+
+        });
     });
 
     describe('Entity linking,', function() {
@@ -252,7 +389,7 @@ exports.execute = function(options) {
     });
 
     describe("Query parameters", function() {
-        var queryParamsString = "subset=SOMESUBSET&limit=2";
+        var queryParamsString = "qp=SOMEVAL&limit=2";
         var path = schemaName + ":" + tableName;
         var uriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" + path;
         var ermrestUriWithoutQuery = options.url + "/catalog/" + catalogId + "/entity/" + "M:=" + path;
@@ -278,7 +415,7 @@ exports.execute = function(options) {
 
         it("parser should create a dictionary of query params.", function() {
             expect(location.queryParams).toBeDefined("queryParams is not defined.");
-            expect(location.queryParams.subset).toBe("SOMESUBSET", "subset mismatch.");
+            expect(location.queryParams.qp).toBe("SOMEVAL", "qp mismatch.");
             expect(location.queryParams.limit).toBe("2", "limit mismatch.");
         });
     });
@@ -291,7 +428,7 @@ exports.execute = function(options) {
                 {"source":"*", "search":["test"]}
             ]
         };
-        
+
         var validBlob2 = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhACYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI57btyA";
         var facetObj2 = {
             "and":[
@@ -299,11 +436,30 @@ exports.execute = function(options) {
                 {"source":"*", "search":["test2"]}
             ]
         };
-        
-        
+
+
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
         var facetError = "Given encoded string for facets is not valid.";
         var location, uri;
+        var invalidPageConditionErrorObj = {
+                       'status': 'Invalid Page Criteria',
+                       'messageWithCondition': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(). Sort modifier is required with paging.",
+                       'messageWithConditions': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(3)@before(7). Sort modifier is required with paging.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/id=269' }
+       };
+        var invalidFilterOperatorErrorObj = {
+                       'status': 'Invalid Filter',
+                       'message': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/' },
+                       'messageWithSort': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269@sort(). Couldn't parse 'id::gt:269' filter.",
+                       'errorDataWithSort': { 'redirectPath': 'parse_schema:parse_table/@sort()' }
+       };
+        var invalidFacetFilterErrorObj = {
+                       'status': 'Invalid Facet Filters',
+                       'message': "Given encoded string for facets is not valid.",
+                       'errorData': { 'redirectPath': 'parse_schema:parse_table/@sort()' },
+                       'errorDataWithoutSort': { 'redirectPath': 'parse_schema:parse_table/' }
+      };
 
         describe("when uri doesn't have any facets, ", function() {
             it("Location.facets should be undefined.", function() {
@@ -318,6 +474,75 @@ exports.execute = function(options) {
                     options.ermRest.parse(baseUri + "/*::facets::invalidblob");
                 }).toThrow(facetError);
             });
+
+            it("should throw an error for invalid facet filter errors with sort() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()");
+                    expect(false).toBe(true, "invalid facet filter didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+            it("should throw an error for invalid facet filter errors without sort() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob");
+                    expect(false).toBe(true, "invalid facet filter without sort() didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFacetFilterErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFacetFilterErrorObj.errorDataWithoutSort, "errorData attribute did not match");
+                }
+            });
+        });
+
+        describe("when uri has invalid paging Criteria", function() {
+            it("it should throw an error for invalid pageing criteria.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id=269@after()");
+                    expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithCondition, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+
+            it("it should throw an error for invalid pageing criteria with both after() and before().", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id=269@after(3)@before(7)");
+                    expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidPageConditionErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidPageConditionErrorObj.messageWithConditions, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidPageConditionErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+        });
+
+        describe("when uri has invalid filter", function() {
+            it("it should throw an error for invalid filter.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id::gt:269");
+                    expect(false).toBe(true, "invalid filter didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFilterOperatorErrorObj.message, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorData, "errorData attribute did not match");
+                }
+            });
+
+            it("it should throw an error for invalid filter with sirt() modifier.", function() {
+                try{
+                    options.ermRest.parse(baseUri + "/id::gt:269@sort()");
+                    expect(false).toBe(true, "invalid filter with sort() modifier didn't throw any errors.");
+                } catch(e){
+                    expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
+                    expect(e.message).toEqual(invalidFilterOperatorErrorObj.messageWithSort, "Error message did not match");
+                    expect(e.errorData).toEqual(invalidFilterOperatorErrorObj.errorDataWithSort, "errorData attribute did not match");
+                }
+            });
         });
 
         describe("when uri has valid facet blob", function() {
@@ -325,9 +550,9 @@ exports.execute = function(options) {
                 uri = baseUri + "/*::facets::" + validBlob;
                 location = options.ermRest.parse(uri);
                 expect(location).toBeDefined("location is not defined.");
-                
+
                 expect(location.uri).toBe(uri, "uri missmatch");
-                
+
                 expect(location.facets).toBeDefined("facets is not defined.");
             });
 
@@ -340,21 +565,21 @@ exports.execute = function(options) {
                 expect(location.facets.encoded).toEqual(validBlob);
             });
         });
-        
+
         describe("when uri has joins, ", function() {
             it("parser should handle having facet before join.", function() {
                 uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)";
                 location = options.ermRest.parse(uri);
                 expect(location).toBeDefined("location is not defined");
-                
+
                 expect(location.uri).toEqual(uri, "uri missmatch");
-                
+
                 expect(location.facets).toBeUndefined("facets is defined.");
-                
+
                 expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
                 expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
                 expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
-                
+
                 expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)", "ermrestCompactPath missmatch");
             });
 
@@ -362,15 +587,15 @@ exports.execute = function(options) {
                 uri = baseUri + "/(id)=(s:otherTable:id)/*::facets::" + validBlob2;
                 location = options.ermRest.parse(uri);
                 expect(location).toBeDefined("location is not defined");
-                
+
                 expect(location.uri).toEqual(uri, "uri missmatch");
-                
+
                 expect(location.projectionFacets).toBeUndefined("projectionFacets is defined.");
-                
+
                 expect(location.facets).toBeDefined("facets is not defined.");
                 expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
                 expect(JSON.stringify(location.facets.decoded)).toEqual(JSON.stringify(facetObj2), "facets decoded missmatch.");
-                
+
                 expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M", "ermrestCompactPath missmatch");
             });
 
@@ -378,19 +603,19 @@ exports.execute = function(options) {
                 uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob2;
                 location = options.ermRest.parse(uri);
                 expect(location).toBeDefined("location is not defined");
-                
+
                 expect(location.uri).toEqual(uri, "uri missmatch");
-                
+
                 expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
                 expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
                 expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
-                
+
                 expect(location.facets).toBeDefined("facets is not defined.");
                 expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
                 expect(JSON.stringify(location.facets.decoded)).toEqual(JSON.stringify(facetObj2), "facets decoded missmatch.");
-                
+
                 expect(location.ermrestCompactPath).toEqual(
-                    "T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M", 
+                    "T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M",
                     "ermrestCompactPath missmatch"
                 );
             });
@@ -399,69 +624,69 @@ exports.execute = function(options) {
         describe("for changing facets in location, ", function () {
             it("Location.facets setter should be able to change the facet and update other APIs.", function() {
                 location.facets = facetObj;
-                
+
                 uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
                 expect(location.uri).toBe(uri, "uri missmatch.");
-                
+
                 expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
             });
-            
+
             it("Location.projectionFacets setter should be able to change the facet and update other APIs.", function() {
                 location.projectionFacets = facetObj2;
-                
+
                 uri = baseUri + "/*::facets::" + validBlob2 + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
                 expect(location.uri).toBe(uri, "uri missmatch.");
-                
+
                 expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
             });
         });
-        
+
         describe("regarding handling different facets syntaxes, ", function () {
             var facet, blob;
             var unicodeSample =  "ɐ ɔ", encodedUnicodeSample = "%C9%90%20%C9%94";
-            
+
             var expectError = function (blob) {
                 expect(function () {
                     var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob);
                     var ermrestURL = loc.ermrestUri;
                 }).toThrow(facetError);
             };
-            
-            var expectLocation = function (blob, facetObject, path) {
+
+            var expectLocation = function (blob, facetObject, path, errMessage) {
                 var url = baseUri + "/*::facets::" + blob;
-                
+
                 var loc = options.ermRest.parse(url);
-                
-                expect(loc).toBeDefined("location is not defined.");
-                
-                expect(loc.uri).toBe(url, "uri missmatch");
-                
-                expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch.");
-                expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch.");
-                
-                expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch");
+
+                expect(loc).toBeDefined("location is not defined" + (errMessage ? errMessage : "."));
+
+                expect(loc.uri).toBe(url, "uri missmatch" + (errMessage ? errMessage : "."));
+
+                expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
+                expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
+
+                expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
             };
 
             describe("regarding source attribute, ", function () {
                 it("should throw an error when `and` is not available.", function () {
                     expectError("N4Igzg9grgTgxgUxALhARhAGhHAFhAS0TBQG10QBdAXyA");
                 });
-                
+
                 it("should throw an error when `and` value is not an array.", function () {
                     expectError("N4IghgdgJiBcoGcD2BXATgYwKZwIwBoQMALJAS2wTgG0RcQBdAXyaA");
                 });
-                
+
                 it ("should throw an error when source is not available.", function () {
                     // {"and": [{"choices": ["1"]} ] }
                     expectError("N4IghgdgJiBcDaoDGALA9gSyQUwM53hAEYQBdAXwqA");
-                    
+
                 });
-                
+
                 it ("should throw an error when source is not string.", function () {
                     // {"and": [ {"source": 1, "choices": ["1"]} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4EYAaELACxQEtck54R8QBdAXxaA");
                 });
-                
+
                 it ("should accept string as source.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEYQAaELACxQEtck55CQBdAX1aA",
@@ -469,16 +694,16 @@ exports.execute = function(options) {
                         "1=1/$M"
                     );
                 });
-                
+
                 // array for source test cases are in faceting spec.
             });
-            
+
             describe("regarding choices attribute, ", function () {
                 it("should throw an error if its value is not an array.", function () {
                     //{"and": [ {"source": "c", "choices": "1"} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yXwEYQBfAXQaA");
                 });
-                
+
                 it ("should handle null values.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdAXzaA",
@@ -486,7 +711,7 @@ exports.execute = function(options) {
                         "c::null::/$M"
                     );
                 });
-                
+
                 it ("should handle unicode characters.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCwAsUBLXJOeQ0kAXQF8ug",
@@ -494,7 +719,7 @@ exports.execute = function(options) {
                         encodedUnicodeSample + "=" + encodedUnicodeSample + "/$M"
                     );
                 });
-                
+
                 it ("should handle multiple values.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTnhAEZiAmIgZgF0BfLoA",
@@ -503,36 +728,36 @@ exports.execute = function(options) {
                     );
                 });
             });
-            
+
             describe("regarding search attribute, ", function () {
-                
+
                 it("should throw an error if its value is not an array.", function () {
                     //{"and": [ {"source": "c", "search": "1"} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALfARhAF8BdeoA");
                 });
-                
+
                 it ("should throw an error if search value is null/undefined.", function () {
                     // {"and": [ {"source": "c", "search": [null]} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeCNAG3oF0BfVoA");
                 });
-                
+
                 it ('should create correct regex search filter.', function () {
                     var intRegexPrefix = "^(.*[^0-9.])?0*";
                     var intRegexSuffix = "([^0-9].*|$)";
-                    
+
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeARgF0BfJoA",
                         {"and": [ {"source": "c", "search": [1]} ]},
                         "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M"
                     );
-                    
+
                     expect(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
                         {"and": [ {"source": "c", "search": ["a b"]} ]},
                         "c::ciregexp::a&c::ciregexp::b/$M"
                     );
                 });
-                
+
                 it("should handle unicode characters.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCRzGwAs55wQBdAX3aA",
@@ -540,7 +765,7 @@ exports.execute = function(options) {
                         encodedUnicodeSample + "::ciregexp::a/$M"
                     );
                 });
-                
+
                 it ("should handle multiple values.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecYkAIxAF0BfNoA",
@@ -549,49 +774,114 @@ exports.execute = function(options) {
                     );
                 });
             });
-            
+
             describe("regarding `ranges` attribute, ", function () {
                 it("should throw an error if its value is not an array.", function () {
                     //{"and": [ {"source": "c", "ranges": "1"} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJfARhAF8BdeoA");
                 });
-                
+
                 it ("should throw an error if max and min are not defined.", function () {
                     // {"and": [ {"source": "c", "ranges": ["1"]} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOeEARhAF0BfFoA");
                 });
-                
+
                 it ('should handle half ranges.', function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXwF1O2g",
                         {"and": [ {"source": "c", "ranges": [{"min":1}]} ]},
-                        "c::gt::1/$M"
+                        "c::geq::1/$M"
                     );
-                    
+
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA98AXEAXwF0v2g",
                         {"and": [ {"source": "c", "ranges": [{"max":"t"}]} ]},
-                        "c::lt::t/$M"
+                        "c::leq::t/$M"
                     );
                 });
-                
+
+                it ('should handle exclusive ranges', function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDgC+AXQWygA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true}]} ]},
+                        "c::gt::1/$M", "min exclusive"
+                    );
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA84BWEhxgfR0awBs0SAJYA3PLAAuGNDgC+AXQWygA",
+                        {"and": [ {"source": "c", "ranges": [{"max":5, "max_exclusive": true}]} ]},
+                        "c::lt::5/$M", "max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKxye3PoOFi4UmQF8Augd1A",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5, "max_exclusive": true}]} ]},
+                        "c::gt::1&c::lt::5/$M", "min and max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGEusADzgFZ2uA+jk5YANmiQMAbnlgAXDGhwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "max":5, "max_exclusive": true}]} ]},
+                        "c::geq::1&c::lt::5/$M", "min inclusive, max exclusive"
+                    );
+
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKwBfALprlQA",
+                        {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5}]} ]},
+                        "c::gt::1&c::leq::5/$M", "min inclusive, max exclusive"
+                    );
+                });
+
                 it("should handle unicode characters.", function () {
                     expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhA0gHMck5EQBbASwn2LMubAA9OpEAF8AumOFA",
                             {"and": [ {"source": unicodeSample, "ranges": [{"min": unicodeSample, "max": unicodeSample}] } ]},
-                            encodedUnicodeSample + "::gt::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::lt::" + encodedUnicodeSample + "/$M"
+                            encodedUnicodeSample + "::geq::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::leq::" + encodedUnicodeSample + "/$M"
                     );
                 });
-                
+
                 it("should handle multiple values.", function () {
                     expectLocation(
                         "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXyNDrAA98AXEBy5M4AWhYlufWAFY2AXUVsgA",
                         {"and": [ {"source": "c", "ranges": [{"min":1}, {"max":"t"}, {"min": -1, "max": 5}]} ]},
-                        "c::gt::1;c::lt::t;c::gt::-1&c::lt::5/$M"
+                        "c::geq::1;c::leq::t;c::geq::-1&c::leq::5/$M"
                     );
                 });
             });
-            
+
+            describe("regarding `not_null` attribute, ", function () {
+                it ("should ignore the value if it's not `true`.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdEiFAFwH16naQAjCGYBfUUA",
+                        {"and": [ {"source": "c", "choices": [null], "not_null": ["1"] }]},
+                        "c::null::/$M"
+                    );
+                });
+
+                it ("should create a not-null filter if it's `true`", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQIUAXAfQjQBta5yM0cBfAXVaA",
+                        {"and": [ {"source": "c", "not_null": true} ]},
+                        "!(c::null::)/$M"
+                    );
+                });
+
+                it ("should handle unicode characters.", function () {
+                    expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhAhQBcB9CNAGybhozRwF8BdLoA",
+                            {"and": [ {"source": unicodeSample, "not_null": true} ] },
+                            "!(" + encodedUnicodeSample + "::null::)/$M"
+                    );
+                });
+
+                it ("should handle not_null and choice=null filter.", function () {
+                    expectLocation(
+                        "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdEiFAFwH16m4OMaHAF9mwoA",
+                        {"and": [ {"source": "c", "choices": [null], "not_null": true} ]},
+                        "c::null::;!(c::null::)/$M"
+                    );
+                });
+            });
+
             it ("should throw an error if one of the facets don't have any constraints.", function () {
                 // {"and": [ {"source": "*"} ]}
                 expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4gCoQBfAXWKA");
@@ -605,7 +895,7 @@ exports.execute = function(options) {
             "and":[{"source":"*", "search": ["test"]}]
         };
         var path;
-        
+
         it('should throw error if parameters are invalid.', function() {
             expect(function () {
                 options.ermRest.createPath(2, null, "table");
@@ -617,7 +907,7 @@ exports.execute = function(options) {
 
         it("should handle not passing any schemaName", function() {
             path = options.ermRest.createPath("1", null, "table", facetObj);
-            expect(path).toEqual("#1/table/*::facets::" + validBlob);      
+            expect(path).toEqual("#1/table/*::facets::" + validBlob);
         });
 
         it("should handle passing an empty object for facets", function() {
@@ -627,7 +917,7 @@ exports.execute = function(options) {
 
         it("should return a valid path, given valid parameters.", function() {
             path = options.ermRest.createPath("1", "schema", "table", facetObj);
-            expect(path).toEqual("#1/schema:table/*::facets::" + validBlob);      
+            expect(path).toEqual("#1/schema:table/*::facets::" + validBlob);
         });
     });
 

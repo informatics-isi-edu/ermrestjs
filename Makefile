@@ -23,7 +23,7 @@ HEADER=$(JS)/header.js
 FOOTER=$(JS)/footer.js
 HEADER_FOOTER= $(HEADER) \
 			   $(FOOTER)
-			   
+
 SOURCE=$(HEADER) \
 	   $(JS)/core.js \
 	   $(JS)/datapath.js \
@@ -34,6 +34,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
 	   $(JS)/reference.js \
+	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \
 	   $(FOOTER) \
 	   $(JS)/hatrac.js \
@@ -83,9 +84,10 @@ $(BUILD)/$(PKG): $(SOURCE)
 	cat $(SOURCE) > $(BUILD)/$(PKG)
 
 # Rule to build the minified package
+# we should list all the tags that jsDoc accepst but the gccjs doesn't.
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/ccjs $(BUILD)/$(PKG) --language_in=ECMASCRIPT5_STRICT > $(BUILD)/$(MIN)
+	$(BIN)/google-closure-compiler-js $(BUILD)/$(PKG) > $(BUILD)/$(MIN) --extraAnnotationNames callback --extraAnnotationNames async
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)

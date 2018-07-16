@@ -60,7 +60,6 @@
 
     /**
      * function that is called when a HTTP 401 Error occurs
-     * @callback httpUnauthorizedFn
      * @type {httpUnauthorizedFn}: Should return a promise
      * @private
      */
@@ -68,12 +67,18 @@
 
     /**
      * set callback function which will be called when a HTTP 401 Error occurs
-     * @callback httpUnauthorizedFn
      * @param {httpUnauthorizedFn} fn callback function
      */
     module.setHttpUnauthorizedFn = function(fn) {
         module._httpUnauthorizedFn = fn;
     };
+
+
+    /**
+     * The callback that will be called whenever 401 HTTP error is encountered,
+     * unless there is already login flow in progress.
+     * @callback httpUnauthorizedFn
+     */
 
     /*
      * A flag to determine whether emrest authorization error has occured
@@ -131,14 +136,19 @@
 
                 // make sure arguments has a config, and config has a headers
                 var config = args[cfg_idx] = args[cfg_idx] || {};
-            
+
                 // now add default headers i
                 config.headers = config.headers || {};
 
                 // if no default contextHeaderParams, then just call the fn
                 if (this.contextHeaderParams) {
                     // Iterate over headers iff they do not collide
-                    var contextHeader = config.headers[module._contextHeaderName] = config.headers[module._contextHeaderName] ||  {};
+                    var contextHeader;
+                    if (typeof config.headers[module._contextHeaderName] === "object" && config.headers[module._contextHeaderName]) {
+                        contextHeader = config.headers[module._contextHeaderName];
+                    } else {
+                        contextHeader = config.headers[module._contextHeaderName] = {};
+                    }
                     for (var key in this.contextHeaderParams) {
                         if (!(key in contextHeader)) {
                             contextHeader[key] = this.contextHeaderParams[key];
@@ -148,16 +158,17 @@
                     args = arguments;
                 }
 
-                /** 
+                /**
                   * If context header is found in header then encode the stringified value of the header and unescape to keep some of them same
                   *     JSON and HTTP safe reserved chars: {, }, ", ,, :
                   *     non-reserved punctuation: -, _, ., ~
                   *     digit: 0 - 9
                   *     alpha: A - Z and a - z
-                  * 
+                  *
                   **/
                 if (typeof config.headers[module._contextHeaderName] === 'object') {
-                    config.headers[module._contextHeaderName] = unescape(module._fixedEncodeURIComponent(JSON.stringify(config.headers[module._contextHeaderName])));
+                    // encode and make sure it's not very lengthy
+                    config.headers[module._contextHeaderName] = module._certifyContextHeader(config.headers[module._contextHeaderName]);
                 }
 
                 // now call the fn, with retry logic
@@ -167,6 +178,7 @@
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
+                        module._onHTTPSuccess();
                         module._onload().then(function() {
                             deferred.resolve(response);
                         });

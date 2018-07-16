@@ -26,11 +26,31 @@
 
     /**
      * function that converts app tag to app URL
-     * @callback appLinkFn
      * @type {appLinkFn}
      * @private
      */
     module._appLinkFn = null;
+
+    /**
+     * Given an app tag, location object and context will return the full url.
+     * @callback appLinkFn
+     * @param {string} tag the tag that is defined in the annotation. If null, should use context.
+     * @param {ERMrest.Location} location the location object that ERMrest will return.
+     * @param {string} context - optional, used to determine default app if tag is null/undefined
+     */
+
+    /**
+     * function that resets the storage expiration time
+     * initialized to empty function so function runs properly when not defined in `chaise`
+     * @type {onHTTPSuccess}
+     * @private
+     */
+    module._onHTTPSuccess = function () {};
+
+    /**
+     * This function will be called on success of http calls.
+     * @callback onHTTPSuccess
+     */
 
     /**
      * @memberof ERMrest
@@ -170,8 +190,6 @@
 
                 var catalog = new Catalog(self._server, id);
                 catalog._introspect().then(function () {
-                    return catalog._meta();
-                }).then(function getMeta() {
                     self._catalogs[id] = catalog;
                     defer.resolve(catalog);
                 }, function (error) {
@@ -214,12 +232,6 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
-
-        /*
-         * Value that holds the meta resource object returned from the server for the catalog
-         * @type null
-         */
-        this.meta = null;
     }
 
     Catalog.prototype = {
@@ -280,26 +292,6 @@
         },
 
         /**
-         *
-         * @private
-         * @return {Promise} a promise that returns the meta object if resolved or
-         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
-         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
-         */
-        _meta: function () {
-            // load all meta data
-            var self = this;
-            return this.server._http.get(this._uri + "/meta").then(function (response) {
-                self.meta = response.data;
-
-                return self.meta;
-            }, function (response) {
-                var error = module._responseToError(response);
-                return module._q.reject(error);
-            });
-        },
-
-        /**
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
          * @param {?string} subject the retuned must have the same object, otherwise return null.
@@ -315,7 +307,7 @@
         _addConstraintName: function (pair, obj, subject) {
             module._addConstraintName(this.id, pair[0], pair[1], obj, subject);
         },
-        
+
         /**
          * Given tableName, and schemaName find the table
          * @param  {string} tableName  name of the table
@@ -324,7 +316,7 @@
          */
         getTable: function (tableName, schemaName) {
             var schema;
-            
+
             if (!schemaName) {
                 var schemas = this.schemas.all();
                 for (var i = 0; i < schemas.length; i++) {
@@ -342,7 +334,7 @@
             } else {
                 schema = this.schemas.get(schemaName);
             }
-            
+
             return schema.tables.get(tableName);
         }
     };
@@ -420,6 +412,39 @@
          */
         has: function (name) {
             return name in this._schemas;
+        },
+
+        /**
+         * @param  {string} tableName  the name of table
+         * @param  {string=} schemaName the name of schema (optional)
+         * @return {ERMrest.Table}
+         * @throws {ERMrest.MalformedURIError}
+         * @throws  {ERMrest.NotFoundError}
+         * Given table name and schema will find the table object.
+         * If schema name is not given, it will still try to find the table.
+         * If the table name exists in multiple schemas or it doesn't exist,
+         * it will throw an error
+         */
+        findTable: function (tableName, schemaName) {
+            if (schemaName) {
+                return this.get(schemaName).tables.get(tableName);
+            }
+
+            var schemas = this.all(), schema;
+            for (var i = 0; i < schemas.length; i++) {
+                if (schemas[i].tables.names().indexOf(tableName) !== -1) {
+                    if (!schema){
+                        schema = schemas[i];
+                    } else{
+                        throw new module.MalformedURIError("Ambiguous table name " + tableName + ". Schema name is required.");
+                    }
+                }
+            }
+            if (!schema) {
+                throw new module.MalformedURIError("Table " + tableName + " not found");
+            }
+
+            return schema.tables.get(tableName);
         }
     };
 
@@ -711,7 +736,7 @@
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
-        this._displayKeys = {}; // Used for display key
+        this._rowDisplayKeys = {}; // Used for display key
 
         /**
          * @type {object}
@@ -858,13 +883,53 @@
         },
 
         /**
+         * The columns that create the shortest key that can be used for display purposes.
+         *
+         * @type {ERMrest.Column[]}
+         */
+        get displayKey () {
+            if (this._displayKey === undefined) {
+                if (this.keys.length() !== 0) {
+                    var countTextColumns = function(key) {
+                        for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                            if (key.colset.columns[i].type.name == "text") res++;
+                        }
+                        return res;
+                    };
+
+                    this._displayKey = this.keys.all().sort(function (keyA, keyB) {
+
+                        // shorter
+                        if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                            return keyA.colset.columns.length > keyB.colset.columns.length;
+                        }
+
+                        // has more text
+                        var aTextCount = countTextColumns(keyA);
+                        var bTextCount = countTextColumns(keyB);
+                        if (aTextCount != bTextCount) {
+                            return aTextCount < bTextCount;
+                        }
+
+                        // the one that has lower column position
+                        return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                    })[0].colset.columns;
+                } else {
+                    this._displayKey = this.columns.all();
+                }
+            }
+            return this._displayKey;
+        },
+
+        /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
          * @desc
-         * returns the key that can be used for display purposes.
+         * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
+         * It's the same as displaykey but with extra restrictions. It might return undefined.
          */
-        _getDisplayKey: function (context) {
-            if (!(context in this._displayKeys)) {
+        _getRowDisplayKey: function (context) {
+            if (!(context in this._rowDisplayKeys)) {
                 var displayKey;
                 if (this.keys.length() !== 0) {
                     var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
@@ -917,9 +982,17 @@
                         })[0];
                     }
                 }
-                this._displayKeys[context] = displayKey; // might be undefined
+                this._rowDisplayKeys[context] = displayKey; // might be undefined
             }
-            return this._displayKeys[context];
+            return this._rowDisplayKeys[context];
+        },
+
+        /**
+         * uri to the table in ermrest with entity api
+         * @type {string}
+         */
+        get uri () {
+            return this._uri;
         },
 
         get reference() {
@@ -1715,14 +1788,18 @@
 
         /**
          * Formats a value corresponding to this column definition.
-         * If a column display annotation with preformat property is available then use prvided format string
-         * else use the default formatValue function
+         * It will take care of pre-formatting and any default formatting based on column type.
+         * If column is array, the returned value will be array of values. The value is either
+         * a string or `null`. We're not returning string because we need to distinguish between
+         * null and value. `null` for arrays is a valid value. [`null`] is different from `null`.
          *
          * @param {Object} data The 'raw' data value.
          * @param {String} context the app context
-         * @returns {string} The formatted value.
+         * @returns {string|string[]} The formatted value. If column is array, it will be an array of values.
          */
         this.formatvalue = function (data, context, options) {
+
+            var self = this;
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
@@ -1734,48 +1811,83 @@
 
             var display = this.getDisplay(context);
 
-            if (display.isPreformat) {
-                try {
-                    return module._printf(display.preformatConfig, data);
-                } catch(e) {
-                    console.log(e);
+            var getFormattedValue = function (v) {
+                // in case of array, null and empty strings are valid values and we
+                // need to distinguish them.
+                if (self.type.isArray && (v == null || v === "")) {
+                    return v;
                 }
-            }
 
-            return _formatValueByType(this.type, data, options);
+                if (display.isPreformat) {
+                    try {
+                        return module._printf(display.preformatConfig, v, self.type.rootName);
+                    } catch(e) {
+                        console.log(e);
+                    }
+                }
+                return _formatValueByType(self.type, v, options);
+            };
+
+            if (this.type.isArray) {
+                return data.map(getFormattedValue);
+            }
+            return getFormattedValue(data);
         };
 
         /**
          * Formats the presentation value corresponding to this column definition.
-         * @param {String} data The 'formatted' data value.
+         * For getting the value of a column we should use this function and not formatvalue directly.
+         * This will call `formatvalue` for the current column and other columns if necessary.
+         *
+         * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
          * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
         this.formatPresentation = function(data, context, options) {
+            data = data || {};
 
             var utils = module._formatUtils;
 
             var display = this.getDisplay(context);
 
-            /* 
+            var formattedValue, unformatted;
+            formattedValue = this.formatvalue(data[this.name], context, options);
+
+            /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
-                return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
-            }
-                
-            /* 
-             * If column doesn't has column-display annotation and is not of type markdown
-             * then return data as it is
-             */
-            if (!display.isHTML) {
-                return { isHTML: false, value: data, unformatted: data };
+                return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
             }
 
-            var unformatted = data;
+            // in this case data must be an array
+            if (!display.isMarkdownPattern && this.type.isArray) {
+                unformatted = module._formatUtils.printArray(formattedValue, {isMarkdown: display.isHTML});
+
+                // If value is null or empty, return value on basis of `show_nulls`
+                if (unformatted === null || unformatted.trim() === '') {
+                    return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+                }
+
+                return {
+                    isHTML: true,
+                    unformatted: unformatted,
+                    value: utils.printMarkdown(unformatted, options)
+                };
+            }
+
+            /*
+             * If column doesn't has column-display annotation and is not of type markdown
+             * then return formattedValue as it is
+             */
+            if (!display.isHTML) {
+                return { isHTML: false, value: formattedValue, unformatted: formattedValue };
+            }
+
+            // the string with markdown syntax in it and not HTML
+            unformatted = formattedValue;
 
             // If there is any markdown pattern then evaluate it
             if (display.isMarkdownPattern) {
@@ -1784,7 +1896,10 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options.formattedValues === undefined) {
+                if (options === undefined || options !== Object(options)) {
+                    options = {};
+                }
+                if (options.formattedValues === undefined) {
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 
@@ -1795,18 +1910,17 @@
 
 
             // If value is null or empty, return value on basis of `show_nulls`
-            
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
-            
+
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
              value = utils.printMarkdown(unformatted, options);
-             
+
              return { isHTML: true, value: value, unformatted: unformatted };
-            
+
         };
 
         /**
@@ -1942,10 +2056,14 @@
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
                 try {
+                    // If the column typename is in the list of types to ignore setting the default for, throw an error to the catch clause
+                    if (module._ignoreDefaultsNames.includes(this.name)) {
+                        throw new Error("" + this.type.name + " is in the list of ignored default types");
+                    }
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
-                                throw new Error();
+                                throw new Error("Val: " + defaultVal + " is not of type boolean.");
                             }
                             break;
                         case "int2":
@@ -1953,7 +2071,7 @@
                         case "int8":
                             var intVal = parseInt(defaultVal, 10);
                             if (isNaN(intVal)) {
-                                throw new Error();
+                                throw new Error("Val: " + intVal + " is not of type integer.");
                             }
                             break;
                         case "float4":
@@ -1961,7 +2079,7 @@
                         case "numeric":
                             var floatVal = parseFloat(defaultVal);
                             if (isNaN(floatVal)) {
-                                throw new Error();
+                                throw new Error("Val: " + floatVal + " is not of type float.");
                             }
                             break;
                         case "date":
@@ -1970,7 +2088,7 @@
                             // convert using moment, if it doesn't error out, set the value.
                             // try/catch catches this if it does error out and sets it to null
                             if (!module._moment(defaultVal).isValid()) {
-                                throw new Error();
+                                throw new Error("Val: " + defaultVal + " is not a valid DateTime value.");
                             }
                             break;
                         case "json":
@@ -1983,7 +2101,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    console.dir(e);
+                    console.dir(e.message);
                     this._default = null;
                 }
             }
@@ -2016,7 +2134,7 @@
                         message: "Automatically generated"
                     };
                 }
-            } else if (context == module._contexts.EDIT) {
+            } else if (context == module._contexts.EDIT || context == module._contexts.ENTRY) {
                 if (this.isSystemColumn || this.isImmutable || isGenerated || isImmutable || isSerial) {
                     return true;
                 }
@@ -2034,28 +2152,12 @@
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [], hasPreformat;
+                var annotation = -1, columnOrder, hasPreformat;
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    var col;
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            col = this.table.columns.get(annotation.column_order[i]);
-                            
-                            // json and jsonb are not sortable.
-                            if (["json", "jsonb"].indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
 
                 if (typeof annotation.pre_format === 'object') {
                     if (typeof annotation.pre_format.format !== 'string') {
@@ -2079,7 +2181,15 @@
             return this._display[context];
         },
 
-        // get the sort columns using the context
+        /**
+         * Returns the columns that this column should be sorted based on and its direction.
+         * It will return an array of objects that has:
+         * - `column`: The {@link ERMrest.Column} object.
+         * - `descending`: Whether we should change the order of sort or not.
+         * @private
+         * @param  {string} context the context that we want the sort columns for
+         * @return {Array}
+         */
         _getSortColumns: function (context) {
             var display = this.getDisplay(context);
 
@@ -2090,12 +2200,12 @@
             if (display.columnOrder !== undefined && display.columnOrder.length !== 0) {
                 return display.columnOrder;
             }
-            
-            if (["json", "jsonb"].indexOf(this.type.name) !== -1) {
+
+            if (module._nonSortableTypes.indexOf(this.type.name) !== -1) {
                 return undefined;
             }
 
-            return [this];
+            return [{column: this}];
         }
     };
 
@@ -2353,6 +2463,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonKey.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2364,19 +2475,27 @@
             } catch (exception){}
         }
 
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for key.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        this.name = this.constraint_names[0].join("_");
-
         this._wellFormed = {};
         this._display = {};
     }
 
     Key.prototype = {
         constructor: Key,
+
+        /**
+         * Unique name that can be used for referring to this key.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                var obj = this._constraintName;
+                if (this.simple) {
+                    obj = {source: this.colset.columns[0].name};
+                }
+                this._name = module.generatePseudoColumnHashName(obj);
+            }
+            return this._name;
+        },
 
         /**
          * Indicates if the key is simple (not composite)
@@ -2416,12 +2535,17 @@
             return (this.colset.columns.indexOf(column) !== -1);
         },
 
-        // will return true if all the columns are not null and not html.
+        /**
+         * Will return true if all the columns are not not, not html, and not array.
+         * @private
+         * @param  {string} context the context (used for checking the markdown_pattern)
+         * @return {boolean} whether it's well formed or not
+         */
         _isWellFormed: function(context) {
             if (!(context in this._wellFormed)) {
                 var cols = this.colset.columns, result = true;
                 for (var c = 0; c < cols.length; c++) {
-                    if (cols[c].nullok || cols[c].getDisplay(context).isHTML) {
+                    if (cols[c].nullok || cols[c].type.isArray || cols[c].getDisplay(context).isHTML) {
                         result = false;
                         break;
                     }
@@ -2433,22 +2557,12 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var annotation = -1, columnOrder;
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            columnOrder.push(this.table.columns.get(annotation.column_order[i]));
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
@@ -2475,7 +2589,7 @@
         /**
          * It won't preserve the order of given columns.
          * Returns set of columns sorted by their names.
-         * 
+         *
          * @type {Array}
          */
         this.columns = columns.slice().sort(function(a, b) {
@@ -2654,32 +2768,84 @@
             return this._foreignKeys.length;
         },
 
+        /**
+         * It will return array of objects with the following attributes:
+         * - isPath: if true then source and column have values, otherwise the foreignKey
+         * - foreignKey: the foreignkey object
+         * - object: The facet object if it's a path.
+         * - column: the column object if it's a path.
+         * - name: the pseudo column name
+         * @private
+         * @param  {String} context
+         * @return {Object}
+         */
         _contextualize: function (context) {
             if(context in this._contextualize_cached) {
                 return this._contextualize_cached[context];
             }
 
-            var orders = -1;
+            var orders = -1, result = [];
             if (this._table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
             if (orders == -1) {
                 this._contextualize_cached[context] = -1;
-                return -1; // no annoation
+                return -1;
             }
 
-            for (var i = 0, result = [], fk; i < orders.length; i++) {
-                if(!Array.isArray(orders[i]) || orders[i].length != 2) {
-                    continue; // the annotation value is not correct.
+            var self = this, fkNames = {}, col, colName, invalid, fk, i;
+
+            var wm = module._warningMessages;
+            var logErr = function (bool, message, i) {
+                if (bool) {
+                    console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    console.log(message);
                 }
-                fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
-                if (fk !== null && result.indexOf(fk.object) == -1 && this._foreignKeys.indexOf(fk.object) != -1) {
-                    // avoid duplicate and if it's a valid inbound fk of this table.
-                    result.push(fk.object);
+                return bool;
+            };
+
+            var addToList = function (obj) {
+                if (obj.name in fkNames) {
+                    return; // avoid duplicates
+                }
+                fkNames[obj.name] = true; // make sure we don't add twice
+                result.push(obj);
+            };
+
+            for (i = 0; i < orders.length; i++) {
+                // inbound foreignkey
+                if(Array.isArray(orders[i])) {
+                    // valid input
+                    if (orders[i].length !== 2) continue;
+
+                    // valid fk
+                    fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
+                    if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
+                        colName = _generateForeignKeyName(fk.object, true);
+                        addToList({foreignKey: fk.object, name: colName});
+                    } else {
+                        logErr(true, wm.INVALID_FK, i);
+                    }
+                }
+                // path
+                else if (typeof orders[i] === "object" && orders[i].source) {
+                    col = _getFacetSourceColumn(orders[i].source, this._table, module._constraintNames);
+
+                    // invalid if:
+                    // 1. invalid source and not a path.
+                    // 2. not entity mode
+                    // 3. has aggregate
+                    invalid = logErr(!col || !_isFacetSourcePath(orders[i].source), wm.INVALID_FK, i) ||
+                              logErr(!_isFacetEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
+                              logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+
+                    if (!invalid) {
+                        colName = _generatePseudoColumnName(orders[i], col).name;
+                        addToList({isPath: true, object: orders[i], column: col, name: colName});
+                    }
                 }
             }
-
             this._contextualize_cached[context] = result;
             return result;
         }
@@ -2832,6 +2998,7 @@
          * @type {Array}
          */
         this.constraint_names = jsonFKR.names;
+        this._constraintName = this.constraint_names[0].join("_");
 
         // add constraint names to catalog
         for (var k = 0, constraint; k < this.constraint_names.length; k++) {
@@ -2842,16 +3009,6 @@
                 }
             } catch (exception){}
         }
-
-        // this name is going to be used to refere to this reference
-        // since constraint names are supposed to be unique in databse,
-        // we can assume that this can be used as a unique identifier for fk.
-        // NOTE: currently ermrest only returns the first constraint name,
-        // so using the first one is sufficient
-        // NOTE: This can cause problem, consider ['s', '_t'] and ['s_', 't'].
-        // They will produce the same name. Is there any better way to generate this?
-        this.name = this.constraint_names[0].join("_");
-
 
         /**
          * @type {string}
@@ -2908,11 +3065,23 @@
         constructor: ForeignKeyRef,
 
         /**
+         * A unique nam that can be used for referring to this foreignkey.
+         * @type {string}
+         */
+        get name () {
+            if (this._name === undefined) {
+                this._name = _generateForeignKeyName(this);
+            }
+            return this._name;
+        },
+
+        /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} [reverse] false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean} isLeft  true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
-        toString: function (reverse){
+        toString: function (reverse, isLeft){
             var leftString = "", rightString = "";
             var columnsLength = this.colset.columns.length;
             for (var i = 0; i < columnsLength; i++) {
@@ -2929,7 +3098,9 @@
                 rightString += separator;
 
             }
-            return "(" + leftString + ")=(" + rightString + ")";
+
+            var joinType = (isLeft === true ? "left": "");
+            return joinType + "(" + leftString + ")=(" + rightString + ")";
         },
 
         delete: function () {
@@ -2964,17 +3135,7 @@
 
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            columnOrder.push(this.key.table.columns.get(annotation.column_order[i]));
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
@@ -3002,7 +3163,7 @@
          * Currently used to signal whether there is a base type for this column
          * @type {boolean}
          */
-        this._isArray = jsonType.is_array;
+        this.isArray = jsonType.is_array;
 
         /**
          * Currently used to signal whether there is a base type for this column
@@ -3020,7 +3181,7 @@
 
     Type.prototype = {
         constructor: Type,
-        
+
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.
