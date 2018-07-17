@@ -1,7 +1,10 @@
 require('./../../utils/starter.spec.js').runTests({
     description: 'In comment spec, ',
-    testCases: [
+    testCasesO: [
         "/comment/tests/01.comment.js"
+    ],
+    testCases: [
+        "dummy.spec.js"
     ],
     schemaConfigurations: [
         "/comment/conf/comment.conf.json"
