@@ -1,10 +1,7 @@
 require('./../../utils/starter.spec.js').runTests({
     description: 'In sample spec, ',
-    testCasesO: [
-        "/sample/tests/01.sample.js"
-    ],
     testCases: [
-        "/dummy.spec.js"
+        "/sample/tests/01.sample.js"
     ],
     schemaConfigurations: [
         "/sample/conf/product.conf.json"

@@ -1,6 +1,6 @@
 require('./../../utils/starter.spec.js').runTests({
     description: 'In reference,',
-    testCasesO: [
+    testCases: [
         "/reference/tests/01.reference.js",
         "/reference/tests/02.related_reference.js",
         "/reference/tests/03.reference_sort.js",
@@ -19,9 +19,6 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/15.aggregates.js",
         "/reference/tests/16.disabled_system_columns.js",
         "/reference/tests/17.reference_pre_format_values.js"
-    ],
-    testCases: [
-        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",
