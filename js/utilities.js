@@ -2506,7 +2506,12 @@
 
             // If template not found then add it to cache
             if (!_compiledTemplate) {
-                module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template);
+                var compileOptions = {
+                    knownHelpersOnly: true,
+                    knownHelpers: module._handlebarsHelpers
+                };
+
+                module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template, compileOptions);
             }
 
             // Generate content from the template
@@ -3050,6 +3055,29 @@
     module._contextHeaderName = 'Deriva-Client-Context';
 
     module.HANDLEBARS = "handlebars";
+
+    module._handlebarsHelpers = Object.freeze({
+        // handlebars builtin helpers
+        // NOTE: by default, built in helpers are allowed, specify false to disallow
+        if: true,
+        unless: true,
+        each: true,
+        with: true,
+        lookup: false,
+        log: false,
+        // ermrestJS handlebars helpers
+        eq: true,       // equal
+        ne: true,       // not equal
+        lt: true,       // less than
+        gt: true,       // greater than
+        lte: true,      // less than or equal
+        gte: true,      // greater than or equal
+        and: true,
+        or: true,
+        ifCond: true,
+        escape: true,
+        encode: true
+    });
 
     module._operationsFlag = Object.freeze({
         DELETE: "DEL",      //delete
