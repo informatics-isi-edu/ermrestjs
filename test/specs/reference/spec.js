@@ -21,7 +21,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/17.reference_pre_format_values.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",

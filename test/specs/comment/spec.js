@@ -4,7 +4,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/comment/tests/01.comment.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/comment/conf/comment.conf.json"

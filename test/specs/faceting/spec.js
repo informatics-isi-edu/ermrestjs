@@ -4,7 +4,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/faceting/tests/01.faceting.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/faceting/conf/faceting.conf.json"

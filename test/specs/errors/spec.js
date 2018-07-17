@@ -12,7 +12,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/errors/tests/09.modifier_error.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/errors/conf/error.conf.json"

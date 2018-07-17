@@ -6,7 +6,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/column/tests/03.pseudo_column.js",
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/column/conf/columns.conf.json",

@@ -6,7 +6,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/common/tests/03.table.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/common/conf/common_schema_2.conf.json", //this should come first since schema_1 has fk to it.

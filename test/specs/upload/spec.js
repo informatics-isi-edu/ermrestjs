@@ -7,7 +7,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/upload/tests/04.create_w_upload.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/upload/conf/upload.conf.json"

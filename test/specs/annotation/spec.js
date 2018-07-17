@@ -6,7 +6,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/annotation/tests/04.visible_foreign_keys.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
     schemaConfigurations: [
         "/annotation/conf/displayname.conf.json",

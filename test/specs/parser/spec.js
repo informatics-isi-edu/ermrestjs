@@ -4,6 +4,6 @@ require('./../../utils/starter.spec.js').runTests({
         "/parser/tests/01.parser.js"
     ],
     testCases: [
-        "dummy.spec.js"
+        "/dummy.spec.js"
     ],
 });
