@@ -3059,12 +3059,12 @@
     module._handlebarsHelpers = Object.freeze({
         // handlebars builtin helpers
         // NOTE: by default, built in helpers are allowed, specify false to disallow
-        if: true,
-        unless: true,
         each: true,
-        with: true,
-        lookup: false,
+        if: true,
         log: false,
+        lookup: false,
+        unless: true,
+        with: true,
         // ermrestJS handlebars helpers
         eq: true,       // equal
         ne: true,       // not equal

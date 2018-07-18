@@ -128,7 +128,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         ermrestJsPath + "vendor/moment.min.js",
         // Mustache script
         ermrestJsPath + "vendor/mustache.min.js",
-
+        // Handlebars script
+        ermrestJsPath + "vendor/handlebars.min.js",
         // Markdown-it and dependent plugin scripts
         ermrestJsPath + "vendor/markdown-it.min.js",
 
