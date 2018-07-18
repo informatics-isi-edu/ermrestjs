@@ -2298,6 +2298,14 @@
         });
 
         module._injectExternalHandlerbarHelper(module._handlebars);
+
+        // loop through handlebars defined list of helpers and check against the enum in ermrestJs
+        // if not in enum, set helper to false
+        // should help defend against new helpers being exposed without us being aware of it
+        module._handlebarsHelpersHash = {};
+        Object.keys(module._handlebars.helpers).forEach(function (key) {
+            module._handlebarsHelpersHash[key] = module._handlebarsHelpersList.includes(key);
+        });
     };
 
     /**
@@ -2508,7 +2516,7 @@
             if (!_compiledTemplate) {
                 var compileOptions = {
                     knownHelpersOnly: true,
-                    knownHelpers: module._handlebarsHelpers
+                    knownHelpers: module._handlebarsHelpersHash
                 };
 
                 module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template, compileOptions);
@@ -3056,28 +3064,12 @@
 
     module.HANDLEBARS = "handlebars";
 
-    module._handlebarsHelpers = Object.freeze({
-        // handlebars builtin helpers
-        // NOTE: by default, built in helpers are allowed, specify false to disallow
-        each: true,
-        if: true,
-        log: false,
-        lookup: false,
-        unless: true,
-        with: true,
-        // ermrestJS handlebars helpers
-        eq: true,       // equal
-        ne: true,       // not equal
-        lt: true,       // less than
-        gt: true,       // greater than
-        lte: true,      // less than or equal
-        gte: true,      // greater than or equal
-        and: true,
-        or: true,
-        ifCond: true,
-        escape: true,
-        encode: true
-    });
+    module._handlebarsHelpersList = [
+        // default helpers - NOTE: includes all of them right now, we might not need 'log' and 'lookup'
+        "blockHelperMissing", "each", "if", "log", "lookup", "helperMissing", "unless", "with",
+        // ermrestJS helpers
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode"
+    ];
 
     module._operationsFlag = Object.freeze({
         DELETE: "DEL",      //delete
