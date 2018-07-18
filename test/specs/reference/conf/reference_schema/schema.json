@@ -379,31 +379,6 @@
                     "name": "id_from_inbound_related_table",
                     "nullok": false,
                     "type": {"typename":"text"}
-                },
-                {
-                    "name": "RID",
-                    "nullok": false,
-                    "type": {"typename":"int8"}
-                },
-                {
-                    "name": "RCB",
-                    "nullok": false,
-                    "type": {"typename":"text"}
-                },
-                {
-                    "name": "RMB",
-                    "nullok": false,
-                    "type": {"typename":"text"}
-                },
-                {
-                    "name": "RCT",
-                    "nullok": false,
-                    "type": {"typename":"timestamptz"}
-                },
-                {
-                    "name": "RMT",
-                    "nullok": false,
-                    "type": {"typename":"timestamptz"}
                 }
             ],
             "annotations": {
@@ -1418,31 +1393,6 @@
                     "type": {
                         "typename": "text"
                     }
-                },
-                {
-                    "name": "RID",
-                    "nullok": false,
-                    "type": {"typename":"int8"}
-                },
-                {
-                    "name": "RCB",
-                    "nullok": false,
-                    "type": {"typename":"text"}
-                },
-                {
-                    "name": "RMB",
-                    "nullok": false,
-                    "type": {"typename":"text"}
-                },
-                {
-                    "name": "RCT",
-                    "nullok": false,
-                    "type": {"typename":"timestamptz"}
-                },
-                {
-                    "name": "RMT",
-                    "nullok": false,
-                    "type": {"typename":"timestamptz"}
                 }
             ]
         },

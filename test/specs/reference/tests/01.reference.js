@@ -71,7 +71,6 @@ exports.execute = function (options) {
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
                     reference = response;
                     createReference = response.contextualize.entryCreate;
-
                     done();
                 }).catch(function (error) {
                     console.dir(error);
@@ -272,7 +271,10 @@ exports.execute = function (options) {
                 expect(tuple.isHTML).toBeDefined();
                 expect(tuple.displayname).toEqual(jasmine.any(Object), "tuple.displayname is not an object");
                 expect(tuple.displayname.value).toBe("Hank", "tuple.displayname.value is incorrect");
-                expect(tuple.uniqueId).toBe("9000", "tuple.uniqueId is incorrect");
+                var rid = options.entities[schemaName][tableName].filter(function (e) {
+                    return e.id == "9000";
+                })[0].RID;
+                expect(tuple.uniqueId).toBe(rid, "tuple.uniqueId is incorrect");
             });
 
             it('tuple.copy should create a shallow copy of the tuple except for the data.', function() {
@@ -300,26 +302,6 @@ exports.execute = function (options) {
                 expect(values[2]).toBe(tuple._data.value.toString());
             });
 
-            it('uniqueId for an entity with a composite key should be set properly.', function(done) {
-                var reference, page, tuple;
-
-                options.ermRest.resolve(entityWithCompositeKey, {cid: "test"}).then(function (response) {
-                    reference = response;
-                    reference.session = { attributes: [] };
-
-                    return reference.read(limit);
-                }).then(function (response) {
-                    page = response;
-                    tuple = page.tuples[0];
-
-                    expect(tuple.uniqueId).toBe("comp-part-1_comp-part-2", "tuple.uniqueId with composite key is incorrect");
-
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
         });
 
         describe('for multiple entities with limit less than the number of referenced entities,', function() {
@@ -327,7 +309,7 @@ exports.execute = function (options) {
             var limit = 5;
 
             it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(multipleEntityUri, {cid: "test"}).then(function (response) {
+                options.ermRest.resolve(multipleEntityUri + "/@sort(id)", {cid: "test"}).then(function (response) {
                     reference = response;
 
                     expect(reference).toEqual(jasmine.any(Object));
