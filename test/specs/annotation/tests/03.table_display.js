@@ -1,6 +1,7 @@
 exports.execute = function (options) {
 
     describe("2016:table-display annotation test", function () {
+
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "schema_table_display",
             tableName1 = "table_wo_title_wo_annotation",
@@ -17,7 +18,7 @@ exports.execute = function (options) {
             tableNameWoAnnot = "table_wo_annotation";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaName + ":" + tableName1;
+            schemaName + ":" + tableName1 + "/@sort(id)";
 
         var table2EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName2;
@@ -30,28 +31,34 @@ exports.execute = function (options) {
 
 
         var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName5;
+            tableName5 + "/@sort(id)";
 
         var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName6;
+            tableName6 + "/@sort(id)";
 
         var table7EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName7;
+            tableName7 + "/@sort(id)";
 
         var table8EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName8;
+            tableName8 + "/@sort(id)";
 
         var table9EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName9;
+            tableName9 + "/@sort(id)";
 
         var table10EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName10;
+            tableName10 + "/@sort(id)";
 
         var table11EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableName11;
+            tableName11 + "/@sort(id)";
 
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
+
+        var findRID = function (tableName, id) {
+            return options.entities[schemaName][tableName].filter(function (e) {
+                return e.id == id;
+            })[0].RID;
+        };
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -130,13 +137,10 @@ exports.execute = function (options) {
 
             it('tuple displayname should return formatted value of id as it is the unique key.', function() {
                 var tuples = page.tuples;
-                var expected = [
-                    "20,001", "20,002", "20,003", "20,004", "20,005", "20,006", "20,007", "20,008", "20,009", "20,010"
-                ];
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    expect(tuple.displayname.value).toBe(expected[i]);
-                    expect(tuple.displayname.unformatted).toBe(expected[i]);
+                    expect(tuple.displayname.value).toBe(tuple.values[0]);
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[0]);
                 }
             });
         });
@@ -274,16 +278,6 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it('tuple displayname should return "description:id" column.', function() {
-                var tuples = page.tuples;
-                for(var i = 0; i < limit; i++) {
-                    var tuple = tuples[i];
-                    var expected = tuple.values[1] + ":" + tuple.values[0];
-                    expect(tuple.displayname.value).toBe(expected);
-                    expect(tuple.displayname.unformatted).toBe(expected);
-                }
             });
         });
 
@@ -477,7 +471,9 @@ exports.execute = function (options) {
 
         describe('markdown display in case of no annotation is defined', function() {
             it('when no annotation is defiend; content should appear in unordered list format.', function(done){
-                var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20001">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/id=20002">20,002</a></p>\n</li>\n</ul>\n';
+                var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName1, "20001") + '">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName1, "20002") + '">20,002</a></p>\n</li>\n</ul>\n';
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     return response;
                 }).then(function (reference){
@@ -499,11 +495,11 @@ exports.execute = function (options) {
                     return ref.read(5);
                 }).then(function (page) {
                     var expected = [
-                        {id: "10001", rowName: "<strong>William Shakespeare</strong>"},
-                        {id: "10002", rowName: "<strong>Mark Twain</strong>"},
-                        {id: "10003", rowName: "<strong>Lewis Carroll</strong>"},
-                        {id: "10004", rowName: "<strong>Jane Austen</strong>"},
-                        {id: "10005", rowName: "<strong>Charles Dickens</strong>"},
+                        {id: 10001, rowName: "<strong>William Shakespeare</strong>"},
+                        {id: 10002, rowName: "<strong>Mark Twain</strong>"},
+                        {id: 10003, rowName: "<strong>Lewis Carroll</strong>"},
+                        {id: 10004, rowName: "<strong>Jane Austen</strong>"},
+                        {id: 10005, rowName: "<strong>Charles Dickens</strong>"},
                         ""
                     ];
 
@@ -512,8 +508,8 @@ exports.execute = function (options) {
                         if (typeof expected[i] === "string") {
                             val = expected[i];
                         } else {
-                            val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/id=' +
-                                  expected[index].id + '">' + expected[index].rowName + '</a>';
+                            val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/RID=' +
+                                  findRID(tableName5, expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
                     });

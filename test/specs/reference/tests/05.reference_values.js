@@ -12,7 +12,7 @@ exports.execute = function (options) {
             limit = 7;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
 
@@ -146,149 +146,158 @@ exports.execute = function (options) {
         describe("Testing tuples values", function() {
             var moment = options.ermRest._currDate;
             var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
+            var testObjects;
 
-            var testObjects ={
-                "test1": {
-                        "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
-                        "expectedValue" : [ '4000',
-                                            '<h2>Hank</h2>\n',
-                                            '<p><a href="https://www.google.com/Hank">link</a></p>\n',
-                                            '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
-                                            '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
-                                            '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                                            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                            '<p><strong>date is :</strong></p>\n',
-                                            '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
-                                            '<code>GATCGATCGC GTATT</code>',
-                                            'NA',
-                                            '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
-                                            '',
-                                            expectedMomentValue
-                                             ],
-                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]
+            beforeAll(function () {
+                var getRID = function (id) {
+                    return options.entities[schemaName]["table_w_composite_key"].filter(function(e) {
+                        return e.id == id;
+                    })[0].RID;
+                };
+
+                testObjects ={
+                    "test1": {
+                            "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
+                            "expectedValue" : [ '4000',
+                                                '<h2>Hank</h2>\n',
+                                                '<p><a href="https://www.google.com/Hank">link</a></p>\n',
+                                                '<p><img src="http://example.com/4000.png" alt="image"></p>\n',
+                                                '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400"></p>\n',
+                                                '<p><a href="https://www.google.com" download="">download link</a></p>\n',
+                                                '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                                '<p><strong>date is :</strong></p>\n',
+                                                '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
+                                                '<code>GATCGATCGC GTATT</code>',
+                                                'NA',
+                                                '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
+                                                '',
+                                                expectedMomentValue
+                                                 ],
+                            "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]
+                            },
+                    "test2": {
+                        "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
+                        "expectedValue" : [
+                                        '4001',
+                                        '<h2>Harold</h2>\n',
+                                        '<p><a href="/Harold">link</a></p>\n',
+                                        '<p><img src="http://example.com/4001.png" alt="image"></p>\n',
+                                        '<p><img src="/4001.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="" download="">download link</a></p>\n',
+                                        '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Harold caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '',
+                                        '<p><a href="http://example.com/Junior">Junior</a></p>\n',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n',
+                                        expectedMomentValue
+                                    ],
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
                         },
-                "test2": {
-                    "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
-                    "expectedValue" : [
-                                    '4001',
-                                    '<h2>Harold</h2>\n',
-                                    '<p><a href="/Harold">link</a></p>\n',
-                                    '<p><img src="http://example.com/4001.png" alt="image"></p>\n',
-                                    '<p><img src="/4001.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="" download="">download link</a></p>\n',
-                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Harold caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '',
-                                    '<p><a href="http://example.com/Junior">Junior</a></p>\n',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=1" class="class-10">4000 , 4001</a></p>\n',
-                                    expectedMomentValue
-                                ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
-                    },
-            "test3": {
-                    "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                    "expectedValue" :[
-                                    '4002',
-                                    null,
-                                    '',
-                                    '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
-                                    '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                                    '',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '',
-                                    '',
-                                    'NA',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=2" class="class-20">4000 , 4002</a></p>\n',
-                                    expectedMomentValue
-                                    ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
-                    },
-            "test4": {
-                    "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
-                    "expectedValue" : [
-                                    '4003',
-                                    null,
-                                    '',
-                                    '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
-                                    '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="" download="">download link</a></p>\n',
-                                    '',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '',
-                                    '',
-                                    '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=3" class="class-30">4000 , 4003</a></p>\n',
-                                    expectedMomentValue
-                                    ],
-                    "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
-                    },
-            "test5": {
-                    "rowValue" :  ["id=4004, name= weird & HTML < "],
-                    "expectedValue" : [
-                                    '4004',
-                                    '<h2>weird &amp; HTML &lt;</h2>\n',
-                                    '<p>[link](/weird &amp; HTML &lt; )</p>\n',
-                                    '<p><img src="http://example.com/4004.png" alt="image"></p>\n',
-                                    '<p><img src="/4004.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="" download="">download link</a></p>\n',
-                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">weird &amp; HTML &lt;  caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '',
-                                    'NA',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=4" class="class-40">4001 , 4002</a></p>\n',
-                                    expectedMomentValue
-                                    ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
-                    },
-            "test6": {
-                    "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
-                    "expectedValue" : [
-                                    '4005',
-                                    '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
-                                    '<p>[link](/&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;)</p>\n',
-                                    '<p><img src="http://example.com/4005.png" alt="image"></p>\n',
-                                    '<p><img src="/4005.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="" download="">download link</a></p>\n',
-                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '',
-                                    '<p><a href="http://example.com/Senior">Senior</a></p>\n',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=5" class="class-50">4002 , 4000</a></p>\n',
-                                    expectedMomentValue
-                                    ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
-                    },
-            "test7": {
-                    "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
-                    "expectedValue" : [
-                                    '4006',
-                                    '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
-                                    '<p><a href="/%3Cscript%3Ealert();%3C/script%3E">link</a></p>\n',
-                                    '<p><img src="http://example.com/4006.png" alt="image"></p>\n',
-                                    '<p><img src="/4006.png" alt="image with size" width="400" height="400"></p>\n',
-                                    '<p><a href="" download="">download link</a></p>\n',
-                                    '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
-                                    '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
-                                    '<code>GATCGATCGC GTATT</code>',
-                                    '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
-                                    '',
-                                    '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=6" class="class-60">4000 , 4000</a></p>\n',
-                                    expectedMomentValue
-                                    ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
-                }
+                "test3": {
+                        "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
+                        "expectedValue" :[
+                                        '4002',
+                                        null,
+                                        '',
+                                        '<p><img src="http://example.com/4002.png" alt="image"></p>\n',
+                                        '<p><img src="https://www.google.com/4002.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="https://www.google.com" download="">download link</a></p>\n',
+                                        '',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '',
+                                        '',
+                                        'NA',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n',
+                                        expectedMomentValue
+                                        ],
+                        "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
+                        },
+                "test4": {
+                        "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
+                        "expectedValue" : [
+                                        '4003',
+                                        null,
+                                        '',
+                                        '<p><img src="http://example.com/4003.png" alt="image"></p>\n',
+                                        '<p><img src="/4003.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="" download="">download link</a></p>\n',
+                                        '',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '',
+                                        '',
+                                        '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n',
+                                        expectedMomentValue
+                                        ],
+                        "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
+                        },
+                "test5": {
+                        "rowValue" :  ["id=4004, name= weird & HTML < "],
+                        "expectedValue" : [
+                                        '4004',
+                                        '<h2>weird &amp; HTML &lt;</h2>\n',
+                                        '<p>[link](/weird &amp; HTML &lt; )</p>\n',
+                                        '<p><img src="http://example.com/4004.png" alt="image"></p>\n',
+                                        '<p><img src="/4004.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="" download="">download link</a></p>\n',
+                                        '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">weird &amp; HTML &lt;  caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '',
+                                        'NA',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n',
+                                        expectedMomentValue
+                                        ],
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
+                        },
+                "test6": {
+                        "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
+                        "expectedValue" : [
+                                        '4005',
+                                        '<h2>&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;</h2>\n',
+                                        '<p>[link](/&lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;)</p>\n',
+                                        '<p><img src="http://example.com/4005.png" alt="image"></p>\n',
+                                        '<p><img src="/4005.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="" download="">download link</a></p>\n',
+                                        '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '',
+                                        '<p><a href="http://example.com/Senior">Senior</a></p>\n',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n',
+                                        expectedMomentValue
+                                        ],
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
+                        },
+                "test7": {
+                        "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
+                        "expectedValue" : [
+                                        '4006',
+                                        '<h2>&lt;script&gt;alert();&lt;/script&gt;</h2>\n',
+                                        '<p><a href="/%3Cscript%3Ealert();%3C/script%3E">link</a></p>\n',
+                                        '<p><img src="http://example.com/4006.png" alt="image"></p>\n',
+                                        '<p><img src="/4006.png" alt="image with size" width="400" height="400"></p>\n',
+                                        '<p><a href="" download="">download link</a></p>\n',
+                                        '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                        '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
+                                        '<code>GATCGATCGC GTATT</code>',
+                                        '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
+                                        '',
+                                        '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/id=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n',
+                                        expectedMomentValue
+                                        ],
+                        "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
+                    }
+                };
 
-            }
+            });
 
             var i = 0;
             for(var key in testObjects){
@@ -320,7 +329,7 @@ exports.execute = function (options) {
             upperLimit = 2001,
             limit = 6;
 
-        var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+        var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName + "/@sort(id)";
 
         var reference, page, tuples, url;
 
@@ -372,7 +381,7 @@ exports.execute = function (options) {
             tableName = "table_w_array",
             limit = 5;
 
-        var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+        var tableWArrayUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName + "@sort(id)";
         var reference, page, tuples;
 
         var testValues = function (cases) {

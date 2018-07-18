@@ -9,7 +9,7 @@ exports.execute = function (options) {
             limit = 7;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
 
@@ -205,7 +205,7 @@ exports.execute = function (options) {
                 upperLimit = 2001,
                 limit = 6;
 
-            var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+            var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName + "/@sort(id)";
 
             var reference, page, tuples;
 

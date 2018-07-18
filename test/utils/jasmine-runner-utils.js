@@ -65,10 +65,10 @@ exports.run = function(config) {
 	jrunner.configureDefaultReporter({ print: function() { } });
 
 	// Add Jasmine  specReporter
-	jrunner.addReporter(new SpecReporter());   
+	jrunner.addReporter(new SpecReporter());
 
-	// Set timeout to a large value 
-	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+	// Set timeout to a large value
+	jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 180000;
 
 	jrunner.onComplete(function(passed) {
 		console.log("Test suite " + (passed ? "passed" : "failed"));
@@ -88,7 +88,7 @@ exports.run = function(config) {
 	}).catch(function(err) {
 		console.log('Caught unhandled exception: ' + err.message);
 		console.log(err.stack);
-	
+
 		process.exit(1);
 	});
 };

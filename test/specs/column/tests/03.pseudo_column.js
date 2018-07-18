@@ -101,13 +101,16 @@ exports.execute = function (options) {
             return url;
         };
 
-        var detailedExpectedValue = [
-            '01', '<p>01: col val 01</p>\n',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/id=01">01</a>',
-            '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=01">01</a>',
-            '01', '', '', '', '', '', '', '', '', '', '', '', '', ''
-        ];
+        // you should use this function only after options.entities value is populated
+        // (in any of jasmine blocks)
+        var findRID = function (currTable, keyName, keyValue) {
+            return options.entities[schemaName][currTable].filter(function (e) {
+                return e[keyName] == keyValue;
+            })[0].RID;
+        };
+
+        // some of the values are depending on RID
+        var detailedExpectedValue;
 
         var detailedExpectedNames = [
              'main_table_id_col', 'col', '06fr6g_9dDm8WuAmEirSRg', 'xRrChcQgxGIr0CNyYQtQ0Q',
@@ -147,6 +150,14 @@ exports.execute = function (options) {
                 console.dir(err);
                 done.fail();
             });
+
+            detailedExpectedValue = [
+                '01', '<p>01: col val 01</p>\n',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
+                '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', ''
+            ];
         });
 
         describe("columns list, ", function () {
@@ -287,7 +298,7 @@ exports.execute = function (options) {
                     mainRefDetailed.read(1).then(function (page) {
                         mainPage = page;
                         mainTuple = page.tuples[0];
-                        expect(page.tuples[0].values).toEqual(detailedExpectedValue);
+                        expect(page.tuples[0].values).toEqual(jasmine.arrayContaining(detailedExpectedValue));
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -381,14 +392,17 @@ exports.execute = function (options) {
                 var facetColumns = mainRef.facetColumns;
                 // since it's going to use the heuristic and in compact we don't
                 // allow inbound fk without aggregate, this won't be exactly the same list.
+
+                // NOTE faceting will change the last column of more specific pseudo-columns
+                // (ForeignKey, InboundforeignKey, etc.) to the shortestkey.
                 expect(facetColumns.length).toBe(11, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
                     return fc.dataSource;
                 })).toEqual(
                     [
                         "main_table_id_col", "col", "main_table_id_col", // the key
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"],
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //entity:false
                         [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
@@ -400,11 +414,11 @@ exports.execute = function (options) {
                             "id"
                         ],
                         "asset_filename",
-                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "id"],
+                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
-                            "id"
+                            "RID"
                         ],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
@@ -724,11 +738,11 @@ exports.execute = function (options) {
                     detailedColsWTuple[16].getAggregatedValue(mainPage).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
                         var value = [
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=01">01 with inbound_2 col 01</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=02">02 with inbound_2 col 02</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=03">03 with inbound_2 col 03</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=04">04 with inbound_2 col 04</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/id=05">05 with inbound_2 col 05</a>'
+                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","01") + '">01 with inbound_2 col 01</a>',
+                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","02") + '">02 with inbound_2 col 02</a>',
+                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","03") + '">03 with inbound_2 col 03</a>',
+                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","04") + '">04 with inbound_2 col 04</a>',
+                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","05") + '">05 with inbound_2 col 05</a>'
                         ];
                         expect(val[0].value).toEqual("<p>" + value.join(", ") + "</p>\n", "value missmatch.");
                         expect(val[0].isHTML).toBe(true, "isHTML missmatch.");
