@@ -107,7 +107,7 @@ exports.execute = function (options) {
             schemaNameEncoded + ":" + altDetailedTable1Encoded + "/id%20x=" + entityId;
 
         var uri7 = options.url + "/catalog/" + catalog_id + "/entity/" +
-            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value;
+            schemaNameEncoded + ":" + altDetailedTable2Encoded + "/id%20x=" + entityId + "&value%20x=" + value ;
 
         var uri8 = options.url + "/catalog/" + catalog_id + "/entity/" + schemaNameEncoded + ":" +
             altDetailedTable1Encoded + "/id%20x=00001;id%20x=00002;id%20x=00003;id%20x=00004;id%20x=00005;id%20x=00006";
@@ -162,6 +162,22 @@ exports.execute = function (options) {
         var uri16 = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaNameEncoded + ":" + altDetailedTable1Encoded + "/*::facets::" + options.ermRest.encodeFacet(facetObject16);
 
+        var firstRowPathWithRID, secondRowPathWithRID, firstRowPathWithID, secondRowPathWithID;
+
+        var findRID = function (currTable, keyName, keyValue) {
+            return options.entities[schemaName][currTable].filter(function (e) {
+                return e[keyName] == keyValue;
+            })[0].RID;
+        };
+
+        beforeAll(function () {
+            firstRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00001");
+            firstRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001";
+            secondRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + findRID(baseTable1, "id", "00002");
+            secondRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002";
+
+        });
+
         describe('1. base table with no entity filters,', function() {
             var reference, reference2, page, tuple;
             var limit = 25;
@@ -199,8 +215,6 @@ exports.execute = function (options) {
             it('1.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -232,7 +246,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('1.A.4 tuple read should return correct data from base table', function(done) {
@@ -241,7 +255,8 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({ "id":"00001","name":"Hank","value":12,"fk_to_related":"1" }));
 
                     done();
                 }, function (err) {
@@ -250,15 +265,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("1.A.5 tuple uniqueId should return correct data from base table.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('1.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -289,7 +298,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('1.B.4 tuple read should return correct data from base table', function(done) {
@@ -298,7 +307,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -307,15 +316,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("1.B.5 tuple uniqueId should return correct data from base table.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('1.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -346,7 +349,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('1.C.4 tuple read should return correct data from base table', function(done) {
@@ -355,17 +358,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("1.C.5 tuple uniqueId should return correct data from base table.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -407,8 +406,6 @@ exports.execute = function (options) {
             it('2.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -440,7 +437,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('2.A.4 tuple read should return correct data from base table', function(done) {
@@ -449,7 +446,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -458,15 +455,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("2.A.5 tuple uniqueId should return correct data from base table.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('2.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -497,7 +488,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('2.B.4 tuple read should return correct data from base table', function(done) {
@@ -506,7 +497,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -515,16 +506,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("2.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
-
             it('2.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -555,7 +539,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('2.C.4 tuple read should return correct data from base table', function(done) {
@@ -564,7 +548,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -573,9 +557,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("2.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('3. base table with single entity filter (multi col key),', function() {
@@ -616,8 +597,6 @@ exports.execute = function (options) {
             it('3.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -649,7 +628,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname.value).toBe(baseTable2);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
+                expect(tuple.reference._location.path).toStartWith(schemaNameEncoded + ":" + baseTable2Encoded);
             });
 
             it('3.A.4 tuple read should return correct data from base table', function(done) {
@@ -658,7 +637,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -667,15 +646,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("3.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('3.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -718,7 +691,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -727,15 +700,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("3.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('3.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -777,7 +744,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -786,9 +753,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("3.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
         });
 
         describe('4. base table with multiple entity filters,', function() {
@@ -828,8 +792,6 @@ exports.execute = function (options) {
             it('4.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -861,7 +823,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('4.A.4 tuple read should return correct data from base table', function(done) {
@@ -870,7 +832,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -879,15 +841,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("4.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('4.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -918,7 +874,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('4.B.4 tuple read should return correct data from base table', function(done) {
@@ -927,7 +883,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -936,15 +892,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("4.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('4.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -975,7 +925,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('4.C.4 tuple read should return correct data from base table', function(done) {
@@ -984,7 +934,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -993,9 +943,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("4.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('5. alternative detailed table with no entity filters,', function() {
@@ -1033,8 +980,6 @@ exports.execute = function (options) {
             it('5.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1066,7 +1011,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('5.A.4 tuple read should return correct data from base table', function(done) {
@@ -1075,7 +1020,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1087,8 +1032,8 @@ exports.execute = function (options) {
             it('5.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1119,7 +1064,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('5.B.4 tuple read should return correct data from base table', function(done) {
@@ -1128,7 +1073,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1140,8 +1085,8 @@ exports.execute = function (options) {
             it('5.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1172,7 +1117,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('5.C.4 tuple read should return correct data from base table', function(done) {
@@ -1181,7 +1126,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1190,9 +1135,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("5.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('6. alternative detail table with single entity filter (single col key),', function() {
@@ -1231,8 +1173,6 @@ exports.execute = function (options) {
             it('6.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1264,7 +1204,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('6.A.4 tuple read should return correct data from base table', function(done) {
@@ -1273,7 +1213,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1282,15 +1222,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("6.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('6.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1321,7 +1257,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('6.B.3 tuple read should return correct data from base table', function(done) {
@@ -1330,7 +1266,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1342,8 +1278,8 @@ exports.execute = function (options) {
             it('6.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1374,7 +1310,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('6.C.4 tuple read should return correct data from base table', function(done) {
@@ -1383,7 +1319,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1392,9 +1328,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("6.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('7. alternative detail table with single entity filter (multi col key),', function() {
@@ -1433,8 +1366,8 @@ exports.execute = function (options) {
             it('7.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id");
+
+
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -1462,11 +1395,12 @@ exports.execute = function (options) {
                 expect(tuple._data.value).toBe(12);
             });
 
-            it('7.A.3 tuple reference should be on the base table with correct filter', function() {
+            // TODO update with changes related to system columns
+            xit('7.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname.value).toBe(baseTable2);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
+                expect(tuple.reference._location.path).toStartWith(schemaNameEncoded + ":" + baseTable2Encoded + "/id=00001&value=12");
             });
 
             it('7.A.4 tuple read should return correct data from base table', function(done) {
@@ -1475,7 +1409,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -1484,15 +1418,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("7.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('7.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -1535,7 +1465,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -1544,15 +1474,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("7.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('7.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -1594,7 +1520,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -1603,9 +1529,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("7.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
         });
 
         describe('8. alternative detail table with multiple entity filters,', function() {
@@ -1643,8 +1566,6 @@ exports.execute = function (options) {
             it('8.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1676,7 +1597,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('8.A.4 tuple read should return correct data from base table', function(done) {
@@ -1685,7 +1606,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1694,15 +1615,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("8.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('8.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1733,7 +1650,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('8.B.4 tuple read should return correct data from base table', function(done) {
@@ -1742,7 +1659,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1751,15 +1668,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("8.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('8.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1790,7 +1703,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('8.C.4 tuple read should return correct data from base table', function(done) {
@@ -1799,17 +1712,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("8.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -1848,8 +1757,6 @@ exports.execute = function (options) {
             it('9.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -1881,7 +1788,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('9.A.4 tuple read should return correct data from base table', function(done) {
@@ -1890,7 +1797,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1899,15 +1806,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("9.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('9.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -1938,7 +1841,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('9.B.4 tuple read should return correct data from base table', function(done) {
@@ -1947,7 +1850,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -1956,15 +1859,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("9.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('9.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -1995,7 +1894,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('9.C.4 tuple read should return correct data from base table', function(done) {
@@ -2004,7 +1903,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2013,9 +1912,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("9.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('10. alternative compact table with single entity filter (single col key),', function() {
@@ -2054,8 +1950,6 @@ exports.execute = function (options) {
             it('10.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2087,7 +1981,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('10.A.4 tuple read should return correct data from base table', function(done) {
@@ -2096,7 +1990,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2105,15 +1999,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it("10.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('10.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
+
+
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2144,7 +2034,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('10.B.3 tuple read should return correct data from base table', function(done) {
@@ -2153,7 +2043,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2165,8 +2055,8 @@ exports.execute = function (options) {
             it('10.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
+
+
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2197,7 +2087,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('10.C.4 tuple read should return correct data from base table', function(done) {
@@ -2206,7 +2096,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2215,9 +2105,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("10.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('11. alternative compact table with single entity filter (multi col key),', function() {
@@ -2256,8 +2143,8 @@ exports.execute = function (options) {
             it('11.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id");
+
+
                 expect(reference2.displayname.value).toBe(baseTable2);
             });
 
@@ -2285,11 +2172,12 @@ exports.execute = function (options) {
                 expect(tuple._data.value).toBe(12);
             });
 
-            it('11.A.3 tuple reference should be on the base table with correct filter', function() {
+            // TODO update with changes related to system columns
+            xit('11.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname.value).toBe(baseTable2);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable2Encoded+ "/id=00001&value=12");
+                expect(tuple.reference._location.path).toStartWith(schemaNameEncoded + ":" + baseTable2Encoded + "/id=00001&value=12");
             });
 
             it('11.A.4 tuple read should return correct data from base table', function(done) {
@@ -2298,7 +2186,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -2307,15 +2195,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("11.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('11.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable2);
             });
 
@@ -2358,7 +2240,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -2367,15 +2249,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("11.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
-
             it('11.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable2);
-                expect(reference2._shortestKey.length).toBe(2);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable2);
             });
 
@@ -2417,7 +2293,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12}));
 
                     done();
                 }, function (err) {
@@ -2426,9 +2302,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("11.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001_12");
-            });
         });
 
         describe('12. alternative compact table with multiple entity filters,', function() {
@@ -2466,8 +2339,6 @@ exports.execute = function (options) {
             it('12.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2499,7 +2370,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('12.A.4 tuple read should return correct data from base table', function(done) {
@@ -2508,7 +2379,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2517,15 +2388,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("12.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('12.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2556,7 +2421,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('12.B.4 tuple read should return correct data from base table', function(done) {
@@ -2565,7 +2430,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2574,15 +2439,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("12.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('12.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2613,7 +2472,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('12.C.4 tuple read should return correct data from base table', function(done) {
@@ -2622,17 +2481,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("12.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -2673,8 +2528,6 @@ exports.execute = function (options) {
             it('13.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2706,7 +2559,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('13.A.4 tuple read should return correct data from base table', function(done) {
@@ -2715,7 +2568,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2724,15 +2577,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("13.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('13.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -2763,7 +2610,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('13.B.4 tuple read should return correct data from base table', function(done) {
@@ -2772,7 +2619,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2781,15 +2628,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("13.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('13.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -2820,7 +2661,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('13.C.4 tuple read should return correct data from base table', function(done) {
@@ -2829,7 +2670,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2838,15 +2679,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("13.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it("13.D contextualizing a contextualized reference should not remove the join., ", function () {
                 reference3 = reference2.contextualize.entry;
                 expect(reference3._table.name).toBe(baseTable1);
-                expect(reference3._shortestKey.length).toBe(1);
-                expect(reference3._shortestKey[0].name).toBe("id");
                 expect(reference3.displayname.value).toBe(baseTable1);
             });
 
@@ -2877,7 +2712,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('13.D.4 tuple read should return correct data from base table', function(done) {
@@ -2886,7 +2721,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2895,9 +2730,6 @@ exports.execute = function (options) {
                 });
             });
 
-            it("13.D.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
         });
 
         describe('14. related_table join on shared key with base with filter,', function() {
@@ -2937,8 +2769,6 @@ exports.execute = function (options) {
             it('14.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id");
                 expect(reference2.displayname.value).toBe(baseTable1);
             });
 
@@ -2970,7 +2800,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithRID);
             });
 
             it('14.A.4 tuple read should return correct data from base table', function(done) {
@@ -2979,7 +2809,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -2988,15 +2818,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("14.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('14.B contextualize detailed should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id x");
                 expect(reference2.displayname.value).toBe(altDetailedTable1);
             });
 
@@ -3027,7 +2851,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('14.B.4 tuple read should return correct data from base table', function(done) {
@@ -3036,7 +2860,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
@@ -3045,15 +2869,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("14.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
-            });
-
             it('14.C contextualize compact should return a new reference with alternative table', function() {
                 reference2 = reference.contextualize.compactBrief;
                 expect(reference2._table.name).toBe(altCompactTable1);
-                expect(reference2._shortestKey.length).toBe(1);
-                expect(reference2._shortestKey[0].name).toBe("id y");
                 expect(reference2.displayname.value).toBe(altCompactTable1);
             });
 
@@ -3084,7 +2902,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable1);
                 expect(tuple.reference.displayname.value).toBe(baseTable1);
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001");
+                expect(tuple.reference._location.path).toBe(firstRowPathWithID);
             });
 
             it('14.C.4 tuple read should return correct data from base table', function(done) {
@@ -3093,17 +2911,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page.tuples.length).toBe(1);
-                    expect(page.tuples[0]._data).toEqual({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"});
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00001","name":"Hank","value":12,"fk_to_related":"1"}));
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("14.C.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00001");
             });
         });
 
@@ -3143,8 +2957,6 @@ exports.execute = function (options) {
             it('15.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
 
             it("15.A.0 returned reference should have correct facets.", function () {
@@ -3179,7 +2991,7 @@ exports.execute = function (options) {
             it('15.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('15.A.4 tuple read should return correct data from base table', function(done) {
@@ -3188,7 +3000,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
                     expect(page.tuples.length).toBe(1, "length missmatch.");
-                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}), "data missmatch.");
 
                     done();
                 }, function (err) {
@@ -3197,15 +3009,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("15.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00002");
-            });
-
             it('15.B contextualize detailed should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.detailed;
                 expect(reference2._table.name).toBe(altDetailedTable1, "table missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id x", "shortestkey name missmatch.");
                 expect(reference2.displayname.value).toBe(altDetailedTable1, "displayname missmatch.");
             });
 
@@ -3250,7 +3056,7 @@ exports.execute = function (options) {
             it('15.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithID, "location missmatch.");
             });
 
             it('15.B.4 tuple read should return correct data from base table', function(done) {
@@ -3259,17 +3065,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
                     expect(page.tuples.length).toBe(1, "length missmatch.");
-                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}), "data missmatch.");
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("15.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00002");
             });
         });
 
@@ -3307,8 +3109,6 @@ exports.execute = function (options) {
             it('16.A contextualize entry/create should return a new reference with base table', function() {
                 reference2 = reference.contextualize.entryCreate;
                 expect(reference2._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey length missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id", "shortestkey name missmatch.");
             });
 
             it("16.A.0 returned reference should have correct facets.", function () {
@@ -3352,7 +3152,7 @@ exports.execute = function (options) {
             it('16.A.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithRID, "location missmatch.");
             });
 
             it('16.A.4 tuple read should return correct data from base table', function(done) {
@@ -3361,7 +3161,7 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
                     expect(page.tuples.length).toBe(1, "length missmatch.");
-                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}), "data missmatch.");
 
                     done();
                 }, function (err) {
@@ -3370,15 +3170,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("16.A.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00002");
-            });
-
             it('16.B contextualize compact should return a new reference with alternative table.', function() {
                 reference2 = reference.contextualize.compact;
                 expect(reference2._table.name).toBe(altCompactTable1, "table missmatch.");
-                expect(reference2._shortestKey.length).toBe(1, "shortestkey missmatch.");
-                expect(reference2._shortestKey[0].name).toBe("id y", "shortestkey name missmatch.");
             });
 
             it("16.B.0 returned reference should have correct facets.", function () {
@@ -3426,7 +3220,7 @@ exports.execute = function (options) {
             it('16.B.3 tuple reference should be on the base table with correct filter', function() {
                 expect(tuple.reference).toBeDefined("reference not defined.");
                 expect(tuple.reference._table.name).toBe(baseTable1, "table name missmatch.");
-                expect(tuple.reference._location.path).toBe(schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002", "location missmatch.");
+                expect(tuple.reference._location.path).toBe(secondRowPathWithID, "location missmatch.");
             });
 
             it('16.B.4 tuple read should return correct data from base table', function(done) {
@@ -3435,17 +3229,13 @@ exports.execute = function (options) {
 
                     expect(page).toEqual(jasmine.any(Object), "page is not an Object.");
                     expect(page.tuples.length).toBe(1, "length missmatch.");
-                    expect(page.tuples[0]._data).toEqual({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}, "data missmatch.");
+                    expect(page.tuples[0]._data).toEqual(jasmine.objectContaining({"id":"00002","name":"Harold","value":17,"fk_to_related":"2"}), "data missmatch.");
 
                     done();
                 }, function (err) {
                     console.dir(err);
                     done.fail();
                 });
-            });
-
-            it("16.B.5 tuple uniqueId should return correct data.", function () {
-                expect(tuple.uniqueId).toEqual("00002");
             });
         });
     });

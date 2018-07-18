@@ -41,13 +41,14 @@
     "bower": "x",
     "google-closure-compiler-js": "x",
     "jasmine": "2.5.3",
+    "jasmine-expect": "^3.7.1",
     "jasmine-spec-reporter": "^2.5.0",
     "jsdoc": "x",
     "jsdoc-to-markdown": "x",
     "jshint": "x",
     "nock": "9.0.22",
-    "require-reload": "^0.2.2",
     "request": "x",
+    "require-reload": "^0.2.2",
     "set-cookie-parser": "x"
   }
 }

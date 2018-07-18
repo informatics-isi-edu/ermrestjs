@@ -55,7 +55,7 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should be sorted by ascending value by default. ', function() {
+            it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
                 var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -63,7 +63,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -87,7 +87,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('tuples should be sorted by ascending id by default. ', function() {
+                it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -95,7 +95,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
 
@@ -138,14 +138,14 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
 
             // limit was changed after paging back
             describe("with navigating back to the first page,", function() {
-                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x)@before(33)?limit=" + limit;
+                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x,RID)@before(33,ZZZZZ)?limit=" + limit;
                 var reference5;
 
                 beforeAll(function(done) {
@@ -526,7 +526,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -557,7 +557,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
@@ -591,7 +591,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
@@ -599,7 +599,7 @@ exports.execute = function (options) {
 
         describe("Paging with sort based on foreignkey with null data ", function () {
             // reference_schema_paging_table_no_sort_fk1
-            var fkHash = "bITRC1H37ph9chTodns5cw";
+            var fkHash = "SgqbHJAVFJyKddPY93Eq-w";
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
                       tableNameNoSort + "@sort(" + fkHash + ",value%20x)";
 
@@ -856,8 +856,9 @@ exports.execute = function (options) {
 
             it ("if page had search, it should change the search accordingly.", function (done) {
                 options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
+                    //this might match the values or RID, therefore we are reading all the existing rows
                     ref = ref.search("9");
-                    return ref.read(5);
+                    return ref.read(30);
                 }).then(function (page) {
                     newRef = currRef.setSamePaging(page);
                     expect(newRef.location.beforeObject).toEqual(null, "beforeObject missmatch.");
@@ -872,9 +873,11 @@ exports.execute = function (options) {
 
 
             describe("when page is sorted based on foreignkey column, ", function () {
-                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference)";
+                // since the shoretestkey is going to be RID, we cannot know its value therefore, the test case
+                // is sorting based on fk value and a key value.
+                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference,id)";
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
-                    testUri(done, url, 5, null, ["9005", "6"]); // since the fk value is not the key, its appending the shortestkey
+                    testUri(done, url, 5, null, ["9005", "6"]);
                 });
 
                 it ("if page had before, should return a reference with same before and new after.", function (done) {

@@ -61,6 +61,7 @@ exports.execute = function (options) {
         };
 
         var data = {
+            "RID": "RND",
             "id": "1",
             "id_1": "2",
             "id_2": "3"
@@ -111,7 +112,7 @@ exports.execute = function (options) {
                 for (i = 0; i < 5; i++) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
-                for (i = 11; i < 16; i++) {
+                for (i = 16; i < 21; i++) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
 
@@ -144,15 +145,16 @@ exports.execute = function (options) {
 
         describe('.isForeignKey, ', function () {
             it ('for PseudoColumns that are foreign key should return true.', function () {
-                for (var i = 1; i < 16; i++) {
+                for (var i = 1; i < 21; i++) {
                     expect(compactColumns[i].isForeignKey).toBe(true);
                     if (i == 4) i = 10;
+                    if (i == 10) i = 16;
                 }
             });
 
             it ('for other columns should return undefined.', function () {
                 expect(compactColumns[0].isForeignKey).toBe(undefined);
-                for (var i = 5; i < 11; i++) {
+                for (var i = 5; i < 16; i++) {
                     expect(compactColumns[i].isForeignKey).toBe(undefined);
                 }
             });
@@ -172,7 +174,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('.isInboundForeignKey', function () {
+        describe('.isInboundForeignKey', function () {``
             it ('for PseudoColumns that are inbound foreign key should return true.', function () {
                 expect(detailedColumns[3].isInboundForeignKey).toEqual(true);
             });
@@ -195,11 +197,11 @@ exports.execute = function (options) {
                     expect(compactColumns[i].table.name).toBe("table_w_simple_key");
                 }
                 expect(compactColumns[4].table.name).toBe("table_w_simple_key_2");
-                expect(compactColumns[11].table.name).toBe("table_w_composite_key");
-                expect(compactColumns[12].table.name).toBe("table_w_composite_key_2");
-                expect(compactColumns[13].table.name).toBe("table_w_composite_key");
-                expect(compactColumns[14].table.name).toBe("table_w_composite_key");
-                expect(compactColumns[15].table.name).toBe("table_w_composite_key");
+                expect(compactColumns[16].table.name).toBe("table_w_composite_key");
+                expect(compactColumns[17].table.name).toBe("table_w_composite_key_2");
+                expect(compactColumns[18].table.name).toBe("table_w_composite_key");
+                expect(compactColumns[19].table.name).toBe("table_w_composite_key");
+                expect(compactColumns[20].table.name).toBe("table_w_composite_key");
             });
 
             it('for pseudoColumns that are inbound foreign key, should return the foreign key table.', function () {
@@ -220,13 +222,13 @@ exports.execute = function (options) {
         describe('.name, ', function () {
             it('for pseudoColumns, should return a unique and deterministic string.', function () {
                 //ref_table_outbound_fks_key
-                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw");
+                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw", "name missmatch for compact, index=0");
                 //outbound_fk_8
-                expect(compactColumns[13].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ");
+                expect(compactColumns[18].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ", "name missmatch for compact, index=13");
                 //inbound_related_to_columns_table_2_fkey
-                expect(detailedColumns[3].name).toBe("9o1FsRzRkFNpnwdeNpXRQQ");
+                expect(detailedColumns[3].name).toBe("tKEjVbHI9RPuBFya-7_j6Q", "name missmatch for detailed, index=3");
                 //outbound_fk_7
-                expect(compactColumns[14].name).toBe("9CKS172K3jKYzR5qgRLvVw");
+                expect(compactColumns[19].name).toBe("9CKS172K3jKYzR5qgRLvVw", "name missmatch for compact, index=14");
             });
 
             it('for other columns should return the base column\'s name.', function () {
@@ -254,12 +256,12 @@ exports.execute = function (options) {
 
                     describe('for composite foreign keys, ', function () {
                         it('should use referenced table\'s displayname in the absence of to_name in foreignKey.', function () {
-                            checkDisplayname(compactColumns[12].displayname, "table_w_composite_key_2", false);
+                            checkDisplayname(compactColumns[17].displayname, "table_w_composite_key_2", false);
                         });
 
                         it('should be disambiguated with displayname of columns when there are multiple foreignkeys to that table.', function () {
-                            checkDisplayname(compactColumns[13].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
-                            checkDisplayname(compactColumns[14].displayname, "table_w_composite_key (col 5, col_4)", false);
+                            checkDisplayname(compactColumns[18].displayname, "table_w_composite_key (col 5, Column 3 Name)", false);
+                            checkDisplayname(compactColumns[19].displayname, "table_w_composite_key (col 5, col_4)", false);
                         });
                     });
 
@@ -298,7 +300,7 @@ exports.execute = function (options) {
                 for (var i = 0; i < 5; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
-                for (var i = 11; i < 16; i++) {
+                for (var i = 16; i < 21; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
                 for (var i = 9; i < 11; i++) {
@@ -358,15 +360,15 @@ exports.execute = function (options) {
 
                 it ('should return null if any of the constituent column default values is null.', function () {
                     expect(compactColumns[1].default).toBe(null);
-                    expect(compactColumns[15].default).toBe(null);
+                    expect(compactColumns[20].default).toBe(null);
                 });
 
                 it ('should return a rowname with correct context if it is possible to generate one with default values.', function () {
-                    expect(compactColumns[14].default).toEqual('col 4 default , col 5 default');
+                    expect(compactColumns[19].default).toEqual('col 4 default , col 5 default');
                 });
 
                 it ('should return a rowname using only the consitutent column values if rowname heuristics returned an empty string.', function () {
-                    expect(compactColumns[12].default).toEqual('col 3 default:col 6 default');
+                    expect(compactColumns[17].default).toEqual('col 3 default:col 6 default');
                 });
             });
 
@@ -393,7 +395,7 @@ exports.execute = function (options) {
                 });
 
                 it('otherwise should use key/foreignkey\'s comment.', function () {
-                    expect(compactColumns[11].comment).toBe("composite fk to table_w_composite_key with to_name");
+                    expect(compactColumns[16].comment).toBe("composite fk to table_w_composite_key with to_name");
                 });
             });
 
@@ -578,14 +580,14 @@ exports.execute = function (options) {
                         it("otherwise should use the provided data.", function () {
                             mainEntityData = {"fk1": 1234};
 
-                            // [columns_schema, fk_position_predefined]: MyksuZoB9y39uSQrFB0qww
-                            // [columns_schema, fk_position_user_defined]: WiH8M8FkXJN2qlywr826jA
+                            // [columns_schema, fk_position_predefined]: KPc9qmb9G8DAyIxeQVpMjg
+                            // [columns_schema, fk_position_user_defined]: stTmPlpgbtPMZ8QZFAhvwg
                             foreignKeyData = {
-                                "MyksuZoB9y39uSQrFB0qww": {
+                                "KPc9qmb9G8DAyIxeQVpMjg": {
                                     "int_value": 4321,
                                     "id": 1
                                 },
-                                "WiH8M8FkXJN2qlywr826jA": {
+                                "stTmPlpgbtPMZ8QZFAhvwg": {
                                     "int_value": 1235,
                                     "id": 2
                                 }
@@ -611,13 +613,13 @@ exports.execute = function (options) {
             describe('for pseudoColumns, ', function () {
                 describe('for foreign keys, ', function () {
                     it('should return the correct link.', function () {
-                        val = compactColumns[14].formatPresentation(data, 'compact').value;
+                        val = compactColumns[19].formatPresentation(data, 'compact').value;
 
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id=1">' + data.id_1 + ' , ' + data.id_2 + '</a>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=RND">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
-                        val = compactColumns[12].formatPresentation(data).value;
+                        val = compactColumns[17].formatPresentation(data).value;
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">' + data.id + '</a>');
                     });
 
@@ -627,7 +629,7 @@ exports.execute = function (options) {
                         };
                         var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/' +
                                             'id_1=' + partialData["id_1"]+ '&id_2='  +partialData["id_2"] + '">' + partialData["id_1"] + ":" + partialData["id_2"] + '</a>';
-                        val = compactColumns[12].formatPresentation(partialData).value;
+                        val = compactColumns[17].formatPresentation(partialData).value;
                         expect(val).toEqual(expectetValue);
                     });
 
@@ -729,7 +731,7 @@ exports.execute = function (options) {
                  });
 
                 it('should use the show-nulls annotation, when the data is null.', function () {
-                    val = compactColumns[14].formatPresentation({}, "detailed").value;
+                    val = compactColumns[19].formatPresentation({}, "detailed").value;
                     expect(val).toBe(null);
                     val = entryEditRef.columns[7].formatPresentation({}).value;
                     expect(val).toBe("");
@@ -754,9 +756,9 @@ exports.execute = function (options) {
 
                 it("when foreignKey doesn't have any `column_order` annotation and referenced table has `row_order`, should use the table's row_order.", function () {
                     //outbound_fk_6
-                    expect(compactColumns[12].sortable).toBe(true);
-                    expect(compactColumns[12]._sortColumns.length).toBe(1);
-                    expect(compactColumns[12]._sortColumns.map(function (col) {
+                    expect(compactColumns[17].sortable).toBe(true);
+                    expect(compactColumns[17]._sortColumns.length).toBe(1);
+                    expect(compactColumns[17]._sortColumns.map(function (col) {
                         return col.column.name
                     })).toEqual(['id_2']);
                 });
@@ -773,14 +775,14 @@ exports.execute = function (options) {
                 describe("when foreign key is not simple, ", function () {
                     it ("and doesn't have `foreign key` annotation (therefore no `column_order` annotation), should return false.", function () {
                         // outbound_fk_7
-                        expect(compactColumns[14].sortable).toBe(false);
-                        expect(compactColumns[14]._sortColumns.length).toBe(0);
+                        expect(compactColumns[19].sortable).toBe(false);
+                        expect(compactColumns[19]._sortColumns.length).toBe(0);
                     });
 
                     it ('and has `foreign key` annotation but no `display` (and therefore no `column_order` annotation), should return false.', function () {
                         // outbound_fk_8
-                        expect(compactColumns[13].sortable).toBe(false);
-                        expect(compactColumns[13]._sortColumns.length).toBe(0);
+                        expect(compactColumns[18].sortable).toBe(false);
+                        expect(compactColumns[18]._sortColumns.length).toBe(0);
                     });
                 });
 

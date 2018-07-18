@@ -3,27 +3,35 @@ var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
-var importSchemas = function(configFilePaths, defer, catalogId) {
+var importSchemas = function(configFilePaths, defer, catalogId, entities) {
 
 	if (!configFilePaths.length) {
-		defer.resolve(catalogId);
+		defer.resolve({catalogId: catalogId, entities: entities});
 		return;
 	}
 
 	var configFilePath = configFilePaths.shift();
 
 	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
-	
+
 	if (catalogId) config.catalog.id = catalogId;
 	else delete config.catalog.id;
-	
+
 	ermrestUtils.importData({
         setup: config,
         url: includes.url,
         authCookie: includes.authCookie
     }).then(function (data) {
     	process.env.catalogId = data.catalogId;
-    	importSchemas(configFilePaths, defer, data.catalogId);
+		if (data.schema) {
+			entities[data.schema.name] = {};
+			for (var t in data.schema.tables) {
+                if (!data.schema.tables.hasOwnProperty(t)) continue;
+                entities[data.schema.name][t] = data.schema.tables[t].entities;
+            }
+			console.log("Attached entities of " + data.schema.name + " schema");
+		}
+    	importSchemas(configFilePaths, defer, data.catalogId, entities);
     }, function (err) {
         defer.reject(err);
     }).catch(function(err) {
@@ -33,13 +41,13 @@ var importSchemas = function(configFilePaths, defer, catalogId) {
 };
 
 exports.importSchemas = function(configFilePaths, catalogId) {
-	var defer = q.defer();
+	var defer = q.defer(), entities = {};
 	if (!configFilePaths || !configFilePaths.length) {
-		defer.resolve(catalogId);
+		defer.resolve({catalogId: catalogId, entities: entities});
 		return defer.promise;
 	}
 
-	importSchemas(configFilePaths.slice(0), defer, catalogId);
+	importSchemas(configFilePaths.slice(0), defer, catalogId, entities);
 	return defer.promise;
 };
 
@@ -58,7 +66,7 @@ exports.importAcls = function(params) {
 };
 
 var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
-	
+
 	if (configFilePaths.length == 0) {
 		defer.resolve(catalogId);
 		return;
@@ -91,14 +99,14 @@ var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
 
 exports.tear = function(configFilePaths, catalogId, deleteCatalog) {
 	var defer = q.defer();
-	
+
 	if (!configFilePaths || !configFilePaths.length || !catalogId) {
 		defer.resolve();
 		return defer.promise;
 	}
-	
+
 	configFilePaths = configFilePaths.reverse();
-	
+
 	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
 
 	return defer.promise;
