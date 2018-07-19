@@ -499,8 +499,9 @@
         }
 
         // if name styles are undefined, get them from the parent element
+        // if it's a system column, don't use the name_styles that are defined on the parent.
         // NOTE: underline_space, title_case, markdown might be null.
-        if(parentElement){
+        if(parentElement && !(element.type && module._systemColumnTypes.indexOf(element.type.name) !== -1)){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
             }
@@ -2933,6 +2934,9 @@
 
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+    module._systemColumnTypes = [
+        'ermrest_rid', 'ermrest_rct', 'ermrest_rmt', 'ermrest_rcb', 'ermrest_rmb'
+    ];
 
     // NOTE: currently we only ignore the system columns
     module._ignoreDefaultsNames = module._systemColumns;
