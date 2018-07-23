@@ -118,7 +118,7 @@ exports.execute = function (options) {
                     .toBe('<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
 
                 // Check for iframe tag with a link and caption
-                var iframeMarkdown = ':::iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
                 var iframeHTML = '<figure class="embed-block" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
@@ -145,7 +145,7 @@ exports.execute = function (options) {
 
 
                 // Check for dropdown tag
-                var dropdownMarkdown = ':::dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
+                var dropdownMarkdown = '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
                 var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
                 expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML);
 
@@ -208,6 +208,11 @@ exports.execute = function (options) {
                 expect(printMarkdown("This is :span: special case:/span:.", {inline: true})).toBe("This is <span> special case</span>.", "invalid inline span");
                 expect(printMarkdown(":span:special:/span:{.test}", {inline: true})).toBe('<span class="test">special</span>', "invalid inline span with attrs");
                 expect(printMarkdown(":span::/span:{.glyph-icon .glyph-danger}", {inline: true})).toBe('<span class="glyph-icon glyph-danger"></span>', "invalid empty inline span with attrs");
+            });
+
+            it("should support table with classname attribute.", function () {
+                var mkString = "|heading|\n|-|\n|text|\n{.class-name}";
+                expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
             });
         });
 
