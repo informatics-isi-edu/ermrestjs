@@ -606,8 +606,8 @@ exports.execute = function (options) {
                 })
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
-                    expect(compactColumns.length).toBe(21);
-                    expect(entryRef.columns.length).toBe(16);
+                    expect(compactColumns.length).toBe(22);
+                    expect(entryRef.columns.length).toBe(17);
                 });
 
                 it('should include columns that are not part of any FKRs.', function () {
@@ -664,6 +664,9 @@ exports.execute = function (options) {
                     });
 
                     it('should create just one PseudoColumn for the FKR.', function () {
+                        console.log(compactColumns[16]);
+                        console.log(compactColumns[20]);
+                        console.log(compactColumns[21]);
                         expect(compactColumns[16].isPseudo).toBe(true);
                         expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
 

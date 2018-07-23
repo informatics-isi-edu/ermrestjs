@@ -75,7 +75,7 @@
               "typename": "text"
           }
         }
-    ]
+      ]
     },
     "table_w_title_wo_annotation": {
       "kind": "table",
@@ -230,6 +230,51 @@
         }
       }
     },
+    "table_w_table_display_annotation_handlebars": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_table_display_annotation_handlebars",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "firstname",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "lastname",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "row_name": {
+            "template_engine": "handlebars",
+            "row_markdown_pattern": "__{{firstname}} {{lastname}}__"
+          }
+        }
+      }
+    },
     "table_w_table_display_annotation_w_title": {
       "kind": "table",
       "keys": [
@@ -356,10 +401,10 @@
             "typename": "text"
           },
           "annotations": {
-            "tag:isrd.isi.edu,2016:column-display" : {
-                "*" : {
-                    "markdown_pattern" : "## {{title}}"
-                }
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "markdown_pattern": "## {{title}}"
+              }
             }
           }
         }
@@ -409,8 +454,8 @@
                 }
             },
             {
-                "name": "col_fk1"
-,                "type": {
+                "name": "col_fk1",
+                "type": {
                     "typename": "integer"
                 }
             }

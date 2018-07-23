@@ -40,6 +40,20 @@
                         }
                     }
                 }
+            }, {
+                "unique_columns": ["columns_schema_handlebars_col"],
+                "names": [["columns_schema", "ref_table_fks_fifth_key"]],
+                "annotations": {
+                    "tag:misd.isi.edu,2015:display": {
+                        "template_engine": "handlebars",
+                        "markdown_name": "**fifth key**"
+                    },
+                    "tag:isrd.isi.edu,2017:key-display": {
+                        "*": {
+                            "column_order": false
+                        }
+                    }
+                }
             }],
             "foreign_keys": [
                 {
@@ -407,6 +421,13 @@
                             }
                         }
                     }
+                },
+                {
+                    "name": "columns_schema_handlebars_col",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "key has handlebars mk pattern"
                 }
             ],
             "annotations": {

@@ -9,6 +9,7 @@ exports.execute = function (options) {
             tableName3 = "table_w_accession_id_wo_annotation",
             tableName4 = "table_w_composite_key_wo_annotation",
             tableName5 = "table_w_table_display_annotation",
+            tableName5b = "table_w_table_display_annotation_handlebars",
             tableName6 = "table_w_table_display_annotation_w_unformatted",
             tableName7 = "table_w_table_display_annotation_w_markdown_pattern",
             tableName8 = "table_w_rowname_fkeys1",
@@ -32,6 +33,9 @@ exports.execute = function (options) {
 
         var table5EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName5 + "/@sort(id)";
+
+        var table5bEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableName5b + "/@sort(id)";
 
         var table6EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableName6 + "/@sort(id)";
@@ -324,6 +328,53 @@ exports.execute = function (options) {
                     var expected = tuple.values[1] + " " + tuple.values[2];
                     expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
                     expect(tuple.displayname.unformatted).toBe("**" + expected + "**");
+                }
+            });
+        });
+
+        describe('table entities with table-display.row-name (handlebars) annotation, without table-display.row-name/unformatted annotation, ', function() {
+            var reference, page, tuple;
+            var limit = 5;
+
+            it('resolve should return a Reference object that is defined.', function(done) {
+                options.ermRest.resolve(table5bEntityUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    expect(reference).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('reference.display should be an object that is defined and display.type is set to table', function() {
+                var display = reference.display;
+                expect(display).toEqual(jasmine.any(Object));
+                expect(display.type).toEqual('table');
+            });
+
+            it('read should return a Page object that is defined.', function(done) {
+                reference.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it('tuple displayname should return string: firstname lastname', function() {
+                var tuples = page.tuples;
+                for(var i = 0; i < limit; i++) {
+                    var tuple = tuples[i];
+                    var expected = tuple.values[1] + " " + tuple.values[2];
+                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
+                    expect(tuple.displayname.unformatted).toBe("__" + expected + "__");
                 }
             });
         });

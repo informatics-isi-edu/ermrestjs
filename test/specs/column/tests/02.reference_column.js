@@ -112,7 +112,7 @@ exports.execute = function (options) {
                 for (i = 0; i < 5; i++) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
-                for (i = 16; i < 21; i++) {
+                for (i = 17; i < 22; i++) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
 
