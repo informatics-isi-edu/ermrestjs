@@ -664,23 +664,20 @@ exports.execute = function (options) {
                     });
 
                     it('should create just one PseudoColumn for the FKR.', function () {
-                        console.log(compactColumns[16]);
-                        console.log(compactColumns[20]);
-                        console.log(compactColumns[21]);
-                        expect(compactColumns[16].isPseudo).toBe(true);
-                        expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
-
                         expect(compactColumns[17].isPseudo).toBe(true);
-                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
 
                         expect(compactColumns[18].isPseudo).toBe(true);
-                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[19].isPseudo).toBe(true);
-                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
+                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[20].isPseudo).toBe(true);
-                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
+
+                        expect(compactColumns[21].isPseudo).toBe(true);
+                        expect(compactColumns[21]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 

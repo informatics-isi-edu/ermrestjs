@@ -56,6 +56,7 @@
                         },
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
+                                "template_engine": "handlebars",
                                 "markdown_pattern" : "{{{main_table_id_col}}}: {{{col}}}"
                             }
                         }

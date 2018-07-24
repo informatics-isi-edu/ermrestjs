@@ -1339,7 +1339,33 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should return the list of rownames in entity-mode.", function (done) {
+                it ("should return the list of rownames (moustache templates) in entity-mode.", function (done) {
+                    refMainFilterOnFK.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(2, "length missmatch.");
+                        checkChoiceDisplayname("index=0", res[0], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=1", res[1], 3, "<strong>three</strong>", true);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("should be able to handle null filter in entity-mode.", function (done) {
+                    var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([null]);
+                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(3, "length missmatch.");
+                        checkChoiceDisplayname("index=0", res[0], null, null, false);
+                        checkChoiceDisplayname("index=1", res[1], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=2", res[2], 3, "<strong>three</strong>", true);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("should return the list of rownames (handlebars templates) in entity-mode.", function (done) {
                     refMainFilterOnFK.facetColumns[11].getChoiceDisplaynames().then(function (res){
                         expect(res.length).toEqual(2, "length missmatch.");
                         checkChoiceDisplayname("index=0", res[0], 2, "<strong>two</strong>", true);
