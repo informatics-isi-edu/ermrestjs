@@ -7,6 +7,10 @@ exports.importSchemas = function (configFilePaths, catalogId) {
   var defer = q.defer(), entities = {}, schemas = {};
   var config, schema, schemaName;
 
+  if (!configFilePaths || configFilePaths.length === 0) {
+    return defer.resolve({catalogId: catalogId, entities: {}}), defer.promise;
+  }
+
   var settings = {
     url: includes.url,
     authCookie: includes.authCookie

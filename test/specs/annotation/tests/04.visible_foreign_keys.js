@@ -1,7 +1,7 @@
 exports.execute = function (options) {
 
     describe('For determining order of visible foreign key, ', function () {
-        var schemaName = "visible_foregin_keys_schema",
+        var schemaName = "visible_foreign_keys_schema",
             tableWithAnnotation = "vfk_table_with_annotation",
             tableWithoutAnnotation = "vfk_table_without_annotation",
             schema;
