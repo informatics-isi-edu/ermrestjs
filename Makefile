@@ -150,11 +150,6 @@ test: $(BUILD) ../ErmrestDataUtils
 testsingle: $(BUILD) ../ErmrestDataUtils
 	node test/single-test-runner.js
 
-# Rule to run the unit tests
-.PHONY: testsingledebug
-testsingledebug: $(BUILD) ../ErmrestDataUtils
-	node-debug test/single-test-runner.js
-
 # Rule to install the package
 .PHONY: install installm dont_install_in_root
 install: $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root

@@ -89,7 +89,7 @@ exports.execute = function (options) {
                                 '',
                                 '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                 '',
-                                '',
+                                '',  // This value is set later by setLinkRID()
                                 expectedMomentValue
                             ],
                 "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -109,7 +109,7 @@ exports.execute = function (options) {
                                 '',
                                 'NA',
                                 '',
-                                '',
+                                '', // This value is set later by setLinkRID()
                                 expectedMomentValue
                                 ],
                 "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
@@ -129,7 +129,7 @@ exports.execute = function (options) {
                                 '',
                                 '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                 '',
-                                '',
+                                '', // This value is set later by setLinkRID()
                                 expectedMomentValue
                                 ],
                 "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
@@ -149,7 +149,7 @@ exports.execute = function (options) {
                                 '',
                                 'NA',
                                 '',
-                                '',
+                                '', // This value is set later by setLinkRID()
                                 expectedMomentValue
                                 ],
                 "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
@@ -169,7 +169,7 @@ exports.execute = function (options) {
                                 '',
                                 '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                 '',
-                                '',
+                                '', // This value is set later by setLinkRID()
                                 expectedMomentValue
                                 ],
                 "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -189,7 +189,7 @@ exports.execute = function (options) {
                                 '<code>GATCGATCGC GTATT</code>',
                                 '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                 '',
-                                '',
+                                '', // This value is set later by setLinkRID()
                                 expectedMomentValue
                                 ],
                 "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
@@ -199,6 +199,7 @@ exports.execute = function (options) {
         beforeAll(function(done) {
             options.ermRest.appLinkFn(appLinkFn);
 
+            // has to be defined here because it relies on values in options.entities and needs to be scoped somewhere it's available
             getRID = function (id) {
                 return options.entities[schemaName]["table_w_composite_key"].filter(function(e) {
                     return e.id == id;
@@ -236,6 +237,7 @@ exports.execute = function (options) {
              * @function
              * @param {String} key name of key in testObjects
              * Takes the key to get the appropriate test object so that one of the expectedValues can be modified with the RID value
+             * Calling setLinkRID has to be done in a `before` or an `it` block to have access to options.entities
              */
             var setLinkRID = function (key) {
                 var rowValues = testObjects[key].expectedValue;
@@ -273,8 +275,6 @@ exports.execute = function (options) {
              * and a particular column value at the specified valuedIndex
              */
             var checkValueAndIsHTML = function(tuple, valueIndex, key) {
-                // get hte RID value that was set on options.entities[schema_name][table_name]
-                setLinkRID(key);
                 // value check
                 var value = tuple.values[valueIndex];
                 var expectedValue = testObjects[key].expectedValue[valueIndex];
@@ -300,6 +300,9 @@ exports.execute = function (options) {
              */
             var testTupleValidity = function(tupleIndex, key) {
                 it("should return 14 values for a tuple", function() {
+                    // get the RID value that was set on options.entities[schema_name][table_name]
+                    setLinkRID(key);
+
                     expect(tuples[tupleIndex].values.length).toBe(14);
                 });
 
