@@ -499,8 +499,9 @@
         }
 
         // if name styles are undefined, get them from the parent element
+        // if it's a system column, don't use the name_styles that are defined on the parent.
         // NOTE: underline_space, title_case, markdown might be null.
-        if(parentElement){
+        if(parentElement && !(element instanceof Column && module._systemColumns.indexOf(element.name) !== -1)){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
             }
