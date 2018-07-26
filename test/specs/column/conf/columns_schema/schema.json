@@ -45,7 +45,6 @@
                 "names": [["columns_schema", "ref_table_fks_fifth_key"]],
                 "annotations": {
                     "tag:misd.isi.edu,2015:display": {
-                        "template_engine": "handlebars",
                         "markdown_name": "**fifth key**"
                     },
                     "tag:isrd.isi.edu,2017:key-display": {

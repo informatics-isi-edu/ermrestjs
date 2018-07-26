@@ -372,9 +372,10 @@ exports.execute = function (options) {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    var expected = tuple.values[1] + " " + tuple.values[2];
-                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
-                    expect(tuple.displayname.unformatted).toBe("__" + expected + "__");
+                    // if no firstname, just show lastname without a space
+                    var expected = tuple.values[1] ? (tuple.values[1] + " " + tuple.values[2]) : tuple.values[2];
+                    expect(tuple.displayname.value).toBe(expected);
+                    expect(tuple.displayname.unformatted).toBe(expected);
                 }
             });
         });

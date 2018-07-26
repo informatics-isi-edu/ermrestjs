@@ -2174,7 +2174,7 @@
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
-                    "templateEngine": annotation.templateEngine,
+                    "templateEngine": annotation.template_engine,
                     "columnOrder": columnOrder
                 };
             }

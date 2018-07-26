@@ -270,7 +270,7 @@
         "tag:isrd.isi.edu,2016:table-display": {
           "row_name": {
             "template_engine": "handlebars",
-            "row_markdown_pattern": "__{{firstname}} {{lastname}}__"
+            "row_markdown_pattern": "{{#if firstname}}{{firstname}} {{/if}}{{lastname}}"
           }
         }
       }
